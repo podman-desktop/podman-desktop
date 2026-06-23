@@ -40,8 +40,11 @@ import { Emitter as EventEmitter } from './events/emitter.js';
 import type { MessageBox } from './message-box.js';
 
 function createAuthenticationConfigMock(
-  trustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {},
+  initialTrustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {},
 ): { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> } {
+  let trustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {
+    ...initialTrustedExtensions,
+  };
   return {
     get: vi.fn().mockImplementation((key: string) => {
       if (key === 'trustedExtensions') {
@@ -49,7 +52,12 @@ function createAuthenticationConfigMock(
       }
       return undefined;
     }),
-    update: vi.fn().mockResolvedValue(undefined),
+    update: vi.fn().mockImplementation((key: string, value: unknown) => {
+      if (key === 'trustedExtensions') {
+        trustedExtensions = value as Record<string, { id: string; name: string; allowed?: boolean }[]>;
+      }
+      return Promise.resolve();
+    }),
   };
 }
 
@@ -82,7 +90,9 @@ function createAuthenticationImpl(
   mb: MessageBox,
   configurationRegistry: IConfigurationRegistry = createMockConfigurationRegistry(),
 ): AuthenticationImpl {
-  return new AuthenticationImpl(api, mb, configurationRegistry);
+  const impl = new AuthenticationImpl(api, mb, configurationRegistry);
+  impl.init();
+  return impl;
 }
 
 function randomNumber(n = 5): number {
@@ -742,17 +752,13 @@ describe('trusted extensions', () => {
 
     await vi.waitFor(() => expect(config.update).toHaveBeenCalledTimes(3));
 
-    const expected = {
+    expect(config.update).toHaveBeenLastCalledWith('trustedExtensions', {
       'p1:a1': [
         { id: 'e1', name: 'E1', allowed: true },
         { id: 'e2', name: 'E2', allowed: true },
         { id: 'e3', name: 'E3', allowed: false },
       ],
-    };
-    for (const call of vi.mocked(config.update).mock.calls) {
-      expect(call[0]).toBe('trustedExtensions');
-      expect(call[1]).toEqual(expected);
-    }
+    });
   });
 
   test('loads trustedExtensions from configuration before isAccessAllowed without persisting again', () => {

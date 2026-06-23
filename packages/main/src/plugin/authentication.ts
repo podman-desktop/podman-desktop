@@ -28,7 +28,7 @@ import type {
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo, SessionRequestInfo } from '@podman-desktop/core-api/authentication';
 import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, postConstruct } from 'inversify';
 
 import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
@@ -128,10 +128,6 @@ export class AuthenticationImpl {
   private _signInRequestsData: Map<string, SessionRequestInfo> = new Map();
   // store account usage to show confirmation when sign out requested
   private _accountUsageData: AccountUsageRecord[] = [];
-  // In-memory store for extension allowances
-  // Key format: `${providerId}:${accountId}` -> AllowedExtension[]
-  private _extensionAllowances: Map<string, AllowedExtension[]> = new Map();
-  private _allowancesLoaded = false;
 
   constructor(
     @inject(ApiSenderType)
@@ -142,11 +138,8 @@ export class AuthenticationImpl {
     private configurationRegistry: IConfigurationRegistry,
   ) {}
 
-  private ensureAllowancesLoaded(): void {
-    if (this._allowancesLoaded) {
-      return;
-    }
-    this._allowancesLoaded = true;
+  @postConstruct()
+  init(): void {
     this.configurationRegistry.registerConfigurations([
       {
         id: 'authentication',
@@ -162,22 +155,29 @@ export class AuthenticationImpl {
         },
       },
     ]);
-    this.loadAllowancesFromConfig();
   }
 
-  private loadAllowancesFromConfig(): void {
+  private get extensionAllowances(): Record<string, AllowedExtension[]> {
     const config = this.configurationRegistry.getConfiguration('authentication');
-    const data = config.get<Record<string, AllowedExtension[]>>('trustedExtensions') ?? {};
-    this._extensionAllowances.clear();
-    for (const [key, value] of Object.entries(data)) {
-      this._extensionAllowances.set(key, value);
+    const data = config.get<unknown>('trustedExtensions');
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      return {};
     }
-  }
-
-  private async saveAllowances(): Promise<void> {
-    const config = this.configurationRegistry.getConfiguration('authentication');
-    const data: Record<string, AllowedExtension[]> = Object.fromEntries(this._extensionAllowances);
-    await config.update('trustedExtensions', data);
+    const result: Record<string, AllowedExtension[]> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (!Array.isArray(value)) {
+        continue;
+      }
+      result[key] = value.filter(
+        (entry): entry is AllowedExtension =>
+          typeof entry === 'object' &&
+          entry !== null &&
+          typeof entry.id === 'string' &&
+          typeof entry.name === 'string' &&
+          (entry.allowed === undefined || typeof entry.allowed === 'boolean'),
+      );
+    }
+    return result;
   }
 
   public async getAuthenticationProvidersInfo(): Promise<AuthenticationProviderInfo[]> {
@@ -292,21 +292,20 @@ export class AuthenticationImpl {
     extensionName: string,
     isAllowed: boolean,
   ): void {
-    this.ensureAllowancesLoaded();
     const key = this.getAllowanceKey(providerId, accountId);
-    const allowances = this._extensionAllowances.get(key) ?? [];
+    const allAllowances = this.extensionAllowances;
+    const allowances = allAllowances[key] ?? [];
 
     const existingIndex = allowances.findIndex(ext => ext.id === extensionId);
     if (existingIndex > -1) {
-      // Update existing entry
       allowances[existingIndex] = { id: extensionId, name: extensionName, allowed: isAllowed };
     } else {
-      // Add new entry
       allowances.push({ id: extensionId, name: extensionName, allowed: isAllowed });
     }
 
-    this._extensionAllowances.set(key, allowances);
-    this.saveAllowances().catch((err: unknown) => {
+    allAllowances[key] = allowances;
+    const config = this.configurationRegistry.getConfiguration('authentication');
+    config.update('trustedExtensions', allAllowances).catch((err: unknown) => {
       console.error('Failed to persist trusted extensions to settings', err);
     });
     this.apiSender.send('authentication-provider-update', { id: providerId });
@@ -321,12 +320,11 @@ export class AuthenticationImpl {
    * if they haven't made a choice yet
    */
   isAccessAllowed(providerId: string, accountId: string, extensionId: string): boolean | undefined {
-    this.ensureAllowancesLoaded();
     const key = this.getAllowanceKey(providerId, accountId);
-    const allowances = this._extensionAllowances.get(key);
+    const allowances = this.extensionAllowances[key];
 
     if (!allowances) {
-      return undefined; // No decision made yet
+      return undefined;
     }
 
     const extensionAllowance = allowances.find(ext => ext.id === extensionId);
@@ -361,8 +359,6 @@ export class AuthenticationImpl {
     if (options.createIfNone && options.silent) {
       throw new Error('Invalid combination of options. Please remove one of the following: createIfNone, silent');
     }
-
-    this.ensureAllowancesLoaded();
 
     const providerData = this._authenticationProviders.get(providerId);
     const sortedScopes = [...scopes].sort((a, b) => a.localeCompare(b));
