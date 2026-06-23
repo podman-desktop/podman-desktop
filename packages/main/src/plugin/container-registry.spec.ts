@@ -3099,6 +3099,43 @@ describe('createContainer', () => {
   });
 });
 
+describe('unpauseContainer', () => {
+  test('test unpause Container', async () => {
+    const unpauseMock = vi.fn().mockResolvedValue({});
+
+    const fakeDockerodeContainer = {
+      unpause: unpauseMock,
+    } as unknown as Dockerode.Container;
+
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(fakeDockerodeContainer);
+
+    await containerRegistry.unpauseContainer('podman1', '1234');
+
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+
+  test('test unpause Container for error handling', async () => {
+    const unpauseError = new Error('unpause failed');
+    const unpauseMock = vi.fn().mockRejectedValue(unpauseError);
+
+    const fakeDockerodeContainer = {
+      unpause: unpauseMock,
+    } as unknown as Dockerode.Container;
+
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(fakeDockerodeContainer);
+
+    await expect(containerRegistry.unpauseContainer('podman1', '1234')).rejects.toThrow(unpauseError);
+
+    expect(telemetry.track).toHaveBeenCalledWith(
+      'unpauseContainer',
+      expect.objectContaining({
+        error: unpauseError,
+      }),
+    );
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+});
+
 describe('attach container', () => {
   test('container attach stream', async () => {
     // create a read/write stream
