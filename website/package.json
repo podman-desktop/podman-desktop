@@ -46,17 +46,17 @@
     "@docusaurus/tsconfig": "^3.10.0",
     "@docusaurus/types": "^3.10.0",
     "@octokit/rest": "^22.0.1",
-    "@tailwindcss/postcss": "^4.3.0",
-    "markdownlint": "^0.40.0",
+    "@tailwindcss/postcss": "^4.3.1",
+    "markdownlint": "^0.41.0",
     "markdownlint-cli2": "^0.22.1",
     "markdownlint-cli2-formatter-summarize": "^0.0.8",
     "msw": "^2.14.6",
     "postcss": "^8.5.12",
-    "tailwindcss": "^4.3.0",
+    "tailwindcss": "^4.3.1",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   },
   "browserslist": {
     "production": [

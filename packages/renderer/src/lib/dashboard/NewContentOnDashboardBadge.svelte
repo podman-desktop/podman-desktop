@@ -18,7 +18,7 @@ let notificationsUnsubscribe: Unsubscriber;
 onMount(() => {
   // if there is a new provider we display the dot
   providersUnsubscribe = providerInfos.subscribe(updatedProviders => {
-    const updatedProvidersId = updatedProviders.map(prov => prov.internalId).sort();
+    const updatedProvidersId = updatedProviders.map(prov => prov.internalId).toSorted();
     if (!hasNewProviders) {
       // if the user is in the dashboard page we do not check for new providers
       hasNewProviders = hasNewProvider(providersId, updatedProvidersId);

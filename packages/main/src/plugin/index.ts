@@ -152,7 +152,7 @@ import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
-import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
+import { IPCHandle, IPCMainOn, MainWindowDeferred } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -173,7 +173,6 @@ import product from '/@product.json' with { type: 'json' };
 
 // eslint-disable-next-line no-restricted-imports
 import rootPackage from '../../../../package.json' with { type: 'json' };
-import { MainWindowDeferred } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
@@ -279,7 +278,7 @@ export class PluginSystem {
   private uiReady = false;
 
   // true if the application is quitting
-  private isQuitting = false;
+  protected isQuitting = false;
 
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;

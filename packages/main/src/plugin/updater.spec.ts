@@ -63,6 +63,7 @@ vi.mock(import('electron-updater'), () => ({
     quitAndInstall: vi.fn(),
     checkForUpdates: vi.fn(),
     on: vi.fn(),
+    setFeedURL: vi.fn(),
     autoDownload: true,
     disableDifferentialDownload: false,
   } as unknown as AppUpdater,
@@ -167,6 +168,10 @@ beforeEach(() => {
     image: '',
   };
 
+  vi.mocked(product).update = {
+    url: '',
+  };
+
   vi.mocked(commandRegistryMock.executeCommand).mockResolvedValue(undefined);
   vi.mocked(util.isLinux).mockReturnValue(false);
 
@@ -242,6 +247,64 @@ test('expect configuration description to use product name', () => {
   expect(configurationNode?.properties?.['preferences.update.reminder']?.description).toBe(
     'Configure whether you receive update reminders when starting Custom Product Name',
   );
+});
+
+test('expect setFeedURL not to be called when product.update.url is empty', () => {
+  vi.mocked(product).update = { url: '' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.setFeedURL).not.toHaveBeenCalled();
+});
+
+test('expect setFeedURL to be called with generic provider when product.update.url is set', () => {
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({
+    provider: 'generic',
+    url: 'https://updates.example.com/releases',
+  });
+});
+
+test('expect setFeedURL to be called before checkForUpdates', () => {
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases' };
+
+  const callOrder: string[] = [];
+  vi.mocked(autoUpdater.setFeedURL).mockImplementation(() => {
+    callOrder.push('setFeedURL');
+  });
+  vi.mocked(autoUpdater.checkForUpdates).mockImplementation(() => {
+    callOrder.push('checkForUpdates');
+    // eslint-disable-next-line no-null/no-null
+    return Promise.resolve(null);
+  });
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(callOrder).toStrictEqual(['setFeedURL', 'checkForUpdates']);
 });
 
 describe('differential download', () => {

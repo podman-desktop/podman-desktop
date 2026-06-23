@@ -17,8 +17,13 @@
  ***********************************************************************/
 
 import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
+
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 
 import { BasePage } from './base-page';
+import { PodmanOnboardingPage } from './podman-onboarding-page';
+import { ResourceDetailsPage } from './resource-details-page';
 
 export class DashboardPage extends BasePage {
   readonly mainPage: Locator;
@@ -97,6 +102,55 @@ export class DashboardPage extends BasePage {
     return this.systemOverview.getByRole('button', {
       name: `Navigate to ${connectionName}`,
       exact: true,
+    });
+  }
+
+  public async expandSystemOverview(expanded: boolean): Promise<void> {
+    const isExpanded = (await this.systemOverviewButton.getAttribute('aria-expanded')) === 'true';
+    if (isExpanded !== expanded) {
+      await this.systemOverviewButton.scrollIntoViewIfNeeded();
+      await this.systemOverviewButton.click();
+      await playExpect(this.systemOverviewButton).toHaveAttribute('aria-expanded', String(expanded));
+    }
+  }
+
+  public async createPodmanMachineFromSystemOverview(
+    machineName: string,
+    {
+      isRootful = false,
+      enableUserNet = false,
+      startNow = true,
+      virtualizationProvider,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
+    } = {},
+  ): Promise<void> {
+    return test.step(`Create Podman machine '${machineName}' from System Overview`, async () => {
+      await this.expandSystemOverview(true);
+      await playExpect(this.setUpPodmanButton).toBeEnabled();
+      await this.setUpPodmanButton.scrollIntoViewIfNeeded();
+      await this.setUpPodmanButton.click();
+      const podmanOnboardingPage = new PodmanOnboardingPage(this.page);
+      await podmanOnboardingPage.createMachine(machineName, {
+        isRootful,
+        enableUserNet,
+        startNow,
+        virtualizationProvider,
+      });
+    });
+  }
+
+  public async checkSystemOverviewResourceDetails(resourceName: string): Promise<void> {
+    return test.step(`Check System Overview resource details for '${resourceName}'`, async () => {
+      await this.expandSystemOverview(true);
+      const navigateToResourceButton = this.getNavigateToConnectionButton(resourceName);
+      await playExpect(navigateToResourceButton).toBeEnabled();
+      await navigateToResourceButton.click();
+      const resourceDetails = new ResourceDetailsPage(this.page, resourceName);
+      await playExpect(resourceDetails.heading).toBeVisible();
     });
   }
 

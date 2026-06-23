@@ -143,18 +143,22 @@ export class ContainersPage extends MainPage {
 
   async openCreatePodPage(names: string[]): Promise<CreatePodsPage> {
     return test.step(`Open Create Pod page for containers: ${names}`, async () => {
-      for (const containerName of names) {
-        const row = await this.getContainerRowByName(containerName);
-        if (row === undefined) {
-          throw Error('Container cannot be podified');
-        }
-        const checkbox = row.getByRole('checkbox');
-        await checkbox.check();
-        await playExpect(checkbox).toBeChecked();
-      }
       const createPodButton = this.page.getByRole('button', { name: 'Create Pod' });
-      await playExpect(createPodButton).toBeVisible();
-      await createPodButton.click();
+      await playExpect(async () => {
+        for (const containerName of names) {
+          const row = await this.getContainerRowByName(containerName);
+          if (row === undefined) {
+            throw Error('Container cannot be podified');
+          }
+          const checkbox = row.getByRole('checkbox');
+          if (!(await checkbox.isChecked())) {
+            await checkbox.check();
+          }
+          await playExpect(checkbox).toBeChecked();
+        }
+        await playExpect(createPodButton).toBeVisible();
+        await createPodButton.click();
+      }).toPass({ timeout: 60_000 });
       return new CreatePodsPage(this.page);
     });
   }

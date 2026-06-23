@@ -16,18 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ResourceElementActions } from '/@/model/core/operations';
 import { SystemOverviewState } from '/@/model/core/states';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
   resetPodmanMachinesFromCLI,
   setEnhancedDashboardFeature,
+  waitForDashboardState,
 } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
+import { getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const PODMAN_MACHINE_NAME: string = 'podman-machine-default';
+const PODMAN_MACHINE_VISIBLE_NAME: string = 'Podman Machine';
 
 test.skip(
   isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
@@ -62,34 +68,20 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe
-  .serial('Enhanced dashboard experimental feature', { tag: '@experimental' }, () => {
+  .serial('Enhanced dashboard experimental feature', { tag: ['@experimental'] }, () => {
     test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
       // assert assets state before enabling it (disabled by default for the time being)
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      let dashboardPage = await navigationBar.openDashboard();
+      let dashboardPage = await waitForDashboardState(navigationBar, false);
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
       // enable the feature
       await setEnhancedDashboardFeature(page, navigationBar, true);
-      // 'System Overview' card may take a moment to load; refresh the view by navigating away and back
-      await playExpect
-        .poll(
-          async () => {
-            dashboardPage = await navigationBar.openDashboard();
-            if (await dashboardPage.systemOverviewButton.isVisible()) {
-              return true;
-            }
-            await navigationBar.openContainers();
-            return false;
-          },
-          { timeout: 30_000 },
-        )
-        .toBeTruthy();
+      dashboardPage = await waitForDashboardState(navigationBar, true);
       // assert assets state after enabling it
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled();
-      await dashboardPage.systemOverviewButton.scrollIntoViewIfNeeded();
-      await dashboardPage.systemOverviewButton.click();
+      await dashboardPage.expandSystemOverview(true);
       await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
       await playExpect(dashboardPage.podmanProvider).not.toBeVisible();
       await playExpect(dashboardPage.statusButton).toBeEnabled();
@@ -98,21 +90,56 @@ test.describe
       await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled();
       // disable the feature and assert everything went back to the expected state
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      dashboardPage = await navigationBar.openDashboard();
-      await playExpect
-        .poll(
-          async () => {
-            dashboardPage = await navigationBar.openDashboard();
-            if (await dashboardPage.podmanProvider.isVisible()) {
-              return true;
-            }
-            await navigationBar.openContainers();
-            return false;
-          },
-          { timeout: 30_000 },
-        )
-        .toBeTruthy();
+      dashboardPage = await waitForDashboardState(navigationBar, false);
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
+    });
+
+    test('Create Podman machine from Dashboard', async ({ page, navigationBar }) => {
+      test.setTimeout(320_000);
+
+      await test.step('Open dashboard and initialize Podman machine', async () => {
+        // enable the feature
+        await setEnhancedDashboardFeature(page, navigationBar, true);
+        let dashboardPage = await waitForDashboardState(navigationBar, true);
+        await dashboardPage.createPodmanMachineFromSystemOverview(PODMAN_MACHINE_NAME, {
+          isRootful: false,
+          enableUserNet: false,
+          startNow: true,
+          virtualizationProvider: getVirtualizationProvider(),
+        });
+        // systemOverview button -> starting up; status label -> starting (missing aria-label)
+        dashboardPage = await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, { timeout: 300_000 });
+        // systemOverview button -> systems operational; status label -> running (missing aria-label)
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
+          timeout: 300_000,
+        });
+        // click on 'status' button to go to podman machine in settings/resources
+        await playExpect(dashboardPage.statusButton).toBeEnabled();
+        await dashboardPage.statusButton.click();
+        let resourcesPage = new ResourcesPage(page);
+        await playExpect
+          .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: 30_000 })
+          .toBeTruthy();
+        const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
+        await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
+        // stop machine
+        await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Stop);
+        // come back to dashboard, button -> some systems are stopped
+        await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, { timeout: 10_000 });
+        // click on 'navigate to...' button, verify it goes to machine details
+        await dashboardPage.checkSystemOverviewResourceDetails(PODMAN_MACHINE_VISIBLE_NAME);
+        // come back to dashboard, click on status button, verify it goes to resources
+        await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboardPage.statusButton).toBeEnabled();
+        await dashboardPage.statusButton.click();
+        resourcesPage = new ResourcesPage(page);
+        await playExpect(resourcesPage.header).toBeVisible();
+      });
     });
   });

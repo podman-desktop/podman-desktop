@@ -19,7 +19,7 @@ Error: unable to start host networking: "could not find \"gvproxy\" in one of [/
 #### Solution
 
 1. Download `gvproxy` from the [gvisor-tap-vsock release page](https://github.com/containers/gvisor-tap-vsock/releases).
-2. Build the `podman-mac-helper` from the source code on the [Podman GitHub page](https://github.com/containers/podman/tree/main/cmd/podman-mac-helper).
+2. Build the `podman-mac-helper` from the source code on the [Podman GitHub page](https://github.com/podman-container-tools/podman/tree/main/cmd/podman-mac-helper).
 3. Add the `helpers_binaries_dir` entry to `~/.config/containers/containers.conf`:
 
 ```sh
@@ -28,7 +28,7 @@ Error: unable to start host networking: "could not find \"gvproxy\" in one of [/
 helper_binaries_dir=["/Users/user/example_directory"]
 ```
 
-**NOTE**: A pre-built binary will be added to the Podman release page so you do not have to build `podman-mac-helper`. An [issue is open for this](https://github.com/containers/podman/issues/16746).
+**NOTE**: A pre-built binary will be added to the Podman release page so you do not have to build `podman-mac-helper`. An [issue is open for this](https://github.com/podman-container-tools/podman/issues/16746).
 
 ## Unable to locate Podman Engine
 
@@ -161,7 +161,7 @@ Keep your brew-based installation and apply one of these workarounds:
 #### Additional resources
 
 - [Homebrew issue #140244](https://github.com/Homebrew/homebrew-core/issues/140244).
-- [Podman issue #19708](https://github.com/containers/podman/issues/19708).
+- [Podman issue #19708](https://github.com/podman-container-tools/podman/issues/19708).
 
 ## On Apple silicon, the Podman Machine does not start
 
@@ -241,7 +241,7 @@ For M3 processors:
 
 #### Additional resources
 
-- [Issue #20776](https://github.com/containers/podman/issues/20776)
+- [Issue #20776](https://github.com/podman-container-tools/podman/issues/20776)
 
 ## `podman machine` CLI commands do not work with `libkrun` provider type without manual configuration
 

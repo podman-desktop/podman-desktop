@@ -10,7 +10,8 @@
     "rootDirs": ["src", "scripts"],
     "outDir": "dist",
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src", "types/*.d.ts", "../../types/**/*.d.ts", "scripts"]
 }

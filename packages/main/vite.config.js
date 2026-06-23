@@ -74,6 +74,7 @@ const config = {
     retry: 3, // Retries failing tests up to 3 times
     environment: 'node',
     include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    setupFiles: ['./vitest.setup.ts'],
   },
 };
 

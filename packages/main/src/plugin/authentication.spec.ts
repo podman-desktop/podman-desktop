@@ -26,7 +26,15 @@ import type {
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { AuthenticationImpl } from './authentication.js';
+import {
+  ALLOW_ACCESS_ALLOW,
+  ALLOW_ACCESS_DENY,
+  AuthenticationImpl,
+  SIGN_IN_ALLOW,
+  SIGN_IN_CANCEL,
+  SIGN_OUT_CANCEL,
+  SIGN_OUT_CONFIRM,
+} from './authentication.js';
 import { Emitter as EventEmitter } from './events/emitter.js';
 import type { MessageBox } from './message-box.js';
 
@@ -74,7 +82,7 @@ const apiSender: ApiSenderType = {
 };
 
 const messageBox: MessageBox = {
-  showMessageBox: () => Promise.resolve({ response: 1 }),
+  showMessageBox: () => Promise.resolve({ response: SIGN_IN_ALLOW }),
 } as unknown as MessageBox;
 
 let authModule: AuthenticationImpl;
@@ -132,8 +140,8 @@ test('Authentication does not create new auth request when silent is true and se
   const mb = {
     showMessageBox: vi
       .fn()
-      .mockResolvedValueOnce({ response: 1 }) // "Sign In?" dialog: Allow (index 1)
-      .mockResolvedValueOnce({ response: 0 }), // "Allow Access" dialog: Allow (index 0)
+      .mockResolvedValueOnce({ response: SIGN_IN_ALLOW })
+      .mockResolvedValueOnce({ response: ALLOW_ACCESS_ALLOW }),
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
@@ -160,7 +168,7 @@ test('Authentication does not create new auth request when silent is true and se
 
 test('Authentication does not create session if user has not allowed it', async () => {
   const mb = {
-    showMessageBox: () => Promise.resolve({ response: 0 }),
+    showMessageBox: () => Promise.resolve({ response: SIGN_IN_CANCEL }),
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
@@ -315,7 +323,7 @@ test('authentication shows confirmation request when signing out from a session'
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
 
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: SIGN_IN_ALLOW });
 
   const session1 = await authentication.getSession(
     { id: 'ext1', label: 'Ext 1' },
@@ -325,7 +333,7 @@ test('authentication shows confirmation request when signing out from a session'
   );
 
   vi.mocked(mb.showMessageBox).mockReset();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: SIGN_OUT_CANCEL });
 
   await authentication.signOut('company.auth-provider', session1!.id);
 
@@ -337,8 +345,8 @@ test('authentication shows confirmation request when signing out from a session'
 
   vi.mocked(mb.showMessageBox).mockReset();
   vi.mocked(mb.showMessageBox)
-    .mockResolvedValueOnce({ response: 0 }) // "Allow Access" dialog: Allow (index 0) for ext2
-    .mockResolvedValueOnce({ response: 1 }); // "Sign Out?" dialog: Sign Out (index 1)
+    .mockResolvedValueOnce({ response: ALLOW_ACCESS_ALLOW })
+    .mockResolvedValueOnce({ response: SIGN_OUT_CONFIRM });
 
   await authentication.getSession({ id: 'ext2', label: 'Ext 2' }, 'company.auth-provider', ['scope1', 'scope2'], {
     createIfNone: true,
@@ -462,7 +470,7 @@ test('getSession returns session when extension access is allowed', async () => 
 
 test('getSession prompts for allowance when accessing session without prior decision', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // "Sign In?" dialog: Allow (index 1)
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
@@ -480,7 +488,7 @@ test('getSession prompts for allowance when accessing session without prior deci
 
   // Reset mock to track only the next call
   vi.mocked(mb.showMessageBox).mockClear();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // "Allow Access" dialog: Allow (index 0)
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
   // ext2 tries to access the session - should prompt for allowance
   const sessionForExt2 = await authentication.getSession(
@@ -508,7 +516,7 @@ test('getSession prompts for allowance when accessing session without prior deci
 
 test('getSession denies access when user clicks Deny on allowance prompt but does not store denial', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // "Sign In?" dialog: Allow (index 1)
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
@@ -526,7 +534,7 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
 
   // Reset mock - user will click "Deny" this time
   vi.mocked(mb.showMessageBox).mockClear();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 }); // User clicks "Deny"
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_DENY });
 
   // ext2 tries to access the session - user denies
   const sessionForExt2 = await authentication.getSession(
@@ -544,7 +552,7 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
 
 test('getSession auto-allows creating extension to reuse its own session in silent mode', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
@@ -584,7 +592,7 @@ test('getSession auto-allows creating extension to reuse its own session in sile
 
 test('getSession returns undefined in silent mode when no allowance decision exists', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
