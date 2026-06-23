@@ -2869,7 +2869,7 @@ test('container logs reassembles multi-byte UTF-8 characters split across chunks
 
   const dataChunks: string[] = [];
   let ended = false;
-  const endPromise = new Promise<void>(resolve => {
+  const endPromise = new Promise<void>((resolve, reject) => {
     const callback = (name: string, data: string): void => {
       if (name === 'data') {
         dataChunks.push(data);
@@ -2880,7 +2880,7 @@ test('container logs reassembles multi-byte UTF-8 characters split across chunks
     };
     containerRegistry
       .logsContainer({ engineId: 'podman', id: 'containerId', callback })
-      .catch((err: unknown) => console.error(err));
+      .catch((err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
   });
 
   // "🚀" (U+1F680) is four UTF-8 bytes: F0 9F 9A 80. Split it across two
