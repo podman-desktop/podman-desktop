@@ -55,6 +55,7 @@ vi.mock(import('/@/lib/actions/ContributionActions.svelte'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'startContainer', { value: vi.fn() });
+  Object.defineProperty(window, 'unpauseContainer', { value: vi.fn() });
   Object.defineProperty(window, 'stopContainer', { value: vi.fn() });
   Object.defineProperty(window, 'restartContainer', { value: vi.fn() });
   Object.defineProperty(window, 'deleteContainer', { value: vi.fn() });
@@ -92,6 +93,41 @@ test('Expect no error and status stopping container', async () => {
 
   expect(container.state).toEqual('STOPPING');
   expect(container.actionError).toEqual('');
+  expect(updateMock).toHaveBeenCalled();
+});
+
+test('Expect no error and status starting for paused container', async () => {
+  // set container state to paused
+  container.state = 'PAUSED';
+  render(ContainerActions, { container, onUpdate: updateMock });
+
+  // click on start button
+  const startButton = screen.getByRole('button', { name: 'Start Container' });
+  await fireEvent.click(startButton);
+
+  expect(container.state).toEqual('STARTING');
+  expect(window.unpauseContainer).toHaveBeenCalled();
+  expect(window.startContainer).not.toHaveBeenCalled();
+  expect(container.actionError).toEqual('');
+  expect(updateMock).toHaveBeenCalled();
+});
+
+test('Expect error and status error for unpausing container', async () => {
+  // set container state to paused
+  container.state = 'PAUSED';
+  const error = new Error('unpause failed');
+  render(ContainerActions, { container, onUpdate: updateMock });
+
+  vi.mocked(window.unpauseContainer).mockRejectedValue(error);
+
+  // click on start button
+  const startButton = screen.getByRole('button', { name: 'Start Container' });
+  await fireEvent.click(startButton);
+
+  expect(window.unpauseContainer).toHaveBeenCalled();
+  expect(window.startContainer).not.toHaveBeenCalled();
+  expect(container.actionError).toContain(error);
+  expect(container.state).toEqual('ERROR');
   expect(updateMock).toHaveBeenCalled();
 });
 
