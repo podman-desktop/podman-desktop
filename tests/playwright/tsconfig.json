@@ -16,7 +16,7 @@
     "types": ["node"],
 
     "paths": {
-      "/@/*": ["src/*"]
+      "/@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "../types/**/*.d.ts", "../../playwright.config.ts", "scripts/*"],
