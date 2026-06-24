@@ -24,7 +24,7 @@ import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { render, screen } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
@@ -49,6 +49,10 @@ beforeAll(() => {
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
+});
+
+beforeEach(() => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(160);
 });
 
 test('Test rendering of the navigation bar with empty items', async (_arg: unknown) => {
@@ -78,7 +82,6 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
     meta,
     exitSettingsCallback: () => {},
   });
-
   const navigationBar = screen.getByRole('navigation', { name: 'AppNavigation' });
   expect(navigationBar).toBeInTheDocument();
 
