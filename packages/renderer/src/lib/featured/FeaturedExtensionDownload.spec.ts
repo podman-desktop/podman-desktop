@@ -24,6 +24,10 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 
+vi.mock(import('/@/stores/extensions'), () => ({
+  fetchExtensions: vi.fn(async () => undefined),
+}));
+
 vi.mock(import('/@/stores/webviews'), () => ({
   fetchWebviews: vi.fn(async () => undefined),
 }));
@@ -42,7 +46,6 @@ vi.mock(import('/@/lib/extensions/extension-catalog-settings.svelte'), () => ({
   isAutoUpdateEnabled: vi.fn(() => false),
 }));
 
-// fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
@@ -65,13 +68,36 @@ test('Expect that the install button is hidden if extension is not installable',
 
   render(FeaturedExtensionDownload, { extension: featuredExtension });
 
-  // expect to have the button if installable
   const installButton = screen.queryByRole('button', { name: 'Install foo.bar Extension' });
-  // expect the button is not there
   expect(installButton).not.toBeInTheDocument();
 });
 
-test('Expect that we can see the button and open the install version modal', async () => {
+test('Expect install button hides after install without parent rerender', async () => {
+  const featuredExtension: FeaturedExtension = {
+    builtin: true,
+    id: 'foo.bar',
+    displayName: 'FooBar',
+    description: 'This is FooBar description',
+    icon: 'data:image/png;base64,foobar',
+    categories: [],
+    fetchable: true,
+    fetchLink: 'oci-hello/world',
+    fetchVersion: '1.2.3',
+    installed: false,
+  };
+
+  render(FeaturedExtensionDownload, { extension: featuredExtension });
+
+  vi.mocked(window.extensionInstallFromImage).mockResolvedValue(undefined);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Install foo.bar Extension' }));
+
+  await vi.waitFor(() => {
+    expect(screen.queryByRole('button', { name: 'Install foo.bar Extension' })).not.toBeInTheDocument();
+  });
+});
+
+test('Expect that clicking install installs the latest version directly', async () => {
   let featuredExtension: FeaturedExtension = {
     builtin: true,
     id: 'foo.bar',
@@ -90,11 +116,6 @@ test('Expect that we can see the button and open the install version modal', asy
   const installButton = screen.getByRole('button', { name: 'Install foo.bar Extension' });
   expect(installButton).toBeInTheDocument();
 
-  await fireEvent.click(installButton);
-
-  expect(screen.getByRole('dialog')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Install v1.2.3' })).toBeEnabled();
-
   vi.mocked(window.extensionInstallFromImage).mockImplementation(async () => {
     featuredExtension.installed = true;
     featuredExtension.fetchable = false;
@@ -102,10 +123,12 @@ test('Expect that we can see the button and open the install version modal', asy
     await renderResult.rerender({ extension: featuredExtension });
   });
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Install v1.2.3' }));
+  await fireEvent.click(installButton);
 
   expect(vi.mocked(window.extensionInstallFromImage)).toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-  const installButtonAfterClick = screen.queryByRole('button', { name: 'Install foo.bar Extension' });
-  expect(installButtonAfterClick).not.toBeInTheDocument();
+  await vi.waitFor(() => {
+    expect(screen.queryByRole('button', { name: 'Install foo.bar Extension' })).not.toBeInTheDocument();
+  });
 });

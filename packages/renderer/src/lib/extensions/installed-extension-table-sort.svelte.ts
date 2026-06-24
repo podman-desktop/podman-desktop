@@ -16,14 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { getNewBadgeInstalledAt, isNewBadgeActive } from './extension-catalog-settings.svelte';
 import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
-import { resolveExtensionOriginSortLabel } from './extension-origin-utils';
 import { USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
-import type { ExtensionsUtils } from './extensions-utils';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 
-export type InstalledTableSortColumn = 'Name' | 'Publisher' | 'Version' | 'Status' | 'Origin';
+export type InstalledTableSortColumn = 'Name' | 'Version' | 'Status';
 
 export const installedTableSortState = $state<{
   value: { column: InstalledTableSortColumn; ascending: boolean } | null;
@@ -46,27 +43,14 @@ export function resetInstalledTableSort(): void {
   installedTableSortState.value = null;
 }
 
-function resolveOriginLabel(row: InstalledExtensionTableRow): string {
-  return resolveExtensionOriginSortLabel(row.extension, {
-    isVerified: row.catalogExtension.isVerified,
-  });
-}
-
 function compareRows(
   a: InstalledExtensionTableRow,
   b: InstalledExtensionTableRow,
   column: InstalledTableSortColumn,
-  extensionsUtils: ExtensionsUtils,
 ): number {
   switch (column) {
     case 'Name':
       return a.name.localeCompare(b.name);
-    case 'Publisher':
-      return extensionsUtils
-        .resolvePublisherDisplayName(a.extension, a.catalogExtension.publisherDisplayName)
-        .localeCompare(
-          extensionsUtils.resolvePublisherDisplayName(b.extension, b.catalogExtension.publisherDisplayName),
-        );
     case 'Version':
       return (a.catalogExtension.installedVersion ?? '').localeCompare(
         b.catalogExtension.installedVersion ?? '',
@@ -77,8 +61,6 @@ function compareRows(
       );
     case 'Status':
       return (a.extension.state ?? '').localeCompare(b.extension.state ?? '');
-    case 'Origin':
-      return resolveOriginLabel(a).localeCompare(resolveOriginLabel(b));
     default:
       return 0;
   }
@@ -86,14 +68,11 @@ function compareRows(
 
 function pinInstalledTableRows(rows: InstalledExtensionTableRow[]): InstalledExtensionTableRow[] {
   const manualUpdate: InstalledExtensionTableRow[] = [];
-  const pinned: InstalledExtensionTableRow[] = [];
   const rest: InstalledExtensionTableRow[] = [];
 
   for (const row of rows) {
     if (extensionRequiresManualUpdate(row.catalogExtension)) {
       manualUpdate.push(row);
-    } else if (isNewBadgeActive(row.extension.id)) {
-      pinned.push(row);
     } else {
       rest.push(row);
     }
@@ -109,22 +88,18 @@ function pinInstalledTableRows(rows: InstalledExtensionTableRow[]): InstalledExt
     return a.name.localeCompare(b.name);
   });
 
-  pinned.sort((a, b) => (getNewBadgeInstalledAt(b.extension.id) ?? 0) - (getNewBadgeInstalledAt(a.extension.id) ?? 0));
   rest.sort((a, b) => a.name.localeCompare(b.name));
 
-  return [...pinned, ...manualUpdate, ...rest];
+  return [...manualUpdate, ...rest];
 }
 
-export function orderInstalledTableRows(
-  rows: InstalledExtensionTableRow[],
-  extensionsUtils: ExtensionsUtils,
-): InstalledExtensionTableRow[] {
+export function orderInstalledTableRows(rows: InstalledExtensionTableRow[]): InstalledExtensionTableRow[] {
   const sort = installedTableSortState.value;
   if (!sort) {
     return pinInstalledTableRows(rows);
   }
 
-  const sorted = [...rows].sort((a, b) => compareRows(a, b, sort.column, extensionsUtils));
+  const sorted = [...rows].sort((a, b) => compareRows(a, b, sort.column));
   if (!sort.ascending) {
     sorted.reverse();
   }

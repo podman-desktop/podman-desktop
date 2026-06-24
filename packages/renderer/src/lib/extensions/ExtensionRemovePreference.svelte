@@ -38,9 +38,9 @@ function handleRemove(): void {
         type="danger"
         icon={faTrash}
         disabled={!canRemove}
-        title="Remove {extension.displayName}"
+        title="Uninstall {extension.displayName}"
         on:click={handleRemove}>
-        Remove
+        Uninstall
       </Button>
     </div>
   </div>

@@ -27,6 +27,7 @@ import {
   isExtensionRemovableInUi,
   resolveExtensionOriginSortLabel,
   resolveExtensionVerificationStatus,
+  shouldShowBuiltInNameIndicator,
 } from './extension-origin-utils';
 
 function createInstalled(id: string, overrides: Partial<CombinedExtensionInfoUI> = {}): CombinedExtensionInfoUI {
@@ -94,5 +95,13 @@ describe('extension-origin-utils', () => {
     expect(isExtensionRemovableInUi(createInstalled('podman-desktop.kind'))).toBe(false);
     expect(isExtensionRemovableInUi(createInstalled('podman-desktop.kind'), true)).toBe(true);
     expect(isExtensionRemovableInUi(createInstalled('podman-desktop.quadlet', { removable: true }))).toBe(true);
+  });
+
+  test('shouldShowBuiltInNameIndicator matches non-removable platform extensions', () => {
+    expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.compose'))).toBe(true);
+    expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.kind'))).toBe(true);
+    expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.kind'), true)).toBe(false);
+    expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.quadlet', { removable: true }))).toBe(false);
+    expect(shouldShowBuiltInNameIndicator(createInstalled('local-dev', { devMode: true }))).toBe(false);
   });
 });

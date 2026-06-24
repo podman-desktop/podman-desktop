@@ -3,7 +3,6 @@ import Badge from '/@/lib/ui/Badge.svelte';
 
 import {
   EXTENSION_BUILTIN_CHIP_LABEL,
-  EXTENSION_BUILTIN_CHIP_TEXT_CLASS,
   EXTENSION_CHIP_BADGE_CLASS,
   EXTENSION_CHIP_COLORS,
   EXTENSION_CHIP_TEXT_CLASS,
@@ -19,15 +18,15 @@ export let extension: { id: string; type: 'dd' | 'pd'; removable: boolean; devMo
       label="Docker Desktop extension"
       color={EXTENSION_CHIP_COLORS.dockerDesktop}
       class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.dockerDesktopText}`} />
-  {:else if extension.devMode}
-    <Badge
-      label="DevMode extension"
-      color={EXTENSION_CHIP_COLORS.devMode}
-      class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {:else if isBuiltInExtension(extension)}
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
-      color={EXTENSION_CHIP_COLORS.builtin}
-      class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
+      color=""
+      class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+  {:else if extension.devMode}
+    <Badge
+      label="DevMode extension"
+      color=""
+      class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.devMode} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
 </div>

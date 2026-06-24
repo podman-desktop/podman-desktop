@@ -16,19 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import {
-  markNewlyInstalled,
-  NEW_BADGE_DURATION_MS,
-  newlyInstalledAt,
-  refreshNewBadges,
-} from './extension-catalog-settings.svelte';
 import { USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
-import { ExtensionsUtils } from './extensions-utils';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 import {
   applyInstalledTableSort,
@@ -72,19 +65,12 @@ function createRow(id: string, name: string, options?: { hasUpdate?: boolean }):
 }
 
 describe('installed-extension-table-sort', () => {
-  const extensionsUtils = new ExtensionsUtils();
-
   beforeEach(() => {
-    newlyInstalledAt.clear();
     resetInstalledTableSort();
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-06-15T10:00:00Z'));
   });
 
   afterEach(() => {
-    newlyInstalledAt.clear();
     resetInstalledTableSort();
-    vi.useRealTimers();
   });
 
   test('pins manual update demo rows above other installed extensions', () => {
@@ -95,7 +81,7 @@ describe('installed-extension-table-sort', () => {
     ];
     rows[1].catalogExtension.fetchVersion = '1.1.0';
 
-    const ordered = orderInstalledTableRows(rows, extensionsUtils);
+    const ordered = orderInstalledTableRows(rows);
 
     expect(ordered.map(row => row.extension.id)).toEqual([
       USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
@@ -104,64 +90,20 @@ describe('installed-extension-table-sort', () => {
     ]);
   });
 
-  test('pins newly installed extensions above manual update demo rows', () => {
-    markNewlyInstalled('podman-desktop.quadlet');
-    newlyInstalledAt.set('podman-desktop.quadlet', Date.now());
+  test('sorts non-update extensions alphabetically', () => {
+    const rows = [createRow('beta', 'Beta'), createRow('alpha', 'Alpha')];
 
-    const rows = [
-      createRow(USE_CASE_EXTENSION_IDS.communityActiveWithUpdate, 'Kind', { hasUpdate: true }),
-      createRow('podman-desktop.quadlet', 'Podman Quadlet'),
-    ];
-    rows[0].catalogExtension.fetchVersion = '1.1.0';
+    const ordered = orderInstalledTableRows(rows);
 
-    const ordered = orderInstalledTableRows(rows, extensionsUtils);
-
-    expect(ordered.map(row => row.extension.id)).toEqual([
-      'podman-desktop.quadlet',
-      USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
-    ]);
-  });
-
-  test('pins newly installed extensions to the top until user sorts', () => {
-    markNewlyInstalled('new-ext');
-    newlyInstalledAt.set('new-ext', Date.now());
-
-    const rows = [createRow('alpha', 'Alpha'), createRow('new-ext', 'New Extension'), createRow('beta', 'Beta')];
-    const ordered = orderInstalledTableRows(rows, extensionsUtils);
-
-    expect(ordered.map(row => row.extension.id)).toEqual(['new-ext', 'alpha', 'beta']);
+    expect(ordered.map(row => row.extension.id)).toEqual(['alpha', 'beta']);
   });
 
   test('uses standard sorting after user applies a column sort', () => {
-    markNewlyInstalled('new-ext');
-    newlyInstalledAt.set('new-ext', Date.now());
-
-    const rows = [createRow('alpha', 'Alpha'), createRow('new-ext', 'New Extension'), createRow('beta', 'Beta')];
+    const rows = [createRow('beta', 'Beta'), createRow('alpha', 'Alpha')];
 
     applyInstalledTableSort('Name');
-    const ordered = orderInstalledTableRows(rows, extensionsUtils);
+    const ordered = orderInstalledTableRows(rows);
 
-    expect(ordered.map(row => row.extension.id)).toEqual(['alpha', 'beta', 'new-ext']);
-  });
-
-  test('returns normal order after the new badge expires', () => {
-    markNewlyInstalled('new-ext');
-
-    const rows = [createRow('alpha', 'Alpha'), createRow('new-ext', 'New Extension'), createRow('beta', 'Beta')];
-
-    expect(orderInstalledTableRows(rows, extensionsUtils).map(row => row.extension.id)).toEqual([
-      'new-ext',
-      'alpha',
-      'beta',
-    ]);
-
-    vi.advanceTimersByTime(NEW_BADGE_DURATION_MS + 1);
-    refreshNewBadges();
-
-    expect(orderInstalledTableRows(rows, extensionsUtils).map(row => row.extension.id)).toEqual([
-      'alpha',
-      'beta',
-      'new-ext',
-    ]);
+    expect(ordered.map(row => row.extension.id)).toEqual(['alpha', 'beta']);
   });
 });

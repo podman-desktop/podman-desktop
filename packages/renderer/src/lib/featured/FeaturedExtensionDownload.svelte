@@ -3,15 +3,16 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 
 import type { CatalogExtensionInfoUI, CatalogExtensionVersionUI } from '/@/lib/extensions/catalog-extension-info-ui';
-import ChangeVersionModal from '/@/lib/extensions/ChangeVersionModal.svelte';
 import { buildExtensionInstallingTooltip, EXTENSION_INSTALL_TOOLTIP } from '/@/lib/extensions/extension-badge-styles';
-import { markNewlyInstalled, setAutoUpdateEnabled } from '/@/lib/extensions/extension-catalog-settings.svelte';
+import { markNewlyInstalled } from '/@/lib/extensions/extension-catalog-settings.svelte';
 import { syncExtensionNavigationAfterInstall } from '/@/lib/extensions/extension-nav-pointer.svelte';
 import {
+  getLatestAvailableVersion,
   normalizeVersionValue,
   resolveExtensionVersionOciUri,
 } from '/@/lib/extensions/extension-version-update.svelte';
 import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
+import { fetchExtensions } from '/@/stores/extensions';
 
 export let extension: {
   id: string;
@@ -34,11 +35,12 @@ export let catalogExtension: CatalogExtensionInfoUI | undefined = undefined;
 export let oninstall: (extensionId: string) => void = () => {};
 
 let installInProgress = false;
+let installCompleted = false;
 let logs: string[] = [];
 let errorInstall = '';
 let percentage = '0%';
-let showInstallVersionModal = false;
 
+$: showInstallButton = extension.fetchable && !extension.isInstalled && !installCompleted;
 $: installTooltip = installInProgress ? buildExtensionInstallingTooltip(percentage) : EXTENSION_INSTALL_TOOLTIP;
 
 function buildCatalogExtensionForInstall(): CatalogExtensionInfoUI {
@@ -79,36 +81,19 @@ function buildCatalogExtensionForInstall(): CatalogExtensionInfoUI {
   };
 }
 
-function openInstallVersionModal(): void {
-  showInstallVersionModal = true;
-}
-
-function closeInstallVersionModal(): void {
-  showInstallVersionModal = false;
-}
-
-async function installExtension(targetVersion?: string, autoUpdateEnabled?: boolean): Promise<void> {
+async function installExtension(): Promise<void> {
   errorInstall = '';
-  console.log('User asked to install the extension with the following properties', extension, targetVersion);
   logs = [];
-
   installInProgress = true;
 
   const catalog = buildCatalogExtensionForInstall();
-  const normalizedTarget = targetVersion ? normalizeVersionValue(targetVersion) : undefined;
-  const ociImage =
-    (normalizedTarget ? resolveExtensionVersionOciUri(catalog, normalizedTarget) : undefined) ??
-    extension?.fetchLink?.trim();
+  const latestVersion = normalizeVersionValue(getLatestAvailableVersion(catalog));
+  const ociImage = resolveExtensionVersionOciUri(catalog, latestVersion) ?? extension?.fetchLink?.trim();
 
   if (!ociImage) {
-    console.log('No image to install');
     errorInstall = 'No image to install';
     installInProgress = false;
     return;
-  }
-
-  if (autoUpdateEnabled !== undefined) {
-    setAutoUpdateEnabled(extension.id, autoUpdateEnabled);
   }
 
   try {
@@ -117,16 +102,12 @@ async function installExtension(targetVersion?: string, autoUpdateEnabled?: bool
       ociImage,
       (data: string) => {
         logs = [...logs, data];
-        console.log('data', data);
-
         const percentageMatch = percentageMatchRegexp.exec(data);
-
         if (percentageMatch) {
           percentage = percentageMatch[1] + '%';
         }
       },
       (error: string) => {
-        console.log(`got an error when installing ${extension.id}`, error);
         installInProgress = false;
         errorInstall = error;
       },
@@ -134,12 +115,12 @@ async function installExtension(targetVersion?: string, autoUpdateEnabled?: bool
     );
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
-    console.log(`[DTUX-2854] Installation completed, marking as newly installed: ${extension.id}`);
+    installCompleted = true;
+    await fetchExtensions();
     await syncExtensionNavigationAfterInstall(extension.id);
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
   } catch (error) {
-    console.log('error', error);
     errorInstall = String(error);
   }
   installInProgress = false;
@@ -147,19 +128,14 @@ async function installExtension(targetVersion?: string, autoUpdateEnabled?: bool
 
 function handleInstallClick(event: MouseEvent): void {
   event.stopPropagation();
-  openInstallVersionModal();
-}
-
-function handleInstallFromModal(version: string, autoUpdateEnabled: boolean): void {
-  closeInstallVersionModal();
-  installExtension(version, autoUpdateEnabled).catch((error: unknown) => {
+  installExtension().catch((error: unknown) => {
     console.error('Unable to install extension', error);
   });
 }
 </script>
 
 <ErrorMessage icon wrapMessage class="-top-[15px] right-0 absolute" error={errorInstall}/>
-{#if extension.fetchable}
+{#if showInstallButton}
   <Tooltip top tip={installTooltip} class="inline-flex shrink-0">
     <button
       aria-label="Install {extension.id} Extension"
@@ -176,12 +152,4 @@ function handleInstallFromModal(version: string, autoUpdateEnabled: boolean): vo
         style="font-size: 8px">{percentage}</span>
     </button>
   </Tooltip>
-{/if}
-
-{#if showInstallVersionModal}
-  <ChangeVersionModal
-    mode="install"
-    extension={buildCatalogExtensionForInstall()}
-    closeCallback={closeInstallVersionModal}
-    onInstall={handleInstallFromModal} />
 {/if}

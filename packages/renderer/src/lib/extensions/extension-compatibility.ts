@@ -20,6 +20,8 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import type { ExtensionDetailsWarning } from './extension-details-warning';
+import { shouldHideExtensionErrorPresentation } from './extension-lifecycle-toggle';
+import { isExtensionUserDisabled } from './extension-lifecycle-user-toggle';
 import { arePrototypeUseCasesEnabled, USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
 import { normalizeVersionValue } from './extension-version-update.svelte';
 
@@ -117,6 +119,15 @@ export function resolveExtensionCompatibilityIssues(
   installedExtensions: CombinedExtensionInfoUI[],
   podmanDesktopVersion?: string,
 ): ExtensionCompatibilityIssue[] {
+  if (isExtensionUserDisabled(extension.id)) {
+    return [];
+  }
+
+  const installedExtension = installedExtensions.find(item => item.id === extension.id);
+  if (shouldHideExtensionErrorPresentation(installedExtension?.state)) {
+    return [];
+  }
+
   const requirements = getPrototypeCompatibilityRequirements(extension.id);
   if (!requirements) {
     return [];

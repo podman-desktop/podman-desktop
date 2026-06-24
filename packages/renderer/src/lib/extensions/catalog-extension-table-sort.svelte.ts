@@ -17,10 +17,8 @@
  ***********************************************************************/
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import { getNewBadgeInstalledAt, isNewBadgeActive } from './extension-catalog-settings.svelte';
-import { resolveExtensionOriginSortLabel } from './extension-origin-utils';
 
-export type CatalogTableSortColumn = 'Name' | 'Publisher' | 'Version' | 'Status' | 'Origin';
+export type CatalogTableSortColumn = 'Name' | 'Publisher' | 'Version' | 'Status';
 
 export const catalogTableSortState = $state<{
   value: { column: CatalogTableSortColumn; ascending: boolean } | null;
@@ -37,12 +35,6 @@ export function applyCatalogTableSort(column: CatalogTableSortColumn): void {
 
 export function resetCatalogTableSort(): void {
   catalogTableSortState.value = null;
-}
-
-function resolveOriginLabel(extension: CatalogExtensionInfoUI): string {
-  return resolveExtensionOriginSortLabel(extension.installedExtension, {
-    isVerified: extension.isVerified,
-  });
 }
 
 function resolveStatusLabel(extension: CatalogExtensionInfoUI): string {
@@ -73,8 +65,6 @@ function compareExtensions(
       return resolveVersionLabel(a).localeCompare(resolveVersionLabel(b), undefined, { numeric: true });
     case 'Status':
       return resolveStatusLabel(a).localeCompare(resolveStatusLabel(b));
-    case 'Origin':
-      return resolveOriginLabel(a).localeCompare(resolveOriginLabel(b));
     default:
       return 0;
   }
@@ -90,28 +80,10 @@ function defaultCatalogOrder(a: CatalogExtensionInfoUI, b: CatalogExtensionInfoU
   return a.displayName.localeCompare(b.displayName);
 }
 
-function pinNewlyInstalledExtensions(extensions: CatalogExtensionInfoUI[]): CatalogExtensionInfoUI[] {
-  const pinned: CatalogExtensionInfoUI[] = [];
-  const rest: CatalogExtensionInfoUI[] = [];
-
-  for (const extension of extensions) {
-    if (isNewBadgeActive(extension.id)) {
-      pinned.push(extension);
-    } else {
-      rest.push(extension);
-    }
-  }
-
-  pinned.sort((a, b) => (getNewBadgeInstalledAt(b.id) ?? 0) - (getNewBadgeInstalledAt(a.id) ?? 0));
-  rest.sort(defaultCatalogOrder);
-
-  return [...pinned, ...rest];
-}
-
 export function orderCatalogTableExtensions(extensions: CatalogExtensionInfoUI[]): CatalogExtensionInfoUI[] {
   const sort = catalogTableSortState.value;
   if (!sort) {
-    return pinNewlyInstalledExtensions(extensions);
+    return [...extensions].sort(defaultCatalogOrder);
   }
 
   const sorted = [...extensions].sort((a, b) => compareExtensions(a, b, sort.column));

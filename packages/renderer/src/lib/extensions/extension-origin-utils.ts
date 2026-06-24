@@ -109,3 +109,15 @@ export function isExtensionRemovableInUi(
 
   return installed.removable ? true : fetchable;
 }
+
+/** Show the built-in shield next to the name when uninstall is blocked for platform extensions. */
+export function shouldShowBuiltInNameIndicator(
+  installed?: Pick<CombinedExtensionInfoUI, 'id' | 'removable' | 'devMode' | 'type'>,
+  fetchable = false,
+): boolean {
+  if (!installed || installed.devMode || installed.type === 'dd') {
+    return false;
+  }
+
+  return !isExtensionRemovableInUi(installed, fetchable);
+}

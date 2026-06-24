@@ -52,6 +52,7 @@ export interface CatalogListFilters {
   verified?: boolean;
   hasUpdate?: boolean;
   featured?: boolean;
+  category?: string;
 }
 
 export type CatalogViewMode = 'grid' | 'table';

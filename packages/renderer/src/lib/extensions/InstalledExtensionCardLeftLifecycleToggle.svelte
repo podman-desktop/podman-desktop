@@ -10,6 +10,7 @@ import {
   getExtensionLifecycleToggleLabel,
   isExtensionLifecycleEnabled,
 } from './extension-lifecycle-toggle';
+import { markExtensionUserDisabled, markExtensionUserEnabled } from './extension-lifecycle-user-toggle';
 
 interface Props {
   extension: CombinedExtensionInfoUI;
@@ -32,8 +33,10 @@ async function toggleExtension(): Promise<void> {
   inProgress = true;
   if (isExtensionLifecycleEnabled(extension.state)) {
     await window.stopExtension(extension.id);
+    markExtensionUserDisabled(extension.id);
   } else {
     await window.startExtension(extension.id);
+    markExtensionUserEnabled(extension.id);
   }
   inProgress = false;
 }

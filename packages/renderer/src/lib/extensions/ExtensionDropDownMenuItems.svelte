@@ -53,6 +53,7 @@ onDestroy(() => {
 </script>
 
 <div
+  role="menu"
   data-extension-dropdown-menu={menuId}
   title="Drop Down Menu Items"
   bind:clientHeight={dropDownHeight}

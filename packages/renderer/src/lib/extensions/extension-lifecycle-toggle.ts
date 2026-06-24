@@ -37,3 +37,7 @@ export function canToggleExtensionLifecycle(state: string): boolean {
 export function getExtensionLifecycleToggleAction(state: string): 'start' | 'stop' {
   return isExtensionLifecycleEnabled(state) ? 'stop' : 'start';
 }
+
+export function shouldHideExtensionErrorPresentation(state: string | undefined): boolean {
+  return state === 'stopped' || state === 'stopping';
+}

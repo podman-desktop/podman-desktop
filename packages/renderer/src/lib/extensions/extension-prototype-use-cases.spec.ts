@@ -22,6 +22,11 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { isAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import {
+  markExtensionUserDisabled,
+  markExtensionUserEnabled,
+  resetExtensionLifecycleUserTogglesForTests,
+} from './extension-lifecycle-user-toggle';
 import { getPrototypeInstalledDemos } from './extension-prototype-installed-demos';
 import {
   applyPrototypeCatalogUseCaseOverlay,
@@ -37,6 +42,7 @@ describe('prototype use cases on real extensions', () => {
 
   afterEach(() => {
     setPrototypeUseCasesEnabled(true);
+    resetExtensionLifecycleUserTogglesForTests();
   });
 
   test('does not inject fake demo extension rows', () => {
@@ -62,6 +68,97 @@ describe('prototype use cases on real extensions', () => {
     const [overlay] = applyPrototypeUseCaseOverlays([registries]);
     expect(overlay.state).toBe('stopped');
     expect(overlay.displayName).toBe('Registries');
+  });
+
+  test('respects user-disabled state for failed demo extensions', () => {
+    const kubeContext: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: USE_CASE_EXTENSION_IDS.communityFailed,
+      name: 'kube-context',
+      displayName: 'Kube Context',
+      description: 'Kube Context',
+      publisher: 'podman-desktop',
+      removable: true,
+      devMode: false,
+      version: '1.0.0',
+      state: 'stopped',
+      path: '',
+      readme: '',
+      error: {
+        message: 'Original backend error',
+      },
+    };
+
+    const [overlay] = applyPrototypeUseCaseOverlays([kubeContext]);
+    expect(overlay.state).toBe('stopped');
+    expect(overlay.error).toBeUndefined();
+  });
+
+  test('restores failed demo overlay after user re-enables extension', () => {
+    markExtensionUserEnabled(USE_CASE_EXTENSION_IDS.communityFailed);
+
+    const kubeContext: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: USE_CASE_EXTENSION_IDS.communityFailed,
+      name: 'kube-context',
+      displayName: 'Kube Context',
+      description: 'Kube Context',
+      publisher: 'podman-desktop',
+      removable: true,
+      devMode: false,
+      version: '1.0.0',
+      state: 'started',
+      path: '',
+      readme: '',
+    };
+
+    const [overlay] = applyPrototypeUseCaseOverlays([kubeContext]);
+    expect(overlay.state).toBe('failed');
+    expect(overlay.error?.message).toContain('Failed to activate extension');
+  });
+
+  test('shows disabled state when user disables a demo extension', () => {
+    markExtensionUserDisabled(USE_CASE_EXTENSION_IDS.activating);
+
+    const kubectl: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: USE_CASE_EXTENSION_IDS.activating,
+      name: 'kubectl-cli',
+      displayName: 'kubectl CLI',
+      description: 'kubectl CLI',
+      publisher: 'podman-desktop',
+      removable: true,
+      devMode: false,
+      version: '1.0.0',
+      state: 'stopped',
+      path: '',
+      readme: '',
+    };
+
+    const [overlay] = applyPrototypeUseCaseOverlays([kubectl]);
+    expect(overlay.state).toBe('stopped');
+  });
+
+  test('shows active state when user enables a forced-disabled demo extension', () => {
+    markExtensionUserEnabled(USE_CASE_EXTENSION_IDS.communityDisabled);
+
+    const registries: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: USE_CASE_EXTENSION_IDS.communityDisabled,
+      name: 'registries',
+      displayName: 'Registries',
+      description: 'Registries',
+      publisher: 'podman-desktop',
+      removable: true,
+      devMode: false,
+      version: '1.0.0',
+      state: 'started',
+      path: '',
+      readme: '',
+    };
+
+    const [overlay] = applyPrototypeUseCaseOverlays([registries]);
+    expect(overlay.state).toBe('started');
   });
 
   test('marks Kind as having an update in catalog metadata', () => {

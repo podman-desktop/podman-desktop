@@ -66,7 +66,7 @@ const extensionB: CatalogExtensionInfoUI = {
   isSupportedByRedHat: false,
 };
 test('Check with empty', async () => {
-  render(CatalogExtensionList, { catalogExtensions: [] });
+  render(CatalogExtensionList, { catalogExtensions: [], allCatalogExtensions: [] });
 
   const availableExtensions = screen.queryByText('Available extensions');
   expect(availableExtensions).not.toBeInTheDocument();
@@ -79,10 +79,10 @@ test('Check with empty', async () => {
 });
 
 test('Check with 2 extensions', async () => {
-  render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
-
-  const availableExtensions = screen.queryByText('Available extensions');
-  expect(availableExtensions).toBeInTheDocument();
+  render(CatalogExtensionList, {
+    catalogExtensions: [extensionA, extensionB],
+    allCatalogExtensions: [extensionA, extensionB],
+  });
 
   const region = screen.getByRole('region', { name: 'Catalog Extensions' });
   expect(region).toBeInTheDocument();
@@ -98,7 +98,11 @@ test('Check with 2 extensions', async () => {
 });
 
 test('non default title', async () => {
-  render(CatalogExtensionList, { title: 'Another title', catalogExtensions: [extensionA, extensionB] });
+  render(CatalogExtensionList, {
+    title: 'Another title',
+    catalogExtensions: [extensionA, extensionB],
+    allCatalogExtensions: [extensionA, extensionB],
+  });
   const availableExtensions = screen.queryByText('Available extensions');
   expect(availableExtensions).not.toBeInTheDocument();
 
@@ -107,14 +111,26 @@ test('non default title', async () => {
 });
 
 test('empty catalog, do not hide if empty (default)', async () => {
-  render(CatalogExtensionList, { catalogExtensions: [] });
+  render(CatalogExtensionList, { catalogExtensions: [], allCatalogExtensions: [] });
 
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).toBeInTheDocument();
 });
 
+test('shows filter toolbar when catalog is filtered empty', async () => {
+  render(CatalogExtensionList, {
+    catalogExtensions: [],
+    allCatalogExtensions: [extensionA, extensionB],
+    showFilteredEmpty: true,
+    searchTerm: 'missing',
+  });
+
+  expect(screen.getByLabelText('Filter by install status')).toBeInTheDocument();
+  expect(screen.getByText(/No extensions matching/i)).toBeInTheDocument();
+});
+
 test('empty catalog, hide if empty', async () => {
-  render(CatalogExtensionList, { showEmptyScreen: false, catalogExtensions: [] });
+  render(CatalogExtensionList, { showEmptyScreen: false, catalogExtensions: [], allCatalogExtensions: [] });
 
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).not.toBeInTheDocument();

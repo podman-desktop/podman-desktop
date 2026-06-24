@@ -102,7 +102,7 @@ describe('ExtensionLifecyclePreference', () => {
 });
 
 describe('ExtensionRemovePreference', () => {
-  test('renders remove button for removable extensions', async () => {
+  test('renders uninstall button for removable extensions', async () => {
     const extension = {
       id: 'podman-desktop.kind',
       displayName: 'Kind',
@@ -119,11 +119,11 @@ describe('ExtensionRemovePreference', () => {
 
     render(ExtensionRemovePreference, { extension });
 
-    expect(screen.getByRole('button', { name: /Remove/i })).toBeEnabled();
-    expect(getExtensionRemovePreferenceDetail(extension)).toContain('Permanently remove Kind');
+    expect(screen.getByRole('button', { name: /Uninstall/i })).toBeEnabled();
+    expect(getExtensionRemovePreferenceDetail(extension)).toContain('Permanently uninstall Kind');
   });
 
-  test('disables remove button for built-in extensions', async () => {
+  test('disables uninstall button for built-in extensions', async () => {
     const extension = {
       id: 'podman-desktop.compose',
       displayName: 'Compose',
@@ -140,14 +140,14 @@ describe('ExtensionRemovePreference', () => {
 
     render(ExtensionRemovePreference, { extension });
 
-    expect(screen.getByRole('button', { name: /Remove/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Uninstall/i })).toBeDisabled();
     expect(getExtensionRemovePreferenceDetail(extension)).toContain(
-      'Built-in extensions are integrated with Podman Desktop and cannot be removed',
+      'Built-in extensions are integrated with Podman Desktop and cannot be uninstalled',
     );
     expect(canRemoveExtensionFromPreferences(extension)).toBe(false);
   });
 
-  test('explains why bundled extensions such as Kind cannot be removed', () => {
+  test('explains why bundled extensions such as Kind cannot be uninstalled', () => {
     const extension = {
       id: 'podman-desktop.kind',
       displayName: 'Kind',
@@ -162,12 +162,12 @@ describe('ExtensionRemovePreference', () => {
       },
     } as CatalogExtensionInfoUI;
 
-    expect(getExtensionRemoveBlockedReason(extension)).toBe('Bundled with Podman Desktop and cannot be removed');
-    expect(getExtensionRemovePreferenceDetail(extension)).toBe('Bundled with Podman Desktop and cannot be removed');
+    expect(getExtensionRemoveBlockedReason(extension)).toBe('Bundled with Podman Desktop and cannot be uninstalled');
+    expect(getExtensionRemovePreferenceDetail(extension)).toBe('Bundled with Podman Desktop and cannot be uninstalled');
     expect(canRemoveExtensionFromPreferences(extension)).toBe(false);
   });
 
-  test('removeExtensionWithConfirmation asks before removing', async () => {
+  test('removeExtensionWithConfirmation asks before uninstalling', async () => {
     vi.spyOn(window, 'showMessageBox').mockResolvedValue({ response: 1 });
     vi.spyOn(window, 'removeExtension').mockResolvedValue(undefined);
 
@@ -186,11 +186,11 @@ describe('ExtensionRemovePreference', () => {
     } as CatalogExtensionInfoUI;
 
     render(ExtensionRemovePreference, { extension });
-    await fireEvent.click(screen.getByRole('button', { name: /Remove/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /Uninstall/i }));
 
     expect(window.showMessageBox).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Remove extension?',
+        title: 'Uninstall extension?',
         type: 'danger',
       }),
     );
@@ -201,7 +201,7 @@ describe('ExtensionRemovePreference', () => {
     expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   });
 
-  test('redirects to preferences main page after removing from preferences', async () => {
+  test('redirects to preferences main page after uninstalling from preferences', async () => {
     vi.spyOn(window, 'showMessageBox').mockResolvedValue({ response: 0 });
     vi.spyOn(window, 'removeExtension').mockResolvedValue(undefined);
 

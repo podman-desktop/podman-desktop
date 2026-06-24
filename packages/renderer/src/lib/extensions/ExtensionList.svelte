@@ -1,24 +1,32 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
-import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
+import { Button, NavPage } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
-import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import {
+  catalogListFilters,
+  hasActiveCatalogListFilters,
+  resetCatalogListFilters,
+} from './catalog-list-filters.svelte';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
-import { markNewlyInstalled } from './extension-catalog-settings.svelte';
 import { buildExtensionsListPath } from './extension-list';
 import { showPostInstallTooltipDemo } from './extension-prototype-post-install-tooltip-demo';
 import { arePrototypeUseCasesEnabled } from './extension-prototype-use-cases';
 import { ExtensionsUtils } from './extensions-utils';
+import {
+  hasActiveInstalledListFilters,
+  installedListFilters,
+  resetInstalledListFilters,
+} from './installed-list-filters.svelte';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
 
 interface Props {
@@ -44,8 +52,22 @@ const installedExtensionsWithDemos: CombinedExtensionInfoUI[] = $derived(
   extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions),
 );
 
+const installedCatalogById = $derived.by(() => {
+  $catalogExtensionInfos;
+  $featuredExtensionInfos;
+  const catalogExtensions = installedExtensionsWithDemos.map(extension =>
+    extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos),
+  );
+  return new Map(extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions).map(catalog => [catalog.id, catalog]));
+});
+
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
-  extensionsUtils.filterInstalledExtensions(installedExtensionsWithDemos, searchTerm),
+  extensionsUtils.filterInstalledExtensions(
+    installedExtensionsWithDemos,
+    searchTerm,
+    installedListFilters.value,
+    installedCatalogById,
+  ),
 );
 
 let filteredInstalledItems: number = $derived(installedExtensionsWithDemos.length - filteredInstalledExtensions.length);
@@ -63,17 +85,23 @@ const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 );
 
 const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
-  extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm),
+  extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm, catalogListFilters.value),
 );
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
-const showInstalledFilterEmpty = $derived(
-  screen === 'installed' && !!searchTerm && filteredInstalledExtensions.length === 0,
-);
 const showCatalogFilterEmpty = $derived(
-  screen === 'catalog' && enableCatalog && !!searchTerm && filteredCatalogExtensions.length === 0,
+  screen === 'catalog' &&
+    enableCatalog &&
+    filteredCatalogExtensions.length === 0 &&
+    (!!searchTerm || hasActiveCatalogListFilters()),
 );
+const showInstalledFilterEmpty = $derived(
+  screen === 'installed' &&
+    filteredInstalledExtensions.length === 0 &&
+    (!!searchTerm || hasActiveInstalledListFilters()),
+);
+
 const showFilterEmptyScreen = $derived(showInstalledFilterEmpty || showCatalogFilterEmpty);
 
 function closeModal(): void {
@@ -82,7 +110,6 @@ function closeModal(): void {
 
 function handleExtensionInstalled(extensionId: string): void {
   console.log(`[DTUX-2854] Extension installed from catalog: ${extensionId}`);
-  markNewlyInstalled(extensionId);
 }
 
 let installManualImageModal: boolean = $state(false);
@@ -102,11 +129,17 @@ function changeScreen(newScreen: ExtensionListScreen): void {
   }
   screen = newScreen;
   searchTerm = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS).terms.join(' ');
+  if (newScreen !== 'catalog') {
+    resetCatalogListFilters();
+  }
+  if (newScreen !== 'installed') {
+    resetInstalledListFilters();
+  }
   router.goto(buildExtensionsListPath(newScreen, searchTerm));
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} title="extensions" searchEnabled={screen !== 'installed' && screen !== 'catalog'}>
   {#snippet additionalActions()}
     {#if enableCatalog && arePrototypeUseCasesEnabled() && screen === 'catalog'}
       <Button
@@ -172,39 +205,30 @@ function changeScreen(newScreen: ExtensionListScreen): void {
   {#snippet content()}
   <div class="flex min-w-full h-full flex-1">
     {#if screen === 'installed'}
-      {#if showInstalledFilterEmpty}
-        <div class="flex flex-1 w-full items-center justify-center">
-          <FilteredEmptyScreen
-            icon={ExtensionIcon}
-            kind="extensions"
-            bind:searchTerm={searchTerm}
-            onResetFilter={(): void => {
-              searchTerm = '';
-            }} />
-        </div>
-      {:else}
-        <InstalledExtensionList extensionInfos={filteredInstalledExtensions} />
-      {/if}
+      <InstalledExtensionList
+        bind:searchTerm
+        extensionInfos={filteredInstalledExtensions}
+        allExtensionInfos={installedExtensionsWithDemos}
+        showFilteredEmpty={showInstalledFilterEmpty}
+        onResetFilter={(): void => {
+          searchTerm = '';
+          resetInstalledListFilters();
+        }} />
     {:else if screen === 'catalog' && enableCatalog}
       {#if prototypeTooltipDemoMessage}
         <div class="px-5 pt-3 text-sm text-[var(--pd-status-warning)]">{prototypeTooltipDemoMessage}</div>
       {/if}
-      {#if showCatalogFilterEmpty}
-        <div class="flex flex-1 w-full items-center justify-center">
-          <FilteredEmptyScreen
-            icon={ExtensionIcon}
-            kind="extensions"
-            bind:searchTerm={searchTerm}
-            onResetFilter={(): void => {
-              searchTerm = '';
-            }} />
-        </div>
-      {:else}
-        <CatalogExtensionList
-          showEmptyScreen={!searchTerm}
-          catalogExtensions={filteredCatalogExtensions}
-          oninstall={handleExtensionInstalled} />
-      {/if}
+      <CatalogExtensionList
+        showEmptyScreen={!searchTerm && !hasActiveCatalogListFilters()}
+        showFilteredEmpty={showCatalogFilterEmpty}
+        bind:searchTerm
+        onResetFilter={(): void => {
+          searchTerm = '';
+          resetCatalogListFilters();
+        }}
+        allCatalogExtensions={enhancedCatalogExtensions}
+        catalogExtensions={filteredCatalogExtensions}
+        oninstall={handleExtensionInstalled} />
     {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}

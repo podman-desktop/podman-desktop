@@ -88,15 +88,13 @@ function closeChangeVersionModal(): void {
 </script>
 
 <div class="flex flex-col gap-1 py-1 text-sm text-[var(--pd-content-text)] min-w-0">
-  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-    <span class="whitespace-nowrap">{displayVersion ? `v${displayVersion}` : 'N/A'}</span>
-    {#if showLink && targetVersion}
-      <Link class="inline-flex shrink-0" aria-label={linkLabel} on:click={handleUpdate}>
-        {linkLabel}
-      </Link>
-    {/if}
-  </div>
-  <ExtensionVersionUpdateStatus extensionId={object.extension.id} />
+  <span class="whitespace-nowrap">{displayVersion ? `v${displayVersion}` : 'N/A'}</span>
+  {#if showLink && targetVersion}
+    <Link class="inline-flex shrink-0 self-start" aria-label={linkLabel} on:click={handleUpdate}>
+      {linkLabel}
+    </Link>
+  {/if}
+  <ExtensionVersionUpdateStatus extensionId={object.extension.id} extensionState={object.extension.state} />
 </div>
 
 {#if showChangeVersionModal}

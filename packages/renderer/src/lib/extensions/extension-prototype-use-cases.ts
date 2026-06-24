@@ -22,6 +22,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { isExtensionUserDisabled, isExtensionUserEnabled } from './extension-lifecycle-user-toggle';
 
 /** Real bundled / catalog extension IDs used to demo DTUX-2849 UI states. */
 export const USE_CASE_EXTENSION_IDS = {
@@ -76,8 +77,32 @@ export function applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoU
 
   return extensions.map(extension => {
     const overlay = INSTALLED_STATE_OVERLAYS[extension.id];
+
+    if (isExtensionUserDisabled(extension.id)) {
+      return {
+        ...extension,
+        state: extension.state === 'stopping' ? 'stopping' : 'stopped',
+        error: undefined,
+      };
+    }
+
     if (!overlay) {
       return extension;
+    }
+
+    if (overlay.state === 'stopped' && isExtensionUserEnabled(extension.id)) {
+      return {
+        ...extension,
+        error: undefined,
+      };
+    }
+
+    if (extension.state === 'stopped' || extension.state === 'stopping') {
+      return {
+        ...extension,
+        state: extension.state,
+        error: undefined,
+      };
     }
 
     return {

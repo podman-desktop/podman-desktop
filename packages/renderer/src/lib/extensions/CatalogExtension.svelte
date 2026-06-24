@@ -14,9 +14,10 @@ import {
   isExtensionVersionUpdating,
 } from './extension-version-update.svelte';
 import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
+import ExtensionFeaturedNameLabel from './ExtensionFeaturedNameLabel.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
+import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
-import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
 export let catalogExtensionUI: CatalogExtensionInfoUI;
@@ -45,7 +46,7 @@ function openExtensionDetails(): void {
 
 function handleCardClick(event: MouseEvent): void {
   const target = event.target as HTMLElement;
-  if (target.closest('button, a, [role="menu"], [role="link"]')) {
+  if (target.closest('button, a, [role="menu"], [role="link"], [data-extension-dropdown-menu]')) {
     return;
   }
   openExtensionDetails();
@@ -81,12 +82,17 @@ function handleCardClick(event: MouseEvent): void {
       </div>
 
       <div class="min-w-0 flex-1 overflow-hidden">
-        <div class="truncate leading-4 text-[var(--pd-content-header)]">
-          {catalogExtensionUI.displayName}
+        <ExtensionFeaturedNameLabel
+          displayName={catalogExtensionUI.displayName}
+          isFeatured={catalogExtensionUI.isFeatured}
+          nameClass="font-semibold text-[var(--pd-content-header)]" />
+        <div class="pt-0.5">
+          <ExtensionPublisherLabel
+            publisherName={catalogExtensionUI.publisherDisplayName}
+            isVerified={catalogExtensionUI.isVerified}
+            isSupportedByRedHat={catalogExtensionUI.isSupportedByRedHat}
+            class="text-sm font-medium text-[var(--pd-content-header)]" />
         </div>
-        <ExtensionTruncatedText
-          text={catalogExtensionUI.publisherDisplayName}
-          class="pt-0.5 text-sm font-medium text-[var(--pd-content-header)]" />
         <ExtensionTruncatedText
           text={catalogExtensionUI.shortDescription}
           class="pt-0.5 text-sm text-[var(--pd-content-text)]" />
@@ -102,13 +108,10 @@ function handleCardClick(event: MouseEvent): void {
                   : optimistic && optimistic !== normalizedActual
                     ? optimistic
                     : actualVersion}
-              {#if displayInstalledVersion}
-                <span>v{displayInstalledVersion}</span>
-                <ExtensionUpdateVersionLink extension={catalogExtensionUI} />
-              {:else}
-                <span>v{catalogExtensionUI.installedVersion}</span>
-              {/if}
-              <ExtensionVersionUpdateStatus extensionId={catalogExtensionUI.id} />
+              <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${catalogExtensionUI.installedVersion}`}</span>
+              <ExtensionVersionUpdateStatus
+                extensionId={catalogExtensionUI.id}
+                extensionState={catalogExtensionUI.installedExtension?.state} />
             {/key}
           {:else}
             <span>v{catalogExtensionUI.fetchVersion}</span>

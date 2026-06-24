@@ -24,7 +24,7 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { clearNewBadge } from './extension-catalog-settings.svelte';
 import { isBuiltInExtension, isBundledCommunityExtension, isExtensionRemovableInUi } from './extension-origin-utils';
 
-export const EXTENSION_REMOVE_PREFERENCE_TITLE = 'Remove extension';
+export const EXTENSION_REMOVE_PREFERENCE_TITLE = 'Uninstall extension';
 export const PREFERENCES_MAIN_ROUTE = '/preferences';
 
 export interface RemoveExtensionOptions {
@@ -64,26 +64,26 @@ export function getExtensionRemoveBlockedReason(extension: CatalogExtensionInfoU
   }
 
   if (isBuiltInExtension(installed)) {
-    return 'Built-in extensions are integrated with Podman Desktop and cannot be removed';
+    return 'Built-in extensions are integrated with Podman Desktop and cannot be uninstalled';
   }
 
   if (installed.devMode) {
-    return 'Untrack this extension in Local Extensions before removing it';
+    return 'Untrack this extension in Local Extensions before uninstalling it';
   }
 
   if (!installed.removable && isBundledCommunityExtension(installed.id)) {
-    return 'Bundled with Podman Desktop and cannot be removed';
+    return 'Bundled with Podman Desktop and cannot be uninstalled';
   }
 
   if (!installed.removable && !extension.fetchable) {
-    return 'Pre-installed extension cannot be removed';
+    return 'Pre-installed extension cannot be uninstalled';
   }
 
   if (!installed.removable) {
-    return 'Extension is marked as non-removable';
+    return 'Extension is marked as non-uninstallable';
   }
 
-  return 'This extension cannot be removed';
+  return 'This extension cannot be uninstalled';
 }
 
 /** Shorter copy for the actions menu detail row. */
@@ -98,7 +98,7 @@ export function getExtensionRemoveBlockedReasonShort(extension: CatalogExtension
   }
 
   if (isBuiltInExtension(installed)) {
-    return 'Built-in extension cannot be removed';
+    return 'Built-in extension cannot be uninstalled';
   }
 
   if (installed.devMode) {
@@ -106,18 +106,18 @@ export function getExtensionRemoveBlockedReasonShort(extension: CatalogExtension
   }
 
   if (!installed.removable && isBundledCommunityExtension(installed.id)) {
-    return 'Bundled extension cannot be removed';
+    return 'Bundled extension cannot be uninstalled';
   }
 
   if (!installed.removable && !extension.fetchable) {
-    return 'Pre-installed extension cannot be removed';
+    return 'Pre-installed extension cannot be uninstalled';
   }
 
   if (!installed.removable) {
-    return 'Extension cannot be removed';
+    return 'Extension cannot be uninstalled';
   }
 
-  return 'Cannot be removed';
+  return 'Cannot be uninstalled';
 }
 
 export function getExtensionRemovePreferenceDetail(extension: CatalogExtensionInfoUI): string {
@@ -126,7 +126,7 @@ export function getExtensionRemovePreferenceDetail(extension: CatalogExtensionIn
     return blockedReason;
   }
 
-  return `Permanently remove ${extension.displayName} from Podman Desktop`;
+  return `Permanently uninstall ${extension.displayName} from Podman Desktop`;
 }
 
 export function matchesExtensionRemoveSearch(searchValue: string): boolean {
@@ -135,7 +135,11 @@ export function matchesExtensionRemoveSearch(searchValue: string): boolean {
   }
 
   const lower = searchValue.toLowerCase();
-  return lower.includes('remove') || EXTENSION_REMOVE_PREFERENCE_TITLE.toLowerCase().includes(lower);
+  return (
+    lower.includes('uninstall') ||
+    lower.includes('remove') ||
+    EXTENSION_REMOVE_PREFERENCE_TITLE.toLowerCase().includes(lower)
+  );
 }
 
 export function removeExtensionWithConfirmation(
@@ -160,7 +164,7 @@ export function removeExtensionWithConfirmation(
         redirectToPreferencesMain(options.redirectAfterRemove);
       }
     },
-    `remove ${extension.displayName}`,
-    { title: 'Remove extension?', variant: 'delete', buttonLabel: 'Remove' },
+    `uninstall ${extension.displayName}`,
+    { title: 'Uninstall extension?', variant: 'delete', buttonLabel: 'Uninstall' },
   );
 }

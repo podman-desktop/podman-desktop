@@ -24,7 +24,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
-import { resolveExtensionVerificationStatus } from './extension-origin-utils';
+import { resolveExtensionVerificationStatus, shouldShowBuiltInNameIndicator } from './extension-origin-utils';
 import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
 import {
   applyPrototypeCatalogUseCaseOverlay,
@@ -32,6 +32,7 @@ import {
   bumpPrototypePatchVersion,
   USE_CASE_EXTENSION_IDS,
 } from './extension-prototype-use-cases';
+import type { InstalledListFilters } from './installed-list-filters.svelte';
 
 export class ExtensionsUtils {
   extractExtensionDetail(
@@ -386,10 +387,52 @@ export class ExtensionsUtils {
     return applyPrototypeCatalogUseCaseOverlay(catalogInfo);
   }
 
-  filterInstalledExtensions(extensions: CombinedExtensionInfoUI[], searchTerm: string): CombinedExtensionInfoUI[] {
+  filterInstalledExtensions(
+    extensions: CombinedExtensionInfoUI[],
+    searchTerm: string,
+    listFilters: InstalledListFilters = {},
+    catalogById: ReadonlyMap<string, CatalogExtensionInfoUI> = new Map(),
+  ): CombinedExtensionInfoUI[] {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const categoryFilter = listFilters.category?.toLowerCase();
+
     return extensions.filter(extension => {
-      return `${extension.displayName} ${extension.description}`.toLowerCase().includes(lowerCaseSearchTerm);
+      const catalogExtension = catalogById.get(extension.id);
+      const matchesSearch =
+        !lowerCaseSearchTerm ||
+        `${extension.displayName} ${extension.description}`.toLowerCase().includes(lowerCaseSearchTerm);
+
+      if (!matchesSearch) {
+        return false;
+      }
+
+      if (listFilters.verified === true && !catalogExtension?.isVerified) {
+        return false;
+      }
+
+      if (listFilters.hasUpdate === true && !catalogExtension?.hasUpdate) {
+        return false;
+      }
+
+      if (listFilters.featured === true && !catalogExtension?.isFeatured) {
+        return false;
+      }
+
+      if (listFilters.builtIn === true) {
+        const catalogExtension = catalogById.get(extension.id);
+        if (!shouldShowBuiltInNameIndicator(extension, catalogExtension?.fetchable === true)) {
+          return false;
+        }
+      }
+
+      if (
+        categoryFilter !== undefined &&
+        !catalogExtension?.categories.some(category => category.toLowerCase() === categoryFilter)
+      ) {
+        return false;
+      }
+
+      return true;
     });
   }
 
@@ -412,6 +455,7 @@ export class ExtensionsUtils {
         ? false
         : undefined;
     const installed = listFilters.installed ?? installedFromSearch;
+    const categoryFilter = listFilters.category?.toLowerCase();
 
     return extensions.filter(extension => {
       return (
@@ -426,7 +470,9 @@ export class ExtensionsUtils {
         (installed === undefined || installed === extension.isInstalled) &&
         (listFilters.verified !== true || extension.isVerified) &&
         (listFilters.hasUpdate !== true || extension.hasUpdate) &&
-        (listFilters.featured !== true || extension.isFeatured)
+        (listFilters.featured !== true || extension.isFeatured) &&
+        (categoryFilter === undefined ||
+          extension.categories.some(category => category.toLowerCase() === categoryFilter))
       );
     });
   }

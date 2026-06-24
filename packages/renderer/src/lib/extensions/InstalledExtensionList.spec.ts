@@ -68,9 +68,9 @@ test('Expect to see each extension', async () => {
   };
   const { findByRole } = render(InstalledExtensionList, { extensionInfos: [extension1, extension2] });
 
-  const myExtension1 = await findByRole('button', { name: 'foo1 extension details' });
+  const myExtension1 = await findByRole('row', { name: 'foo1' });
   expect(myExtension1).toBeInTheDocument();
 
-  const myExtension2 = await findByRole('button', { name: 'foo2 extension details' });
+  const myExtension2 = await findByRole('row', { name: 'foo2' });
   expect(myExtension2).toBeInTheDocument();
 });

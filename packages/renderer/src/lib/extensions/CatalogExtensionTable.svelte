@@ -23,9 +23,8 @@ import {
   getOptimisticInstalledVersion,
   isExtensionVersionUpdating,
 } from './extension-version-update.svelte';
-import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
-import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
+import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 import CatalogExtensionTableNameColumn from './table/CatalogExtensionTableNameColumn.svelte';
 
@@ -37,9 +36,16 @@ interface Props {
 
 let { catalogExtensions, oninstall, onChangeVersion }: Props = $props();
 
-const sortableColumns: CatalogTableSortColumn[] = ['Name', 'Publisher', 'Version', 'Status', 'Origin'];
+const sortableColumns: CatalogTableSortColumn[] = ['Name', 'Publisher', 'Version', 'Status'];
 
-const gridTemplateColumns = '56px minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) 140px';
+const catalogTableColumnLabels: Record<CatalogTableSortColumn, string> = {
+  Name: 'Name',
+  Publisher: 'Published by',
+  Version: 'Version',
+  Status: 'Status',
+};
+
+const gridTemplateColumns = '56px minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 140px';
 
 const currentSort = $derived(catalogTableSortState.value);
 const userSortApplied = $derived(currentSort !== null);
@@ -59,7 +65,7 @@ onMount(() => {
 
 function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void {
   const target = event.target as HTMLElement;
-  if (target.closest('button, a, [role="menu"], [role="link"]')) {
+  if (target.closest('button, a, [role="menu"], [role="link"], [data-extension-dropdown-menu]')) {
     return;
   }
   router.goto(buildExtensionDetailsPath(extension.id, 'catalog'));
@@ -81,10 +87,10 @@ function isSorted(column: CatalogTableSortColumn): boolean {
 }
 </script>
 
-<div class="w-full px-5" role="table" aria-label="extensions">
+<div class="w-full" role="table" aria-label="extensions">
   <div
     role="rowgroup"
-    class="grid gap-x-4 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
+    class="grid gap-x-4 h-7 pb-1 text-[var(--pd-table-header-text)] uppercase"
     style:grid-template-columns={gridTemplateColumns}>
     <div role="columnheader"></div>
     {#each sortableColumns as column (column)}
@@ -92,7 +98,7 @@ function isSorted(column: CatalogTableSortColumn): boolean {
         role="columnheader"
         class="flex items-center gap-1 text-sm font-semibold self-center cursor-pointer select-none"
         onclick={(): void => handleSort(column)}>
-        <span>{column}</span>
+        <span>{catalogTableColumnLabels[column]}</span>
         <Fa
           icon={sortIcon(column)}
           class="text-xs {isSorted(column) ? 'text-[var(--pd-content-header)]' : 'text-[var(--pd-table-header-unsorted)]'}" />
@@ -115,11 +121,14 @@ function isSorted(column: CatalogTableSortColumn): boolean {
         <div role="cell" class="min-w-0 py-2 pr-2">
           <CatalogExtensionTableNameColumn {extension} />
         </div>
-        <div role="cell" class="text-sm text-[var(--pd-content-text)] py-2">
-          {extension.publisherDisplayName}
+        <div role="cell" class="min-w-0 py-2 text-sm text-[var(--pd-content-text)]">
+          <ExtensionPublisherLabel
+            publisherName={extension.publisherDisplayName}
+            isVerified={extension.isVerified}
+            isSupportedByRedHat={extension.isSupportedByRedHat} />
         </div>
-        <div role="cell" class="min-w-0 overflow-hidden py-2" onclick={(event): void => event.stopPropagation()}>
-          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--pd-content-text)]">
+        <div role="cell" class="min-w-0 overflow-hidden py-2">
+          <div class="text-sm text-[var(--pd-content-text)]">
             {#if extension.isInstalled}
               {#key uiRevision}
                 {@const actualVersion = extension.installedVersion}
@@ -131,13 +140,10 @@ function isSorted(column: CatalogTableSortColumn): boolean {
                     : optimistic && optimistic !== normalizedActual
                       ? optimistic
                       : actualVersion}
-                {#if displayInstalledVersion}
-                  <span>v{displayInstalledVersion}</span>
-                  <ExtensionUpdateVersionLink {extension} />
-                {:else}
-                  <span>v{extension.installedVersion}</span>
-                {/if}
-                <ExtensionVersionUpdateStatus extensionId={extension.id} />
+                <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${extension.installedVersion}`}</span>
+                <ExtensionVersionUpdateStatus
+                  extensionId={extension.id}
+                  extensionState={extension.installedExtension?.state} />
               {/key}
             {:else}
               <span>{extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}</span>
@@ -150,9 +156,6 @@ function isSorted(column: CatalogTableSortColumn): boolean {
           {:else}
             <span class="text-sm text-[var(--pd-table-header-text)]">Not installed</span>
           {/if}
-        </div>
-        <div role="cell" class="min-w-0 overflow-hidden py-2">
-          <ExtensionCatalogStatusChips {extension} originFirst nowrap showUpdateChip={false} showNewBadge={false} />
         </div>
         <div role="cell" class="justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex shrink-0 items-center justify-end gap-1">

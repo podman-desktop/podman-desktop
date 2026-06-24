@@ -8,7 +8,6 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { isExtensionPinnedRow } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
 import { EXTENSION_TABLE_ROW_BASE_CLASS, extensionTableRowBorderClass } from './extension-table-styles';
-import { ExtensionsUtils } from './extensions-utils';
 import { setInstalledTableCallbacks } from './installed-extension-table-context';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 import {
@@ -20,7 +19,6 @@ import InstalledExtensionTableActionsColumn from './table/InstalledExtensionTabl
 import InstalledExtensionTableIconColumn from './table/InstalledExtensionTableIconColumn.svelte';
 import InstalledExtensionTableLifecycleColumn from './table/InstalledExtensionTableLifecycleColumn.svelte';
 import InstalledExtensionTableNameColumn from './table/InstalledExtensionTableNameColumn.svelte';
-import InstalledExtensionTableOriginColumn from './table/InstalledExtensionTableOriginColumn.svelte';
 import InstalledExtensionTableVersionColumn from './table/InstalledExtensionTableVersionColumn.svelte';
 
 interface Props {
@@ -30,11 +28,9 @@ interface Props {
 
 let { rows, onChangeVersion }: Props = $props();
 
-const extensionsUtils = new ExtensionsUtils();
+const sortableColumns: InstalledTableSortColumn[] = ['Name', 'Version', 'Status'];
 
-const sortableColumns: InstalledTableSortColumn[] = ['Name', 'Publisher', 'Version', 'Status', 'Origin'];
-
-const gridTemplateColumns = '56px 2fr 1.5fr 1.35fr minmax(9rem, 1.25fr) 2fr 140px';
+const gridTemplateColumns = '56px 2fr 1.35fr minmax(9rem, 1.25fr) 140px';
 
 const currentSort = $derived(installedTableSortState.value);
 const userSortApplied = $derived(currentSort !== null);
@@ -45,7 +41,7 @@ onMount(() => {
 
 function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
   const target = event.target as HTMLElement;
-  if (target.closest('button, a, [role="menu"], [role="link"]')) {
+  if (target.closest('button, a, [role="menu"], [role="link"], [data-extension-dropdown-menu]')) {
     return;
   }
   router.goto(buildExtensionDetailsPath(row.extension.id, 'installed'));
@@ -67,10 +63,10 @@ function isSorted(column: InstalledTableSortColumn): boolean {
 }
 </script>
 
-<div class="w-full px-5" role="table" aria-label="installed extensions">
+<div class="w-full" role="table" aria-label="installed extensions">
   <div
     role="rowgroup"
-    class="grid gap-x-4 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
+    class="grid gap-x-4 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
     style:grid-template-columns={gridTemplateColumns}>
     <div role="columnheader"></div>
     {#each sortableColumns as column (column)}
@@ -101,17 +97,11 @@ function isSorted(column: InstalledTableSortColumn): boolean {
         <div role="cell" class="self-center min-w-0 py-2 pr-2">
           <InstalledExtensionTableNameColumn object={row} />
         </div>
-        <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
-          {extensionsUtils.resolvePublisherDisplayName(row.extension, row.catalogExtension.publisherDisplayName)}
-        </div>
         <div role="cell" class="self-center py-2 pr-4 min-w-0" onclick={(event): void => event.stopPropagation()}>
           <InstalledExtensionTableVersionColumn object={row} />
         </div>
         <div role="cell" class="self-center py-2 min-w-0 overflow-hidden">
           <InstalledExtensionTableLifecycleColumn object={row} />
-        </div>
-        <div role="cell" class="self-center py-2">
-          <InstalledExtensionTableOriginColumn object={row} />
         </div>
         <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
           <InstalledExtensionTableActionsColumn object={row} />

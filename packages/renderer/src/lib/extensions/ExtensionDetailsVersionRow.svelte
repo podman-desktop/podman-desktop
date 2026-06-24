@@ -6,9 +6,7 @@ import {
   EXTENSION_VERSION_UI_CHANGE_EVENT,
   getOptimisticInstalledVersion,
   isExtensionVersionUpdating,
-  withDisplayInstalledVersion,
 } from './extension-version-update.svelte';
-import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
 interface Props {
@@ -30,11 +28,6 @@ onMount(() => {
   };
 });
 
-const displayExtension = $derived.by(() => {
-  uiRevision;
-  return withDisplayInstalledVersion(catalogExtension);
-});
-
 const displayVersion = $derived.by(() => {
   uiRevision;
   const actualVersion = catalogExtension.installedVersion;
@@ -54,19 +47,19 @@ const displayVersion = $derived.by(() => {
 </script>
 
 <div class="flex flex-col gap-1 min-w-0 {className}">
-  <div class="flex flex-col items-start gap-1 min-w-0">
-    {#if catalogExtension.isInstalled}
-      <span class="font-medium text-[var(--pd-content-header)] break-words">
-        {displayVersion ? `v${displayVersion}` : 'N/A'}
-      </span>
-      <ExtensionUpdateVersionLink extension={displayExtension} />
-    {:else}
-      <span class="text-[var(--pd-content-text)] break-words">
-        Latest catalog version: v{catalogExtension.fetchVersion || 'N/A'}
-      </span>
-    {/if}
-  </div>
   {#if catalogExtension.isInstalled}
-    <ExtensionVersionUpdateStatus extensionId={catalogExtension.id} />
+    <span class="font-medium text-[var(--pd-content-header)] break-words">
+      {displayVersion ? `v${displayVersion}` : 'N/A'}
+    </span>
+    <p class="text-xs text-[var(--pd-content-text)]">
+      Change version from extension preferences.
+    </p>
+    <ExtensionVersionUpdateStatus
+      extensionId={catalogExtension.id}
+      extensionState={catalogExtension.installedExtension?.state} />
+  {:else}
+    <span class="text-[var(--pd-content-text)] break-words">
+      Latest catalog version: v{catalogExtension.fetchVersion || 'N/A'}
+    </span>
   {/if}
 </div>

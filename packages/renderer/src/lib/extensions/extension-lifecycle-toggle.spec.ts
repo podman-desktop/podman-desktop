@@ -21,6 +21,7 @@ import {
   getExtensionLifecycleToggleAction,
   getExtensionLifecycleToggleLabel,
   isExtensionLifecycleEnabled,
+  shouldHideExtensionErrorPresentation,
 } from './extension-lifecycle-toggle';
 
 describe('extension-lifecycle-toggle', () => {
@@ -48,5 +49,13 @@ describe('extension-lifecycle-toggle', () => {
     expect(getExtensionLifecycleToggleAction('stopped')).toBe('start');
     expect(isExtensionLifecycleEnabled('started')).toBe(true);
     expect(isExtensionLifecycleEnabled('stopped')).toBe(false);
+  });
+
+  test('hides error presentation while extension is disabling or disabled', () => {
+    expect(shouldHideExtensionErrorPresentation('stopped')).toBe(true);
+    expect(shouldHideExtensionErrorPresentation('stopping')).toBe(true);
+    expect(shouldHideExtensionErrorPresentation('failed')).toBe(false);
+    expect(shouldHideExtensionErrorPresentation('started')).toBe(false);
+    expect(shouldHideExtensionErrorPresentation(undefined)).toBe(false);
   });
 });

@@ -4,7 +4,6 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
-import { confirmExtensionAutoUpdateChange } from '/@/lib/extensions/extension-auto-update-confirm';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
 import type { CatalogExtensionInfoUI, CatalogExtensionVersionUI } from './catalog-extension-info-ui';
@@ -146,16 +145,7 @@ function applyPrimaryAction(): void {
   closeCallback();
 }
 
-async function handleAutoUpdateToggle(checked: boolean): Promise<void> {
-  if (checked === autoUpdateEnabled) {
-    return;
-  }
-
-  const confirmed = await confirmExtensionAutoUpdateChange(extension, checked);
-  if (!confirmed) {
-    return;
-  }
-
+function handleAutoUpdateToggle(checked: boolean): void {
   autoUpdateEnabled = checked;
   setAutoUpdateEnabled(extension.id, checked);
 }
@@ -205,14 +195,15 @@ async function handleAutoUpdateToggle(checked: boolean): Promise<void> {
         </div>
       </div>
 
-      <div class="shrink-0">
+      <div class="flex shrink-0 items-center justify-between gap-4">
+        <label for="auto-update-{extension.id}" class="text-sm text-[var(--pd-content-text)] cursor-pointer">
+          Enable automatic updates for this extension
+        </label>
         <SlideToggle
           id="auto-update-{extension.id}"
-          checked={autoUpdateEnabled}
+          bind:checked={autoUpdateEnabled}
           on:checked={(event): void => handleAutoUpdateToggle(event.detail)}
-          aria-label="Enable automatic updates for {extension.displayName}">
-          Enable automatic updates for this extension
-        </SlideToggle>
+          aria-label="Enable automatic updates for {extension.displayName}" />
       </div>
     </div>
   {/snippet}

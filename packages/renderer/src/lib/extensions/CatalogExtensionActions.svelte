@@ -22,13 +22,18 @@ import {
   getExtensionLifecycleToggleLabel,
   isExtensionLifecycleEnabled,
 } from './extension-lifecycle-toggle';
+import { markExtensionUserDisabled, markExtensionUserEnabled } from './extension-lifecycle-user-toggle';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
   resolveCatalogExtensionOnboardingStatus,
   resolveOnboardingRouteExtensionId,
 } from './extension-onboarding-utils';
 import { isExtensionRemovableInUi } from './extension-origin-utils';
-import { getExtensionRemoveBlockedReasonShort, removeExtensionWithConfirmation } from './extension-remove-preference';
+import {
+  buildExtensionPreferencesRoute,
+  getExtensionRemoveBlockedReasonShort,
+  removeExtensionWithConfirmation,
+} from './extension-remove-preference';
 import ExtensionDropdownMenu from './ExtensionDropdownMenu.svelte';
 import ExtensionDropdownMenuItem from './ExtensionDropdownMenuItem.svelte';
 
@@ -76,7 +81,7 @@ function openOnboarding(event: Event): void {
 
 function openPreferences(event: Event): void {
   event.stopPropagation();
-  router.goto(`/preferences/default/preferences.${extension.id}`);
+  router.goto(buildExtensionPreferencesRoute(extension.id));
 }
 
 async function toggleExtensionLifecycle(event: Event): Promise<void> {
@@ -87,10 +92,12 @@ async function toggleExtensionLifecycle(event: Event): Promise<void> {
 
   if (isExtensionLifecycleEnabled(installedExtension.state)) {
     await window.stopExtension(installedExtension.id);
+    markExtensionUserDisabled(installedExtension.id);
     return;
   }
 
   await window.startExtension(installedExtension.id);
+  markExtensionUserEnabled(installedExtension.id);
 }
 
 async function removeExtension(event: Event): Promise<void> {
@@ -136,8 +143,8 @@ async function openRepository(event: Event): Promise<void> {
       {/if}
       <ExtensionDropdownMenuItem title="Report a bug" icon={faBug} onClick={reportBug} />
       <ExtensionDropdownMenuItem
-        title="Remove"
-        detail={isRemovable ? '' : (getExtensionRemoveBlockedReasonShort(extension) ?? 'Cannot be removed')}
+        title="Uninstall"
+        detail={isRemovable ? '' : (getExtensionRemoveBlockedReasonShort(extension) ?? 'Cannot be uninstalled')}
         icon={faTrash}
         enabled={isRemovable}
         onClick={removeExtension} />

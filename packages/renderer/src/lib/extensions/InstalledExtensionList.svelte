@@ -1,6 +1,8 @@
 <script lang="ts">
+import { FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
@@ -13,18 +15,37 @@ import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from '
 import { ExtensionsUtils } from './extensions-utils';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 import { installedTableSortState, orderInstalledTableRows } from './installed-extension-table-sort.svelte';
+import InstalledExtensionFilters from './InstalledExtensionFilters.svelte';
 import InstalledExtensionTable from './InstalledExtensionTable.svelte';
 
 interface Props {
   extensionInfos?: CombinedExtensionInfoUI[];
+  allExtensionInfos?: CombinedExtensionInfoUI[];
+  searchTerm?: string;
+  showFilteredEmpty?: boolean;
+  onResetFilter?: () => void;
 }
 
-let { extensionInfos = [] }: Props = $props();
+let {
+  extensionInfos = [],
+  allExtensionInfos = [],
+  searchTerm = $bindable(''),
+  showFilteredEmpty = false,
+  onResetFilter = (): void => {},
+}: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 let changeVersionExtension: CatalogExtensionInfoUI | undefined = $state(undefined);
 let changeVersionPreferredVersion: string | undefined = $state(undefined);
 let uiRevision = $state(0);
+
+const filterCatalogExtensions: CatalogExtensionInfoUI[] = $derived.by(() => {
+  $catalogExtensionInfos;
+  $featuredExtensionInfos;
+  return (allExtensionInfos.length > 0 ? allExtensionInfos : extensionInfos).map(extension =>
+    extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos),
+  );
+});
 
 onMount(() => {
   refreshNewBadges();
@@ -66,7 +87,7 @@ const tableRows: InstalledExtensionTableRow[] = $derived.by(() => {
     };
   });
 
-  return orderInstalledTableRows(rows, extensionsUtils);
+  return orderInstalledTableRows(rows);
 });
 
 function openChangeVersion(extension: CatalogExtensionInfoUI, preferredVersion?: string): void {
@@ -80,8 +101,20 @@ function closeChangeVersion(): void {
 }
 </script>
 
-<div class="grow px-5 py-3">
-  <InstalledExtensionTable rows={tableRows} onChangeVersion={openChangeVersion} />
+<div class="flex grow flex-col py-3">
+  <div class="sticky top-0 z-20 bg-[var(--pd-content-bg)] px-5 pb-4 pt-1">
+    <InstalledExtensionFilters catalogExtensions={filterCatalogExtensions} bind:searchTerm />
+  </div>
+
+  <div class="grow px-5">
+    {#if showFilteredEmpty}
+      <div class="flex min-h-[40vh] flex-1 items-center justify-center">
+        <FilteredEmptyScreen icon={ExtensionIcon} kind="extensions" bind:searchTerm {onResetFilter} />
+      </div>
+    {:else}
+      <InstalledExtensionTable rows={tableRows} onChangeVersion={openChangeVersion} />
+    {/if}
+  </div>
 </div>
 
 {#if changeVersionExtension}

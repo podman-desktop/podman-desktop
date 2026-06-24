@@ -208,6 +208,6 @@ export function refreshNewBadges(): void {
   scheduleNewBadgeExpiryCheck();
 }
 
-export function isExtensionPinnedRow(extensionId: string, userSortApplied: boolean): boolean {
-  return !userSortApplied && isNewBadgeActive(extensionId);
+export function isExtensionPinnedRow(_extensionId: string, _userSortApplied: boolean): boolean {
+  return false;
 }

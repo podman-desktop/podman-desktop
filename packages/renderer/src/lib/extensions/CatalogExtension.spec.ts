@@ -95,7 +95,7 @@ test('Expect to see featured and fetch button', async () => {
 
   expect(extensionWidget).toBeInTheDocument();
 
-  const featured = screen.getByText('Featured');
+  const featured = screen.getByLabelText('Featured extension');
   expect(featured).toBeInTheDocument();
 
   const installButton = screen.getByRole('button', { name: 'Install myId Extension' });
@@ -103,20 +103,16 @@ test('Expect to see featured and fetch button', async () => {
 
   await fireEvent.click(installButton);
 
-  expect(screen.getByRole('dialog')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Install v1.2.3' })).toBeEnabled();
-
-  await fireEvent.click(screen.getByRole('button', { name: 'Install v1.2.3' }));
-
   expect(vi.mocked(window.extensionInstallFromImage)).toHaveBeenCalledWith(
     'myLink',
     expect.any(Function),
     expect.any(Function),
     'myId',
   );
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
-test('Expect featured and community chips in the same container', async () => {
+test('Expect featured star without category tags on catalog cards', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'minikube',
     displayName: 'minikube',
@@ -128,7 +124,7 @@ test('Expect featured and community chips in the same container', async () => {
     publisherDisplayName: 'Podman Desktop',
     isInstalled: true,
     shortDescription: 'Run Kubernetes locally',
-    categories: [],
+    categories: ['Kubernetes'],
     keywords: [],
     availableVersions: [],
     hasUpdate: true,
@@ -146,20 +142,9 @@ test('Expect featured and community chips in the same container', async () => {
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  const featured = screen.getByLabelText('badge-Featured');
-  const community = screen.getByLabelText('badge-Community');
-
-  expect(featured.parentElement).toBe(community.parentElement);
-
-  const chipRow = featured.parentElement;
-  expect(chipRow).toBeTruthy();
-
-  const chipLabels = chipRow?.querySelectorAll('[aria-label^="badge-"]');
-  expect(chipLabels?.length).toBeGreaterThanOrEqual(2);
-
-  const featuredIndex = Array.from(chipLabels ?? []).indexOf(featured);
-  const communityIndex = Array.from(chipLabels ?? []).indexOf(community);
-  expect(communityIndex - featuredIndex).toBe(1);
+  expect(screen.getByLabelText('Featured extension')).toBeInTheDocument();
+  expect(screen.queryByLabelText('badge-Featured')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('badge-Kubernetes')).not.toBeInTheDocument();
 });
 
 test('Expect to have version of installed one', async () => {
@@ -188,7 +173,7 @@ test('Expect to have version of installed one', async () => {
   expect(screen.queryByRole('link', { name: /Upgrade to v/i })).not.toBeInTheDocument();
 });
 
-test('Expect upgrade link opens change version modal with latest version preselected', async () => {
+test('Expect installed catalog card shows version without upgrade link', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'minikube',
     displayName: 'minikube',
@@ -221,9 +206,6 @@ test('Expect upgrade link opens change version modal with latest version presele
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  const upgradeLink = screen.getByRole('link', { name: 'Upgrade to v0.4.1' });
-  await fireEvent.click(upgradeLink);
-
-  expect(screen.getByRole('dialog')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Upgrade to v0.4.1' })).toBeEnabled();
+  expect(screen.getByText('v0.4.0')).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Upgrade to v0.4.1' })).not.toBeInTheDocument();
 });

@@ -34,17 +34,14 @@ const disabledClasses =
   'bg-transparent hover:bg-transparent text-[var(--pd-dropdown-disabled-item-text)] cursor-default pointer-events-none';
 
 function handleClick(event: Event): void {
+  event.stopPropagation();
   if (!enabled) {
-    event.stopPropagation();
     return;
   }
-  if (keepMenuOpen) {
-    event.stopPropagation();
-    onClick(event);
-    return;
-  }
-  menuContext?.closeMenu();
   onClick(event);
+  if (!keepMenuOpen) {
+    menuContext?.closeMenu();
+  }
 }
 </script>
 

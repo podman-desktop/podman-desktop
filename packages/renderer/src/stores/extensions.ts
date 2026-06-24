@@ -38,18 +38,23 @@ async function checkForUpdate(): Promise<boolean> {
 
 export const extensionInfos: Writable<ExtensionInfo[]> = writable([]);
 
-const eventStore = new EventStore<ExtensionInfo[]>(
+// use helper here as window methods are initialized after the store in tests
+const listExtensions = async (): Promise<ExtensionInfo[]> => {
+  const result = await window.listExtensions();
+  result.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  return result;
+};
+
+export const extensionsEventStore = new EventStore<ExtensionInfo[]>(
   'extensions',
   extensionInfos,
   checkForUpdate,
   windowEvents,
   windowListeners,
-  fetchExtensions,
+  listExtensions,
 );
-eventStore.setup();
+const extensionsEventStoreInfo = extensionsEventStore.setup();
 
-async function fetchExtensions(): Promise<ExtensionInfo[]> {
-  const result = await window.listExtensions();
-  result.sort((a, b) => a.displayName.localeCompare(b.displayName));
-  return result;
-}
+export const fetchExtensions = async (): Promise<void> => {
+  await extensionsEventStoreInfo.fetch();
+};

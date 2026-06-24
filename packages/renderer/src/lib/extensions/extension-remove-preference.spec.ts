@@ -65,11 +65,11 @@ describe('extension-remove-preference', () => {
     } as CatalogExtensionInfoUI;
 
     expect(getExtensionRemoveBlockedReason(builtIn)).toContain('Built-in extensions');
-    expect(getExtensionRemoveBlockedReason(bundled)).toBe('Bundled with Podman Desktop and cannot be removed');
-    expect(getExtensionRemoveBlockedReasonShort(bundled)).toBe('Bundled extension cannot be removed');
-    expect(getExtensionRemoveBlockedReasonShort(builtIn)).toBe('Built-in extension cannot be removed');
+    expect(getExtensionRemoveBlockedReason(bundled)).toBe('Bundled with Podman Desktop and cannot be uninstalled');
+    expect(getExtensionRemoveBlockedReasonShort(bundled)).toBe('Bundled extension cannot be uninstalled');
+    expect(getExtensionRemoveBlockedReasonShort(builtIn)).toBe('Built-in extension cannot be uninstalled');
     expect(getExtensionRemoveBlockedReason(removable)).toBeUndefined();
-    expect(getExtensionRemovePreferenceDetail(removable)).toContain('Permanently remove Podman Quadlet');
+    expect(getExtensionRemovePreferenceDetail(removable)).toContain('Permanently uninstall Podman Quadlet');
     expect(canRemoveExtensionFromPreferences(removable)).toBe(true);
   });
 });

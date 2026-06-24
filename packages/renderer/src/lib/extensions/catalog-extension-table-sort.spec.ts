@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import {
@@ -24,12 +24,6 @@ import {
   orderCatalogTableExtensions,
   resetCatalogTableSort,
 } from './catalog-extension-table-sort.svelte';
-import {
-  markNewlyInstalled,
-  NEW_BADGE_DURATION_MS,
-  newlyInstalledAt,
-  refreshNewBadges,
-} from './extension-catalog-settings.svelte';
 
 function createExtension(id: string, name: string, featured = false): CatalogExtensionInfoUI {
   return {
@@ -53,70 +47,34 @@ function createExtension(id: string, name: string, featured = false): CatalogExt
 
 describe('catalog-extension-table-sort', () => {
   beforeEach(() => {
-    newlyInstalledAt.clear();
     resetCatalogTableSort();
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-06-15T10:00:00Z'));
   });
 
   afterEach(() => {
-    newlyInstalledAt.clear();
     resetCatalogTableSort();
-    vi.useRealTimers();
   });
 
-  test('pins newly installed extensions to the top until user sorts', () => {
-    markNewlyInstalled('new-ext');
-    newlyInstalledAt.set('new-ext', Date.now());
-
+  test('orders featured extensions before others by default', () => {
     const extensions = [
       createExtension('alpha', 'Alpha'),
-      createExtension('new-ext', 'New Extension'),
+      createExtension('featured', 'Featured Extension', true),
       createExtension('beta', 'Beta'),
     ];
     const ordered = orderCatalogTableExtensions(extensions);
 
-    expect(ordered.map(extension => extension.id)).toEqual(['new-ext', 'alpha', 'beta']);
+    expect(ordered.map(extension => extension.id)).toEqual(['featured', 'alpha', 'beta']);
   });
 
   test('uses standard sorting after user applies a column sort', () => {
-    markNewlyInstalled('new-ext');
-    newlyInstalledAt.set('new-ext', Date.now());
-
     const extensions = [
       createExtension('alpha', 'Alpha'),
-      createExtension('new-ext', 'New Extension'),
       createExtension('beta', 'Beta'),
+      createExtension('featured', 'Featured Extension', true),
     ];
 
     applyCatalogTableSort('Name');
     const ordered = orderCatalogTableExtensions(extensions);
 
-    expect(ordered.map(extension => extension.id)).toEqual(['alpha', 'beta', 'new-ext']);
-  });
-
-  test('returns normal order after the new badge expires', () => {
-    markNewlyInstalled('new-ext');
-
-    const extensions = [
-      createExtension('alpha', 'Alpha'),
-      createExtension('new-ext', 'New Extension'),
-      createExtension('beta', 'Beta'),
-    ];
-
-    expect(orderCatalogTableExtensions(extensions).map(extension => extension.id)).toEqual([
-      'new-ext',
-      'alpha',
-      'beta',
-    ]);
-
-    vi.advanceTimersByTime(NEW_BADGE_DURATION_MS + 1);
-    refreshNewBadges();
-
-    expect(orderCatalogTableExtensions(extensions).map(extension => extension.id)).toEqual([
-      'alpha',
-      'beta',
-      'new-ext',
-    ]);
+    expect(ordered.map(extension => extension.id)).toEqual(['alpha', 'beta', 'featured']);
   });
 });

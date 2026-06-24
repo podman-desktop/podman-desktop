@@ -22,6 +22,14 @@ export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
 
 export const EXTENSION_BUILTIN_CHIP_TOOLTIP = 'Pre-installed with Podman Desktop';
 
+export const EXTENSION_BUILTIN_INDICATOR_TOOLTIP = 'Built-in extension';
+
+/** Blue indicator icons shown next to extension names (featured, built-in). */
+export const EXTENSION_INDICATOR_ICON_CLASS = 'text-sm text-[var(--pd-badge-sky)]';
+
+/** Verified publisher indicator uses link color to match existing chrome. */
+export const EXTENSION_VERIFIED_INDICATOR_ICON_CLASS = 'text-sm text-[var(--pd-link)]';
+
 export const EXTENSION_NEW_BADGE_TOOLTIP = 'Just installed';
 
 export function buildExtensionNewNavigationTooltip(name: string): string {
@@ -42,18 +50,21 @@ export const EXTENSION_CHIP_COLORS = {
   new: 'bg-yellow-500',
   update: 'bg-[var(--pd-status-warning)]',
   installed: 'bg-[var(--pd-badge-gray)]',
+  category: 'bg-[var(--pd-status-disconnected)]',
   community: 'bg-[var(--pd-status-disconnected)]',
   verified: 'bg-[var(--pd-status-running)]',
   communityOrigin: 'bg-[var(--pd-status-disconnected)]',
-  builtin: 'bg-[var(--pd-badge-builtin-extension-bg)]',
-  devMode: 'bg-[var(--pd-badge-devmode-extension-bg)]',
+  /** Dark gray background for readable white label text. */
+  builtin: 'bg-[var(--pd-status-disconnected)]',
+  devMode: 'bg-[var(--pd-status-disconnected)]',
   dockerDesktop: 'bg-[var(--pd-badge-dd-extension-bg)]',
   dockerDesktopText: '!text-white',
 } as const;
 
 export const EXTENSION_CHIP_TEXT_CLASS = '!text-white';
 
-export const EXTENSION_BUILTIN_CHIP_TEXT_CLASS = 'text-[var(--pd-badge-text)]';
+/** @deprecated Use EXTENSION_CHIP_TEXT_CLASS for gray-background chips. */
+export const EXTENSION_BUILTIN_CHIP_TEXT_CLASS = EXTENSION_CHIP_TEXT_CLASS;
 
 export function buildExtensionBugReportUrl(repositoryUrl?: string): string {
   const fallback = 'https://github.com/podman-desktop/podman-desktop/issues/new';

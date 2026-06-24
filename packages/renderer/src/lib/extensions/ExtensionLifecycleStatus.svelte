@@ -12,6 +12,8 @@ import {
   resolveExtensionCompatibilityIssues,
 } from './extension-compatibility';
 import { getExtensionCompatibilityPresentation, getExtensionLifecyclePresentation } from './extension-lifecycle-status';
+import { shouldHideExtensionErrorPresentation } from './extension-lifecycle-toggle';
+import { EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT } from './extension-lifecycle-user-toggle';
 
 interface Props {
   extension?: CombinedExtensionInfoUI;
@@ -37,7 +39,16 @@ onMount(() => {
     }
   }
 
+  const handleLifecycleToggle = (): void => {
+    uiRevision += 1;
+  };
+
   void loadPodmanDesktopVersion().catch(() => {});
+  window.addEventListener(EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT, handleLifecycleToggle);
+
+  return (): void => {
+    window.removeEventListener(EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT, handleLifecycleToggle);
+  };
 });
 
 const compatibilityIssues = $derived.by(() => {
@@ -60,7 +71,12 @@ const lifecyclePresentation = $derived(
   extension ? getExtensionLifecyclePresentation(extension.state, extension.type) : undefined,
 );
 
-const presentation = $derived(compatibilityPresentation ?? lifecyclePresentation);
+const presentation = $derived.by(() => {
+  if (extension && shouldHideExtensionErrorPresentation(extension.state)) {
+    return lifecyclePresentation;
+  }
+  return compatibilityPresentation ?? lifecyclePresentation;
+});
 
 const compatibilityTooltip = $derived(
   compatibilityIssues.map(issue => formatExtensionCompatibilityIssueTooltip(issue)).join('\n\n'),
@@ -68,7 +84,10 @@ const compatibilityTooltip = $derived(
 
 const failureReason = $derived(extension?.error?.message ?? 'Unknown error');
 const showFailureTooltip = $derived(
-  !compatibilityPresentation && extension?.state === 'failed' && !!extension?.error?.message,
+  !compatibilityPresentation &&
+    extension?.state === 'failed' &&
+    !!extension?.error?.message &&
+    !shouldHideExtensionErrorPresentation(extension.state),
 );
 const showCompatibilityTooltip = $derived(!!compatibilityPresentation && compatibilityIssues.length > 0);
 const tooltip = $derived(
