@@ -23,7 +23,6 @@ import type { CancellationToken, Progress, ProviderConnectionStatus, RunResult }
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
-import { resolveContainerMachineProvider } from '/@/extension';
 import type { MachineInfo } from '/@/types';
 import * as util from '/@/utils/util';
 
@@ -31,10 +30,6 @@ import { PodmanCertificateSync } from './podman-certificate-sync';
 
 vi.mock(import('../utils/util'), () => ({
   execPodman: vi.fn(),
-}));
-
-vi.mock(import('/@/extension'), () => ({
-  resolveContainerMachineProvider: vi.fn().mockImplementation(async (vmType: string | undefined) => vmType),
 }));
 
 vi.mock(import('node:tls'), () => ({
@@ -66,7 +61,6 @@ describe('PodmanCertificateSync', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mocked(resolveContainerMachineProvider).mockImplementation(async vmType => vmType);
     machineStatuses = new Map();
     machineInfos = new Map();
     certSync = new PodmanCertificateSync(machineStatuses, machineInfos);

@@ -3627,20 +3627,6 @@ test('getJSONMachineList should update WSL/HyperV context even for podman >= 6.0
   expect(extensionApi.context.setValue).toBeCalledWith(WSL_HYPERV_ENABLED_KEY, true);
 });
 
-test('startMachine passes undefined provider to execPodman for podman >= 6.0', async () => {
-  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' } as InstalledPodman);
-  const execPodmanSpy = vi.spyOn(util, 'execPodman').mockResolvedValue({
-    stdout: '',
-    stderr: '',
-    command: '',
-  });
-
-  await extension.startMachine(provider, podmanConfiguration, machineInfo);
-
-  expect(execPodmanSpy).toHaveBeenCalledOnce();
-  expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'start', machineInfo.name], undefined, expect.any(Object));
-});
-
 describe('updateWSLHyperVEnabledValue', () => {
   beforeEach(() => {
     extension.updateWSLHyperVEnabledContextValue(true);

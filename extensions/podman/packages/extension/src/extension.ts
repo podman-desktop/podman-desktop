@@ -298,7 +298,7 @@ async function doUpdateMachines(
           const podmanMachineInfo = podmanMachinesInfo.get(machineName);
           const { stdout: socket } = await execPodman(
             ['machine', 'inspect', '--format', '{{.ConnectionInfo.PodmanSocket.Path}}', machineName],
-            await resolveContainerMachineProvider(podmanMachineInfo?.vmType),
+            podmanMachineInfo?.vmType,
           );
           socketPath = socket;
         }
@@ -408,10 +408,7 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
         try {
           const connectionName = isRootful ? `${runningMachine.Name}${ROOTFUL_SUFFIX}` : runningMachine.Name;
           // make it the default to run the info command
-          await execPodman(
-            ['system', 'connection', 'default', connectionName],
-            await resolveContainerMachineProvider(runningMachine.VMType),
-          );
+          await execPodman(['system', 'connection', 'default', connectionName], runningMachine.VMType);
         } catch (error) {
           // eslint-disable-next-line quotes
           console.error("Error running 'podman system connection default': ", error);
@@ -448,10 +445,7 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
       try {
         const connectionName = machineIsRootful ? `${runningMachine.Name}${ROOTFUL_SUFFIX}` : runningMachine.Name;
         // make it the default to run the info command
-        await execPodman(
-          ['system', 'connection', 'default', connectionName],
-          await resolveContainerMachineProvider(runningMachine.VMType),
-        );
+        await execPodman(['system', 'connection', 'default', connectionName], runningMachine.VMType);
       } catch (error) {
         // eslint-disable-next-line quotes
         console.error("Error running 'podman system connection default': ", error);
@@ -483,10 +477,7 @@ async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Prom
     vmType = machineDetails.VMType;
   }
   try {
-    const { stdout: machineInspectJson } = await execPodman(
-      ['machine', 'inspect', machineName],
-      await resolveContainerMachineProvider(vmType),
-    );
+    const { stdout: machineInspectJson } = await execPodman(['machine', 'inspect', machineName], vmType);
     const machinesInspect = JSON.parse(machineInspectJson);
     // find the machine name in the array
     const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineName);
@@ -826,7 +817,7 @@ export async function registerProviderFor(
           if (state === 'started') {
             await lifecycle.stop?.(context, logger);
           }
-          await execPodman(args, await resolveContainerMachineProvider(machineInfo.vmType), {
+          await execPodman(args, machineInfo.vmType, {
             logger: new LoggerDelegator(context, logger),
           });
 
@@ -914,11 +905,7 @@ export async function startMachine(
       runOptions.detached = true;
     }
 
-    await execPodman(
-      ['machine', 'start', machineInfo.name],
-      await resolveContainerMachineProvider(machineInfo.vmType),
-      runOptions,
-    );
+    await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
 
     // Provision /etc/containers/enable-rosetta if needed (macOS Tahoe + AppleHV + Podman 5.6+).
     // If the file was just created, restart the machine so the binfmt_misc handler registers.
@@ -964,7 +951,7 @@ export async function stopMachine(
   const telemetryRecords: Record<string, unknown> = {};
   telemetryRecords.provider = machineInfo.vmType;
   try {
-    await execPodman(['machine', 'stop', machineInfo.name], await resolveContainerMachineProvider(machineInfo.vmType), {
+    await execPodman(['machine', 'stop', machineInfo.name], machineInfo.vmType, {
       logger: new LoggerDelegator(context, logger),
     });
     provider.updateStatus('stopped');
@@ -1826,35 +1813,22 @@ async function stopAutoStartedMachine(): Promise<void> {
     return;
   }
   console.log('stopping autostarted machine', autoMachineName);
-  await execPodman(['machine', 'stop', autoMachineName], await resolveContainerMachineProvider(currentMachine.VMType));
-}
-
-/**
- * Returns undefined when Podman >= 6.0 because CONTAINERS_MACHINE_PROVIDER is no longer needed
- * to route machine operations (machine names are globally unique in 6.0+).
- */
-export async function resolveContainerMachineProvider(vmType: string | undefined): Promise<string | undefined> {
-  if (!vmType) return undefined;
-  const installedPodman = await podmanBinary.getBinaryInfo();
-  if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {
-    return undefined;
-  }
-  return vmType;
+  await execPodman(['machine', 'stop', autoMachineName], currentMachine.VMType);
 }
 
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const installedPodman = await podmanBinary.getBinaryInfo();
 
+  let hypervEnabled = false;
+  wslEnabled = await winPlatform.isWSLEnabled();
+  if (await winPlatform.isHyperVEnabled()) {
+    hypervEnabled = true;
+  }
+  updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
+
   // For Podman >= 6.0, machine list returns all machines across all providers by default,
   // so a single call without specifying a provider is sufficient.
   if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {
-    let hypervEnabled = false;
-    wslEnabled = await winPlatform.isWSLEnabled();
-    if (await winPlatform.isHyperVEnabled()) {
-      hypervEnabled = true;
-    }
-    updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
-
     const machineListOutput = await getJSONMachineListByProvider();
     return {
       list: JSON.parse(machineListOutput.stdout) as MachineJSON[],
@@ -1869,18 +1843,13 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
     containerMachineProviders.push(...['applehv', 'libkrun']);
   }
 
-  let hypervEnabled = false;
-  wslEnabled = await winPlatform.isWSLEnabled();
   if (wslEnabled) {
     containerMachineProviders.push('wsl');
   }
 
-  if (await winPlatform.isHyperVEnabled()) {
-    hypervEnabled = true;
+  if (hypervEnabled) {
     containerMachineProviders.push('hyperv');
   }
-  // update context "wsl-hyperv enabled" value
-  updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
 
   if (containerMachineProviders.length === 0) {
     // in all other cases we set undefined so that it executes normally by using the default container provider

@@ -22,7 +22,6 @@ import * as tls from 'node:tls';
 import type { CancellationToken, Progress, ProviderConnectionStatus, RunError } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
-import { resolveContainerMachineProvider } from '/@/extension';
 import type { MachineInfo } from '/@/types';
 import { execPodman } from '/@/utils/util';
 
@@ -70,9 +69,7 @@ export class PodmanCertificateSync {
    */
   private async runMachineCommand(machineName: string, command: string, token?: CancellationToken): Promise<void> {
     const vmType = this.machineInfos.get(machineName)?.vmType;
-    await execPodman(['machine', 'ssh', machineName, command], await resolveContainerMachineProvider(vmType), {
-      token,
-    });
+    await execPodman(['machine', 'ssh', machineName, command], vmType, { token });
   }
 
   /**
@@ -85,11 +82,7 @@ export class PodmanCertificateSync {
     token?: CancellationToken,
   ): Promise<string> {
     const vmType = this.machineInfos.get(machineName)?.vmType;
-    const result = await execPodman(
-      ['machine', 'ssh', machineName, command],
-      await resolveContainerMachineProvider(vmType),
-      { token },
-    );
+    const result = await execPodman(['machine', 'ssh', machineName, command], vmType, { token });
     return result.stdout;
   }
 
