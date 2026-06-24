@@ -211,7 +211,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
         </Route>
 
-        <Route path="/kube/play" breadcrumb="Podman Kube Play">
+        <Route path="/kube/play" breadcrumb="Podman kube play">
           <KubePlayYAML />
         </Route>
 
