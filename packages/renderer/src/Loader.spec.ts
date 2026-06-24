@@ -18,16 +18,20 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { render } from '@testing-library/svelte';
+import '@testing-library/jest-dom/vitest';
+
+import type { ColorInfo } from '@desktop-framework/api';
+import { render, screen } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import Loader from './Loader.svelte';
 import { lastPage } from './stores/breadcrumb';
+import { colorsInfos } from './stores/colors';
 
 // first, patch window object
 const callbacks = new Map<string, any>();
@@ -38,10 +42,14 @@ const eventEmitter = {
 };
 
 const dispatchEventMock = vi.fn();
+const extensionSystemIsReadyMock = vi.fn();
 const extensionSystemIsExtensionsStartedMock = vi.fn();
 
 // mock the router
 vi.mock(import('tinro'));
+
+// no need to render the whole application
+vi.mock(import('./App.svelte'));
 
 Object.defineProperty(global, 'window', {
   value: {
@@ -49,7 +57,7 @@ Object.defineProperty(global, 'window', {
       receive: eventEmitter.receive,
     },
     dispatchEvent: dispatchEventMock,
-    extensionSystemIsReady: vi.fn(),
+    extensionSystemIsReady: extensionSystemIsReadyMock,
     extensionSystemIsExtensionsStarted: extensionSystemIsExtensionsStartedMock,
     addEventListener: eventEmitter.receive,
   },
@@ -61,11 +69,25 @@ beforeAll(() => {
   vi.clearAllMocks();
 });
 
+const color: ColorInfo = {
+  id: 'color',
+  cssVar: '--pd-color',
+  value: '#ffffff',
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  extensionSystemIsReadyMock.mockResolvedValue(false);
+  colorsInfos.set([]);
+});
+
 test('Loader should redirect to the installation page when receiving the event', async () => {
   const dummyExtensionId = 'my.customExtensionId';
 
   // rendering the component
   render(Loader, { props: {} });
+  // let the initial system ready check settle before simulating the events
+  await tick();
 
   // send the install-extension:from-id event
   const callbackInstallExtension = callbacks.get('install-extension:from-id');
@@ -76,12 +98,14 @@ test('Loader should redirect to the installation page when receiving the event',
   // check that we didn't redirect to the installation page as system is not yet ready
   expect(router.goto).not.toHaveBeenCalled();
 
-  // send the system-ready event
-  const callback = callbacks.get('system-ready');
-  // send 'system-ready' event
-  expect(callback).toBeDefined();
-  await callback();
+  // flag the system as ready, colors are still loading: the redirect must still be deferred
+  callbacks.get('starting-extensions')('true');
+  await tick();
+  expect(router.goto).not.toHaveBeenCalled();
 
+  // now colors are loaded: the deferred redirect happens
+  colorsInfos.set([color]);
+  await tick();
   await tick();
 
   // check that we have been redirected
@@ -92,6 +116,25 @@ test('Loader should redirect to the installation page when receiving the event',
     name: 'Extensions',
     path: '/extensions',
   });
+});
+
+test('Loader should show the splash screen until the system is ready and colors are loaded', async () => {
+  // rendering the component
+  render(Loader, { props: {} });
+  await tick();
+
+  // system is not ready yet
+  expect(screen.getByText('Initializing...')).toBeInTheDocument();
+
+  // system is ready but colors are still loading: keep the splash screen
+  callbacks.get('starting-extensions')('true');
+  await tick();
+  expect(screen.getByText('Initializing...')).toBeInTheDocument();
+
+  // colors are loaded: the application can be displayed
+  colorsInfos.set([color]);
+  await tick();
+  expect(screen.queryByText('Initializing...')).not.toBeInTheDocument();
 });
 
 test('Loader should send the event if extensions take time to start', async () => {
