@@ -23,7 +23,7 @@ import { TasksPage } from '/@/model/pages/tasks-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-const longRunningTaskName = 'quay.io/fbenoit/long-task-example:v1.0';
+const longRunningTaskName = 'ghcr.io/podmandesktop-ci/long-task-example:v1.0';
 const taskName = 'Dummy Long Task';
 const taskDisplayName = 'Doing something';
 

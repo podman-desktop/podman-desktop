@@ -23,10 +23,10 @@ You can also use the Kubernetes CLI to configure access to your Kubernetes clust
 #### Procedure
 
 1. (Optionally) Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Preferences > Kubernetes** to adapt your kubeconfig file location, when different from the default `$HOME/.kube/config`.
-1. Register your _`<my_kubernetes>`_ Kubernetes cluster:
+1. Register your Kubernetes cluster:
 
-   ```shell-session
-   $ kubectl config set-cluster <my_kubernetes> --server=<my_kubernetes_url>
+   ```bash
+   kubectl config set-cluster <cluster-name> --server=<server-url>
    ```
 
 #### Verification

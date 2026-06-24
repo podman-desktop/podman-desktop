@@ -671,6 +671,15 @@ export class ColorRegistry {
       hcDark: white,
       hcLight: black,
     });
+
+    this.registerColorDefinition(
+      this.color(`${invCt}table-row-stripe`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.04))
+        .withDark(colorPaletteHelper(white).withAlpha(0.04))
+        .withHcLight(colorPaletteHelper(black).withAlpha(0.04))
+        .withHcDark(colorPaletteHelper(white).withAlpha(0.04))
+        .build(),
+    );
   }
 
   protected initContent(): void {
