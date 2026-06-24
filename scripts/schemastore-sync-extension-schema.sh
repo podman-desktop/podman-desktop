@@ -24,8 +24,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
 forwarded_args=("$@")
-
-incoming_file="../source-repo/schemas/extension-schema.json"
+incoming_file="../schemas/extension-schema.json"
 schema_dir="src/schemas/json"
 catalog_file="src/api/json/catalog.json"
 schema_validation_file="src/schema-validation.jsonc"
