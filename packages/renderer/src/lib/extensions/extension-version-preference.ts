@@ -20,9 +20,10 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import { extensionHasOtherVersions } from './extension-onboarding-utils';
+import { extensionHasVersionUpdate } from './extension-onboarding-utils';
 import {
   getDisplayInstalledVersion,
+  getStoreInstalledVersion,
   getVersionChangeLinkLabel,
   normalizeVersionValue,
 } from './extension-version-update.svelte';
@@ -42,8 +43,56 @@ export function shouldShowExtensionVersionPreference(extension?: CatalogExtensio
   return !!extension?.isInstalled && !extension.installedExtension?.devMode;
 }
 
+function collectCatalogVersions(extension: CatalogExtensionInfoUI): Set<string> {
+  const versions = new Set<string>();
+
+  for (const version of extension.availableVersions) {
+    const normalized = normalizeVersionValue(version.version);
+    if (normalized) {
+      versions.add(normalized);
+    }
+  }
+
+  const fetchVersion = normalizeVersionValue(extension.fetchVersion);
+  if (fetchVersion) {
+    versions.add(fetchVersion);
+  }
+
+  return versions;
+}
+
+function getLatestCatalogVersion(extension: CatalogExtensionInfoUI): string | undefined {
+  const versions = collectCatalogVersions(extension);
+  if (versions.size === 0) {
+    return undefined;
+  }
+
+  return [...versions].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0];
+}
+
+export function extensionIsOnLatestVersion(extension: CatalogExtensionInfoUI): boolean {
+  const current = getExtensionVersionPreferenceValue(extension);
+  if (!current) {
+    return false;
+  }
+
+  if (extensionHasVersionUpdate(extension.isInstalled, current, extension.fetchVersion, extension.hasUpdate)) {
+    return false;
+  }
+
+  const latest = getLatestCatalogVersion(extension);
+  return !!latest && current === latest;
+}
+
 export function extensionHasVersionChoices(extension: CatalogExtensionInfoUI): boolean {
-  return extensionHasOtherVersions(extension);
+  const current = getExtensionVersionPreferenceValue(extension);
+  const versions = collectCatalogVersions(extension);
+
+  if (!current) {
+    return versions.size > 1;
+  }
+
+  return [...versions].some(version => version !== current);
 }
 
 export function getExtensionVersionPreferenceSummary(currentVersion: string): string {
@@ -79,19 +128,7 @@ export function getExtensionVersionOptions(
   extension: CatalogExtensionInfoUI,
   currentVersion: string,
 ): ExtensionVersionOption[] {
-  const versions = new Set<string>();
-
-  for (const version of extension.availableVersions) {
-    const normalized = normalizeVersionValue(version.version);
-    if (normalized) {
-      versions.add(normalized);
-    }
-  }
-
-  const fetchVersion = normalizeVersionValue(extension.fetchVersion);
-  if (fetchVersion) {
-    versions.add(fetchVersion);
-  }
+  const versions = collectCatalogVersions(extension);
 
   return [...versions]
     .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))
@@ -125,11 +162,8 @@ export function getExtensionVersionOptions(
 }
 
 export function getExtensionVersionPreferenceValue(extension: CatalogExtensionInfoUI): string {
-  return (
-    normalizeVersionValue(
-      getDisplayInstalledVersion(extension.id, extension.installedVersion) ?? extension.installedVersion,
-    ) ?? ''
-  );
+  const storeVersion = getStoreInstalledVersion(extension);
+  return normalizeVersionValue(getDisplayInstalledVersion(extension.id, storeVersion) ?? storeVersion) ?? '';
 }
 
 export function matchesExtensionVersionSearch(searchValue: string): boolean {
@@ -149,9 +183,9 @@ export async function confirmExtensionVersionChange(
   extension: CatalogExtensionInfoUI,
   targetVersion: string,
 ): Promise<boolean> {
-  const actionLabel = getVersionChangeLinkLabel(extension.installedVersion, targetVersion);
+  const actionLabel = getVersionChangeLinkLabel(getExtensionVersionPreferenceValue(extension), targetVersion);
   const result = await window.showMessageBox({
-    type: 'question',
+    type: 'none',
     title: `${actionLabel} for ${extension.displayName}?`,
     detail: `The extension will be updated to v${targetVersion}.`,
     buttons: [actionLabel, 'Cancel'],

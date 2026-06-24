@@ -22,6 +22,8 @@ import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { extensionHasVersionChoices, getExtensionVersionPreferenceValue } from './extension-version-preference';
+import { optimisticInstalledVersionsStore, resetVersionUpdateStateForTests } from './extension-version-update.svelte';
 import ExtensionVersionPreference from './ExtensionVersionPreference.svelte';
 
 test('renders version dropdown with current installed version selected', async () => {
@@ -46,6 +48,33 @@ test('renders version dropdown with current installed version selected', async (
     ),
   ).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'v1.0.0' })).toBeEnabled();
+  expect(screen.queryByLabelText('Up to date')).not.toBeInTheDocument();
+});
+
+test('renders up to date chip when latest version is installed but downgrades are available', async () => {
+  const extension = {
+    id: 'podman-desktop.minikube',
+    displayName: 'minikube',
+    isInstalled: true,
+    installedVersion: '0.4.0',
+    fetchVersion: '0.4.0',
+    availableVersions: [
+      { version: '0.4.0', ociUri: '', preview: false },
+      { version: '0.3.0', ociUri: '', preview: false },
+      { version: '0.2.0', ociUri: '', preview: false },
+    ],
+    installedExtension: { devMode: false },
+  } as CatalogExtensionInfoUI;
+
+  render(ExtensionVersionPreference, { extension });
+
+  expect(screen.getByLabelText('Up to date')).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      'Currently installed v0.4.0. Select a version to upgrade or downgrade (may require restart of extension)',
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'v0.4.0' })).toBeEnabled();
 });
 
 test('renders disabled version dropdown when no other versions are available', async () => {
@@ -62,6 +91,48 @@ test('renders disabled version dropdown when no other versions are available', a
   render(ExtensionVersionPreference, { extension });
 
   expect(screen.getByText('Version')).toBeInTheDocument();
+  expect(screen.getByLabelText('Up to date')).toBeInTheDocument();
   expect(screen.getByText('Currently installed v1.28.0-next. No other versions available')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'v1.28.0-next' })).toBeDisabled();
+});
+
+test('keeps version choices enabled after an optimistic upgrade', () => {
+  resetVersionUpdateStateForTests();
+
+  const extension = {
+    id: 'podman-desktop.minikube',
+    displayName: 'minikube',
+    isInstalled: true,
+    installedVersion: '0.2.0',
+    fetchVersion: '0.4.0',
+    availableVersions: [
+      { version: '0.4.0', ociUri: 'oci:minikube:0.4.0', preview: false },
+      { version: '0.2.0', ociUri: 'oci:minikube:0.2.0', preview: false },
+    ],
+    installedExtension: {
+      id: 'podman-desktop.minikube',
+      version: '0.4.0',
+      displayName: 'minikube',
+      state: 'started',
+      removable: true,
+      devMode: false,
+      type: 'pd',
+      path: '',
+      readme: '',
+    },
+  } as CatalogExtensionInfoUI;
+
+  optimisticInstalledVersionsStore.set({ 'podman-desktop.minikube': '0.4.0' });
+
+  expect(getExtensionVersionPreferenceValue(extension)).toBe('0.4.0');
+  expect(extensionHasVersionChoices(extension)).toBe(true);
+
+  render(ExtensionVersionPreference, { extension });
+
+  expect(
+    screen.getByText(
+      'Currently installed v0.4.0. Select a version to upgrade or downgrade (may require restart of extension)',
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'v0.4.0' })).toBeEnabled();
 });

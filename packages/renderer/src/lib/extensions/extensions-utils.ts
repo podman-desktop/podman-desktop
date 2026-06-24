@@ -24,14 +24,18 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
 import { resolveExtensionVerificationStatus, shouldShowBuiltInNameIndicator } from './extension-origin-utils';
 import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
 import {
   applyPrototypeCatalogUseCaseOverlay,
   applyPrototypeUseCaseOverlays,
   bumpPrototypePatchVersion,
-  USE_CASE_EXTENSION_IDS,
+  getPrototypeUpdateTargetVersion,
+  isPrototypeUpdateDemoExtension,
+  PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS,
 } from './extension-prototype-use-cases';
+import { withDisplayInstalledVersion } from './extension-version-update.svelte';
 import type { InstalledListFilters } from './installed-list-filters.svelte';
 
 export class ExtensionsUtils {
@@ -257,40 +261,50 @@ export class ExtensionsUtils {
   }
 
   /**
-   * Prototype helper (DTUX-2849): ensure at least one installed extension shows an update
+   * Prototype helper (DTUX-2849): ensure two installed extensions show an update
    * when no real version mismatch exists in catalog data.
    */
   ensurePrototypeUpdateDemo(extensions: CatalogExtensionInfoUI[]): CatalogExtensionInfoUI[] {
-    const realExtensions = extensions.filter(extension => !isPrototypeInstalledDemo(extension.id));
-    const preferredDemo = realExtensions.find(
-      extension =>
-        extension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate &&
-        extension.isInstalled &&
-        extension.installedVersion,
-    );
-
-    const withKindDemo = extensions.map(extension => {
-      if (extension.isInstalled && extension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate) {
+    let result = extensions.map(extension => {
+      if (extension.isInstalled && isPrototypeUpdateDemoExtension(extension.id)) {
         return applyPrototypeCatalogUseCaseOverlay(extension);
       }
       return extension;
     });
 
-    if (withKindDemo.some(extension => extension.isInstalled && extension.hasUpdate)) {
-      return withKindDemo;
+    const countUpdates = (list: CatalogExtensionInfoUI[]): number =>
+      list.filter(extension => extension.isInstalled && extension.hasUpdate).length;
+
+    if (countUpdates(result) >= 2) {
+      return result;
     }
 
-    const candidate = preferredDemo;
-    if (!candidate) {
-      return withKindDemo;
-    }
-
-    return withKindDemo.map(extension => {
-      if (extension.id !== candidate.id) {
-        return extension;
+    for (const demoId of PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS) {
+      if (countUpdates(result) >= 2) {
+        break;
       }
-      return this.withPrototypeUpdate(extension);
-    });
+
+      result = result.map(extension => {
+        if (extension.id !== demoId || !extension.isInstalled || extension.hasUpdate) {
+          return extension;
+        }
+        return this.withPrototypeUpdate(applyPrototypeCatalogUseCaseOverlay(extension));
+      });
+    }
+
+    if (countUpdates(result) >= 2) {
+      return result;
+    }
+
+    for (let index = 0; index < result.length && countUpdates(result) < 2; index++) {
+      const extension = result[index];
+      if (!extension.isInstalled || extension.hasUpdate || isPrototypeInstalledDemo(extension.id)) {
+        continue;
+      }
+      result[index] = this.withPrototypeUpdate(extension);
+    }
+
+    return result;
   }
 
   withPrototypeUpdate(extension: CatalogExtensionInfoUI): CatalogExtensionInfoUI {
@@ -298,7 +312,9 @@ export class ExtensionsUtils {
     const fetchVersion =
       extension.fetchVersion && extension.fetchVersion !== installedVersion
         ? extension.fetchVersion
-        : bumpPrototypePatchVersion(installedVersion ?? '');
+        : isPrototypeUpdateDemoExtension(extension.id)
+          ? getPrototypeUpdateTargetVersion(extension.id, installedVersion ?? '')
+          : bumpPrototypePatchVersion(installedVersion ?? '');
 
     const availableVersions = [...extension.availableVersions];
     if (fetchVersion && !availableVersions.some(version => version.version === fetchVersion)) {
@@ -410,8 +426,10 @@ export class ExtensionsUtils {
         return false;
       }
 
-      if (listFilters.hasUpdate === true && !catalogExtension?.hasUpdate) {
-        return false;
+      if (listFilters.hasUpdate === true) {
+        if (!catalogExtension || !extensionRequiresManualUpdate(withDisplayInstalledVersion(catalogExtension))) {
+          return false;
+        }
       }
 
       if (listFilters.featured === true && !catalogExtension?.isFeatured) {

@@ -42,6 +42,14 @@ export function getExtensionCompatibilityPresentation(
   };
 }
 
+export function getExtensionVersionUpdatePresentation(): ExtensionLifecyclePresentation {
+  return {
+    statusDotStatus: 'stopped',
+    label: 'Upgrading',
+    textColorVar: 'var(--pd-status-stopped)',
+  };
+}
+
 export function getExtensionLifecyclePresentation(
   extensionState: string,
   extensionType: 'dd' | 'pd',

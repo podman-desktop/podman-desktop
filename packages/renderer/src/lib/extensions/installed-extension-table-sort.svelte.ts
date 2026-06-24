@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
-import { USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 
 export type InstalledTableSortColumn = 'Name' | 'Version' | 'Status';
@@ -66,37 +64,10 @@ function compareRows(
   }
 }
 
-function pinInstalledTableRows(rows: InstalledExtensionTableRow[]): InstalledExtensionTableRow[] {
-  const manualUpdate: InstalledExtensionTableRow[] = [];
-  const rest: InstalledExtensionTableRow[] = [];
-
-  for (const row of rows) {
-    if (extensionRequiresManualUpdate(row.catalogExtension)) {
-      manualUpdate.push(row);
-    } else {
-      rest.push(row);
-    }
-  }
-
-  manualUpdate.sort((a, b) => {
-    if (a.catalogExtension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate) {
-      return -1;
-    }
-    if (b.catalogExtension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate) {
-      return 1;
-    }
-    return a.name.localeCompare(b.name);
-  });
-
-  rest.sort((a, b) => a.name.localeCompare(b.name));
-
-  return [...manualUpdate, ...rest];
-}
-
 export function orderInstalledTableRows(rows: InstalledExtensionTableRow[]): InstalledExtensionTableRow[] {
   const sort = installedTableSortState.value;
   if (!sort) {
-    return pinInstalledTableRows(rows);
+    return [...rows].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   const sorted = [...rows].sort((a, b) => compareRows(a, b, sort.column));

@@ -22,6 +22,7 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import {
   confirmExtensionVersionChange,
   extensionHasVersionChoices,
+  extensionIsOnLatestVersion,
   getExtensionVersionOptions,
   getExtensionVersionPreferenceDescription,
   getExtensionVersionPreferenceDetail,
@@ -97,6 +98,34 @@ describe('extension-version-preference', () => {
     expect(getExtensionVersionPreferenceDescription('1.0.0', true)).toContain('upgrade or downgrade');
   });
 
+  test('detects when installed version is the latest catalog version', () => {
+    const onLatestWithDowngrades = {
+      isInstalled: true,
+      installedVersion: '0.4.0',
+      fetchVersion: '0.4.0',
+      availableVersions: [
+        { version: '0.4.0', ociUri: '', preview: false },
+        { version: '0.3.0', ociUri: '', preview: false },
+      ],
+      hasUpdate: false,
+    } as CatalogExtensionInfoUI;
+
+    const upgradeAvailable = {
+      isInstalled: true,
+      installedVersion: '1.0.0',
+      fetchVersion: '1.1.0',
+      availableVersions: [
+        { version: '1.1.0', ociUri: '', preview: false },
+        { version: '1.0.0', ociUri: '', preview: false },
+      ],
+      hasUpdate: true,
+    } as CatalogExtensionInfoUI;
+
+    expect(extensionIsOnLatestVersion(onLatestWithDowngrades)).toBe(true);
+    expect(extensionHasVersionChoices(onLatestWithDowngrades)).toBe(true);
+    expect(extensionIsOnLatestVersion(upgradeAvailable)).toBe(false);
+  });
+
   test('matches version search terms', () => {
     expect(matchesExtensionVersionSearch('version')).toBe(true);
     expect(matchesExtensionVersionSearch('automatic')).toBe(false);
@@ -111,5 +140,11 @@ describe('extension-version-preference', () => {
     } as CatalogExtensionInfoUI;
 
     await expect(confirmExtensionVersionChange(extension, '1.1.0')).resolves.toBe(true);
+    expect(window.showMessageBox).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'none',
+        title: 'Upgrade to v1.1.0 for Kind?',
+      }),
+    );
   });
 });

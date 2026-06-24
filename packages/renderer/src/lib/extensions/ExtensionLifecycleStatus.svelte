@@ -11,9 +11,14 @@ import {
   formatExtensionCompatibilityIssueTooltip,
   resolveExtensionCompatibilityIssues,
 } from './extension-compatibility';
-import { getExtensionCompatibilityPresentation, getExtensionLifecyclePresentation } from './extension-lifecycle-status';
+import {
+  getExtensionCompatibilityPresentation,
+  getExtensionLifecyclePresentation,
+  getExtensionVersionUpdatePresentation,
+} from './extension-lifecycle-status';
 import { shouldHideExtensionErrorPresentation } from './extension-lifecycle-toggle';
 import { EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT } from './extension-lifecycle-user-toggle';
+import { EXTENSION_VERSION_UI_CHANGE_EVENT, isExtensionVersionUpdating } from './extension-version-update.svelte';
 
 interface Props {
   extension?: CombinedExtensionInfoUI;
@@ -43,12 +48,28 @@ onMount(() => {
     uiRevision += 1;
   };
 
+  const handleVersionUiChange = (): void => {
+    uiRevision += 1;
+  };
+
   void loadPodmanDesktopVersion().catch(() => {});
   window.addEventListener(EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT, handleLifecycleToggle);
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handleVersionUiChange);
 
   return (): void => {
     window.removeEventListener(EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT, handleLifecycleToggle);
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handleVersionUiChange);
   };
+});
+
+const extensionId = $derived(catalogExtension?.id ?? extension?.id);
+
+const versionUpdatePresentation = $derived.by(() => {
+  uiRevision;
+  if (extensionId && isExtensionVersionUpdating(extensionId)) {
+    return getExtensionVersionUpdatePresentation();
+  }
+  return undefined;
 });
 
 const compatibilityIssues = $derived.by(() => {
@@ -72,6 +93,10 @@ const lifecyclePresentation = $derived(
 );
 
 const presentation = $derived.by(() => {
+  if (versionUpdatePresentation) {
+    return versionUpdatePresentation;
+  }
+
   if (extension && shouldHideExtensionErrorPresentation(extension.state)) {
     return lifecyclePresentation;
   }

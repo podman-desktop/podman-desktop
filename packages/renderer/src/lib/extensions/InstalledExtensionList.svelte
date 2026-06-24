@@ -8,7 +8,6 @@ import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import ChangeVersionModal from './ChangeVersionModal.svelte';
 import { newBadgeRevision, refreshNewBadges } from './extension-catalog-settings.svelte';
 import { ensurePrototypeManualUpdateSettings } from './extension-prototype-use-cases';
 import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from './extension-version-update.svelte';
@@ -35,8 +34,6 @@ let {
 }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
-let changeVersionExtension: CatalogExtensionInfoUI | undefined = $state(undefined);
-let changeVersionPreferredVersion: string | undefined = $state(undefined);
 let uiRevision = $state(0);
 
 const filterCatalogExtensions: CatalogExtensionInfoUI[] = $derived.by(() => {
@@ -89,16 +86,6 @@ const tableRows: InstalledExtensionTableRow[] = $derived.by(() => {
 
   return orderInstalledTableRows(rows);
 });
-
-function openChangeVersion(extension: CatalogExtensionInfoUI, preferredVersion?: string): void {
-  changeVersionExtension = extension;
-  changeVersionPreferredVersion = preferredVersion;
-}
-
-function closeChangeVersion(): void {
-  changeVersionExtension = undefined;
-  changeVersionPreferredVersion = undefined;
-}
 </script>
 
 <div class="flex grow flex-col py-3">
@@ -112,14 +99,8 @@ function closeChangeVersion(): void {
         <FilteredEmptyScreen icon={ExtensionIcon} kind="extensions" bind:searchTerm {onResetFilter} />
       </div>
     {:else}
-      <InstalledExtensionTable rows={tableRows} onChangeVersion={openChangeVersion} />
+      <InstalledExtensionTable rows={tableRows} onChangeVersion={(): void => {}} />
     {/if}
   </div>
 </div>
 
-{#if changeVersionExtension}
-  <ChangeVersionModal
-    extension={changeVersionExtension}
-    preferredVersion={changeVersionPreferredVersion}
-    closeCallback={closeChangeVersion} />
-{/if}

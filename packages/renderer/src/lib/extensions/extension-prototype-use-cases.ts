@@ -29,6 +29,8 @@ export const USE_CASE_EXTENSION_IDS = {
   builtIn: 'podman-desktop.compose',
   /** Installed-tab demo: upgrade available with manual version installation (auto-update off). */
   communityActiveWithUpdate: 'podman-desktop.kind',
+  /** Second installed-tab demo row with an available update. */
+  communityActiveWithUpdateSecondary: 'podman-desktop.compose',
   communityDisabled: 'podman-desktop.registries',
   communityFailed: 'podman-desktop.kube-context',
   activating: 'podman-desktop.kubectl-cli',
@@ -38,6 +40,15 @@ export const USE_CASE_EXTENSION_IDS = {
   /** Install Podman AI Lab, then use Preview install tooltip on the Catalog tab. */
   postInstallTooltipWithOnboarding: 'redhat.ai-lab',
 } as const;
+
+export const PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS = [
+  USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+  USE_CASE_EXTENSION_IDS.communityActiveWithUpdateSecondary,
+] as const;
+
+export function isPrototypeUpdateDemoExtension(extensionId: string): boolean {
+  return (PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS as readonly string[]).includes(extensionId);
+}
 
 let prototypeUseCasesEnabled = true;
 
@@ -132,9 +143,37 @@ export function bumpPrototypePatchVersion(version: string): string {
   return `${normalized}.1`;
 }
 
-function applyPrototypeKindUpdateOverlay(catalogInfo: CatalogExtensionInfoUI): CatalogExtensionInfoUI {
+/** Bump minor segment for prototype update demos (supports semver suffixes like -next). */
+export function bumpPrototypeMinorVersion(version: string): string {
+  const normalized = version.replace(/^v/i, '').trim();
+  const versionPattern = /^(\d+)\.(\d+)\.(\d+)(.*)$/;
+  const match = versionPattern.exec(normalized);
+  if (match) {
+    const minor = Number.parseInt(match[2], 10) + 1;
+    return `${match[1]}.${minor}.0${match[4]}`;
+  }
+
+  const legacyParts = normalized.split('.').map(part => Number.parseInt(part, 10));
+  if (legacyParts.length > 1 && !legacyParts.some(Number.isNaN)) {
+    legacyParts[legacyParts.length - 2] += 1;
+    legacyParts[legacyParts.length - 1] = 0;
+    return legacyParts.join('.');
+  }
+
+  return bumpPrototypePatchVersion(version);
+}
+
+export function getPrototypeUpdateTargetVersion(extensionId: string, installedVersion: string): string {
+  if (extensionId === USE_CASE_EXTENSION_IDS.communityActiveWithUpdateSecondary) {
+    return bumpPrototypeMinorVersion(installedVersion);
+  }
+
+  return bumpPrototypePatchVersion(installedVersion);
+}
+
+function applyPrototypeUpdateOverlay(catalogInfo: CatalogExtensionInfoUI): CatalogExtensionInfoUI {
   const installedVersion = catalogInfo.installedVersion ?? catalogInfo.fetchVersion ?? '1.0.0';
-  const newerVersion = bumpPrototypePatchVersion(installedVersion);
+  const newerVersion = getPrototypeUpdateTargetVersion(catalogInfo.id, installedVersion);
   const versionOptions = [
     { version: newerVersion, ociUri: catalogInfo.fetchLink ?? '', preview: false },
     { version: installedVersion, ociUri: catalogInfo.fetchLink ?? '', preview: false },
@@ -155,8 +194,8 @@ export function applyPrototypeCatalogUseCaseOverlay(catalogInfo: CatalogExtensio
     return catalogInfo;
   }
 
-  if (catalogInfo.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate) {
-    return applyPrototypeKindUpdateOverlay(catalogInfo);
+  if (isPrototypeUpdateDemoExtension(catalogInfo.id)) {
+    return applyPrototypeUpdateOverlay(catalogInfo);
   }
 
   if (catalogInfo.publisherDisplayName.toLowerCase().includes('red hat')) {
@@ -170,20 +209,16 @@ export function applyPrototypeCatalogUseCaseOverlay(catalogInfo: CatalogExtensio
   return catalogInfo;
 }
 
-/** Keep auto-update disabled on the installed-tab manual update demo extension. */
+/** Keep auto-update disabled on installed-tab manual update demo extensions. */
 export function ensurePrototypeManualUpdateSettings(extensions: CatalogExtensionInfoUI[]): void {
   if (!prototypeUseCasesEnabled) {
     return;
   }
 
-  const demoExtension =
-    extensions.find(
-      extension => extension.isInstalled && extension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
-    ) ??
-    extensions.find(extension => extension.isInstalled && extension.hasUpdate) ??
-    extensions.find(extension => extension.isInstalled);
-
-  if (demoExtension) {
-    setAutoUpdateEnabled(demoExtension.id, false);
+  for (const demoId of PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS) {
+    const demoExtension = extensions.find(extension => extension.isInstalled && extension.id === demoId);
+    if (demoExtension) {
+      setAutoUpdateEnabled(demoExtension.id, false);
+    }
   }
 }

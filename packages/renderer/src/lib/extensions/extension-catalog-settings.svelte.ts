@@ -34,7 +34,7 @@ const autoUpdateEnabled = new SvelteMap<string, boolean>();
 export const newlyInstalledAt = new SvelteMap<string, number>();
 
 // Catalog view mode preference (persists across tab switches)
-export const catalogViewMode = $state<{ mode: CatalogViewMode }>({ mode: 'grid' });
+let catalogViewModeState = $state<CatalogViewMode>('grid');
 
 /** Bumped when new-badge membership changes so navigation tooltips can refresh. */
 export const newBadgeRevision = $state<{ value: number }>({ value: 0 });
@@ -195,11 +195,11 @@ export function clearNewBadge(extensionId: string): void {
 }
 
 export function getCatalogViewMode(): CatalogViewMode {
-  return catalogViewMode.mode;
+  return catalogViewModeState;
 }
 
 export function setCatalogViewMode(mode: CatalogViewMode): void {
-  catalogViewMode.mode = mode;
+  catalogViewModeState = mode;
 }
 
 export function refreshNewBadges(): void {

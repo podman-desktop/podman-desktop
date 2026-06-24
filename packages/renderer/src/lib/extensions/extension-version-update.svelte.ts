@@ -149,6 +149,10 @@ export function getLatestAvailableVersion(extension: CatalogExtensionInfoUI): st
   return [...versions].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0] ?? '';
 }
 
+export function getStoreInstalledVersion(extension: CatalogExtensionInfoUI): string | undefined {
+  return extension.installedExtension?.version ?? extension.installedVersion;
+}
+
 export function getDisplayInstalledVersion(extensionId: string, actualVersion?: string): string | undefined {
   const normalizedActual = normalizeVersionValue(actualVersion);
   const optimistic = get(optimisticInstalledVersionsStore)[extensionId];
@@ -169,15 +173,18 @@ export function getDisplayInstalledVersion(extensionId: string, actualVersion?: 
 }
 
 export function withDisplayInstalledVersion(extension: CatalogExtensionInfoUI): CatalogExtensionInfoUI {
-  const installedVersion = getDisplayInstalledVersion(extension.id, extension.installedVersion);
-  if (!installedVersion || installedVersion === extension.installedVersion) {
+  const storeVersion = getStoreInstalledVersion(extension);
+  const displayVersion = normalizeVersionValue(getDisplayInstalledVersion(extension.id, storeVersion) ?? storeVersion);
+  const currentDisplay = normalizeVersionValue(extension.installedVersion);
+
+  if (!displayVersion || displayVersion === currentDisplay) {
     return extension;
   }
 
   return {
     ...extension,
-    installedVersion,
-    hasUpdate: extensionHasUpdateForVersion(extension, installedVersion),
+    installedVersion: displayVersion,
+    hasUpdate: extensionHasUpdateForVersion(extension, displayVersion),
   };
 }
 
@@ -193,7 +200,8 @@ export function resolveVersionChangeTarget(extension: CatalogExtensionInfoUI): s
   }
 
   const installed = normalizeVersionValue(
-    getDisplayInstalledVersion(extension.id, extension.installedVersion) ?? extension.installedVersion,
+    getDisplayInstalledVersion(extension.id, getStoreInstalledVersion(extension)) ??
+      getStoreInstalledVersion(extension),
   );
   const latest = getLatestAvailableVersion(extension);
 

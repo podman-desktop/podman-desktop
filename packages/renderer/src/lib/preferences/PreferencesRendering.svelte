@@ -23,6 +23,10 @@ import {
   matchesExtensionVersionSearch,
   shouldShowExtensionVersionPreference,
 } from '/@/lib/extensions/extension-version-preference';
+import {
+  EXTENSION_VERSION_UI_CHANGE_EVENT,
+  withDisplayInstalledVersion,
+} from '/@/lib/extensions/extension-version-update.svelte';
 import ExtensionAutomaticUpdatesPreference from '/@/lib/extensions/ExtensionAutomaticUpdatesPreference.svelte';
 import ExtensionLifecyclePreference from '/@/lib/extensions/ExtensionLifecyclePreference.svelte';
 import ExtensionRemovePreference from '/@/lib/extensions/ExtensionRemovePreference.svelte';
@@ -47,16 +51,23 @@ interface Props {
 let { properties = [], key, searchValue = '' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
+let versionUiRevision = $state(0);
 
-const extensionPreferenceCatalog = $derived(
-  resolveExtensionPreferenceCatalog(
+const extensionPreferenceCatalog = $derived.by(() => {
+  versionUiRevision;
+  $combinedInstalledExtensions;
+  $catalogExtensionInfos;
+  $featuredExtensionInfos;
+  const catalog = resolveExtensionPreferenceCatalog(
     key,
     $combinedInstalledExtensions,
     $catalogExtensionInfos,
     $featuredExtensionInfos,
     extensionsUtils,
-  ),
-);
+  );
+
+  return catalog ? withDisplayInstalledVersion(catalog) : undefined;
+});
 
 const showExtensionAutoUpdatePreference = $derived(
   !!extensionPreferenceCatalog &&
@@ -115,10 +126,19 @@ const matchingRecords = $derived(
     }, new Map<string, IConfigurationPropertyRecordedSchema[]>()),
 );
 
-onMount(async () => {
+onMount(() => {
   contextsUnsubscribe = context.subscribe(value => {
     globalContext = value;
   });
+
+  const versionUiHandler = (): void => {
+    versionUiRevision += 1;
+  };
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, versionUiHandler);
+
+  return (): void => {
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, versionUiHandler);
+  };
 });
 
 onDestroy(() => {

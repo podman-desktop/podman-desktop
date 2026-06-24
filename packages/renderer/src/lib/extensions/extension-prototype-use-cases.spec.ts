@@ -187,6 +187,67 @@ describe('prototype use cases on real extensions', () => {
     expect(enriched.installedVersion).toBe('1.0.0');
   });
 
+  test('marks Compose as having an update in catalog metadata', () => {
+    const composeCatalog: CatalogExtensionInfoUI = {
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdateSecondary,
+      displayName: 'Compose',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: '1.28.0-next',
+      publisherDisplayName: 'podman-desktop',
+      isInstalled: true,
+      installedVersion: '1.28.0-next',
+      shortDescription: 'Compose',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: '1.28.0-next', ociUri: '', preview: false }],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+
+    const enriched = applyPrototypeCatalogUseCaseOverlay(composeCatalog);
+    expect(enriched.hasUpdate).toBe(true);
+    expect(enriched.fetchVersion).toBe('1.29.0-next');
+    expect(enriched.installedVersion).toBe('1.28.0-next');
+  });
+
+  test('uses different update targets for Kind and Compose on the same installed version', () => {
+    const installedVersion = '1.28.0-next';
+    const kindCatalog: CatalogExtensionInfoUI = {
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+      displayName: 'Kind',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: installedVersion,
+      publisherDisplayName: 'podman-desktop',
+      isInstalled: true,
+      installedVersion,
+      shortDescription: 'Kind clusters',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: installedVersion, ociUri: '', preview: false }],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+    const composeCatalog: CatalogExtensionInfoUI = {
+      ...kindCatalog,
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdateSecondary,
+      displayName: 'Compose',
+      shortDescription: 'Compose',
+    };
+
+    const kindResult = applyPrototypeCatalogUseCaseOverlay(kindCatalog);
+    const composeResult = applyPrototypeCatalogUseCaseOverlay(composeCatalog);
+
+    expect(kindResult.fetchVersion).toBe('1.28.1-next');
+    expect(composeResult.fetchVersion).toBe('1.29.0-next');
+    expect(kindResult.fetchVersion).not.toBe(composeResult.fetchVersion);
+  });
+
   test('marks Kind update relative to the installed next-channel version', () => {
     const kindCatalog: CatalogExtensionInfoUI = {
       id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
@@ -234,7 +295,7 @@ describe('prototype use cases on real extensions', () => {
     expect(result[0]?.id).toBe('podman-desktop.compose');
   });
 
-  test('ensurePrototypeManualUpdateSettings disables auto-update on the manual update demo', () => {
+  test('ensurePrototypeManualUpdateSettings disables auto-update on manual update demos', () => {
     const kind: CatalogExtensionInfoUI = {
       id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
       displayName: 'Kind',
@@ -253,13 +314,56 @@ describe('prototype use cases on real extensions', () => {
       isVerified: false,
       isSupportedByRedHat: false,
     };
+    const compose: CatalogExtensionInfoUI = {
+      ...kind,
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdateSecondary,
+      displayName: 'Compose',
+      shortDescription: 'Compose',
+    };
 
-    ensurePrototypeManualUpdateSettings([kind]);
+    ensurePrototypeManualUpdateSettings([kind, compose]);
 
     expect(isAutoUpdateEnabled(kind.id)).toBe(false);
+    expect(isAutoUpdateEnabled(compose.id)).toBe(false);
   });
 
-  test('ensurePrototypeUpdateDemo prefers Kind when installed and no other updates exist', () => {
+  test('ensurePrototypeUpdateDemo marks Kind and Compose as having updates', () => {
+    const kind: CatalogExtensionInfoUI = {
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+      displayName: 'Kind',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: '1.0.0',
+      publisherDisplayName: 'Podman Desktop',
+      isInstalled: true,
+      installedVersion: '1.0.0',
+      shortDescription: 'Kind clusters',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: '1.0.0', ociUri: '', preview: false }],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+    const compose: CatalogExtensionInfoUI = {
+      ...kind,
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdateSecondary,
+      displayName: 'Compose',
+      installedVersion: '2.0.0',
+      fetchVersion: '2.0.0',
+      shortDescription: 'Compose',
+    };
+
+    const [kindResult, composeResult] = extensionsUtils.ensurePrototypeUpdateDemo([kind, compose]);
+
+    expect(kindResult?.hasUpdate).toBe(true);
+    expect(kindResult?.fetchVersion).toBe('1.0.1');
+    expect(composeResult?.hasUpdate).toBe(true);
+    expect(composeResult?.fetchVersion).toBe('2.1.0');
+  });
+
+  test('ensurePrototypeUpdateDemo adds a second update when only Kind is installed', () => {
     const kind: CatalogExtensionInfoUI = {
       id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
       displayName: 'Kind',
@@ -290,10 +394,11 @@ describe('prototype use cases on real extensions', () => {
 
     expect(kindResult?.hasUpdate).toBe(true);
     expect(kindResult?.fetchVersion).toBe('1.0.1');
-    expect(composeResult?.hasUpdate).toBe(false);
+    expect(composeResult?.hasUpdate).toBe(true);
+    expect(composeResult?.fetchVersion).toBe('2.1.0');
   });
 
-  test('ensurePrototypeUpdateDemo does not apply fallback update when Kind is absent', () => {
+  test('ensurePrototypeUpdateDemo marks Compose as having an update when Kind is absent', () => {
     const compose: CatalogExtensionInfoUI = {
       id: 'podman-desktop.compose',
       displayName: 'Compose',
@@ -315,7 +420,7 @@ describe('prototype use cases on real extensions', () => {
 
     const [composeResult] = extensionsUtils.ensurePrototypeUpdateDemo([compose]);
 
-    expect(composeResult?.hasUpdate).toBe(false);
-    expect(composeResult?.fetchVersion).toBe('1.28.0-next');
+    expect(composeResult?.hasUpdate).toBe(true);
+    expect(composeResult?.fetchVersion).toBe('1.29.0-next');
   });
 });

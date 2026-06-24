@@ -73,20 +73,20 @@ describe('installed-extension-table-sort', () => {
     resetInstalledTableSort();
   });
 
-  test('pins manual update demo rows above other installed extensions', () => {
+  test('sorts installed extensions alphabetically by default', () => {
     const rows = [
-      createRow('alpha', 'Alpha'),
-      createRow(USE_CASE_EXTENSION_IDS.communityActiveWithUpdate, 'Kind', { hasUpdate: true }),
       createRow('beta', 'Beta'),
+      createRow(USE_CASE_EXTENSION_IDS.communityActiveWithUpdate, 'Kind', { hasUpdate: true }),
+      createRow('alpha', 'Alpha'),
     ];
     rows[1].catalogExtension.fetchVersion = '1.1.0';
 
     const ordered = orderInstalledTableRows(rows);
 
     expect(ordered.map(row => row.extension.id)).toEqual([
-      USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
       'alpha',
       'beta',
+      USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
     ]);
   });
 

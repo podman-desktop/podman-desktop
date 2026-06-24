@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, NavPage } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
@@ -21,6 +22,7 @@ import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte
 import { buildExtensionsListPath } from './extension-list';
 import { showPostInstallTooltipDemo } from './extension-prototype-post-install-tooltip-demo';
 import { arePrototypeUseCasesEnabled } from './extension-prototype-use-cases';
+import { EXTENSION_VERSION_UI_CHANGE_EVENT } from './extension-version-update.svelte';
 import { ExtensionsUtils } from './extensions-utils';
 import {
   hasActiveInstalledListFilters,
@@ -37,6 +39,17 @@ interface Props {
 let { searchTerm = '', screen = 'installed' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
+let versionUiRevision = $state(0);
+
+onMount(() => {
+  const handler = (): void => {
+    versionUiRevision += 1;
+  };
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  return (): void => {
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  };
+});
 
 let enableCustomExtensions = $derived(
   (await window.getConfigurationValue('extensions.customExtensions.enabled')) ?? true,
@@ -61,16 +74,16 @@ const installedCatalogById = $derived.by(() => {
   return new Map(extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions).map(catalog => [catalog.id, catalog]));
 });
 
-const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
-  extensionsUtils.filterInstalledExtensions(
+const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived.by(() => {
+  versionUiRevision;
+  return extensionsUtils.filterInstalledExtensions(
     installedExtensionsWithDemos,
     searchTerm,
     installedListFilters.value,
     installedCatalogById,
-  ),
-);
+  );
+});
 
-let filteredInstalledItems: number = $derived(installedExtensionsWithDemos.length - filteredInstalledExtensions.length);
 // combine data from featured extensions and catalog extension
 // need to add in the catalog extension a flag to know if extension is featured or not
 // and featured extensions need to be displayed first
@@ -88,8 +101,6 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
   extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm, catalogListFilters.value),
 );
 
-let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
-
 const showCatalogFilterEmpty = $derived(
   screen === 'catalog' &&
     enableCatalog &&
@@ -101,8 +112,6 @@ const showInstalledFilterEmpty = $derived(
     filteredInstalledExtensions.length === 0 &&
     (!!searchTerm || hasActiveInstalledListFilters()),
 );
-
-const showFilterEmptyScreen = $derived(showInstalledFilterEmpty || showCatalogFilterEmpty);
 
 function closeModal(): void {
   installManualImageModal = false;
@@ -160,20 +169,6 @@ function changeScreen(newScreen: ExtensionListScreen): void {
         icon={faCloudDownload}
         title="Install manually an extension"
         aria-label="Install custom">Install custom...</Button>
-    {/if}
-  {/snippet}
-
-  {#snippet bottomAdditionalActions()}
-    {#if !showFilterEmptyScreen}
-      {#if filteredInstalledItems > 0 && screen === 'installed'}
-        <div class="text-sm text-[var(--pd-content-text)]">
-          Filtered out {filteredInstalledItems} items of {installedExtensionsWithDemos.length}
-        </div>
-      {:else if filteredCatalogItems > 0 && screen === 'catalog'}
-        <div class="text-sm text-[var(--pd-content-text)]">
-          Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
-        </div>
-      {/if}
     {/if}
   {/snippet}
 

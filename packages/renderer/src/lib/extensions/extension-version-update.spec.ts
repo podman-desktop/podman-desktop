@@ -31,6 +31,7 @@ import {
   resolveVersionChangeTarget,
   setPrototypeVersionChangesEnabled,
   shouldShowVersionChangeLink,
+  withDisplayInstalledVersion,
 } from './extension-version-update.svelte';
 
 const baseExtension: CatalogExtensionInfoUI = {
@@ -157,4 +158,42 @@ test('prototype mode updates UI when selected version has no oci uri', async () 
 
   expect(window.updateExtension).not.toHaveBeenCalled();
   expect(getOptimisticInstalledVersion(baseExtension.id)).toBe('0.2.0');
+});
+
+test('getDisplayInstalledVersion keeps optimistic version when resolved from store version', async () => {
+  setPrototypeVersionChangesEnabled(true);
+  applyExtensionVersionChange(baseExtension, '0.2.0', false);
+  await vi.advanceTimersByTimeAsync(3000);
+
+  expect(getOptimisticInstalledVersion(baseExtension.id)).toBe('0.2.0');
+  expect(getDisplayInstalledVersion(baseExtension.id, '0.4.0')).toBe('0.2.0');
+  expect(getOptimisticInstalledVersion(baseExtension.id)).toBe('0.2.0');
+});
+
+test('withDisplayInstalledVersion reflects table upgrades in preferences', async () => {
+  setPrototypeVersionChangesEnabled(true);
+  const extensionWithStoreVersion = {
+    ...baseExtension,
+    installedExtension: {
+      id: baseExtension.id,
+      version: '0.4.0',
+      displayName: baseExtension.displayName,
+      state: 'started',
+      removable: true,
+      devMode: false,
+      type: 'pd',
+      path: '',
+      readme: '',
+    },
+  } as CatalogExtensionInfoUI;
+
+  applyExtensionVersionChange(baseExtension, '0.2.0', false);
+  await vi.advanceTimersByTimeAsync(3000);
+
+  expect(withDisplayInstalledVersion(extensionWithStoreVersion).installedVersion).toBe('0.2.0');
+
+  applyExtensionVersionChange(baseExtension, '0.4.0', false);
+  await vi.advanceTimersByTimeAsync(3000);
+
+  expect(withDisplayInstalledVersion(extensionWithStoreVersion).installedVersion).toBe('0.4.0');
 });

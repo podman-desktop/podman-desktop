@@ -3,8 +3,10 @@ import { Link } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import ChangeVersionModal from './ChangeVersionModal.svelte';
+import { isAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { confirmExtensionVersionChange } from './extension-version-preference';
 import {
+  applyExtensionVersionChange,
   EXTENSION_VERSION_UI_CHANGE_EVENT,
   getOptimisticInstalledVersion,
   getVersionChangeLinkLabel,
@@ -21,8 +23,6 @@ interface Props {
 let { extension }: Props = $props();
 
 let uiRevision = $state(0);
-let changeVersionPreferredVersion: string | undefined = $state(undefined);
-let showChangeVersionModal = $state(false);
 
 onMount(() => {
   const handler = (): void => {
@@ -71,31 +71,28 @@ const showLink = $derived.by(() => {
 const targetVersion = $derived(resolveVersionChangeTarget(extensionForDisplay));
 const linkLabel = $derived(targetVersion ? getVersionChangeLinkLabel(displayInstalledVersion, targetVersion) : '');
 
-function handleUpdate(event: Event): void {
+async function handleUpdate(event: Event): Promise<void> {
   event.stopPropagation();
   if (!targetVersion) {
     return;
   }
 
-  changeVersionPreferredVersion = targetVersion;
-  showChangeVersionModal = true;
-}
+  const confirmed = await confirmExtensionVersionChange(extensionForDisplay, targetVersion);
+  if (!confirmed) {
+    return;
+  }
 
-function closeChangeVersionModal(): void {
-  showChangeVersionModal = false;
-  changeVersionPreferredVersion = undefined;
+  applyExtensionVersionChange(extensionForDisplay, targetVersion, isAutoUpdateEnabled(extensionForDisplay.id));
 }
 </script>
 
 {#if showLink && targetVersion}
-  <Link class="inline-flex shrink-0" aria-label={linkLabel} on:click={handleUpdate}>
+  <Link
+    class="inline-flex shrink-0"
+    aria-label={linkLabel}
+    on:click={(event): void => {
+      handleUpdate(event).catch(() => undefined);
+    }}>
     {linkLabel}
   </Link>
-{/if}
-
-{#if showChangeVersionModal}
-  <ChangeVersionModal
-    extension={extensionForDisplay}
-    preferredVersion={changeVersionPreferredVersion}
-    closeCallback={closeChangeVersionModal} />
 {/if}

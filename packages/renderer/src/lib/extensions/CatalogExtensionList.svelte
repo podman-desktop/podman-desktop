@@ -10,7 +10,7 @@ import { catalogTableSortState, orderCatalogTableExtensions } from './catalog-ex
 import CatalogExtension from './CatalogExtension.svelte';
 import CatalogExtensionTable from './CatalogExtensionTable.svelte';
 import CatalogExtensionViewToolbar from './CatalogExtensionViewToolbar.svelte';
-import { catalogViewMode, refreshNewBadges } from './extension-catalog-settings.svelte';
+import { getCatalogViewMode, refreshNewBadges } from './extension-catalog-settings.svelte';
 
 interface Props {
   catalogExtensions: CatalogExtensionInfoUI[];
@@ -40,7 +40,7 @@ onMount(() => {
   refreshNewBadges();
 });
 
-const viewMode = $derived(catalogViewMode.mode);
+const viewMode = $derived.by(() => getCatalogViewMode());
 const hasCatalogData = $derived(allCatalogExtensions.length > 0);
 const hasVisibleExtensions = $derived(catalogExtensions.length > 0);
 const tableCatalogExtensions = $derived.by(() => {

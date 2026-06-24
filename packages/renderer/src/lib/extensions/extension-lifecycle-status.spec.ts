@@ -19,9 +19,21 @@
 import { describe, expect, test } from 'vitest';
 
 import type { ExtensionCompatibilityIssue } from './extension-compatibility';
-import { getExtensionCompatibilityPresentation, getExtensionLifecyclePresentation } from './extension-lifecycle-status';
+import {
+  getExtensionCompatibilityPresentation,
+  getExtensionLifecyclePresentation,
+  getExtensionVersionUpdatePresentation,
+} from './extension-lifecycle-status';
 
 describe('getExtensionLifecyclePresentation', () => {
+  test('version update uses neutral upgrading presentation', () => {
+    expect(getExtensionVersionUpdatePresentation()).toEqual({
+      statusDotStatus: 'stopped',
+      label: 'Upgrading',
+      textColorVar: 'var(--pd-status-stopped)',
+    });
+  });
+
   test('docker desktop extension is always active', () => {
     expect(getExtensionLifecyclePresentation('stopped', 'dd')).toEqual({
       statusDotStatus: 'running',

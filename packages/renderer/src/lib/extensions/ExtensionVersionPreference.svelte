@@ -7,6 +7,7 @@ import {
   confirmExtensionVersionChange,
   EXTENSION_VERSION_PREFERENCE_TITLE,
   extensionHasVersionChoices,
+  extensionIsOnLatestVersion,
   getExtensionVersionOptions,
   getExtensionVersionPreferenceDescription,
   getExtensionVersionPreferenceValue,
@@ -17,6 +18,7 @@ import {
   isExtensionVersionUpdating,
   normalizeVersionValue,
 } from './extension-version-update.svelte';
+import ExtensionUpToDateChip from './ExtensionUpToDateChip.svelte';
 import ExtensionVersionPreferenceDropdown from './ExtensionVersionPreferenceDropdown.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
@@ -35,7 +37,10 @@ const currentVersion = $derived.by(() => {
   return getExtensionVersionPreferenceValue(extension);
 });
 
-const hasOtherVersions = $derived(extensionHasVersionChoices(extension));
+const hasOtherVersions = $derived.by(() => {
+  uiRevision;
+  return extensionHasVersionChoices(extension);
+});
 
 const description = $derived(getExtensionVersionPreferenceDescription(currentVersion, hasOtherVersions));
 
@@ -47,6 +52,11 @@ const versionOptions = $derived.by(() => {
 const disabled = $derived.by(() => {
   uiRevision;
   return !hasOtherVersions || isChanging || isExtensionVersionUpdating(extension.id);
+});
+
+const showUpToDateChip = $derived.by(() => {
+  uiRevision;
+  return extensionIsOnLatestVersion(extension) && !isExtensionVersionUpdating(extension.id);
 });
 
 const dropdownId = $derived(`input-standard-extension.version.${extension.id}`);
@@ -94,8 +104,11 @@ async function handleVersionChange(newValue: string): Promise<void> {
 <div class="flex flex-col px-2 py-2 w-full text-[color:var(--pd-invert-content-card-text)] space-y-4">
   <div class="flex flex-row justify-between gap-6">
     <div class="flex min-w-0 flex-col">
-      <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
+      <div class="flex flex-row items-center gap-2 text-[color:var(--pd-invert-content-card-text)]">
         <span class="font-semibold">{EXTENSION_VERSION_PREFERENCE_TITLE}</span>
+        {#if showUpToDateChip}
+          <ExtensionUpToDateChip />
+        {/if}
       </div>
       <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">{description}</div>
       <ExtensionVersionUpdateStatus extensionId={extension.id} class="pt-1" />

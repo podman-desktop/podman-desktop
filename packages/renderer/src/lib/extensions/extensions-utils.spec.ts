@@ -23,6 +23,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { optimisticInstalledVersionsStore, resetVersionUpdateStateForTests } from './extension-version-update.svelte';
 import { ExtensionsUtils } from './extensions-utils';
 
 let extensionsUtils: ExtensionsUtils;
@@ -536,6 +539,49 @@ describe('filters', () => {
     const filteredInstalledExtensions = extensionsUtils.filterInstalledExtensions(combined, 'bar');
     expect(filteredInstalledExtensions.length).toBe(1);
     expect(filteredInstalledExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterInstalledExtensions hasUpdate includes downgraded extensions with stale hasUpdate flag', () => {
+    resetVersionUpdateStateForTests();
+    const extensionId = 'podman-desktop.minikube';
+    const installed = {
+      id: extensionId,
+      displayName: 'minikube',
+      version: '0.4.0',
+    } as CombinedExtensionInfoUI;
+    const catalogExtension = {
+      id: extensionId,
+      displayName: 'minikube',
+      isFeatured: false,
+      fetchable: true,
+      fetchLink: 'oci:minikube:0.4.0',
+      fetchVersion: '0.4.0',
+      publisherDisplayName: 'Podman Desktop',
+      isInstalled: true,
+      installedVersion: '0.4.0',
+      shortDescription: 'Run Kubernetes locally',
+      categories: [],
+      keywords: [],
+      availableVersions: [
+        { version: '0.4.0', ociUri: 'oci:minikube:0.4.0', preview: false },
+        { version: '0.2.0', ociUri: 'oci:minikube:0.2.0', preview: false },
+      ],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    } as CatalogExtensionInfoUI;
+
+    setAutoUpdateEnabled(extensionId, false);
+    optimisticInstalledVersionsStore.set({ [extensionId]: '0.2.0' });
+
+    const filtered = extensionsUtils.filterInstalledExtensions(
+      [installed],
+      '',
+      { hasUpdate: true },
+      new Map([[extensionId, catalogExtension]]),
+    );
+
+    expect(filtered.map(extension => extension.id)).toEqual([extensionId]);
   });
 
   describe('quoted values with spaces', () => {

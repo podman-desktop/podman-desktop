@@ -63,6 +63,12 @@ export const EXTENSION_CHIP_COLORS = {
 
 export const EXTENSION_CHIP_TEXT_CLASS = '!text-white';
 
+export const EXTENSION_OUTLINED_CHIP_CLASS =
+  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium leading-none select-none shrink-0';
+
+export const EXTENSION_OUTLINED_CHIP_UP_TO_DATE_CLASS =
+  'border-[var(--pd-status-running)] text-[var(--pd-status-running)] bg-transparent';
+
 /** @deprecated Use EXTENSION_CHIP_TEXT_CLASS for gray-background chips. */
 export const EXTENSION_BUILTIN_CHIP_TEXT_CLASS = EXTENSION_CHIP_TEXT_CLASS;
 

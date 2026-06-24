@@ -1,4 +1,6 @@
 <script lang="ts">
+import { onMount } from 'svelte';
+
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
@@ -8,6 +10,7 @@ import {
   toggleExtensionAutoUpdate,
 } from './extension-auto-update-preference';
 import { isAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from './extension-version-update.svelte';
 
 interface Props {
   extension: CatalogExtensionInfoUI;
@@ -15,9 +18,24 @@ interface Props {
 
 let { extension }: Props = $props();
 
+let uiRevision = $state(0);
+
 const checked = $derived(isAutoUpdateEnabled(extension.id));
-const detail = $derived(getExtensionAutoUpdatePreferenceDetail(extension));
+const detail = $derived.by(() => {
+  uiRevision;
+  return getExtensionAutoUpdatePreferenceDetail(withDisplayInstalledVersion(extension));
+});
 const toggleId = $derived(`input-standard-extension.autoUpdate.${extension.id}`);
+
+onMount(() => {
+  const handler = (): void => {
+    uiRevision += 1;
+  };
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  return (): void => {
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  };
+});
 
 async function handleToggle(): Promise<void> {
   await toggleExtensionAutoUpdate(extension, !checked);

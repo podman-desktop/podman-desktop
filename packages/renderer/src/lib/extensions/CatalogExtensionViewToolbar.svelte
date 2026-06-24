@@ -4,7 +4,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionFilters from './CatalogExtensionFilters.svelte';
-import { catalogViewMode } from './extension-catalog-settings.svelte';
+import { getCatalogViewMode, setCatalogViewMode } from './extension-catalog-settings.svelte';
 
 interface Props {
   catalogExtensions: CatalogExtensionInfoUI[];
@@ -15,22 +15,22 @@ interface Props {
 
 let { catalogExtensions, searchTerm = $bindable(''), showViewSwitch = true }: Props = $props();
 
-const viewMode = $derived(catalogViewMode.mode);
+const viewMode = $derived.by(() => getCatalogViewMode());
 </script>
 
 <div class="flex w-full flex-wrap items-center gap-3">
   <CatalogExtensionFilters {catalogExtensions} bind:searchTerm />
   <div class="min-w-0 flex-1"></div>
   {#if showViewSwitch}
-    <div class="flex shrink-0 items-center gap-1">
+    <div class="relative z-[60] flex shrink-0 items-center gap-1">
       <Button
         type="tab"
         icon={faThLarge}
         selected={viewMode === 'grid'}
         title="Grid view"
         aria-label="Grid view"
-        on:click={(): void => {
-          catalogViewMode.mode = 'grid';
+        onclick={(): void => {
+          setCatalogViewMode('grid');
         }} />
       <Button
         type="tab"
@@ -38,8 +38,8 @@ const viewMode = $derived(catalogViewMode.mode);
         selected={viewMode === 'table'}
         title="Table view"
         aria-label="Table view"
-        on:click={(): void => {
-          catalogViewMode.mode = 'table';
+        onclick={(): void => {
+          setCatalogViewMode('table');
         }} />
     </div>
   {/if}

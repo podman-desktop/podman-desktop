@@ -2,8 +2,10 @@
 import { Link } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import ChangeVersionModal from '/@/lib/extensions/ChangeVersionModal.svelte';
+import { isAutoUpdateEnabled } from '/@/lib/extensions/extension-catalog-settings.svelte';
+import { confirmExtensionVersionChange } from '/@/lib/extensions/extension-version-preference';
 import {
+  applyExtensionVersionChange,
   EXTENSION_VERSION_UI_CHANGE_EVENT,
   getOptimisticInstalledVersion,
   getVersionChangeLinkLabel,
@@ -22,8 +24,6 @@ interface Props {
 let { object }: Props = $props();
 
 let uiRevision = $state(0);
-let changeVersionPreferredVersion: string | undefined = $state(undefined);
-let showChangeVersionModal = $state(false);
 
 onMount(() => {
   const handler = (): void => {
@@ -72,34 +72,31 @@ const showLink = $derived.by(() => {
 const targetVersion = $derived(resolveVersionChangeTarget(extensionForDisplay));
 const linkLabel = $derived(targetVersion ? getVersionChangeLinkLabel(displayVersion, targetVersion) : '');
 
-function handleUpdate(): void {
+async function handleUpdate(): Promise<void> {
   if (!targetVersion) {
     return;
   }
 
-  changeVersionPreferredVersion = targetVersion;
-  showChangeVersionModal = true;
-}
+  const confirmed = await confirmExtensionVersionChange(extensionForDisplay, targetVersion);
+  if (!confirmed) {
+    return;
+  }
 
-function closeChangeVersionModal(): void {
-  showChangeVersionModal = false;
-  changeVersionPreferredVersion = undefined;
+  applyExtensionVersionChange(extensionForDisplay, targetVersion, isAutoUpdateEnabled(extensionForDisplay.id));
 }
 </script>
 
 <div class="flex flex-col gap-1 py-1 text-sm text-[var(--pd-content-text)] min-w-0">
   <span class="whitespace-nowrap">{displayVersion ? `v${displayVersion}` : 'N/A'}</span>
   {#if showLink && targetVersion}
-    <Link class="inline-flex shrink-0 self-start" aria-label={linkLabel} on:click={handleUpdate}>
+    <Link
+      class="inline-flex shrink-0 self-start"
+      aria-label={linkLabel}
+      on:click={(): void => {
+        handleUpdate().catch(() => undefined);
+      }}>
       {linkLabel}
     </Link>
   {/if}
   <ExtensionVersionUpdateStatus extensionId={object.extension.id} extensionState={object.extension.state} />
 </div>
-
-{#if showChangeVersionModal}
-  <ChangeVersionModal
-    extension={extensionForDisplay}
-    preferredVersion={changeVersionPreferredVersion}
-    closeCallback={closeChangeVersionModal} />
-{/if}
