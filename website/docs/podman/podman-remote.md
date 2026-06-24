@@ -31,7 +31,7 @@ Podman Desktop will automatically detect and show any `podman system connection 
 
 ![Enable the remote setting](img/remote.png)
 
-If you have not added a remote podman connection yet, you can follow the [official Podman guide](https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md) or follow the steps below:
+If you have not added a remote podman connection yet, you can follow the [official Podman guide](https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/remote_client.md) or follow the steps below:
 
 1. Generate a local ed25519 key:
 
@@ -147,4 +147,4 @@ You can also use the `--connection` argument to target only the connection you w
 
 #### Additional resources
 
-- [podman:docs/tutorials/remote_client.md](https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md)
+- [podman:docs/tutorials/remote_client.md](https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/remote_client.md)

@@ -54,8 +54,8 @@ export class RegistriesPage extends SettingsPage {
     this.preferredRepositoriesField = page.locator(`input[name="${Registries.PREFERRED_INPUT_NAME}"]`);
   }
 
-  async createRegistry(url: string, username: string, pswd: string): Promise<void> {
-    return test.step('Create a new registry', async () => {
+  async submitRegistryForm(url: string, username: string, pswd: string): Promise<void> {
+    return test.step('Submit registry form', async () => {
       await this.page.waitForTimeout(4_000);
       await playExpect(this.addRegistryButton).toBeEnabled();
       await this.addRegistryButton.click();
@@ -68,6 +68,13 @@ export class RegistriesPage extends SettingsPage {
 
       await playExpect(this.confirmDialogButton).toBeEnabled();
       await this.confirmDialogButton.click();
+    });
+  }
+
+  async createRegistry(url: string, username: string, pswd: string): Promise<void> {
+    return test.step('Create a new registry', async () => {
+      await this.submitRegistryForm(url, username, pswd);
+      await playExpect(this.addRegistryDialog).toBeHidden({ timeout: 30_000 });
     });
   }
 

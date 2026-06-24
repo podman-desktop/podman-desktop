@@ -3,10 +3,16 @@
   "name": "kind",
   "displayName": "Kind",
   "description": "Integration for Kind: run local Kubernetes clusters using container “nodes”",
-  "version": "1.28.0-next",
+  "version": "1.29.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/kind"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/kind#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
@@ -54,7 +60,7 @@
           "type": "boolean",
           "default": true,
           "scope": "KubernetesProviderConnectionFactory",
-          "description": "Setup an ingress controller (Contour https://projectcontour.io)"
+          "description": "Set up an ingress controller (Contour https://projectcontour.io)"
         },
         "kind.cluster.creation.controlPlaneImage": {
           "type": "string",
@@ -119,8 +125,8 @@
   "devDependencies": {
     "adm-zip": "^0.5.17",
     "mkdirp": "^3.0.1",
-    "tsx": "^4.22.3",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.7"
+    "tsx": "^4.22.4",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }

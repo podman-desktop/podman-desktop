@@ -19,7 +19,6 @@
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
-import type Electron from 'electron';
 import { nativeTheme } from 'electron';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -30,12 +29,6 @@ import type { Directories } from './directories.js';
 import type { LockedConfiguration } from './locked-configuration.js';
 
 let configurationRegistry: ConfigurationRegistry;
-
-vi.mock(import('electron'), () => {
-  return {
-    nativeTheme: {},
-  } as unknown as typeof Electron;
-});
 
 const apiSender: ApiSenderType = {
   send: vi.fn(),

@@ -90,7 +90,7 @@ COPY fluxbox /usr/share/fluxbox/init
 
 Then we need a special configuration to allow to have Podman working inside the container
 
-We add the `podman-desktop` user with correct range on subuid and subgid when running containers. I used the [tutorial](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md#etcsubuid-and-etcsubgid-configuration).
+We add the `podman-desktop` user with correct range on subuid and subgid when running containers. I used the [tutorial](https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/rootless_tutorial.md#etcsubuid-and-etcsubgid-configuration).
 
 ```docker
 RUN useradd -u 1000 podman-desktop && echo podman-desktop:10000:5000 > /etc/subuid && echo podman-desktop:10000:5000 > /etc/subgid

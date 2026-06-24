@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
-import type Electron from 'electron';
 import type { App } from 'electron';
 import { app, BrowserWindow, Menu } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
@@ -71,6 +70,10 @@ const configurationRegistryMock = {
 
 const fakeWindow = {
   isDestroyed: vi.fn(),
+  isMinimized: vi.fn().mockReturnValue(false),
+  show: vi.fn(),
+  focus: vi.fn(),
+  restore: vi.fn(),
   webContents: {
     send: vi.fn(),
   },
@@ -80,85 +83,18 @@ const extensionLoader = {
   getConfigurationRegistry: vi.fn(),
 } as unknown as ExtensionLoader;
 
+vi.mock(import('./index.js'), async importOriginal => {
+  const electron = await import('electron');
+  vi.mocked(electron.app.whenReady).mockReturnValue(constants.appReadyDeferredPromise);
+  vi.mocked(electron.app.requestSingleInstanceLock).mockReturnValue(true);
+  return importOriginal();
+});
 vi.mock(import('./plugin/index.js'));
 vi.mock(import('./util.js'), () => ({
   isWindows: vi.fn().mockReturnValue(false),
   isMac: vi.fn().mockReturnValue(false),
   isLinux: vi.fn().mockReturnValue(false),
 }));
-
-vi.mock(import('electron'), async () => {
-  return {
-    autoUpdater: {
-      on: vi.fn(),
-    },
-    screen: {
-      getCursorScreenPoint: vi.fn(),
-      getDisplayNearestPoint: vi.fn().mockImplementation(() => {
-        const workArea = { x: 0, y: 0, width: 0, height: 0 };
-        return { workArea };
-      }),
-    },
-    app: {
-      getAppPath: (): string => 'a-custom-appPath',
-      getPath: (): string => 'a-custom-path',
-      disableHardwareAcceleration: vi.fn(),
-      requestSingleInstanceLock: vi.fn().mockReturnValue(true),
-      quit: vi.fn(),
-      on: vi.fn(),
-      once: vi.fn(),
-      whenReady: vi.fn().mockReturnValue(constants.appReadyDeferredPromise),
-      setAppUserModelId: vi.fn(),
-    },
-    ipcMain: {
-      on: vi.fn(),
-      emit: vi.fn(),
-      handle: vi.fn(),
-    },
-    nativeTheme: {
-      on: vi.fn(),
-    },
-    Menu: vi.fn(
-      class {
-        static readonly buildFromTemplate: typeof Menu.buildFromTemplate = vi.fn();
-        static readonly getApplicationMenu: typeof Menu.getApplicationMenu = vi.fn();
-        static readonly setApplicationMenu: typeof Menu.setApplicationMenu = vi.fn();
-      },
-    ),
-    BrowserWindow: vi.fn(
-      class MyCustomWindow {
-        static readonly singleton = new MyCustomWindow();
-
-        loadURL(): void {}
-        setBounds(): void {}
-
-        on(): void {}
-
-        show(): void {}
-        focus(): void {}
-        isMinimized(): boolean {
-          return false;
-        }
-        isDestroyed(): boolean {
-          return false;
-        }
-
-        static getAllWindows(): unknown[] {
-          return [MyCustomWindow.singleton];
-        }
-      },
-    ),
-    Tray: vi.fn(
-      class {
-        tray = vi.fn();
-        setImage = vi.fn();
-        setToolTip = vi.fn();
-        setContextMenu = vi.fn();
-        isDestroyed = vi.fn().mockReturnValue(false);
-      },
-    ),
-  } as unknown as typeof Electron;
-});
 
 beforeEach(() => {
   console.log = consoleLogMock;
@@ -167,6 +103,8 @@ beforeEach(() => {
   vi.mocked(PluginSystem.prototype.initExtensions).mockResolvedValue(extensionLoader);
 
   vi.mocked(app.whenReady).mockReturnValue(constants.appReadyDeferredPromise);
+  vi.mocked(app.getPath).mockReturnValue('');
+  vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([fakeWindow]);
   const newDefer = Promise.withResolvers<BrowserWindow>();
   if (mainWindowDeferred.promise !== undefined) {
     mainWindowDeferred.resolve = newDefer.resolve;

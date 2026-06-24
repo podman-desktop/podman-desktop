@@ -1312,9 +1312,7 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
   const spyPrompt = vi.mocked(extensionApi.window.showInformationMessage);
   spyPrompt.mockResolvedValue('Yes');
 
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   await extension.checkDefaultMachine(fakeMachineJSON);
 
@@ -2062,6 +2060,110 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_CPU, false);
   expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_MEMORY, false);
   expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+});
+
+describe('connection error property on lifecycle methods', () => {
+  let registeredConnection: ContainerProviderConnection | undefined;
+  const spySetup = () => {
+    extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+    vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+      registeredConnection = connection;
+      return Disposable.from({ dispose: () => {} });
+    });
+  };
+
+  const registerConnection = async () => {
+    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+    spyExecPromise.mockImplementation(
+      (_command, args) =>
+        new Promise<extensionApi.RunResult>((resolve, reject) => {
+          if (args?.[0] === 'machine' && args?.[1] === 'list') {
+            resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+          } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+            resolve({
+              stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+            } as extensionApi.RunResult);
+          } else {
+            reject(new Error('command failed'));
+          }
+        }),
+    );
+    await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+    return spyExecPromise;
+  };
+
+  test('start lifecycle clears error on success', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    spySetup();
+    await registerConnection();
+    expect(registeredConnection).toBeDefined();
+
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+    registeredConnection!.error = 'previous error';
+    await registeredConnection?.lifecycle?.start?.({} as extensionApi.LifecycleContext);
+    expect(registeredConnection!.error).toBeUndefined();
+  });
+
+  test('start lifecycle sets error on failure', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    spySetup();
+    await registerConnection();
+    expect(registeredConnection).toBeDefined();
+
+    vi.spyOn(extensionApi.process, 'exec').mockRejectedValue(new Error('start failed'));
+    await expect(registeredConnection?.lifecycle?.start?.({} as extensionApi.LifecycleContext)).rejects.toThrow(
+      'start failed',
+    );
+    expect(registeredConnection!.error).toBe('start failed');
+  });
+
+  test('stop lifecycle clears error on success', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    spySetup();
+    await registerConnection();
+    expect(registeredConnection).toBeDefined();
+
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+    registeredConnection!.error = 'previous error';
+    await registeredConnection?.lifecycle?.stop?.({} as extensionApi.LifecycleContext);
+    expect(registeredConnection!.error).toBeUndefined();
+  });
+
+  test('stop lifecycle sets error on failure', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    spySetup();
+    await registerConnection();
+    expect(registeredConnection).toBeDefined();
+
+    vi.spyOn(extensionApi.process, 'exec').mockRejectedValue(new Error('stop failed'));
+    await expect(registeredConnection?.lifecycle?.stop?.({} as extensionApi.LifecycleContext)).rejects.toThrow(
+      'stop failed',
+    );
+    expect(registeredConnection!.error).toBe('stop failed');
+  });
+
+  test('delete lifecycle clears error on success', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    spySetup();
+    await registerConnection();
+    expect(registeredConnection).toBeDefined();
+
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+    registeredConnection!.error = 'previous error';
+    await registeredConnection?.lifecycle?.delete?.();
+    expect(registeredConnection!.error).toBeUndefined();
+  });
+
+  test('delete lifecycle sets error on failure', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    spySetup();
+    await registerConnection();
+    expect(registeredConnection).toBeDefined();
+
+    vi.spyOn(extensionApi.process, 'exec').mockRejectedValue(new Error('delete failed'));
+    await expect(registeredConnection?.lifecycle?.delete?.()).rejects.toThrow('delete failed');
+    expect(registeredConnection!.error).toBe('delete failed');
+  });
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {

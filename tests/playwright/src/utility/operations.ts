@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import { execSync } from 'node:child_process';
-import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
@@ -27,6 +26,7 @@ import { ResourceElementState } from '/@/model/core/states';
 import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
 import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ExperimentalPage } from '/@/model/pages/experimental-page';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RegistriesPage } from '/@/model/pages/registries-page';
@@ -35,7 +35,7 @@ import { ResourcesPage } from '/@/model/pages/resources-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { VolumeDetailsPage } from '/@/model/pages/volume-details-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
-import { isLinux, isMac, isWindows } from '/@/utility/platform';
+import { isLinux } from '/@/utility/platform';
 import { waitUntil, waitWhile } from '/@/utility/wait';
 
 /**
@@ -618,51 +618,47 @@ export async function setStatusBarProvidersFeature(
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
 }
 
-function isRootlessPodman(): boolean {
-  try {
-    let output: string;
-
-    if (isMac || isWindows) {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
-      output = execSync('podman machine ssh podman info --format json').toString();
-    } else if (isLinux) {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
-      output = execSync('podman info --format json').toString();
-    } else {
-      throw new Error('Unsupported platform');
-    }
-    const info = JSON.parse(output);
-    return info?.host?.security?.rootless === true;
-  } catch (err) {
-    throw new Error(`Failed to determine Podman rootless mode: ${err}`);
-  }
+export async function setEnhancedDashboardFeature(
+  page: Page,
+  navigationBar: NavigationBar,
+  enable: boolean,
+): Promise<void> {
+  await navigationBar.openSettings();
+  const settingsBar = new SettingsBar(page);
+  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+  await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
 }
 
-function getPodmanVolumePath(volumeName: string, fileName: string): string {
-  const relativePath = `${volumeName}/_data/${fileName}`;
-  const isRootless = isRootlessPodman();
-
-  if (isMac || isWindows) {
-    const base = isRootless ? '.local/share/containers/storage/volumes' : '/var/lib/containers/storage/volumes';
-    return `${base}/${relativePath}`;
-  }
-
-  if (isLinux) {
-    const base = isRootless
-      ? `${os.homedir()}/.local/share/containers/storage/volumes`
-      : '/var/lib/containers/storage/volumes';
-    return `${base}/${relativePath}`;
-  }
-
-  throw new Error('Unsupported platform');
+export async function waitForDashboardState(navigationBar: NavigationBar, enable: boolean): Promise<DashboardPage> {
+  // Assets in the dashboard take a bit to load, poll until they do.
+  // If the enhanced dashboard feature is enabled -> systemOverviewButton is expected.
+  // If the enhanced dashboard feature is disabled -> podmanProvider card is expected.
+  const getExpectedElement = (dashboard: DashboardPage): Locator =>
+    enable ? dashboard.systemOverviewButton : dashboard.podmanProvider;
+  let dashboardPage!: DashboardPage;
+  await playExpect
+    .poll(
+      async () => {
+        dashboardPage = await navigationBar.openDashboard();
+        if (await getExpectedElement(dashboardPage).isVisible()) {
+          return true;
+        }
+        await navigationBar.openContainers();
+        return false;
+      },
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
+  return dashboardPage;
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
   return test.step('Read file in volume from CLI', async () => {
     try {
-      const fullPath = getPodmanVolumePath(volumeName, fileName);
-
-      const command = isMac || isWindows ? `podman machine ssh sudo cat ${fullPath}` : `cat ${fullPath}`;
+      // Use a temporary container to read the file directly from the volume.
+      // This avoids platform-specific path resolution and SSH access issues
+      // (e.g., rootful vs rootless paths, HyperV admin context, CI runner environments).
+      const command = `podman run --rm -v ${volumeName}:/volume-read:ro alpine cat /volume-read/${fileName}`;
 
       // eslint-disable-next-line sonarjs/os-command, n/no-sync
       const output = execSync(command).toString();

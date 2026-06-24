@@ -43,7 +43,11 @@ export class DockerConfig {
   }
 
   protected readConfiguration(): string {
-    return configuration.getConfiguration('docker').get('config') ?? DockerConfig.DEFAULT_CONFIG_FOLDER;
+    const dockerConfigPath = configuration.getConfiguration('docker').get<string>('config');
+    if (dockerConfigPath === undefined || dockerConfigPath.trim() === '') {
+      return DockerConfig.DEFAULT_CONFIG_FOLDER;
+    }
+    return dockerConfigPath;
   }
 
   // Returns the path to the Docker configuration file.

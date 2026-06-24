@@ -29,7 +29,7 @@ const closeAction = (): void => {
 </script>
 
 <div
-  class="flex flex-nowrap min-h-10 select-none pointer-events-auto cursor-default max-h-50 max-w-[var(--toastWidth)] flex-row p-2 border-[var(--pd-content-divider)] border rounded-md bg-[var(--pd-modal-bg)] gap-2 justify-between text-base"
+  class="flex flex-nowrap min-h-10 select-none pointer-events-auto cursor-default max-h-50 max-w-[var(--toastWidth)] flex-row p-2 border-[var(--pd-content-divider)] border rounded bg-[var(--pd-modal-bg)] gap-2 justify-between text-base"
   title={taskInfo.name}
 >
   <div class="flex flex-row gap-1 items-start">

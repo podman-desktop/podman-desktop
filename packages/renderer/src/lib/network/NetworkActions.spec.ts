@@ -88,6 +88,7 @@ test('Expect error dialog when network deletion fails', async () => {
     expect(window.showMessageBox).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Delete Network Failed',
+        message: `Error while deleting network ${network1.name}: ${errorMessage}`,
         type: 'error',
       }),
     );

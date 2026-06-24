@@ -23,7 +23,7 @@ import { ResourcesPage } from '/@/model/pages/resources-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { createPodmanMachineFromCLI, setDockerCompatibilityFeature } from '/@/utility/operations';
-import { isWindows } from '/@/utility/platform';
+import { isCI, isRHEL, isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const defaultMachine = 'Podman Machine';
@@ -45,6 +45,7 @@ test.afterAll(async ({ runner, page }) => {
 
 //Feature unstable on mac and linux atm
 test.skip(!isWindows, 'Testing only on Windows');
+test.skip(!!isCI && isRHEL, 'Docker Engine is not officially supported on RHEL');
 
 test.describe
   .serial('Verify docker compatibility feature', { tag: '@smoke' }, () => {

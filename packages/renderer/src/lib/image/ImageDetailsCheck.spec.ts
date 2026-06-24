@@ -34,7 +34,7 @@ const cancelTokenSpy = vi.fn();
 const tokenID = 70735;
 beforeAll(() => {
   Object.defineProperty(window, 'getCancellableTokenSource', { value: getCancellableTokenSourceMock });
-  getCancellableTokenSourceMock.mockImplementation(() => tokenID);
+  getCancellableTokenSourceMock.mockReturnValue(tokenID);
   Object.defineProperty(window, 'imageCheck', { value: imageCheckMock });
   Object.defineProperty(window, 'cancelToken', { value: cancelTokenSpy.mockResolvedValue(undefined) });
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });

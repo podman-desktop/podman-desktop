@@ -45,6 +45,7 @@ UI guidelines -->
 </style>
 
 <script lang="ts">
+import DOMPurify from 'dompurify';
 import { micromark } from 'micromark';
 import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
@@ -55,57 +56,43 @@ import { link } from './micromark-link-directive';
 import { createListener } from './micromark-listener-handler';
 import { warnings } from './micromark-warnings-directive';
 
-let text: string;
-let html: string;
+interface Props {
+  markdown?: string;
 
-// Optional attribute to specify the markdown to use
-// the user can use: <Markdown>**bold</Markdown> or <Markdown markdown="**bold**" /> syntax
-export let markdown = '';
-
-// Button micromark related:
-//
-// In progress execution callbacks for all markdown buttons.
-export let inProgressMarkdownCommandExecutionCallback: (
-  command: string,
-  state: 'starting' | 'failed' | 'successful',
-  value?: unknown,
-) => void = () => {};
-
-// Create an event listener for updating the in-progress markdown command execution callback
-const eventListeners: EventListener[] = [];
-
-// Render the markdown or the html+micromark markdown reactively
-$: markdown
-  ? (html = micromark(markdown, {
-      extensions: [directive()],
-      htmlExtensions: [directiveHtml({ button, image, link, warnings })],
-    }))
-  : undefined;
-
-function decode(htmlString: string): string {
-  let textArea = document.createElement('textarea');
-  textArea.innerHTML = htmlString;
-  return textArea.value;
+  /**
+   * Button micromark related:
+   * In progress execution callbacks for all markdown buttons.
+   */
+  inProgressMarkdownCommandExecutionCallback?: (
+    command: string,
+    state: 'starting' | 'failed' | 'successful',
+    value?: unknown,
+  ) => void;
 }
 
-onMount(async () => {
-  if (markdown) {
-    text = markdown;
-  }
+let { markdown, inProgressMarkdownCommandExecutionCallback = (): void => {} }: Props = $props();
+
+let urlProtocol: string = $state('');
+let html: string = $derived.by(() => {
+  if (!markdown) return '';
 
   // Provide micromark + extensions
-  html = micromark(text, {
+  const html = micromark(markdown, {
     extensions: [directive()],
     htmlExtensions: [directiveHtml({ button, image, link, warnings })],
   });
 
-  const urlProtocol: string = await window.getUrlProtocol();
   const protocolPrefix = `${urlProtocol}://`;
 
   // remove href values in each anchor using # for links
   // and set the attribute data-pd-jump-in-page
   const parser = new DOMParser();
-  const doc = parser.parseFromString(decode(html), 'text/html');
+  const doc = parser.parseFromString(
+    DOMPurify.sanitize(decode(html), {
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|podman-desktop):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    }),
+    'text/html',
+  );
   const links = doc.querySelectorAll('a');
   links.forEach(link => {
     const currentHref = link.getAttribute('href');
@@ -138,8 +125,20 @@ onMount(async () => {
     }
   });
 
-  html = doc.body.innerHTML;
+  return doc.body.innerHTML;
+});
 
+// Create an event listener for updating the in-progress markdown command execution callback
+const eventListeners: EventListener[] = [];
+
+function decode(htmlString: string): string {
+  let textArea = document.createElement('textarea');
+  textArea.innerHTML = htmlString;
+  return textArea.value;
+}
+
+onMount(async () => {
+  urlProtocol = await window.getUrlProtocol();
   // We create a click listener in order to execute any internal micromark commands
   // We add the clickListener here since we're unable to add it in the directive typescript file.
   const clickListener = createListener(inProgressMarkdownCommandExecutionCallback);
@@ -154,11 +153,6 @@ onDestroy(() => {
   eventListeners.forEach(listener => document.removeEventListener('click', listener));
 });
 </script>
-
-<!-- Placeholder to grab the content if people are using <Markdown>**bold</Markdown> -->
-<span contenteditable="false" bind:textContent={text} class="hidden">
-  <slot />
-</span>
 
 <section class="markdown" aria-label="markdown-content">
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->

@@ -140,6 +140,7 @@ test.describe.serial('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
 - `@managed-configuration` - Managed configuration tests
 - `@podman-remote` - Remote podman tests
 - `@ui-stress` - Non functional UI stress tests
+- `@experimental` - Experimental features tests
 
 ### 6. File Naming Convention
 

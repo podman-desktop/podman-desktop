@@ -15,7 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
-import type { App } from 'electron';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -24,11 +23,6 @@ import product from '/@product.json' with { type: 'json' };
 
 const APP_VERSION_MOCK = '1.2.3';
 
-vi.mock(import('electron'), () => ({
-  app: {
-    getVersion: vi.fn(),
-  } as unknown as App,
-}));
 vi.mock(import('/@product.json'));
 
 interface PartialProductJson {

@@ -179,7 +179,7 @@ onMount(async () => {
     // sort from newest to oldest
     const runningContainers = engineContainers
       .filter(container => container.state === 'RUNNING')
-      .sort((a, b) => b.created - a.created);
+      .toSorted((a, b) => b.created - a.created);
     if (runningContainers.length > 0) {
       // use the first running container
       networkingModeUserContainer = runningContainers[0].id;

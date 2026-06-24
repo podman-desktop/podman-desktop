@@ -471,6 +471,16 @@ export class Updater {
   public init(): Disposable {
     // disable auto download
     autoUpdater.autoDownload = false;
+
+    // If a custom update server URL is configured in product.json, use it
+    // instead of the default GitHub provider.
+    if (product.update?.url) {
+      autoUpdater.setFeedURL({
+        provider: 'generic',
+        url: product.update.url,
+      });
+    }
+
     /**
      * Differential updates take **a lot** of memory
      * and have lead to constant JavaScript heap out of memory on windows

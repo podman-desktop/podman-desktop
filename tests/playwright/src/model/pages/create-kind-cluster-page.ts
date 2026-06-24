@@ -41,7 +41,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
     // Locator for the parent element of the ingress controller checkbox, used to change its value
     this.controllerCheckbox = this.clusterPropertiesInformation
       .getByRole('checkbox', {
-        name: 'Setup an ingress controller',
+        name: 'Set up an ingress controller',
       })
       .locator('..');
     this.providerType = this.clusterPropertiesInformation.getByLabel('Provider Type');

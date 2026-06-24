@@ -51,11 +51,21 @@ const { Story } = defineMeta({
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">{label}</span>
     <div
       style="background: var(--pd-toast-{type}-bg); color: var(--pd-toast-{type}-color);"
-      class="w-64 rounded overflow-hidden text-sm select-none shadow-md">
-      <div class="px-3 py-2.5">{message}</div>
+      class="relative flex flex-row items-center w-64 min-h-[2rem] rounded-[0.2rem] overflow-hidden text-[0.8rem] select-none shadow-md">
+      <div class="flex-1">
+        {#if type === 'error' || type === 'warning'}
+          <div class="flex flex-row items-start gap-1.5 -ml-0.5 px-3 pt-2 pb-2.5">
+            <Icon icon={type === 'error' ? faCircleExclamation : faTriangleExclamation} class="shrink-0 mt-1" />
+            <span>{message}</span>
+          </div>
+        {:else}
+          <div class="px-3 pt-2 pb-2.5">{message}</div>
+        {/if}
+      </div>
+      <div class="w-8 self-stretch flex items-center justify-center cursor-pointer opacity-60 text-[1rem]">✕</div>
       <div
         style="background: var(--pd-toast-{type}-bar-bg);"
-        class="h-[3px] w-3/5">
+        class="absolute bottom-0.5 left-0.5 h-[3px] w-3/5 rounded-[2px]">
       </div>
     </div>
   </div>
@@ -65,7 +75,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">In progress</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="in-progress">
           <Spinner size="1.5em" />
@@ -81,7 +91,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">Success</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="success">
           <Icon icon={faCheckCircle} class="text-(--pd-state-success) fa-xl" />
@@ -97,7 +107,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">Failure</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="failure">
           <Icon icon={faCircleExclamation} class="text-(--pd-state-error) fa-xl" />
@@ -116,7 +126,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">Canceled</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="canceled">
           <Icon icon={faTriangleExclamation} class="text-(--pd-state-warning) fa-xl" />

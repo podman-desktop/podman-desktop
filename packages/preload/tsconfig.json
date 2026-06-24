@@ -13,7 +13,6 @@
     "emitDecoratorMetadata": true,
     "types": ["node"],
 
-    "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"]
     }

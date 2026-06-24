@@ -21,10 +21,9 @@ import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '/@/utility/operations';
-import { isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-const imageToPull = 'quay.io/centos-bootc/bootc-image-builder';
+const imageToPull = 'ghcr.io/osbuild/bootc-image-builder';
 const imageTag = 'latest';
 const noVolumeImageToPull = 'ghcr.io/linuxcontainers/alpine';
 const containerName = 'alpine';
@@ -44,14 +43,8 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner, page }) => {
-  try {
-    await deleteContainer(page, containerName);
-
-    await deleteImage(page, noVolumeImageToPull);
-  } finally {
-    await runner.close();
-  }
+test.afterAll(async ({ runner }) => {
+  await runner.close();
 });
 
 test.describe
@@ -128,6 +121,14 @@ test.describe
         })
         .toBeTruthy();
     });
+  });
+
+test.describe
+  .serial('Volume container integration', { tag: ['@smoke'] }, () => {
+    test.afterAll(async ({ page }) => {
+      await deleteContainer(page, containerName);
+      await deleteImage(page, noVolumeImageToPull);
+    });
 
     test('Create volumes from bootc-image-builder', async ({ navigationBar }) => {
       test.setTimeout(300_000);
@@ -153,7 +154,7 @@ test.describe
         }
       }
 
-      //pull image from quay.io/centos-bootc/bootc-image-builder
+      //pull image from ghcr.io/osbuild/bootc-image-builder
       let images = await navigationBar.openImages();
       const pullImagePage = await images.openPullImage();
       images = await pullImagePage.pullImage(imageToPull, imageTag, 240_000);
@@ -222,7 +223,6 @@ test.describe
     });
 
     test('Create volume on the system mapped into container', async ({ navigationBar, page }) => {
-      test.skip(!!isWindows, 'Skipped on Windows due to file system issues');
       //create a new volume
       let volumesPage = await navigationBar.openVolumes();
       await playExpect(volumesPage.heading).toBeVisible();
@@ -234,7 +234,7 @@ test.describe
         })
         .toBeTruthy();
 
-      //pull image from quay.io/podman-desktop-demo/podify-demo-backend
+      //pull image from ghcr.io/linuxcontainers/alpine
       let images = await navigationBar.openImages();
       const pullImagePage = await images.openPullImage();
       images = await pullImagePage.pullImage(noVolumeImageToPull, imageTag, 120_000);

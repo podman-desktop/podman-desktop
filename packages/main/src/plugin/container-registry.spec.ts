@@ -1468,7 +1468,7 @@ describe('buildImage', () => {
       canDelete: false,
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
     vi.spyOn(tar, 'pack').mockReturnValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI, 'buildImage').mockRejectedValue('human error message');
 
@@ -1510,7 +1510,7 @@ describe('buildImage', () => {
       status: () => 'started',
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
     vi.spyOn(tar, 'pack').mockReturnValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI, 'buildImage').mockRejectedValue('human error message');
 
@@ -1558,7 +1558,7 @@ describe('buildImage', () => {
       canDelete: false,
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+    vi.spyOn(util, 'isWindows').mockReturnValue(true);
     vi.spyOn(tar, 'pack').mockReturnValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI, 'buildImage').mockResolvedValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI.modem, 'followProgress').mockImplementation((_s, f, _p) => {
@@ -1609,7 +1609,7 @@ describe('buildImage', () => {
       status: () => 'started',
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+    vi.spyOn(util, 'isWindows').mockReturnValue(true);
     vi.spyOn(tar, 'pack').mockReturnValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI, 'buildImage').mockResolvedValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI.modem, 'followProgress').mockImplementation((_s, f, _p) => {
@@ -1665,7 +1665,7 @@ describe('buildImage', () => {
       canDelete: false,
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
     vi.spyOn(dockerAPI, 'buildImage').mockResolvedValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI.modem, 'followProgress').mockImplementation((_s, f, _p) => {
       return f(null, []);
@@ -1774,7 +1774,7 @@ describe('buildImage', () => {
       canDelete: false,
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
     vi.spyOn(dockerAPI, 'buildImage').mockResolvedValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI.modem, 'followProgress').mockImplementation((_s, f, _p) => {
       return f(null, []);
@@ -1859,7 +1859,7 @@ describe('buildImage', () => {
       canDelete: false,
     };
 
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
     vi.spyOn(tar, 'pack').mockReturnValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI, 'buildImage').mockResolvedValue({} as NodeJS.ReadableStream);
     vi.spyOn(dockerAPI.modem, 'followProgress').mockImplementation((_e, f, _d) => {
@@ -5956,13 +5956,13 @@ describe('using fake timers', () => {
     const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId);
     const token = tokenSource?.token;
     const dockerode = new Dockerode({ protocol: 'http', host: 'localhost' });
-    const imageObjectGetMock = vi.fn().mockImplementation(() => {
-      return new Promise(resolve => {
+    const imageObjectGetMock = vi.fn().mockReturnValue(
+      new Promise(resolve => {
         setTimeout(() => {
           resolve(undefined);
         }, 1000);
-      });
-    });
+      }),
+    );
     const stream: Dockerode.Image = {
       get: imageObjectGetMock,
     } as unknown as Dockerode.Image;

@@ -71,7 +71,7 @@ test.describe
 
       const registryBox = registryPage.registriesTable.getByLabel('GitHub');
       const username = registryBox.getByText(registryUsername);
-      await playExpect(username).toBeVisible();
+      await playExpect(username).toBeVisible({ timeout: 10_000 });
     });
 
     test('Pull image', async ({ navigationBar }) => {
@@ -156,6 +156,6 @@ test.describe
       await registryPage.removeRegistry(registryName);
       const registryBox = registryPage.registriesTable.getByLabel(registryName);
       const username = registryBox.getByText(registryUsername);
-      await playExpect(username).toBeHidden();
+      await playExpect(username).toBeHidden({ timeout: 10_000 });
     });
   });

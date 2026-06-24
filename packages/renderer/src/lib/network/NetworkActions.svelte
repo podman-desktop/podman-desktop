@@ -26,7 +26,7 @@ async function removeNetwork(): Promise<void> {
     object.status = oldStatus;
     await window.showMessageBox({
       title: 'Delete Network Failed',
-      message: `Error while deleting network ${object.name}: ${String(error)}`,
+      message: `Error while deleting network ${object.name}: ${error instanceof Error ? error.message : String(error)}`,
       type: 'error',
       buttons: ['Dismiss'],
     });

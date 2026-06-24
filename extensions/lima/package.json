@@ -3,10 +3,16 @@
   "name": "lima",
   "displayName": "Lima",
   "description": "Integration for Lima: Linux Machines (typically macOS)",
-  "version": "1.28.0-next",
+  "version": "1.29.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/lima"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/lima#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
@@ -75,8 +81,8 @@
   "devDependencies": {
     "adm-zip": "^0.5.17",
     "mkdirp": "^3.0.1",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.7",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9",
     "tmp-promise": "^3.0.3"
   }
 }

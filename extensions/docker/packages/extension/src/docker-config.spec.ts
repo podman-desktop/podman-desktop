@@ -50,6 +50,16 @@ test('check path if there is a config', async () => {
   expect(path).toBe(myFakeConfig);
 });
 
+test('check default path if config is an empty string', async () => {
+  vi.mocked(configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(() => ''),
+  } as unknown as Configuration);
+
+  const dockerConfig = new DockerConfig();
+  const path = dockerConfig.getPath();
+  expect(path).toBe(DockerConfig.DEFAULT_CONFIG_FOLDER);
+});
+
 test('check path is updated if the config changes', async () => {
   // mock configuration.getConfiguration with an undefined value
   vi.mocked(configuration.getConfiguration).mockReturnValue({

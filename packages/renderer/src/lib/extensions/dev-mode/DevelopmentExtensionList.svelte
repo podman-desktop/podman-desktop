@@ -83,10 +83,10 @@ async function addLocalFolderExtension(): Promise<void> {
 </script>
 
 {#if isDevelopmentModeEnabled}
-  <div class="bg-[var(--pd-content-card-bg)] m-2 w-full space-y-2 p-4 rounded-lg">
+  <div class="m-2 w-full space-y-2 p-4 rounded-lg">
     <div class="flex flex-col">
       <!-- List all -->
-      <div class="bg-[var(--pd-content-bg)] rounded flex flex-col p-2">
+      <div class="bg-(--pd-content-card-bg) rounded flex flex-col p-2">
         <div class="flex flex-row w-full">
           <div class="text font-medium first-letter:uppercase pb-2">Local extension folders being tracked</div>
           <div class="flex-grow flex flex-col items-end">

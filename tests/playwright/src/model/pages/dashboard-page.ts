@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,13 @@
  ***********************************************************************/
 
 import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
+
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 
 import { BasePage } from './base-page';
+import { PodmanOnboardingPage } from './podman-onboarding-page';
+import { ResourceDetailsPage } from './resource-details-page';
 
 export class DashboardPage extends BasePage {
   readonly mainPage: Locator;
@@ -41,6 +46,15 @@ export class DashboardPage extends BasePage {
   readonly podmanProvider: Locator;
   readonly podmanStatusLabel: Locator;
   readonly podmanInitilizeAndStartButton: Locator;
+
+  // enhanced dashboard - health monitoring
+  readonly systemOverviewButton: Locator;
+  readonly systemOverview: Locator;
+  readonly statusButton: Locator;
+  readonly setUpPodmanButton: Locator;
+  readonly errorDetailsButton: Locator;
+  readonly noContainerEngineLabel: Locator;
+  readonly k8sVmConnectionLabel: Locator;
 
   // contants
   readonly ACTUAL_STATE = 'Actual State';
@@ -71,6 +85,73 @@ export class DashboardPage extends BasePage {
     this.podmanInitilizeAndStartButton = this.podmanProvider.getByRole('button', { name: 'Initialize and start ' });
     this.transitioningState = this.podmanProvider.getByLabel('Transitioning State');
     this.podmanStatusLabel = this.podmanProvider.getByLabel(this.CONNECTION_STATUS_LABEL);
+
+    // Enhanced Dashboard - Health Monitoring
+    this.systemOverviewButton = page.getByRole('button', { name: 'System Overview', exact: true });
+    this.systemOverview = this.systemOverviewButton.locator('..').getByRole('region');
+    this.setUpPodmanButton = this.systemOverview.getByRole('button', { name: 'Set up Podman' });
+    this.errorDetailsButton = this.systemOverview.getByRole('button', { name: 'See Details in Resources' });
+    this.statusButton = this.systemOverview.getByRole('button', { name: 'System Overview - Overall status' }); //'Some systems are stopped', 'All systems operational', 'Starting up...', 'Error detected'
+    this.noContainerEngineLabel = this.systemOverview.getByText(
+      'No container engine (machine) created yet. Create one to run containers and pods.',
+    );
+    this.k8sVmConnectionLabel = this.systemOverview.getByText('Kubernetes/VM connections:');
+  }
+
+  getNavigateToConnectionButton(connectionName: string): Locator {
+    return this.systemOverview.getByRole('button', {
+      name: `Navigate to ${connectionName}`,
+      exact: true,
+    });
+  }
+
+  public async expandSystemOverview(expanded: boolean): Promise<void> {
+    const isExpanded = (await this.systemOverviewButton.getAttribute('aria-expanded')) === 'true';
+    if (isExpanded !== expanded) {
+      await this.systemOverviewButton.scrollIntoViewIfNeeded();
+      await this.systemOverviewButton.click();
+      await playExpect(this.systemOverviewButton).toHaveAttribute('aria-expanded', String(expanded));
+    }
+  }
+
+  public async createPodmanMachineFromSystemOverview(
+    machineName: string,
+    {
+      isRootful = false,
+      enableUserNet = false,
+      startNow = true,
+      virtualizationProvider,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
+    } = {},
+  ): Promise<void> {
+    return test.step(`Create Podman machine '${machineName}' from System Overview`, async () => {
+      await this.expandSystemOverview(true);
+      await playExpect(this.setUpPodmanButton).toBeEnabled();
+      await this.setUpPodmanButton.scrollIntoViewIfNeeded();
+      await this.setUpPodmanButton.click();
+      const podmanOnboardingPage = new PodmanOnboardingPage(this.page);
+      await podmanOnboardingPage.createMachine(machineName, {
+        isRootful,
+        enableUserNet,
+        startNow,
+        virtualizationProvider,
+      });
+    });
+  }
+
+  public async checkSystemOverviewResourceDetails(resourceName: string): Promise<void> {
+    return test.step(`Check System Overview resource details for '${resourceName}'`, async () => {
+      await this.expandSystemOverview(true);
+      const navigateToResourceButton = this.getNavigateToConnectionButton(resourceName);
+      await playExpect(navigateToResourceButton).toBeEnabled();
+      await navigateToResourceButton.click();
+      const resourceDetails = new ResourceDetailsPage(this.page, resourceName);
+      await playExpect(resourceDetails.heading).toBeVisible();
+    });
   }
 
   public getPodmanStatusLocator(): Locator {

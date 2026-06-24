@@ -18,7 +18,7 @@
 import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 
-import { app, nativeTheme } from 'electron';
+import { app, nativeImage, nativeTheme } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { AnimatedTray } from './tray-animate-icon.js';
@@ -40,24 +40,6 @@ class TestAnimatedTray extends AnimatedTray {
 }
 
 let testAnimatedTray: TestAnimatedTray;
-
-const mockNativeImage = vi.hoisted(() => ({
-  createFromBuffer: vi.fn().mockReturnValue({ isEmpty: () => false }),
-}));
-
-vi.mock(import('electron'), async () => {
-  return {
-    app: {
-      getAppPath: (): string => 'a-custom-appPath',
-    },
-    nativeTheme: {
-      on: vi.fn(),
-      off: vi.fn(),
-      shouldUseDarkColors: false,
-    },
-    nativeImage: mockNativeImage,
-  } as unknown as typeof Electron;
-});
 
 vi.mock(import('node:fs'), () => ({
   readFileSync: vi.fn().mockReturnValue(Buffer.from('')),
@@ -145,7 +127,7 @@ test('Windows should return a NativeImage not a string', () => {
   const result = testAnimatedTray.getIconPath('default');
 
   expect(typeof result).not.toBe('string');
-  expect(mockNativeImage.createFromBuffer).toHaveBeenCalled();
+  expect(nativeImage.createFromBuffer).toHaveBeenCalled();
 });
 
 test('Windows should load the @2x asset', () => {
@@ -162,7 +144,7 @@ test('Windows should call createFromBuffer with correct logical dimensions', () 
 
   testAnimatedTray.getIconPath('default');
 
-  expect(mockNativeImage.createFromBuffer).toHaveBeenCalledWith(expect.anything(), {
+  expect(nativeImage.createFromBuffer).toHaveBeenCalledWith(expect.anything(), {
     width: 16,
     height: 16,
     scaleFactor: 1.0,

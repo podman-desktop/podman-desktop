@@ -286,10 +286,16 @@ const config = {
     schemes: [product.urlProtocol],
     role: 'Editor',
   },
-  publish: {
-    provider: 'github',
-    timeout: 10000,
-  },
+  publish: product.update?.url
+    ? {
+        provider: 'generic',
+        url: product.update.url,
+        timeout: 10000,
+      }
+    : {
+        provider: 'github',
+        timeout: 10000,
+      },
   /*extraMetadata: {
     version: process.env.VITE_APP_VERSION,
   },*/
@@ -299,7 +305,8 @@ const config = {
 if (process.env.AIRGAP_DOWNLOAD) {
   config.publish = {
     publishAutoUpdate: false,
-    provider: 'github',
+    provider: product.update?.url ? 'generic' : 'github',
+    ...(product.update?.url ? { url: product.update.url } : {}),
   };
 }
 

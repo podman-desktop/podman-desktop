@@ -3,11 +3,17 @@
   "name": "podman",
   "displayName": "Podman",
   "description": "Integration for Podman and Podman Machines",
-  "version": "1.28.0-next",
+  "version": "1.29.0-next",
   "icon": "icon.png",
   "type": "module",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/podman/packages/extension"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/podman/packages/extension#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
@@ -44,7 +50,7 @@
       },
       {
         "command": "podman.setupRegistry",
-        "title": "Podman: Setup registry"
+        "title": "Podman: Set up registry"
       },
       {
         "command": "podman.uninstallLegacyPodmanInstaller",
@@ -434,7 +440,7 @@
       "dashboard/container-connection": [
         {
           "command": "podman.setupRegistry",
-          "title": "Setup registry configuration",
+          "title": "Set up registry configuration",
           "when": "selectedProviderConnectionType === 'podman' && selectedProviderConnectionStatus === 'started'"
         }
       ]
@@ -450,10 +456,10 @@
     "@podman-desktop/api": "workspace:*",
     "@podman-desktop/podman-extension-api": "workspace:*",
     "async-mutex": "^0.5.0",
-    "inversify": "^8.1.0",
+    "inversify": "^8.1.1",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "semver": "^7.8.1",
+    "semver": "^7.8.5",
     "smol-toml": "1.6.1",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
@@ -461,15 +467,15 @@
   "devDependencies": {
     "@types/mustache": "^4.2.6",
     "@types/ssh2": "^1.15.5",
-    "@types/sshpk": "^1.17.4",
+    "@types/sshpk": "^1.17.5",
     "adm-zip": "^0.5.17",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
     "msw": "^2.14.6",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
-    "tsx": "^4.22.3",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.7"
+    "tsx": "^4.22.4",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }

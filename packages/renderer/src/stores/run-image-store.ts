@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfoUI } from 'src/lib/image/ImageInfoUI';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
+
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 
 /**
  * Defines the store used to define the image to run when starting a container.

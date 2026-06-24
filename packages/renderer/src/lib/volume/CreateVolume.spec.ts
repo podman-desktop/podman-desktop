@@ -20,12 +20,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { ProviderInfo, VolumeListInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
+import { volumeListInfos } from '/@/stores/volumes';
 
 import CreateVolume from './CreateVolume.svelte';
 
@@ -34,6 +35,11 @@ const createVolumeMock = vi.fn();
 // fake the window.events object
 beforeAll(() => {
   (window as any).createVolume = createVolumeMock;
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  volumeListInfos.set([]);
 });
 
 const createButtonTitle = 'Create';
@@ -59,6 +65,7 @@ test('Expect Create button is working', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -87,6 +94,7 @@ test('Expect Create with a custom name', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -134,6 +142,7 @@ test('Expect error message when volume creation fails', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -165,6 +174,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -176,6 +186,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
     } as unknown as ProviderInfo,
     {
       name: 'docker',
+      id: 'docker',
       status: 'started',
       internalId: 'docker-internal-id',
       containerConnections: [
@@ -218,4 +229,277 @@ test('Expect Create with a custom name and multiple providers', async () => {
   expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
     Name: customVolumeName,
   });
+});
+
+test('Expect error and disabled button when volume name already exists', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'existing-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'existing-volume');
+
+  const errorMessage = screen.getByText('The name "existing-volume" already exists. Please choose a different name.');
+  expect(errorMessage).toBeInTheDocument();
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  expect(createButton).toBeDisabled();
+});
+
+test('Expect no error when volume name is unique', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'existing-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'new-volume');
+
+  const errorMessage = screen.queryByText(/already exists/);
+  expect(errorMessage).not.toBeInTheDocument();
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  expect(createButton).toBeEnabled();
+});
+
+test('Expect no error when volume name is empty', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'existing-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'existing-volume');
+
+  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+
+  await userEvent.clear(nameInput);
+
+  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  expect(createButton).toBeEnabled();
+});
+
+test('Expect revalidation when provider changes', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+    {
+      name: 'docker',
+      id: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'shared-name' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+    {
+      engineId: 'docker.docker',
+      engineName: 'docker',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'shared-name');
+
+  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+
+  const providerSelect = screen.getByRole('combobox', { name: 'Provider Choice' });
+  await userEvent.selectOptions(providerSelect, 'docker');
+
+  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+});
+
+test('Expect no false positive when providers share connection name', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'Docker',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+    {
+      name: 'docker',
+      id: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'Docker',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'docker.Docker',
+      engineName: 'docker',
+      Volumes: [{ Name: 'my-vol' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+    {
+      engineId: 'podman.Docker',
+      engineName: 'podman',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'my-vol');
+
+  // podman.Docker is selected first — no volume named 'my-vol' there
+  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+
+  // switch to docker.Docker — 'my-vol' exists there
+  const providerSelect = screen.getByRole('combobox', { name: 'Provider Choice' });
+  const options = providerSelect.querySelectorAll('option');
+  await userEvent.selectOptions(providerSelect, options[1] as HTMLOptionElement);
+
+  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+});
+
+test('Expect error clears when name is corrected', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'my-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'my-volume');
+
+  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, 'my-volume-2');
+
+  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
 });

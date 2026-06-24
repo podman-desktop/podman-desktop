@@ -144,10 +144,8 @@ test('check configureRouter with missing referrer', async () => {
   };
   const sendMock = vi.fn();
   const res = {
-    status: vi.fn().mockImplementation(() => {
-      return {
-        send: sendMock,
-      };
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
     }),
   };
   func(req, res);
@@ -193,10 +191,8 @@ test('check configureRouter with invalid uuid', async () => {
   };
   const sendMock = vi.fn();
   const res = {
-    status: vi.fn().mockImplementation(() => {
-      return {
-        send: sendMock,
-      };
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
     }),
   };
   func(req, res);
@@ -221,10 +217,8 @@ test('check configureRouter with valid uuid but no matching webview', async () =
   const sendMock = vi.fn();
   const res = {
     sendFile: vi.fn(),
-    status: vi.fn().mockImplementation(() => {
-      return {
-        send: sendMock,
-      };
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
     }),
   };
 
@@ -242,9 +236,7 @@ test('check configureRouter with valid uuid but no matching webview', async () =
 
 test('check configureRouter with valid uuid and file exists', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -267,10 +259,8 @@ test('check configureRouter with valid uuid and file exists', async () => {
   const sendMock = vi.fn();
   const res = {
     sendFile: vi.fn(),
-    status: vi.fn().mockImplementation(() => {
-      return {
-        send: sendMock,
-      };
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
     }),
   };
 
@@ -285,9 +275,7 @@ test('check configureRouter with valid uuid and file exists', async () => {
 
 test('check configureRouter with valid uuid and file does not exist', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -310,10 +298,8 @@ test('check configureRouter with valid uuid and file does not exist', async () =
   const sendMock = vi.fn();
   const res = {
     sendFile: vi.fn(),
-    status: vi.fn().mockImplementation(() => {
-      return {
-        send: sendMock,
-      };
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
     }),
   };
 
@@ -331,9 +317,7 @@ test('check configureRouter with valid uuid and file does not exist', async () =
 
 test('check configureRouter with valid uuid and file from another directory', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -356,10 +340,8 @@ test('check configureRouter with valid uuid and file from another directory', as
   const sendMock = vi.fn();
   const res = {
     sendFile: vi.fn(),
-    status: vi.fn().mockImplementation(() => {
-      return {
-        send: sendMock,
-      };
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
     }),
   };
 

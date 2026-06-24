@@ -43,6 +43,15 @@ Below is what a typical release week may look like (This is just an example of t
    - Click `Run workflow`
    - You can view the PR at: https://github.com/flathub/io.podman_desktop.PodmanDesktop/pulls/podman-desktop-bot
 
+1. Approve `npmjs-publish.yaml` workflow **IMPORTANT NOTE:** We should wait for release note to be merged
+
+   The workflow will be waiting for manual approval
+   - Go to https://github.com/podman-desktop/podman-desktop/actions/workflows/npmjs-publish.yaml?query=is%3Awaiting
+   - Click on `View details` of the run corresponding to the release you wish to publish
+   - Click on `Review Deployment`
+   - Check `npmjs-publish.yaml` then click on `Approve and Deploy`
+   - Cancel any other pending run (If you did one or several re-spin, previous release tag will also wait, we should not publish them).
+
 ## Test release before it is rolling out.
 
 The release is a **pre-release**, it means it is not yet the latest version, so no clients will automatically update to this version.
@@ -251,7 +260,7 @@ Podman Desktop X.X is now available. [Click here to download it](/downloads)!
 
 <!-- EXAMPLE -->
 <!-- ### Podman v4.5.1 -->
-<!-- Podman Desktop 1.1 moves up to [Podman 4.5.1](https://github.com/containers/podman/releases/tag/v4.5.1). -->
+<!-- Podman Desktop 1.1 moves up to [Podman 4.5.1](https://github.com/podman-container-tools/podman/releases/tag/v4.5.1). -->
 
 <!-- WHEN DESCRIBING NAVBAR SECTIONS, INCLUDE ICON -->
 <!-- EXAMPLE -->

@@ -24,6 +24,7 @@ import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@pod
 import * as extensionApi from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
 
+import product from '../product.json' with { type: 'json' };
 import { connectionAuditor, createCluster } from './create-cluster';
 import type { ImageInfo } from './image-handler';
 import { ImageHandler } from './image-handler';
@@ -39,7 +40,7 @@ import {
 
 const KIND_CLI_NAME = 'kind';
 const KIND_DISPLAY_NAME = 'Kind';
-const KIND_MARKDOWN = `Podman Desktop can help you run Kind-powered local Kubernetes clusters on a container engine, such as Podman.\n\nMore information: [Podman Desktop Documentation](https://podman-desktop.io/docs/kind)`;
+const KIND_MARKDOWN = product.kindMarkdown ?? '';
 
 const API_KIND_INTERNAL_API_PORT = 6443;
 
@@ -234,35 +235,56 @@ async function updateClusters(
             }
             // start the container
             await extensionApi.containerEngine.startContainer(cluster.engineId, cluster.id);
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
           } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
             console.error(err);
-            // propagate the error
             throw err;
           }
         },
         stop: async (context, logger): Promise<void> => {
-          if (context || logger) {
-            await extensionApi.containerEngine.logsContainer(
-              cluster.engineId,
-              cluster.id,
-              getLoggerCallback(context, logger),
-            );
+          try {
+            if (context || logger) {
+              await extensionApi.containerEngine.logsContainer(
+                cluster.engineId,
+                cluster.id,
+                getLoggerCallback(context, logger),
+              );
+            }
+            await extensionApi.containerEngine.stopContainer(cluster.engineId, cluster.id);
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
+          } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
+            console.error(err);
+            throw err;
           }
-          await extensionApi.containerEngine.stopContainer(cluster.engineId, cluster.id);
         },
         delete: async (logger): Promise<void> => {
-          const env: { [key: string]: string } = {};
-          if (cluster.engineType === 'podman') {
-            env['KIND_EXPERIMENTAL_PROVIDER'] = 'podman';
-          }
-          env.PATH = getKindPath() ?? '';
-          if (kindPath) {
-            const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
-            await extensionApi.process.exec(
-              kindPath,
-              ['delete', 'cluster', '--name', cluster.name, '--kubeconfig', kubeConfigPath],
-              { env, logger },
-            );
+          try {
+            const env: { [key: string]: string } = {};
+            if (cluster.engineType === 'podman') {
+              env['KIND_EXPERIMENTAL_PROVIDER'] = 'podman';
+            }
+            env.PATH = getKindPath() ?? '';
+            if (kindPath) {
+              const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
+              await extensionApi.process.exec(
+                kindPath,
+                ['delete', 'cluster', '--name', cluster.name, '--kubeconfig', kubeConfigPath],
+                { env, logger },
+              );
+            }
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
+          } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
+            console.error(err);
+            throw err;
           }
         },
       };
