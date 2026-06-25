@@ -66,8 +66,8 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
   const isEnhancedDashboard = await dashboardPage.systemOverviewButton.isVisible({ timeout: 5_000 }).catch(() => false);
 
   if (isEnhancedDashboard) {
+    await dashboardPage.expandSystemOverview(true);
     if (enabled) {
-      await dashboardPage.expandSystemOverview(true);
       await playExpect(dashboardPage.statusButton).toBeVisible({ timeout: 15_000 });
     } else {
       await playExpect(dashboardPage.setUpPodmanButton).not.toBeVisible({ timeout: 15_000 });
