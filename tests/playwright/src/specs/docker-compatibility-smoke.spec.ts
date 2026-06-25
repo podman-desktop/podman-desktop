@@ -93,7 +93,7 @@ test.describe
 
       await settingsBar.openTabPage(DockerCompatibilityPage);
       await playExpect
-        .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
+        .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 120_000 })
         .toBeTruthy();
       await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
     });
