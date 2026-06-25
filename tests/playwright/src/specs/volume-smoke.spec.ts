@@ -154,13 +154,13 @@ test.describe('Volume container integration', { tag: ['@smoke'] }, () => {
       }
     }
 
-      //pull image from ghcr.io/osbuild/bootc-image-builder
-      let images = await navigationBar.openImages();
-      const pullImagePage = await images.openPullImage();
-      images = await pullImagePage.pullImage(imageToPull, imageTag, 240_000);
-      await playExpect
-        .poll(async () => await images.waitForImageExists(imageToPull, 30_000), { timeout: 0 })
-        .toBeTruthy();
+    //pull image from ghcr.io/osbuild/bootc-image-builder
+    let images = await navigationBar.openImages();
+    const pullImagePage = await images.openPullImage();
+    images = await pullImagePage.pullImage(imageToPull, imageTag, 240_000);
+    await playExpect
+      .poll(async () => await images.waitForImageExists(imageToPull, 30_000), { timeout: 0 })
+      .toBeTruthy();
 
     //start a container from the image (generates 4 new volumes)
     const imageDetails = await images.openImageDetails(imageToPull);
@@ -234,13 +234,13 @@ test.describe('Volume container integration', { tag: ['@smoke'] }, () => {
       })
       .toBeTruthy();
 
-      //pull image from quay.io/podman-desktop-demo/podify-demo-backend
-      let images = await navigationBar.openImages();
-      const pullImagePage = await images.openPullImage();
-      images = await pullImagePage.pullImage(noVolumeImageToPull, imageTag, 120_000);
-      await playExpect
-        .poll(async () => await images.waitForImageExists(noVolumeImageToPull, 30_000), { timeout: 0 })
-        .toBeTruthy();
+    //pull image from quay.io/podman-desktop-demo/podify-demo-backend
+    let images = await navigationBar.openImages();
+    const pullImagePage = await images.openPullImage();
+    images = await pullImagePage.pullImage(noVolumeImageToPull, imageTag, 120_000);
+    await playExpect
+      .poll(async () => await images.waitForImageExists(noVolumeImageToPull, 30_000), { timeout: 0 })
+      .toBeTruthy();
 
     //start a container from the image and map the volume into it
     const imageDetails = await images.openImageDetails(noVolumeImageToPull);
