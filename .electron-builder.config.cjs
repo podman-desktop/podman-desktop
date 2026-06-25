@@ -254,7 +254,9 @@ const config = {
   mac: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
-    entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
+    notarize: true,
+    entitlements: './buildResources/entitlements.mac.plist',
+    entitlementsInherit: './buildResources/entitlements.mac.plist',
     x64ArchFiles: 'Contents/Resources/app.asar.unpacked/**/*.node',
     target: {
       target: 'default',
