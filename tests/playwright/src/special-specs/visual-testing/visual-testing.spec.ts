@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { handleConfirmationDialog } from '/@/utility/operations';
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('screenshots');
@@ -30,22 +29,22 @@ test.afterAll(async ({ runner, navigationBar }) => {
   const containersPage = await navigationBar.openContainers();
   await playExpect(containersPage.heading).toBeVisible();
 
-  const count = await containersPage.getAllTableRows();
-  if (count.length > 0) {
-    // Select all containers through the checkbox
-    const toggleAll = containersPage.page.getByRole('checkbox', { name: 'Toggle all' });
-    await playExpect(toggleAll).toBeVisible();
-    await toggleAll.click();
-
-    // Get the bulk delete button
-    const bulkDelete = containersPage.page.getByRole('button', { name: 'Delete selected containers and pods' });
-    await playExpect(bulkDelete).toBeVisible();
-    await bulkDelete.click();
-
-    await handleConfirmationDialog(containersPage.page, 'Delete Containers?', true, 'Delete');
-
-    // Wait until none are remaining
-    await playExpect.poll(async () => await containersPage.getAllTableRows()).toHaveLength(0);
+  try {
+    playExpect.poll(
+      async () => {
+        return await containersPage.pageIsEmpty();
+      },
+      { timeout: 10_000 },
+    );
+  } catch (err) {
+    console.log('We have some containers');
+    await containersPage.pruneContainers();
+    playExpect.poll(
+      async () => {
+        return await containersPage.pageIsEmpty();
+      },
+      { timeout: 20_000 },
+    );
   }
 
   await runner.close(45_000);
