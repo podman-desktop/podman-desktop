@@ -4,6 +4,8 @@ import { onDestroy, onMount } from 'svelte';
 
 import { currentScreen, registerPrototype, unregisterPrototype } from '/@/stores/prototype';
 
+import StatusDotIcon from './StatusDotIcon.svelte';
+
 // #region Types
 
 interface ContainerOption {
@@ -341,12 +343,19 @@ function selectOverflowTab(selectedTab: PanelTab): void {
   // Swap the chosen overflow tab into the last visible slot
   [tabs[selectedIndex], tabs[lastVisibleIndex]] = [tabs[lastVisibleIndex], tabs[selectedIndex]];
   panelState = { ...panelState, tabs, activeTabId: selectedTab.id };
+  closeOverflowMenu();
+}
+
+function closeOverflowMenu(): void {
   showOverflowMenu = false;
+  window.dispatchEvent(new Event('tooltip-show'));
 }
 
 function toggleOverflowMenu(): void {
-  showOverflowMenu = !showOverflowMenu;
   if (showOverflowMenu) {
+    closeOverflowMenu();
+  } else {
+    showOverflowMenu = true;
     window.dispatchEvent(new Event('tooltip-hide'));
   }
 }
@@ -431,11 +440,11 @@ onMount((): void => {
               <!-- Multi-container selector: shown inline when tab has container options -->
               {#if tab.containers && tab.containers.length > 0}
                 <button
-                  class="flex items-center gap-0.5 pl-1 opacity-70 hover:opacity-100"
+                  class="flex items-center gap-1 px-0.5 text-[10px] border border-transparent border-b-(--pd-input-field-stroke) hover:border-b-(--pd-input-field-hover-stroke) transition-colors"
                   aria-label="Select container for {tab.label}"
                   onclick={(e: MouseEvent): void => openContainerDropdown(e, tab.id)}>
-                  <span class="text-[10px] -ml-1.5">· {tab.selectedContainer}</span>
-                  <i class="fa-solid fa-chevron-down text-[7px]"></i>
+                  <span>{tab.selectedContainer}</span>
+                  <i class="fa-solid fa-caret-down text-[9px]"></i>
                 </button>
               {/if}
               <i
@@ -461,21 +470,20 @@ onMount((): void => {
           {@const dropdownTab = panelState.tabs.find(t => t.id === containerDropdownTabId)}
           {#if dropdownTab?.containers}
             <div
-              class="fixed bg-(--pd-content-card-bg) border border-(--pd-content-divider) rounded shadow-lg min-w-[180px] py-1"
+              class="fixed rounded-md bg-(--pd-dropdown-bg) border border-(--pd-input-field-hover-stroke) min-w-[180px] py-1 overflow-y-auto"
               style="z-index: 9999; left: {containerDropdownLeft}px; top: {containerDropdownTop}px;">
-              <div class="px-3 py-1 text-[10px] font-medium text-(--pd-content-text)/40 uppercase tracking-wide border-b border-(--pd-content-divider) mb-1">
+              <div class="px-3 py-1 text-[10px] font-medium text-(--pd-content-text) tracking-wide border-b border-(--pd-input-field-stroke) mb-1">
                 {dropdownTab.label}
               </div>
               {#each dropdownTab.containers as container (container.name)}
                 <button
-                  class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-(--pd-content-text) hover:bg-(--pd-content-card-hover-bg) transition-colors"
+                  class="flex flex-row items-center w-full select-none px-2 py-1 text-xs text-start hover:bg-(--pd-dropdown-item-hover-bg) hover:text-(--pd-dropdown-item-hover-text) transition-colors"
                   role="menuitem"
                   onclick={(): void => selectContainer(dropdownTab, container.name)}>
-                  <span
-                    class="w-1.5 h-1.5 rounded-full shrink-0 {container.status === 'running'
-                      ? 'bg-(--pd-status-running)'
-                      : 'bg-(--pd-content-text)/25'}"></span>
-                  <span class="flex-1 text-left">{container.name}</span>
+                  <div class="min-w-4 max-w-4 flex items-center">
+                    <StatusDotIcon status={container.status} size="10" />
+                  </div>
+                  <div class="grow">{container.name}</div>
                   {#if container.name === dropdownTab.selectedContainer}
                     <i class="fa-solid fa-check text-[9px] text-(--pd-global-nav-icon-selected-highlight)"></i>
                   {/if}
@@ -488,7 +496,7 @@ onMount((): void => {
         <!-- New tab button -->
         <Tooltip top tip="New terminal">
           <button
-            class="flex items-center justify-center px-2.5 h-[35px] border-r border-(--pd-global-nav-bg-border) text-(--pd-global-nav-icon)"
+            class="flex items-center justify-center px-2.5 h-[35px] text-(--pd-global-nav-icon) {overflowTabs.length > 0 ? 'border-r border-(--pd-global-nav-bg-border)' : ''}"
             aria-label="New terminal tab">
             <i class="fa-solid fa-plus text-[10px]"></i>
           </button>
@@ -503,7 +511,6 @@ onMount((): void => {
                 aria-label="{overflowTabs.length} more tabs"
                 onclick={toggleOverflowMenu}>
                 <i class="fa-solid fa-ellipsis"></i>
-                <span class="flex items-center justify-center w-[16px] h-[16px] rounded-full text-[9px] font-medium bg-(--pd-global-nav-icon) text-(--pd-content-bg)">{overflowTabs.length}</span>
               </button>
             </Tooltip>
 
@@ -514,19 +521,19 @@ onMount((): void => {
               <div
                 class="fixed inset-0"
                 style="z-index: 9998;"
-                onclick={(): void => {
-                  showOverflowMenu = false;
-                }}></div>
+                onclick={closeOverflowMenu}></div>
               <div
-                class="fixed bg-(--pd-content-card-bg) border border-(--pd-content-divider) rounded shadow-lg min-w-[200px] overflow-menu-popup"
+                class="fixed rounded-md bg-(--pd-dropdown-bg) border border-(--pd-input-field-hover-stroke) min-w-[200px] py-1 overflow-y-auto overflow-menu-popup"
                 style="z-index: 9999;">
                 {#each overflowTabs as tab (tab.id)}
                   <button
-                    class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-(--pd-content-text) hover:bg-(--pd-content-card-hover-bg) transition-colors"
+                    class="flex flex-row items-center w-full select-none px-2 py-1 text-xs text-start hover:bg-(--pd-dropdown-item-hover-bg) hover:text-(--pd-dropdown-item-hover-text) transition-colors"
                     role="menuitem"
                     onclick={(): void => selectOverflowTab(tab)}>
-                    <i class="{tab.icon} text-[10px]"></i>
-                    <span class="truncate">{tab.label}</span>
+                    <div class="min-w-4 max-w-4 flex items-center justify-center">
+                      <i class="{tab.icon} text-[10px]"></i>
+                    </div>
+                    <div class="grow truncate">{tab.label}</div>
                   </button>
                 {/each}
               </div>

@@ -190,10 +190,11 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         class="flex flex-col w-full h-full overflow-hidden"
         class:bg-[var(--pd-content-bg)]={!meta.url.startsWith('/preferences')}
         class:bg-[var(--pd-invert-content-bg)]={meta.url.startsWith('/preferences')}>
-        <TaskManager />
-        <SendFeedback />
-        <ToastHandler />
-        <ToastTaskNotifications />
+        <div class="flex flex-col flex-1 min-h-0 relative">
+          <TaskManager />
+          <SendFeedback />
+          <ToastHandler />
+          <ToastTaskNotifications />
         <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
           <DashboardPage />
         </Route>
@@ -455,6 +456,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             <ExtensionDetails extensionId={meta.params.id} />
           </Route>
         </Route>
+        </div>
         <PrototypeTabbedPanel />
       </div>
     </div>
