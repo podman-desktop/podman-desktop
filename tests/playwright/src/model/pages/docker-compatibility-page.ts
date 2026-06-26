@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import type { Locator, Page } from '@playwright/test';
-import { expect as playExpect } from '@playwright/test';
 
 import { SettingsPage } from './settings-page';
 
@@ -45,11 +44,17 @@ export class DockerCompatibilityPage extends SettingsPage {
     this.refreshStatusButton = this.content.getByRole('button', { name: 'Refresh the status' });
   }
 
+  /**
+   * Clicks the Refresh button to trigger a fresh socket status check,
+   * then waits for the "podman is listening" label to become visible.
+   * Returns immediately on success; returns false after a short timeout
+   * if the socket is unreachable. Designed for use inside playExpect.poll().
+   */
   public async socketIsReachable(): Promise<boolean> {
     try {
       await this.refreshStatusButton.click();
-      await playExpect(this.podmanListeningLabel).toBeVisible({ timeout: 3_000 });
-      return await this.podmanListeningLabel.isVisible();
+      await this.podmanListeningLabel.waitFor({ state: 'visible', timeout: 5_000 });
+      return true;
     } catch (_error) {
       return false;
     }
