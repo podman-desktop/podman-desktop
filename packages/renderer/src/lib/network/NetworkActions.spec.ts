@@ -61,7 +61,7 @@ beforeEach(() => {
 });
 
 test('Expect non-podman unused network to have delete option and disabled edit', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(NetworkActions, { object: network1 });
 
   expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
@@ -75,7 +75,7 @@ test('Expect non-podman unused network to have delete option and disabled edit',
 
 test('Expect error dialog when network deletion fails', async () => {
   const errorMessage = 'default network podman cannot be removed';
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   vi.mocked(window.removeNetwork).mockRejectedValueOnce(new Error(errorMessage));
 
   const network: NetworkInfoUI = { ...network1, status: 'UNUSED' };

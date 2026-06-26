@@ -37,43 +37,43 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe
-  .serial('Certificate synchronization to Podman VMs', { tag: ['@smoke'] }, () => {
-    test.skip(isLinux, 'Certificate sync targets Podman virtual machines — not applicable on native Linux');
-    test.skip(isWindows && isCI, 'Certificate sync via podman machine ssh hangs on Windows CI runners');
+test.describe('Certificate synchronization to Podman VMs', { tag: ['@smoke'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test.skip(isLinux, 'Certificate sync targets Podman virtual machines — not applicable on native Linux');
+  test.skip(isWindows && isCI, 'Certificate sync via podman machine ssh hangs on Windows CI runners');
 
-    test('Synchronize certificates completes successfully', async ({ page, statusBar }) => {
-      test.setTimeout(SYNC_TIMEOUT + 60_000);
+  test('Synchronize certificates completes successfully', async ({ page, statusBar }) => {
+    test.setTimeout(SYNC_TIMEOUT + 60_000);
 
-      const tasksPage = await statusBar.openTasksPage();
-      await playExpect(tasksPage.heading).toBeVisible();
+    const tasksPage = await statusBar.openTasksPage();
+    await playExpect(tasksPage.heading).toBeVisible();
 
-      const commandPalette = new CommandPalette(page);
-      await commandPalette.executeCommand(syncCertificatesCommand);
+    const commandPalette = new CommandPalette(page);
+    await commandPalette.executeCommand(syncCertificatesCommand);
 
-      await playExpect
-        .poll(
-          async () => {
-            try {
-              const status = await tasksPage.getStatusForLatestTask();
-              if (status && !status.includes(TaskState.Success)) {
-                console.log(`Poll: current task status = "${status}"`);
-              }
-              return status;
-            } catch (error: unknown) {
-              console.log('Poll: task status not yet available —', error instanceof Error ? error.message : error);
-              return '';
+    await playExpect
+      .poll(
+        async () => {
+          try {
+            const status = await tasksPage.getStatusForLatestTask();
+            if (status && !status.includes(TaskState.Success)) {
+              console.log(`Poll: current task status = "${status}"`);
             }
-          },
-          { timeout: SYNC_TIMEOUT, intervals: [POLL_INTERVAL] },
-        )
-        .toContain(TaskState.Success);
-    });
-
-    test('Clear certificate sync tasks', async ({ page }) => {
-      const tasksPage = new TasksPage(page);
-      await playExpect(tasksPage.heading).toBeVisible();
-      await tasksPage.clearAllTasks();
-      await playExpect(tasksPage.taskList).toHaveCount(0);
-    });
+            return status;
+          } catch (error: unknown) {
+            console.log('Poll: task status not yet available —', error instanceof Error ? error.message : error);
+            return '';
+          }
+        },
+        { timeout: SYNC_TIMEOUT, intervals: [POLL_INTERVAL] },
+      )
+      .toContain(TaskState.Success);
   });
+
+  test('Clear certificate sync tasks', async ({ page }) => {
+    const tasksPage = new TasksPage(page);
+    await playExpect(tasksPage.heading).toBeVisible();
+    await tasksPage.clearAllTasks();
+    await playExpect(tasksPage.taskList).toHaveCount(0);
+  });
+});

@@ -801,7 +801,7 @@ test('Sort containers based on selected parameter', async () => {
 test('Expect user confirmation to pop up when preferences require', async () => {
   vi.mocked(window.listContainers).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -845,7 +845,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.deleteContainer).toHaveBeenCalled());

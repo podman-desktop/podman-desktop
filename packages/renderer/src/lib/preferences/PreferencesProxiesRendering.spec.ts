@@ -531,7 +531,7 @@ describe('manual proxy settings persistence', () => {
     });
     vi.mocked(window.setProxyState).mockResolvedValue(undefined);
     vi.mocked(window.updateProxySettings).mockResolvedValue(undefined);
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
 
     manualProxySettings.settings = undefined;
 

@@ -33,16 +33,16 @@ import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
 
 // Sign Out dialog buttons
-export const SIGN_OUT_CANCEL = 0;
-export const SIGN_OUT_CONFIRM = 1;
+export const SIGN_OUT_CANCEL = 'Cancel';
+export const SIGN_OUT_CONFIRM = 'Sign Out';
 
 // Allow Access dialog buttons
-export const ALLOW_ACCESS_ALLOW = 0;
-export const ALLOW_ACCESS_DENY = 1;
+export const ALLOW_ACCESS_ALLOW = 'Allow';
+export const ALLOW_ACCESS_DENY = 'Deny';
 
 // Sign In dialog buttons
-export const SIGN_IN_CANCEL = 0;
-export const SIGN_IN_ALLOW = 1;
+export const SIGN_IN_CANCEL = 'Cancel';
+export const SIGN_IN_ALLOW = 'Allow';
 
 /**
  * Structure to save authentication provider information

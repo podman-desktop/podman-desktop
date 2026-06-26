@@ -30,123 +30,123 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe
-  .serial('Navigation History Smoke Tests', { tag: ['@smoke', '@macos_sanity', '@windows_sanity'] }, () => {
-    test('Back button navigates to previous page', async ({ navigationBar }) => {
-      // Navigate through pages: Dashboard → Containers → Images
-      await navigationBar.openDashboard();
-      const containersPage = await navigationBar.openContainers();
-      await navigationBar.openImages();
+test.describe('Navigation History Smoke Tests', { tag: ['@smoke', '@macos_sanity', '@windows_sanity'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test('Back button navigates to previous page', async ({ navigationBar }) => {
+    // Navigate through pages: Dashboard → Containers → Images
+    await navigationBar.openDashboard();
+    const containersPage = await navigationBar.openContainers();
+    await navigationBar.openImages();
 
-      // Click back button
-      await navigationBar.goBack();
+    // Click back button
+    await navigationBar.goBack();
 
-      // Verify on Containers page
-      await playExpect(containersPage.heading).toBeVisible();
+    // Verify on Containers page
+    await playExpect(containersPage.heading).toBeVisible();
 
-      // Verify button states
-      await playExpect(navigationBar.backButton).toBeEnabled();
-      await playExpect(navigationBar.forwardButton).toBeEnabled();
-    });
-
-    test('Forward button navigates to next page', async ({ navigationBar, page }) => {
-      // Continue from TC-001 state (on Containers, can go forward to Images)
-      const imagesPage = new ImagesPage(page);
-
-      // Click forward button
-      await navigationBar.goForward();
-
-      // Verify on Images page
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      // Verify forward button disabled (at end of history)
-      await playExpect(navigationBar.forwardButton).toBeDisabled();
-    });
-
-    test('Buttons disabled when navigation not possible', async ({ navigationBar, page }) => {
-      // Clear sessionStorage so route-restoration lands on Dashboard (default),
-      // not on whatever page a prior test happened to leave in storage.
-      await page.evaluate(() => sessionStorage.clear());
-      await page.reload();
-      await playExpect(navigationBar.backButton).toBeDisabled();
-      await playExpect(navigationBar.forwardButton).toBeDisabled();
-
-      const dashboardPage = new DashboardPage(page);
-      const containersPage = await navigationBar.openContainers();
-      await playExpect(containersPage.heading).toBeVisible();
-
-      await navigationBar.goBack();
-      await playExpect(dashboardPage.heading).toBeVisible();
-
-      await playExpect(navigationBar.forwardButton).toBeEnabled();
-      await playExpect(navigationBar.backButton).toBeDisabled();
-
-      // After one navigation, back should be enabled, forward disabled
-      await navigationBar.goForward();
-      await playExpect(navigationBar.backButton).toBeEnabled();
-      await playExpect(navigationBar.forwardButton).toBeDisabled();
-    });
-
-    test('Command palette Go Back navigates to previous page', async ({ navigationBar, page }) => {
-      // Navigate: Dashboard → Containers
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-
-      // Open command palette and execute Go Back
-      const commandPalette = new CommandPalette(page);
-      await commandPalette.executeCommand('Go Back');
-
-      // Verify on Dashboard
-      const dashboardPage = new DashboardPage(page);
-      await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
-    });
-
-    test('Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
-      // Setup: Navigate and go back
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
-      await navigationBar.goBack(); // Now on Containers
-
-      // Open command palette and execute Go Forward
-      const commandPalette = new CommandPalette(page);
-      await commandPalette.executeCommand('Go Forward');
-
-      // Verify on Images page
-      const imagesPage = new ImagesPage(page);
-      await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
-    });
-
-    test('History truncated when navigating to new page from middle of stack', async ({ navigationBar }) => {
-      // Navigate: Dashboard → Containers → Images → Volumes
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
-      await navigationBar.openVolumes();
-
-      // Go back twice (now at Containers)
-      await navigationBar.goBack();
-      await navigationBar.goBack();
-
-      // Navigate to Pods (should truncate forward history)
-      const podsPage = await navigationBar.openPods();
-      await playExpect(podsPage.heading).toBeVisible();
-
-      // Forward button should be disabled (history truncated)
-      await playExpect(navigationBar.forwardButton).toBeDisabled();
-    });
-
-    test('Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-
-      // Click Containers again
-      await navigationBar.openContainers();
-
-      // Go back - should go to Dashboard, not Containers
-      await navigationBar.goBack();
-
-      const dashboardPage = new DashboardPage(page);
-      await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
-    });
+    // Verify button states
+    await playExpect(navigationBar.backButton).toBeEnabled();
+    await playExpect(navigationBar.forwardButton).toBeEnabled();
   });
+
+  test('Forward button navigates to next page', async ({ navigationBar, page }) => {
+    // Continue from TC-001 state (on Containers, can go forward to Images)
+    const imagesPage = new ImagesPage(page);
+
+    // Click forward button
+    await navigationBar.goForward();
+
+    // Verify on Images page
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    // Verify forward button disabled (at end of history)
+    await playExpect(navigationBar.forwardButton).toBeDisabled();
+  });
+
+  test('Buttons disabled when navigation not possible', async ({ navigationBar, page }) => {
+    // Clear sessionStorage so route-restoration lands on Dashboard (default),
+    // not on whatever page a prior test happened to leave in storage.
+    await page.evaluate(() => sessionStorage.clear());
+    await page.reload();
+    await playExpect(navigationBar.backButton).toBeDisabled();
+    await playExpect(navigationBar.forwardButton).toBeDisabled();
+
+    const dashboardPage = new DashboardPage(page);
+    const containersPage = await navigationBar.openContainers();
+    await playExpect(containersPage.heading).toBeVisible();
+
+    await navigationBar.goBack();
+    await playExpect(dashboardPage.heading).toBeVisible();
+
+    await playExpect(navigationBar.forwardButton).toBeEnabled();
+    await playExpect(navigationBar.backButton).toBeDisabled();
+
+    // After one navigation, back should be enabled, forward disabled
+    await navigationBar.goForward();
+    await playExpect(navigationBar.backButton).toBeEnabled();
+    await playExpect(navigationBar.forwardButton).toBeDisabled();
+  });
+
+  test('Command palette Go Back navigates to previous page', async ({ navigationBar, page }) => {
+    // Navigate: Dashboard → Containers
+    await navigationBar.openDashboard();
+    await navigationBar.openContainers();
+
+    // Open command palette and execute Go Back
+    const commandPalette = new CommandPalette(page);
+    await commandPalette.executeCommand('Go Back');
+
+    // Verify on Dashboard
+    const dashboardPage = new DashboardPage(page);
+    await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
+    // Setup: Navigate and go back
+    await navigationBar.openDashboard();
+    await navigationBar.openContainers();
+    await navigationBar.openImages();
+    await navigationBar.goBack(); // Now on Containers
+
+    // Open command palette and execute Go Forward
+    const commandPalette = new CommandPalette(page);
+    await commandPalette.executeCommand('Go Forward');
+
+    // Verify on Images page
+    const imagesPage = new ImagesPage(page);
+    await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('History truncated when navigating to new page from middle of stack', async ({ navigationBar }) => {
+    // Navigate: Dashboard → Containers → Images → Volumes
+    await navigationBar.openDashboard();
+    await navigationBar.openContainers();
+    await navigationBar.openImages();
+    await navigationBar.openVolumes();
+
+    // Go back twice (now at Containers)
+    await navigationBar.goBack();
+    await navigationBar.goBack();
+
+    // Navigate to Pods (should truncate forward history)
+    const podsPage = await navigationBar.openPods();
+    await playExpect(podsPage.heading).toBeVisible();
+
+    // Forward button should be disabled (history truncated)
+    await playExpect(navigationBar.forwardButton).toBeDisabled();
+  });
+
+  test('Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
+    await navigationBar.openDashboard();
+    await navigationBar.openContainers();
+
+    // Click Containers again
+    await navigationBar.openContainers();
+
+    // Go back - should go to Dashboard, not Containers
+    await navigationBar.goBack();
+
+    const dashboardPage = new DashboardPage(page);
+    await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
+  });
+});

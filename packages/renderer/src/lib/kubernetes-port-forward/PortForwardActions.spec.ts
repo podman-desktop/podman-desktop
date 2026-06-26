@@ -47,9 +47,9 @@ beforeEach(() => {
   (window.deleteKubernetesPortForward as unknown) = vi.fn();
   (window.showMessageBox as unknown) = vi.fn();
 
-  // mock resolved `Yes`
+  // mock resolved `Delete`
   vi.mocked(window.showMessageBox).mockResolvedValue({
-    response: 0,
+    response: 'Delete',
   });
 });
 

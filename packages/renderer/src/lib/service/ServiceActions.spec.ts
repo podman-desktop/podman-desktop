@@ -62,8 +62,8 @@ afterEach(() => {
 });
 
 test('Expect no error and status deleting service', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Delete' (yes)
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(ServiceActions, { service });
 
   // click on delete button

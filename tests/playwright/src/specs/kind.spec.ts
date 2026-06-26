@@ -97,174 +97,163 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
-  test.describe
-    .serial('Kind installation', () => {
-      test('Install Kind CLI', async ({ page, navigationBar }) => {
-        test.skip(!!skipKindInstallation, 'Skipping Kind cluster installation');
-        const settingsBar = await navigationBar.openSettings();
-        await settingsBar.cliToolsTab.click();
+  test.describe('Kind installation', () => {
+    test.describe.configure({ mode: 'serial' });
+    test('Install Kind CLI', async ({ page, navigationBar }) => {
+      test.skip(!!skipKindInstallation, 'Skipping Kind cluster installation');
+      const settingsBar = await navigationBar.openSettings();
+      await settingsBar.cliToolsTab.click();
 
-        await ensureCliInstalled(page, 'Kind');
-      });
+      await ensureCliInstalled(page, 'Kind');
+    });
 
-      test('Kind extension lifecycle', async ({ navigationBar }) => {
-        const extensionsPage = await navigationBar.openExtensions();
-        const kindExtension = await extensionsPage.getInstalledExtension('Kind extension', EXTENSION_LABEL);
-        await playExpect
-          .poll(async () => await extensionsPage.extensionIsInstalled(EXTENSION_LABEL), { timeout: 10000 })
-          .toBeTruthy();
-        await playExpect(kindExtension.status).toHaveText(ExtensionState.Active);
-        await kindExtension.disableExtension();
-        await navigationBar.openSettings();
-        await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeFalsy();
-        await navigationBar.openExtensions();
-        await kindExtension.enableExtension();
-        await navigationBar.openSettings();
-        await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+    test('Kind extension lifecycle', async ({ navigationBar }) => {
+      const extensionsPage = await navigationBar.openExtensions();
+      const kindExtension = await extensionsPage.getInstalledExtension('Kind extension', EXTENSION_LABEL);
+      await playExpect
+        .poll(async () => await extensionsPage.extensionIsInstalled(EXTENSION_LABEL), { timeout: 10000 })
+        .toBeTruthy();
+      await playExpect(kindExtension.status).toHaveText(ExtensionState.Active);
+      await kindExtension.disableExtension();
+      await navigationBar.openSettings();
+      await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeFalsy();
+      await navigationBar.openExtensions();
+      await kindExtension.enableExtension();
+      await navigationBar.openSettings();
+      await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+    });
+  });
+  test.describe('Kind cluster validation tests', () => {
+    test.describe.configure({ mode: 'serial' });
+    test('Create a Kind cluster - With Ingress controller', async ({ page }) => {
+      test.setTimeout(CLUSTER_CREATION_TIMEOUT);
+
+      await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+        providerType: providerTypeGHA,
+        useIngressController: true,
       });
     });
-  test.describe
-    .serial('Kind cluster validation tests', () => {
-      test('Create a Kind cluster - With Ingress controller', async ({ page }) => {
-        test.setTimeout(CLUSTER_CREATION_TIMEOUT);
 
-        await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
-          providerType: providerTypeGHA,
-          useIngressController: true,
-        });
+    test('Check resources added with the Kind cluster', async ({ page }) => {
+      await checkClusterResources(page, KIND_CONTAINER);
+    });
+
+    test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      const pullImagePage = await imagesPage.openPullImage();
+      await pullImagePage.pullImage(IMAGE_TO_PULL, IMAGE_TAG);
+      await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_TO_PULL, 10_000)).toBeTruthy();
+      const containersPage = await imagesPage.startContainerWithImage(
+        IMAGE_TO_PULL,
+        CONTAINER_NAME,
+        CONTAINER_START_PARAMS,
+      );
+      await playExpect
+        .poll(async () => containersPage.containerExists(CONTAINER_NAME), {
+          timeout: 15_000,
+        })
+        .toBeTruthy();
+      const containerDetails = await containersPage.openContainersDetails(CONTAINER_NAME);
+      await playExpect(containerDetails.heading).toBeVisible();
+      await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
+      await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
+    });
+
+    test.describe('Kind cluster lifecycle', () => {
+      test.describe.configure({ mode: 'serial' });
+      test.skip(() => getVirtualizationProvider() === PodmanVirtualizationProviders.WSL, skipKindClusterLifecycleOnWsl);
+
+      test('Kind cluster operations - STOP', async ({ page }) => {
+        await resourceConnectionAction(page, kindResourceCard, ResourceElementActions.Stop, ResourceElementState.Off);
       });
 
-      test('Check resources added with the Kind cluster', async ({ page }) => {
-        await checkClusterResources(page, KIND_CONTAINER);
-      });
-
-      test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
-        const imagesPage = await navigationBar.openImages();
-        const pullImagePage = await imagesPage.openPullImage();
-        await pullImagePage.pullImage(IMAGE_TO_PULL, IMAGE_TAG);
-        await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_TO_PULL, 10_000)).toBeTruthy();
-        const containersPage = await imagesPage.startContainerWithImage(
-          IMAGE_TO_PULL,
-          CONTAINER_NAME,
-          CONTAINER_START_PARAMS,
+      test('Kind cluster operations - START', async ({ page }) => {
+        await resourceConnectionAction(
+          page,
+          kindResourceCard,
+          ResourceElementActions.Start,
+          ResourceElementState.Running,
         );
-        await playExpect
-          .poll(async () => containersPage.containerExists(CONTAINER_NAME), {
-            timeout: 15_000,
-          })
-          .toBeTruthy();
-        const containerDetails = await containersPage.openContainersDetails(CONTAINER_NAME);
-        await playExpect(containerDetails.heading).toBeVisible();
-        await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
-        await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
       });
 
-      test.describe
-        .serial('Kind cluster lifecycle', () => {
-          test.skip(
-            () => getVirtualizationProvider() === PodmanVirtualizationProviders.WSL,
-            skipKindClusterLifecycleOnWsl,
-          );
-
-          test('Kind cluster operations - STOP', async ({ page }) => {
-            await resourceConnectionAction(
-              page,
-              kindResourceCard,
-              ResourceElementActions.Stop,
-              ResourceElementState.Off,
-            );
-          });
-
-          test('Kind cluster operations - START', async ({ page }) => {
-            await resourceConnectionAction(
-              page,
-              kindResourceCard,
-              ResourceElementActions.Start,
-              ResourceElementState.Running,
-            );
-          });
-
-          test('Kind cluster operations - RESTART', async ({ page }) => {
-            await resourceConnectionAction(
-              page,
-              kindResourceCard,
-              ResourceElementActions.Restart,
-              ResourceElementState.Running,
-            );
-          });
-        });
-
-      test('Kind cluster operations - DELETE', async ({ page }) => {
-        await deleteCluster(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
+      test('Kind cluster operations - RESTART', async ({ page }) => {
+        await resourceConnectionAction(
+          page,
+          kindResourceCard,
+          ResourceElementActions.Restart,
+          ResourceElementState.Running,
+        );
       });
     });
-  test.describe
-    .serial('Kind cluster operations - Details', () => {
-      test('Create a Kind cluster - Without Ingress controller', async ({ page }) => {
-        test.setTimeout(CLUSTER_CREATION_TIMEOUT);
 
-        await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
-          providerType: providerTypeGHA,
-          useIngressController: false,
-        });
-      });
+    test('Kind cluster operations - DELETE', async ({ page }) => {
+      await deleteCluster(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
+    });
+  });
+  test.describe('Kind cluster operations - Details', () => {
+    test.describe.configure({ mode: 'serial' });
+    test('Create a Kind cluster - Without Ingress controller', async ({ page }) => {
+      test.setTimeout(CLUSTER_CREATION_TIMEOUT);
 
-      test.describe
-        .serial('Kind cluster lifecycle details', () => {
-          test.skip(
-            () => getVirtualizationProvider() === PodmanVirtualizationProviders.WSL,
-            skipKindClusterLifecycleOnWsl,
-          );
-
-          test('Kind cluster operations details - STOP', async ({ page }) => {
-            await resourceConnectionActionDetails(
-              page,
-              kindResourceCard,
-              CLUSTER_NAME,
-              ResourceElementActions.Stop,
-              ResourceElementState.Off,
-            );
-          });
-
-          test('Kind cluster operations details - START', async ({ page }) => {
-            await resourceConnectionActionDetails(
-              page,
-              kindResourceCard,
-              CLUSTER_NAME,
-              ResourceElementActions.Start,
-              ResourceElementState.Running,
-            );
-          });
-
-          test('Kind cluster operations details - RESTART', async ({ page }) => {
-            await resourceConnectionActionDetails(
-              page,
-              kindResourceCard,
-              CLUSTER_NAME,
-              ResourceElementActions.Restart,
-              ResourceElementState.Running,
-            );
-          });
-        });
-
-      test('Kind cluster operations details - DELETE', async ({ page }) => {
-        await deleteClusterFromDetails(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
+      await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+        providerType: providerTypeGHA,
+        useIngressController: false,
       });
     });
-  test.describe
-    .serial('Kind cluster creation with custom config file', () => {
-      test('Create a Kind cluster using the custom config file', async ({ page }) => {
-        test.setTimeout(CLUSTER_CREATION_TIMEOUT);
 
-        await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
-          configFilePath: CUSTOM_CONFIG_FILE_PATH,
-          providerType: providerTypeGHA,
-          useIngressController: false,
-        });
-        await checkClusterResources(page, CUSTOM_CONFIG_KIND_CONTAINER);
+    test.describe('Kind cluster lifecycle details', () => {
+      test.describe.configure({ mode: 'serial' });
+      test.skip(() => getVirtualizationProvider() === PodmanVirtualizationProviders.WSL, skipKindClusterLifecycleOnWsl);
+
+      test('Kind cluster operations details - STOP', async ({ page }) => {
+        await resourceConnectionActionDetails(
+          page,
+          kindResourceCard,
+          CLUSTER_NAME,
+          ResourceElementActions.Stop,
+          ResourceElementState.Off,
+        );
       });
-      test('Delete the Kind cluster', async ({ page }) => {
-        await deleteClusterFromDetails(page, RESOURCE_NAME, CUSTOM_CONFIG_KIND_CONTAINER, CUSTOM_CONFIG_CLUSTER_NAME);
+
+      test('Kind cluster operations details - START', async ({ page }) => {
+        await resourceConnectionActionDetails(
+          page,
+          kindResourceCard,
+          CLUSTER_NAME,
+          ResourceElementActions.Start,
+          ResourceElementState.Running,
+        );
+      });
+
+      test('Kind cluster operations details - RESTART', async ({ page }) => {
+        await resourceConnectionActionDetails(
+          page,
+          kindResourceCard,
+          CLUSTER_NAME,
+          ResourceElementActions.Restart,
+          ResourceElementState.Running,
+        );
       });
     });
+
+    test('Kind cluster operations details - DELETE', async ({ page }) => {
+      await deleteClusterFromDetails(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
+    });
+  });
+  test.describe('Kind cluster creation with custom config file', () => {
+    test.describe.configure({ mode: 'serial' });
+    test('Create a Kind cluster using the custom config file', async ({ page }) => {
+      test.setTimeout(CLUSTER_CREATION_TIMEOUT);
+
+      await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+        configFilePath: CUSTOM_CONFIG_FILE_PATH,
+        providerType: providerTypeGHA,
+        useIngressController: false,
+      });
+      await checkClusterResources(page, CUSTOM_CONFIG_KIND_CONTAINER);
+    });
+    test('Delete the Kind cluster', async ({ page }) => {
+      await deleteClusterFromDetails(page, RESOURCE_NAME, CUSTOM_CONFIG_KIND_CONTAINER, CUSTOM_CONFIG_CLUSTER_NAME);
+    });
+  });
 });

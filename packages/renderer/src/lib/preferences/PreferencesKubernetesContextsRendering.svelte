@@ -99,7 +99,7 @@ async function handleDeleteContext(contextName: string): Promise<void> {
         'You will delete the current context. If you delete it, you will need to switch to another context. Continue?',
       buttons: ['Delete', 'Cancel'],
     });
-    if (result.response !== 0) {
+    if (result.response !== 'Delete') {
       return;
     }
   }

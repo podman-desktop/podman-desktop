@@ -99,7 +99,7 @@ describe.each<{
   });
 
   test('Expect redirect to previous page if pod is deleted', async () => {
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
     const routerGotoSpy = vi.spyOn(router, 'goto');
 

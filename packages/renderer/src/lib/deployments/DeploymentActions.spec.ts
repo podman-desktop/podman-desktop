@@ -67,7 +67,7 @@ afterEach(() => {
 });
 
 test('Expect no error and status deleting deployment', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   render(DeploymentActions, { deployment });
 
