@@ -214,7 +214,7 @@
       "node-forge": "^1.4.0",
       "config-file-ts>glob": "^10.5.0",
       "compression>on-headers": "^1.1.0",
-      "@kubernetes/client-node>js-yaml": "^4.1.1",
+      "js-yaml": "^4.2.0",
       "tmp-promise>tmp": "^0.2.7",
       "tar": "^7.5.3",
       "cheerio>undici": "^7.18.2",
