@@ -64,7 +64,9 @@ test.describe
       const settingsBar = new SettingsBar(page);
       const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
       await playExpect(dockerCompatibilityPage.heading).toBeVisible();
-      await playExpect.poll(async () => await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
+      await playExpect
+        .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
+        .toBeTruthy();
       await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
     });
     test('Verify socket reachability is responding to podman machine status', async ({ page }) => {

@@ -48,7 +48,7 @@ export class DockerCompatibilityPage extends SettingsPage {
   public async socketIsReachable(): Promise<boolean> {
     try {
       await this.refreshStatusButton.click();
-      await playExpect(this.podmanListeningLabel).toBeVisible();
+      await playExpect(this.podmanListeningLabel).toBeVisible({ timeout: 3_000 });
       return await this.podmanListeningLabel.isVisible();
     } catch (_error) {
       return false;
