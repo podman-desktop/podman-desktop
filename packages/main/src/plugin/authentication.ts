@@ -68,6 +68,16 @@ export interface AllowedExtension {
   allowed?: boolean;
 }
 
+function isAllowedExtension(entry: unknown): entry is AllowedExtension {
+  return (
+    typeof entry === 'object' &&
+    entry !== null &&
+    typeof (entry as AllowedExtension).id === 'string' &&
+    typeof (entry as AllowedExtension).name === 'string' &&
+    ((entry as AllowedExtension).allowed === undefined || typeof (entry as AllowedExtension).allowed === 'boolean')
+  );
+}
+
 interface AccountUsageRecord {
   providerId: string;
   sessionId: string;
@@ -157,25 +167,26 @@ export class AuthenticationImpl {
     ]);
   }
 
+  /**
+   * Reads trusted extensions from configuration. Expected JSON shape:
+   * {
+   *   "providerId:accountId": [
+   *     { "id": "ext.one", "name": "Extension One", "allowed": true },
+   *     { "id": "ext.two", "name": "Extension Two", "allowed": false }
+   *   ]
+   * }
+   */
   private get extensionAllowances(): Record<string, AllowedExtension[]> {
     const config = this.configurationRegistry.getConfiguration('authentication');
     const data = config.get<unknown>('trustedExtensions');
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      return {};
-    }
     const result: Record<string, AllowedExtension[]> = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (!Array.isArray(value)) {
-        continue;
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      for (const [key, value] of Object.entries(data)) {
+        if (!Array.isArray(value)) {
+          continue;
+        }
+        result[key] = value.filter(isAllowedExtension);
       }
-      result[key] = value.filter(
-        (entry): entry is AllowedExtension =>
-          typeof entry === 'object' &&
-          entry !== null &&
-          typeof entry.id === 'string' &&
-          typeof entry.name === 'string' &&
-          (entry.allowed === undefined || typeof entry.allowed === 'boolean'),
-      );
     }
     return result;
   }
@@ -489,6 +500,7 @@ export class AuthenticationImpl {
     if (session) {
       this._signInRequestsData.delete(id);
       this._signInRequests.delete(data.providerId);
+      this.updateAllowedExtension(data.providerId, session.account.id, data.extensionId, data.extensionLabel, true);
     }
   }
 
