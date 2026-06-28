@@ -678,7 +678,7 @@ test('getSession returns undefined in silent mode when no allowance decision exi
 describe('trusted extensions', () => {
   test('saves trusted extensions after user grants access from getSession allowance dialog', async () => {
     const mb = {
-      showMessageBox: vi.fn().mockResolvedValueOnce({ response: 1 }), // "Sign In?" Allow
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
     } as unknown as MessageBox;
     const { registry, config } = createMockConfigurationRegistryWithConfig();
     const authentication = createAuthenticationImpl(apiSender, mb, registry);
@@ -694,7 +694,7 @@ describe('trusted extensions', () => {
     expect(session).toBeDefined();
 
     vi.mocked(mb.showMessageBox).mockClear();
-    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // "Allow Access" Allow
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
     await authentication.getSession({ id: 'ext2', label: 'Extension 2' }, 'company.auth-provider', [
       'scope1',
@@ -775,7 +775,7 @@ describe('trusted extensions', () => {
 
   test('allows multiple extensions for the same provider/account (both reflected in persisted trustedExtensions)', async () => {
     const mb = {
-      showMessageBox: vi.fn().mockResolvedValueOnce({ response: 1 }), // "Sign In?" Allow
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
     } as unknown as MessageBox;
     const { registry, config } = createMockConfigurationRegistryWithConfig();
     const authentication = createAuthenticationImpl(apiSender, mb, registry);
@@ -791,7 +791,7 @@ describe('trusted extensions', () => {
     expect(session).toBeDefined();
 
     vi.mocked(mb.showMessageBox).mockClear();
-    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // "Allow Access" Allow
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
     await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
       'scope1',
@@ -821,7 +821,7 @@ describe('trusted extensions', () => {
 
   test('config.update trustedExtensions includes every allowed extension entry for provider:account when multiple grants exist', async () => {
     const mb = {
-      showMessageBox: vi.fn().mockResolvedValueOnce({ response: 1 }),
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
     } as unknown as MessageBox;
     const { registry, config } = createMockConfigurationRegistryWithConfig();
     const authentication = createAuthenticationImpl(apiSender, mb, registry);
@@ -837,7 +837,7 @@ describe('trusted extensions', () => {
     expect(session).toBeDefined();
 
     vi.mocked(mb.showMessageBox).mockClear();
-    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
     await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
       'scope1',
@@ -863,7 +863,7 @@ describe('trusted extensions', () => {
 
   test('revoking one extension does not remove another trusted extension for same provider/account', async () => {
     const mb = {
-      showMessageBox: vi.fn().mockResolvedValueOnce({ response: 1 }),
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
     } as unknown as MessageBox;
     const { registry, config } = createMockConfigurationRegistryWithConfig();
     const authentication = createAuthenticationImpl(apiSender, mb, registry);
@@ -879,7 +879,7 @@ describe('trusted extensions', () => {
     expect(session).toBeDefined();
 
     vi.mocked(mb.showMessageBox).mockClear();
-    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
     await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
       'scope1',
@@ -911,7 +911,7 @@ describe('trusted extensions', () => {
 
   test('shows allowance dialog for a third extension when two others already have access', async () => {
     const mb = {
-      showMessageBox: vi.fn().mockResolvedValueOnce({ response: 1 }), // Ext A Sign In Allow
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
     } as unknown as MessageBox;
     const authentication = createAuthenticationImpl(apiSender, mb);
     const authProvider = new AuthenticationProviderSingleAccount();
@@ -924,7 +924,7 @@ describe('trusted extensions', () => {
       { createIfNone: true },
     );
 
-    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // Ext B allowance Allow
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
     await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
       'scope1',
@@ -933,7 +933,7 @@ describe('trusted extensions', () => {
 
     vi.mocked(mb.showMessageBox).mockClear();
 
-    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // Ext C allowance Allow
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
     await authentication.getSession({ id: 'ext-c', label: 'Extension C' }, 'company.auth-provider', [
       'scope1',
