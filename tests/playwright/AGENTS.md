@@ -123,8 +123,7 @@ test('Linux/Mac only', async ({ navigationBar }) => {
 ### 5. Test Tags
 
 ```typescript
-test.describe('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
-  test.describe.configure({ mode: 'serial' });
+test.describe.serial('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
   // tests
 });
 ```
@@ -268,9 +267,7 @@ test.afterAll(async ({ runner, navigationBar }) => {
   }
 });
 
-test.describe('Volume operations', { tag: ['@smoke'] }, () => {
-  test.describe.configure({ mode: 'serial' });
-
+test.describe.serial('Volume operations', { tag: ['@smoke'] }, () => {
   test('Create and verify volume', async ({ navigationBar }) => {
     const volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible();
