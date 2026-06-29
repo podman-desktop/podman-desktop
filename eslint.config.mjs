@@ -246,6 +246,11 @@ export default [
       'sonarjs/prefer-enum-initializers': 'off',
 
       'sonarjs/no-unused-expressions': 'off',
+      'sonarjs/assertions-in-tests': 'off',
+      'sonarjs/no-skipped-tests': 'off',
+      'sonarjs/prefer-specific-assertions': 'off',
+      'sonarjs/super-linear-regex': 'off',
+      'sonarjs/no-trivial-assertions': 'off',
 
       // redundant-undefined custom rules
       'redundant-undefined/redundant-undefined': 'error',
