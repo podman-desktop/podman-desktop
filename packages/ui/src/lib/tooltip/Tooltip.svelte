@@ -65,6 +65,25 @@ let cleanupAutoUpdate: (() => void) | undefined;
 const tooltipInnerClasses =
   'pt-[4px] pb-[5px] px-[8px] rounded-[9px] bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-inner-border)] backdrop-blur-sm';
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
+function getTooltipAriaTarget(root: HTMLElement | undefined): HTMLElement | undefined {
+  if (!root) return undefined;
+  return root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? root;
+}
+
+function setTooltipAriaDescribedBy(root: HTMLElement | undefined, id: string | undefined): void {
+  const target = getTooltipAriaTarget(root);
+  if (!target) return;
+
+  if (id) {
+    target.setAttribute('aria-describedby', id);
+  } else {
+    target.removeAttribute('aria-describedby');
+  }
+}
+
 function getPreferredPlacement(): Placement {
   if (top) return 'top';
   if (topLeft) return 'top-start';
@@ -150,13 +169,21 @@ $effect((): (() => void) => {
     }
   };
 });
+
+$effect(() => {
+  const shouldDescribe = isVisible && !$tooltipHidden && (tip ?? tipSnippet);
+  setTooltipAriaDescribedBy(referenceElement, shouldDescribe ? tooltipId : undefined);
+
+  return (): void => {
+    setTooltipAriaDescribedBy(referenceElement, undefined);
+  };
+});
 </script>
 
 <div class={containerClass ?? 'relative inline-block'}>
   <span
     data-testid="tooltip-trigger"
     class="group tooltip-slot {className}"
-    aria-describedby={isVisible ? tooltipId : undefined}
     bind:this={referenceElement}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}

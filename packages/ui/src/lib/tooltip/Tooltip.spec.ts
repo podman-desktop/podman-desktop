@@ -403,4 +403,18 @@ describe('Tooltip', () => {
       expect(slot).not.toHaveAttribute('aria-describedby');
     });
   });
+
+  test('aria-describedby is set on nested focusable trigger', async () => {
+    render(TooltipTestComponent, { tip: 'button tooltip', useButton: true });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+    const button = screen.getByRole('button', { name: 'Hover me' });
+    await fireEvent.mouseEnter(slot);
+
+    await waitFor(() => {
+      const tooltip = screen.getByRole('tooltip');
+      expect(button).toHaveAttribute('aria-describedby', tooltip.id);
+      expect(slot).not.toHaveAttribute('aria-describedby');
+    });
+  });
 });
