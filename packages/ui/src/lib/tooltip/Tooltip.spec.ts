@@ -321,10 +321,10 @@ describe('Tooltip', () => {
     await fireEvent.mouseEnter(slot);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('tooltip')).toBeInTheDocument();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
     });
 
-    return screen.getByLabelText('tooltip');
+    return screen.getByRole('tooltip');
   }
 
   function expectTooltipStyling(element: HTMLElement): void {
@@ -352,7 +352,7 @@ describe('Tooltip', () => {
     await fireEvent.mouseEnter(slot);
 
     await waitFor(() => {
-      const slotElement = screen.getByLabelText('tooltip');
+      const slotElement = screen.getByRole('tooltip');
       expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
     });
   });
@@ -360,5 +360,47 @@ describe('Tooltip', () => {
   test('containerClass prop should replace the default class of the container', async () => {
     const { container } = render(TooltipTestComponent, { containerClass: 'w-full' });
     expect(container.childNodes[0]).toHaveClass('w-full');
+  });
+
+  test('tooltip has role="tooltip" when visible', async () => {
+    render(TooltipTestComponent, { tip: 'accessible tooltip' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(slot);
+
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      expect(screen.getByRole('tooltip')).toHaveTextContent('accessible tooltip');
+    });
+  });
+
+  test('trigger has aria-describedby matching tooltip id when visible', async () => {
+    render(TooltipTestComponent, { tip: 'linked tooltip' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(slot);
+
+    await waitFor(() => {
+      const tooltip = screen.getByRole('tooltip');
+      expect(slot).toHaveAttribute('aria-describedby', tooltip.id);
+      expect(tooltip.id).toMatch(/^pd-tooltip-/);
+    });
+  });
+
+  test('trigger aria-describedby is removed when tooltip hides', async () => {
+    render(TooltipTestComponent, { tip: 'hide tooltip' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(slot);
+
+    await waitFor(() => {
+      expect(slot).toHaveAttribute('aria-describedby');
+    });
+
+    await fireEvent.mouseLeave(slot);
+
+    await waitFor(() => {
+      expect(slot).not.toHaveAttribute('aria-describedby');
+    });
   });
 });

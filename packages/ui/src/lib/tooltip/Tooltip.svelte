@@ -36,7 +36,6 @@ interface Props {
   containerClass?: string;
   tipSnippet?: Snippet;
   children?: Snippet;
-  'aria-label'?: string;
 }
 
 let {
@@ -53,8 +52,9 @@ let {
   containerClass,
   tipSnippet,
   children,
-  'aria-label': ariaLabel,
 }: Props = $props();
+
+const tooltipId = `pd-tooltip-${crypto.randomUUID()}`;
 
 let referenceElement: HTMLElement | undefined = $state(undefined);
 let tooltipElement: HTMLElement | undefined = $state(undefined);
@@ -152,11 +152,11 @@ $effect((): (() => void) => {
 });
 </script>
 
-<div class={containerClass ?? 'relative inline-block'} aria-label={ariaLabel}>
+<div class={containerClass ?? 'relative inline-block'}>
   <span
-    role="none"
     data-testid="tooltip-trigger"
     class="group tooltip-slot {className}"
+    aria-describedby={isVisible ? tooltipId : undefined}
     bind:this={referenceElement}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
@@ -171,12 +171,12 @@ $effect((): (() => void) => {
       class:opacity-0={!isPositioned}
       style="left: 0; top: 0;">
       {#if tip}
-        <div class="{tooltipInnerClasses} {className}" aria-label="tooltip">
+        <div class="{tooltipInnerClasses} {className}" role="tooltip" id={tooltipId}>
           {tip}
         </div>
       {/if}
       {#if tipSnippet && !tip}
-        <div class="{tooltipInnerClasses} {className}" aria-label="tooltip">
+        <div class="{tooltipInnerClasses} {className}" role="tooltip" id={tooltipId}>
           {@render tipSnippet?.()}
         </div>
       {/if}
