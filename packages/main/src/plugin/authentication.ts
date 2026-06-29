@@ -29,6 +29,7 @@ import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo, SessionRequestInfo } from '@podman-desktop/core-api/authentication';
 import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable, postConstruct } from 'inversify';
+import * as z from 'zod';
 
 import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
@@ -62,21 +63,15 @@ export interface ExtensionInfo {
   icon?: string | { light: string; dark: string };
 }
 
-export interface AllowedExtension {
-  id: string;
-  name: string;
-  allowed?: boolean;
-}
+export const AllowedExtensionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  allowed: z.boolean().optional(),
+});
 
-function isAllowedExtension(entry: unknown): entry is AllowedExtension {
-  return (
-    typeof entry === 'object' &&
-    entry !== null &&
-    typeof (entry as AllowedExtension).id === 'string' &&
-    typeof (entry as AllowedExtension).name === 'string' &&
-    ((entry as AllowedExtension).allowed === undefined || typeof (entry as AllowedExtension).allowed === 'boolean')
-  );
-}
+export type AllowedExtension = z.output<typeof AllowedExtensionSchema>;
+
+export const AllowedExtensionRecordSchema = z.record(z.string(), z.array(AllowedExtensionSchema));
 
 interface AccountUsageRecord {
   providerId: string;
@@ -178,17 +173,15 @@ export class AuthenticationImpl {
    */
   private get extensionAllowances(): Record<string, AllowedExtension[]> {
     const config = this.configurationRegistry.getConfiguration('authentication');
-    const data = config.get<unknown>('trustedExtensions');
-    const result: Record<string, AllowedExtension[]> = {};
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      for (const [key, value] of Object.entries(data)) {
-        if (!Array.isArray(value)) {
-          continue;
-        }
-        result[key] = value.filter(isAllowedExtension);
-      }
+    const raw = config.get<unknown>('trustedExtensions');
+
+    const { data, success, error } = AllowedExtensionRecordSchema.safeParse(raw);
+    if (success) {
+      return data;
     }
-    return result;
+
+    console.error('configuration registry has invalid trustedExtensions', z.prettifyError(error));
+    return {};
   }
 
   public async getAuthenticationProvidersInfo(): Promise<AuthenticationProviderInfo[]> {
