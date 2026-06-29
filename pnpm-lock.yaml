@@ -851,8 +851,8 @@ importers:
         specifier: ^3.4.10
         version: 3.4.11
       eslint-plugin-svelte:
-        specifier: ^3.19.0
-        version: 3.19.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0))
+        specifier: ^3.20.0
+        version: 3.20.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0))
       filesize:
         specifier: ^11.0.19
         version: 11.0.19
@@ -966,8 +966,8 @@ importers:
         specifier: ^8.62.0
         version: 8.62.0(@typescript-eslint/parser@8.62.0(eslint@10.6.0(jiti@2.7.0))(typescript@5.9.3))(eslint@10.6.0(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-svelte:
-        specifier: ^3.19.0
-        version: 3.19.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0))
+        specifier: ^3.20.0
+        version: 3.20.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0))
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -1065,8 +1065,8 @@ importers:
         specifier: 10.4.6
         version: 10.4.6(eslint@10.6.0(jiti@2.7.0))(storybook@10.4.2(@testing-library/dom@10.4.1)(@types/react@18.3.12)(prettier@3.8.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3)
       eslint-plugin-svelte:
-        specifier: ^3.19.0
-        version: 3.19.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0))
+        specifier: ^3.20.0
+        version: 3.20.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0))
       postcss:
         specifier: ^8.5.12
         version: 8.5.15
@@ -7667,8 +7667,8 @@ packages:
       eslint: '>=8'
       storybook: ^10.4.6
 
-  eslint-plugin-svelte@3.19.0:
-    resolution: {integrity: sha512-t3rNaZeXz4d2gG4uJyMEYfJCFKf22+SWbSizIIXIWKu4wM+XPLiMWuSSr/C5821JmFeN9ogK+eExbG+z+twyxw==}
+  eslint-plugin-svelte@3.20.0:
+    resolution: {integrity: sha512-AElKLVt7Hjy4d7ljwhrhw9hux60DCxCNkmK8cY/aAXvjs8tpR7PvU4DlyI/SA1PaJww1gh0wPGo2pbyURuEwxQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0 || ^10.0.0
@@ -15398,7 +15398,7 @@ snapshots:
       node-gyp: 11.5.0
       ora: 5.4.1
       read-binary-file-arch: 1.0.6
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.16
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -16258,7 +16258,7 @@ snapshots:
 
   '@npmcli/fs@4.0.0':
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   '@octokit/app@16.1.2':
     dependencies:
@@ -20805,7 +20805,7 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-svelte@3.19.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0)):
+  eslint-plugin-svelte@3.20.0(eslint@10.6.0(jiti@2.7.0))(svelte@5.56.3(@typescript-eslint/types@8.62.0)):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.6.0(jiti@2.7.0))
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -21442,7 +21442,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.4
+      semver: 7.8.5
       serialize-error: 7.0.1
     optional: true
 
@@ -23570,14 +23570,14 @@ snapshots:
 
   node-abi@4.26.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-addon-api@1.7.2:
     optional: true
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-emoji@2.1.3:
     dependencies:
@@ -23602,7 +23602,7 @@ snapshots:
       make-fetch-happen: 14.0.3
       nopt: 8.1.0
       proc-log: 5.0.0
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.16
       tinyglobby: 0.2.17
       which: 5.0.0
