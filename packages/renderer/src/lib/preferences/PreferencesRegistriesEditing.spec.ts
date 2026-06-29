@@ -18,19 +18,21 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { Registry } from '@podman-desktop/api';
+import type { Registry, RegistrySuggestedProvider } from '@podman-desktop/api';
 import { waitFor } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { registriesInfos } from '/@/stores/registries';
+import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
 
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
 
 describe('PreferencesRegistriesEditing', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    registriesInfos.set([]);
+    registriesSuggestedInfos.set([]);
   });
 
   test('Expect that add registry button is visible and enabled', async () => {
@@ -60,6 +62,213 @@ describe('PreferencesRegistriesEditing', () => {
     const button = screen.getByRole('button', { name: 'Add registry' });
     expect(button).toBeInTheDocument();
     expect(button).toBeEnabled();
+  });
+
+  test('Expect registry without name shows serverUrl', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://myregistry.example.com',
+      username: 'user',
+      secret: 'secret',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    const entry = screen.getByText('myregistry.example.com');
+    expect(entry).toBeInTheDocument();
+  });
+
+  test('Expect registry with alias shows alias instead of username', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'user',
+      secret: 'secret',
+      alias: 'myAlias',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    expect(screen.getByText('myAlias')).toBeInTheDocument();
+    expect(screen.queryByText('user')).not.toBeInTheDocument();
+  });
+
+  test('Expect registry without credentials shows Login now button', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: '',
+      secret: '',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    const loginButton = screen.getByRole('button', { name: 'Login now' });
+    expect(loginButton).toBeInTheDocument();
+  });
+
+  test('Expect edit mode shows Login and Cancel buttons after clicking Edit password', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'user',
+      secret: 'secret',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    const kebabMenu = screen.getByRole('button', { name: 'kebab menu' });
+    await userEvent.click(kebabMenu);
+
+    const editButton = screen.getByTitle('Edit password');
+    await userEvent.click(editButton);
+
+    const loginButton = screen.getByRole('button', { name: 'Login' });
+    expect(loginButton).toBeInTheDocument();
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    expect(cancelButton).toBeInTheDocument();
+
+    const usernameInput = screen.getByPlaceholderText('Username');
+    expect(usernameInput).toBeInTheDocument();
+  });
+
+  test('Expect cancel in edit mode restores original values', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'originalUser',
+      secret: 'originalSecret',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    const kebabMenu = screen.getByRole('button', { name: 'kebab menu' });
+    await userEvent.click(kebabMenu);
+
+    const editButton = screen.getByTitle('Edit password');
+    await userEvent.click(editButton);
+
+    const usernameInput = screen.getByPlaceholderText('Username');
+    await userEvent.clear(usernameInput);
+    await userEvent.type(usernameInput, 'newUser');
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    await userEvent.click(cancelButton);
+
+    expect(screen.getByText('originalUser')).toBeInTheDocument();
+  });
+
+  test('Expect show/hide password buttons work for existing registry', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'user',
+      secret: 'mySecretPassword',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    const showButton = screen.getByTitle('Show password');
+    expect(showButton).toBeInTheDocument();
+
+    await userEvent.click(showButton);
+
+    expect(screen.getByText('mySecretPassword')).toBeInTheDocument();
+
+    const hideButton = screen.getByTitle('Hide password');
+    expect(hideButton).toBeInTheDocument();
+
+    await userEvent.click(hideButton);
+
+    expect(screen.queryByText('mySecretPassword')).not.toBeInTheDocument();
+  });
+
+  test('Expect suggested registries are visible with Configure button', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Docker Hub',
+      url: 'docker.io',
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    expect(screen.getByText('Docker Hub')).toBeInTheDocument();
+    const configureButton = screen.getByRole('button', { name: 'Configure' });
+    expect(configureButton).toBeInTheDocument();
+  });
+
+  test('Expect Configure on suggested registry shows login form', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Docker Hub',
+      url: 'docker.io',
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure' });
+    await userEvent.click(configureButton);
+
+    expect(screen.getByText('https://docker.io')).toBeInTheDocument();
+
+    const usernameInput = screen.getByPlaceholderText('Username');
+    expect(usernameInput).toBeInTheDocument();
+
+    const loginButton = screen.getByRole('button', { name: 'Login' });
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toBeDisabled();
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    expect(cancelButton).toBeInTheDocument();
+  });
+
+  test('Expect login in edit mode calls updateImageRegistry', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'user',
+      secret: 'secret',
+    };
+    registriesInfos.set([registry]);
+    vi.mocked(window.checkImageCredentials).mockResolvedValue(undefined);
+    vi.mocked(window.updateImageRegistry).mockResolvedValue(undefined);
+    render(PreferencesRegistriesEditing, {});
+
+    const kebabMenu = screen.getByRole('button', { name: 'kebab menu' });
+    await userEvent.click(kebabMenu);
+
+    const editButton = screen.getByTitle('Edit password');
+    await userEvent.click(editButton);
+
+    const loginButton = screen.getByRole('button', { name: 'Login' });
+    await userEvent.click(loginButton);
+
+    await waitFor(() => expect(window.updateImageRegistry).toHaveBeenCalledOnce());
+  });
+
+  test('Expect removing registry calls unregisterImageRegistry', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'user',
+      secret: 'secret',
+    };
+    registriesInfos.set([registry]);
+    render(PreferencesRegistriesEditing, {});
+
+    const kebabMenu = screen.getByRole('button', { name: 'kebab menu' });
+    await userEvent.click(kebabMenu);
+
+    const removeButton = screen.getByTitle('Remove');
+    await userEvent.click(removeButton);
+
+    expect(window.unregisterImageRegistry).toHaveBeenCalledOnce();
   });
 
   test('Expect that adding a registry enables a form, and Add button is initially disabled', async () => {

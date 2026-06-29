@@ -267,10 +267,10 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         class="flex w-full space-x-2 text-sm font-semibold text-[var(--pd-table-header-text)]"
         role="rowgroup"
         aria-label="header">
-        <div class="text-left py-4 uppercase w-2/5 pl-5" role="columnheader">Registry Location</div>
-        <div class="text-left py-4 uppercase w-1/5" role="columnheader">Username</div>
-        <div class="text-left py-4 uppercase w-1/5" role="columnheader">Password</div>
-        <div class="text-left py-4 uppercase w-1/5" role="columnheader"></div>
+        <div class="text-left py-4 uppercase w-2/5 min-w-0 pl-5" role="columnheader">Registry Location</div>
+        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader">Username</div>
+        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader">Password</div>
+        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader"></div>
       </div>
 
       {#each $registriesInfos as registry, index (index)}
@@ -280,19 +280,19 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
           role="row"
           aria-label={registry.name ?? registry.serverUrl}>
           <div class="flex flex-row items-center pt-4 pb-3 space-x-2">
-            <div class="pl-5 w-2/5" role="cell">
+            <div class="pl-5 w-2/5 min-w-0" role="cell">
               <div class="flex w-full h-full">
-                <div class="flex items-center">
+                <div class="flex items-center min-w-0">
                   <!-- Only show if a "suggested" registry icon has been added -->
                   {#if registry.icon}
-                    <IconImage image={registry.icon} class="w-6 h-6" alt={registry.name}></IconImage>
+                    <IconImage image={registry.icon} class="w-6 h-6 shrink-0" alt={registry.name}></IconImage>
                   {/if}
                   {#if registry.name}
-                    <span class="ml-2">
+                    <span class="ml-2 truncate">
                       {registry.name}
                     </span>
                   {:else}
-                    <span class="ml-2">
+                    <span class="ml-2 truncate">
                       {registry.serverUrl.replace('https://', '')}
                     </span>
                   {/if}
@@ -301,7 +301,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
             </div>
 
             <!-- Username -->
-            <div class="w-1/5 text-ellipsis overflow-hidden" role="cell">
+            <div class="w-1/5 min-w-0 truncate" role="cell">
               {#if originRegistries.some(r => r.serverUrl === registry.serverUrl)}
                 <Input placeholder="Username" aria-label="Username" bind:value={registry.username} />
               {:else if !registry.username && !registry.secret}
@@ -313,7 +313,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 
             <!-- Password -->
             {#if originRegistries.some(r => r.serverUrl === registry.serverUrl)}
-              <div class="w-1/5" role="cell">
+              <div class="w-1/5 min-w-0" role="cell">
                 <PasswordInput
                   id="r.serverUrl"
                   bind:password={registry.secret}
@@ -323,25 +323,25 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                       !showPasswordForServerUrls.some(r => r === registry.serverUrl),
                     )} />
               </div>
-              <div class="w-1/5" role="cell">
+              <div class="w-1/5 min-w-0 flex flex-row items-center justify-end space-x-1" role="cell">
                 <Button onclick={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>Login</Button>
                 <Button onclick={(): void => markRegistryAsClean(registry)} type="link">Cancel</Button>
               </div>
             {:else}
-              <div class="w-1/5" role="cell">
+              <div class="w-1/5 min-w-0" role="cell">
                 <!-- Password field start -->
-                <div class="container mx-auto w-full self-center items-center truncate">
+                <div class="w-full self-center items-center truncate">
                   {#if !registry.username && !registry.secret}
                     <span class="no-user-select">&nbsp;</span>
                   {:else if showPasswordForServerUrls.some(r => r === registry.serverUrl)}
-                    {registry.secret}
+                    <span class="truncate block">{registry.secret}</span>
                   {:else}
                     ····················
                   {/if}
                 </div>
                 <!-- Password field end -->
               </div>
-              <div class="w-1/5 flex flex-row space-x-2 justify-end" role="cell">
+              <div class="w-1/5 min-w-0 flex flex-row space-x-2 justify-end" role="cell">
                 <!-- Show/hide password start -->
                 {#if registry.username && registry.secret}
                   {#if showPasswordForServerUrls.some(r => r === registry.serverUrl)}
@@ -407,14 +407,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
           role="row"
           aria-label={registry.name ? registry.name : registry.url}>
           <div class="flex flex-row items-center pt-4 pb-3 space-x-2">
-            <div class="pl-5 w-2/5" role="cell">
+            <div class="pl-5 w-2/5 min-w-0" role="cell">
               <div class="flex w-full h-full">
-                <div class="flex items-center">
+                <div class="flex items-center min-w-0">
                   {#if registry.icon}
-                    <IconImage image={registry.icon} class="w-6 h-6" alt={registry.name}></IconImage>
+                    <IconImage image={registry.icon} class="w-6 h-6 shrink-0" alt={registry.name}></IconImage>
                   {/if}
                   <!-- By default, just show the name, but if we go to add it, show the full URL including https -->
-                  <span class="ml-2">
+                  <span class="ml-2 truncate">
                     {#if listedSuggestedRegistries[i]}
                       https://{registry.url}
                     {:else}
@@ -424,12 +424,12 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                 </div>
               </div>
             </div>
-            <div class="w-1/5" role="cell">
+            <div class="w-1/5 min-w-0" role="cell">
               {#if listedSuggestedRegistries[i]}
                 <Input placeholder="Username" aria-label="Username" bind:value={newRegistryRequest.username} />
               {/if}
             </div>
-            <div class="w-1/5" role="cell">
+            <div class="w-1/5 min-w-0" role="cell">
               {#if listedSuggestedRegistries[i]}
                 <PasswordInput
                   id="r.serverUrl"
@@ -441,7 +441,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                     )} />
               {/if}
             </div>
-            <div class="w-1/5 flex space-x-2 justify-end" role="cell">
+            <div class="w-1/5 min-w-0 flex items-center justify-end space-x-1" role="cell">
               {#if listedSuggestedRegistries[i]}
                 <Button
                   onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}
