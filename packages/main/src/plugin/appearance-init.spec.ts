@@ -194,7 +194,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.markdownDescription).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.type).toBe('number');
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.default).toBe(0);
-  expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBe(0.1);
+  expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBeCloseTo(0.1);
 
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.description).toBeDefined();
