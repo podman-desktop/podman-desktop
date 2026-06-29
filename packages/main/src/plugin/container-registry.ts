@@ -772,7 +772,7 @@ export class ContainerProviderRegistry {
           if (!provider.api) {
             return [];
           }
-          const images = await provider.api.listImages({ all: false });
+          const images = await provider.api.listImages({ all: false, digests: true });
           return images.map(image => {
             const imageInfo: ImageInfo = {
               ...image,
@@ -824,6 +824,7 @@ export class ContainerProviderRegistry {
           // Create list options with explicit defaults
           const listOptions = {
             all: options?.all ?? false,
+            digests: true,
             filters: options?.filters,
           };
 
