@@ -60,7 +60,7 @@ test('images should be updated in case of a image is loaded from an archive', as
   // initial images
   listImagesMock.mockResolvedValue([
     {
-      Id: 1,
+      Id: '1',
     } as unknown as ImageInfo,
   ]);
   const storeInfo = imagesEventStore.setup();
@@ -76,7 +76,7 @@ test('images should be updated in case of a image is loaded from an archive', as
   // now get list
   const images = get(imagesInfos);
   expect(images.length).toBe(1);
-  expect(images[0].Id).toBe(1);
+  expect(images[0].Id).toBe('1');
 
   // ok now mock the listImages function to return an empty list
   listImagesMock.mockResolvedValue([]);
@@ -98,7 +98,7 @@ describe('filtered images tests', () => {
   test('images with isManifest field missing should be included', async () => {
     // No isManifest field
     listImagesMock.mockResolvedValue([
-      { Id: 2 } as unknown as ImageInfo, // Simulate isManifest field missing
+      { Id: '2' } as unknown as ImageInfo, // Simulate isManifest field missing
     ]);
 
     // Setup, callback and fetch the images
@@ -109,12 +109,12 @@ describe('filtered images tests', () => {
 
     const images = get(filtered);
     expect(images.length).toBe(1);
-    expect(images[0].Id).toBe(2);
+    expect(images[0].Id).toBe('2');
   });
 
   test('images with isManifest false should be included', async () => {
     // isManifest but set to false
-    listImagesMock.mockResolvedValue([{ Id: 3, isManifest: false } as unknown as ImageInfo]);
+    listImagesMock.mockResolvedValue([{ Id: '3', isManifest: false } as unknown as ImageInfo]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
@@ -125,13 +125,13 @@ describe('filtered images tests', () => {
     // Check the filtered images
     const images = get(filtered);
     expect(images.length).toBe(1);
-    expect(images[0].Id).toBe(3);
+    expect(images[0].Id).toBe('3');
     expect(images[0].isManifest).toBe(false);
   });
 
   test('images with isManifest true should be included', async () => {
     // isManifest but set to true
-    listImagesMock.mockResolvedValue([{ Id: 4, isManifest: true } as unknown as ImageInfo]);
+    listImagesMock.mockResolvedValue([{ Id: '4', isManifest: true } as unknown as ImageInfo]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
@@ -148,9 +148,9 @@ describe('filtered images tests', () => {
   test('check against 3 images with different isManifest values', async () => {
     // 3 images with different isManifest values
     listImagesMock.mockResolvedValue([
-      { Id: 5, isManifest: false } as unknown as ImageInfo,
-      { Id: 6, isManifest: true } as unknown as ImageInfo,
-      { Id: 7 } as unknown as ImageInfo, // Simulate isManifest field missing
+      { Id: '5', isManifest: false } as unknown as ImageInfo,
+      { Id: '6', isManifest: true } as unknown as ImageInfo,
+      { Id: '7' } as unknown as ImageInfo, // Simulate isManifest field missing
     ]);
 
     // Setup, callback and fetch the images
@@ -166,11 +166,11 @@ describe('filtered images tests', () => {
     expect(images.length).toBe(3);
 
     // Check the first image
-    expect(images[0].Id).toBe(5);
+    expect(images[0].Id).toBe('5');
     expect(images[0].isManifest).toBe(false);
 
     // Check the second image
-    expect(images[1].Id).toBe(6);
+    expect(images[1].Id).toBe('6');
     expect(images[1].isManifest).toBeDefined();
   });
 });
