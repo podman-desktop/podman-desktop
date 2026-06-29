@@ -12,12 +12,12 @@
     "svelte-fa": "^4.0.0"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.2.0",
-    "@fortawesome/free-brands-svg-icons": "^7.2.0",
-    "@fortawesome/free-regular-svg-icons": "^7.2.0",
-    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@fortawesome/fontawesome-free": "^7.3.0",
+    "@fortawesome/free-brands-svg-icons": "^7.3.0",
+    "@fortawesome/free-regular-svg-icons": "^7.3.0",
+    "@fortawesome/free-solid-svg-icons": "^7.3.0",
     "@podman-desktop/ui-svelte": "workspace:*",
-    "eslint": "^10.5.0",
+    "eslint": "^10.6.0",
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
@@ -31,11 +31,11 @@
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tailwindcss/vite": "^4.3.1",
     "@tsconfig/svelte": "^5.0.8",
-    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
     "autoprefixer": "^10.5.0",
     "cross-env": "10.1.0",
     "eslint-plugin-storybook": "10.4.6",
-    "eslint-plugin-svelte": "^3.19.0",
+    "eslint-plugin-svelte": "^3.20.0",
     "postcss": "^8.5.12",
     "postcss-load-config": "^6.0.1",
     "react": "18.2.0",
