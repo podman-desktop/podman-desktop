@@ -25,7 +25,7 @@
     "@playwright/test": "1.61.0",
     "@types/node": "^24",
     "electron": "42.5.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "unplugin-dts": "1.0.3",
     "vitest": "^4.1.9"
   }
