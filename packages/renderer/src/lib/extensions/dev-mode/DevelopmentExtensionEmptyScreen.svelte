@@ -5,7 +5,9 @@ import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 let extDevelopementLink = $derived(await window.getExtensionDevelopmentDocsLink());
 
 async function openExtensionDocumentation(): Promise<void> {
-  await window.openExternal('https://podman-desktop.io/docs/extensions/developing');
+  if (extDevelopementLink) {
+    await window.openExternal(extDevelopementLink);
+  }
 }
 </script>
 
