@@ -47,7 +47,7 @@ export function initTelemetryLogger(): void {
 
 const composeCliName = 'docker-compose';
 const composeDisplayName = 'Compose';
-const composeDescription = product.composeMarkdown ?? '';
+const composeDescription = product.composeDescription ?? '';
 const imageLocation = './icon.png';
 
 let binaryVersion: string | undefined;
