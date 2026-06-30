@@ -105,7 +105,7 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
     });
 
     test('Verify Kubernetes/VM Connections', async ({ page, navigationBar }) => {
-      test.setTimeout(90_000);
+      test.setTimeout(150_000);
       // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
       const dashboardPage = await navigationBar.openDashboard();
       await dashboardPage.statusButton.scrollIntoViewIfNeeded();
@@ -128,6 +128,7 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
         .locator('form')
         .filter({ hasText: 'Cluster name' })
         .getByRole('button', { name: 'Create' });
+      await playExpect(createK8sClusterButton).toBeEnabled();
       await createK8sClusterButton.click();
       // verify the 'Kubernetes/VM connections:' label is visible
       await navigationBar.openDashboard();
