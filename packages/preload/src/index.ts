@@ -2724,7 +2724,7 @@ export function initExposure(): void {
     return ipcInvoke('extension-development-folders:addDevelopmentFolder', path);
   });
 
-  contextBridge.exposeInMainWorld('getExtensionDevelopmentDocsLink', async (): Promise<string> => {
+  contextBridge.exposeInMainWorld('getExtensionDevelopmentDocsLink', async (): Promise<string | undefined> => {
     return ipcInvoke('extension-development:getExtensionDevelopmentDocsLink');
   });
 

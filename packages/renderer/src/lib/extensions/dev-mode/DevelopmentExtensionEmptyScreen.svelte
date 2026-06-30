@@ -1,13 +1,8 @@
 <script lang="ts">
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
 
-let extDevelopementLink: string | undefined;
-
-onMount(async () => {
-  extDevelopementLink = await window.getExtensionDevelopmentDocsLink();
-});
+let extDevelopementLink = $derived(await window.getExtensionDevelopmentDocsLink());
 
 async function openExtensionDocumentation(): Promise<void> {
   await window.openExternal('https://podman-desktop.io/docs/extensions/developing');
