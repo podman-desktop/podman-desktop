@@ -285,6 +285,12 @@ export class AuthenticationImpl {
     );
   }
 
+  /**
+   * Builds a stable key for storing per-account extension allowances.
+   * The accountId is a provider-specific stable user identifier (e.g. OIDC `sub`
+   * claim for Red Hat SSO, numeric user ID for GitHub) that remains constant
+   * across sessions and scopes.
+   */
   private getAllowanceKey(providerId: string, accountId: string): string {
     return `${providerId}:${accountId}`;
   }
