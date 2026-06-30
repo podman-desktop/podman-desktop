@@ -1,1 +1,0 @@
-import{i as e}from"./preload-helper-xPQekRTU.js";var t,n,r=e((()=>{t=(e,t)=>{let n=e.replace(/\s+/g,`-`);return t?`control-${t}-${n}`:`control-${n}`},n=(e,t)=>{let n=e.replace(/\s+/g,`-`);return t?`set-${t}-${n}`:`set-${n}`}}));export{n,r,t};
