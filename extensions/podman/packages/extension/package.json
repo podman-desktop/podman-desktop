@@ -140,6 +140,14 @@
           "when": "podman.podmanMachineEditRootfulSupported",
           "hidden": true
         },
+        "podman.machine.importNativeCA": {
+          "type": "boolean",
+          "default": false,
+          "scope": "ContainerConnection",
+          "markdownDescription": "Import host trusted CA certificates into the machine during startup. See [documentation](https://docs.podman.io/en/latest/markdown/podman-machine-init.1.html#import-native-ca).",
+          "when": "podman.podmanMachineEditImportNativeCASupported",
+          "hidden": true
+        },
         "podman.factory.machine.name": {
           "type": "string",
           "default": "podman-machine-default",
@@ -232,6 +240,21 @@
           "scope": "ContainerProviderConnectionFactory",
           "description": "Start the machine now",
           "when": "podman.isStartNowAtMachineInitSupported"
+        },
+        "podman.factory.machine.import-native-ca": {
+          "type": "boolean",
+          "default": true,
+          "scope": "ContainerProviderConnectionFactory",
+          "markdownDescription": "Import host trusted CA certificates into the machine during startup. See [documentation](https://docs.podman.io/en/latest/markdown/podman-machine-init.1.html#import-native-ca).",
+          "when": "podman.isImportNativeCASupported == true"
+        },
+        "podman.factory.machine.import-native-ca-lt-6": {
+          "type": "boolean",
+          "default": false,
+          "scope": "ContainerProviderConnectionFactory",
+          "markdownDescription": "Import host trusted CA certificates into the machine during startup.<br/>This option is supported only for podman 6 and above. Use manual sync of CA certificates instead.",
+          "when": "podman.isImportNativeCASupported == false",
+          "readonly": true
         },
         "podman.setting.rosetta": {
           "type": "boolean",

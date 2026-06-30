@@ -20,7 +20,9 @@
 import type * as proc from 'node:child_process';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { arch } from 'node:os';
+import path from 'node:path';
 
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
@@ -33,6 +35,7 @@ import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode'
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
+  PODMAN_EDIT_IMPORT_NATIVE_CA,
   PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
@@ -56,6 +59,7 @@ import { PodmanBinary } from '/@/utils/podman-binary';
 
 import * as extension from './extension';
 import {
+  getImportNativeCAFromConfig,
   initCheckAndRegisterUpdate,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
@@ -298,6 +302,13 @@ const originalConsoleTrace = console.trace;
 const consoleTraceMock = vi.fn();
 
 vi.mock(import('node:fs'));
+vi.mock(import('node:fs/promises'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    readFile: vi.fn(),
+  };
+});
 vi.mock(import('node:child_process'), async importOriginal => {
   const childProcessActual = await importOriginal();
   return {
@@ -714,6 +725,72 @@ describe.each([
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
       expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+    );
+  });
+
+  test('createMachine passes --import-native-ca when param is true and Podman >= 6', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.import-native-ca': true,
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--import-native-ca']),
+      expect.any(Object),
+    );
+  });
+
+  test('createMachine does not pass --import-native-ca when param is true but Podman < 6', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.8.0' });
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.import-native-ca': true,
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).not.toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--import-native-ca']),
+      expect.any(Object),
+    );
+  });
+
+  test('createMachine does not pass --import-native-ca when param is false and Podman >= 6', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.import-native-ca': false,
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).not.toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--import-native-ca']),
+      expect.any(Object),
     );
   });
 });
@@ -1966,6 +2043,82 @@ test('provider is registered with limited edit capabilities on (HyperV) Windows'
     expect.arrayContaining(['machine', 'set', machineInfo.name, '--rootful=true']),
     expect.any(Object),
   );
+});
+
+describe('edit lifecycle importNativeCA', () => {
+  function mockExecForMachineEdit() {
+    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+    spyExecPromise.mockImplementation(
+      (_command, args) =>
+        new Promise<extensionApi.RunResult>((resolve, reject) => {
+          if (args?.[0] === 'machine' && args?.[1] === 'list') {
+            resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+          } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+            resolve({
+              stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+            } as extensionApi.RunResult);
+          } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+            resolve({ stdout: '' } as extensionApi.RunResult);
+          } else {
+            reject(new Error('unexpected command'));
+          }
+        }),
+    );
+    return spyExecPromise;
+  }
+
+  function mockRegisterConnection() {
+    let registeredConnection: ContainerProviderConnection | undefined;
+    vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+      registeredConnection = connection;
+      return Disposable.from({ dispose: () => {} });
+    });
+    return () => registeredConnection;
+  }
+
+  test.each([
+    { importNativeCA: true, expectedArg: '--import-native-ca=true' },
+    { importNativeCA: false, expectedArg: '--import-native-ca=false' },
+  ])('passes --import-native-ca=$importNativeCA when Podman >= 6', async ({ importNativeCA, expectedArg }) => {
+    vi.mocked(extensionApi.env).isMac = true;
+    extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' } as InstalledPodman);
+    const spyExecPromise = mockExecForMachineEdit();
+    const getConnection = mockRegisterConnection();
+
+    await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+    expect(getConnection()?.lifecycle?.edit).toBeDefined();
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_EDIT_IMPORT_NATIVE_CA, true);
+
+    await getConnection()?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+      'podman.machine.importNativeCA': importNativeCA,
+    });
+    expect(spyExecPromise).toBeCalledWith(
+      expect.any(String),
+      expect.arrayContaining(['machine', 'set', machineInfo.name, expectedArg]),
+      expect.any(Object),
+    );
+  });
+
+  test('does not pass --import-native-ca when Podman < 6', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.3.0' } as InstalledPodman);
+    const spyExecPromise = mockExecForMachineEdit();
+    const getConnection = mockRegisterConnection();
+
+    await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_EDIT_IMPORT_NATIVE_CA, false);
+
+    await getConnection()?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+      'podman.machine.importNativeCA': true,
+    });
+    expect(spyExecPromise).not.toBeCalledWith(
+      expect.any(String),
+      expect.arrayContaining(['--import-native-ca=true']),
+      expect.any(Object),
+    );
+  });
 });
 
 test.each([
@@ -3850,6 +4003,62 @@ describe('activate sets PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY', () => {
     } as unknown as UpdateCheck);
     await extension.activate(getContextMock());
     expect(extensionApi.context.setValue).toHaveBeenCalledWith(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, supported);
+  });
+});
+
+describe('getImportNativeCAFromConfig', () => {
+  test('should return false when machineInspect is undefined', async () => {
+    const result = await getImportNativeCAFromConfig('machine1', undefined);
+    expect(result).toBe(false);
+  });
+
+  test('should return false when ConfigDir is missing', async () => {
+    const result = await getImportNativeCAFromConfig('machine1', { Rootful: true });
+    expect(result).toBe(false);
+  });
+
+  test('should return false when ConfigDir.Path is missing', async () => {
+    const result = await getImportNativeCAFromConfig('machine1', { ConfigDir: {} });
+    expect(result).toBe(false);
+  });
+
+  test('should return true when config file has ImportNativeCA set to true', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ ImportNativeCA: true }));
+    const configDir = path.join('some', 'config', 'dir');
+    const result = await getImportNativeCAFromConfig('machine1', { ConfigDir: { Path: configDir } });
+    expect(result).toBe(true);
+    expect(readFile).toHaveBeenCalledWith(path.join(configDir, 'machine1.json'), 'utf-8');
+  });
+
+  test('should return false when config file has ImportNativeCA set to false', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ ImportNativeCA: false }));
+    const result = await getImportNativeCAFromConfig('machine1', {
+      ConfigDir: { Path: path.join('some', 'config', 'dir') },
+    });
+    expect(result).toBe(false);
+  });
+
+  test('should return false when config file does not have ImportNativeCA field', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ Rootful: true }));
+    const result = await getImportNativeCAFromConfig('machine1', {
+      ConfigDir: { Path: path.join('some', 'config', 'dir') },
+    });
+    expect(result).toBe(false);
+  });
+
+  test('should return false when reading config file throws an error', async () => {
+    vi.mocked(readFile).mockRejectedValueOnce(new Error('ENOENT: no such file'));
+    const result = await getImportNativeCAFromConfig('machine1', {
+      ConfigDir: { Path: path.join('nonexistent', 'dir') },
+    });
+    expect(result).toBe(false);
+  });
+
+  test('should construct correct file path from configDir and machineName', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ ImportNativeCA: true }));
+    const configDir = path.join('home', 'user', '.config', 'containers', 'podman', 'machine', 'applehv');
+    await getImportNativeCAFromConfig('my-vm', { ConfigDir: { Path: configDir } });
+    expect(readFile).toHaveBeenCalledWith(path.join(configDir, 'my-vm.json'), 'utf-8');
   });
 });
 

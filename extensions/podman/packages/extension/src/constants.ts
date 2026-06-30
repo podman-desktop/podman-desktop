@@ -32,6 +32,8 @@ export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupport
 export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
 export const PODMAN_MACHINE_EDIT_ROOTFUL = 'podman.podmanMachineEditRootfulSupported';
 export const PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY = 'podman.isImportNativeCASupported';
+export const PODMAN_EDIT_IMPORT_NATIVE_CA = 'podman.podmanMachineEditImportNativeCASupported';
+
 /**
  * Command ID to uninstall a version of podman installed with non-msi installer
  */

@@ -25,6 +25,8 @@ import { compare } from 'semver';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import {
+  PODMAN_EDIT_IMPORT_NATIVE_CA,
+  PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
   ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
@@ -34,6 +36,7 @@ import {
   calcPodmanMachineSetting,
   getJSONMachineList,
   isLibkrunSupported,
+  isPodman6OrLater,
   isRootfulMachineInitSupported,
   isStartNowAtMachineInitSupported,
   isUserModeNetworkingSupported,
@@ -109,6 +112,10 @@ export class PodmanInstall {
         extensionApi.context.setValue(
           PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
           isLibkrunSupported(newInstalledPodman.version),
+        );
+        extensionApi.context.setValue(
+          PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
+          isPodman6OrLater(newInstalledPodman.version),
         );
         await calcPodmanMachineSetting();
       }
@@ -319,6 +326,11 @@ export class PodmanInstall {
             PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
             isLibkrunSupported(updateInfo.bundledVersion),
           );
+          extensionApi.context.setValue(
+            PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
+            isPodman6OrLater(updateInfo.bundledVersion),
+          );
+          extensionApi.context.setValue(PODMAN_EDIT_IMPORT_NATIVE_CA, isPodman6OrLater(updateInfo.bundledVersion));
         } else if (answer === 'Ignore') {
           this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
         } else if (answer === 'Open release notes') {

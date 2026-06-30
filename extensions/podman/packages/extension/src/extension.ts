@@ -18,6 +18,7 @@
 
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -33,6 +34,7 @@ import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
   PODMAN_DOCKER_COMPAT_ENABLE_KEY,
+  PODMAN_EDIT_IMPORT_NATIVE_CA,
   PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
@@ -466,8 +468,9 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
   }
 }
 
-async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Promise<boolean> {
-  let isRootful = false;
+async function getMachineInspect(
+  machineDetails: MachineJSON | MachineInfo,
+): Promise<Record<string, unknown> | undefined> {
   let vmType: string;
   let machineName: string;
   if ('name' in machineDetails) {
@@ -479,14 +482,39 @@ async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Prom
   }
   try {
     const { stdout: machineInspectJson } = await execPodman(['machine', 'inspect', machineName], vmType);
-    const machinesInspect = JSON.parse(machineInspectJson);
-    // find the machine name in the array
-    const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineName);
-    isRootful = machineInspect?.Rootful ?? false;
+    const machinesInspect = JSON.parse(machineInspectJson) as Record<string, unknown>[];
+    return machinesInspect.find((machine: Record<string, unknown>) => machine.Name === machineName);
   } catch (error) {
-    console.error('Error when checking rootful machine: ', error);
+    console.error('Error when inspecting machine: ', error);
   }
-  return isRootful;
+  return undefined;
+}
+
+async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Promise<boolean> {
+  const machineInspect = await getMachineInspect(machineDetails);
+  return (machineInspect?.Rootful as boolean) ?? false;
+}
+
+function isRootfulFromInspect(machineInspect: Record<string, unknown> | undefined): boolean {
+  return (machineInspect?.Rootful as boolean) ?? false;
+}
+
+export async function getImportNativeCAFromConfig(
+  machineName: string,
+  machineInspect: Record<string, unknown> | undefined,
+): Promise<boolean> {
+  const configDir = (machineInspect?.ConfigDir as { Path?: string })?.Path;
+  if (!configDir) {
+    return false;
+  }
+  try {
+    const configFile = path.join(configDir, `${machineName}.json`);
+    const content = JSON.parse(await readFile(configFile, 'utf-8'));
+    return content.ImportNativeCA ?? false;
+  } catch (error) {
+    console.error('Error reading ImportNativeCA from machine config: ', error);
+  }
+  return false;
 }
 
 async function getDefaultConnection(): Promise<ConnectionJSON | undefined> {
@@ -511,7 +539,8 @@ async function updateContainerConfiguration(
 ): Promise<void> {
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const isRootful = await isRootfulMachine(machineInfo);
+  const machineInspect = await getMachineInspect(machineInfo);
+  const isRootful = isRootfulFromInspect(machineInspect);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -522,6 +551,9 @@ async function updateContainerConfiguration(
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
 
   await containerConfiguration.update('machine.rootful', isRootful);
+
+  const importNativeCA = await getImportNativeCAFromConfig(machineInfo.name, machineInspect);
+  await containerConfiguration.update('machine.importNativeCA', importNativeCA);
 }
 
 function calcMacosSocketPath(machineName: string): string {
@@ -750,13 +782,22 @@ export async function registerProviderFor(
   const isEditDiskSizeSupported = extensionApi.env.isMac;
   const isEditRootfulSupported = extensionApi.env.isMac || extensionApi.env.isWindows;
 
+  const podmanInstallation = await podmanBinary.getBinaryInfo();
+  const podmanVersion = podmanInstallation?.version;
+  const isEditImportNativeCASupported = podmanVersion ? isPodman6OrLater(podmanVersion) : false;
+
   const isEditSupported =
-    isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported || isEditRootfulSupported;
+    isEditMemorySupported ||
+    isEditCPUSupported ||
+    isEditDiskSizeSupported ||
+    isEditRootfulSupported ||
+    isEditImportNativeCASupported;
 
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_CPU, isEditCPUSupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_DISK_SIZE, isEditDiskSizeSupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_ROOTFUL, isEditRootfulSupported);
+  extensionApi.context.setValue(PODMAN_EDIT_IMPORT_NATIVE_CA, isEditImportNativeCASupported);
 
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
@@ -810,6 +851,9 @@ export async function registerProviderFor(
           args.push(`--rootful=${params[key]}`);
           effective = true;
           isRootful = params[key];
+        } else if (isEditImportNativeCASupported && key === 'podman.machine.importNativeCA') {
+          args.push(`--import-native-ca=${params[key]}`);
+          effective = true;
         }
       }
       if (effective) {
@@ -865,7 +909,8 @@ export async function registerProviderFor(
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const isRootful = await isRootfulMachine(machineInfo);
+  const machineInspect = await getMachineInspect(machineInfo);
+  const isRootful = isRootfulFromInspect(machineInspect);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -876,6 +921,9 @@ export async function registerProviderFor(
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
 
   await containerConfiguration.update('machine.rootful', isRootful);
+
+  const importNativeCA = await getImportNativeCAFromConfig(machineInfo.name, machineInspect);
+  await containerConfiguration.update('machine.importNativeCA', importNativeCA);
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);
@@ -2178,6 +2226,14 @@ export async function createMachine(
   if (params['podman.factory.machine.user-mode-networking']) {
     parameters.push('--user-mode-networking');
     telemetryRecords.userModeNetworking = true;
+  }
+
+  const isPodmanV6OrLater = version ? isPodman6OrLater(version) : false;
+  if (params['podman.factory.machine.import-native-ca'] && isPodmanV6OrLater) {
+    parameters.push('--import-native-ca');
+    telemetryRecords.importNativeCA = true;
+  } else {
+    telemetryRecords.importNativeCA = false;
   }
 
   // name at the end
