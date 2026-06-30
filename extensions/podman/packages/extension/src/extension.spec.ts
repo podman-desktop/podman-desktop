@@ -1112,6 +1112,32 @@ describe('startMachine rosetta enable-file provisioning', () => {
   });
 });
 
+describe('on Linux, startMachine and stopMachine should not update provider status', () => {
+  beforeEach(() => {
+    vi.spyOn(provider, 'updateStatus').mockImplementation(() => {});
+    vi.mocked(extensionApi.env).isLinux = true;
+    vi.mocked(extensionApi.env).isMac = false;
+  });
+
+  test('startMachine does not call provider.updateStatus on Linux', async () => {
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.7.0' } as InstalledPodman);
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).mockResolvedValue(false);
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('stopMachine does not call provider.updateStatus on Linux', async () => {
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+
+    await extension.stopMachine(provider, machineInfo);
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+});
+
 describe('createMachine rosetta enable-file provisioning', () => {
   const createMachineBaseParams = {
     'podman.factory.machine.cpus': '2',
