@@ -2724,6 +2724,10 @@ export function initExposure(): void {
     return ipcInvoke('extension-development-folders:addDevelopmentFolder', path);
   });
 
+  contextBridge.exposeInMainWorld('getExtensionDevelopmentDocsLink', async (): Promise<string> => {
+    return ipcInvoke('extension-development:getExtensionDevelopmentDocsLink');
+  });
+
   contextBridge.exposeInMainWorld(
     'kubernetesGetTroubleshootingInformation',
     async (): Promise<KubernetesTroubleshootingInformation> => {
