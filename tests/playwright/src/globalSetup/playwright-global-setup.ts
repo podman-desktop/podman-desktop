@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { defineConfig, devices } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 
-export default defineConfig({
-  globalSetup: './tests/playwright/src/globalSetup/playwright-global-setup.ts',
-  outputDir: 'tests/playwright/output/',
-  workers: 1,
-  timeout: 90_000,
+import { setup } from './global-setup';
 
-  reporter: [
-    ['list'],
-    ['junit', { outputFile: 'tests/playwright/output/junit-results.xml' }],
-    ['json', { outputFile: 'tests/playwright/output/json-results.json' }],
-    ['html', { open: 'never', outputFolder: 'tests/playwright/output/html-results/' }],
-  ],
+export default async function globalSetup(): Promise<void> {
+  const playwrightCli = path.join(process.cwd(), 'node_modules', 'playwright', 'cli.js');
 
-  projects: [
-    {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-      },
-    },
-  ],
-});
+  // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+  execFileSync(process.execPath, [playwrightCli, 'install', 'chromium'], { stdio: 'inherit' });
+
+  await setup();
+}
