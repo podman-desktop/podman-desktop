@@ -214,7 +214,7 @@
   "devDependencies": {
     "@podman-desktop/api": "workspace:*",
     "@types/mustache": "^4.2.6",
-    "adm-zip": "^0.5.17",
+    "adm-zip": "^0.5.18",
     "mkdirp": "^3.0.1",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"

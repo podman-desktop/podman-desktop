@@ -246,8 +246,8 @@ importers:
         specifier: ^4.2.6
         version: 4.2.6
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -274,8 +274,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -305,8 +305,8 @@ importers:
         version: 2.9.0
     devDependencies:
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -333,8 +333,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -364,8 +364,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       byline:
         specifier: ^5.0.0
         version: 5.0.0
@@ -389,8 +389,8 @@ importers:
         version: link:../../packages/extension-api
     devDependencies:
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -414,8 +414,8 @@ importers:
         version: link:../docker/packages/api
     devDependencies:
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -475,8 +475,8 @@ importers:
         specifier: ^1.17.5
         version: 1.17.5
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       hasha:
         specifier: ^7.0.0
         version: 7.0.0
@@ -509,8 +509,8 @@ importers:
         version: link:../../packages/extension-api
     devDependencies:
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -576,8 +576,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.5.18
+        version: 0.5.18
       check-disk-space:
         specifier: ^3.4.0
         version: 3.4.0
@@ -5617,8 +5617,8 @@ packages:
     resolution: {integrity: sha512-4B/qKCfeE/ODUaAUpSwfzazo5x29WD4r3vXiWsB7I2mSDAihwEqKO+g8GELZUQSSAo5e1XTYh3ZVfLyxBc12nA==}
     engines: {node: '>= 10.0.0'}
 
-  adm-zip@0.5.17:
-    resolution: {integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==}
+  adm-zip@0.5.18:
+    resolution: {integrity: sha512-ufJnssQGbxzLNS1Ho9bCtX4rQKCCvoVuDLHoJyc3F9dOGDB4BkWs2Ci0kv53lqocAEQ/Cbi+I2XCsNYGqVYqng==}
     engines: {node: '>=12.0'}
 
   agent-base@7.1.4:
@@ -18328,7 +18328,7 @@ snapshots:
 
   address@1.2.2: {}
 
-  adm-zip@0.5.17: {}
+  adm-zip@0.5.18: {}
 
   agent-base@7.1.4: {}
 

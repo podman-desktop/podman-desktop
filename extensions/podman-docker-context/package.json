@@ -29,7 +29,7 @@
     "@podman-desktop/docker-extension-api": "workspace:*"
   },
   "devDependencies": {
-    "adm-zip": "^0.5.17",
+    "adm-zip": "^0.5.18",
     "mkdirp": "^3.0.1",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
