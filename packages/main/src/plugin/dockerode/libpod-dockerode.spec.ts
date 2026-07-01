@@ -572,4 +572,89 @@ describe('secrets', () => {
     const api = new Dockerode({ protocol: 'http', host: 'localhost' });
     await expect((api as unknown as LibPod).removeSecret('secret123')).rejects.toThrow();
   });
+
+  test('inspectSecret should call GET on libpod secrets endpoint with showsecret=false by default', async () => {
+    const mockSecret = {
+      ID: 'secret123',
+      Spec: { Name: 'my-secret', Driver: { Name: 'file' } },
+      CreatedAt: '2024-01-01T00:00:00Z',
+      UpdatedAt: '2024-01-01T00:00:00Z',
+    };
+
+    const getHandler = vi.fn().mockImplementation(info => {
+      const url = new URL(info.request.url);
+      expect(url.searchParams.get('showsecret')).toBe('false');
+      return HttpResponse.json(mockSecret, { status: 200 });
+    });
+
+    server = setupServer(http.get('http://localhost/v4.2.0/libpod/secrets/secret123/json', getHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    const result = await (api as unknown as LibPod).inspectSecret('secret123');
+
+    expect(getHandler).toHaveBeenCalledOnce();
+    expect(result.ID).toBe('secret123');
+  });
+
+  test('inspectSecret should pass showsecret=true when requested', async () => {
+    const mockSecret = {
+      ID: 'secret123',
+      Spec: { Name: 'my-secret', Driver: { Name: 'file' } },
+      CreatedAt: '2024-01-01T00:00:00Z',
+      UpdatedAt: '2024-01-01T00:00:00Z',
+      SecretData: 'c2VjcmV0dmFsdWU=',
+    };
+
+    const getHandler = vi.fn().mockImplementation(info => {
+      const url = new URL(info.request.url);
+      expect(url.searchParams.get('showsecret')).toBe('true');
+      return HttpResponse.json(mockSecret, { status: 200 });
+    });
+
+    server = setupServer(http.get('http://localhost/v4.2.0/libpod/secrets/secret123/json', getHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    const result = await (api as unknown as LibPod).inspectSecret('secret123', { showsecret: true });
+
+    expect(getHandler).toHaveBeenCalledOnce();
+    expect(result.SecretData).toBe('c2VjcmV0dmFsdWU=');
+  });
+
+  test('inspectSecret without options should default showsecret to false', async () => {
+    const mockSecret = {
+      ID: 'secret456',
+      Spec: { Name: 'another-secret', Driver: { Name: 'file' } },
+      CreatedAt: '2024-01-01T00:00:00Z',
+      UpdatedAt: '2024-01-01T00:00:00Z',
+    };
+
+    const getHandler = vi.fn().mockImplementation(info => {
+      const url = new URL(info.request.url);
+      expect(url.searchParams.get('showsecret')).toBe('false');
+      return HttpResponse.json(mockSecret, { status: 200 });
+    });
+
+    server = setupServer(http.get('http://localhost/v4.2.0/libpod/secrets/secret456/json', getHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    const result = await (api as unknown as LibPod).inspectSecret('secret456');
+
+    expect(getHandler).toHaveBeenCalledOnce();
+    expect(result.ID).toBe('secret456');
+  });
+
+  test('inspectSecret should reject when server returns an error', async () => {
+    server = setupServer(
+      http.get('http://localhost/v4.2.0/libpod/secrets/nonexistent/json', () =>
+        HttpResponse.json({ message: 'no such secret' }, { status: 404 }),
+      ),
+    );
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await expect((api as unknown as LibPod).inspectSecret('nonexistent')).rejects.toThrow();
+  });
 });

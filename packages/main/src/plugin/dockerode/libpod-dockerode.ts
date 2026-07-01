@@ -23,7 +23,7 @@ import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, PodmanListImagesOp
 import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';
 import type { DialOptions } from 'docker-modem';
-import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
+import type { Secret, VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
 import Dockerode from 'dockerode';
 
 export interface PodCreateOptions {
@@ -265,6 +265,14 @@ export interface LibPod {
    * @param secretId
    */
   removeSecret(secretId: string): Promise<void>;
+
+  /**
+   * The traditional Dockerode API does not allow us to retreive the data of a secret.
+   * We need to use the official libpod API to be able to inspect a secret
+   * @param secretId
+   * @param options
+   */
+  inspectSecret(secretId: string, options?: { showsecret?: boolean }): Promise<Secret & { SecretData?: string }>;
 }
 
 // change the method from private to public as we're overriding it
@@ -983,6 +991,30 @@ export class LibpodDockerode {
             return reject(err);
           }
           resolve(wrapAs<void>(data));
+        });
+      });
+    };
+
+    prototypeOfDockerode.inspectSecret = function (
+      secretId: string,
+      options?: { showsecret?: boolean },
+    ): Promise<Secret & { SecretData?: string }> {
+      const optsf = {
+        path: `/v4.2.0/libpod/secrets/${secretId}/json?showsecret=${options?.showsecret ? 'true' : 'false'}?`,
+        method: 'GET',
+        statusCodes: {
+          200: true,
+          204: true,
+          400: 'bad parameter',
+          500: 'server error',
+        },
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<Secret & { SecretData?: string }>(data));
         });
       });
     };
