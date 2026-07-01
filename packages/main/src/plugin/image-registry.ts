@@ -215,7 +215,8 @@ export class ImageRegistry {
     }
 
     this.suggestedRegistries.push(registry);
-    this.apiSender.send('registry-update', registry);
+    // Send only serializable fields (handlers are functions and cannot cross IPC)
+    this.apiSender.send('registry-update', { name: registry.name, url: registry.url });
 
     // Create a disposable to remove the registry from the list
     return Disposable.create(() => {
@@ -231,7 +232,7 @@ export class ImageRegistry {
     }
 
     // Fire an update to the UI to remove the suggested registry
-    this.apiSender.send('registry-update', registry);
+    this.apiSender.send('registry-update', { name: registry.name, url: registry.url });
   }
 
   unregisterRegistry(registry: containerDesktopAPI.Registry): void {
@@ -254,7 +255,24 @@ export class ImageRegistry {
   }
 
   getSuggestedRegistries(): containerDesktopAPI.RegistrySuggestedProvider[] {
-    return this.suggestedRegistries;
+    return this.suggestedRegistries.map(reg => ({
+      name: reg.name,
+      url: reg.url,
+      icon: reg.icon,
+      additionalConfigHandlers: reg.additionalConfigHandlers?.map(({ label, isDefault }) => ({ label, isDefault })),
+    })) as containerDesktopAPI.RegistrySuggestedProvider[];
+  }
+
+  async invokeRegistryConfigHandler(url: string, label: string): Promise<void> {
+    const registry = this.suggestedRegistries.find(reg => reg.url === url);
+    if (!registry?.additionalConfigHandlers) {
+      throw new Error(`No additional config handlers found for registry ${url}`);
+    }
+    const configHandler = registry.additionalConfigHandlers.find(m => m.label === label);
+    if (!configHandler) {
+      throw new Error(`Config handler "${label}" not found for registry ${url}`);
+    }
+    await configHandler.handler();
   }
 
   getProviderNames(): string[] {
