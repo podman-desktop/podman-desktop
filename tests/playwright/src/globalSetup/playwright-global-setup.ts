@@ -16,16 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 
 import { setup } from './global-setup';
 
+async function installChromium(): Promise<void> {
+  const moduleRequire = createRequire(import.meta.url);
+  const playwrightCli = moduleRequire.resolve('playwright/cli.js');
+
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(process.execPath, [playwrightCli, 'install', 'chromium'], { stdio: 'inherit' });
+    child.on('error', reject);
+    child.on('close', code => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`playwright install chromium failed with exit code ${code}`));
+      }
+    });
+  });
+}
+
 export default async function globalSetup(): Promise<void> {
-  const playwrightCli = path.join(process.cwd(), 'node_modules', 'playwright', 'cli.js');
-
-  // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
-  execFileSync(process.execPath, [playwrightCli, 'install', 'chromium'], { stdio: 'inherit' });
-
+  await installChromium();
   await setup();
 }
