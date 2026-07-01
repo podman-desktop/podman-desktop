@@ -163,7 +163,7 @@
     "@fortawesome/free-regular-svg-icons": "^7.3.0",
     "@fortawesome/free-solid-svg-icons": "^7.3.0",
     "moment": "^2.30.1",
-    "humanize-duration": "^3.33.2",
+    "humanize-duration": "^3.34.0",
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
