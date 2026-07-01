@@ -29,7 +29,7 @@
     "@storybook/svelte-vite": "^10.4.6",
     "@sveltejs/package": "^2.5.8",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
-    "@tailwindcss/vite": "^4.3.1",
+    "@tailwindcss/vite": "^4.3.2",
     "@tsconfig/svelte": "^5.0.8",
     "@typescript-eslint/eslint-plugin": "^8.62.1",
     "autoprefixer": "^10.5.2",
@@ -43,7 +43,7 @@
     "storybook": "^10.4.2",
     "svelte": "5.56.4",
     "svelte-check": "^4.7.1",
-    "tailwindcss": "^4.3.1",
+    "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
