@@ -23,7 +23,7 @@ import { setup } from './global-setup';
 
 async function installChromium(): Promise<void> {
   const moduleRequire = createRequire(import.meta.url);
-  const playwrightCli = moduleRequire.resolve('playwright/cli.js');
+  const playwrightCli = moduleRequire.resolve('@playwright/test/cli');
 
   await new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, [playwrightCli, 'install', 'chromium'], { stdio: 'inherit' });
