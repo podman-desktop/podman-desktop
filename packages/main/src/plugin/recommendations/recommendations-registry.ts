@@ -29,6 +29,7 @@ import { inject, injectable } from 'inversify';
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Featured } from '/@/plugin/featured/featured.js';
+import { rotateArray } from '/@/plugin/util/array-mutation.js';
 
 // eslint-disable-next-line no-restricted-imports
 import recommendations from '../../../../../recommendations.json' with { type: 'json' };
@@ -139,13 +140,7 @@ export class RecommendationsRegistry {
     if (limit >= 0 && extensionBanners.length > limit) {
       // instead of using random generator we ensure deterministic results for a period of time (here by the hours)
       const startingIndex = new Date().getHours() % extensionBanners.length;
-
-      // Let's return the subset of banners starting at the chosen index
-      // and filter out all potential undefined items
-      return Array.from(
-        { length: limit },
-        (_, i) => extensionBanners[(startingIndex + i) % extensionBanners.length],
-      ).filter((value): value is ExtensionBanner => value !== undefined);
+      return rotateArray(extensionBanners, startingIndex).slice(0, limit);
     }
     return extensionBanners;
   }
