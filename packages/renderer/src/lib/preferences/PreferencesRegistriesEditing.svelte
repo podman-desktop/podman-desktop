@@ -173,6 +173,42 @@ function clearSavedCredentials(): void {
   newRegistryRequest.secret = '';
 }
 
+const CONFIG_HANDLER_DEFAULT = 'username-password';
+
+function buildConfigureOptions(registry: containerDesktopAPI.RegistrySuggestedProvider): SplitButtonOption[] {
+  const options: SplitButtonOption[] = [{ id: CONFIG_HANDLER_DEFAULT, label: 'Configure' }];
+  for (const method of registry.additionalConfigHandlers ?? []) {
+    options.push({ id: method.label, label: `Configure with ${method.label}` });
+  }
+  return options;
+}
+
+let configureSelections: Record<string, string> = $state({});
+
+function getDefaultConfigHandler(registry: containerDesktopAPI.RegistrySuggestedProvider): string {
+  const defaultHandler = registry.additionalConfigHandlers?.find(h => h.isDefault);
+  return defaultHandler?.label ?? CONFIG_HANDLER_DEFAULT;
+}
+
+function getConfigureSelection(registry: containerDesktopAPI.RegistrySuggestedProvider): string {
+  return configureSelections[registry.url] ?? getDefaultConfigHandler(registry);
+}
+
+function setConfigureSelection(registryUrl: string, optionId: string): void {
+  configureSelections = { ...configureSelections, [registryUrl]: optionId };
+}
+
+function handleConfigureAction(i: number, registry: containerDesktopAPI.RegistrySuggestedProvider): void {
+  const selection = getConfigureSelection(registry);
+  if (selection === CONFIG_HANDLER_DEFAULT) {
+    setNewSuggestedRegistryFormVisible(i, registry);
+  } else {
+    window.invokeImageRegistryConfigHandler(registry.url, selection).catch((error: unknown) => {
+      console.error(`Failed to invoke config handler "${selection}" for ${registry.url}`, error);
+    });
+  }
+}
+
 async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<void> {
   loggingIn = true;
   clearErrorResponse(registry.serverUrl);
@@ -453,6 +489,16 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 
               {#if listedSuggestedRegistries[i]}
                 <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
+              {:else if registry.additionalConfigHandlers?.length}
+                <SplitButton
+                  options={buildConfigureOptions(registry)}
+                  selectedOptionIds={[getConfigureSelection(registry)]}
+                  noSelectionLabel="Configure"
+                  onSelect={(options): void => {
+                    if (options.length > 0) setConfigureSelection(registry.url, options[0].id);
+                  }}
+                  onAction={(): void => handleConfigureAction(i, registry)} />
+
               {:else}
                 <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
               {/if}
