@@ -46,11 +46,10 @@
   },
   "dependencies": {
     "@podman-desktop/api": "workspace:*",
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^5.2.0"
   },
   "devDependencies": {
     "adm-zip": "^0.5.18",
-    "@types/js-yaml": "^4.0.9",
     "mkdirp": "^3.0.1",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
