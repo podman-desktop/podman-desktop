@@ -1227,11 +1227,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^6.0.0
+        version: 6.0.0
       '@argos-ci/playwright':
-        specifier: ^7.1.1
-        version: 7.1.1
+        specifier: ^7.1.2
+        version: 7.1.2
       '@playwright/test':
         specifier: 1.61.1
         version: 1.61.1
@@ -1351,25 +1351,25 @@ packages:
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
-  '@argos-ci/api-client@0.22.1':
-    resolution: {integrity: sha512-RnJvhCcdHJb0h5HoLSlGWnmRnRn2zgY0jq6ynS2506sd2drAeYJV03dSi3tX5TN7janQOPfMDR9DJeFudiyeqw==}
+  '@argos-ci/api-client@0.23.0':
+    resolution: {integrity: sha512-LlGMFqWQz0S3JpCyUGC7/Ao/zUkDCfjak4z4HNXjEnKzpiNKsxt2tApl1UYn4bzrsVyZZmr4NFQGTY+6OArkpQ==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/browser@6.2.0':
     resolution: {integrity: sha512-AZUI5mDQ+XWa29Bcj23bW6UbFwMLfwItmR4QClgcjt/5auW57fwnRN7p0enOetx+v5DNz4jG4ZhgLFM/1P4kFQ==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/cli@5.1.3':
-    resolution: {integrity: sha512-JIomOedMxnymrZupLbwUFUwrMZ64qYXJ1Y7PxRyyxtHIfB7Gcwze/uIGlN7tkGVQ91EGs6LPP3sV5tS4cG5rBg==}
+  '@argos-ci/cli@6.0.0':
+    resolution: {integrity: sha512-Zx2gI2ny59qBU96qXTiP3ecPjXSZG05YPOm70tUl7KCLCPIXr2fATat5UWFsnTHbsFiUDl4jIJLGCQoPPV3N1g==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@argos-ci/core@6.2.3':
-    resolution: {integrity: sha512-aju16U7mSjVKw7LWld0DXD0j8DPeEjXH2vFIrvwlZamWs7hFyJkjXU0xew1i390mi0+6D25vGXxSHRkWHSUbQg==}
+  '@argos-ci/core@6.3.0':
+    resolution: {integrity: sha512-zxuiK5Fx6fr1ctigUF82FFRxkdMbGOMK64nmcOo0jV8e85LA4iA55VFmmwHMTd04jLk0trvKVU+7a7LGy6zNzQ==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/playwright@7.1.1':
-    resolution: {integrity: sha512-OyE3bJqFETgYQLanCGwuqq7M0ckM1LZ4JcqgCGzrcESWJZRfCC3kHMJiSVPGX67IEWvkeJ4ne05Vqyw2xEXe8A==}
+  '@argos-ci/playwright@7.1.2':
+    resolution: {integrity: sha512-XIQAU4dKnc/su6mYVvobvN6TBqmgpa1dU2HkkG0aYmOU+t8/SAcuVr9nk5zfPWEddJqbkdaooOaTs4+rTOHkEQ==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/util@4.0.0':
@@ -12965,7 +12965,7 @@ snapshots:
       package-manager-detector: 1.3.0
       tinyexec: 1.2.4
 
-  '@argos-ci/api-client@0.22.1':
+  '@argos-ci/api-client@0.23.0':
     dependencies:
       debug: 4.4.3
       openapi-fetch: 0.17.0
@@ -12975,10 +12975,10 @@ snapshots:
 
   '@argos-ci/browser@6.2.0': {}
 
-  '@argos-ci/cli@5.1.3':
+  '@argos-ci/cli@6.0.0':
     dependencies:
-      '@argos-ci/api-client': 0.22.1
-      '@argos-ci/core': 6.2.3
+      '@argos-ci/api-client': 0.23.0
+      '@argos-ci/core': 6.3.0
       commander: 15.0.0
       open: 11.0.0
       ora: 9.4.1
@@ -12986,9 +12986,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@6.2.3':
+  '@argos-ci/core@6.3.0':
     dependencies:
-      '@argos-ci/api-client': 0.22.1
+      '@argos-ci/api-client': 0.23.0
       '@argos-ci/util': 4.0.0
       convict: 6.2.5
       debug: 4.4.3
@@ -13000,10 +13000,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@7.1.1':
+  '@argos-ci/playwright@7.1.2':
     dependencies:
       '@argos-ci/browser': 6.2.0
-      '@argos-ci/core': 6.2.3
+      '@argos-ci/core': 6.3.0
       '@argos-ci/util': 4.0.0
       chalk: 5.6.2
       debug: 4.4.3
@@ -15274,7 +15274,7 @@ snapshots:
       node-gyp: 11.5.0
       ora: 5.4.1
       read-binary-file-arch: 1.0.6
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.19
       yargs: 17.7.3
     transitivePeerDependencies:
@@ -16108,7 +16108,7 @@ snapshots:
 
   '@npmcli/fs@4.0.0':
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   '@octokit/app@16.1.2':
     dependencies:
@@ -21234,7 +21234,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.4
+      semver: 7.8.5
       serialize-error: 7.0.1
     optional: true
 
@@ -23336,14 +23336,14 @@ snapshots:
 
   node-abi@4.26.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-addon-api@1.7.2:
     optional: true
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-emoji@2.1.3:
     dependencies:
@@ -23368,7 +23368,7 @@ snapshots:
       make-fetch-happen: 14.0.3
       nopt: 8.1.0
       proc-log: 5.0.0
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.19
       tinyglobby: 0.2.17
       which: 5.0.0
