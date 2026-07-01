@@ -55,7 +55,7 @@ test('switches catalog list from grid to table view', async () => {
 
   expect(screen.getByRole('region', { name: 'Catalog Extensions' })).toBeInTheDocument();
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Table view' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'List view' }));
 
   expect(getCatalogViewMode()).toBe('table');
   expect(screen.getByRole('table', { name: 'extensions' })).toBeInTheDocument();

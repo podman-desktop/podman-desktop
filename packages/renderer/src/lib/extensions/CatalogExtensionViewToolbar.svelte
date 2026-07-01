@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faTableCells, faThLarge } from '@fortawesome/free-solid-svg-icons';
+import { faList, faThLarge } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
@@ -34,10 +34,10 @@ const viewMode = $derived.by(() => getCatalogViewMode());
         }} />
       <Button
         type="tab"
-        icon={faTableCells}
+        icon={faList}
         selected={viewMode === 'table'}
-        title="Table view"
-        aria-label="Table view"
+        title="List view"
+        aria-label="List view"
         onclick={(): void => {
           setCatalogViewMode('table');
         }} />

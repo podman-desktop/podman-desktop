@@ -7,6 +7,7 @@ import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
+import { EXTENSION_ACTIONS_MENU_CHANGE_EVENT, isExtensionActionsMenuOpen } from './extension-actions-menu.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
   EXTENSION_VERSION_UI_CHANGE_EVENT,
@@ -26,17 +27,31 @@ export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 
 let uiRevision = 0;
+let menuRevision = 0;
 
 function refreshVersionUi(): void {
   uiRevision += 1;
 }
 
+function refreshActionsMenuUi(): void {
+  menuRevision += 1;
+}
+
+$: isActionsMenuOpen = ((): boolean => {
+  menuRevision;
+  return isExtensionActionsMenuOpen(catalogExtensionUI.id);
+})();
+
+$: cardActionVisibilityClass = isActionsMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100';
+
 onMount(() => {
   window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
+  window.addEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, refreshActionsMenuUi);
 });
 
 onDestroy(() => {
   window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
+  window.removeEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, refreshActionsMenuUi);
 });
 
 function openExtensionDetails(): void {
@@ -54,34 +69,18 @@ function handleCardClick(event: MouseEvent): void {
 </script>
 
 <div
-  class="relative rounded-lg border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] hover:border-[var(--pd-content-card-border-selected)] cursor-pointer"
+  class="group relative rounded-lg border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] hover:border-[var(--pd-content-card-border-selected)] cursor-pointer"
   role="group"
   aria-label={catalogExtensionUI.displayName}
   onclick={handleCardClick}>
-  <div class="px-3 pt-3 pb-2 flex flex-col gap-1.5">
-    <div class="relative min-h-8 pr-9">
-      <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} />
-        {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedExtension}
-          <ExtensionLifecycleStatus extension={catalogExtensionUI.installedExtension} class="shrink-0" />
-        {/if}
-      </div>
-      <div class="absolute right-0 top-0 flex items-center gap-1">
-        {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
-          <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
-        {/if}
-        <CatalogExtensionActions
-          extension={catalogExtensionUI}
-          {returnScreen} />
-      </div>
-    </div>
-
+  <div class="px-3 pt-3 pb-2">
     <div class="flex items-start gap-2">
       <div class="flex size-10 shrink-0 items-center justify-start">
         <CatalogExtensionIcon iconHref={catalogExtensionUI.iconHref} displayName={catalogExtensionUI.displayName} />
       </div>
 
       <div class="min-w-0 flex-1 overflow-hidden">
+        <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} class="mb-1" />
         <ExtensionFeaturedNameLabel
           displayName={catalogExtensionUI.displayName}
           isFeatured={catalogExtensionUI.isFeatured}
@@ -112,11 +111,25 @@ function handleCardClick(event: MouseEvent): void {
               <ExtensionVersionUpdateStatus
                 extensionId={catalogExtensionUI.id}
                 extensionState={catalogExtensionUI.installedExtension?.state} />
+              {#if catalogExtensionUI.installedExtension}
+                <ExtensionLifecycleStatus
+                  extension={catalogExtensionUI.installedExtension}
+                  class="shrink-0" />
+              {/if}
             {/key}
           {:else}
             <span>v{catalogExtensionUI.fetchVersion}</span>
           {/if}
         </div>
+      </div>
+
+      <div class="flex shrink-0 items-start gap-1 transition-opacity {cardActionVisibilityClass}">
+        {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
+          <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
+        {/if}
+        <CatalogExtensionActions
+          extension={catalogExtensionUI}
+          {returnScreen} />
       </div>
     </div>
   </div>

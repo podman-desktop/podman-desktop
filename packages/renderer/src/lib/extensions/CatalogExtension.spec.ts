@@ -173,6 +173,41 @@ test('Expect to have version of installed one', async () => {
   expect(screen.queryByRole('link', { name: /Upgrade to v/i })).not.toBeInTheDocument();
 });
 
+test('Expect installed catalog card shows active status next to version', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'minikube',
+    displayName: 'minikube',
+    isFeatured: false,
+    fetchable: false,
+    fetchLink: '',
+    fetchVersion: '0.4.1',
+    installedVersion: '0.4.0',
+    publisherDisplayName: 'Podman Desktop',
+    isInstalled: true,
+    shortDescription: 'Run Kubernetes locally',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+    installedExtension: {
+      id: 'minikube',
+      name: 'minikube',
+      state: 'started',
+      removable: true,
+      devMode: false,
+      type: 'extension',
+    },
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  expect(screen.getByText('Active')).toBeInTheDocument();
+  expect(screen.getByText('v0.4.0')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Installed' })).not.toBeInTheDocument();
+});
+
 test('Expect installed catalog card shows version without upgrade link', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'minikube',

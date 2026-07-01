@@ -38,6 +38,8 @@ export function buildExtensionNewNavigationTooltip(name: string): string {
 
 export const EXTENSION_INSTALL_TOOLTIP = 'Install';
 
+export const EXTENSION_INSTALLED_TOOLTIP = 'Installed';
+
 export function buildExtensionInstallingTooltip(percentage?: string): string {
   if (percentage && percentage !== '0%') {
     return `Installing (${percentage})`;
