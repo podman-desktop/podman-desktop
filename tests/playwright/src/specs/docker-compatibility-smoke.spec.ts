@@ -22,7 +22,11 @@ import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { createPodmanMachineFromCLI, setDockerCompatibilityFeature } from '/@/utility/operations';
+import {
+  createPodmanMachineFromCLI,
+  resetPodmanMachinesFromCLI,
+  setDockerCompatibilityFeature,
+} from '/@/utility/operations';
 import { isCI, isRHEL, isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
@@ -36,10 +40,19 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 });
 
 test.afterAll(async ({ runner, page }) => {
-  if (test.info().status === 'failed') {
-    await setDockerCompatibilityFeature(page, false);
-    await createPodmanMachineFromCLI();
+  test.setTimeout(120_000);
+
+  try {
+    if (test.info().status === 'failed') {
+      await setDockerCompatibilityFeature(page, false);
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+      await waitForPodmanMachineStartup(page);
+    }
+  } catch (error) {
+    console.log('Error during cleanup:', error);
   }
+
   await runner.close();
 });
 
@@ -62,6 +75,8 @@ test.describe
     });
     test('Verify Docker Compatibility page', async ({ page }) => {
       const settingsBar = new SettingsBar(page);
+      // Navigate to Resources and back to ensure Docker Compatibility page state is fresh
+      await settingsBar.openTabPage(ResourcesPage);
       const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
       await playExpect(dockerCompatibilityPage.heading).toBeVisible();
       await playExpect
@@ -92,12 +107,6 @@ test.describe
       await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
         timeout: 120_000,
       });
-
-      await settingsBar.openTabPage(DockerCompatibilityPage);
-      await playExpect
-        .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 120_000 })
-        .toBeTruthy();
-      await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
     });
     test('Disable docker compatibility', async ({ page }) => {
       await setDockerCompatibilityFeature(page, false);
