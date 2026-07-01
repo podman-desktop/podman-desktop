@@ -18,6 +18,7 @@
 
 // export core modules
 export * from './globalSetup/global-setup';
+export { default as playwrightGlobalSetup } from './globalSetup/playwright-global-setup';
 export * from './runner/chrome-dev-tools-protocol-runner';
 export * from './runner/electron-runner';
 export * from './runner/podman-desktop-runner';
