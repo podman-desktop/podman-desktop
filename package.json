@@ -142,7 +142,7 @@
     "@biomejs/biome": "^2.5.1",
     "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
-    "@electron/fuses": "^2.1.2",
+    "@electron/fuses": "^2.1.3",
     "@eslint/compat": "^2.1.0",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
