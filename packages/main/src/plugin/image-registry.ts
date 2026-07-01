@@ -980,6 +980,13 @@ export class ImageRegistry {
     try {
       await got.get(registryUrl, options);
     } catch (requestErr) {
+      // diagnostic logging for insecure registry debugging
+      if (requestErr instanceof Error) {
+        const e = requestErr as { code?: string; cause?: unknown };
+        console.error(
+          `[getAuthInfo] error class=${requestErr.constructor.name} message="${requestErr.message}" code="${e.code}" cause="${e.cause}" isHTTPError=${requestErr instanceof HTTPError} isRequestError=${requestErr instanceof RequestError}`,
+        );
+      }
       if (requestErr instanceof HTTPError) {
         const wwwAuthenticate = requestErr.response?.headers['www-authenticate'];
         if (wwwAuthenticate) {
@@ -1002,8 +1009,16 @@ export class ImageRegistry {
         } else {
           throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${requestErr.message}`);
         }
+      } else if (requestErr instanceof Error) {
+        const errWithCode = requestErr as { code?: string; cause?: unknown };
+        const causeMsg = errWithCode.cause instanceof Error ? errWithCode.cause.message : '';
+        const detail =
+          causeMsg ||
+          (errWithCode.code && errWithCode.code !== 'ERR_GOT_REQUEST_ERROR' ? errWithCode.code : '') ||
+          requestErr.message;
+        throw new Error(`Unable to find auth info for ${registryUrl}. ${detail}`);
       } else {
-        throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${requestErr}`);
+        throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${String(requestErr)}`);
       }
     }
 
