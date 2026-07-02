@@ -530,7 +530,7 @@ export class LibpodDockerode {
         statusCodes: {
           200: true,
           204: true,
-          304: 'pod already stopped',
+          304: 'pod already started',
           404: 'no such pod',
           409: 'unexpected error',
           500: 'server error',
