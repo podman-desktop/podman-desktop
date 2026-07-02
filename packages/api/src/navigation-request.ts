@@ -60,6 +60,9 @@ export interface NavigationParameters {
   [NavigationPage.CONTAINER_CONNECTION]: { provider: string; name: string; socketPath: string };
   [NavigationPage.KUBERNETES_CONNECTION]: { provider: string; apiURL: string };
   [NavigationPage.VM_CONNECTION]: { provider: string; name: string };
+  [NavigationPage.SECRETS]: never;
+  [NavigationPage.SECRET_CREATE]: never;
+  [NavigationPage.SECRET]: { id: string; engineId: string };
 }
 
 // the parameters property is optional when the NavigationParameters say it is
