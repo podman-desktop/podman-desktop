@@ -24,7 +24,6 @@ import { ContainerState, ImageState, ResourceElementState } from '/@/model/core/
 import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { ContainersPage } from '/@/model/pages/containers-page';
 import { ImageDetailsPage } from '/@/model/pages/image-details-page';
-import type { ImagesPage } from '/@/model/pages/images-page';
 import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
@@ -32,7 +31,7 @@ import { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
-import { waitForPodmanMachineStartup, waitWhile } from '/@/utility/wait';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
@@ -78,20 +77,6 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
       timeout: 90_000,
     });
   }
-
-  let images: ImagesPage;
-  try {
-    images = await new NavigationBar(page).openImages();
-  } catch (error) {
-    await runner.screenshot('error-on-open-images.png');
-    throw error;
-  }
-
-  await waitWhile(async () => await images.pageIsEmpty(), {
-    timeout: 60_000,
-    sendError: false,
-    message: 'Images page is empty, there are no images present',
-  });
 
   try {
     await deleteContainer(page, containerToRun);
