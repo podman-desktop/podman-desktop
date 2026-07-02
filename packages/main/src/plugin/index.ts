@@ -284,12 +284,19 @@ export class PluginSystem {
   private extensionLoader!: ExtensionLoader;
   private validExtList!: ExtensionInfo[];
 
+  protected container?: Container;
+
   constructor(
     private trayMenu: TrayMenu,
     private mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
   ) {
     app.on('before-quit', () => {
       this.isQuitting = true;
+      try {
+        this.container?.unbindAll();
+      } catch (err: unknown) {
+        console.error('[PluginSystem] error during before-quit handling:', err);
+      }
     });
   }
 
@@ -511,7 +518,8 @@ export class PluginSystem {
 
     // init api sender
     const apiSender = this.getApiSender(this.getWebContentsSender());
-    const container = new Container();
+    this.container = new Container();
+    const container = this.container;
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
     container.bind<IPCMainOn>(IPCMainOn).toConstantValue(this.ipcMainOn);

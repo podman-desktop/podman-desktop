@@ -125,6 +125,10 @@ class TestPluginSystem extends PluginSystem {
   setQuitting(value: boolean): void {
     this.isQuitting = value;
   }
+
+  setContainer(container?: InversifyContainer): void {
+    this.container = container;
+  }
 }
 
 let inversifyContainer: InversifyContainer;
@@ -952,6 +956,49 @@ describe.each<{
     expect(errorMock).toHaveBeenCalledWith(rejectError);
     expect(originalTask.status).toEqual('in-progress');
     expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
+  });
+});
+
+type Listener = (...args: unknown[]) => void;
+
+function getElectronAppListener(event: string): Listener {
+  const callback = vi.mocked(app.on).mock.calls.find(([mEvent]) => mEvent === event)?.[1];
+  assert(callback, `cannot find listener for event ${event}`);
+  return callback;
+}
+
+describe('before-quit container disposal', () => {
+  test('should call unbindAll on the container when before-quit is emitted', () => {
+    const beforeQuitCallback = getElectronAppListener('before-quit');
+
+    const unbindAllMock = vi.fn().mockResolvedValue(undefined);
+    pluginSystem.setContainer({ unbindAll: unbindAllMock } as unknown as InversifyContainer);
+
+    beforeQuitCallback();
+
+    expect(unbindAllMock).toHaveBeenCalled();
+  });
+
+  test('should log error if unbindAll throws', () => {
+    const beforeQuitCallback = getElectronAppListener('before-quit');
+    const error = new Error('unbind failed');
+    pluginSystem.setContainer({
+      unbindAll: vi.fn().mockImplementation(() => {
+        throw error;
+      }),
+    } as unknown as InversifyContainer);
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    beforeQuitCallback();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('[PluginSystem] error during before-quit handling:', error);
+  });
+
+  test('should not throw when container is undefined', () => {
+    const beforeQuitCallback = getElectronAppListener('before-quit');
+
+    expect(() => beforeQuitCallback()).not.toThrow();
   });
 });
 
