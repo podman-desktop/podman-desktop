@@ -490,6 +490,7 @@ export class ContainerProviderRegistry {
         Id: secret.ID,
         CreatedAt: secret.CreatedAt,
         UpdatedAt: secret.UpdatedAt,
+        Labels: secret.Spec?.Labels,
       };
     } catch (error) {
       telemetryOptions = { error: error };
@@ -543,7 +544,6 @@ export class ContainerProviderRegistry {
             CreatedAt: secret.CreatedAt,
             UpdatedAt: secret.UpdatedAt,
             Labels: secret.Spec?.Labels,
-            SecretData: undefined, // do not include secret when listing
           }));
         } catch (error) {
           this.notifyConsole(`error in engine ${provider.name} ${error}`);
