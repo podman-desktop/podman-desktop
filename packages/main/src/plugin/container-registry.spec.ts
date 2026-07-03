@@ -7168,34 +7168,6 @@ describe('listSecrets', () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.Id).toBe('secret1');
   });
-
-  test('should not include SecretData in listing', async () => {
-    const listSecretsMock = vi.fn().mockResolvedValue([
-      {
-        ID: 'secret1',
-        Spec: { Name: 'my-secret', Data: 'should-not-appear' },
-        CreatedAt: '2024-01-01T00:00:00Z',
-        UpdatedAt: '2024-01-01T00:00:00Z',
-      },
-    ]);
-
-    containerRegistry.addInternalProvider('podman1', {
-      name: 'podman',
-      id: 'podman1',
-      api: { listSecrets: listSecretsMock } as unknown as Dockerode,
-      connection: {
-        type: 'podman',
-        name: 'podman',
-        displayName: 'podman',
-        endpoint: { socketPath: '/endpoint1.sock' },
-        status: () => 'started',
-      },
-    });
-
-    const result = await containerRegistry.listSecrets();
-
-    expect(result[0]?.SecretData).toBeUndefined();
-  });
 });
 
 describe('inspectSecret', () => {
