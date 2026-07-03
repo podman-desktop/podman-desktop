@@ -20,17 +20,12 @@ import { rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { ContainerState, ImageState, ResourceElementState } from '/@/model/core/states';
+import { ContainerState, ImageState } from '/@/model/core/states';
 import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { ContainersPage } from '/@/model/pages/containers-page';
 import { ImageDetailsPage } from '/@/model/pages/image-details-page';
-import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
-import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
-import { ResourcesPage } from '/@/model/pages/resources-page';
-import { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage } from '/@/utility/operations';
-import { isLinux } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
@@ -39,9 +34,6 @@ const containerToRun = 'alpine-container';
 const containerList = ['first', 'second', 'third'];
 const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
-const PODMAN_MACHINE_NAME = 'podman-machine-default';
-const PODMAN_MACHINE_VISIBLE_NAME = 'Podman Machine';
-const RESOURCE_NAME = 'podman';
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   test.setTimeout(180_000);
@@ -49,34 +41,6 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('containers-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
-
-  // On Windows, stop and restart the machine via the UI to ensure a healthy socket connection
-  if (!isLinux) {
-    const navigationBar = new NavigationBar(page);
-    const settingsBar = await navigationBar.openSettings();
-    await settingsBar.resourcesTab.click();
-
-    const resourcesPage = new ResourcesPage(page);
-    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
-
-    const resourcesPodmanConnections = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-    await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: 20_000 });
-    await playExpect(resourcesPodmanConnections.resourceElementDetailsButton).toBeVisible();
-    await resourcesPodmanConnections.resourceElementDetailsButton.click();
-
-    const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_VISIBLE_NAME);
-    await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled({ timeout: 30_000 });
-    await podmanMachineDetails.podmanMachineStopButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: 60_000,
-    });
-
-    await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
-    await podmanMachineDetails.podmanMachineStartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: 90_000,
-    });
-  }
 
   try {
     await deleteContainer(page, containerToRun);
