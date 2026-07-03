@@ -317,8 +317,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/extension-api
       js-yaml:
-        specifier: ^5.2.0
-        version: 5.2.0
+        specifier: ^5.2.1
+        version: 5.2.1
     devDependencies:
       adm-zip:
         specifier: ^0.5.18
@@ -615,8 +615,8 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(reflect-metadata@0.2.2)
       js-yaml:
-        specifier: ^5.2.0
-        version: 5.2.0
+        specifier: ^5.2.1
+        version: 5.2.1
       minimist:
         specifier: ^1.2.8
         version: 1.2.8
@@ -765,8 +765,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       js-yaml:
-        specifier: ^5.2.0
-        version: 5.2.0
+        specifier: ^5.2.1
+        version: 5.2.1
       search-string:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8809,8 +8809,8 @@ packages:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
-  js-yaml@5.2.0:
-    resolution: {integrity: sha512-YeLUMlvR4Ou1B119LIaM0r65JvbOBooJDc9yEu0dClb/uSC5P4FrLU8OCCz/HXWvtPoIrR0dRzABTjo1sTN9Bw==}
+  js-yaml@5.2.1:
+    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
     hasBin: true
 
   jsbn@0.1.1:
@@ -21983,7 +21983,7 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js-yaml@5.2.0:
+  js-yaml@5.2.1:
     dependencies:
       argparse: 2.0.1
 
