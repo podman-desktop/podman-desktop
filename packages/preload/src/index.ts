@@ -296,12 +296,9 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:removeSecret', engineId, secretId);
   });
 
-  contextBridge.exposeInMainWorld(
-    'inspectSecret',
-    async (engineId: string, secretId: string, options?: { showsecret: boolean }): Promise<SecretInfo> => {
-      return ipcInvoke('container-provider-registry:inspectSecret', engineId, secretId, options);
-    },
-  );
+  contextBridge.exposeInMainWorld('inspectSecret', async (engineId: string, secretId: string): Promise<SecretInfo> => {
+    return ipcInvoke('container-provider-registry:inspectSecret', engineId, secretId);
+  });
 
   contextBridge.exposeInMainWorld('createSecret', async (options: SecretCreateOptions): Promise<SecretCreateResult> => {
     return ipcInvoke('container-provider-registry:createSecret', options);

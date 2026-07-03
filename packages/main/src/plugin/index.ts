@@ -891,8 +891,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'container-provider-registry:inspectSecret',
-      async (_listener, engineId: string, secretId: string, options?: { showsecret: boolean }): Promise<SecretInfo> => {
-        return containerProviderRegistry.inspectSecret(engineId, secretId, options);
+      async (_listener, engineId: string, secretId: string): Promise<SecretInfo> => {
+        return containerProviderRegistry.inspectSecret(engineId, secretId);
       },
     );
 

@@ -76,7 +76,7 @@ import type {
 } from '@podman-desktop/core-api/libpod';
 import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
-import type { ContainerAttachOptions, ImageBuildOptions, Secret } from 'dockerode';
+import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
@@ -473,44 +473,29 @@ export class ContainerProviderRegistry {
     }
   }
 
-  async inspectSecret(engineId: string, secretId: string, options?: { showsecret?: boolean }): Promise<SecretInfo> {
+  async inspectSecret(engineId: string, secretId: string): Promise<SecretInfo> {
     let telemetryOptions = {};
     try {
       const engine = this.internalProviders.get(engineId);
-      let secret: Secret & { SecretData?: string };
-      if (engine?.libpodApi) {
-        secret = await engine.libpodApi.inspectSecret(secretId, options);
-      } else if (engine?.api) {
-        secret = await engine.api.getSecret(secretId).inspect();
-      } else {
+      if (!engine?.api) {
         throw new Error(`internal providers with engineId ${engineId} has no api`);
       }
-
-      let secretData: string | undefined = undefined;
-      if ('SecretData' in secret && typeof secret['SecretData'] === 'string') {
-        secretData = secret['SecretData'];
-      } else if (secret.Spec?.Data && typeof secret.Spec.Data === 'string') {
-        secretData = secret.Spec.Data;
-      }
+      const secret = await engine.api.getSecret(secretId).inspect();
 
       return {
         engineName: engine.name,
         engineId: engine.id,
         engineType: engine.connection.type,
-        Name:
-          !!secret.Spec && 'Name' in secret.Spec && typeof secret.Spec['Name'] === 'string'
-            ? secret.Spec['Name']
-            : secret.ID,
+        Name: secret.Spec?.Name ?? secret.ID,
         Id: secret.ID,
         CreatedAt: secret.CreatedAt,
         UpdatedAt: secret.UpdatedAt,
-        SecretData: secretData,
       };
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
     } finally {
-      this.telemetryService.track('removeSecret', telemetryOptions);
+      this.telemetryService.track('inspectSecret', telemetryOptions);
     }
   }
 

@@ -23,7 +23,6 @@ export interface SecretInfo {
   engineType: 'podman' | 'docker';
   Id: string;
   Name: string;
-  SecretData?: string;
   CreatedAt?: string; // datetime
   UpdatedAt?: string; // datetime
 }
