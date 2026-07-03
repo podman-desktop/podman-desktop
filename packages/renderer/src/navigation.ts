@@ -166,5 +166,8 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.VM_CONNECTION:
       router.goto(`/preferences/vm-connection/${request.parameters.provider}/${request.parameters.name}/terminal`);
       break;
+    case NavigationPage.SECRETS:
+      router.goto(`/secrets`);
+      break;
   }
 };

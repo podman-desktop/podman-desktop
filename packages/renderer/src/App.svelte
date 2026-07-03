@@ -8,6 +8,7 @@ import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
+import SecretsList from '/@/lib/secrets/SecretsList.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
@@ -18,7 +19,7 @@ import Appearance from './lib/appearance/Appearance.svelte';
 import ComposeDetails from './lib/compose/ComposeDetails.svelte';
 import ConfigMapDetails from './lib/configmaps-secrets/ConfigMapDetails.svelte';
 import ConfigMapSecretList from './lib/configmaps-secrets/ConfigMapSecretList.svelte';
-import SecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
+import KubernetesSecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
 import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
@@ -304,7 +305,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/pod-create-from-containers" breadcrumb="Create Pod">
           <PodCreateFromContainers />
         </Route>
-        
+
         <Route path="/volumes/*" breadcrumb="Volumes" navigationHint="root" firstmatch>
           <Route path="/" breadcrumb="Volumes" navigationHint="root">
             <VolumesList />
@@ -315,6 +316,18 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
             <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
           </Route>
+        </Route>
+
+        <!--- secrets -->
+        <Route path="/secrets" breadcrumb="Secrets" navigationHint="root">
+          <SecretsList />
+        </Route>
+
+        <Route path="/networks" breadcrumb="Networks" navigationHint="root">
+          <NetworksList />
+        </Route>
+        <Route path="/networks/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
+          <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
@@ -410,7 +423,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             breadcrumb="Secret Details"
             let:meta
             navigationHint="details">
-            <SecretDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
+            <KubernetesSecretDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route
             path="/kubernetes/ingressesRoutes/route/:name/:namespace/*"
