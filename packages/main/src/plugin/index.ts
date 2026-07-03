@@ -112,6 +112,9 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
@@ -874,6 +877,31 @@ export class PluginSystem {
     this.ipcHandle('container-provider-registry:listContainers', async (): Promise<ContainerInfo[]> => {
       return containerProviderRegistry.listContainers();
     });
+
+    this.ipcHandle('container-provider-registry:listSecrets', async (): Promise<Array<SecretInfo>> => {
+      return containerProviderRegistry.listSecrets();
+    });
+
+    this.ipcHandle(
+      'container-provider-registry:removeSecret',
+      async (_listener, engineId: string, secretId: string): Promise<void> => {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:inspectSecret',
+      async (_listener, engineId: string, secretId: string): Promise<SecretInfo> => {
+        return containerProviderRegistry.inspectSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:createSecret',
+      async (_listener, options: SecretCreateOptions): Promise<SecretCreateResult> => {
+        return containerProviderRegistry.createSecret(options);
+      },
+    );
 
     this.ipcHandle(
       'container-provider-registry:listSimpleContainersByLabel',

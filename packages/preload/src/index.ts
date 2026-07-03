@@ -116,6 +116,9 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   SystemOverviewStatusInfo,
@@ -283,6 +286,22 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
+  });
+
+  contextBridge.exposeInMainWorld('listSecrets', async (): Promise<SecretInfo[]> => {
+    return ipcInvoke('container-provider-registry:listSecrets');
+  });
+
+  contextBridge.exposeInMainWorld('removeSecret', async (engineId: string, secretId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:removeSecret', engineId, secretId);
+  });
+
+  contextBridge.exposeInMainWorld('inspectSecret', async (engineId: string, secretId: string): Promise<SecretInfo> => {
+    return ipcInvoke('container-provider-registry:inspectSecret', engineId, secretId);
+  });
+
+  contextBridge.exposeInMainWorld('createSecret', async (options: SecretCreateOptions): Promise<SecretCreateResult> => {
+    return ipcInvoke('container-provider-registry:createSecret', options);
   });
 
   contextBridge.exposeInMainWorld(
