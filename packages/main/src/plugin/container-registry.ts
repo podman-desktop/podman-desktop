@@ -54,6 +54,9 @@ import type {
   PodmanListImagesOptions,
   ProviderContainerConnectionInfo,
   PullEvent,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
@@ -234,6 +237,8 @@ export class ContainerProviderRegistry {
         this.apiSender.send('volume-event');
       } else if (jsonEvent?.Type === 'network') {
         this.apiSender.send('network-event');
+      } else if (jsonEvent?.Type === 'secret') {
+        this.apiSender.send('secret-event');
       } else if (status === 'remove' && jsonEvent?.Type === 'container') {
         this.apiSender.send('container-removed-event', id);
       } else if (status === 'pull' && jsonEvent?.Type === 'image') {
@@ -439,6 +444,120 @@ export class ContainerProviderRegistry {
   notifyConsole(message: string): void {
     if (this.notify) {
       console.log(message);
+    }
+  }
+
+  async createSecret(options: SecretCreateOptions): Promise<SecretCreateResult> {
+    if (!options.selectedProvider) throw new Error('cannot create secret without selected provider');
+
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const provider = this.getMatchingContainerProvider(options.selectedProvider);
+      if (!provider.api) throw new Error(`provider ${provider.name} has no api`);
+      const { id } = await provider.api.createSecret({
+        // The data need to be encoded in base64 url safe
+        // ref https://docs.podman.io/en/latest/_static/api.html?version=latest#tag/secrets-(compat)/operation/SecretCreate
+        Data: Buffer.from(options.data).toString('base64'),
+        Name: options.name,
+        Labels: options.labels,
+      });
+      return {
+        id,
+        engineId: provider.id,
+      };
+    } catch (error: unknown) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('createSecret', telemetryOptions);
+    }
+  }
+
+  async inspectSecret(engineId: string, secretId: string): Promise<SecretInfo> {
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const engine = this.internalProviders.get(engineId);
+      if (!engine?.api) {
+        throw new Error(`internal providers with engineId ${engineId} has no api`);
+      }
+      const secret = await engine.api.getSecret(secretId).inspect();
+
+      return {
+        engineName: engine.name,
+        engineId: engine.id,
+        engineType: engine.connection.type,
+        Name: secret.Spec?.Name ?? secret.ID,
+        Id: secret.ID,
+        CreatedAt: secret.CreatedAt,
+        UpdatedAt: secret.UpdatedAt,
+        Labels: secret.Spec?.Labels,
+      };
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('inspectSecret', telemetryOptions);
+    }
+  }
+
+  async removeSecret(engineId: string, secretId: string): Promise<void> {
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const engine = this.internalProviders.get(engineId);
+      if (engine?.libpodApi) {
+        // we cannot use the /secrets (compact) api to retreive secret with podman
+        // endpoint is malformed
+        // https://github.com/containers/podman/issues/27548
+        await engine.libpodApi.removeSecret(secretId);
+      } else if (engine?.api) {
+        await engine.api.getSecret(secretId).remove();
+      } else {
+        throw new Error(`internal providers with engineId ${engineId} has no api`);
+      }
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('removeSecret', telemetryOptions);
+    }
+  }
+
+  async listSecrets(): Promise<Array<SecretInfo>> {
+    const telemetryOptions: Record<string, unknown> = {};
+    const providers: Array<InternalContainerProvider> = Array.from(this.internalProviders.values());
+
+    try {
+      const all: SecretInfo[][] = await Promise.all(
+        Array.from(providers).map(async provider => {
+          try {
+            if (!provider.api) {
+              return [];
+            }
+            const secrets = await provider.api.listSecrets();
+            return secrets.map(secret => ({
+              engineName: provider.name,
+              engineId: provider.id,
+              engineType: provider.connection.type,
+              Name: secret.Spec?.Name ?? secret.ID,
+              Id: secret.ID,
+              CreatedAt: secret.CreatedAt,
+              UpdatedAt: secret.UpdatedAt,
+              Labels: secret.Spec?.Labels,
+            }));
+          } catch (error) {
+            this.notifyConsole(`error in engine ${provider.name} ${error}`);
+            return [];
+          }
+        }),
+      );
+      const secrets = all.flat();
+      telemetryOptions['total'] = secrets.length;
+      return secrets;
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('listSecrets', telemetryOptions);
     }
   }
 
