@@ -1517,13 +1517,17 @@ test('ensure running and not starting machine reports ready provider', async () 
   expect(extension.podmanMachinesStatuses.get('podman-machine-default')).toBe('started');
 });
 
-test('ensure started machine reports configuration', async () => {
+test('ensure started machine reports configuration with SSH-based memory', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
-      new Promise<extensionApi.RunResult>(resolve => {
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
         if (args?.[0] === 'machine' && args?.[1] === 'list') {
           resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'ssh') {
+          resolve({
+            stdout: 'MemTotal:        1023437 kB\nMemFree:          450000 kB\nMemAvailable:      800000 kB\n',
+          } as extensionApi.RunResult);
         } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
           resolve({
             stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: false }]),
@@ -1534,6 +1538,8 @@ test('ensure started machine reports configuration', async () => {
           } as extensionApi.RunResult);
         } else if (args?.[0] === '--version') {
           resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
+        } else {
+          reject(new Error(`unexpected exec call: ${args?.join(' ')}`));
         }
       }),
   );
@@ -1552,9 +1558,88 @@ test('ensure started machine reports configuration', async () => {
   expect(config.update).toBeCalledWith('machine.memory', Number(fakeMachineJSON[0].Memory));
   expect(config.update).toBeCalledWith('machine.diskSize', Number(fakeMachineJSON[0].DiskSize));
   expect(config.update).toBeCalledWith('machine.cpusUsage', 1);
+  // MemAvailable=800000 kB = 819200000 bytes, memory=1048000000, used=1048000000-819200000=228800000
+  // usage% = 228800000/1048000000*100 ≈ 21.83
+  expect(config.update).toBeCalledWith('machine.memoryUsage', expect.closeTo(21.83, 0));
+  expect(config.update).toBeCalledWith('machine.diskSizeUsage', 20);
+  expect(config.update).toBeCalledWith('machine.rootful', false);
+});
+
+test('ensure started machine falls back to API memoryUsed when SSH fails', async () => {
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'ssh') {
+          reject(new Error('SSH connection refused'));
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: false }]),
+          } as unknown as extensionApi.RunResult);
+        } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === '--version') {
+          resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
+        } else {
+          reject(new Error(`unexpected exec call: ${args?.join(' ')}`));
+        }
+      }),
+  );
+
+  await extension.updateMachines(provider, podmanConfiguration);
+  (extensionApi.containerEngine.info as Mock).mockResolvedValue({
+    cpus: 2,
+    cpuIdle: 99,
+    memory: 1048000000,
+    memoryUsed: 524000000,
+    diskSize: 250000000000,
+    diskUsed: 50000000000,
+  } as ContainerEngineInfo);
+  await extension.updateMachines(provider, podmanConfiguration);
+  expect(config.update).toBeCalledWith('machine.cpus', fakeMachineJSON[0].CPUs);
+  expect(config.update).toBeCalledWith('machine.memory', Number(fakeMachineJSON[0].Memory));
+  expect(config.update).toBeCalledWith('machine.diskSize', Number(fakeMachineJSON[0].DiskSize));
+  expect(config.update).toBeCalledWith('machine.cpusUsage', 1);
+  // Falls back to API-provided memoryUsed: 524000000/1048000000*100 = 50
   expect(config.update).toBeCalledWith('machine.memoryUsage', 50);
   expect(config.update).toBeCalledWith('machine.diskSizeUsage', 20);
   expect(config.update).toBeCalledWith('machine.rootful', false);
+});
+
+test('getMemoryUsedFromMemAvailable parses MemAvailable correctly', async () => {
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+    stdout:
+      'MemTotal:        5603264 kB\nMemFree:         1953732 kB\nMemAvailable:    4509124 kB\nBuffers:          102400 kB\nCached:          2500000 kB\n',
+    stderr: '',
+    command: 'podman',
+  } as extensionApi.RunResult);
+
+  const result = await extension.getMemoryUsedFromMemAvailable('test-machine', 'libkrun', 5737742336);
+  // MemAvailable = 4509124 kB = 4617342976 bytes
+  // used = 5737742336 - 4617342976 = 1120399360
+  expect(result).toBe(5737742336 - 4509124 * 1024);
+});
+
+test('getMemoryUsedFromMemAvailable returns undefined on SSH failure', async () => {
+  vi.spyOn(extensionApi.process, 'exec').mockRejectedValue(new Error('connection refused'));
+
+  const result = await extension.getMemoryUsedFromMemAvailable('test-machine', 'libkrun', 5737742336);
+  expect(result).toBeUndefined();
+});
+
+test('getMemoryUsedFromMemAvailable returns undefined if MemAvailable not in output', async () => {
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+    stdout: 'MemTotal:        5603264 kB\nMemFree:         1953732 kB\n',
+    stderr: '',
+    command: 'podman',
+  } as extensionApi.RunResult);
+
+  const result = await extension.getMemoryUsedFromMemAvailable('test-machine', 'libkrun', 5737742336);
+  expect(result).toBeUndefined();
 });
 
 test('ensure stopped machine reports configuration', async () => {

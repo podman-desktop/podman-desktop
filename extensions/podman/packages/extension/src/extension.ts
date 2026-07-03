@@ -226,6 +226,14 @@ async function doUpdateMachines(
       }
     }
 
+    let memoryUsed = machineInfo?.memoryUsed;
+    if (running && machineInfo?.memory !== undefined && memoryUsed !== undefined) {
+      const corrected = await getMemoryUsedFromMemAvailable(machine.Name, machine.VMType, machineInfo.memory);
+      if (corrected !== undefined) {
+        memoryUsed = corrected;
+      }
+    }
+
     const previousStatus = podmanMachinesStatuses.get(machine.Name);
     if (previousStatus !== status) {
       // notify status change
@@ -246,8 +254,8 @@ async function doUpdateMachines(
           ? (machineInfo?.diskUsed * 100) / machineInfo?.diskSize
           : 0,
       memoryUsage:
-        machineInfo?.memory !== undefined && machineInfo?.memoryUsed !== undefined && machineInfo?.memoryUsed > 0
-          ? (machineInfo?.memoryUsed * 100) / machineInfo?.memory
+        machineInfo?.memory !== undefined && memoryUsed !== undefined && memoryUsed > 0
+          ? (memoryUsed * 100) / machineInfo?.memory
           : 0,
       vmType: machine.VMType,
       port: machine.Port,
@@ -1775,6 +1783,30 @@ export async function calcPodmanMachineSetting(): Promise<void> {
   extensionApi.context.setValue(PODMAN_MACHINE_CPU_SUPPORTED_KEY, cpuSupported);
   extensionApi.context.setValue(PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, memorySupported);
   extensionApi.context.setValue(PODMAN_MACHINE_DISK_SUPPORTED_KEY, diskSupported);
+}
+
+/**
+ * Reads MemAvailable from /proc/meminfo via SSH to compute accurate memory usage.
+ * Returns used bytes (memTotal - memAvailable) or undefined if unavailable.
+ * This works around the Podman API only exposing memFree (which excludes reclaimable buff/cache).
+ * Related issue: https://github.com/podman-desktop/podman-desktop/issues/17488
+ */
+export async function getMemoryUsedFromMemAvailable(
+  machineName: string,
+  vmType: string,
+  memTotal: number,
+): Promise<number | undefined> {
+  try {
+    const { stdout } = await execPodman(['machine', 'ssh', machineName, 'cat /proc/meminfo'], vmType);
+    const match = /MemAvailable:\s+(\d+)\s+kB/.exec(stdout);
+    if (match) {
+      const memAvailableBytes = parseInt(match[1], 10) * 1024;
+      return memTotal - memAvailableBytes;
+    }
+  } catch {
+    // SSH failed — fall back to the API-provided memoryUsed (memTotal - memFree)
+  }
+  return undefined;
 }
 
 // Function that checks to see if the default machine is running and return a string

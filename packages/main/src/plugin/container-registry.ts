@@ -2825,7 +2825,10 @@ export class ContainerProviderRegistry {
         cpus: podmanInfo.host.cpus,
         cpuIdle: podmanInfo.host.cpuUtilization.idlePercent,
         memory: podmanInfo.host.memTotal,
-        memoryUsed: podmanInfo.host.memTotal - podmanInfo.host.memFree,
+        memoryUsed:
+          podmanInfo.host.memAvailable !== undefined
+            ? podmanInfo.host.memTotal - podmanInfo.host.memAvailable
+            : podmanInfo.host.memTotal - podmanInfo.host.memFree,
         diskSize: podmanInfo.store.graphRootAllocated,
         diskUsed: podmanInfo.store.graphRootUsed,
       };
