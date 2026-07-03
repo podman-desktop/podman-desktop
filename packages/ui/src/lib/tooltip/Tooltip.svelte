@@ -15,6 +15,15 @@
 }
 </style>
 
+<script module lang="ts">
+let tooltipIdCounter = 0;
+
+function nextTooltipId(): string {
+  tooltipIdCounter += 1;
+  return `pd-tooltip-${tooltipIdCounter}`;
+}
+</script>
+
 <script lang="ts">
 import type { Placement } from '@floating-ui/dom';
 import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
@@ -54,7 +63,7 @@ let {
   children,
 }: Props = $props();
 
-const tooltipId = `pd-tooltip-${crypto.randomUUID()}`;
+const tooltipId = nextTooltipId();
 
 let referenceElement: HTMLElement | undefined = $state(undefined);
 let tooltipElement: HTMLElement | undefined = $state(undefined);

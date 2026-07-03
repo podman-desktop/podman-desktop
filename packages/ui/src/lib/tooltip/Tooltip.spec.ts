@@ -387,6 +387,21 @@ describe('Tooltip', () => {
     });
   });
 
+  test('each tooltip instance gets a unique id', async () => {
+    render(TooltipTestComponent, { tip: 'first tooltip' });
+    render(TooltipTestComponent, { tip: 'second tooltip' });
+
+    const slots = screen.getAllByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(slots[0]);
+    await fireEvent.mouseEnter(slots[1]);
+
+    await waitFor(() => {
+      const tooltips = screen.getAllByRole('tooltip');
+      expect(tooltips).toHaveLength(2);
+      expect(tooltips[0].id).not.toBe(tooltips[1].id);
+    });
+  });
+
   test('trigger aria-describedby is removed when tooltip hides', async () => {
     render(TooltipTestComponent, { tip: 'hide tooltip' });
 
