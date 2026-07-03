@@ -450,7 +450,7 @@ export class ContainerProviderRegistry {
   async createSecret(options: SecretCreateOptions): Promise<SecretCreateResult> {
     if (!options.selectedProvider) throw new Error('cannot create secret without selected provider');
 
-    let telemetryOptions = {};
+    const telemetryOptions: Record<string, unknown> = {};
     try {
       const provider = this.getMatchingContainerProvider(options.selectedProvider);
       if (!provider.api) throw new Error(`provider ${provider.name} has no api`);
@@ -466,7 +466,7 @@ export class ContainerProviderRegistry {
         engineId: provider.id,
       };
     } catch (error: unknown) {
-      telemetryOptions = { error: error };
+      telemetryOptions['error'] = error;
       throw error;
     } finally {
       this.telemetryService.track('createSecret', telemetryOptions);
@@ -474,7 +474,7 @@ export class ContainerProviderRegistry {
   }
 
   async inspectSecret(engineId: string, secretId: string): Promise<SecretInfo> {
-    let telemetryOptions = {};
+    const telemetryOptions: Record<string, unknown> = {};
     try {
       const engine = this.internalProviders.get(engineId);
       if (!engine?.api) {
@@ -493,7 +493,7 @@ export class ContainerProviderRegistry {
         Labels: secret.Spec?.Labels,
       };
     } catch (error) {
-      telemetryOptions = { error: error };
+      telemetryOptions['error'] = error;
       throw error;
     } finally {
       this.telemetryService.track('inspectSecret', telemetryOptions);
@@ -501,7 +501,7 @@ export class ContainerProviderRegistry {
   }
 
   async removeSecret(engineId: string, secretId: string): Promise<void> {
-    let telemetryOptions = {};
+    const telemetryOptions: Record<string, unknown> = {};
     try {
       const engine = this.internalProviders.get(engineId);
       if (engine?.libpodApi) {
@@ -515,7 +515,7 @@ export class ContainerProviderRegistry {
         throw new Error(`internal providers with engineId ${engineId} has no api`);
       }
     } catch (error) {
-      telemetryOptions = { error: error };
+      telemetryOptions['error'] = error;
       throw error;
     } finally {
       this.telemetryService.track('removeSecret', telemetryOptions);
@@ -523,35 +523,42 @@ export class ContainerProviderRegistry {
   }
 
   async listSecrets(): Promise<Array<SecretInfo>> {
+    const telemetryOptions: Record<string, unknown> = {};
     const providers: Array<InternalContainerProvider> = Array.from(this.internalProviders.values());
 
-    const all: SecretInfo[][] = await Promise.all(
-      Array.from(providers).map(async provider => {
-        try {
-          if (!provider.api) {
+    try {
+      const all: SecretInfo[][] = await Promise.all(
+        Array.from(providers).map(async provider => {
+          try {
+            if (!provider.api) {
+              return [];
+            }
+            const secrets = await provider.api.listSecrets();
+            return secrets.map(secret => ({
+              engineName: provider.name,
+              engineId: provider.id,
+              engineType: provider.connection.type,
+              Name: secret.Spec?.Name ?? secret.ID,
+              Id: secret.ID,
+              CreatedAt: secret.CreatedAt,
+              UpdatedAt: secret.UpdatedAt,
+              Labels: secret.Spec?.Labels,
+            }));
+          } catch (error) {
+            this.notifyConsole(`error in engine ${provider.name} ${error}`);
             return [];
           }
-          const secrets = await provider.api.listSecrets();
-          return secrets.map(secret => ({
-            engineName: provider.name,
-            engineId: provider.id,
-            engineType: provider.connection.type,
-            Name:
-              !!secret.Spec && 'Name' in secret.Spec && typeof secret.Spec['Name'] === 'string'
-                ? secret.Spec['Name']
-                : secret.ID,
-            Id: secret.ID,
-            CreatedAt: secret.CreatedAt,
-            UpdatedAt: secret.UpdatedAt,
-            Labels: secret.Spec?.Labels,
-          }));
-        } catch (error) {
-          this.notifyConsole(`error in engine ${provider.name} ${error}`);
-          return [];
-        }
-      }),
-    );
-    return all.flat();
+        }),
+      );
+      const secrets = all.flat();
+      telemetryOptions['total'] = secrets.length;
+      return secrets;
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('listSecrets', telemetryOptions);
+    }
   }
 
   // do not use inspect information
