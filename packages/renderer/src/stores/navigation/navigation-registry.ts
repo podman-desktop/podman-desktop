@@ -23,7 +23,6 @@ import type { IconSize } from 'svelte-fa';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { EventStore } from '/@/stores/event-store';
-import { createNavigationSecretEntry } from '/@/stores/navigation/navigation-registry-secret.svelte';
 
 import { createNavigationContainerEntry } from './navigation-registry-container.svelte';
 import { createNavigationExtensionEntry, createNavigationExtensionGroup } from './navigation-registry-extension.svelte';
@@ -31,6 +30,7 @@ import { createNavigationImageEntry } from './navigation-registry-image.svelte';
 import { createNavigationKubernetesGroup } from './navigation-registry-kubernetes.svelte';
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
+import { createNavigationSecretEntry } from './navigation-registry-secret.svelte';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
 
 export interface NavigationRegistryEntry {
