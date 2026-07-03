@@ -547,3 +547,29 @@ describe('kube play', () => {
     expect(second.headers.get('Content-Type')).toBe('application/yaml');
   });
 });
+
+describe('secrets', () => {
+  test('removeSecret should call DELETE on libpod secrets endpoint', async () => {
+    const deleteHandler = vi.fn().mockReturnValue(HttpResponse.text('', { status: 204 }));
+
+    server = setupServer(http.delete('http://localhost/v4.2.0/libpod/secrets/secret123', deleteHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await (api as unknown as LibPod).removeSecret('secret123');
+
+    expect(deleteHandler).toHaveBeenCalledOnce();
+  });
+
+  test('removeSecret should reject when server returns an error', async () => {
+    server = setupServer(
+      http.delete('http://localhost/v4.2.0/libpod/secrets/secret123', () =>
+        HttpResponse.json({ message: 'no such secret' }, { status: 404 }),
+      ),
+    );
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await expect((api as unknown as LibPod).removeSecret('secret123')).rejects.toThrow();
+  });
+});

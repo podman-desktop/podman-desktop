@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2026 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Guide } from '@podman-desktop/core-api/learning-center';
-
-import { rotateArray } from '/@/plugin/util/array-mutation.js';
-import product from '/@product.json' with { type: 'json' };
-
-export function downloadGuideList(): Guide[] {
-  const guides = product.learningCenter.guides;
-  if (guides.length <= 1) {
-    return guides;
+/**
+ * Rotates an array so that the element at {@link startIndex} becomes the first element.
+ * Returns a new array without mutating the original.
+ */
+export function rotateArray<T>(items: T[], startIndex: number): T[] {
+  if (items.length <= 1) {
+    return items;
   }
-
-  const startingIndex = new Date().getHours() % guides.length;
-  return rotateArray(guides, startingIndex);
+  const normalizedIndex = ((startIndex % items.length) + items.length) % items.length;
+  return [...items.slice(normalizedIndex), ...items.slice(0, normalizedIndex)];
 }
