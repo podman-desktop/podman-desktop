@@ -1548,6 +1548,18 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async unpausePod(engineId: string, podId: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingPodmanEngineLibPod(engineId).unpausePod(podId);
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpausePod', telemetryOptions);
+    }
+  }
+
   async createPod(podOptions: PodCreateOptions): Promise<{ engineId: string; Id: string }> {
     let telemetryOptions = {};
     try {
