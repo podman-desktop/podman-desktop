@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => ({
   SubmenuNavigation: vi.fn(),
   DeploymentsList: vi.fn(),
   KubernetesDashboard: vi.fn(),
+  SecretsList: vi.fn(),
 }));
 
 vi.mock(import('./lib/dashboard/DashboardPage.svelte'), () => ({
@@ -66,6 +67,10 @@ vi.mock(import('./lib/kube/KubernetesDashboard.svelte'), () => ({
 
 vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
   default: mocks.DeploymentsList,
+}));
+
+vi.mock(import('./lib/secrets/SecretsList.svelte'), () => ({
+  default: mocks.SecretsList,
 }));
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
@@ -173,6 +178,15 @@ test('displays kubernetes empty screen if no current context, without Kubernetes
   expect(mocks.KubernetesDashboard).toHaveBeenCalled();
   expect(mocks.DeploymentsList).not.toHaveBeenCalled();
   expect(mocks.SubmenuNavigation).not.toHaveBeenCalled();
+});
+
+test('test /secrets route', async () => {
+  render(App);
+  expect(mocks.SecretsList).not.toHaveBeenCalled();
+  expect(mocks.DashboardPage).toHaveBeenCalled();
+  router.goto('/secrets');
+  await tick();
+  expect(mocks.SecretsList).toHaveBeenCalled();
 });
 
 test('receive show-release-notes event from main', async () => {
