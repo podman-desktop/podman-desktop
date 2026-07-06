@@ -38,7 +38,7 @@
     "@types/mustache": "^4.2.6",
     "mustache": "^4.2.0",
     "rimraf": "^6.0.1",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.0",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
