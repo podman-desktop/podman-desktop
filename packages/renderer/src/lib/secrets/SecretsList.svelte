@@ -22,9 +22,8 @@ import SecretEmptyScreen from '/@/lib/secrets/components/SecretEmptyScreen.svelt
 import type { SecretInfoUI } from '/@/lib/secrets/SecretInfoUI';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { providerInfos } from '/@/stores/providers';
-import { filtered } from '/@/stores/secrets';
+import { filtered, searchPattern } from '/@/stores/secrets';
 
-let searchTerm = $state('');
 let selectedEnvironment = $state('');
 
 let secrets: Array<SecretInfoUI> = $derived(
@@ -34,11 +33,7 @@ let secrets: Array<SecretInfoUI> = $derived(
       Name: info.Name ?? '<none>',
       selected: false,
     }))
-    .filter(
-      info =>
-        info.Name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedEnvironment ? info.engineId === selectedEnvironment : true),
-    ),
+    .filter(info => (selectedEnvironment ? info.engineId === selectedEnvironment : true)),
 );
 
 let selectedItemsNumber: number = $state(0);
@@ -94,7 +89,7 @@ async function bulkDeleteSecrets(): Promise<void> {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="secrets">
+<NavPage bind:searchTerm={$searchPattern} title="secrets">
   {#snippet bottomAdditionalActions()}
     <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber > 0}
@@ -118,8 +113,8 @@ async function bulkDeleteSecrets(): Promise<void> {
       {#if providerConnections.length === 0}
         <NoContainerEngineEmptyScreen />
       {:else if secrets.length === 0}
-        {#if searchTerm}
-          <FilteredEmptyScreen icon={SecretIcon} kind="secrets" bind:searchTerm={searchTerm} />
+        {#if $searchPattern}
+          <FilteredEmptyScreen icon={SecretIcon} kind="secrets" bind:searchTerm={$searchPattern} />
         {:else}
           <SecretEmptyScreen />
         {/if}
