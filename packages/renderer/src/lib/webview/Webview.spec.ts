@@ -64,14 +64,12 @@ beforeEach(() => {
   (window as any).getWebviewPreloadPath = getWebviewPreloadPathMock;
   (window as any).getWebviewRegistryHttpPort = getWebviewRegistryHttpPortMock;
 
-  (window.events as unknown) = {
-    receive: vi.fn().mockImplementation((channel, func) => {
-      messages.set(channel, func);
-      return {
-        dispose: vi.fn(),
-      };
-    }),
-  };
+  vi.mocked(window.events.receive).mockImplementation((channel, func) => {
+    messages.set(channel, func);
+    return {
+      dispose: vi.fn(),
+    };
+  });
 
   // provide preload path
   getWebviewPreloadPathMock.mockResolvedValue('/path/to/preload');

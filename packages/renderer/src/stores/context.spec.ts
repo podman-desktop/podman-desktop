@@ -24,12 +24,10 @@ import { ContextUI } from '/@/lib/context/context';
 import { setup } from './context';
 
 const contextCollectAllValues = vi.fn();
-const receiveMock = vi.fn();
 const addEventListenerMock = vi.fn();
 
 beforeAll(() => {
   Object.defineProperty(window, 'contextCollectAllValues', { value: contextCollectAllValues });
-  Object.defineProperty(window, 'events', { value: { receive: receiveMock } });
   Object.defineProperty(window, 'addEventListener', { value: addEventListenerMock });
 });
 
@@ -39,13 +37,14 @@ beforeEach(() => {
 });
 
 test('context store values updated on context-value-updated/context-key-removed events', async () => {
-  receiveMock.mockImplementation((msg: string, f: (value: unknown) => void) => {
+  vi.mocked(window.events.receive).mockImplementation((msg, f) => {
     if (msg === 'context-value-updated') {
       setTimeout(() => f({ key: 'c', value: 'three' }), 5);
       setTimeout(() => f({ key: 'b', value: 2 }), 15);
     } else if (msg === 'context-key-removed') {
       setTimeout(() => f({ key: 'a', value: 1 }), 10);
     }
+    return { dispose: vi.fn() };
   });
 
   vi.useFakeTimers();

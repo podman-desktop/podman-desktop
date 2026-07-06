@@ -27,7 +27,6 @@ import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte'
 
 const cleanupProvidersMock = vi.fn();
 
-// fake the window.events object
 beforeAll(() => {
   (window as any).window.cleanupProviders = cleanupProvidersMock;
 });

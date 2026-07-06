@@ -29,12 +29,11 @@ beforeAll(() => {
   Object.defineProperty(window, 'executeCommand', { value: executeCommand });
   executeCommand.mockImplementation(() => {});
 
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      // Cast to function before calling
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    // Cast to function before calling
+    (func as () => void)();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect no ListItemButtonIcon', async () => {
