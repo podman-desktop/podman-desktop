@@ -25,7 +25,7 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
@@ -34,16 +34,6 @@ import { runImageInfo } from '/@/stores/run-image-store';
 import PullImage from './PullImage.svelte';
 
 vi.mock(import('/@/lib/ui/TerminalWindow.svelte'));
-
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-
-  vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
-});
 
 const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
   connectionType: 'container',
@@ -77,6 +67,10 @@ const originalConsoleError = console.error;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    (func as () => void)();
+    return { dispose: vi.fn() };
+  });
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
       return 1000;

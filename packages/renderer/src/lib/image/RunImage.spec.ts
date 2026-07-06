@@ -32,13 +32,11 @@ import { runImageInfo } from '/@/stores/run-image-store';
 
 const originalConsoleDebug = console.debug;
 
-// fake the window.events object
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    (func as () => void)();
+    return { dispose: vi.fn() };
+  });
   vi.mocked(window.listNetworks).mockResolvedValue([]);
   vi.mocked(window.listContainers).mockResolvedValue([]);
   vi.mocked(window.createAndStartContainer).mockResolvedValue({ id: '1234' });

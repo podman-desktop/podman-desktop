@@ -20,7 +20,7 @@
 
 import type { IDisposable } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import {
   extensionDevelopmentFolders,
@@ -34,10 +34,6 @@ const eventEmitter = (message: string, func: (...args: unknown[]) => void): IDis
   callbacks.set(message, func);
   return {} as IDisposable;
 };
-
-beforeAll(() => {
-  Object.defineProperty(window, 'events', { value: { receive: vi.fn() } });
-});
 
 beforeEach(() => {
   vi.restoreAllMocks();
