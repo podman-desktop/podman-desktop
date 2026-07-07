@@ -33,7 +33,7 @@ export class Certificates {
    * Setup all certificates globally depending on the platform.
    */
   async init(): Promise<void> {
-    this.allCertificates = tls.getCACertificates('system');
+    this.allCertificates = [...tls.rootCertificates, ...tls.getCACertificates('system')];
 
     // initialize the certificates globally
     https.globalAgent.options.ca = this.allCertificates;

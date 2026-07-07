@@ -30,6 +30,7 @@ let certificate: Certificates;
 beforeEach(() => {
   vi.resetAllMocks();
   https.globalAgent.options.ca = [];
+  vi.mocked(tls).rootCertificates = ['root cert'];
 
   certificate = new Certificates();
 });
@@ -39,5 +40,5 @@ test('should update globalAgent.options.ca', async () => {
 
   await certificate.init();
 
-  expect(https.globalAgent.options.ca).toEqual(['cert1', 'cert2']);
+  expect(https.globalAgent.options.ca).toEqual(['root cert', 'cert1', 'cert2']);
 });
