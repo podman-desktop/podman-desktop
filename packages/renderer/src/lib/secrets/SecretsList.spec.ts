@@ -20,7 +20,6 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo, SecretInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -79,7 +78,6 @@ async function init(searchTerm?: string): Promise<void> {
   }
 
   render(SecretsList);
-  await tick();
 }
 
 beforeEach(() => {
@@ -116,7 +114,9 @@ test('Expect no container engines being displayed', async () => {
 test('Expect filter empty screen when there are no matches for search term', async () => {
   await init('No match');
 
-  const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+  const filterButton = await vi.waitFor(() => {
+    return screen.getByRole('button', { name: 'Clear filter' });
+  });
   expect(filterButton).toBeInTheDocument();
 });
 
@@ -126,17 +126,14 @@ test('Expect empty page when there are no secrets', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
 
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
+  await waitFor(() => {
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   render(SecretsList);
-  await tick();
-
-  expect(screen.getByText('No secrets')).toBeInTheDocument();
+  await vi.waitFor(() => {
+    expect(screen.getByText('No secrets')).toBeInTheDocument();
+  });
 
   const copyButton = screen.getByRole('button', { name: 'Copy To Clipboard' });
   expect(copyButton).toBeInTheDocument();
@@ -198,18 +195,16 @@ test('Expect environment column sorted by engineName', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
 
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-      expect(get(secretsInfo)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
+  await waitFor(() => {
+    expect(get(providerInfos)).not.toHaveLength(0);
+    expect(get(secretsInfo)).not.toHaveLength(0);
+  });
 
   render(SecretsList);
-  await tick();
 
-  const environment = screen.getByRole('columnheader', { name: 'Environment' });
+  const environment = await vi.waitFor(() => {
+    return screen.getByRole('columnheader', { name: 'Environment' });
+  });
   await fireEvent.click(environment);
 
   const cells = screen.getAllByRole('cell', { name: /my-secret/ });

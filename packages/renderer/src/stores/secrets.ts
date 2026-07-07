@@ -17,9 +17,9 @@
  ***********************************************************************/
 
 import type { SecretInfo } from '@podman-desktop/core-api';
-import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { derived, type Writable, writable } from 'svelte/store';
 
+import SecretIcon from '/@/lib/images/SecretIcon.svelte';
 import { findMatchInLeaves } from '/@/stores/search-util';
 
 import { EventStore } from './event-store';
@@ -52,7 +52,7 @@ export const secretsEventStore = new EventStore<Array<SecretInfo>>(
   windowEvents,
   windowListeners,
   listSecrets,
-  ContainerIcon,
+  SecretIcon,
 );
 secretsEventStore.setupWithDebounce();
 

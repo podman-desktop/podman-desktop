@@ -45,7 +45,7 @@ let nameColumn = new TableColumn<SecretInfoUI>('Name', {
   initialOrder: 'descending',
 });
 
-let createdColumn = new TableColumn<SecretInfoUI, Date | undefined>('CreatedAt', {
+let createdColumn = new TableColumn<SecretInfoUI, Date | undefined>('Created At', {
   renderMapping: (deployment): Date | undefined => (deployment.CreatedAt ? new Date(deployment.CreatedAt) : undefined),
   renderer: TableDurationColumn,
   comparator: (a, b): number => moment(b.CreatedAt).diff(moment(a.CreatedAt)),

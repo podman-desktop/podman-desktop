@@ -185,8 +185,10 @@ test('test /secrets route', async () => {
   expect(mocks.SecretsList).not.toHaveBeenCalled();
   expect(mocks.DashboardPage).toHaveBeenCalled();
   router.goto('/secrets');
-  await tick();
-  expect(mocks.SecretsList).toHaveBeenCalled();
+
+  await vi.waitFor(() => {
+    expect(mocks.SecretsList).toHaveBeenCalled();
+  });
 });
 
 test('receive show-release-notes event from main', async () => {
