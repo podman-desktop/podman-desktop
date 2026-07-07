@@ -50,6 +50,9 @@ export class Certificates {
     return this.allCertificates;
   }
 
+  /**
+   * @deprecated
+   */
   async retrieveCertificates(): Promise<string[]> {
     if (isMac()) {
       return this.retrieveMacOSCertificates();
@@ -63,12 +66,16 @@ export class Certificates {
     return [...tls.rootCertificates];
   }
 
+  /**
+   * @deprecated
+   */
   public extractCertificates(content: string): string[] {
-    // need to create an array of text from the content starting by '-----BEGIN CERTIFICATE-----'
-    // use a regexp
-    return content.split(/(?=-----BEGIN CERTIFICATE-----)/g).filter(c => c.trim().length > 0);
+    return content.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) ?? [];
   }
 
+  /**
+   * @deprecated
+   */
   async retrieveMacOSCertificates(): Promise<string[]> {
     const rootCertificates = await this.getMacOSCertificates(
       '/System/Library/Keychains/SystemRootCertificates.keychain',
@@ -78,6 +85,9 @@ export class Certificates {
   }
 
   // get the certificates from the Windows certificate store
+  /**
+   * @deprecated
+   */
   async retrieveWindowsCertificates(): Promise<string[]> {
     // delegate to the win-ca module
     const winCaRetrieval = new Promise<string[]>(resolve => {
@@ -116,6 +126,9 @@ export class Certificates {
   }
 
   // grab the certificates from the Linux certificate store
+  /**
+   * @deprecated
+   */
   async retrieveLinuxCertificates(): Promise<string[]> {
     // certificates on Linux are stored in /etc/ssl/certs/ folder
     // for example
@@ -139,6 +152,10 @@ export class Certificates {
     return certificates.filter((value, index, self) => self.indexOf(value) === index);
   }
 
+  /**
+   * @deprecated
+   * @param key
+   */
   async getMacOSCertificates(key?: string): Promise<string[]> {
     const command = '/usr/bin/security';
     const spawnArgs = ['find-certificate', '-a', '-p'];
