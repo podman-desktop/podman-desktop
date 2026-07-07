@@ -22,12 +22,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+SCHEMASTORE_ROOT="$(pwd)"
 
 forwarded_args=("$@")
-incoming_file="../schemas/extension-schema.json"
-schema_dir="src/schemas/json"
-catalog_file="src/api/json/catalog.json"
-schema_validation_file="src/schema-validation.jsonc"
+incoming_file="${REPO_ROOT}/schemas/extension-schema.json"
+schema_dir="${SCHEMASTORE_ROOT}/src/schemas/json"
+catalog_file="${SCHEMASTORE_ROOT}/src/api/json/catalog.json"
+schema_validation_file="${SCHEMASTORE_ROOT}/src/schema-validation.jsonc"
 schema_file_name="podman-desktop-extension.json"
 versioned_schema_file_name=""
 
@@ -48,6 +49,8 @@ if [[ -z "$versioned_schema_file_name" ]]; then
   exit 1
 fi
 
+npm install --no-audit --no-fund --ignore-scripts
+
 node --experimental-strip-types "${REPO_ROOT}/scripts/schemastore-sync-extension-schema.ts" \
   --incoming-file "${incoming_file}" \
   --schema-dir "${schema_dir}" \
@@ -55,7 +58,6 @@ node --experimental-strip-types "${REPO_ROOT}/scripts/schemastore-sync-extension
   --schema-validation-file "${schema_validation_file}" \
   --schema-file-name "${schema_file_name}" \
   "${forwarded_args[@]}"
-npm install --no-audit --no-fund --ignore-scripts
 npx prettier \
   --write \
   --config .prettierrc.cjs \
