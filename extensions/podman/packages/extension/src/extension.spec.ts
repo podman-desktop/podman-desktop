@@ -56,6 +56,7 @@ import { PodmanBinary } from '/@/utils/podman-binary';
 import * as extension from './extension';
 import {
   initCheckAndRegisterUpdate,
+  isPodman6OrLater,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
   setWSLEnabled,
@@ -3826,6 +3827,21 @@ describe('monitorProvider', () => {
 
     await vi.runAllTimersAsync();
     expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('isPodman6OrLater', () => {
+  test.for(['5.0.0', '5.4.2', '5.9.9'])('should return false for Podman %s (cert sync command enabled)', version => {
+    expect(isPodman6OrLater(version)).toBe(false);
+  });
+
+  test.for([
+    '6.0.0',
+    '6.1.0',
+    '6.3.2',
+    '7.0.0',
+  ])('should return true for Podman %s (cert sync command disabled)', version => {
+    expect(isPodman6OrLater(version)).toBe(true);
   });
 });
 

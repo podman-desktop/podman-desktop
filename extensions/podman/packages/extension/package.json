@@ -58,7 +58,8 @@
       },
       {
         "command": "podman.synchronizeCertificates",
-        "title": "Podman: Synchronize certificates to all VMs"
+        "title": "Podman: Synchronize certificates to all VMs",
+        "enablement": "!podman.isImportNativeCASupported"
       }
     ],
     "configuration": {
