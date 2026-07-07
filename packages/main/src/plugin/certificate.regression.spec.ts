@@ -1,5 +1,5 @@
 import { platform } from 'node:os';
-import { getCACertificates } from 'node:tls';
+import { getCACertificates, rootCertificates } from 'node:tls';
 
 import { beforeEach, expect, test } from 'vitest';
 
@@ -11,12 +11,16 @@ beforeEach(() => {
   certificates = new Certificates();
 });
 
+function getCertificatesFromNode(): string[] {
+  return [...rootCertificates, ...getCACertificates('system')];
+}
+
 test('linux', {
   skip: platform() !== 'linux',
 }, async () => {
   const certs = await certificates.retrieveLinuxCertificates();
 
-  const systemCerts = getCACertificates('system');
+  const systemCerts = getCertificatesFromNode();
 
   const a = new Set(certs.map(c => c.trim()));
   const b = new Set(systemCerts.map(c => c.trim()));
@@ -29,7 +33,7 @@ test('macos', {
 }, async () => {
   const certs = await certificates.retrieveMacOSCertificates();
 
-  const systemCerts = getCACertificates('system');
+  const systemCerts = getCertificatesFromNode();
 
   const a = new Set(certs.map(c => c.trim()));
   const b = new Set(systemCerts.map(c => c.trim()));
@@ -42,7 +46,7 @@ test('windows', {
 }, async () => {
   const certs = await certificates.retrieveWindowsCertificates();
 
-  const systemCerts = getCACertificates('system');
+  const systemCerts = getCertificatesFromNode();
 
   const a = new Set(certs.map(c => c.trim()));
   const b = new Set(systemCerts.map(c => c.trim()));
