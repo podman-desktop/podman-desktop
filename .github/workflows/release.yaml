@@ -219,11 +219,11 @@ jobs:
         run: echo the release id is ${{ needs.tag.outputs.releaseId}}
 
       - name: Publish release
-        uses: StuYarrow/publish-release@01f2a1365bacd77bad861873a7fdf274ab49eefd # v1.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          id: ${{ needs.tag.outputs.releaseId}}
+        run: |
+          gh api --method PATCH /repos/${{ github.repository }}/releases/${{ needs.tag.outputs.releaseId }} \
+            -F draft=false
 
   # publish the pnpm store for flathub builds
   pnpm-store:

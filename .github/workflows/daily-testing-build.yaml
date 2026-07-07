@@ -178,13 +178,11 @@ jobs:
 
       - name: Publish release
         if: ${{ needs.build.result == 'success' }}
-        uses: StuYarrow/publish-release@01f2a1365bacd77bad861873a7fdf274ab49eefd # v1.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
-        with:
-          id: ${{ needs.tag.outputs.releaseId }}
-          repo: testing-prereleases
-          owner: podman-desktop
+        run: |
+          gh api --method PATCH /repos/podman-desktop/testing-prereleases/releases/${{ needs.tag.outputs.releaseId }} \
+            -F draft=false
       
       - name: Delete release
         if: ${{ needs.build.result != 'success' }}
