@@ -476,6 +476,7 @@ export class Updater {
 
   public updateAvailable(): boolean {
     if (!this.getAppUpdateEnabled()) {
+      console.log('Application update is disabled with preferences.update.appUpdate settings');
       return false;
     }
     return !!this.#nextVersion;
