@@ -18,17 +18,22 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInspectInfo } from '@podman-desktop/core-api';
+import type { ContainerInfo, ImageInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import RunImage from '/@/lib/image/RunImage.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+import { containersInfos } from '/@/stores/containers';
+import { networksListInfo } from '/@/stores/networks';
 import { runImageInfo } from '/@/stores/run-image-store';
+
+const ENGINE_ID = 'engine-id-abc123';
 
 const originalConsoleDebug = console.debug;
 
@@ -66,7 +71,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     age: '',
     base64RepoTag: '',
     createdAt: 0,
-    engineId: '',
+    engineId: ENGINE_ID,
     engineName: '',
     size: 0,
     humanSize: '',
@@ -139,7 +144,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     },
     Size: 0,
     VirtualSize: 0,
-    engineId: 'engineid',
+    engineId: ENGINE_ID,
     engineName: 'engineName',
   };
   (window.getImageInspect as Mock).mockResolvedValue(imageInfo);
@@ -215,7 +220,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Entrypoint: ['entrypoint'] }),
     );
   });
@@ -228,7 +233,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Entrypoint: ['entrypoint'] }),
     );
   });
@@ -241,7 +246,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Entrypoint: ['entrypoint with space'] }),
     );
   });
@@ -254,7 +259,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Entrypoint: ['entrypoint1', 'entrypoint2'] }),
     );
   });
@@ -267,7 +272,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Entrypoint: ['entrypoint1', 'entrypoint2'] }),
     );
   });
@@ -280,7 +285,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Cmd: ['command'] }),
     );
   });
@@ -293,7 +298,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Cmd: ['command with space'] }),
     );
   });
@@ -305,7 +310,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Cmd: ['command1', 'command2'] }),
     );
   });
@@ -318,7 +323,7 @@ describe('RunImage', () => {
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ Cmd: ['command1', 'command2'] }),
     );
   });
@@ -455,7 +460,7 @@ describe('RunImage', () => {
 
     // should have item 1 and item 3 as we deleted item 2
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({ EnvFiles: [customEnvFile, 'foo3'] }),
     );
   });
@@ -531,7 +536,7 @@ describe('RunImage', () => {
 
     // should have item 1 and item 3 as we deleted item 2
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
-      'engineid',
+      ENGINE_ID,
       expect.objectContaining({
         HostConfig: expect.objectContaining({
           Devices: [
@@ -549,5 +554,118 @@ describe('RunImage', () => {
         }),
       }),
     );
+  });
+
+  describe('NetworkingTab', () => {
+    const CONTAINER_ID = 'container-abc123';
+    const NETWORK_ID = 'network-xyz789';
+
+    beforeEach(async () => {
+      router.goto('/basic');
+      vi.mocked(window.listContainers).mockResolvedValue([
+        {
+          Id: CONTAINER_ID,
+          Names: ['/my-container'],
+          Image: 'my-image',
+          State: 'Running',
+          Status: 'Running',
+          engineId: ENGINE_ID,
+          engineName: 'engineName',
+          ImageID: 'dummy-image-id',
+        } as unknown as ContainerInfo,
+      ]);
+      vi.mocked(window.listNetworks).mockResolvedValue([
+        {
+          engineId: ENGINE_ID,
+          engineName: 'engineName',
+          engineType: 'podman',
+          Name: 'my-network',
+          Id: NETWORK_ID,
+          Created: '',
+          Scope: '',
+          Driver: '',
+          EnableIPv6: false,
+          Internal: false,
+          Attachable: false,
+          Ingress: false,
+          ConfigOnly: false,
+        },
+      ]);
+
+      window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+      // wait store are populated
+      await vi.waitFor(() => {
+        expect(get(containersInfos)).toHaveLength(1);
+        expect(get(containersInfos)[0].Id).toBe(CONTAINER_ID);
+
+        expect(get(networksListInfo)).toHaveLength(1);
+        expect(get(networksListInfo)[0].Id).toBe(NETWORK_ID);
+      });
+    });
+
+    test('Expect networkingModeUserContainer is defined when selecting choice-container mode', async () => {
+      await createRunImage('entrypoint', []);
+
+      const networkTab = screen.getByRole('link', {
+        name: 'Networking',
+      });
+      await fireEvent.click(networkTab);
+
+      const modeButton = await vi.waitFor(() => {
+        return screen.getByRole('button', {
+          name: 'Creates a network stack on the default bridge (default)',
+        });
+      });
+      await fireEvent.click(modeButton);
+
+      const containerOption = screen.getByRole('button', {
+        name: 'Use another container networking stack',
+      });
+      await fireEvent.click(containerOption);
+
+      const button = screen.getByRole('button', { name: 'Start Container' });
+      await fireEvent.click(button);
+
+      expect(window.createAndStartContainer).toHaveBeenCalledWith(
+        ENGINE_ID,
+        expect.objectContaining({
+          HostConfig: expect.objectContaining({
+            NetworkMode: `container:${CONTAINER_ID}`,
+          }),
+        }),
+      );
+    });
+
+    test('Expect networkingModeUserNetwork is defined when selecting choice-network mode', async () => {
+      await createRunImage('entrypoint', []);
+
+      const networkTab = screen.getByRole('link', {
+        name: 'Networking',
+      });
+      await fireEvent.click(networkTab);
+
+      const modeButton = await vi.waitFor(() => {
+        return screen.getByRole('button', {
+          name: 'Creates a network stack on the default bridge (default)',
+        });
+      });
+      await fireEvent.click(modeButton);
+
+      const networkOption = screen.getByRole('button', { name: 'User-defined network' });
+      await fireEvent.click(networkOption);
+
+      const button = screen.getByRole('button', { name: 'Start Container' });
+      await fireEvent.click(button);
+
+      expect(window.createAndStartContainer).toHaveBeenCalledWith(
+        ENGINE_ID,
+        expect.objectContaining({
+          HostConfig: expect.objectContaining({
+            NetworkMode: NETWORK_ID,
+          }),
+        }),
+      );
+    });
   });
 });
