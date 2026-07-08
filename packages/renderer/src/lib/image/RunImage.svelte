@@ -34,7 +34,19 @@ interface PortInfo {
 let imageInspectInfo: ImageInspectInfo;
 
 let containerName = $state('');
-let containerNameError = $state('');
+let containerNameError: string | undefined = $derived.by(() => {
+  // ok, now check if we already have a matching container: same name and same engine ID
+  const containerAlreadyExists = $containersInfos.find(
+    container =>
+      container.engineId === imageInspectInfo.engineId &&
+      container.Names.some(iteratingContainerName => iteratingContainerName === `/${containerName}`),
+  );
+  if (containerAlreadyExists) {
+    return `The name ${containerName} already exists. Please choose another name or leave blank to generate a name.`;
+  } else {
+    return undefined;
+  }
+});
 
 let command = $state('');
 
@@ -56,9 +68,12 @@ let devices = $state<{ host: string; container: string; read: boolean; write: bo
   { host: '', container: '', read: false, write: false, mknod: false },
 ]);
 
-let invalidName = $state(false);
-let invalidPorts = $state(false);
-let invalidFields = $derived(invalidName || invalidPorts);
+let invalidPorts = $derived.by(() => {
+  const invalidHostPorts = hostContainerPortMappings.filter(pair => pair.hostPort.error);
+  const invalidContainerPortMapping = containerPortMapping?.filter(port => port.error) ?? [];
+  return invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
+});
+let invalidFields = $derived(!!containerNameError || invalidPorts);
 
 // auto remove the container on exit
 let autoRemove = $state(false);
@@ -518,7 +533,6 @@ function addHostContainerPorts(): void {
 
 async function deleteHostContainerPorts(index: number): Promise<void> {
   hostContainerPortMappings = hostContainerPortMappings.filter((_, i) => i !== index);
-  await assertAllPortAreValid();
 }
 
 function addVolumeMount(): void {
@@ -576,36 +590,15 @@ function deleteDevice(index: number): void {
   devices = devices.filter((_, i) => i !== index);
 }
 
-// called when user change the container's name
-function checkContainerName(event: Event): void {
-  const containerValue = event.target instanceof Input ? event.target.value : '';
-
-  // ok, now check if we already have a matching container: same name and same engine ID
-  const containerAlreadyExists = $containersInfos.find(
-    container =>
-      container.engineId === imageInspectInfo.engineId &&
-      container.Names.some(iteratingContainerName => iteratingContainerName === `/${containerValue}`),
-  );
-  if (containerAlreadyExists) {
-    containerNameError = `The name ${containerValue} already exists. Please choose another name or leave blank to generate a name.`;
-    invalidName = true;
-  } else {
-    containerNameError = '';
-    invalidName = false;
-  }
-}
-
 function onContainerPortMappingInput(event: Event, index: number): void {
   onPortInput(event, containerPortMapping[index], () => {
     containerPortMapping = containerPortMapping;
-    assertAllPortAreValid().catch((err: unknown) => console.error('Error checking all ports valid', err));
   });
 }
 
 function onHostContainerPortMappingInput(event: Event, index: number): void {
   onPortInput(event, hostContainerPortMappings[index].hostPort, () => {
     hostContainerPortMappings = hostContainerPortMappings;
-    assertAllPortAreValid().catch((err: unknown) => console.error('Error checking all ports valid', err));
   });
 }
 
@@ -629,12 +622,6 @@ function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): vo
         updateUI();
       });
   }, 500);
-}
-
-async function assertAllPortAreValid(): Promise<void> {
-  const invalidHostPorts = hostContainerPortMappings.filter(pair => pair.hostPort.error);
-  const invalidContainerPortMapping = containerPortMapping?.filter(port => port.error) ?? [];
-  invalidPorts = invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
 }
 
 const volumeDialogOptions: OpenDialogOptions = {
@@ -678,7 +665,6 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalContainerName"
                 class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
               <Input
-                on:input={checkContainerName}
                 bind:value={containerName}
                 name="modalContainerName"
                 id="modalContainerName"
