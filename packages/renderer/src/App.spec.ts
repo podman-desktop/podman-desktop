@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   DeploymentsList: vi.fn(),
   KubernetesDashboard: vi.fn(),
   SecretsList: vi.fn(),
+  SecretDetails: vi.fn(),
 }));
 
 vi.mock(import('./lib/dashboard/DashboardPage.svelte'), () => ({
@@ -71,6 +72,10 @@ vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
 
 vi.mock(import('./lib/secrets/SecretsList.svelte'), () => ({
   default: mocks.SecretsList,
+}));
+
+vi.mock(import('./lib/secrets/SecretDetails.svelte'), () => ({
+  default: mocks.SecretDetails,
 }));
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
@@ -188,6 +193,20 @@ test('test /secrets route', async () => {
 
   await vi.waitFor(() => {
     expect(mocks.SecretsList).toHaveBeenCalled();
+  });
+});
+
+test('test /secrets/:engineId/:secretId/* route', async () => {
+  render(App);
+  expect(mocks.SecretDetails).not.toHaveBeenCalled();
+  expect(mocks.DashboardPage).toHaveBeenCalled();
+  router.goto('/secrets/engine%201/secret%2Fid/summary');
+
+  await vi.waitFor(() => {
+    expect(mocks.SecretDetails).toHaveBeenCalledWith(expect.anything(), {
+      secretId: 'secret/id',
+      engineId: 'engine 1',
+    });
   });
 });
 
