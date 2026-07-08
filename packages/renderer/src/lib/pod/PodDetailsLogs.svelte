@@ -1,6 +1,7 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
@@ -10,8 +11,6 @@ import { ansi256Colours, colourizedANSIContainerName } from '/@/lib/editor/edito
 import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
-
-import type { PodInfoUI } from './PodInfoUI';
 
 export let pod: PodInfoUI;
 

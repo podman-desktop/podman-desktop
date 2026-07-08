@@ -1,10 +1,8 @@
 <script lang="ts">
-import type { PodInspectInfo } from '@podman-desktop/core-api';
+import type { PodInfoUI, PodInspectInfo } from '@podman-desktop/core-api';
 import { onMount } from 'svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
-
-import type { PodInfoUI } from './PodInfoUI';
 
 export let pod: PodInfoUI;
 

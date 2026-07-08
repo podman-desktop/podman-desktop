@@ -18,9 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { PodInfoContainerUI } from '@podman-desktop/core-api';
 import { expect, test } from 'vitest';
-
-import type { PodInfoContainerUI } from '/@/lib/pod/PodInfoUI';
 
 import { getStatusColor, organizeContainers } from './Dots';
 

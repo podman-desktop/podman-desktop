@@ -19,11 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInfo, Port } from '@podman-desktop/api';
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import PodActions from './PodActions.svelte';
-import type { PodInfoUI } from './PodInfoUI';
 
 class Pod {
   #status: string;

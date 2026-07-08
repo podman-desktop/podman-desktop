@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { PodContainerInfo, PodInfo } from '@podman-desktop/api';
+import type { PodInfoContainerUI, PodInfoUI } from '@podman-desktop/core-api';
 import { beforeEach, expect, test } from 'vitest';
 
 import { TerminalService } from '/@/lib/kube/pods/terminal/KubernetesTerminalService';
@@ -26,7 +26,7 @@ import { TerminalService } from '/@/lib/kube/pods/terminal/KubernetesTerminalSer
 let terminalService: TestableKubernetesTerminalService;
 
 class TestableKubernetesTerminalService extends TerminalService {
-  public testInvalidateCacheRecordOnStatusUpdate(podsInfos: PodInfo[]): void {
+  public testInvalidateCacheRecordOnStatusUpdate(podsInfos: PodInfoUI[]): void {
     return this.invalidateCacheRecordOnStatusUpdate(podsInfos);
   }
 
@@ -34,7 +34,7 @@ class TestableKubernetesTerminalService extends TerminalService {
     return super.toKey(podName, containerName);
   }
 
-  public testInvalidateCacheRecordOnPodRemove(podsInfos: PodInfo[]): void {
+  public testInvalidateCacheRecordOnPodRemove(podsInfos: PodInfoUI[]): void {
     return this.invalidateCacheRecordOnPodRemove(podsInfos);
   }
 
@@ -69,11 +69,11 @@ test('should check if the terminal exists in the cache', () => {
 
 test('should invalidate cache for non-running containers', () => {
   terminalService.testTerminalCache().set('pod1-container1', {});
-  const podsInfosMock: PodInfo[] = [
+  const podsInfosMock: PodInfoUI[] = [
     {
-      Name: 'pod1',
-      Containers: [{ Names: 'container1', Status: 'exited' } as PodContainerInfo],
-    } as PodInfo,
+      name: 'pod1',
+      containers: [{ Names: 'container1', Status: 'exited' } as PodInfoContainerUI],
+    } as PodInfoUI,
   ];
 
   terminalService.testInvalidateCacheRecordOnStatusUpdate(podsInfosMock);

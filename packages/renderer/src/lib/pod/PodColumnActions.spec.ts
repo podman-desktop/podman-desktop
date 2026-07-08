@@ -19,11 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInfo, Port } from '@podman-desktop/api';
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import PodColumnActions from './PodColumnActions.svelte';
-import type { PodInfoUI } from './PodInfoUI';
 
 const listContainersMock = vi.fn();
 const getContributedMenusMock = vi.fn();

@@ -21,7 +21,7 @@ import type { Component } from 'svelte';
 
 import type { ContainerInfo } from './container-info.js';
 import type { ImageInfo } from './image-info.js';
-import type { PodInfo } from './pod-info.js';
+import type { PodInfoUI } from './pod-info.js';
 import type { VolumeInfo } from './volume-info.js';
 
 export interface DocumentationBaseInfo {
@@ -36,7 +36,7 @@ export interface DocumentationInfo extends DocumentationBaseInfo {
 }
 
 export type GoToInfo =
-  | (PodInfo & { type: 'Pod'; icon: GoToIcon })
+  | (PodInfoUI & { type: 'Pod'; icon: GoToIcon })
   | (ContainerInfo & { type: 'Container'; icon: GoToIcon })
   | (ImageInfo & { type: 'Image'; icon: GoToIcon })
   | (VolumeInfo & { type: 'Volume'; icon: GoToIcon })

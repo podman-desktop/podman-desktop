@@ -1,8 +1,8 @@
 <script lang="ts">
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import PodActions from './PodActions.svelte';
-import type { PodInfoUI } from './PodInfoUI';
 
 export let object: PodInfoUI;
 </script>

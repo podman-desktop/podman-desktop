@@ -1,9 +1,7 @@
 <script lang="ts">
-import { NavigationPage } from '@podman-desktop/core-api';
+import { NavigationPage, type PodInfoUI } from '@podman-desktop/core-api';
 
 import { handleNavigation } from '/@/navigation';
-
-import type { PodInfoUI } from './PodInfoUI';
 
 export let object: PodInfoUI;
 

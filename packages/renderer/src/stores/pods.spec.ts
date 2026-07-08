@@ -18,12 +18,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { PodInfo } from '@podman-desktop/core-api';
+import type { PodInfo, PodInfoUI } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import { podsEventStore, podsInfos } from './pods';
+import { filtered, podsEventStore, podsInfos, searchPattern } from './pods';
 
 // first, path window object
 const callbacks = new Map<string, any>();
@@ -89,8 +89,74 @@ test.each([
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 
-  // now get list
-  const podListResult = get(podsInfos);
-  expect(podListResult.length).toBe(1);
-  expect(podListResult[0].Id).toEqual('id123');
+  const podUiListResult = get(podsInfos);
+  expect(podUiListResult.length).toBe(1);
+  expect(podUiListResult[0].id).toEqual('id123');
+});
+
+const runningPod: PodInfoUI = {
+  id: 'running-pod-id',
+  shortId: 'running',
+  name: 'running-pod',
+  status: 'RUNNING',
+  age: '1 day',
+  created: '2026-01-01T00:00:00Z',
+  engineId: 'engine-id-1',
+  engineName: 'engine-1',
+  containers: [],
+  selected: false,
+};
+
+const stoppedPod: PodInfoUI = {
+  id: 'stopped-pod-id',
+  shortId: 'stopped',
+  name: 'stopped-pod',
+  status: 'STOPPED',
+  age: '1 day',
+  created: '2026-01-01T00:00:00Z',
+  engineId: 'engine-id-1',
+  engineName: 'engine-1',
+  containers: [],
+  selected: false,
+};
+
+test('keep pod ui values in writable pod ui store', () => {
+  podsInfos.set([runningPod]);
+  searchPattern.set('');
+
+  const podUiListResult = get(podsInfos);
+  expect(podUiListResult.length).toBe(1);
+  expect(podUiListResult[0].id).toEqual('running-pod-id');
+});
+
+test('filter pod ui store keeps both running and stopped pods by default', () => {
+  podsInfos.set([runningPod, stoppedPod]);
+  searchPattern.set('');
+
+  const filteredPods = get(filtered);
+  expect(filteredPods).toHaveLength(2);
+  expect(filteredPods).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ status: 'RUNNING' }),
+      expect.objectContaining({ status: 'STOPPED' }),
+    ]),
+  );
+});
+
+test('filter pod ui store keeps only running pods with running filter', () => {
+  podsInfos.set([runningPod, stoppedPod]);
+  searchPattern.set('is:running');
+
+  const filteredPods = get(filtered);
+  expect(filteredPods).toHaveLength(1);
+  expect(filteredPods[0]).toEqual(expect.objectContaining({ status: 'RUNNING' }));
+});
+
+test('filter pod ui store keeps only stopped pods with stopped filter', () => {
+  podsInfos.set([runningPod, stoppedPod]);
+  searchPattern.set('is:stopped');
+
+  const filteredPods = get(filtered);
+  expect(filteredPods).toHaveLength(1);
+  expect(filteredPods[0]).toEqual(expect.objectContaining({ status: 'STOPPED' }));
 });

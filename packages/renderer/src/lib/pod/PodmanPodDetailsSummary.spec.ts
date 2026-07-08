@@ -18,10 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { PodInfoUI } from './PodInfoUI';
 import PodmanPodDetailsSummary from './PodmanPodDetailsSummary.svelte';
 
 const fakePod: PodInfoUI = {

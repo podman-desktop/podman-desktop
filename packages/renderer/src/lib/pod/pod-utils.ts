@@ -16,11 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfo } from '@podman-desktop/core-api';
+import type { PodInfo, PodInfoUI } from '@podman-desktop/core-api';
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
-
-import type { PodInfoUI } from './PodInfoUI';
 
 export class PodUtils {
   getStatus(podinfo: PodInfo): string {
@@ -74,14 +72,14 @@ export class PodUtils {
     };
   }
 
-  calculateNewPodName(existedPods?: PodInfo[]): string {
+  calculateNewPodName(existedPods?: PodInfoUI[]): string {
     const proposedPodName = 'my-pod';
 
     if (!existedPods) {
       return proposedPodName;
     }
 
-    const existedNames = existedPods.map(pod => pod.Name);
+    const existedNames = existedPods.map(pod => pod.name);
 
     if (!existedNames.includes(proposedPodName)) {
       return proposedPodName;

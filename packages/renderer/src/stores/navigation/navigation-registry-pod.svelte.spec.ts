@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfo } from '@podman-desktop/core-api';
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { podsInfos } from '/@/stores/pods';
@@ -31,11 +31,11 @@ test('createNavigationPodEntry', async () => {
   const entry = createNavigationPodEntry();
   podsInfos.set([
     {
-      Id: '1234',
-    } as unknown as PodInfo,
+      id: '1234',
+    } as unknown as PodInfoUI,
     {
-      Id: '3456',
-    } as unknown as PodInfo,
+      id: '3456',
+    } as unknown as PodInfoUI,
   ]);
 
   expect(entry).toBeDefined();

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodContainerInfo, PodInfo } from '@podman-desktop/api';
+import type { PodInfoContainerUI, PodInfoUI } from '@podman-desktop/core-api';
 
 import KubernetesTerminal from '/@/lib/kube/pods/terminal/KubernetesTerminal.svelte';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
@@ -32,20 +32,20 @@ export class TerminalService {
     });
   }
 
-  protected invalidateCacheRecordOnStatusUpdate(podsInfos: PodInfo[]): void {
-    podsInfos.forEach((pod: PodInfo) => {
-      pod.Containers.forEach((container: PodContainerInfo) => {
-        if (container.Status !== 'running') {
-          this.terminalCache.delete(this.toKey(pod.Name, container.Names));
+  protected invalidateCacheRecordOnStatusUpdate(podsInfos: PodInfoUI[]): void {
+    podsInfos.forEach((pod: PodInfoUI) => {
+      pod.containers.forEach((container: PodInfoContainerUI) => {
+        if (container.Status.toLowerCase() !== 'running') {
+          this.terminalCache.delete(this.toKey(pod.name, container.Names));
         }
       });
     });
   }
 
-  protected invalidateCacheRecordOnPodRemove(podsInfos: PodInfo[]): void {
+  protected invalidateCacheRecordOnPodRemove(podsInfos: PodInfoUI[]): void {
     const activePods = new Set(
-      podsInfos.flatMap((pod: PodInfo) =>
-        pod.Containers.map((container: PodContainerInfo) => this.toKey(pod.Name, container.Names)),
+      podsInfos.flatMap((pod: PodInfoUI) =>
+        pod.containers.map((container: PodInfoContainerUI) => this.toKey(pod.name, container.Names)),
       ),
     );
     for (const [key] of this.terminalCache) {

@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { faCube, faImage } from '@fortawesome/free-solid-svg-icons';
-import type { ContainerInfo, GoToInfo, ImageInfo, PodInfo, VolumeInfo } from '@podman-desktop/core-api';
+import type { ContainerInfo, GoToInfo, ImageInfo, PodInfoUI, VolumeInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { describe, expect, test } from 'vitest';
 
@@ -47,13 +47,18 @@ const mockContainerInfo: ContainerInfo = {
   ImageBase64RepoTag: Buffer.from('nginx:latest').toString('base64'),
 } as unknown as ContainerInfo;
 
-const mockPodInfo: PodInfo = {
-  Id: 'ghi789012345678901234567890123456789012345678901234567890123456789012',
-  Name: 'test-pod',
-  Status: 'Running',
+const mockPodInfo: PodInfoUI = {
+  id: 'ghi789012345678901234567890123456789012345678901234567890123456789012',
+  shortId: 'ghi78901',
+  name: 'test-pod',
+  status: 'RUNNING',
+  age: '1 day',
+  created: '2026-01-01T00:00:00Z',
   engineId: 'podman',
   engineName: 'Podman',
-} as unknown as PodInfo;
+  containers: [],
+  selected: false,
+};
 
 const mockVolumeInfo: VolumeInfo = {
   Name: 'my-volume',
@@ -170,7 +175,7 @@ describe('createGoToItems', () => {
     // Check pod item
     const podItem = items.find(item => item.type === 'Pod');
     expect(podItem).toBeDefined();
-    expect(podItem?.Id).toBe(mockPodInfo.Id);
+    expect(podItem?.id).toBe(mockPodInfo.id);
     expect(getGoToDisplayText(podItem!)).toBe('test-pod');
     expect(podItem?.type).toBe('Pod');
 
@@ -302,7 +307,7 @@ describe('getGoToDisplayText function behavior', () => {
   });
 
   test('should handle pod correctly', () => {
-    const pod = { ...mockPodInfo, Name: 'test-pod' };
+    const pod = { ...mockPodInfo, name: 'test-pod' };
     const items = createGoToItems([], [], [pod], []);
     const podItem = items.find(item => item.type === 'Pod');
     expect(getGoToDisplayText(podItem!)).toBe('test-pod');

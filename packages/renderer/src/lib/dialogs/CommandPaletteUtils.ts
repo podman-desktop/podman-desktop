@@ -22,7 +22,7 @@ import type {
   GoToInfo,
   ImageInfo,
   NavigationInfo,
-  PodInfo,
+  PodInfoUI,
   VolumeInfo,
 } from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
@@ -51,7 +51,7 @@ export function getGoToDisplayText(goToInfo: GoToInfo): string {
   } else if (goToInfo.type === 'Container') {
     return goToInfo.Names[0].replace(/^\//, '');
   } else if (goToInfo.type === 'Pod') {
-    return goToInfo.Name;
+    return goToInfo.name;
   } else if (goToInfo.type === 'Volume') {
     return goToInfo.Name.substring(0, 12);
   } else if (goToInfo.type === 'Navigation') {
@@ -130,7 +130,7 @@ function extractNavigationPaths(entries: NavigationRegistryEntry[]): Array<Navig
 export function createGoToItems(
   images: ImageInfo[],
   containers: ContainerInfo[],
-  pods: PodInfo[],
+  pods: PodInfoUI[],
   volumes: VolumeInfo[],
   navigationEntries: NavigationRegistryEntry[] = [],
 ): GoToInfo[] {

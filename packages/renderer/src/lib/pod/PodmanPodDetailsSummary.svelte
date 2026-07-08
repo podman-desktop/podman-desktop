@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { PodInfoContainerUI, PodInfoUI } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import { Link } from '@podman-desktop/ui-svelte';
 
@@ -7,8 +8,6 @@ import DetailsSubtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import DetailsTable from '/@/lib/details/DetailsTable.svelte';
 import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
 import { handleNavigation } from '/@/navigation';
-
-import type { PodInfoContainerUI, PodInfoUI } from './PodInfoUI';
 
 export let pod: PodInfoUI | undefined;
 let creationTime: Date;

@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { SearchAddon } from '@xterm/addon-search';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import PodDetailsLogs from '/@/lib/pod/PodDetailsLogs.svelte';
-import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-search'));

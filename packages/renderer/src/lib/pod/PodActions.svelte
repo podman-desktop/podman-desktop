@@ -8,7 +8,7 @@ import {
   faStop,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import type { Menu } from '@podman-desktop/core-api';
+import type { Menu, PodInfoUI } from '@podman-desktop/core-api';
 import { MenuContext } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher, onMount } from 'svelte';
@@ -19,8 +19,6 @@ import { ContainerUtils } from '/@/lib/container/container-utils';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
-
-import type { PodInfoUI } from './PodInfoUI';
 
 const dispatch = createEventDispatcher<{ update: PodInfoUI }>();
 interface Props {

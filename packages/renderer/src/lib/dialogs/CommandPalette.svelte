@@ -15,7 +15,7 @@ import type {
   DocumentationInfo,
   GoToInfo,
   ImageInfo,
-  PodInfo,
+  PodInfoUI,
   VolumeInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
@@ -85,7 +85,7 @@ let searchOptionsSelectedIndex: number = $state(0);
 
 let documentationItems: DocumentationInfo[] = $state([]);
 let containerInfos: ContainerInfo[] = $derived($containersInfos);
-let podInfos: PodInfo[] = $derived($podsInfos);
+let podInfos: PodInfoUI[] = $derived($podsInfos);
 let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
 let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
@@ -290,7 +290,7 @@ async function executeAction(index: number): Promise<void> {
       handleNavigation({
         page: NavigationPage.PODMAN_POD_SUMMARY,
         parameters: {
-          name: item.Name,
+          name: item.name,
           engineId: item.engineId,
         },
       });

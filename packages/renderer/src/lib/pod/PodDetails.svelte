@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { ErrorMessage, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
@@ -10,12 +11,10 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
 import { podsInfos } from '/@/stores/pods';
 
-import { PodUtils } from './pod-utils';
 import PodActions from './PodActions.svelte';
 import PodDetailsInspect from './PodDetailsInspect.svelte';
 import PodDetailsKube from './PodDetailsKube.svelte';
 import PodDetailsLogs from './PodDetailsLogs.svelte';
-import type { PodInfoUI } from './PodInfoUI';
 import PodmanPodDetailsSummary from './PodmanPodDetailsSummary.svelte';
 
 export let podName: string;
@@ -28,18 +27,16 @@ let detailsPage: DetailsPage;
 let currentRouterPath: string;
 
 onMount(() => {
-  const podUtils = new PodUtils();
-
   router.subscribe(route => {
     currentRouterPath = route.path;
   });
 
   // loading pod info
   return podsInfos.subscribe(pods => {
-    const matchingPod = pods.find(podInPods => podInPods.Name === podName && podInPods.engineId === engineId);
+    const matchingPod = pods.find(podInPods => podInPods.name === podName && podInPods.engineId === engineId);
     if (matchingPod) {
       try {
-        pod = podUtils.getPodInfoUI(matchingPod);
+        pod = matchingPod;
 
         if (currentRouterPath.endsWith('/')) {
           router.goto(`${currentRouterPath}logs`);

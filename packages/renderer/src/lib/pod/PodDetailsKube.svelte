@@ -1,9 +1,8 @@
 <script lang="ts">
+import type { PodInfoUI } from '@podman-desktop/core-api';
 import { onMount } from 'svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
-
-import type { PodInfoUI } from './PodInfoUI';
 
 export let pod: PodInfoUI;
 
