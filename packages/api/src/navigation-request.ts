@@ -62,6 +62,7 @@ export interface NavigationParameters {
   [NavigationPage.VM_CONNECTION]: { provider: string; name: string };
   [NavigationPage.SECRETS]: never;
   [NavigationPage.SECRET]: { id: string; engineId: string };
+  [NavigationPage.SECRET_CREATE]: never;
 }
 
 // the parameters property is optional when the NavigationParameters say it is

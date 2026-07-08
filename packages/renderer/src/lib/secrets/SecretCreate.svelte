@@ -1,0 +1,116 @@
+<script lang="ts">
+import {
+  NavigationPage,
+  type ProviderContainerConnectionInfo,
+  type SecretCreateOptions,
+} from '@podman-desktop/core-api';
+import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import SecretIcon from '/@/lib/images/SecretIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import { handleNavigation } from '/@/navigation';
+import { providerInfos } from '/@/stores/providers';
+
+let createError: string | undefined = $state(undefined);
+let loading = $state(false);
+
+let secretCreateOptions: SecretCreateOptions = $state({
+  selectedProvider: undefined,
+  name: '',
+  data: '',
+});
+
+let providerConnections = $derived(
+  $providerInfos.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
+    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
+    return acc.concat(startedConnections);
+  }, []),
+);
+
+$effect(() => {
+  if (providerConnections.length > 0 && secretCreateOptions.selectedProvider === undefined) {
+    secretCreateOptions.selectedProvider = providerConnections[0];
+  }
+});
+
+let valid = $derived(
+  secretCreateOptions.selectedProvider !== undefined &&
+    secretCreateOptions.name.trim().length > 0 &&
+    secretCreateOptions.data.length > 0,
+);
+
+async function createSecret(): Promise<void> {
+  if (!secretCreateOptions.selectedProvider) return;
+
+  try {
+    loading = true;
+    createError = undefined;
+    await window.createSecret($state.snapshot(secretCreateOptions));
+    handleNavigation({ page: NavigationPage.SECRETS });
+  } catch (error: unknown) {
+    createError = error instanceof Error ? error.message : String(error);
+  } finally {
+    loading = false;
+  }
+}
+
+function close(): void {
+  handleNavigation({ page: NavigationPage.SECRETS });
+}
+</script>
+
+<EngineFormPage title="Create a Secret" showEmptyScreen={providerConnections.length === 0}>
+  {#snippet icon()}
+    <Icon icon={SecretIcon} size={27} />
+  {/snippet}
+  {#snippet content()}
+    <div class="space-y-6">
+      {#if providerConnections.length > 1}
+        <div>
+          <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+            >Container Engine <span class="text-red-500">*</span></label>
+          <ContainerConnectionDropdown
+            id="providerChoice"
+            name="providerChoice"
+            bind:value={secretCreateOptions.selectedProvider}
+            connections={providerConnections} />
+        </div>
+      {/if}
+
+      <div>
+        <label for="secretName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Name <span class="text-red-500">*</span></label>
+        <Input
+          bind:value={secretCreateOptions.name}
+          name="secretName"
+          id="secretName"
+          placeholder="Secret name"
+          required
+          class="w-full" />
+      </div>
+
+      <div>
+        <label for="secretData" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Data <span class="text-red-500">*</span></label>
+        <Input
+          bind:value={secretCreateOptions.data}
+          name="secretData"
+          id="secretData"
+          placeholder="Secret data"
+          required
+          class="w-full" />
+      </div>
+
+      <div class="w-full flex flex-row space-x-4">
+        <Button type="secondary" class="w-full" onclick={close}>Cancel</Button>
+        <Button disabled={!valid || loading} inProgress={loading} class="w-full" onclick={createSecret}>Create</Button>
+      </div>
+
+      {#if createError}
+        <ErrorMessage class="text-sm" error={createError} />
+      {/if}
+    </div>
+  {/snippet}
+</EngineFormPage>

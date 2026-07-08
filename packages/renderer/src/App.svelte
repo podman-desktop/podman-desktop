@@ -8,6 +8,7 @@ import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
+import SecretCreate from '/@/lib/secrets/SecretCreate.svelte';
 import SecretDetails from '/@/lib/secrets/SecretDetails.svelte';
 import SecretsList from '/@/lib/secrets/SecretsList.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
@@ -323,6 +324,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/secrets/*" breadcrumb="Secrets" navigationHint="root" firstmatch>
           <Route path="/" breadcrumb="Secrets" navigationHint="root">
             <SecretsList />
+          </Route>
+          <Route path="/create" breadcrumb="Create a Secret">
+            <SecretCreate />
           </Route>
           <Route path="/:engineId/:secretId/*" breadcrumb="Secret Details" let:meta navigationHint="details">
             <SecretDetails secretId={decodeURIComponent(meta.params.secretId)} engineId={decodeURIComponent(meta.params.engineId)} />

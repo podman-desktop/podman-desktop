@@ -150,6 +150,13 @@ test('Expect secrets table to be rendered with data', async () => {
   expect(screen.getByText('my-secret-2')).toBeInTheDocument();
 });
 
+test('Expect create button to be displayed when engine is available', async () => {
+  await init();
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  expect(createButton).toBeInTheDocument();
+});
+
 test('Expect delete action on each secret row', async () => {
   await init();
 

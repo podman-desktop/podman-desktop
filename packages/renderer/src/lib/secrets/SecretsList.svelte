@@ -1,6 +1,7 @@
 <script lang="ts">
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { SecretInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -21,6 +22,7 @@ import SecretActions from '/@/lib/secrets/components/SecretActions.svelte';
 import SecretEmptyScreen from '/@/lib/secrets/components/SecretEmptyScreen.svelte';
 import type { SecretInfoUI } from '/@/lib/secrets/SecretInfoUI';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
+import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
 import { filtered, searchPattern } from '/@/stores/secrets';
 
@@ -87,9 +89,19 @@ async function bulkDeleteSecrets(): Promise<void> {
     bulkDeleteInProgress = false;
   }
 }
+
+function gotoCreateSecret(): void {
+  handleNavigation({ page: NavigationPage.SECRET_CREATE });
+}
 </script>
 
 <NavPage bind:searchTerm={$searchPattern} title="secrets">
+  {#snippet additionalActions()}
+    {#if providerConnections.length > 0}
+      <Button onclick={gotoCreateSecret} icon={faPlusCircle} title="Create a secret" aria-label="Create">Create</Button>
+    {/if}
+  {/snippet}
+
   {#snippet bottomAdditionalActions()}
     <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber > 0}

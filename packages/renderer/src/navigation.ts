@@ -118,6 +118,8 @@ export const resolveRoute = (request: InferredNavigationRequest<NavigationPage>)
       return `/secrets`;
     case NavigationPage.SECRET:
       return `/secrets/${encodeURIComponent(request.parameters.engineId)}/${encodeURIComponent(request.parameters.id)}/summary`;
+    case NavigationPage.SECRET_CREATE:
+      return '/secrets/create';
   }
 };
 
