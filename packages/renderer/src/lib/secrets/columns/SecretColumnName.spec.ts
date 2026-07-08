@@ -27,9 +27,7 @@ import { handleNavigation } from '/@/navigation';
 
 import SecretColumnName from './SecretColumnName.svelte';
 
-vi.mock(import('/@/navigation'), () => ({
-  handleNavigation: vi.fn(),
-}));
+vi.mock(import('/@/navigation'));
 
 const secret: SecretInfoUI = {
   engineId: 'podman1',
