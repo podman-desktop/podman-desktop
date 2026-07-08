@@ -102,6 +102,33 @@ test('Check list of images using Podman API', async () => {
   expect(firstImage?.Id).toBe('sha256:1234567890');
 });
 
+test('Check unpause Pod using Podman API', async () => {
+  const handler = vi.fn(() => HttpResponse.json({}, { status: 200 }));
+
+  server = setupServer(http.post('http://localhost/v4.2.0/libpod/pods/dummy/unpause', handler));
+
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  await (api as unknown as LibPod).unpausePod('dummy');
+  expect(handler).toHaveBeenCalledOnce();
+});
+
+test('Check unpause Pod for error handling using Podman API', async () => {
+  server = setupServer(
+    http.post('http://localhost/v4.2.0/libpod/pods/dummy/unpause', () =>
+      HttpResponse.text('no such pod', { status: 404 }),
+    ),
+  );
+
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  await expect((api as unknown as LibPod).unpausePod('dummy')).rejects.toThrow();
+});
+
 test('Check list of containers using Podman API', async () => {
   const jsonContainers = [
     {

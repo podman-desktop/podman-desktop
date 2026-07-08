@@ -4281,6 +4281,42 @@ test('check createPod uses running podman connection if ProviderContainerConnect
   expect(result.engineId).equal('podman1');
 });
 
+describe('unpausePod', () => {
+  test('test unpause Pod', async () => {
+    const unpauseMock = vi.fn().mockResolvedValue({});
+
+    const fakeLibPod = {
+      unpausePod: unpauseMock,
+    } as unknown as LibPod;
+
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(fakeLibPod);
+
+    await containerRegistry.unpausePod('podman1', '1234');
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+
+  test('test unpause Pod for error handling', async () => {
+    const unpauseError = new Error('unpause failed');
+    const unpauseMock = vi.fn().mockRejectedValue(unpauseError);
+
+    const fakeLibPod = {
+      unpausePod: unpauseMock,
+    } as unknown as LibPod;
+
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(fakeLibPod);
+
+    await expect(containerRegistry.unpausePod('podman1', '1234')).rejects.toThrow(unpauseError);
+
+    expect(telemetry.track).toHaveBeenCalledWith(
+      'unpausePod',
+      expect.objectContaining({
+        error: unpauseError,
+      }),
+    );
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+});
+
 test('check that fails if there is no podman provider running', async () => {
   const internalProvider = {
     name: 'podman1',
