@@ -94,6 +94,24 @@ You can create and run an extension by performing the following end-to-end tasks
 1. [Running the extension](/tutorial/creating-an-extension#running-the-extension)
 1. [Verifying the extension's features](/tutorial/creating-an-extension#verifying-the-extensions-features)
 
+## Common extension features
+
+These guides cover the most frequently used APIs when building an extension:
+
+- [Commands](/docs/extensions/developing/commands) -- register actions users can invoke from the command palette and menus
+- [Configuration](/docs/extensions/developing/config) -- declare settings in `package.json` and read them at runtime
+- [Menus](/docs/extensions/developing/menu) -- add items to context menus
+- [Status bar](/docs/extensions/developing/status-bar) -- add clickable indicators to the bottom bar
+- [Progress tasks](/docs/extensions/developing/progress-tasks) -- show progress in the task widget during long operations
+- [Tray menu](/docs/extensions/developing/tray-menu) -- add items to the system tray icon menu
+- [CLI tools](/docs/extensions/developing/cli-tools) -- register CLI tools in the Settings page
+- [Onboarding workflow](/docs/extensions/developing/onboarding-workflow) -- guide users through first-time setup
+- [Webview messaging](/docs/extensions/developing/webview-messaging) -- communicate between the extension and its webview panel
+- [Adding UI components](/docs/extensions/developing/adding-ui-components) -- use the `@podman-desktop/ui-svelte` library in webviews
+- [Adding icons](/docs/extensions/developing/adding-icons) -- customize your extension's icons
+
+For a hands-on walkthrough that combines many of these APIs in a real extension, see the [Writing custom extensions](/blog/writing-custom-extensions) blog post.
+
 ## Expanding your extension
 
 Below is documentation and/or "boiler-plate" code that can help expand your extension.
