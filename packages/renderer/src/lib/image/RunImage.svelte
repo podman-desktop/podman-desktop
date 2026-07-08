@@ -27,6 +27,7 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
+import { networksListInfo } from '/@/stores/networks';
 import { runImageInfo } from '/@/stores/run-image-store';
 
 let options: RunOptions = $state({
@@ -97,10 +98,18 @@ let dataReady = $state(false);
 
 let imageDisplayName = $state('');
 
-let engineNetworks = $state<NetworkInspectInfo[]>([]);
-let engineContainers = $state<ContainerInfoUI[]>([]);
-
 const image = $runImageInfo;
+
+const containerUtils = new ContainerUtils();
+
+let engineNetworks = $derived<NetworkInspectInfo[]>(
+  $networksListInfo.filter(network => network.engineId === image.engineId),
+);
+let engineContainers = $derived<ContainerInfoUI[]>(
+  $containersInfos
+    .filter(container => container.engineId === image.engineId)
+    .map(container => containerUtils.getContainerInfoUI(container)),
+);
 
 onMount(async () => {
   if (!image) {
@@ -139,35 +148,6 @@ onMount(async () => {
     imageDisplayName = '...' + image.name.substring(image.name.length - 60);
   } else {
     imageDisplayName = image.name;
-  }
-
-  const allNetworks = await window.listNetworks();
-  engineNetworks = allNetworks.filter(network => network.engineId === image.engineId);
-
-  if (engineNetworks.length > 0) {
-    const bridgeNetwork = engineNetworks.find(network => network.Name === 'bridge');
-    if (bridgeNetwork) {
-      options.networking.networkingModeUserNetwork = bridgeNetwork.Id;
-    } else {
-      options.networking.networkingModeUserNetwork = engineNetworks[0].Id;
-    }
-  }
-
-  const allContainers = await window.listContainers();
-  const containerUtils = new ContainerUtils();
-  engineContainers = allContainers
-    .filter(container => container.engineId === image.engineId)
-    .map(container => containerUtils.getContainerInfoUI(container));
-
-  if (engineContainers.length > 0) {
-    const runningContainers = engineContainers
-      .filter(container => container.state === 'RUNNING')
-      .toSorted((a, b) => b.created - a.created);
-    if (runningContainers.length > 0) {
-      options.networking.networkingModeUserContainer = runningContainers[0].id;
-    } else {
-      options.networking.networkingModeUserContainer = engineContainers[0].id;
-    }
   }
 });
 
