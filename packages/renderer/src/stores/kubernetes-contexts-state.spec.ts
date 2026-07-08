@@ -16,13 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { KubernetesObject } from '@kubernetes/client-node';
-import type { ResourceName } from '@podman-desktop/core-api';
 import type { Readable } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import {
   kubernetesCurrentContextCronJobs,
@@ -33,36 +29,15 @@ import {
   kubernetesCurrentContextServices,
 } from './kubernetes-contexts-state';
 
-// define mocks and event callback
-const kubernetesRegisterGetCurrentContextResourcesMock: Mock<
-  (resourceName: ResourceName) => Promise<KubernetesObject[]>
-> = vi.fn();
-const kubernetesUnregisterGetCurrentContextResourcesMock: Mock<
-  (resourceName: ResourceName) => Promise<KubernetesObject[]>
-> = vi.fn().mockResolvedValue([]);
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.kubernetesUnregisterGetCurrentContextResources).mockResolvedValue([]);
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-// patch window object
-Object.defineProperty(global, 'window', {
-  value: {
-    kubernetesRegisterGetCurrentContextResources: kubernetesRegisterGetCurrentContextResourcesMock,
-    kubernetesUnregisterGetCurrentContextResources: kubernetesUnregisterGetCurrentContextResourcesMock,
-    addEventListener: eventEmitter.receive,
-    events: {
-      receive: eventEmitter.receive,
-    },
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test.each([
@@ -111,7 +86,7 @@ async function testKubernetesStore(resourceName: string, store: Readable<Kuberne
   } as unknown as KubernetesObject;
 
   // start with one object in resources and subscribe
-  kubernetesRegisterGetCurrentContextResourcesMock.mockImplementation(type =>
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockImplementation(type =>
     Promise.resolve(type === resourceName ? [object1] : []),
   );
 
@@ -129,9 +104,9 @@ async function testKubernetesStore(resourceName: string, store: Readable<Kuberne
   // update object via an event
   const callback = callbacks.get(event);
   expect(callback).toBeDefined();
-  await callback();
+  await callback?.();
 
-  callbacks.get(event)([object2, object1]);
+  await callbacks.get(event)?.([object2, object1]);
 
   // wait for data to be updated
   await vi.waitFor(() => {

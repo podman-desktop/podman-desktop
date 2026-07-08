@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { IDisposable } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -38,7 +36,7 @@ const eventEmitter = (message: string, func: (...args: unknown[]) => void): IDis
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();
-  vi.mocked(window.events).receive.mockImplementation((channel, args) => {
+  vi.mocked(window.events.receive).mockImplementation((channel, args) => {
     return eventEmitter(channel, args);
   });
 

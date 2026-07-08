@@ -16,43 +16,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { VolumeInspectInfo } from '@podman-desktop/core-api';
+import type { VolumeListInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchVolumesWithData, volumeListInfos, volumesEventStore } from './volumes';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listVolumesMock: Mock<() => Promise<VolumeInspectInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listVolumes: listVolumesMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('volumes should be updated in case of a container is removed', async () => {
   // initial volume
-  listVolumesMock.mockResolvedValue([
+  vi.mocked(window.listVolumes).mockResolvedValue([
     {
       Volumes: [
         {
@@ -61,14 +43,12 @@ test('volumes should be updated in case of a container is removed', async () => 
           Mountpoint: 'mountpoint1',
         },
       ],
-    } as unknown as VolumeInspectInfo,
+    } as unknown as VolumeListInfo,
   ]);
   volumesEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch volumes
   await fetchVolumesWithData();
@@ -79,12 +59,12 @@ test('volumes should be updated in case of a container is removed', async () => 
   expect(volumes[0].Volumes.length).toBe(1);
 
   // ok now mock the listVolumes function to return an empty list
-  listVolumesMock.mockResolvedValue([]);
+  vi.mocked(window.listVolumes).mockResolvedValue([]);
 
   // call 'container-removed-event' event
   const containerRemovedCallback = callbacks.get('container-removed-event');
   expect(containerRemovedCallback).toBeDefined();
-  await containerRemovedCallback();
+  await containerRemovedCallback?.();
 
   // wait debounce
   await new Promise(resolve => setTimeout(resolve, 2000));
@@ -108,16 +88,16 @@ test.each([
   volumesEventStore.setupWithDebounce(10, 10);
 
   // empty list
-  listVolumesMock.mockResolvedValue([]);
+  vi.mocked(window.listVolumes).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('extensions-already-started')();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // clear mock calls
-  listVolumesMock.mockClear();
+  vi.mocked(window.listVolumes).mockClear();
 
-  // now, setup listVolumesMock
-  listVolumesMock.mockResolvedValue([
+  // now, setup listVolumes
+  vi.mocked(window.listVolumes).mockResolvedValue([
     {
       Volumes: [
         {
@@ -126,16 +106,16 @@ test.each([
           Mountpoint: 'mountpoint1',
         },
       ],
-    } as unknown as VolumeInspectInfo,
+    } as unknown as VolumeListInfo,
   ]);
 
   // send event
   const callback = callbacks.get(eventName);
   expect(callback).toBeDefined();
-  await callback();
+  await callback?.();
 
   // wait listContainersMock is called
-  while (listVolumesMock.mock.calls.length === 0) {
+  while (vi.mocked(window.listVolumes).mock.calls.length === 0) {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 

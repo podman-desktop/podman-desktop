@@ -16,51 +16,31 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { CommandInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { commandsEventStore, commandsEventStoreInfo, commandsInfos } from './commands';
 
-// first, patch window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
-    callbacks.set(message, callback);
-  },
-};
-
-const getCommandPaletteCommandsMock: Mock<() => Promise<CommandInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    getCommandPaletteCommands: getCommandPaletteCommandsMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
+// setup() registers a real window.addEventListener that is never removed, so it must
+// only run once for the file rather than per test (which would stack duplicate listeners).
+beforeAll(() => {
+  commandsEventStore.setup();
 });
 
-beforeAll(() => {
-  vi.clearAllMocks();
-  commandsEventStore.setup();
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('commands should be updated', async () => {
   // initial command is empty
-  getCommandPaletteCommandsMock.mockResolvedValue([]);
+  vi.mocked(window.getCommandPaletteCommands).mockResolvedValue([]);
 
   // get list and expect nothing there
   const commands = get(commandsInfos);
   expect(commands.length).toBe(0);
 
-  getCommandPaletteCommandsMock.mockReset();
-  getCommandPaletteCommandsMock.mockResolvedValue([
+  vi.mocked(window.getCommandPaletteCommands).mockReset();
+  vi.mocked(window.getCommandPaletteCommands).mockResolvedValue([
     {
       id: 'first.extension1',
       title: 'test1',
@@ -71,13 +51,11 @@ test('commands should be updated', async () => {
     },
   ]);
 
-  const callback = callbacks.get('system-ready');
   // send 'system-ready' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('system-ready'));
 
   // check that getCommandPaletteCommands is called
-  expect(getCommandPaletteCommandsMock).toBeCalled();
+  await vi.waitFor(() => expect(window.getCommandPaletteCommands).toBeCalled());
 
   // fetch manually
   await commandsEventStoreInfo.fetch();

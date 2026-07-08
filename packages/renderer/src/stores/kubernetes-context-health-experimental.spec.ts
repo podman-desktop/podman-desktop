@@ -17,27 +17,17 @@
  ***********************************************************************/
 
 import { get } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesContextsHealths, kubernetesContextsHealthsStore } from './kubernetes-context-health';
 
-const callbacks = new Map<string, () => Promise<void>>();
-const eventEmitter = {
-  receive: (message: string, callback: () => Promise<void>): void => {
-    callbacks.set(message, callback);
-  },
-};
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
-beforeAll(() => {
-  Object.defineProperty(global, 'window', {
-    value: {
-      kubernetesGetContextsHealths: vi.fn(),
-      isExperimentalConfigurationEnabled: vi.fn(),
-      addEventListener: eventEmitter.receive,
-      events: {
-        receive: eventEmitter.receive,
-      },
-    },
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
   });
 });
 
@@ -78,9 +68,7 @@ test('kubernetesContextsHealths in experimental states mode', async () => {
   kubernetesContextsHealthsStore.setup();
 
   // send 'extensions-already-started' event
-  const callbackExtensionsStarted = callbacks.get('extensions-already-started');
-  expect(callbackExtensionsStarted).toBeDefined();
-  await callbackExtensionsStarted!();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   await vi.waitFor(() => {
     const currentValue = get(kubernetesContextsHealths);
@@ -94,7 +82,7 @@ test('kubernetesContextsHealths in experimental states mode', async () => {
   const event = 'kubernetes-contexts-healths';
   const callback = callbacks.get(event);
   expect(callback).toBeDefined();
-  await callback!();
+  await callback?.();
 
   // check received data is updated
   await vi.waitFor(() => {

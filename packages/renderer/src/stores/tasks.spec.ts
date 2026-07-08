@@ -51,7 +51,8 @@ const NOTIFICATION_TASK: NotificationTaskInfo = {
   cancellable: false,
 };
 
-// first, patch window object
+// tasks.ts registers its window.events.receive listeners at module load time, so the
+// tracking mock must be wired up in vi.hoisted() to run before the './tasks' import.
 const { callbacks, eventEmitter } = vi.hoisted(() => {
   const callbacks = new Map<string, (data: unknown) => void>();
   const eventEmitter = (message: string, func: (...args: unknown[]) => void): IDisposable => {
@@ -59,12 +60,8 @@ const { callbacks, eventEmitter } = vi.hoisted(() => {
     return {} as IDisposable;
   };
 
-  Object.defineProperty(window, 'events', {
-    value: {
-      receive: vi.fn().mockImplementation((channel: string, func: (...args: unknown[]) => void) => {
-        return eventEmitter(channel, func);
-      }),
-    },
+  vi.mocked(window.events.receive).mockImplementation((channel: string, func: (...args: unknown[]) => void) => {
+    return eventEmitter(channel, func);
   });
 
   return { callbacks, eventEmitter };
@@ -74,7 +71,7 @@ beforeEach(() => {
   tasksInfo.set([]);
   vi.resetAllMocks();
 
-  vi.mocked(window.events).receive.mockImplementation((channel, args) => {
+  vi.mocked(window.events.receive).mockImplementation((channel, args) => {
     return eventEmitter(channel, args);
   });
 });

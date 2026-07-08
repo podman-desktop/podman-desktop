@@ -18,27 +18,17 @@
 
 import type { ResourceCount } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesResourcesCount, kubernetesResourcesCountStore } from './kubernetes-resources-count';
 
-const callbacks = new Map<string, () => Promise<void>>();
-const eventEmitter = {
-  receive: (message: string, callback: () => Promise<void>): void => {
-    callbacks.set(message, callback);
-  },
-};
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
-beforeAll(() => {
-  Object.defineProperty(global, 'window', {
-    value: {
-      kubernetesGetResourcesCount: vi.fn(),
-      isExperimentalConfigurationEnabled: vi.fn(),
-      addEventListener: eventEmitter.receive,
-      events: {
-        receive: eventEmitter.receive,
-      },
-    },
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
   });
 });
 
@@ -63,9 +53,7 @@ test('kubernetesResourcesCount in experimental states mode', async () => {
   kubernetesResourcesCountStore.setup();
 
   // send 'extensions-already-started' event
-  const callbackExtensionsStarted = callbacks.get('extensions-already-started');
-  expect(callbackExtensionsStarted).toBeDefined();
-  await callbackExtensionsStarted!();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   await vi.waitFor(() => {
     const currentValue = get(kubernetesResourcesCount);
@@ -79,7 +67,7 @@ test('kubernetesResourcesCount in experimental states mode', async () => {
   const event = 'kubernetes-resources-count';
   const callback = callbacks.get(event);
   expect(callback).toBeDefined();
-  await callback!();
+  await callback?.();
 
   await vi.waitFor(() => {
     // check received data is updated

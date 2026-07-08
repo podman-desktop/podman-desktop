@@ -23,7 +23,7 @@ import type { EventStoreInfo } from './event-store';
 import { addStore, allEventStoresInfo, getStore, updateStore } from './event-store-manager';
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   allEventStoresInfo.set([]);
 });
 
