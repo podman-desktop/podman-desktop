@@ -18,12 +18,18 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { NavigationPage } from '@podman-desktop/core-api';
+import { fireEvent, render } from '@testing-library/svelte';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { SecretInfoUI } from '/@/lib/secrets/SecretInfoUI';
+import { handleNavigation } from '/@/navigation';
 
 import SecretColumnName from './SecretColumnName.svelte';
+
+vi.mock(import('/@/navigation'), () => ({
+  handleNavigation: vi.fn(),
+}));
 
 const secret: SecretInfoUI = {
   engineId: 'podman1',
@@ -35,9 +41,28 @@ const secret: SecretInfoUI = {
   selected: false,
 };
 
-test('Expect secret name to be displayed', async () => {
-  render(SecretColumnName, { object: secret });
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
-  const text = screen.getByText('my-secret');
+test('Expect secret name to be displayed', async () => {
+  const { getByText } = render(SecretColumnName, { object: secret });
+
+  const text = getByText('my-secret');
   expect(text).toBeInTheDocument();
+});
+
+test('Expect click to open secret details', async () => {
+  const { getByRole } = render(SecretColumnName, { object: secret });
+
+  const secretButton = getByRole('button', { name: 'my-secret' });
+  await fireEvent.click(secretButton);
+
+  expect(handleNavigation).toHaveBeenCalledWith({
+    page: NavigationPage.SECRET,
+    parameters: {
+      id: secret.Id,
+      engineId: secret.engineId,
+    },
+  });
 });

@@ -169,5 +169,10 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.SECRETS:
       router.goto(`/secrets`);
       break;
+    case NavigationPage.SECRET:
+      router.goto(
+        `/secrets/${encodeURIComponent(request.parameters.engineId)}/${encodeURIComponent(request.parameters.id)}/summary`,
+      );
+      break;
   }
 };

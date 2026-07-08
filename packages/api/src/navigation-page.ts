@@ -58,4 +58,5 @@ export enum NavigationPage {
   VM_CONNECTION = 'vm-connection',
   KUBERNETES_CONNECTION = 'kubernetes-connection',
   SECRETS = 'secrets',
+  SECRET = 'secret',
 }

@@ -344,3 +344,21 @@ test(`Test navigationHandle for ${NavigationPage.VM_CONNECTION}`, () => {
     '/preferences/vm-connection/dummyProviderId/dummyProviderName/terminal',
   );
 });
+
+test(`Test navigationHandle for ${NavigationPage.SECRETS}`, () => {
+  handleNavigation({ page: NavigationPage.SECRETS });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/secrets');
+});
+
+test(`Test navigationHandle for ${NavigationPage.SECRET}`, () => {
+  handleNavigation({
+    page: NavigationPage.SECRET,
+    parameters: {
+      id: 'secret/id',
+      engineId: 'engine id',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/secrets/engine%20id/secret%2Fid/summary');
+});
