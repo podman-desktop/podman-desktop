@@ -617,6 +617,7 @@ declare module '@podman-desktop/api' {
 
   export interface CheckResult {
     successful: boolean;
+    severity?: 'error' | 'warning';
     description?: string;
     docLinksDescription?: string;
     docLinks?: CheckResultLink[];
