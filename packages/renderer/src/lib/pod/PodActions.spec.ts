@@ -30,7 +30,7 @@ class Pod {
   #actionError: string;
   constructor(
     public id: string,
-    public containers: { Id: string }[],
+    public containers: { Id: string; Status?: string }[],
     initialStatus: string,
     public kind: string,
     actionError: string,
@@ -69,6 +69,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'ResizeObserver', { value: ResizeObserver });
   Object.defineProperty(window, 'listContainers', { value: listContainersMock });
   Object.defineProperty(window, 'startPod', { value: vi.fn() });
+  Object.defineProperty(window, 'unpausePod', { value: vi.fn() });
   Object.defineProperty(window, 'stopPod', { value: vi.fn() });
   Object.defineProperty(window, 'restartPod', { value: vi.fn() });
   Object.defineProperty(window, 'removePod', { value: vi.fn() });
@@ -97,6 +98,24 @@ test('Expect no error and status starting pod', async () => {
 
   expect(podmanPod.status).toEqual('STARTING');
   expect(podmanPod.actionError).toEqual('');
+  expect(updateMock).toHaveBeenCalled();
+});
+
+test('Expect no error and status starting for unpausing pod', async () => {
+  listContainersMock.mockResolvedValue([]);
+
+  // set status to paused
+  podmanPod.containers[0].Status = 'paused';
+  render(PodActions, { pod: podmanPod, onUpdate: updateMock });
+
+  // click on start button
+  const startButton = screen.getByRole('button', { name: 'Start Pod' });
+  await fireEvent.click(startButton);
+
+  expect(podmanPod.status).toEqual('STARTING');
+  expect(podmanPod.actionError).toEqual('');
+  expect(window.unpausePod).toHaveBeenCalledWith(podmanPod.engineId, podmanPod.id);
+  expect(window.startPod).not.toHaveBeenCalled();
   expect(updateMock).toHaveBeenCalled();
 });
 
