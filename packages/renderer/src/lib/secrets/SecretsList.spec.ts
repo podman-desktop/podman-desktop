@@ -84,6 +84,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.listSecrets).mockResolvedValue([]);
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   providerInfos.set([]);
   secretsInfo.set([]);
   searchPattern.set('');
