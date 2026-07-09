@@ -13,6 +13,7 @@ import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
+import ChangeVersionModal from './ChangeVersionModal.svelte';
 import { EXTENSION_ACTIONS_MENU_CHANGE_EVENT, getOpenExtensionActionsMenuId } from './extension-actions-menu.svelte';
 import {
   mapCompatibilityIssuesToDetailsWarnings,
@@ -26,6 +27,10 @@ import ExtensionDetailsError from './ExtensionDetailsError.svelte';
 import ExtensionDetailsReadme from './ExtensionDetailsReadme.svelte';
 import ExtensionDetailsSummaryCard from './ExtensionDetailsSummaryCard.svelte';
 import ExtensionDetailsWarnings from './ExtensionDetailsWarnings.svelte';
+import {
+  areExtensionsImprovementsSuggested,
+  EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT,
+} from './extensions-prototype-scope';
 import { ExtensionsUtils } from './extensions-utils';
 
 export let extensionId: string;
@@ -40,12 +45,22 @@ const extensionsUtils = new ExtensionsUtils();
 let podmanDesktopVersion = '';
 let uiRevision = 0;
 let actionsMenuRevision = 0;
+let changeVersionExtension: CatalogExtensionInfoUI | undefined;
+let changeVersionPreferredVersion: string | undefined;
+let scopeRevision = 0;
+
+$: isSuggestionScope = ((): boolean => {
+  scopeRevision;
+  return areExtensionsImprovementsSuggested();
+})();
 
 let extension: Readable<ExtensionDetailsUI | undefined>;
 
 $: decodedExtensionId = decodeURIComponent(extensionId);
 
-$: installedExtensionsWithDemos = extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions);
+$: installedExtensionsWithDemos = isSuggestionScope
+  ? extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions)
+  : $combinedInstalledExtensions;
 
 $: catalogExtension = ((): CatalogExtensionInfoUI | undefined => {
   uiRevision;
@@ -55,14 +70,16 @@ $: catalogExtension = ((): CatalogExtensionInfoUI | undefined => {
     $featuredExtensionInfos,
     installedExtensionsWithDemos,
   );
-  return info ? withDisplayInstalledVersion(info) : undefined;
+  return info ? (isSuggestionScope ? withDisplayInstalledVersion(info) : info) : undefined;
 })();
 
 $: extension = derived(
   [catalogExtensionInfos, combinedInstalledExtensions],
   ([$catalogExtensionInfos, _combinedInstalledExtensions]) => {
-    const withDemos = extensionsUtils.applyPrototypeUseCaseOverlays(_combinedInstalledExtensions);
-    return extensionsUtils.extractExtensionDetail($catalogExtensionInfos, withDemos, decodedExtensionId);
+    const extensions = isSuggestionScope
+      ? extensionsUtils.applyPrototypeUseCaseOverlays(_combinedInstalledExtensions)
+      : _combinedInstalledExtensions;
+    return extensionsUtils.extractExtensionDetail($catalogExtensionInfos, extensions, decodedExtensionId);
   },
 );
 
@@ -117,13 +134,31 @@ onMount(() => {
   const actionsMenuHandler = (): void => {
     actionsMenuRevision += 1;
   };
+  const scopeHandler = (): void => {
+    scopeRevision += 1;
+  };
   window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
   window.addEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, actionsMenuHandler);
+  window.addEventListener(EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT, scopeHandler);
   return (): void => {
     window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
     window.removeEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, actionsMenuHandler);
+    window.removeEventListener(EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT, scopeHandler);
   };
 });
+
+function openChangeVersion(): void {
+  if (!catalogExtension) {
+    return;
+  }
+  changeVersionExtension = catalogExtension;
+  changeVersionPreferredVersion = undefined;
+}
+
+function closeChangeVersion(): void {
+  changeVersionExtension = undefined;
+  changeVersionPreferredVersion = undefined;
+}
 </script>
 
 {#if $extension}
@@ -152,6 +187,7 @@ onMount(() => {
           <CatalogExtensionActions
             extension={catalogExtension}
             {returnScreen}
+            onChangeVersion={isSuggestionScope ? openChangeVersion : undefined}
             onDetailsPage={true} />
         {/if}
       </div>
@@ -207,4 +243,11 @@ onMount(() => {
       </div>
     {/snippet}
   </DetailsPage>
+{/if}
+
+{#if changeVersionExtension && isSuggestionScope}
+  <ChangeVersionModal
+    extension={changeVersionExtension}
+    preferredVersion={changeVersionPreferredVersion}
+    closeCallback={closeChangeVersion} />
 {/if}

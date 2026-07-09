@@ -135,3 +135,15 @@ test('empty catalog, hide if empty', async () => {
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).not.toBeInTheDocument();
 });
+
+test('current scope uses production catalog cards without actions menu', async () => {
+  render(CatalogExtensionList, {
+    suggestionScope: false,
+    catalogExtensions: [extensionA, extensionB],
+    allCatalogExtensions: [extensionA, extensionB],
+  });
+
+  expect(screen.getByRole('button', { name: 'This is the display name1 details' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'This is the display name1 actions' })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Filter by install status')).not.toBeInTheDocument();
+});

@@ -35,6 +35,7 @@ import QuickPickInput from './lib/dialogs/QuickPickInput.svelte';
 import DockerExtension from './lib/docker-extension/DockerExtension.svelte';
 import ExtensionDetails from './lib/extensions/ExtensionDetails.svelte';
 import ExtensionList from './lib/extensions/ExtensionList.svelte';
+import { initExtensionsPrototypeScope } from './lib/extensions/extensions-prototype-scope';
 import SendFeedback from './lib/feedback/SendFeedback.svelte';
 import HelpActions from './lib/help/HelpActions.svelte';
 import BuildImageFromContainerfile from './lib/image/BuildImageFromContainerfile.svelte';
@@ -160,6 +161,8 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 
 // Initialize table persistence callbacks immediately
 tablePersistence.storage = new PodmanDesktopStoragePersist();
+
+initExtensionsPrototypeScope();
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>

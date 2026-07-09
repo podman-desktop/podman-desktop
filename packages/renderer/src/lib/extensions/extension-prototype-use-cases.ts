@@ -50,7 +50,7 @@ export function isPrototypeUpdateDemoExtension(extensionId: string): boolean {
   return (PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS as readonly string[]).includes(extensionId);
 }
 
-let prototypeUseCasesEnabled = true;
+let prototypeUseCasesEnabled = false;
 
 export function setPrototypeUseCasesEnabled(enabled: boolean): void {
   prototypeUseCasesEnabled = enabled;

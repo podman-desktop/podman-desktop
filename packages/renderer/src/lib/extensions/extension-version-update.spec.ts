@@ -116,6 +116,44 @@ test('applyExtensionVersionChange surfaces backend errors when prototype mode is
   expect(getDisplayInstalledVersion(baseExtension.id, '0.4.0')).toBe('0.4.0');
 });
 
+test('prototype mode shows downgrading status then completes after 3 seconds', async () => {
+  setPrototypeVersionChangesEnabled(true);
+
+  applyExtensionVersionChange(baseExtension, '0.2.0', false);
+
+  expect(getExtensionVersionUpdateState(baseExtension.id)?.status).toBe('updating');
+  expect(getExtensionVersionUpdateState(baseExtension.id)?.message).toBe('Downgrading...');
+  expect(getExtensionVersionUpdateState(baseExtension.id)?.direction).toBe('downgrade');
+  expect(window.updateExtension).not.toHaveBeenCalled();
+
+  await vi.advanceTimersByTimeAsync(3000);
+
+  expect(getOptimisticInstalledVersion(baseExtension.id)).toBe('0.2.0');
+  expect(getExtensionVersionUpdateState(baseExtension.id)).toBeUndefined();
+  expect(window.updateExtension).not.toHaveBeenCalled();
+});
+
+test('prototype mode shows upgrading status for newer target version', async () => {
+  setPrototypeVersionChangesEnabled(true);
+
+  applyExtensionVersionChange(
+    {
+      ...baseExtension,
+      installedVersion: '0.2.0',
+    },
+    '0.4.0',
+    false,
+  );
+
+  expect(getExtensionVersionUpdateState(baseExtension.id)?.message).toBe('Upgrading...');
+  expect(getExtensionVersionUpdateState(baseExtension.id)?.direction).toBe('upgrade');
+
+  await vi.advanceTimersByTimeAsync(3000);
+
+  expect(getOptimisticInstalledVersion(baseExtension.id)).toBe('0.4.0');
+  expect(getExtensionVersionUpdateState(baseExtension.id)).toBeUndefined();
+});
+
 test('prototype mode updates UI without calling backend', async () => {
   setPrototypeVersionChangesEnabled(true);
 
@@ -134,6 +172,7 @@ test('prototype mode completes after 3 seconds without waiting for backend', asy
   applyExtensionVersionChange(baseExtension, '0.2.0', false);
 
   expect(getExtensionVersionUpdateState(baseExtension.id)?.status).toBe('updating');
+  expect(getExtensionVersionUpdateState(baseExtension.id)?.message).toBe('Downgrading...');
   expect(window.updateExtension).not.toHaveBeenCalled();
 
   await vi.advanceTimersByTimeAsync(3000);

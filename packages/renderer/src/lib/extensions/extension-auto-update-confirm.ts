@@ -29,7 +29,7 @@ export function getExtensionAutoUpdateConfirmDetail(extension: CatalogExtensionI
     return 'New updates will be automatically installed when they become available.';
   }
 
-  return 'You will need to install updates manually using the Update link or Version preference.';
+  return 'You will need to install updates manually using the Update link or Change version menu.';
 }
 
 export async function confirmExtensionAutoUpdateChange(

@@ -10,6 +10,7 @@ import {
 } from '/@/lib/extensions/extension-badge-styles';
 import { extensionRequiresManualUpdate } from '/@/lib/extensions/extension-onboarding-utils';
 import { shouldShowBuiltInNameIndicator } from '/@/lib/extensions/extension-origin-utils';
+import ExtensionFeaturedNameLabel from '/@/lib/extensions/ExtensionFeaturedNameLabel.svelte';
 import ExtensionIndicatorIcon from '/@/lib/extensions/ExtensionIndicatorIcon.svelte';
 import ExtensionTruncatedText from '/@/lib/extensions/ExtensionTruncatedText.svelte';
 import type { InstalledExtensionTableRow } from '/@/lib/extensions/installed-extension-table-row';
@@ -31,7 +32,11 @@ const showBuiltIn = $derived(
 
 <div class="flex flex-col gap-1 min-w-0 py-1">
   <span class="inline-flex min-w-0 max-w-full items-center gap-1">
-    <span class="truncate font-semibold text-[var(--pd-content-header)]">{displayName}</span>
+    <ExtensionFeaturedNameLabel
+      displayName={displayName}
+      isFeatured={object.catalogExtension.isFeatured}
+      isVerified={object.catalogExtension.isVerified}
+      nameClass="font-semibold text-[var(--pd-content-header)]" />
     {#if showBuiltIn}
       <ExtensionIndicatorIcon
         icon={faShieldHalved}

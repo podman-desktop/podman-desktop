@@ -2,6 +2,7 @@
 import {
   faBug,
   faCircleInfo,
+  faCodeBranch,
   faExternalLink,
   faGear,
   faGraduationCap,
@@ -34,17 +35,19 @@ import {
   getExtensionRemoveBlockedReasonShort,
   removeExtensionWithConfirmation,
 } from './extension-remove-preference';
+import { extensionHasVersionChoices, shouldShowExtensionVersionPreference } from './extension-version-preference';
 import ExtensionDropdownMenu from './ExtensionDropdownMenu.svelte';
 import ExtensionDropdownMenuItem from './ExtensionDropdownMenuItem.svelte';
 
 interface Props {
   extension: CatalogExtensionInfoUI;
   returnScreen?: ExtensionListScreen;
+  onChangeVersion?: () => void;
   /** Hide "View more details" when the actions menu is rendered on the details page. */
   onDetailsPage?: boolean;
 }
 
-let { extension, returnScreen = 'catalog', onDetailsPage = false }: Props = $props();
+let { extension, returnScreen = 'catalog', onChangeVersion, onDetailsPage = false }: Props = $props();
 
 const installedExtension = $derived(extension.installedExtension);
 
@@ -65,6 +68,12 @@ const lifecycleToggleIcon = $derived(
 const isRemovable = $derived(
   !!installedExtension && isExtensionRemovableInUi(installedExtension, extension.fetchable === true),
 );
+
+const showChangeVersion = $derived(
+  !!extension.isInstalled && shouldShowExtensionVersionPreference(extension) && !!onChangeVersion,
+);
+
+const hasOtherVersions = $derived(extensionHasVersionChoices(extension));
 
 function openDetails(event: Event): void {
   event.stopPropagation();
@@ -116,6 +125,14 @@ async function openRepository(event: Event): Promise<void> {
     await window.openExternal(extension.repositoryUrl);
   }
 }
+
+function handleChangeVersion(event: Event): void {
+  event.stopPropagation();
+  if (!onChangeVersion) {
+    return;
+  }
+  onChangeVersion();
+}
 </script>
 
 <div onclick={(event): void => event.stopPropagation()} role="presentation">
@@ -137,6 +154,13 @@ async function openRepository(event: Event): Promise<void> {
         icon={lifecycleToggleIcon}
         enabled={canToggleLifecycle}
         onClick={toggleExtensionLifecycle} />
+      {#if showChangeVersion}
+        <ExtensionDropdownMenuItem
+          title="Change version"
+          detail={hasOtherVersions ? '' : 'No other versions available'}
+          icon={faCodeBranch}
+          onClick={handleChangeVersion} />
+      {/if}
       <ExtensionDropdownMenuItem title="Preferences" icon={faGear} onClick={openPreferences} />
       {#if extension.repositoryUrl}
         <ExtensionDropdownMenuItem title="Open repository" icon={faExternalLink} onClick={openRepository} />

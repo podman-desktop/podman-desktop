@@ -7,7 +7,6 @@ import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
-import { EXTENSION_ACTIONS_MENU_CHANGE_EVENT, isExtensionActionsMenuOpen } from './extension-actions-menu.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
   EXTENSION_VERSION_UI_CHANGE_EVENT,
@@ -27,31 +26,17 @@ export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 
 let uiRevision = 0;
-let menuRevision = 0;
 
 function refreshVersionUi(): void {
   uiRevision += 1;
 }
 
-function refreshActionsMenuUi(): void {
-  menuRevision += 1;
-}
-
-$: isActionsMenuOpen = ((): boolean => {
-  menuRevision;
-  return isExtensionActionsMenuOpen(catalogExtensionUI.id);
-})();
-
-$: cardActionVisibilityClass = isActionsMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100';
-
 onMount(() => {
   window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
-  window.addEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, refreshActionsMenuUi);
 });
 
 onDestroy(() => {
   window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
-  window.removeEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, refreshActionsMenuUi);
 });
 
 function openExtensionDetails(): void {
@@ -123,7 +108,7 @@ function handleCardClick(event: MouseEvent): void {
         </div>
       </div>
 
-      <div class="flex shrink-0 items-start gap-1 transition-opacity {cardActionVisibilityClass}">
+      <div class="flex shrink-0 items-start gap-1">
         {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
         {/if}

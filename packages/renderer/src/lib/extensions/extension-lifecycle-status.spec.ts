@@ -26,10 +26,18 @@ import {
 } from './extension-lifecycle-status';
 
 describe('getExtensionLifecyclePresentation', () => {
-  test('version update uses neutral upgrading presentation', () => {
-    expect(getExtensionVersionUpdatePresentation()).toEqual({
+  test('version update uses upgrading presentation', () => {
+    expect(getExtensionVersionUpdatePresentation('upgrade')).toEqual({
       statusDotStatus: 'stopped',
-      label: 'Upgrading',
+      label: 'Upgrading...',
+      textColorVar: 'var(--pd-status-stopped)',
+    });
+  });
+
+  test('version update uses downgrading presentation', () => {
+    expect(getExtensionVersionUpdatePresentation('downgrade')).toEqual({
+      statusDotStatus: 'stopped',
+      label: 'Downgrading...',
       textColorVar: 'var(--pd-status-stopped)',
     });
   });

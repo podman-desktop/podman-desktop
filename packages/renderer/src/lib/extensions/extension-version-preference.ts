@@ -22,6 +22,7 @@ import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { extensionHasVersionUpdate } from './extension-onboarding-utils';
 import {
+  arePrototypeVersionChangesEnabled,
   getDisplayInstalledVersion,
   getStoreInstalledVersion,
   getVersionChangeLinkLabel,
@@ -183,6 +184,10 @@ export async function confirmExtensionVersionChange(
   extension: CatalogExtensionInfoUI,
   targetVersion: string,
 ): Promise<boolean> {
+  if (arePrototypeVersionChangesEnabled()) {
+    return true;
+  }
+
   const actionLabel = getVersionChangeLinkLabel(getExtensionVersionPreferenceValue(extension), targetVersion);
   const result = await window.showMessageBox({
     type: 'none',

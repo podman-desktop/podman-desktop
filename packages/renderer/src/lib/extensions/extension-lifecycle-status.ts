@@ -42,10 +42,12 @@ export function getExtensionCompatibilityPresentation(
   };
 }
 
-export function getExtensionVersionUpdatePresentation(): ExtensionLifecyclePresentation {
+export function getExtensionVersionUpdatePresentation(
+  direction: 'upgrade' | 'downgrade' = 'upgrade',
+): ExtensionLifecyclePresentation {
   return {
     statusDotStatus: 'stopped',
-    label: 'Upgrading',
+    label: direction === 'downgrade' ? 'Downgrading...' : 'Upgrading...',
     textColorVar: 'var(--pd-status-stopped)',
   };
 }

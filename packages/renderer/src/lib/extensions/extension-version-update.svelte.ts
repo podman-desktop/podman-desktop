@@ -31,12 +31,13 @@ export interface ExtensionVersionUpdateState {
   status: 'updating' | 'error';
   message: string;
   targetVersion: string;
+  direction?: 'upgrade' | 'downgrade';
 }
 
 export const EXTENSION_VERSION_UI_CHANGE_EVENT = 'extension-version-ui-change';
 
 const PROTOTYPE_MIN_LOADING_MS = 3000;
-let prototypeVersionChangesEnabled = true;
+let prototypeVersionChangesEnabled = false;
 
 interface ExtensionVersionUiGlobal {
   versionUpdateStatesStore: Writable<Record<string, ExtensionVersionUpdateState>>;
@@ -241,6 +242,23 @@ export function getVersionChangeLinkLabel(installedVersion: string | undefined, 
   return `Change to v${target}`;
 }
 
+export function getVersionChangeDirection(
+  installedVersion: string | undefined,
+  targetVersion: string,
+): 'upgrade' | 'downgrade' {
+  const installed = normalizeVersionValue(installedVersion);
+  const target = normalizeVersionValue(targetVersion);
+  if (!installed || !target) {
+    return 'upgrade';
+  }
+
+  return target.localeCompare(installed, undefined, { numeric: true }) < 0 ? 'downgrade' : 'upgrade';
+}
+
+function getPrototypeVersionUpdateMessage(direction: 'upgrade' | 'downgrade'): string {
+  return direction === 'downgrade' ? 'Downgrading...' : 'Upgrading...';
+}
+
 export function resolveExtensionVersionOciUri(
   extension: CatalogExtensionInfoUI,
   normalizedTarget: string,
@@ -326,10 +344,17 @@ export function applyExtensionVersionChange(
     setAutoUpdateEnabled(extension.id, autoUpdateEnabled);
   }
 
+  const installedVersion = getStoreInstalledVersion(extension) ?? extension.installedVersion;
+  const direction = getVersionChangeDirection(installedVersion, normalizedTarget);
+  const message = prototypeVersionChangesEnabled
+    ? getPrototypeVersionUpdateMessage(direction)
+    : `Updating to v${normalizedTarget}...`;
+
   setUpdateState(extension.id, {
     status: 'updating',
-    message: `Updating to v${normalizedTarget}...`,
+    message,
     targetVersion: normalizedTarget,
+    direction,
   });
 
   if (prototypeVersionChangesEnabled) {

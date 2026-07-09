@@ -9,12 +9,11 @@ import {
   EXTENSION_VERSION_UI_CHANGE_EVENT,
   getOptimisticInstalledVersion,
   getVersionChangeLinkLabel,
-  isExtensionVersionUpdating,
   resolveVersionChangeTarget,
   shouldShowVersionChangeLink,
+  versionUpdateStatesStore,
   withDisplayInstalledVersion,
 } from '/@/lib/extensions/extension-version-update.svelte';
-import ExtensionVersionUpdateStatus from '/@/lib/extensions/ExtensionVersionUpdateStatus.svelte';
 import type { InstalledExtensionTableRow } from '/@/lib/extensions/installed-extension-table-row';
 
 interface Props {
@@ -35,15 +34,13 @@ onMount(() => {
   };
 });
 
+const isUpdating = $derived($versionUpdateStatesStore[object.extension.id]?.status === 'updating');
+
 const displayVersion = $derived.by(() => {
   uiRevision;
   const actualVersion = object.extension.version;
   const optimistic = getOptimisticInstalledVersion(object.extension.id);
   const normalizedActual = actualVersion?.replace(/^v/i, '').trim();
-
-  if (isExtensionVersionUpdating(object.extension.id)) {
-    return actualVersion;
-  }
 
   if (optimistic && optimistic !== normalizedActual) {
     return optimistic;
@@ -58,11 +55,6 @@ const extensionForDisplay = $derived(
     installedVersion: displayVersion,
   }),
 );
-
-const isUpdating = $derived.by(() => {
-  uiRevision;
-  return isExtensionVersionUpdating(object.extension.id);
-});
 
 const showLink = $derived.by(() => {
   uiRevision;
@@ -98,5 +90,4 @@ async function handleUpdate(): Promise<void> {
       {linkLabel}
     </Link>
   {/if}
-  <ExtensionVersionUpdateStatus extensionId={object.extension.id} extensionState={object.extension.state} />
 </div>

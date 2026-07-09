@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *********************************************************************/
 
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import {
@@ -31,6 +31,12 @@ import {
   matchesExtensionVersionSearch,
   shouldShowExtensionVersionPreference,
 } from './extension-version-preference';
+import { setPrototypeVersionChangesEnabled } from './extension-version-update.svelte';
+
+beforeEach(() => {
+  vi.restoreAllMocks();
+  setPrototypeVersionChangesEnabled(false);
+});
 
 describe('extension-version-preference', () => {
   test('shows preference when multiple versions are available', () => {
