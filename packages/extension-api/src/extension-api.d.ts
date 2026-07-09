@@ -2717,8 +2717,6 @@ declare module '@podman-desktop/api' {
   }
 
   interface SecretCreateOptions {
-    name: string;
-    data: string;
     labels?: Record<string, string>;
     // Set the provider to use, if not we will try select the first one available (sorted in favor of Podman).
     provider?: ContainerProviderConnection;
@@ -4243,7 +4241,11 @@ declare module '@podman-desktop/api' {
     export function listSecrets(): Promise<SecretInfo[]>;
     export function removeSecret(engineId: string, secretId: string): Promise<void>;
     export function inspectSecret(engineId: string, id: string): Promise<SecretInspectInfo>;
-    export function createSecret(options: SecretCreateOptions): Promise<SecretCreateResult>;
+    export function createSecret(
+      name: string,
+      data: string,
+      options?: SecretCreateOptions,
+    ): Promise<SecretCreateResult>;
   }
 
   /**
