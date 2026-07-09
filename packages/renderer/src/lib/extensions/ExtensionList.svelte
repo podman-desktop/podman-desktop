@@ -109,6 +109,8 @@ const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived.by(() =>
   return extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm);
 });
 
+let filteredInstalledItems: number = $derived($combinedInstalledExtensions.length - filteredInstalledExtensions.length);
+
 // combine data from featured extensions and catalog extension
 // need to add in the catalog extension a flag to know if extension is featured or not
 // and featured extensions need to be displayed first
@@ -127,6 +129,8 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
     ? extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm, catalogListFilters.value)
     : extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm),
 );
+
+let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
 const showCatalogFilterEmpty = $derived(
   isSuggestionScope &&
@@ -217,6 +221,20 @@ $effect(() => {
     {/if}
   {/snippet}
 
+  {#snippet bottomAdditionalActions()}
+    {#if !isSuggestionScope}
+      {#if filteredInstalledItems > 0 && screen === 'installed'}
+        <div class="text-sm text-[var(--pd-content-text)]">
+          Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
+        </div>
+      {:else if filteredCatalogItems > 0 && screen === 'catalog'}
+        <div class="text-sm text-[var(--pd-content-text)]">
+          Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
+        </div>
+      {/if}
+    {/if}
+  {/snippet}
+
   {#snippet tabs()}
     <Tab
       title="Installed"
@@ -237,6 +255,7 @@ $effect(() => {
   {/snippet}
 
   {#snippet content()}
+  {#if isSuggestionScope}
   <div class="flex min-w-full h-full flex-1">
     {#if screen === 'installed'}
       {#if showInstalledSearchEmpty}
@@ -251,7 +270,7 @@ $effect(() => {
         </div>
       {/if}
       <InstalledExtensionList
-        suggestionScope={isSuggestionScope}
+        suggestionScope={true}
         bind:searchTerm
         extensionInfos={filteredInstalledExtensions}
         allExtensionInfos={installedExtensionsWithDemos}
@@ -276,7 +295,7 @@ $effect(() => {
         <div class="px-5 pt-3 text-sm text-[var(--pd-status-warning)]">{prototypeTooltipDemoMessage}</div>
       {/if}
       <CatalogExtensionList
-        suggestionScope={isSuggestionScope}
+        suggestionScope={true}
         showEmptyScreen={!searchTerm && !hasActiveCatalogListFilters()}
         showFilteredEmpty={showCatalogFilterEmpty}
         bind:searchTerm
@@ -291,6 +310,38 @@ $effect(() => {
       <DevelopmentExtensionList />
     {/if}
   </div>
+  {:else}
+  <div class="flex min-w-full h-full">
+    {#if screen === 'installed'}
+      {#if searchTerm && filteredInstalledExtensions.length === 0}
+        <FilteredEmptyScreen
+          icon={ExtensionIcon}
+          kind="extensions"
+          bind:searchTerm
+          onResetFilter={(): void => {
+            searchTerm = '';
+          }} />
+      {/if}
+      <InstalledExtensionList suggestionScope={false} extensionInfos={filteredInstalledExtensions} />
+    {:else if screen === 'catalog' && enableCatalog}
+      {#if searchTerm && filteredCatalogExtensions.length === 0}
+        <FilteredEmptyScreen
+          icon={ExtensionIcon}
+          kind="extensions"
+          bind:searchTerm
+          onResetFilter={(): void => {
+            searchTerm = '';
+          }} />
+      {/if}
+      <CatalogExtensionList
+        suggestionScope={false}
+        showEmptyScreen={!searchTerm}
+        catalogExtensions={filteredCatalogExtensions} />
+    {:else if screen === 'development' && enableLocalExtensions}
+      <DevelopmentExtensionList />
+    {/if}
+  </div>
+  {/if}
   {/snippet}
 </NavPage>
 

@@ -138,12 +138,7 @@ function closeChangeVersion(): void {
 {:else}
   <div class="grow px-5 py-3">
     {#each extensionInfos as extension (extension.id)}
-      {@const catalogExtension = extensionsUtils.buildCatalogInfoForInstalled(
-        extension,
-        $catalogExtensionInfos,
-        $featuredExtensionInfos,
-      )}
-      <InstalledExtensionCard {extension} {catalogExtension} />
+      <InstalledExtensionCard extension={extension} />
     {/each}
   </div>
 {/if}

@@ -113,25 +113,27 @@ async function fetchCatalog(): Promise<void> {
     </div>
   </div>
 {:else}
-  <div class="flex grow flex-col px-5 py-3">
+  {@const currentTitle = title || 'Available extensions'}
+  <div class="flex flex-col grow px-5 py-3">
     {#if catalogExtensions.length > 0}
-      <div class="mb-4 flex flex-row items-center justify-end">
-        <Button title="Refresh the catalog" aria-label="Refresh the catalog" on:click={fetchCatalog}>
-          Refresh the catalog
-        </Button>
+      <div class="mb-4 flex flex-row">
+        <div class="flex items-center text-[var(--pd-content-header)]">{currentTitle}</div>
+        <div class="flex-1 text-right">
+          <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
+        </div>
       </div>
     {:else if showEmptyScreen}
       <EmptyScreen
         title="No extensions in the catalog"
         message="No extensions from the catalog. It seems that the internet connection was not available to download the catalog."
         icon={faPuzzlePiece}>
-        <Button title="Refresh the catalog" aria-label="Refresh the catalog" on:click={fetchCatalog}>
-          Refresh the catalog
-        </Button>
+        <div class="flex gap-2 justify-center">
+          <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
+        </div>
       </EmptyScreen>
     {/if}
 
-    {#if catalogExtensions.length > 0}
+    <div class="flex flex-col w-full">
       <div
         class="grid min-[920px]:grid-cols-2 min-[1180px]:grid-cols-3 gap-3"
         role="region"
@@ -140,6 +142,6 @@ async function fetchCatalog(): Promise<void> {
           <CatalogExtension ondetails={ondetails} oninstall={oninstall} catalogExtensionUI={catalogExtension} />
         {/each}
       </div>
-    {/if}
+    </div>
   </div>
 {/if}

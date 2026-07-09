@@ -1,16 +1,14 @@
 <script lang="ts">
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import InstalledExtensionCardLeft from './InstalledExtensionCardLeft.svelte';
 import InstalledExtensionCardRight from './InstalledExtensionCardRight.svelte';
 
 interface Props {
   extension: CombinedExtensionInfoUI;
-  catalogExtension?: CatalogExtensionInfoUI;
 }
 
-let { extension, catalogExtension }: Props = $props();
+let { extension }: Props = $props();
 </script>
 
 <div
@@ -18,7 +16,7 @@ let { extension, catalogExtension }: Props = $props();
   role="region"
   aria-label={extension.id}>
   <!-- left col  -->
-  <InstalledExtensionCardLeft {extension} {catalogExtension} />
+  <InstalledExtensionCardLeft extension={extension} />
 
   <div class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2" role="region">
     <InstalledExtensionCardRight extension={extension} />
