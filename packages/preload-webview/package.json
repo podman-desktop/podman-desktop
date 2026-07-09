@@ -8,6 +8,6 @@
     "@podman-desktop/core-api": "workspace:*",
     "@podman-desktop/webview-api": "workspace:*",
     "electron": "43.0.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   }
 }
