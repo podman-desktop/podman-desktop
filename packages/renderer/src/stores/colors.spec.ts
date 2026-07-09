@@ -49,9 +49,7 @@ test('grab colors', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // wait listColors is called
-  while (!vi.mocked(window.listColors).mock.calls.length) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await vi.waitFor(() => expect(window.listColors).toHaveBeenCalled());
 
   // now get the current-theme list
   const colors = get(colorsInfos);

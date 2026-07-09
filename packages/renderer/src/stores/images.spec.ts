@@ -31,6 +31,7 @@ vi.mock(import('./search-util'), () => ({
 }));
 
 beforeEach(() => {
+  callbacks.clear();
   vi.resetAllMocks();
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);

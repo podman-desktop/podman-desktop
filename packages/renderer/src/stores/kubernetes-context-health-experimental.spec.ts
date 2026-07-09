@@ -24,6 +24,7 @@ import { kubernetesContextsHealths, kubernetesContextsHealthsStore } from './kub
 const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
 beforeEach(() => {
+  callbacks.clear();
   vi.resetAllMocks();
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);

@@ -32,6 +32,7 @@ import {
 const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
 beforeEach(() => {
+  callbacks.clear();
   vi.resetAllMocks();
   vi.mocked(window.kubernetesUnregisterGetCurrentContextResources).mockResolvedValue([]);
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {

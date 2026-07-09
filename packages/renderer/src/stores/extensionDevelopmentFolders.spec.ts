@@ -34,6 +34,7 @@ const eventEmitter = (message: string, func: (...args: unknown[]) => void): IDis
 };
 
 beforeEach(() => {
+  callbacks.clear();
   vi.restoreAllMocks();
   vi.resetAllMocks();
   vi.mocked(window.events.receive).mockImplementation((channel, args) => {
