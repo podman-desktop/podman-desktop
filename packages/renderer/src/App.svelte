@@ -4,6 +4,8 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import type { KubernetesNavigationRequest, NavigationRequest } from '@podman-desktop/core-api';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import { parseExtensionDetailsRequest, parseExtensionListRequest } from '/@/lib/extensions/extension-list';
@@ -88,6 +90,7 @@ import WelcomePage from './lib/welcome/WelcomePage.svelte';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import Route from './Route.svelte';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
+import { activePrototype } from './stores/prototype';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 router.mode.memory();
@@ -163,6 +166,12 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 tablePersistence.storage = new PodmanDesktopStoragePersist();
 
 initExtensionsPrototypeScope();
+
+onMount(() => {
+  if (!get(activePrototype)) {
+    initExtensionsPrototypeScope();
+  }
+});
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>
