@@ -31,12 +31,20 @@ test('createNavigationVolumeEntry', async () => {
   const entry = createNavigationVolumeEntry();
   volumeListInfos.set([
     {
-      Id: '1234',
-      Size: 0,
-    } as unknown as VolumeListInfo,
-    {
-      Id: '3456',
-      Size: 0,
+      Volumes: [
+        {
+          Id: '1234',
+          Size: 0,
+          Name: 'my-data',
+          engineId: 'podman',
+        },
+        {
+          Id: '3456',
+          Size: 0,
+          Name: 'cache-vol',
+          engineId: 'docker',
+        },
+      ],
     } as unknown as VolumeListInfo,
   ]);
 
@@ -46,5 +54,19 @@ test('createNavigationVolumeEntry', async () => {
   expect(entry.tooltip).toBe('Volumes');
   await vi.waitFor(() => {
     expect(entry.counter).toBe(2);
+    expect(entry.destinations).toHaveLength(3);
   });
+
+  const [first, second, listEntry] = entry.destinations;
+
+  expect(first.page).toBe('volume');
+  expect(first).toHaveProperty('parameters', { engineId: 'podman', name: 'my-data' });
+  expect(first.name).toBe('Volume: my-data');
+
+  expect(second.page).toBe('volume');
+  expect(second).toHaveProperty('parameters', { engineId: 'docker', name: 'cache-vol' });
+  expect(second.name).toBe('Volume: cache-vol');
+
+  expect(listEntry.page).toBe('volumes');
+  expect(listEntry.name).toBe('Volumes (2)');
 });

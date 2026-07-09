@@ -156,6 +156,7 @@ test('opens submenu when a `submenu` menu is opened', async () => {
       get counter(): number {
         return 0;
       },
+      destinations: [],
       items: [{} as NavigationRegistryEntry],
     },
   ]);
@@ -226,7 +227,7 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
       link: '/pods',
       tooltip: 'Pods',
       type: 'entry',
-
+      destinations: [],
       get counter(): number {
         return 0;
       },
@@ -237,7 +238,7 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
       link: '/images',
       tooltip: 'Images',
       type: 'entry',
-
+      destinations: [],
       get counter(): number {
         return 0;
       },

@@ -47,6 +47,7 @@ test('Expect entry is rendered', async () => {
     tooltip: 'Item tooltip',
     link: '/mylink',
     counter: 0,
+    destinations: [],
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
@@ -66,6 +67,7 @@ test('Expect hidden entry is not rendered', async () => {
     tooltip: 'Item tooltip',
     link: '/mylink',
     counter: 0,
+    destinations: [],
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
@@ -85,6 +87,7 @@ test('Expect entry to have title if iconWithTitle is true', async () => {
     tooltip: 'Item tooltip',
     link: '/mylink',
     counter: 0,
+    destinations: [],
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
@@ -105,6 +108,7 @@ test('Expect entry to not have title by default', async () => {
     tooltip: 'Item tooltip',
     link: '/mylink',
     counter: 0,
+    destinations: [],
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;

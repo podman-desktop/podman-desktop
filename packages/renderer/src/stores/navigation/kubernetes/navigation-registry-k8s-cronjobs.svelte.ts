@@ -36,6 +36,7 @@ export function createNavigationKubernetesCronJobsEntry(): NavigationRegistryEnt
     link: '/kubernetes/cronjobs',
     tooltip: 'CronJobs',
     type: 'entry',
+    destinations: [],
     get counter() {
       return count;
     },

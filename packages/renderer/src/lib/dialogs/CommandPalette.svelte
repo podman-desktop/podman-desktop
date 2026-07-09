@@ -8,21 +8,10 @@ import {
   faMagnifyingGlass,
   faTerminal,
 } from '@fortawesome/free-solid-svg-icons';
-import type {
-  CommandInfo,
-  CommandPaletteSearchOption,
-  ContainerInfo,
-  DocumentationInfo,
-  GoToInfo,
-  ImageInfo,
-  PodInfo,
-  VolumeInfo,
-} from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
+import type { CommandInfo, CommandPaletteSearchOption, DocumentationInfo, GoToInfo } from '@podman-desktop/core-api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { type Component, onMount, tick } from 'svelte';
-import { router } from 'tinro';
 
 import ArrowDownIcon from '/@/lib/images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '/@/lib/images/ArrowUpIcon.svelte';
@@ -31,14 +20,9 @@ import NotFoundIcon from '/@/lib/images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '/@/lib/preferences/Util';
 import { handleNavigation } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
-import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
-import { imagesInfos } from '/@/stores/images';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
-import { podsInfos } from '/@/stores/pods';
-import { volumeListInfos } from '/@/stores/volumes';
 
-import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 import TextHighLight from './TextHighLight.svelte';
 
 const ENTER_KEY = 'Enter';
@@ -84,14 +68,15 @@ let searchOptionsWithShortcuts = $derived(
 let searchOptionsSelectedIndex: number = $state(0);
 
 let documentationItems: DocumentationInfo[] = $state([]);
-let containerInfos: ContainerInfo[] = $derived($containersInfos);
-let podInfos: PodInfo[] = $derived($podsInfos);
-let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
-let imageInfos: ImageInfo[] = $derived($imagesInfos);
 let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
-let goToItems: GoToInfo[] = $derived(
-  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
-);
+
+// Recursively extract all destinations from the navigation registry (entries can nest via `items`)
+let goToItems: GoToInfo[] = $derived.by(() => {
+  function extract(entry: NavigationRegistryEntry): GoToInfo[] {
+    return [...(entry.destinations ?? []), ...(entry.items ?? []).flatMap(extract)];
+  }
+  return navigationItems.flatMap(extract);
+});
 let helperText = $derived(searchOptionsWithShortcuts[searchOptionsSelectedIndex]?.placeholder);
 
 // Keep backward compatibility with existing variable name
@@ -113,12 +98,7 @@ let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
 );
 
 let filteredGoToItems = $derived(
-  goToItems.filter(item =>
-    inputValue
-      ? getGoToDisplayText(item).toLowerCase().includes(inputValue.toLowerCase()) ||
-        item.type.toLowerCase().includes(inputValue.toLowerCase())
-      : true,
-  ),
+  goToItems.filter(item => (inputValue ? item.name.toLowerCase().includes(inputValue.toLowerCase()) : true)),
 );
 
 let filteredItems = $derived.by(() => {
@@ -270,39 +250,8 @@ async function executeAction(index: number): Promise<void> {
     itemType = item.category;
     pageLink = item.url;
   } else if (isGoToItem(item)) {
-    // Go to item
-    if (item.type === 'Image') {
-      const repoTag = item.RepoTags?.[0] ?? '<none>';
-      handleNavigation({
-        page: NavigationPage.IMAGE,
-        parameters: {
-          id: item.Id,
-          engineId: item.engineId,
-          tag: repoTag,
-        },
-      });
-    } else if (item.type === 'Container') {
-      handleNavigation({
-        page: NavigationPage.CONTAINER_SUMMARY,
-        parameters: { id: item.Id },
-      });
-    } else if (item.type === 'Pod') {
-      handleNavigation({
-        page: NavigationPage.PODMAN_POD_SUMMARY,
-        parameters: {
-          name: item.Name,
-          engineId: item.engineId,
-        },
-      });
-    } else if (item.type === 'Volume') {
-      handleNavigation({
-        page: NavigationPage.VOLUME,
-        parameters: { name: item.Name, engineId: item.engineId },
-      });
-    } else if (item.type === 'Navigation') {
-      router.goto(item.link);
-    }
-    itemType = item.type;
+    handleNavigation(item);
+    itemType = item.page;
   } else {
     // Command item
     if (item.id) {
@@ -369,7 +318,7 @@ async function onAction(): Promise<void> {
 }
 
 function isGoToItem(item: CommandPaletteItem): item is GoToInfo {
-  return 'type' in item;
+  return 'page' in item;
 }
 
 function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
@@ -380,10 +329,7 @@ function getTextToHighlight(item: CommandPaletteItem): string {
   if (isDocItem(item)) {
     return `${item.category}: ${item.name}`;
   } else if (isGoToItem(item)) {
-    if (item.type === 'Navigation') {
-      return `${item.name}`;
-    }
-    return `${item.type}: ${getGoToDisplayText(item)}`;
+    return item.name;
   } else {
     return item.title ?? '';
   }
@@ -455,11 +401,11 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
           {/each}
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
-          {#each filteredItems as item, i (i)}
+          {#each filteredItems as item, i (getTextToHighlight(item))}
             {@const goToItem = isGoToItem(item)}
             {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}
-            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
+            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? item.name : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex

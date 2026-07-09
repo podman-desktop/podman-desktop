@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
-import type { ContributionInfo, WebviewInfo } from '@podman-desktop/core-api';
+import { type ContributionInfo, type GoToInfo, NavigationPage, type WebviewInfo } from '@podman-desktop/core-api';
 
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { contributions } from '/@/stores/contribs';
@@ -32,6 +32,7 @@ export function createNavigationExtensionEntry(): NavigationRegistryEntry {
     link: '/extensions',
     tooltip: 'Extensions',
     type: 'entry',
+    destinations: [],
     get counter() {
       return 0;
     },
@@ -41,6 +42,9 @@ export function createNavigationExtensionEntry(): NavigationRegistryEntry {
 
 let extensionNavigationGroupItems: NavigationRegistryEntry[] = $state([]);
 
+let webviewDestinations = $state<GoToInfo[]>([]);
+let contribDestinations = $state<GoToInfo[]>([]);
+
 export function createNavigationExtensionGroup(): NavigationRegistryEntry {
   const mainGroupEntry: NavigationRegistryEntry = {
     name: 'Extensions',
@@ -48,6 +52,9 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
     link: `/extensions`,
     tooltip: 'Extensions',
     type: 'group',
+    get destinations() {
+      return [...webviewDestinations, ...contribDestinations];
+    },
     get counter() {
       return 0;
     },
@@ -57,12 +64,12 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
   };
 
   let allContribs: ContributionInfo[] = [];
-
   let allWebviews: WebviewInfo[] = [];
 
   const refresh = (): void => {
     const newItems: NavigationRegistryEntry[] = [];
-    allContribs.forEach(contrib => {
+
+    contribDestinations = allContribs.map(contrib => {
       const registry: NavigationRegistryEntry = {
         name: contrib.name,
         icon: {
@@ -71,27 +78,40 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
         link: `/contribs/${contrib.name}`,
         type: 'entry',
         tooltip: contrib.name,
+        destinations: [],
         get counter() {
           return 0;
         },
       };
       newItems.push(registry);
+      return {
+        page: NavigationPage.CONTRIBUTION,
+        parameters: { name: contrib.name },
+        icon: { iconImage: contrib.icon },
+        name: `Contribution: ${contrib.name}`,
+      };
     });
 
-    allWebviews.forEach(webview => {
+    webviewDestinations = allWebviews.map(webview => {
       const icon = webview.icon ? { iconImage: webview.icon } : { faIconImage: faPuzzlePiece, size: '1.5x' };
-
       const registry: NavigationRegistryEntry = {
         name: webview.name,
         icon,
         link: `/webviews/${webview.id}`,
         tooltip: webview.name,
         type: 'entry',
+        destinations: [],
         get counter() {
           return 0;
         },
       };
       newItems.push(registry);
+      return {
+        page: NavigationPage.WEBVIEW,
+        parameters: { id: webview.id },
+        icon,
+        name: `Extensions: ${webview.name}`,
+      };
     });
 
     extensionNavigationGroupItems = newItems;

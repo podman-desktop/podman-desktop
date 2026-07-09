@@ -16,26 +16,44 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type GoToInfo, NavigationPage } from '@podman-desktop/core-api';
+
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 let count = $state(0);
+let destinations = $state<GoToInfo[]>([]);
 
 export function createNavigationVolumeEntry(): NavigationRegistryEntry {
   volumeListInfos.subscribe(volumes => {
     const flattenedVolumes = volumes.map(volumeInfo => volumeInfo.Volumes).flat();
-
     count = flattenedVolumes.length;
+    destinations = [
+      ...flattenedVolumes.map(volume => ({
+        page: NavigationPage.VOLUME as const,
+        parameters: { engineId: volume.engineId, name: volume.Name },
+        icon: { iconComponent: VolumeIcon },
+        name: `Volume: ${volume.Name}`,
+      })),
+      {
+        page: NavigationPage.VOLUMES as const,
+        icon: { iconComponent: VolumeIcon },
+        name: `Volumes (${count})`,
+      },
+    ];
   });
+
   const registry: NavigationRegistryEntry = {
     name: 'Volumes',
     icon: { iconComponent: VolumeIcon },
     link: '/volumes',
     tooltip: 'Volumes',
     type: 'entry',
-
+    get destinations() {
+      return destinations;
+    },
     get counter() {
       return count;
     },

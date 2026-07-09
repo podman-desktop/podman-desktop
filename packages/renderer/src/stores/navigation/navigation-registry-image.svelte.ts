@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfo } from '@podman-desktop/core-api';
+import { type GoToInfo, NavigationPage } from '@podman-desktop/core-api';
 
 import { ImageUtils } from '/@/lib/image/image-utils';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
@@ -24,24 +24,38 @@ import { imagesInfos } from '/@/stores/images';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
 
-let count = $state(0);
+let count = $derived(0);
+let destinations = $state<GoToInfo[]>([]);
 
 const imageUtils = new ImageUtils();
 
 export function createNavigationImageEntry(): NavigationRegistryEntry {
   imagesInfos.subscribe(images => {
-    const allImages = images
-      .map((imageInfo: ImageInfo) => imageUtils.getImagesInfoUI(imageInfo, [], undefined, []))
-      .flat();
-    count = allImages.length;
+    count = images.length;
+    destinations = [
+      ...images.map(image => ({
+        page: NavigationPage.IMAGE as const,
+        parameters: { id: image.Id, engineId: image.engineId, tag: image.RepoTags?.[0] ?? '<none>' },
+        icon: { iconComponent: ImageIcon },
+        name: `Image: ${image.RepoTags?.[0] ?? imageUtils.getShortId(image.Id)}`,
+      })),
+      {
+        page: NavigationPage.IMAGES as const,
+        icon: { iconComponent: ImageIcon },
+        name: `Images (${count})`,
+      },
+    ];
   });
+
   const registry: NavigationRegistryEntry = {
     name: 'Images',
     icon: { iconComponent: ImageIcon },
     link: '/images',
     tooltip: 'Images',
     type: 'entry',
-
+    get destinations() {
+      return destinations;
+    },
     get counter() {
       return count;
     },

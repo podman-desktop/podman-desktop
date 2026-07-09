@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo } from '@podman-desktop/core-api';
+import { type ContainerInfo, NavigationPage } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -27,6 +27,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import CommandPalette from './CommandPalette.svelte';
 
@@ -630,5 +631,85 @@ describe('Command Palette', () => {
     // Click All tab and verify placeholder changes back
     await userEvent.click(allTab);
     await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Enter category 1 item'));
+  });
+
+  test('Expect GoTo items are extracted from navigation registry destinations', async () => {
+    const mockEntries: NavigationRegistryEntry[] = [
+      {
+        name: 'Containers',
+        icon: {},
+        link: '/containers',
+        tooltip: 'Containers',
+        type: 'entry',
+        counter: 1,
+        destinations: [
+          {
+            page: NavigationPage.CONTAINER_SUMMARY,
+            parameters: { id: 'abc123' },
+            icon: {},
+            name: 'Container: web-app',
+          },
+          {
+            page: NavigationPage.CONTAINERS,
+            icon: {},
+            name: 'Containers (1)',
+          },
+        ],
+      },
+      {
+        name: 'Extensions',
+        icon: {},
+        link: '/extensions',
+        tooltip: 'Extensions',
+        type: 'group',
+        counter: 0,
+        destinations: [
+          {
+            page: NavigationPage.WEBVIEW,
+            parameters: { id: 'my-webview' },
+            icon: {},
+            name: 'Extensions: AI Lab',
+          },
+        ],
+        items: [
+          {
+            name: 'AI Lab',
+            icon: {},
+            link: '/webviews/my-webview',
+            tooltip: 'AI Lab',
+            type: 'entry',
+            counter: 0,
+            destinations: [
+              {
+                page: NavigationPage.WEBVIEW,
+                parameters: { id: 'nested-webview' },
+                icon: {},
+                name: 'Extensions: Nested',
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    navigationRegistry.set(mockEntries);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    // Switch to the GoTo tab (category 4)
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    // Should see all destinations including nested ones
+    await waitFor(() => {
+      expect(screen.getByRole('listitem', { name: 'Container: web-app' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('listitem', { name: 'Containers (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Extensions: AI Lab' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Extensions: Nested' })).toBeInTheDocument();
   });
 });

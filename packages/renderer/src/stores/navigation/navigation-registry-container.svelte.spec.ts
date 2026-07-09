@@ -34,9 +34,13 @@ test('createNavigationContainerEntry', async () => {
   containersInfos.set([
     {
       Id: '1234',
+      Names: ['/web-app'],
+      engineId: 'podman',
     } as unknown as ContainerInfo,
     {
       Id: '3456',
+      Names: ['database'],
+      engineId: 'docker',
     } as unknown as ContainerInfo,
   ]);
 
@@ -46,5 +50,19 @@ test('createNavigationContainerEntry', async () => {
   expect(entry.tooltip).toBe('Containers');
   await vi.waitFor(() => {
     expect(entry.counter).toBe(2);
+    expect(entry.destinations).toHaveLength(3);
   });
+
+  const [first, second, listEntry] = entry.destinations;
+
+  expect(first.page).toBe('container-summary');
+  expect(first).toHaveProperty('parameters', { id: '1234' });
+  expect(first.name).toBe('Container: web-app');
+
+  expect(second.page).toBe('container-summary');
+  expect(second).toHaveProperty('parameters', { id: '3456' });
+  expect(second.name).toBe('Container: database');
+
+  expect(listEntry.page).toBe('containers');
+  expect(listEntry.name).toBe('Containers (2)');
 });

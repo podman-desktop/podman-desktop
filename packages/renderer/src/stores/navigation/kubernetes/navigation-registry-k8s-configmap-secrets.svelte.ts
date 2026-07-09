@@ -43,6 +43,7 @@ export function createNavigationKubernetesConfigMapSecretsEntry(): NavigationReg
     link: '/kubernetes/configmapsSecrets',
     tooltip: 'ConfigMaps & Secrets',
     type: 'entry',
+    destinations: [],
     get counter() {
       return count;
     },
