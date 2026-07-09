@@ -16,16 +16,32 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type GoToInfo, NavigationPage } from '@podman-desktop/core-api';
+
 import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import { networksListInfo } from '/@/stores/networks';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 let count = $state(0);
+let destinations = $state<GoToInfo[]>([]);
 
 export function createNavigationNetworkEntry(): NavigationRegistryEntry {
   networksListInfo.subscribe(networks => {
     count = networks.length;
+    destinations = [
+      ...networks.map(network => ({
+        page: NavigationPage.NETWORK as const,
+        parameters: { name: network.Name, engineId: network.engineId },
+        icon: { iconComponent: NetworkIcon },
+        name: `Network: ${network.Name}`,
+      })),
+      {
+        page: NavigationPage.NETWORKS as const,
+        icon: { iconComponent: NetworkIcon },
+        name: `Networks (${count})`,
+      },
+    ];
   });
   const registry: NavigationRegistryEntry = {
     name: 'Networks',
@@ -33,6 +49,9 @@ export function createNavigationNetworkEntry(): NavigationRegistryEntry {
     link: '/networks',
     tooltip: 'Networks',
     type: 'entry',
+    get destinations() {
+      return destinations;
+    },
     get counter() {
       return count;
     },

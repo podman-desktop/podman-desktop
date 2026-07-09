@@ -33,10 +33,13 @@ test('createNavigationImageEntry', async () => {
     {
       Id: '1234',
       Size: 0,
+      RepoTags: ['nginx:latest'],
+      engineId: 'podman',
     } as unknown as ImageInfo,
     {
       Id: '3456',
       Size: 0,
+      engineId: 'docker',
     } as unknown as ImageInfo,
   ]);
 
@@ -46,5 +49,23 @@ test('createNavigationImageEntry', async () => {
   expect(entry.tooltip).toBe('Images');
   await vi.waitFor(() => {
     expect(entry.counter).toBe(2);
+    expect(entry.destinations).toHaveLength(3);
   });
+
+  const [first, second, listEntry] = entry.destinations;
+
+  expect(first.page).toBe('image');
+  expect(first).toHaveProperty('parameters', { id: '1234', engineId: 'podman', tag: 'nginx:latest' });
+  expect(first.name).toBe('Image: nginx:latest');
+
+  expect(second.page).toBe('image');
+  expect(second).toHaveProperty('parameters', {
+    id: '3456',
+    engineId: 'docker',
+    tag: '3456',
+  });
+  expect(second.name).toContain('Image:');
+
+  expect(listEntry.page).toBe('images');
+  expect(listEntry.name).toBe('Images (2)');
 });
