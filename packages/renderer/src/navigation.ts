@@ -16,15 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigationRequest } from '@podman-desktop/core-api';
+import type { InferredNavigationRequest } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer } from 'buffer';
 import { router } from 'tinro';
-
-// help method to ensure the handleNavigation is able to infer type properly through the switch
-// ref https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
-type InferredNavigationRequest<T extends NavigationPage> = T extends NavigationPage ? NavigationRequest<T> : never;
 
 /**
  * Navigation hints for setting current page and history (breadcrumbs):

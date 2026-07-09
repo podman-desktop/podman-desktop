@@ -73,3 +73,9 @@ export type NavigationRequest<T extends NavigationPage> = NavigationParameters[T
       page: T;
       parameters: NavigationParameters[T];
     };
+
+// help method to ensure the handleNavigation is able to infer type properly through the switch
+// ref https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+export type InferredNavigationRequest<T extends NavigationPage> = T extends NavigationPage
+  ? NavigationRequest<T>
+  : never;
