@@ -26,6 +26,24 @@ import type { DockerContextInfo, DockerContextParsingInfo } from '@podman-deskto
 import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
 import type { DockerConfig } from './docker-config.js';
 
+const UNIX_SCHEME = 'unix://';
+const NPIPE_SCHEME = 'npipe://';
+
+/**
+ * Resolves a Docker context endpoint host (e.g. `unix:///var/run/docker.sock`,
+ * `npipe:////./pipe/docker_engine`) to a socket path usable with `http.get({ socketPath })`.
+ * Returns undefined for schemes that are not a local socket (e.g. `tcp://`, `ssh://`).
+ */
+export function parseContextEndpoint(host: string): string | undefined {
+  if (host.startsWith(UNIX_SCHEME)) {
+    return host.slice(UNIX_SCHEME.length);
+  }
+  if (host.startsWith(NPIPE_SCHEME)) {
+    return host.slice(NPIPE_SCHEME.length);
+  }
+  return undefined;
+}
+
 /**
  * Handle the `docker context`, allowing to list them and switch between them.
  */

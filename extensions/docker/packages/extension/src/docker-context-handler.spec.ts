@@ -24,7 +24,7 @@ import type { DockerContextParsingInfo } from '@podman-desktop/docker-extension-
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DockerConfig } from './docker-config.js';
-import { DockerContextHandler } from './docker-context-handler.js';
+import { DockerContextHandler, parseContextEndpoint } from './docker-context-handler.js';
 
 class TestDockerContextHandler extends DockerContextHandler {
   override getDockerConfigPath(): string {
@@ -324,5 +324,23 @@ describe('removeContext', () => {
 
     // no rm folder
     expect(rmSpy).toBeCalled();
+  });
+});
+
+describe('parseContextEndpoint', () => {
+  test('resolves a unix:// endpoint to its socket path', () => {
+    expect(parseContextEndpoint('unix:///var/run/docker.sock')).toBe('/var/run/docker.sock');
+  });
+
+  test('resolves a npipe:// endpoint to its pipe path', () => {
+    expect(parseContextEndpoint('npipe:////./pipe/docker_engine')).toBe('//./pipe/docker_engine');
+  });
+
+  test('returns undefined for a tcp:// endpoint', () => {
+    expect(parseContextEndpoint('tcp://1.2.3.4:2376')).toBeUndefined();
+  });
+
+  test('returns undefined for a ssh:// endpoint', () => {
+    expect(parseContextEndpoint('ssh://user@host/run/podman/podman.sock')).toBeUndefined();
   });
 });
