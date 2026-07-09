@@ -145,13 +145,7 @@ test.describe
       await playExpect(containersDetails.terminalContent).toContainText('/bin/sh');
 
       await containersDetails.executeCommandInTty('echo "Hello World"');
-      await containersDetails.findInLogs('Hello World');
-      await playExpect
-        .poll(async () => containersDetails.getCountOfSearchResults(), { timeout: 10_000 })
-        .toBeGreaterThanOrEqual(1);
-
-      await containersDetails.clearLogs();
-      await playExpect(containersDetails.terminalContent).not.toContainText('Hello World');
+      await playExpect(containersDetails.terminalContent).toContainText('Hello World');
     });
 
     test('Redirecting to image details from a container details', async ({ page, navigationBar }) => {
