@@ -10,8 +10,8 @@ import { catalogTableSortState, orderCatalogTableExtensions } from './catalog-ex
 import CatalogExtension from './CatalogExtension.svelte';
 import CatalogExtensionTable from './CatalogExtensionTable.svelte';
 import CatalogExtensionViewToolbar from './CatalogExtensionViewToolbar.svelte';
-import CurrentCatalogExtension from './CurrentCatalogExtension.svelte';
 import { getCatalogViewMode, refreshNewBadges } from './extension-catalog-settings.svelte';
+import SuggestionCatalogExtension from './SuggestionCatalogExtension.svelte';
 
 interface Props {
   catalogExtensions: CatalogExtensionInfoUI[];
@@ -92,7 +92,7 @@ async function fetchCatalog(): Promise<void> {
             role="region"
             aria-label="Catalog Extensions">
             {#each catalogExtensions as catalogExtension (catalogExtension.id)}
-              <CatalogExtension
+              <SuggestionCatalogExtension
                 ondetails={ondetails}
                 oninstall={oninstall}
                 catalogExtensionUI={catalogExtension} />
@@ -137,10 +137,7 @@ async function fetchCatalog(): Promise<void> {
         role="region"
         aria-label="Catalog Extensions">
         {#each catalogExtensions as catalogExtension (catalogExtension.id)}
-          <CurrentCatalogExtension
-            ondetails={ondetails}
-            oninstall={oninstall}
-            catalogExtensionUI={catalogExtension} />
+          <CatalogExtension ondetails={ondetails} oninstall={oninstall} catalogExtensionUI={catalogExtension} />
         {/each}
       </div>
     {/if}

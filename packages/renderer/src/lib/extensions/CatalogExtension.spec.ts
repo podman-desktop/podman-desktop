@@ -25,129 +25,17 @@ import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtension from './CatalogExtension.svelte';
 
-// mock the router
 vi.mock(import('tinro'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });
-  Object.defineProperty(window, 'openExternal', { value: vi.fn() });
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn().mockResolvedValue({ response: 0 }) });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('Expect card click opens extension details', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'myId',
-    displayName: 'This is the display name',
-    isFeatured: false,
-    fetchable: false,
-    fetchLink: '',
-    fetchVersion: '',
-    publisherDisplayName: 'Foo publisher',
-    isInstalled: false,
-    shortDescription: 'my description',
-    categories: [],
-    keywords: [],
-    availableVersions: [],
-    hasUpdate: false,
-    isVerified: false,
-    isSupportedByRedHat: false,
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
-  expect(extensionWidget).toBeInTheDocument();
-
-  const publisher = screen.getByText('Foo publisher');
-  expect(publisher).toBeInTheDocument();
-
-  await fireEvent.click(extensionWidget);
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/?returnScreen=catalog');
-});
-
-test('Expect to see featured and fetch button', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'myId',
-    displayName: 'This is the display name',
-    isFeatured: true,
-    fetchable: true,
-    fetchLink: 'myLink',
-    fetchVersion: '1.2.3',
-    publisherDisplayName: 'Foo publisher',
-    isInstalled: false,
-    shortDescription: 'my description',
-    categories: [],
-    keywords: [],
-    availableVersions: [{ version: '1.2.3', ociUri: 'myLink', preview: false }],
-    hasUpdate: false,
-    isVerified: false,
-    isSupportedByRedHat: false,
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
-
-  expect(extensionWidget).toBeInTheDocument();
-
-  const featured = screen.getByLabelText('Featured extension');
-  expect(featured).toBeInTheDocument();
-
-  const installButton = screen.getByRole('button', { name: 'Install myId Extension' });
-  expect(installButton).toBeInTheDocument();
-
-  await fireEvent.click(installButton);
-
-  expect(vi.mocked(window.extensionInstallFromImage)).toHaveBeenCalledWith(
-    'myLink',
-    expect.any(Function),
-    expect.any(Function),
-    'myId',
-  );
-  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-});
-
-test('Expect featured star without category tags on catalog cards', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'minikube',
-    displayName: 'minikube',
-    isFeatured: true,
-    fetchable: false,
-    fetchLink: '',
-    fetchVersion: '0.4.1',
-    installedVersion: '0.4.0',
-    publisherDisplayName: 'Podman Desktop',
-    isInstalled: true,
-    shortDescription: 'Run Kubernetes locally',
-    categories: ['Kubernetes'],
-    keywords: [],
-    availableVersions: [],
-    hasUpdate: true,
-    isVerified: false,
-    isSupportedByRedHat: false,
-    installedExtension: {
-      id: 'minikube',
-      name: 'minikube',
-      state: 'started',
-      removable: true,
-      devMode: false,
-      type: 'extension',
-    },
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  expect(screen.getByLabelText('Featured extension')).toBeInTheDocument();
-  expect(screen.queryByLabelText('badge-Featured')).not.toBeInTheDocument();
-  expect(screen.queryByLabelText('badge-Kubernetes')).not.toBeInTheDocument();
-});
-
-test('Expect to have version of installed one', async () => {
+test('Expect production catalog card hover border class', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'myId',
     displayName: 'This is the display name',
@@ -155,7 +43,84 @@ test('Expect to have version of installed one', async () => {
     fetchable: false,
     fetchLink: '',
     fetchVersion: '1.0.0',
-    installedVersion: '2.0.0',
+    publisherDisplayName: 'Foo publisher',
+    isInstalled: false,
+    shortDescription: 'my description',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
+  expect(extensionWidget).toHaveClass('hover:border-[var(--pd-content-card-border-selected)]');
+});
+
+test('Expect production catalog card shows More details without actions menu', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'myId',
+    displayName: 'This is the display name',
+    isFeatured: false,
+    fetchable: false,
+    fetchLink: '',
+    fetchVersion: '1.0.0',
+    publisherDisplayName: 'Foo publisher',
+    isInstalled: false,
+    shortDescription: 'my description',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  expect(screen.getByRole('button', { name: 'This is the display name details' })).toBeInTheDocument();
+  expect(screen.getByText('More details')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /actions$/i })).not.toBeInTheDocument();
+});
+
+test('Expect More details opens extension details route', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'myId',
+    displayName: 'This is the display name',
+    isFeatured: false,
+    fetchable: false,
+    fetchLink: '',
+    fetchVersion: '1.0.0',
+    publisherDisplayName: 'Foo publisher',
+    isInstalled: false,
+    shortDescription: 'my description',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'This is the display name details' }));
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/');
+});
+
+test('Expect installed production catalog card shows Already installed', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'myId',
+    displayName: 'Installed extension',
+    isFeatured: false,
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: '2.0.0',
+    installedVersion: '1.0.0',
     publisherDisplayName: 'Foo publisher',
     isInstalled: true,
     shortDescription: 'my description',
@@ -169,78 +134,6 @@ test('Expect to have version of installed one', async () => {
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  expect(screen.getByText('v2.0.0')).toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: /Upgrade to v/i })).not.toBeInTheDocument();
-});
-
-test('Expect installed catalog card shows active status next to version', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'minikube',
-    displayName: 'minikube',
-    isFeatured: false,
-    fetchable: false,
-    fetchLink: '',
-    fetchVersion: '0.4.1',
-    installedVersion: '0.4.0',
-    publisherDisplayName: 'Podman Desktop',
-    isInstalled: true,
-    shortDescription: 'Run Kubernetes locally',
-    categories: [],
-    keywords: [],
-    availableVersions: [],
-    hasUpdate: false,
-    isVerified: false,
-    isSupportedByRedHat: false,
-    installedExtension: {
-      id: 'minikube',
-      name: 'minikube',
-      state: 'started',
-      removable: true,
-      devMode: false,
-      type: 'extension',
-    },
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  expect(screen.getByText('Active')).toBeInTheDocument();
-  expect(screen.getByText('v0.4.0')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Installed' })).not.toBeInTheDocument();
-});
-
-test('Expect installed catalog card shows version without upgrade link', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'minikube',
-    displayName: 'minikube',
-    isFeatured: false,
-    fetchable: false,
-    fetchLink: 'oci://minikube:0.4.1',
-    fetchVersion: '0.4.1',
-    installedVersion: '0.4.0',
-    publisherDisplayName: 'Podman Desktop',
-    isInstalled: true,
-    shortDescription: 'Run Kubernetes locally',
-    categories: [],
-    keywords: [],
-    availableVersions: [
-      { version: '0.4.1', ociUri: 'oci://minikube:0.4.1', preview: false },
-      { version: '0.4.0', ociUri: 'oci://minikube:0.4.0', preview: false },
-    ],
-    hasUpdate: true,
-    isVerified: false,
-    isSupportedByRedHat: false,
-    installedExtension: {
-      id: 'minikube',
-      name: 'minikube',
-      state: 'started',
-      removable: true,
-      devMode: false,
-      type: 'extension',
-    },
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  expect(screen.getByText('v0.4.0')).toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: 'Upgrade to v0.4.1' })).not.toBeInTheDocument();
+  expect(screen.getByText('Already installed')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Install myId Extension' })).not.toBeInTheDocument();
 });

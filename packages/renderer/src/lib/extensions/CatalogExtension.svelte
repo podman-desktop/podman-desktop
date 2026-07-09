@@ -1,120 +1,82 @@
 <script lang="ts">
-import { onDestroy, onMount } from 'svelte';
+import { faCheckCircle, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import CatalogExtensionActions from './CatalogExtensionActions.svelte';
-import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
-import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
-import {
-  EXTENSION_VERSION_UI_CHANGE_EVENT,
-  getOptimisticInstalledVersion,
-  isExtensionVersionUpdating,
-} from './extension-version-update.svelte';
-import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
-import ExtensionFeaturedNameLabel from './ExtensionFeaturedNameLabel.svelte';
-import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
-import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
-import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
-import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
 export let catalogExtensionUI: CatalogExtensionInfoUI;
-export let returnScreen: ExtensionListScreen = 'catalog';
 export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 
-let uiRevision = 0;
-
-function refreshVersionUi(): void {
-  uiRevision += 1;
-}
-
-onMount(() => {
-  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
-});
-
-onDestroy(() => {
-  window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
-});
-
 function openExtensionDetails(): void {
   ondetails(catalogExtensionUI.id);
-  router.goto(buildExtensionDetailsPath(catalogExtensionUI.id, returnScreen));
-}
-
-function handleCardClick(event: MouseEvent): void {
-  const target = event.target as HTMLElement;
-  if (target.closest('button, a, [role="menu"], [role="link"], [data-extension-dropdown-menu]')) {
-    return;
-  }
-  openExtensionDetails();
+  router.goto(`/extensions/details/${catalogExtensionUI.id}/`);
 }
 </script>
 
 <div
-  class="group relative rounded-lg border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] hover:border-[var(--pd-content-card-border-selected)] cursor-pointer"
+  class="rounded-lg border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] hover:border-[var(--pd-content-card-border-selected)] min-h-32 max-h-32"
   role="group"
-  aria-label={catalogExtensionUI.displayName}
-  onclick={handleCardClick}>
-  <div class="px-3 pt-3 pb-2">
-    <div class="flex items-start gap-2">
-      <div class="flex size-10 shrink-0 items-center justify-start">
-        <CatalogExtensionIcon iconHref={catalogExtensionUI.iconHref} displayName={catalogExtensionUI.displayName} />
-      </div>
+  aria-label={catalogExtensionUI.displayName}>
+  {#if catalogExtensionUI.isFeatured}
+    <div
+      class="bg-[var(--pd-badge-purple)] text-[var(--pd-card-header-text)] rounded-t-md px-2 text-sm min-h-6 flex flex-row items-center">
+      Featured
+    </div>
+  {/if}
 
-      <div class="min-w-0 flex-1 overflow-hidden">
-        <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} class="mb-1" />
-        <ExtensionFeaturedNameLabel
-          displayName={catalogExtensionUI.displayName}
-          isFeatured={catalogExtensionUI.isFeatured}
-          nameClass="font-semibold text-[var(--pd-content-header)]" />
-        <div class="pt-0.5">
-          <ExtensionPublisherLabel
-            publisherName={catalogExtensionUI.publisherDisplayName}
-            isVerified={catalogExtensionUI.isVerified}
-            isSupportedByRedHat={catalogExtensionUI.isSupportedByRedHat}
-            class="text-sm font-medium text-[var(--pd-content-header)]" />
-        </div>
-        <ExtensionTruncatedText
-          text={catalogExtensionUI.shortDescription}
-          class="pt-0.5 text-sm text-[var(--pd-content-text)]" />
-        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 pb-1.5 text-sm text-[var(--pd-content-text)]">
-          {#if catalogExtensionUI.isInstalled}
-            {#key uiRevision}
-              {@const actualVersion = catalogExtensionUI.installedVersion}
-              {@const normalizedActual = actualVersion?.replace(/^v/i, '').trim()}
-              {@const optimistic = getOptimisticInstalledVersion(catalogExtensionUI.id)}
-              {@const displayInstalledVersion =
-                isExtensionVersionUpdating(catalogExtensionUI.id)
-                  ? actualVersion
-                  : optimistic && optimistic !== normalizedActual
-                    ? optimistic
-                    : actualVersion}
-              <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${catalogExtensionUI.installedVersion}`}</span>
-              <ExtensionVersionUpdateStatus
-                extensionId={catalogExtensionUI.id}
-                extensionState={catalogExtensionUI.installedExtension?.state} />
-              {#if catalogExtensionUI.installedExtension}
-                <ExtensionLifecycleStatus
-                  extension={catalogExtensionUI.installedExtension}
-                  class="shrink-0" />
-              {/if}
-            {/key}
-          {:else}
-            <span>v{catalogExtensionUI.fetchVersion}</span>
-          {/if}
+  <div class="p-3 h-full w-full flex flex-col justify-start">
+    <div class="flex flex-row w-full">
+      <div class="w-3/4 flex flex-col">
+        <div class="flex flex-col w-full">
+          <div class="flex-row flex items-center">
+            <img
+              src={catalogExtensionUI.iconHref}
+              alt="{catalogExtensionUI.displayName} logo"
+              class="mr-2 max-w-10 max-h-10 object-contain" />
+
+            <div>
+              <div class="line-clamp-2 leading-4 max-h-8 text-[var(--pd-content-header)]">
+                {catalogExtensionUI.displayName}
+              </div>
+              <div class="pt-2 text-[var(--pd-content-text)] line-clamp-1">
+                {catalogExtensionUI.shortDescription}
+              </div>
+            </div>
+          </div>
+          <div class="pt-1 text-[var(--pd-content-text)] text-sm">{catalogExtensionUI.publisherDisplayName}</div>
         </div>
       </div>
 
-      <div class="flex shrink-0 items-start gap-1">
-        {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
+      {#if catalogExtensionUI.isInstalled}
+        <div
+          class="flex flex-1 text-[var(--pd-invert-content-info-icon)] p-1 justify-items-end flex-row place-content-end items-center">
+          <Icon class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
+          <div class="uppercase text-sm cursor-default">Already installed</div>
+        </div>
+      {:else if catalogExtensionUI.fetchable}
+        <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
+        </div>
+      {/if}
+    </div>
+    <div class="items-end flex flex-1">
+      <div class="text-[var(--pd-content-text)] text-sm">
+        v{catalogExtensionUI.fetchVersion}
+        {#if catalogExtensionUI.installedVersion && catalogExtensionUI.installedVersion !== catalogExtensionUI.fetchVersion}
+          <span>(installed: v{catalogExtensionUI.installedVersion})</span>
         {/if}
-        <CatalogExtensionActions
-          extension={catalogExtensionUI}
-          {returnScreen} />
+      </div>
+      <div class="flex flex-1 justify-end items-center">
+        <Button
+          type="link"
+          icon={faCircleInfo}
+          aria-label="{catalogExtensionUI.displayName} details"
+          on:click={openExtensionDetails}>More details</Button>
       </div>
     </div>
   </div>
