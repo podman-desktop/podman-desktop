@@ -53,7 +53,7 @@
     "getos": "^3.2.1",
     "got": "^15.1.0",
     "hpagent": "^1.2.0",
-    "inversify": "^8.1.1",
+    "inversify": "^8.1.2",
     "js-yaml": "^5.2.1",
     "minimist": "^1.2.8",
     "moment": "^2.30.1",
