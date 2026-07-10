@@ -455,7 +455,7 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
           {/each}
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
-          {#each filteredItems as item, i (i)}
+          {#each filteredItems as item, i (getTextToHighlight(item))}
             {@const goToItem = isGoToItem(item)}
             {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}
