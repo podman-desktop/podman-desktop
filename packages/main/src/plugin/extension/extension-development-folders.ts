@@ -133,6 +133,7 @@ export class ExtensionDevelopmentFolders {
       extensionPath: path,
       removable: false,
       devMode: true,
+      bundled: false,
     });
     // if there is an error, abort
     if (analyzedExtension.error) {

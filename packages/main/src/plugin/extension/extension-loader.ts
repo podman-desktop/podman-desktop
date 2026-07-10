@@ -47,6 +47,7 @@ import { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { IconRegistry } from '/@/plugin/icon-registry.js';
@@ -225,6 +226,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private extensionApiVersion: ExtensionApiVersion,
     @inject(FeatureRegistry)
     private featureRegistry: FeatureRegistry,
+    @inject(ExtensionsBundle)
+    private extensionsBundle: ExtensionsBundle,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -277,6 +280,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       path: extension.path,
       removable: extension.removable,
       devMode: extension.devMode,
+      bundled: extension.bundled,
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
@@ -328,6 +332,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     const extension = await this.analyzeExtension({
       extensionPath: unpackedDirectory,
       removable: true,
+      bundled: false,
     });
     if (!extension.error) {
       await this.loadExtension(extension);
@@ -480,42 +485,18 @@ export class ExtensionLoader implements IAsyncDisposable {
       fs.mkdirSync(this.extensionsStorageDirectory);
     }
 
-    let folders: string[];
-    // scan all extensions that we can find from the extensions folder
-    if (import.meta.env.PROD) {
-      // in production mode, use the extensions & extensions-extra locally
-      const promises = await Promise.all([
-        this.readProductionFolders(path.join(__dirname, '../../../extensions')),
-        this.readDevelopmentFolders(path.join(process.resourcesPath, 'extensions-extra')),
-      ]);
+    // Get the bundled extensions
+    const analyzedExtensions: AnalyzedExtension[] = this.extensionsBundle.all().filter(extension => !extension.error);
 
-      folders = promises.flat();
-    } else {
-      // in development mode, use the extensions locally
-      folders = await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions'));
-    }
+    // Get the external foldr extensions
     const externalExtensions = await this.readExternalFolders();
-    // ok now load grab all extensions from these folders
-    const analyzedExtensions: AnalyzedExtension[] = [];
-
-    const analyzedFoldersExtension = (
-      await Promise.all(
-        folders.map(folder =>
-          this.analyzeExtension({
-            extensionPath: folder,
-            removable: false,
-          }),
-        ),
-      )
-    ).filter(extension => !extension.error);
-    analyzedExtensions.push(...analyzedFoldersExtension);
-
     const analyzedExternalExtensions = (
       await Promise.all(
         externalExtensions.map(folder =>
           this.analyzeExtension({
             extensionPath: folder,
             removable: false,
+            bundled: false,
             devMode: true,
           }),
         ),
@@ -538,6 +519,7 @@ export class ExtensionLoader implements IAsyncDisposable {
             this.analyzeExtension({
               extensionPath: folder,
               removable: true,
+              bundled: false,
             }),
           ),
         )
@@ -572,6 +554,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         const analyzedExtension = await this.analyzeExtension({
           extensionPath: folder.path,
           removable: false,
+          bundled: false,
           devMode: true,
         });
         if (!analyzedExtension.error) {
@@ -599,20 +582,35 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async loadExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
+    const extensions = this.removeDuplicates(analyzedExtensions);
+
     // check if all dependencies are available
-    this.searchForMissingDependencies(analyzedExtensions);
+    this.searchForMissingDependencies(extensions);
 
     // do we have circular dependencies?
-    this.searchForCircularDependencies(analyzedExtensions);
+    this.searchForCircularDependencies(extensions);
 
     // now, need to sort them by extensionDependencies order
-    const sortedExtensions = this.sortExtensionsByDependencies(analyzedExtensions);
+    const sortedExtensions = this.sortExtensionsByDependencies(extensions);
 
     // now, load all extensions
 
     for (const extension of sortedExtensions) {
       await this.loadExtension(extension);
     }
+  }
+
+  private removeDuplicates(analyzedExtensions: Array<AnalyzedExtension>): Array<AnalyzedExtension> {
+    const mapping = new Map<string, AnalyzedExtension>();
+
+    for (const extension of analyzedExtensions) {
+      const dup = mapping.get(extension.id);
+      if (!dup || dup.bundled) {
+        mapping.set(extension.id, extension);
+      }
+    }
+
+    return Array.from(mapping.values());
   }
 
   // do we have circular dependencies?
@@ -672,26 +670,6 @@ export class ExtensionLoader implements IAsyncDisposable {
     return sorted;
   }
 
-  async readDevelopmentFolders(folderPath: string): Promise<string[]> {
-    // only readdir on existing folder
-    if (!fs.existsSync(folderPath)) return [];
-
-    const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
-    // filter only directories ignoring node_modules directory
-    return entries
-      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
-      .reduce((directories: string[], directory) => {
-        const apiExtFolder = path.join(folderPath, directory.name, 'packages', 'extension');
-        const plainExtFolder = path.join(folderPath, directory.name);
-        if (fs.existsSync(path.join(apiExtFolder, 'package.json'))) {
-          directories.push(apiExtFolder);
-        } else if (fs.existsSync(path.join(plainExtFolder, 'package.json'))) {
-          directories.push(plainExtFolder);
-        }
-        return directories;
-      }, []);
-  }
-
   async readExternalFolders(): Promise<string[]> {
     const pathes = [];
     for (let index = 0; index < process.argv.length; index++) {
@@ -701,22 +679,6 @@ export class ExtensionLoader implements IAsyncDisposable {
     }
     // filter all undefined values
     return pathes.filter(path => path !== undefined);
-  }
-
-  async readProductionFolders(folderPath: string): Promise<string[]> {
-    // only readdir on existing folder
-    if (!fs.existsSync(folderPath)) return [];
-
-    const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
-    return entries
-      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
-      .map(directory => {
-        const rootExtPath = path.join(folderPath, directory.name);
-        const plainExtPath = path.join(rootExtPath, 'builtin', `${directory.name}.cdix`);
-        return fs.existsSync(plainExtPath)
-          ? plainExtPath
-          : path.join(rootExtPath, 'packages', 'extension', 'builtin', `${directory.name}.cdix`);
-      });
   }
 
   /**
@@ -765,6 +727,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       const updatedExtension = await this.analyzeExtension({
         extensionPath: extension.path,
         removable,
+        bundled: extension.bundled,
         devMode: extension.devMode,
       });
 
@@ -789,6 +752,20 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async loadExtension(extension: AnalyzedExtension, checkForMissingDependencies = false): Promise<void> {
+    const existing = this.analyzedExtensions.get(extension.id);
+    if (existing) {
+      if (!existing.bundled) {
+        throw new Error(
+          `Extension ${extension.id} is not bundled extension, it cannot be overridden by ${extension.mainPath}`,
+        );
+      }
+
+      // deactivate existing extension
+      if (this.activatedExtensions.has(extension.id)) {
+        await this.deactivateExtension(extension.id);
+      }
+    }
+
     // check if all dependencies are available
     if (checkForMissingDependencies && extension?.manifest?.extensionDependencies) {
       // search from existing .this.analyzedExtensions
@@ -1920,6 +1897,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       const analyzedExtension = await this.analyzeExtension({
         extensionPath: extension.path,
         removable: extension.removable,
+        bundled: extension.bundled,
         devMode: extension.devMode,
       });
 
@@ -1962,6 +1940,11 @@ export class ExtensionLoader implements IAsyncDisposable {
       this.extensionDevelopmentFolder.removeExternalExtensionId(extensionId);
       this.apiSender.send('extension-removed');
       this._onDidChange.fire();
+
+      const bundled = this.extensionsBundle.all().find(extension => extension.id === extensionId);
+      if (bundled) {
+        await this.loadExtension(bundled);
+      }
     }
   }
 

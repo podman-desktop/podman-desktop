@@ -217,6 +217,7 @@ export class ExtensionInstaller {
         analyzedExtension = await this.extensionLoader.analyzeExtension({
           extensionPath: finalFolderPath,
           removable: true,
+          bundled: false,
         });
       } catch (error) {
         sendError('Error while analyzing extension: ' + error);

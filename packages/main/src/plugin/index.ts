@@ -160,6 +160,7 @@ import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
+import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
@@ -801,9 +802,10 @@ export class PluginSystem {
     container.bind<ProgressImpl>(ProgressImpl).toSelf().inSingletonScope();
 
     container.bind<ExtensionApiVersion>(ExtensionApiVersion).toSelf().inSingletonScope();
+    container.bind<ExtensionsBundle>(ExtensionsBundle).toSelf().inSingletonScope();
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
-    this.extensionLoader = container.get<ExtensionLoader>(ExtensionLoader);
+    this.extensionLoader = await container.getAsync<ExtensionLoader>(ExtensionLoader);
     await this.extensionLoader.init();
 
     container.bind<FeedbackHandler>(FeedbackHandler).toSelf().inSingletonScope();

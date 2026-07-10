@@ -156,7 +156,6 @@ beforeEach(async () => {
   ]);
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.mocked(Updater.prototype.init).mockReturnValue(new Disposable(vi.fn()));
-  vi.mocked(ExtensionLoader.prototype.readDevelopmentFolders).mockResolvedValue([]);
   vi.mocked(ExtensionLoader.prototype.listExtensions).mockResolvedValue([]);
 
   vi.mocked(ProviderRegistry.prototype.getProviderInfos).mockReturnValue([]);
