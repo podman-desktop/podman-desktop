@@ -272,7 +272,7 @@ async function executeAction(index: number): Promise<void> {
   } else if (isGoToItem(item)) {
     // Go to item
     if (item.type === 'Image') {
-      const repoTag = item.RepoTags?.[0] ?? item.Id;
+      const repoTag = item.RepoTags?.[0] ?? '<none>';
       handleNavigation({
         page: NavigationPage.IMAGE,
         parameters: {
