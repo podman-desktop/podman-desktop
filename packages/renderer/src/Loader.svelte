@@ -77,7 +77,7 @@ window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
 });
 
 // Wait that the server-side is ready
-window.events.receive('starting-extensions', (value: unknown) => {
+window.events?.receive('starting-extensions', (value: unknown) => {
   systemReady = value === 'true';
   if (systemReady) {
     window.dispatchEvent(new CustomEvent('system-ready', {}));
