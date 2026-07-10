@@ -243,6 +243,18 @@ test.describe
           .toBeTruthy();
       }
 
+      for (const image of imageList) {
+        await imagesPage.filterByName(image);
+        await playExpect
+          .poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 })
+          .toBeGreaterThanOrEqual(1);
+        await playExpect.poll(async () => await imagesPage.getImageRowByName(image), { timeout: 5_000 }).toBeDefined();
+      }
+      await imagesPage.clearFilterByName();
+      await playExpect
+        .poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(imageList.length);
+
       await imagesPage.pruneImages();
       await playExpect(imagesPage.heading).toBeVisible();
 

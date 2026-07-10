@@ -312,9 +312,26 @@ test.describe
           .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
           .toBeTruthy();
       }
+
+      //Verify search filtering works for each container
+      let containersPage = new ContainersPage(page);
+      for (const container of containerList) {
+        await containersPage.filterByName(container);
+        await playExpect
+          .poll(async () => await containersPage.countRowsFromTable(), { timeout: 10_000 })
+          .toBeGreaterThanOrEqual(1);
+        await playExpect
+          .poll(async () => await containersPage.containerExists(container), { timeout: 5_000 })
+          .toBeTruthy();
+      }
+      await containersPage.clearFilterByName();
+      await playExpect
+        .poll(async () => await containersPage.countRowsFromTable(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(containerList.length);
+
       //Stop a container, prune, and repeat
       for (const container of containerList) {
-        let containersPage = new ContainersPage(page);
+        containersPage = new ContainersPage(page);
         const containersDetails = await containersPage.stopContainerFromDetails(container);
         await playExpect
           .poll(async () => await containersDetails.getState(), { timeout: 60_000 })
@@ -341,7 +358,7 @@ test.describe
           .toMatch(stopStatusRegex);
       }
       //Prune the 3 stopped containers at the same time
-      const containersPage = await navigationBar.openContainers();
+      containersPage = await navigationBar.openContainers();
       await playExpect(containersPage.heading).toBeVisible();
       await containersPage.pruneContainers();
       for (const container of containerList) {
