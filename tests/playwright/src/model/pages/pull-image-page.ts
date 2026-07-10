@@ -36,6 +36,7 @@ export class PullImagePage extends BasePage {
   readonly cancelButton: Locator;
   readonly viewDetailsButton: Locator;
   readonly runButton: Locator;
+  readonly pullErrorMessage: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -60,6 +61,7 @@ export class PullImagePage extends BasePage {
     this.cancelButton = this.tabContent.getByRole('button', { name: 'Cancel', exact: true });
     this.viewDetailsButton = this.tabContent.getByRole('button', { name: 'View details', exact: true });
     this.runButton = this.tabContent.getByRole('button', { name: 'Run', exact: true });
+    this.pullErrorMessage = page.getByRole('alert').filter({ hasText: 'no running provider' });
   }
 
   async pullImage(imageName: string, tag = '', timeout = 60_000): Promise<ImagesPage> {
@@ -255,10 +257,8 @@ export class PullImagePage extends BasePage {
 
   private async waitForPullCompletion(timeout: number, maxRetries = 3): Promise<void> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const pullErrorMessage = this.page.getByRole('alert').filter({ hasText: 'no running provider' });
-
       await this.page.waitForTimeout(2_000);
-      const errorAppeared = await pullErrorMessage.isVisible();
+      const errorAppeared = await this.pullErrorMessage.isVisible();
 
       if (!errorAppeared) break;
 
