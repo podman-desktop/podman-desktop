@@ -7,6 +7,13 @@ import SealRocket from './lib/images/SealRocket.svelte';
 import ColorsStyle from './lib/style/ColorsStyle.svelte';
 import { lastPage } from './stores/breadcrumb';
 
+// (delete-me) cold-start trace logging
+const _t0 = Date.now();
+const _trace = (msg: string): void => console.log(`[TRACE:renderer] +${Date.now() - _t0}ms ${msg}`);
+_trace(
+  `Loader.svelte module init — window.events=${typeof window.events} window.extensionSystemIsReady=${typeof window.extensionSystemIsReady}`,
+);
+
 let systemReady = false;
 
 let toggle = false;
@@ -16,12 +23,15 @@ let loadingSequence: NodeJS.Timeout;
 let extensionsStarterChecker: NodeJS.Timeout;
 
 onMount(async () => {
+  _trace('onMount fired');
   loadingSequence = setInterval(() => {
     toggle = !toggle;
   }, 100);
   // check if the server side is ready
   try {
+    _trace('calling extensionSystemIsReady()');
     const isReady = await window.extensionSystemIsReady();
+    _trace(`extensionSystemIsReady() returned: ${isReady}`);
     systemReady = isReady;
     if (systemReady) {
       window.dispatchEvent(new CustomEvent('system-ready', {}));
@@ -78,6 +88,7 @@ window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
 
 // Wait that the server-side is ready
 window.events?.receive('starting-extensions', (value: unknown) => {
+  _trace(`received 'starting-extensions' event: ${value}`);
   systemReady = value === 'true';
   if (systemReady) {
     window.dispatchEvent(new CustomEvent('system-ready', {}));

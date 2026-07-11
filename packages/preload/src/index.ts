@@ -20,6 +20,7 @@
  * @module preload
  */
 
+// (delete-me) cold-start trace logging — must be before all imports
 import EventEmitter from 'node:events';
 
 import type {
@@ -153,6 +154,10 @@ import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
 import { contextBridge, ipcRenderer } from 'electron';
 
+const _traceT0 = Date.now();
+const _trace = (msg: string): void => console.log(`[TRACE:preload] +${Date.now() - _traceT0}ms ${msg}`);
+_trace('preload module start (before imports)');
+
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;
 
 const originalConsole = console;
@@ -202,6 +207,7 @@ export function initExposure(): void {
   }
 
   contextBridge.exposeInMainWorld('events', apiSender);
+  _trace('window.events exposed');
   ipcRenderer.on('api-sender', (_, channel, data) => {
     apiSender.send(channel, data);
   });
@@ -2771,4 +2777,6 @@ export function initExposure(): void {
 }
 
 // expose methods
+_trace('imports resolved, calling initExposure()');
 initExposure();
+_trace('initExposure() done — all contextBridge APIs exposed');

@@ -57,6 +57,7 @@ export class ElectronRunner extends Runner {
       this._app = await electron.launch({
         ...this._options,
       });
+
       // setup state
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
@@ -249,6 +250,9 @@ export class ElectronRunner extends Runner {
     }
   }
 
+  // (delete-me) cold-start trace file counter
+  private static _launchCount = 0;
+
   protected override defaultOptions(): object {
     const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
     const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
@@ -256,6 +260,10 @@ export class ElectronRunner extends Runner {
     const tracesDir = join(this._testOutput, 'traces', 'raw');
     console.log(`video will be written to: ${directory}`);
     const env = this.setupPodmanDesktopCustomFolder();
+    // (delete-me) pass trace file path to Electron main process
+    const traceFile = join(this._testOutput, `cold-start-trace-w${ElectronRunner._launchCount++}.log`);
+    env['PD_COLD_TRACE_FILE'] = traceFile;
+    console.log(`Cold-start trace file: ${traceFile}`);
     const recordVideo = {
       dir: directory,
       size: {
