@@ -243,6 +243,9 @@ jobs:
         exclude:
         - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
+      - name: Exclude workspace from Windows Defender scanning
+        run: Add-MpPreference -ExclusionPath "${{ github.workspace }}"
+
       - name: Set the default env. variables
         env:
           DEFAULT_UPDATE_TARGET_OWNER: 'podman-desktop'
