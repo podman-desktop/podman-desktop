@@ -109,7 +109,7 @@
     ]
   },
   "scripts": {
-    "install:contour": "tsx ./scripts/download.ts",
+    "install:contour": "node ./scripts/download.ts",
     "build": "vite build && node ./scripts/build.js",
     "test": "vitest run --coverage",
     "test:watch": "vitest watch --coverage",
@@ -125,7 +125,6 @@
   "devDependencies": {
     "adm-zip": "^0.6.0",
     "mkdirp": "^3.0.1",
-    "tsx": "^4.23.1",
     "vite": "^8.1.4",
     "vitest": "^4.1.10"
   }
