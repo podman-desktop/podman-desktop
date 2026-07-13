@@ -24,6 +24,10 @@ const config = {
   projectName: 'podman-desktop',
   deploymentBranch: 'gh-pages',
   trailingSlash: false,
+  future: {
+    v4: true,
+    faster: false,
+  },
   markdown: {
     mermaid: true,
     parseFrontMatter: async params => {
