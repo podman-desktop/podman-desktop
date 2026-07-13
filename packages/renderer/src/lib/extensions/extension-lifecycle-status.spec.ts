@@ -76,9 +76,9 @@ describe('getExtensionLifecyclePresentation', () => {
 
   test('stopping extension is disabling', () => {
     expect(getExtensionLifecyclePresentation('stopping', 'pd')).toEqual({
-      statusDotStatus: 'waiting',
+      statusDotStatus: 'transitioning',
       label: 'Disabling',
-      textColorVar: 'var(--pd-status-waiting)',
+      textColorVar: 'var(--pd-status-stopped)',
     });
   });
 

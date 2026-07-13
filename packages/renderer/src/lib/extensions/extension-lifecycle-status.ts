@@ -85,9 +85,9 @@ export function getExtensionLifecyclePresentation(
       };
     case 'stopping':
       return {
-        statusDotStatus: 'waiting',
+        statusDotStatus: 'transitioning',
         label: 'Disabling',
-        textColorVar: 'var(--pd-status-waiting)',
+        textColorVar: 'var(--pd-status-stopped)',
       };
     case 'failed':
       return {

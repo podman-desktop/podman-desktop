@@ -21,7 +21,7 @@ const statusCssVars: Record<string, string> = {
   degraded: 'var(--pd-status-degraded)',
   unknown: 'var(--pd-status-unknown)',
   starting: 'var(--pd-status-starting)',
-  transitioning: 'var(--pd-status-unknown)',
+  transitioning: 'var(--pd-status-stopped)',
   'not-running': 'var(--pd-status-not-running)',
   connected: 'var(--pd-status-connected)',
   disconnected: 'var(--pd-status-disconnected)',
