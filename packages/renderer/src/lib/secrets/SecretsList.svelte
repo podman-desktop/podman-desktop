@@ -98,7 +98,7 @@ function gotoCreateSecret(): void {
 <NavPage bind:searchTerm={$searchPattern} title="secrets">
   {#snippet additionalActions()}
     {#if providerConnections.length > 0}
-      <Button onclick={gotoCreateSecret} icon={faPlusCircle} title="Create a secret" aria-label="Create">Create</Button>
+      <Button onclick={gotoCreateSecret} icon={faPlusCircle} title="Create a secret">Create</Button>
     {/if}
   {/snippet}
 

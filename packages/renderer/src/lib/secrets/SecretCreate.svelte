@@ -70,7 +70,7 @@ function close(): void {
       {#if providerConnections.length > 1}
         <div>
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Container Engine <span class="text-red-500">*</span></label>
+            >Container Engine <span class="text-(--pd-state-error)">*</span></label>
           <ContainerConnectionDropdown
             id="providerChoice"
             name="providerChoice"
@@ -81,7 +81,7 @@ function close(): void {
 
       <div>
         <label for="secretName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-          >Name <span class="text-red-500">*</span></label>
+          >Name <span class="text-(--pd-state-error)">*</span></label>
         <Input
           bind:value={secretCreateOptions.name}
           name="secretName"
@@ -93,11 +93,12 @@ function close(): void {
 
       <div>
         <label for="secretData" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-          >Data <span class="text-red-500">*</span></label>
+          >Data <span class="text-(--pd-state-error)">*</span></label>
         <Input
           bind:value={secretCreateOptions.data}
           name="secretData"
           id="secretData"
+          type="password"
           placeholder="Secret data"
           required
           class="w-full" />
