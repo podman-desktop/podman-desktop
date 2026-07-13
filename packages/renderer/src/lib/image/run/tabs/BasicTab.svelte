@@ -10,17 +10,10 @@ interface Props {
   options: RunOptions['basic'];
   containerNameError?: string;
   exposedPorts: string[];
-  containerPortMapping: PortInfo[];
   onContainerPortMappingInput: (event: Event, index: number) => void;
 }
 
-let {
-  options = $bindable(),
-  containerNameError,
-  exposedPorts,
-  containerPortMapping = $bindable(),
-  onContainerPortMappingInput,
-}: Props = $props();
+let { options = $bindable(), containerNameError, exposedPorts, onContainerPortMappingInput }: Props = $props();
 
 function addVolumeMount(): void {
   options.volumeMounts = [...options.volumeMounts, { source: '', target: '' }];
@@ -158,12 +151,12 @@ const envDialogOptions: OpenDialogOptions = {
         class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
         >Local port for {port}:</span>
       <Input
-        bind:value={containerPortMapping[index].port}
+        bind:value={options.containerPortMapping[index].port}
         on:input={(event): void => onContainerPortMappingInput(event, index)}
         placeholder="Enter value for port {port}"
-        error={containerPortMapping[index].error}
+        error={options.containerPortMapping[index].error}
         class="ml-2 w-full"
-        title={containerPortMapping[index].error} />
+        title={options.containerPortMapping[index].error} />
     </div>
   {/each}
 

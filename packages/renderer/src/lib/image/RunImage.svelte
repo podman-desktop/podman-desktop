@@ -38,6 +38,7 @@ let options: RunOptions = $state({
     environmentVariables: [{ key: '', value: '' }],
     environmentFiles: [''],
     hostContainerPortMappings: [],
+    containerPortMapping: [],
   },
   networking: {
     hostname: undefined,
@@ -81,14 +82,13 @@ let containerNameError: string | undefined = $derived.by(() => {
   }
 });
 
-let containerPortMapping = $state<PortInfo[]>([]);
 let exposedPorts = $state<string[]>([]);
 let createError = $state<string>();
 let onPortInputTimeout: NodeJS.Timeout;
 
 let invalidPorts = $derived.by(() => {
   const invalidHostPorts = options.basic.hostContainerPortMappings.filter(pair => pair.hostPort.error);
-  const invalidContainerPortMapping = containerPortMapping?.filter(port => port.error) ?? [];
+  const invalidContainerPortMapping = options.basic.containerPortMapping?.filter(port => port.error) ?? [];
   return invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
 });
 let invalidFields = $derived(!!containerNameError || invalidPorts);
@@ -108,8 +108,6 @@ onMount(async () => {
     return;
   }
 
-  containerPortMapping = [];
-
   imageInspectInfo = await window.getImageInspect(image.engineId, image.id);
   exposedPorts = Array.from(Object.keys(imageInspectInfo?.Config?.ExposedPorts ?? {}));
 
@@ -125,12 +123,12 @@ onMount(async () => {
     options.basic.entrypoint = '';
   }
 
-  containerPortMapping = new Array<PortInfo>(exposedPorts.length);
+  options.basic.containerPortMapping = new Array<PortInfo>(exposedPorts.length);
   await Promise.all(
     exposedPorts.map(async (port, index) => {
       const localPorts = await getPortsInfo(port);
       if (localPorts) {
-        containerPortMapping[index] = { port: localPorts, error: '' };
+        options.basic.containerPortMapping[index] = { port: localPorts, error: '' };
       }
     }),
   );
@@ -223,11 +221,11 @@ async function startContainer(): Promise<void> {
   const PortBindings: HostConfigPortBinding = {};
   try {
     exposedPorts.forEach((port, index) => {
-      if (port.includes('-') || containerPortMapping[index]?.port.includes('-')) {
-        addPortsFromRange(ExposedPorts, PortBindings, port, containerPortMapping[index].port);
+      if (port.includes('-') || options.basic.containerPortMapping[index]?.port.includes('-')) {
+        addPortsFromRange(ExposedPorts, PortBindings, port, options.basic.containerPortMapping[index].port);
       } else {
-        if (containerPortMapping[index]?.port) {
-          PortBindings[port] = [{ HostPort: containerPortMapping[index].port }];
+        if (options.basic.containerPortMapping[index]?.port) {
+          PortBindings[port] = [{ HostPort: options.basic.containerPortMapping[index].port }];
         }
         ExposedPorts[port] = {};
       }
@@ -448,12 +446,10 @@ function getStartEndRange(range: string):
 }
 
 function onContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, containerPortMapping[index], () => {
-    containerPortMapping = containerPortMapping;
-  });
+  onPortInput(event, options.basic.containerPortMapping[index]);
 }
 
-function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): void {
+function onPortInput(event: Event, portInfo: PortInfo): void {
   clearTimeout(onPortInputTimeout);
   const target = event.currentTarget as HTMLInputElement;
   const _value: number = Number(target.value);
@@ -462,13 +458,11 @@ function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): vo
       .isFreePort(_value)
       .then(_ => {
         portInfo.error = '';
-        updateUI();
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
           portInfo.error = (error as { message: string }).message;
         }
-        updateUI();
       });
   }, 500);
 }
@@ -503,7 +497,6 @@ function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): vo
               bind:options={options.basic}
               {containerNameError}
               {exposedPorts}
-              bind:containerPortMapping
               {onContainerPortMappingInput} />
           </Route>
           <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
