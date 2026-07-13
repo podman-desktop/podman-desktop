@@ -30,8 +30,7 @@ beforeAll(() => {
   executeCommand.mockImplementation(() => {});
 
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    // Cast to function before calling
-    (func as () => void)();
+    func();
     return { dispose: vi.fn() };
   });
 });
