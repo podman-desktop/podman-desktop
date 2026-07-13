@@ -20,6 +20,14 @@ run-name: Testing build of Podman Desktop from Main branch
 
 on:
   workflow_dispatch:
+    inputs:
+      build_all:
+        description: 'Build all installer artifacts (ignore the reduced target/arch list)'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        default: 'false'
   schedule:
     - cron: '0 1 * * *'
 
@@ -112,6 +120,8 @@ jobs:
       ELECTRON_ENABLE_INSPECT: true
       GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
       AIRGAP_DOWNLOAD: ${{ matrix.airgap == 'true' && '1' || '' }}
+      BUILD_ALL: ${{ inputs.build_all || 'false' }}
+
     strategy:
       fail-fast: true
       matrix:
@@ -153,7 +163,23 @@ jobs:
           flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
           flatpak install flathub --no-static-deltas --user -y org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
 
-      - name: Run Build and Compile
+      - name: Run Windows Build and Compile
+        if: runner.os == 'Windows' && env.BUILD_ALL != 'true'
+        timeout-minutes: 60
+        run: pnpm compile:next --win --x64 nsis
+
+      - name: Run macOS Build and Compile - next
+        if: runner.os == 'macOS' && env.BUILD_ALL != 'true'
+        timeout-minutes: 60
+        run: pnpm compile:next --mac default --arm64
+
+      - name: Run Linux Build and Compile
+        if: runner.os == 'Linux' && env.BUILD_ALL != 'true'
+        timeout-minutes: 60
+        run: pnpm compile:next
+
+      - name: Run Build and Compile (all)
+        if: env.BUILD_ALL == 'true'
         timeout-minutes: 60
         run: pnpm compile:next
 
