@@ -31,144 +31,96 @@ import { router } from 'tinro';
  */
 export type NavigationHint = 'root' | 'details' | 'tab';
 
-export const handleNavigation = (request: InferredNavigationRequest<NavigationPage>): void => {
+export const resolveRoute = (request: InferredNavigationRequest<NavigationPage>): string => {
   // eslint-disable-next-line sonarjs/max-switch-cases
   switch (request.page) {
     case NavigationPage.DASHBOARD:
-      router.goto('/');
-      break;
+      return '/';
     case NavigationPage.CONTAINERS:
-      router.goto('/containers');
-      break;
+      return '/containers';
     case NavigationPage.CONTAINER_EXPORT:
-      router.goto(`/containers/${request.parameters.id}/export`);
-      break;
+      return `/containers/${request.parameters.id}/export`;
     case NavigationPage.CONTAINER:
-      router.goto(`/containers/${request.parameters.id}/`);
-      break;
+      return `/containers/${request.parameters.id}/`;
     case NavigationPage.EXISTING_IMAGE_CREATE_CONTAINER:
-      router.goto(`/images/existing-image-create-container`);
-      break;
+      return `/images/existing-image-create-container`;
     case NavigationPage.CONTAINER_SUMMARY:
-      router.goto(`/containers/${request.parameters.id}/summary`);
-      break;
+      return `/containers/${request.parameters.id}/summary`;
     case NavigationPage.CONTAINER_LOGS:
-      router.goto(`/containers/${request.parameters.id}/logs`);
-      break;
+      return `/containers/${request.parameters.id}/logs`;
     case NavigationPage.CONTAINER_INSPECT:
-      router.goto(`/containers/${request.parameters.id}/inspect`);
-      break;
+      return `/containers/${request.parameters.id}/inspect`;
     case NavigationPage.CONTAINER_TERMINAL:
-      router.goto(`/containers/${request.parameters.id}/terminal`);
-      break;
+      return `/containers/${request.parameters.id}/terminal`;
     case NavigationPage.CONTAINER_TTY:
-      router.goto(`/containers/${request.parameters.id}/tty`);
-      break;
+      return `/containers/${request.parameters.id}/tty`;
     case NavigationPage.CONTAINER_KUBE:
-      router.goto(`/containers/${request.parameters.id}/kube`);
-      break;
+      return `/containers/${request.parameters.id}/kube`;
     case NavigationPage.DEPLOY_TO_KUBE:
-      router.goto(`/deploy-to-kube/${request.parameters.id}/${request.parameters.engineId}`);
-      break;
+      return `/deploy-to-kube/${request.parameters.id}/${request.parameters.engineId}`;
     case NavigationPage.IMAGES:
-      router.goto(`/images`);
-      break;
+      return `/images`;
     case NavigationPage.IMAGE_BUILD:
-      router.goto(`/images/build?taskId=${request.parameters.taskId}`);
-      break;
+      return `/images/build?taskId=${request.parameters.taskId}`;
     case NavigationPage.IMAGE:
-      router.goto(
-        `/images/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`,
-      );
-      break;
+      return `/images/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`;
     case NavigationPage.MANIFEST:
-      router.goto(
-        `/manifests/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`,
-      );
-      break;
+      return `/manifests/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`;
     case NavigationPage.ONBOARDING:
-      router.goto(`/preferences/onboarding/${request.parameters.extensionId}`);
-      break;
+      return `/preferences/onboarding/${request.parameters.extensionId}`;
     case NavigationPage.PODMAN_PODS:
-      router.goto(`/pods`);
-      break;
+      return `/pods`;
     case NavigationPage.PODMAN_POD_SUMMARY:
-      router.goto(`/pods/podman/${request.parameters.name}/${request.parameters.engineId}/summary`);
-      break;
+      return `/pods/podman/${request.parameters.name}/${request.parameters.engineId}/summary`;
     case NavigationPage.PODMAN_POD:
-      router.goto(`/pods/podman/${request.parameters.name}/${request.parameters.engineId}/`);
-      break;
+      return `/pods/podman/${request.parameters.name}/${request.parameters.engineId}/`;
     case NavigationPage.VOLUMES:
-      router.goto('/volumes');
-      break;
+      return '/volumes';
     case NavigationPage.VOLUME:
-      router.goto(`/volumes/${request.parameters.name}/${request.parameters.engineId}/summary`);
-      break;
+      return `/volumes/${request.parameters.name}/${request.parameters.engineId}/summary`;
     case NavigationPage.CONTRIBUTION:
-      router.goto(`/contribs/${request.parameters.name}/`);
-      break;
+      return `/contribs/${request.parameters.name}/`;
     case NavigationPage.TROUBLESHOOTING:
-      router.goto('/troubleshooting/repair-connections');
-      break;
+      return '/troubleshooting/repair-connections';
     case NavigationPage.HELP:
-      router.goto('/help');
-      break;
+      return '/help';
     case NavigationPage.CLI_TOOLS:
-      router.goto(`/preferences/cli-tools`);
-      break;
+      return `/preferences/cli-tools`;
     case NavigationPage.PROVIDER_TASK:
-      router.goto(`/preferences/resources/provider-task/${request.parameters.internalId}/${request.parameters.taskId}`);
-      break;
+      return `/preferences/resources/provider-task/${request.parameters.internalId}/${request.parameters.taskId}`;
     case NavigationPage.WEBVIEW:
-      router.goto(`/webviews/${request.parameters.id}`);
-      break;
+      return `/webviews/${request.parameters.id}`;
     case NavigationPage.AUTHENTICATION:
-      router.goto('/preferences/authentication-providers');
-      break;
+      return '/preferences/authentication-providers';
     case NavigationPage.RESOURCES:
-      router.goto('/preferences/resources');
-      break;
+      return '/preferences/resources';
     case NavigationPage.EDIT_CONTAINER_CONNECTION:
-      router.goto(`/preferences/container-connection/edit/${request.parameters.provider}/${request.parameters.name}`);
-      break;
+      return `/preferences/container-connection/edit/${request.parameters.provider}/${request.parameters.name}`;
     case NavigationPage.EXPERIMENTAL_FEATURES:
-      router.goto('/preferences/experimental');
-      break;
+      return '/preferences/experimental';
     case NavigationPage.CREATE_PROVIDER_CONNECTION:
-      router.goto(`/preferences/resources/provider/${request.parameters.provider}`);
-      break;
+      return `/preferences/resources/provider/${request.parameters.provider}`;
     case NavigationPage.NETWORKS:
-      router.goto('/networks');
-      break;
+      return '/networks';
     case NavigationPage.NETWORK:
-      router.goto(`/networks/${request.parameters.name}/${request.parameters.engineId}/summary`);
-      break;
+      return `/networks/${request.parameters.name}/${request.parameters.engineId}/summary`;
     case NavigationPage.NETWORK_CREATE:
-      router.goto('/networks/create');
-      break;
+      return '/networks/create';
     case NavigationPage.EXTENSIONS_CATALOG:
-      router.goto(`/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`);
-      break;
+      return `/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`;
     case NavigationPage.CONTAINER_CONNECTION:
-      router.goto(
-        `/preferences/container-connection/view/${request.parameters.provider}/${Buffer.from(request.parameters.name).toString('base64')}/${Buffer.from(request.parameters.socketPath).toString('base64')}/summary`,
-      );
-      break;
+      return `/preferences/container-connection/view/${request.parameters.provider}/${Buffer.from(request.parameters.name).toString('base64')}/${Buffer.from(request.parameters.socketPath).toString('base64')}/summary`;
     case NavigationPage.KUBERNETES_CONNECTION:
-      router.goto(
-        `/preferences/kubernetes-connection/${request.parameters.provider}/${Buffer.from(request.parameters.apiURL).toString('base64')}/summary`,
-      );
-      break;
+      return `/preferences/kubernetes-connection/${request.parameters.provider}/${Buffer.from(request.parameters.apiURL).toString('base64')}/summary`;
     case NavigationPage.VM_CONNECTION:
-      router.goto(`/preferences/vm-connection/${request.parameters.provider}/${request.parameters.name}/terminal`);
-      break;
+      return `/preferences/vm-connection/${request.parameters.provider}/${request.parameters.name}/terminal`;
     case NavigationPage.SECRETS:
-      router.goto(`/secrets`);
-      break;
+      return `/secrets`;
     case NavigationPage.SECRET:
-      router.goto(
-        `/secrets/${encodeURIComponent(request.parameters.engineId)}/${encodeURIComponent(request.parameters.id)}/summary`,
-      );
-      break;
+      return `/secrets/${encodeURIComponent(request.parameters.engineId)}/${encodeURIComponent(request.parameters.id)}/summary`;
   }
+};
+
+export const handleNavigation = (request: InferredNavigationRequest<NavigationPage>): void => {
+  router.goto(resolveRoute(request));
 };
