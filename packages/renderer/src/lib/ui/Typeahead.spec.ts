@@ -429,6 +429,11 @@ test('list opens on focus', async () => {
 
   const input = screen.getByRole('textbox');
   await userEvent.click(input);
+  await userEvent.keyboard('text');
+
+  // click away and then select the input with tab to focus it
+  await userEvent.click(document.body);
+  await userEvent.tab();
 
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });

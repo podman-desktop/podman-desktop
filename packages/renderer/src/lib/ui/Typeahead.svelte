@@ -277,7 +277,7 @@ function onWindowClick(e: Event): void {
     name={name}
     oninput={onInput}
     onkeydown={onKeyDown}
-    onfocus={processInput}
+    onfocus={open}
     use:requestFocus />
   {#if loading}
     <Spinner size="1em" />

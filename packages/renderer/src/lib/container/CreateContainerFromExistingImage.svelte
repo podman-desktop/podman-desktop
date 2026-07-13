@@ -359,6 +359,9 @@ function onContainerConnectionChange(): void {
   matchingLocalImages = [];
   imageToPull = '';
 }
+
+// trigger search on mount to populate the typeahead with local images
+onMount(() => searchFunction(''));
 </script>
 
 <EngineFormPage title="Select an image">
