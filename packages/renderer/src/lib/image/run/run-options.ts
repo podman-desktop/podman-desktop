@@ -21,6 +21,12 @@ export interface PortInfo {
   error: string;
 }
 
+export interface SecretMapping {
+  name: string;
+  type: 'mount' | 'env';
+  target: string;
+}
+
 export interface RunOptions {
   basic: {
     containerName: string;
@@ -31,6 +37,7 @@ export interface RunOptions {
     environmentFiles: string[];
     hostContainerPortMappings: { hostPort: PortInfo; containerPort: string }[];
     containerPortMapping: Array<PortInfo>;
+    secretMappings: Array<SecretMapping>;
   };
   networking: {
     hostname?: string;

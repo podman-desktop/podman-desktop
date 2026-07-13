@@ -4735,6 +4735,53 @@ describe('createContainerLibPod', () => {
     await containerRegistry.createContainer('podman1', options);
     expect(createPodmanContainerMock).toBeCalledWith(expectedOptions);
   });
+
+  test('check that secrets and secret_env are passed to createPodmanContainer', async () => {
+    const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+    const libpod = new LibpodDockerode();
+    libpod.enhancePrototypeWithLibPod();
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: dockerAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    const createPodmanContainerMock = vi
+      .spyOn(dockerAPI as unknown as LibPod, 'createPodmanContainer')
+      .mockImplementation(_options =>
+        Promise.resolve({
+          Id: 'id',
+          Warnings: [],
+        }),
+      );
+    vi.spyOn(dockerAPI as unknown as Dockerode, 'getContainer').mockImplementation((_id: string) => {
+      return {
+        start: () => {},
+      } as unknown as Dockerode.Container;
+    });
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const options: ContainerCreateOptions = {
+      Image: 'image',
+      name: 'name',
+      Secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
+      SecretEnv: { FOO_DATA: 'foo-data' },
+    };
+
+    await containerRegistry.createContainer('podman1', options);
+
+    expect(createPodmanContainerMock).toBeCalledWith(
+      expect.objectContaining({
+        secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
+        secret_env: { FOO_DATA: 'foo-data' },
+      }),
+    );
+  });
 });
 
 describe('getContainerCreateMountOptionFromBind', () => {
