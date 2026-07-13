@@ -50,6 +50,6 @@ const showUpdate = $derived(extensionRequiresManualUpdate(extension));
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
       color=""
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin}`} />
   {/if}
 </div>

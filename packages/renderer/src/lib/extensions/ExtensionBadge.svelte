@@ -22,7 +22,7 @@ export let extension: { id: string; type: 'dd' | 'pd'; removable: boolean; devMo
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
       color=""
-      class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin}`} />
   {:else if extension.devMode}
     <Badge
       label="DevMode extension"

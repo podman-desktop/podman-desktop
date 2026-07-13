@@ -48,7 +48,7 @@ test('Expect to have badge for pd built-in Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  expect(screen.getByText('Built-in extension')).toBeInTheDocument();
+  expect(screen.getByText('built-in Extension')).toBeInTheDocument();
 });
 
 test('Expect to have badge for devMode Extension', async () => {
@@ -72,5 +72,5 @@ test('Expect bundled catalog extension with removable false to have no built-in 
   };
   render(ExtensionBadge, { extension });
 
-  expect(screen.queryByText('Built-in extension')).not.toBeInTheDocument();
+  expect(screen.queryByText('built-in Extension')).not.toBeInTheDocument();
 });

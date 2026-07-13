@@ -18,7 +18,7 @@
 
 export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 cursor-pointer m-0';
 
-export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
+export const EXTENSION_BUILTIN_CHIP_LABEL = 'built-in Extension';
 
 export const EXTENSION_BUILTIN_CHIP_TOOLTIP = 'Pre-installed with Podman Desktop';
 
@@ -56,8 +56,7 @@ export const EXTENSION_CHIP_COLORS = {
   community: 'bg-[var(--pd-status-disconnected)]',
   verified: 'bg-[var(--pd-status-running)]',
   communityOrigin: 'bg-[var(--pd-status-disconnected)]',
-  /** Dark gray background for readable white label text. */
-  builtin: 'bg-[var(--pd-status-disconnected)]',
+  builtin: 'bg-[var(--pd-badge-builtin-extension-bg)]',
   devMode: 'bg-[var(--pd-status-disconnected)]',
   dockerDesktop: 'bg-[var(--pd-badge-dd-extension-bg)]',
   dockerDesktopText: '!text-white',
