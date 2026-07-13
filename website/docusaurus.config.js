@@ -18,14 +18,27 @@ const config = {
   url: inDevMode ? 'http://localhost:3000' : 'https://podman-desktop.io',
   baseUrl: '/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
   organizationName: 'containers',
   projectName: 'podman-desktop',
   deploymentBranch: 'gh-pages',
   trailingSlash: false,
+  future: {
+    v4: true,
+  },
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+    // Formatters (e.g. Prettier's default markdown parser) don't understand that `{/* */}`
+    // is a JSX comment expression, not markdown emphasis, and can mangle it into `{/_ _/}`,
+    // which MDX then parses as a regex literal. Self-heal it here, the same way Docusaurus's
+    // own website works around an equivalent Crowdin translation bug:
+    // https://github.com/facebook/docusaurus/blob/main/website/docusaurus.config.ts#L252-L258
+    preprocessor: ({ fileContent }) => {
+      return fileContent.replaceAll('{/_', '{/*').replaceAll('_/}', '*/}');
+    },
     parseFrontMatter: async params => {
       return createNotesFiles(params);
     },

@@ -16,7 +16,7 @@ This extension is a technology preview.
 
 ![hero](/img/blog/apple-container-extension/apple-container-extension.png)
 
-<!--truncate-->
+{/_ truncate _/}
 
 ## Introduction
 

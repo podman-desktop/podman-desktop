@@ -19,7 +19,7 @@ In this blog post, we will explore the best practice for streamlining the image 
 
 ![hero](img/sharing-podman-images-with-kubernetes-cluster/selkie-family.png)
 
-<!--truncate-->
+{/_ truncate _/}
 
 ---
 
@@ -121,8 +121,6 @@ RUN clean-install podman && \
 
 with
 
-<!-- markdownlint-disable MD001 MD034 -->
-
 ```Dockerfile
 RUN sh -c "echo 'deb https://downloadcontent.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
     curl -LO https://downloadcontent.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_22.04/Release.key && \
@@ -152,8 +150,6 @@ Ok now let's try in two steps:
 ```shell
 podman machine init --cpus 4 --memory 6000 --rootful
 ```
-
-<!-- markdownlint-disable-next-line -->
 
 2. Start the cluster using our kicbase image
 

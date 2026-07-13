@@ -17,7 +17,7 @@ The 5 things to know being a Docker user by using Podman Desktop:
 
 ![5-things-to-know-for-a-docker-user-hero](img/5-things-to-know-for-a-docker-user/5-things-to-know-for-a-docker-user-hero.png)
 
-<!--truncate-->
+{/_ truncate _/}
 
 ---
 
