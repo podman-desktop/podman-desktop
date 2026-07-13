@@ -23,10 +23,11 @@ import { versionUpdateStatesStore } from './extension-version-update.svelte';
 interface Props {
   extension?: CombinedExtensionInfoUI;
   catalogExtension?: Pick<CatalogExtensionInfoUI, 'id' | 'displayName' | 'isInstalled'>;
+  showTooltip?: boolean;
   class?: string;
 }
 
-let { extension, catalogExtension, class: className = '' }: Props = $props();
+let { extension, catalogExtension, showTooltip = true, class: className = '' }: Props = $props();
 
 let podmanDesktopVersion = $state('');
 let uiRevision = $state(0);
@@ -122,7 +123,7 @@ const tooltip = $derived(
 </script>
 
 {#if presentation}
-  {#if tooltip}
+  {#if tooltip && showTooltip}
     <Tooltip top tip={tooltip}>
       <div class="min-w-0 max-w-full cursor-help">
         <div class="inline-flex items-center gap-1.5 min-w-0 max-w-full {className}">

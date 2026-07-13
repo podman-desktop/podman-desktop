@@ -48,6 +48,7 @@ let { extensionDetails, catalogExtension }: Props = $props();
         <ExtensionLifecycleStatus
           extension={catalogExtension.installedExtension}
           catalogExtension={catalogExtension}
+          showTooltip={false}
           class="pt-0.5" />
       </div>
     {/if}
