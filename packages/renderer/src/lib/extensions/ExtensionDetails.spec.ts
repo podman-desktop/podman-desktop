@@ -29,6 +29,11 @@ import { extensionInfos } from '/@/stores/extensions';
 
 import ExtensionDetails from './ExtensionDetails.svelte';
 
+vi.mock(import('./extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: (): boolean => false,
+  EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT: 'extensions-prototype-scope-change',
+}));
+
 beforeEach(() => {
   vi.resetAllMocks();
   Object.defineProperty(window, 'getPodmanDesktopVersion', {
@@ -133,8 +138,9 @@ test('Expect to have details page', async () => {
   const heading = screen.getByRole('heading', { name: 'A installed Extension extension' });
   expect(heading).toBeInTheDocument();
 
-  const extensionActions = screen.getByRole('button', { name: 'A Extension actions' });
+  const extensionActions = screen.getByRole('group', { name: 'Extension Actions' });
   expect(extensionActions).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'A Extension actions' })).not.toBeInTheDocument();
 
   // no tabs as not failing state
   const readmeTab = screen.queryByRole('button', { name: 'Readme' });

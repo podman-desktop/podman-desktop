@@ -7,6 +7,7 @@ import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload
 import extensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import ExtensionIcon from '/@/lib/preferences/ExtensionIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import ExtensionStatus from '/@/lib/ui/ExtensionStatus.svelte';
 import { combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
@@ -23,6 +24,7 @@ import type { ExtensionDetailsUI } from './extension-details-ui';
 import { resolveExtensionLifecycleWarnings } from './extension-lifecycle-warning';
 import { buildExtensionsListPath, type ExtensionListScreen } from './extension-list';
 import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from './extension-version-update.svelte';
+import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsError from './ExtensionDetailsError.svelte';
 import ExtensionDetailsReadme from './ExtensionDetailsReadme.svelte';
 import ExtensionDetailsSummaryCard from './ExtensionDetailsSummaryCard.svelte';
@@ -32,6 +34,8 @@ import {
   EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT,
 } from './extensions-prototype-scope';
 import { ExtensionsUtils } from './extensions-utils';
+import InstalledExtensionActions from './InstalledExtensionActions.svelte';
+import SuggestionExtensionDetailsSummaryCard from './SuggestionExtensionDetailsSummaryCard.svelte';
 
 export let extensionId: string;
 export let returnScreen: ExtensionListScreen = 'installed';
@@ -54,15 +58,29 @@ $: isSuggestionScope = ((): boolean => {
   return areExtensionsImprovementsSuggested();
 })();
 
-let extension: Readable<ExtensionDetailsUI | undefined>;
-
 $: decodedExtensionId = decodeURIComponent(extensionId);
 
 $: installedExtensionsWithDemos = isSuggestionScope
   ? extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions)
   : $combinedInstalledExtensions;
 
+let extension: Readable<ExtensionDetailsUI | undefined>;
+
+$: extension = derived(
+  [catalogExtensionInfos, combinedInstalledExtensions],
+  ([$catalogExtensionInfos, $combinedInstalledExtensions]) => {
+    const extensions = isSuggestionScope
+      ? extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions)
+      : $combinedInstalledExtensions;
+    return extensionsUtils.extractExtensionDetail($catalogExtensionInfos, extensions, decodedExtensionId);
+  },
+);
+
 $: catalogExtension = ((): CatalogExtensionInfoUI | undefined => {
+  if (!isSuggestionScope) {
+    return undefined;
+  }
+
   uiRevision;
   const info = extensionsUtils.buildCatalogExtensionInfoForId(
     decodedExtensionId,
@@ -70,20 +88,14 @@ $: catalogExtension = ((): CatalogExtensionInfoUI | undefined => {
     $featuredExtensionInfos,
     installedExtensionsWithDemos,
   );
-  return info ? (isSuggestionScope ? withDisplayInstalledVersion(info) : info) : undefined;
+  return info ? withDisplayInstalledVersion(info) : undefined;
 })();
 
-$: extension = derived(
-  [catalogExtensionInfos, combinedInstalledExtensions],
-  ([$catalogExtensionInfos, _combinedInstalledExtensions]) => {
-    const extensions = isSuggestionScope
-      ? extensionsUtils.applyPrototypeUseCaseOverlays(_combinedInstalledExtensions)
-      : _combinedInstalledExtensions;
-    return extensionsUtils.extractExtensionDetail($catalogExtensionInfos, extensions, decodedExtensionId);
-  },
-);
-
 $: compatibilityIssues = ((): ReturnType<typeof resolveExtensionCompatibilityIssues> => {
+  if (!isSuggestionScope) {
+    return [];
+  }
+
   uiRevision;
   return resolveExtensionCompatibilityIssues(
     catalogExtension ?? {
@@ -96,11 +108,15 @@ $: compatibilityIssues = ((): ReturnType<typeof resolveExtensionCompatibilityIss
   );
 })();
 
-$: lifecycleWarnings = resolveExtensionLifecycleWarnings($extension?.installedExtension);
+$: lifecycleWarnings = isSuggestionScope ? resolveExtensionLifecycleWarnings($extension?.installedExtension) : [];
 
 $: detailsWarnings = [...lifecycleWarnings, ...mapCompatibilityIssuesToDetailsWarnings(compatibilityIssues)];
 
 $: hideDisabledLifecycleWarningWhileMenuOpen = ((): boolean => {
+  if (!isSuggestionScope) {
+    return false;
+  }
+
   actionsMenuRevision;
   return (
     $extension?.installedExtension?.state === 'stopped' &&
@@ -115,6 +131,10 @@ $: visibleDetailsWarnings = hideDisabledLifecycleWarningWhileMenuOpen
 
 onMount(() => {
   async function loadPodmanDesktopVersion(): Promise<void> {
+    if (!areExtensionsImprovementsSuggested()) {
+      return;
+    }
+
     try {
       const version = await window.getPodmanDesktopVersion?.();
       if (version) {
@@ -162,76 +182,147 @@ function closeChangeVersion(): void {
 </script>
 
 {#if $extension}
-  <DetailsPage
-    title="{$extension.displayName} extension"
-    subtitle={$extension.description}
-    {returnPath}
-    bind:this={detailsPage}>
-    {#snippet iconSnippet()}
-      <div class="flex flex-col mt-1 items-baseline w-8">
-        <div class="w-8 min-h-8">
-          {#if $extension.icon}
-            <ExtensionIcon extension={$extension} />
-          {:else if $extension.iconRef}
-            <img src={$extension.iconRef} alt="{$extension.displayName} icon" class="max-w-8 max-h-8" />
+  {#if isSuggestionScope}
+    <DetailsPage
+      title="{$extension.displayName} extension"
+      subtitle={$extension.description}
+      {returnPath}
+      bind:this={detailsPage}>
+      {#snippet iconSnippet()}
+        <div class="flex flex-col mt-1 items-baseline w-8">
+          <div class="w-8 min-h-8">
+            {#if $extension.icon}
+              <ExtensionIcon extension={$extension} />
+            {:else if $extension.iconRef}
+              <img src={$extension.iconRef} alt="{$extension.displayName} icon" class="max-w-8 max-h-8" />
+            {/if}
+          </div>
+        </div>
+      {/snippet}
+      {#snippet actionsSnippet()}
+        <div class="flex items-center gap-2">
+          {#if !$extension.installedExtension && $extension.fetchable}
+            <FeaturedExtensionDownload extension={$extension} catalogExtension={catalogExtension} />
+          {/if}
+          {#if catalogExtension}
+            <CatalogExtensionActions
+              extension={catalogExtension}
+              {returnScreen}
+              onChangeVersion={openChangeVersion}
+              onDetailsPage={true} />
           {/if}
         </div>
-      </div>
-    {/snippet}
-    {#snippet actionsSnippet()}
-      <div class="flex items-center gap-2">
-        {#if !$extension.installedExtension && $extension.fetchable}
-          <FeaturedExtensionDownload extension={$extension} catalogExtension={catalogExtension} />
-        {/if}
-        {#if catalogExtension}
-          <CatalogExtensionActions
-            extension={catalogExtension}
-            {returnScreen}
-            onChangeVersion={isSuggestionScope ? openChangeVersion : undefined}
-            onDetailsPage={true} />
-        {/if}
-      </div>
-    {/snippet}
+      {/snippet}
 
-    {#snippet tabsSnippet()}
-      {#if $extension.state === 'failed'}
-        <Button
-          type="tab"
-          on:click={(): void => {
-            screen = 'README';
-          }}
-          selected={screen === 'README'}>Readme</Button>
-        <Button
-          type="tab"
-          on:click={(): void => {
-            screen = 'ERROR';
-          }}
-          selected={screen === 'ERROR'}>Error</Button>
-      {/if}
-    {/snippet}
+      {#snippet tabsSnippet()}
+        {#if $extension.state === 'failed'}
+          <Button
+            type="tab"
+            on:click={(): void => {
+              screen = 'README';
+            }}
+            selected={screen === 'README'}>Readme</Button>
+          <Button
+            type="tab"
+            on:click={(): void => {
+              screen = 'ERROR';
+            }}
+            selected={screen === 'ERROR'}>Error</Button>
+        {/if}
+      {/snippet}
 
-    {#snippet contentSnippet()}
-      <div class="flex w-full h-full overflow-y-auto p-5 flex-col lg:flex-row gap-4">
-        {#if screen === 'README'}
-          <div class="flex flex-col gap-4 flex-1 min-w-0">
-            {#if visibleDetailsWarnings.length > 0}
-              <ExtensionDetailsWarnings warnings={visibleDetailsWarnings} />
+      {#snippet contentSnippet()}
+        <div class="flex w-full h-full overflow-y-auto p-5 flex-col lg:flex-row gap-4">
+          {#if screen === 'README'}
+            <div class="flex flex-col gap-4 flex-1 min-w-0">
+              {#if visibleDetailsWarnings.length > 0}
+                <ExtensionDetailsWarnings warnings={visibleDetailsWarnings} />
+              {/if}
+              <ExtensionDetailsReadme readme={$extension.readme} />
+            </div>
+            <SuggestionExtensionDetailsSummaryCard extensionDetails={$extension} {catalogExtension} />
+          {:else if screen === 'ERROR'}
+            <div class="flex flex-col gap-4 flex-1 min-w-0">
+              {#if visibleDetailsWarnings.length > 0}
+                <ExtensionDetailsWarnings warnings={visibleDetailsWarnings} />
+              {/if}
+              <ExtensionDetailsError extension={$extension} />
+            </div>
+            <SuggestionExtensionDetailsSummaryCard extensionDetails={$extension} {catalogExtension} />
+          {/if}
+        </div>
+      {/snippet}
+    </DetailsPage>
+  {:else}
+    <DetailsPage
+      title="{$extension.displayName} extension"
+      subtitle={$extension.description}
+      {returnPath}
+      bind:this={detailsPage}>
+      {#snippet iconSnippet()}
+        <div class="flex flex-col mt-1 items-baseline w-8">
+          <div class="w-8 min-h-8">
+            {#if $extension.icon}
+              <ExtensionIcon extension={$extension} />
+            {:else if $extension.iconRef}
+              <img src={$extension.iconRef} alt="{$extension.displayName} icon" class="max-w-8 max-h-8" />
             {/if}
+          </div>
+          <div class="flex flex-row mt-3">
+            <ExtensionStatus status={$extension.type === 'dd' ? 'started' : $extension.state} />
+          </div>
+        </div>
+      {/snippet}
+      {#snippet actionsSnippet()}
+        <div class="flex items-center space-x-10 w-full">
+          {#if $extension.installedExtension}
+            <InstalledExtensionActions class="w-48" extension={$extension.installedExtension} />
+          {:else if $extension.fetchable}
+            <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">
+              <div class="italic text-sm text-[var(--pd-content-text)] pb-3">
+                Install this extension with a single click
+              </div>
+              <FeaturedExtensionDownload extension={$extension} />
+            </div>
+          {/if}
+        </div>
+      {/snippet}
+
+      {#snippet detailSnippet()}
+        <div class="flex">
+          <ExtensionBadge class="mt-2" extension={$extension} />
+        </div>
+      {/snippet}
+
+      {#snippet tabsSnippet()}
+        {#if $extension.state === 'failed'}
+          <Button
+            type="tab"
+            on:click={(): void => {
+              screen = 'README';
+            }}
+            selected={screen === 'README'}>Readme</Button>
+          <Button
+            type="tab"
+            on:click={(): void => {
+              screen = 'ERROR';
+            }}
+            selected={screen === 'ERROR'}>Error</Button>
+        {/if}
+      {/snippet}
+
+      {#snippet contentSnippet()}
+        <div class="flex w-full h-full overflow-y-auto p-5 flex-col">
+          {#if screen === 'README'}
+            <ExtensionDetailsSummaryCard extensionDetails={$extension} />
             <ExtensionDetailsReadme readme={$extension.readme} />
-          </div>
-          <ExtensionDetailsSummaryCard extensionDetails={$extension} {catalogExtension} />
-        {:else if screen === 'ERROR'}
-          <div class="flex flex-col gap-4 flex-1 min-w-0">
-            {#if visibleDetailsWarnings.length > 0}
-              <ExtensionDetailsWarnings warnings={visibleDetailsWarnings} />
-            {/if}
+          {:else if screen === 'ERROR'}
             <ExtensionDetailsError extension={$extension} />
-          </div>
-          <ExtensionDetailsSummaryCard extensionDetails={$extension} {catalogExtension} />
-        {/if}
-      </div>
-    {/snippet}
-  </DetailsPage>
+          {/if}
+        </div>
+      {/snippet}
+    </DetailsPage>
+  {/if}
 {:else}
   <DetailsPage title="{extensionId} extension" {returnPath} bind:this={detailsPage}>
     {#snippet contentSnippet()}
