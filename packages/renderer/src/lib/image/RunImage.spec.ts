@@ -53,6 +53,7 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleDebug;
+  vi.useRealTimers();
 });
 
 async function waitRender(): Promise<void> {
@@ -458,6 +459,38 @@ describe('RunImage', () => {
       'engineid',
       expect.objectContaining({ EnvFiles: [customEnvFile, 'foo3'] }),
     );
+  });
+
+  test('Expect error to be visible if isFreePort is not free', async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+    });
+
+    vi.mocked(window.isFreePort).mockRejectedValue(new Error('Port 8080 is already in use.'));
+    router.goto('/basic');
+
+    await createRunImage(undefined, ['command1', 'command2']);
+
+    const customMappingButton = screen.getByRole('button', { name: 'Add custom port mapping' });
+    await fireEvent.click(customMappingButton);
+
+    const hostInput = screen.getByLabelText('host port');
+    await userEvent.click(hostInput);
+    await userEvent.clear(hostInput);
+    await userEvent.keyboard('8080');
+
+    const containerInput = screen.getByLabelText('container port');
+    await userEvent.click(containerInput);
+    await userEvent.clear(containerInput);
+    await userEvent.keyboard('8080');
+
+    // wait for debounce
+    await vi.advanceTimersByTimeAsync(800);
+
+    const error = await vi.waitFor(() => {
+      return screen.getByText('Port 8080 is already in use.');
+    });
+    expect(error).toBeInTheDocument();
   });
 
   test('Expect "start container" button to be disabled when port is not free', async () => {
