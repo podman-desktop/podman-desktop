@@ -145,20 +145,21 @@ export function applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoU
         };
       }
 
-      // Extensions that were "re-installed" via the prototype demo show as Active,
-      // overriding any real backend error state.
-      if (prototypeRestoredExtensionIds.has(extension.id)) {
-        return {
-          ...extension,
-          state: 'started',
-          error: undefined,
-        };
-      }
-
+      // User-toggled disable takes priority over every other overlay.
       if (isExtensionUserDisabled(extension.id)) {
         return {
           ...extension,
           state: extension.state === 'stopping' ? 'stopping' : 'stopped',
+          error: undefined,
+        };
+      }
+
+      // Extensions that were "re-installed" via the prototype demo show as Active,
+      // overriding any real backend error state (but only when not manually disabled).
+      if (prototypeRestoredExtensionIds.has(extension.id)) {
+        return {
+          ...extension,
+          state: 'started',
           error: undefined,
         };
       }

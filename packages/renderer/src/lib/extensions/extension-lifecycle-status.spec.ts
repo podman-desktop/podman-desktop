@@ -68,17 +68,17 @@ describe('getExtensionLifecyclePresentation', () => {
 
   test('starting extension is enabling', () => {
     expect(getExtensionLifecyclePresentation('starting', 'pd')).toEqual({
-      statusDotStatus: 'transitioning',
+      statusDotStatus: 'starting',
       label: 'Enabling',
-      textColorVar: 'var(--pd-status-unknown)',
+      textColorVar: 'var(--pd-status-starting)',
     });
   });
 
   test('stopping extension is disabling', () => {
     expect(getExtensionLifecyclePresentation('stopping', 'pd')).toEqual({
-      statusDotStatus: 'transitioning',
+      statusDotStatus: 'waiting',
       label: 'Disabling',
-      textColorVar: 'var(--pd-status-unknown)',
+      textColorVar: 'var(--pd-status-waiting)',
     });
   });
 
