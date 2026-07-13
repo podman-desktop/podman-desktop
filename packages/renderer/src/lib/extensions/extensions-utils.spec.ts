@@ -656,3 +656,179 @@ describe('filters', () => {
     });
   });
 });
+
+describe('extension id matching', () => {
+  const aiLabCatalog: CatalogExtension = {
+    id: 'redhat.ai-lab',
+    publisherName: 'redhat',
+    shortDescription: 'Work with LLMs locally',
+    publisherDisplayName: 'Red Hat',
+    extensionName: 'ai-lab',
+    displayName: 'Podman AI Lab',
+    categories: ['AI'],
+    keywords: [],
+    unlisted: false,
+    versions: [
+      {
+        version: '1.9.3',
+        preview: false,
+        files: [{ assetType: 'icon', data: 'icon-ai-lab' }],
+        ociUri: 'oci:ai-lab',
+        lastUpdated: new Date(),
+      },
+    ],
+  };
+
+  const aiLabInstalled = {
+    id: 'redhat.ai-lab',
+    type: 'pd',
+    state: 'started',
+    name: 'ai-lab',
+    displayName: 'Podman AI Lab',
+    description: 'Work with LLMs locally',
+    publisher: 'redhat',
+    removable: true,
+    devMode: false,
+    version: '1.9.3',
+    path: '',
+    readme: '',
+  } as CombinedExtensionInfoUI;
+
+  test('findMatchingInstalledExtension matches catalog and installed ids by extension name', () => {
+    const installedByName = {
+      ...aiLabInstalled,
+      id: 'publisher.ai-lab',
+      name: 'ai-lab',
+    };
+
+    expect(extensionsUtils.findMatchingInstalledExtension(aiLabCatalog, [installedByName])?.id).toBe(
+      'publisher.ai-lab',
+    );
+  });
+
+  test('extractCatalogExtensions marks AI Lab installed when ids differ by publisher prefix', () => {
+    const installedByName = {
+      ...aiLabInstalled,
+      id: 'publisher.ai-lab',
+      name: 'ai-lab',
+    };
+
+    const [catalogInfo] = extensionsUtils.extractCatalogExtensions([aiLabCatalog], [], [installedByName]);
+
+    expect(catalogInfo.isInstalled).toBe(true);
+    expect(catalogInfo.installedExtension?.id).toBe('publisher.ai-lab');
+  });
+
+  test('extractCatalogExtensions marks AI Lab installed from webview-only runtime row', () => {
+    const webviewOnlyInstalled = {
+      ...aiLabInstalled,
+      version: '',
+      displayName: 'AI Lab',
+    };
+
+    const [catalogInfo] = extensionsUtils.extractCatalogExtensions([aiLabCatalog], [], [webviewOnlyInstalled]);
+
+    expect(catalogInfo.isInstalled).toBe(true);
+    expect(catalogInfo.installedVersion).toBe('1.9.3');
+    expect(catalogInfo.installedExtension?.id).toBe('redhat.ai-lab');
+  });
+
+  test('filterInstalledExtensions keeps AI Lab when verified filter is active', () => {
+    const [catalogInfo] = extensionsUtils.extractCatalogExtensions([aiLabCatalog], [], [aiLabInstalled]);
+    const catalogById = new Map<string, CatalogExtensionInfoUI>([
+      [aiLabInstalled.id, catalogInfo],
+      [catalogInfo.id, catalogInfo],
+    ]);
+
+    const filtered = extensionsUtils.filterInstalledExtensions([aiLabInstalled], '', { verified: true }, catalogById);
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].id).toBe('redhat.ai-lab');
+  });
+
+  test('filterInstalledExtensions keeps extensions without catalog metadata when verified filter is active', () => {
+    const filtered = extensionsUtils.filterInstalledExtensions([aiLabInstalled], '', { verified: true }, new Map());
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].id).toBe('redhat.ai-lab');
+  });
+
+  test('buildCatalogInfoForInstalled marks redhat publisher extensions as verified', () => {
+    const catalogInfo = extensionsUtils.buildCatalogInfoForInstalled(aiLabInstalled, [], []);
+
+    expect(catalogInfo.publisherDisplayName).toBe('Red Hat');
+    expect(catalogInfo.isVerified).toBe(true);
+    expect(catalogInfo.isSupportedByRedHat).toBe(true);
+  });
+
+  test('mergeWithCatalogInstalledExtensions adds catalog-installed extensions missing from store list', () => {
+    const catalogOnlyInstalled = {
+      ...aiLabInstalled,
+      id: 'redhat.ai-lab',
+    };
+    const catalogInfo: CatalogExtensionInfoUI = {
+      id: 'redhat.ai-lab',
+      displayName: 'Podman AI Lab',
+      isFeatured: true,
+      fetchable: true,
+      fetchLink: 'oci:ai-lab',
+      fetchVersion: '1.9.3',
+      publisherDisplayName: 'Red Hat',
+      isInstalled: true,
+      installedVersion: '1.9.3',
+      shortDescription: 'Work with LLMs locally',
+      categories: ['AI'],
+      keywords: [],
+      availableVersions: [],
+      hasUpdate: false,
+      isVerified: true,
+      isSupportedByRedHat: true,
+      installedExtension: catalogOnlyInstalled,
+    };
+
+    const merged = extensionsUtils.mergeWithCatalogInstalledExtensions([], [catalogInfo]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe('redhat.ai-lab');
+  });
+
+  test('findInstalledExtensionById matches catalog and installed ids by extension name', () => {
+    const installedByName = {
+      ...aiLabInstalled,
+      id: 'publisher.ai-lab',
+      name: 'ai-lab',
+    };
+
+    expect(extensionsUtils.findInstalledExtensionById('redhat.ai-lab', [installedByName], [aiLabCatalog])?.id).toBe(
+      'publisher.ai-lab',
+    );
+  });
+
+  test('extractExtensionDetail resolves installed extensions with mismatched ids', () => {
+    const installedByName = {
+      ...aiLabInstalled,
+      id: 'publisher.ai-lab',
+      name: 'ai-lab',
+    };
+
+    const detail = extensionsUtils.extractExtensionDetail([aiLabCatalog], [installedByName], 'redhat.ai-lab');
+
+    expect(detail?.id).toBe('redhat.ai-lab');
+    expect(detail?.installedExtension?.id).toBe('publisher.ai-lab');
+    expect(detail?.displayName).toBe('Podman AI Lab');
+  });
+
+  test('resolveInstalledExtensionsForUi keeps catalog-installed extensions aligned with runtime rows', () => {
+    const webviewOnlyInstalled = {
+      ...aiLabInstalled,
+      version: '',
+      displayName: 'AI Lab',
+    };
+    const resolved = extensionsUtils.resolveInstalledExtensionsForUi([webviewOnlyInstalled], [aiLabCatalog], [], {
+      applyPrototypeUpdateDemo: false,
+    });
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].id).toBe('redhat.ai-lab');
+  });
+});

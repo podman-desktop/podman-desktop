@@ -84,7 +84,13 @@ const tableRows: InstalledExtensionTableRow[] = $derived.by(() => {
   const catalogWithDemo = suggestionScope
     ? extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions)
     : catalogExtensions;
-  const catalogById = new Map(catalogWithDemo.map(catalog => [catalog.id, catalog]));
+  const catalogById = new Map<string, CatalogExtensionInfoUI>();
+  for (const catalog of catalogWithDemo) {
+    catalogById.set(catalog.id, catalog);
+    if (catalog.installedExtension) {
+      catalogById.set(catalog.installedExtension.id, catalog);
+    }
+  }
 
   const rows = extensionInfos.map(extension => {
     const catalogExtension =

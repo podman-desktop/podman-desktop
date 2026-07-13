@@ -79,15 +79,15 @@ export function getExtensionLifecyclePresentation(
       };
     case 'starting':
       return {
-        statusDotStatus: 'starting',
-        label: 'Activating',
-        textColorVar: 'var(--pd-status-starting)',
+        statusDotStatus: 'transitioning',
+        label: 'Enabling',
+        textColorVar: 'var(--pd-status-unknown)',
       };
     case 'stopping':
       return {
-        statusDotStatus: 'waiting',
+        statusDotStatus: 'transitioning',
         label: 'Disabling',
-        textColorVar: 'var(--pd-status-waiting)',
+        textColorVar: 'var(--pd-status-unknown)',
       };
     case 'failed':
       return {

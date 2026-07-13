@@ -34,6 +34,9 @@ import ExtensionLifecyclePreference from './ExtensionLifecyclePreference.svelte'
 import ExtensionRemovePreference from './ExtensionRemovePreference.svelte';
 
 vi.mock(import('tinro'));
+vi.mock(import('./extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: vi.fn().mockReturnValue(false),
+}));
 
 describe('ExtensionLifecyclePreference', () => {
   test('renders enabled toggle for started extensions', async () => {

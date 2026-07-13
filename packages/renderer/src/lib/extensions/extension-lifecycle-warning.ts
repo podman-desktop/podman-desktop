@@ -62,11 +62,11 @@ export function resolveExtensionLifecycleWarnings(
     case 'starting':
       return [
         {
-          key: 'activating',
+          key: 'enabling',
           severity: 'warning',
-          title: 'Extension is activating',
+          title: 'Extension is enabling',
           detail: `${displayName} is starting and is not fully available yet.`,
-          fix: 'Wait for activation to finish. If it remains in this state, select Enable from the actions menu (⋮).',
+          fix: 'Wait for enabling to finish. If it remains in this state, select Enable from the actions menu (⋮).',
         },
       ];
     case 'stopping':

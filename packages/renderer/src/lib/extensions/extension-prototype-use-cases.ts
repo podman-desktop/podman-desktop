@@ -23,6 +23,12 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { isExtensionUserDisabled, isExtensionUserEnabled } from './extension-lifecycle-user-toggle';
+import {
+  getPrototypeTransientLifecycleState,
+  prototypeLifecycleOverlayRevisionStore,
+  setPrototypeLifecycleDemosEnabled,
+  startPrototypeActivatingOverlay,
+} from './extension-prototype-lifecycle-overlay.svelte';
 
 /** Real bundled / catalog extension IDs used to demo DTUX-2849 UI states. */
 export const USE_CASE_EXTENSION_IDS = {
@@ -52,12 +58,51 @@ export function isPrototypeUpdateDemoExtension(extensionId: string): boolean {
 
 let prototypeUseCasesEnabled = false;
 
+/** Extension ids removed during this session via the prototype uninstall demo. */
+const prototypeRemovedExtensionIds = new Set<string>();
+
+/**
+ * Extension ids that were restored via a prototype re-install demo.
+ * These are forced to the 'started' state to override any real backend error state.
+ */
+const prototypeRestoredExtensionIds = new Set<string>();
+
 export function setPrototypeUseCasesEnabled(enabled: boolean): void {
   prototypeUseCasesEnabled = enabled;
+  setPrototypeLifecycleDemosEnabled(enabled);
+  if (enabled) {
+    startPrototypeActivatingOverlay();
+  }
 }
 
 export function arePrototypeUseCasesEnabled(): boolean {
   return prototypeUseCasesEnabled;
+}
+
+/** Mark an extension as uninstalled in the prototype (no backend call). */
+export function prototypeRemoveExtension(extensionId: string): void {
+  prototypeRemovedExtensionIds.add(extensionId);
+  prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
+}
+
+/**
+ * Restore a prototype-removed extension (undo the demo uninstall, no backend call).
+ * Also marks the extension as "freshly installed" so it shows Active regardless of
+ * the real backend state (e.g. a pre-existing failed state).
+ */
+export function prototypeRestoreExtension(extensionId: string): void {
+  prototypeRemovedExtensionIds.delete(extensionId);
+  prototypeRestoredExtensionIds.add(extensionId);
+  prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
+}
+
+export function isPrototypeRemovedExtension(extensionId: string): boolean {
+  return prototypeRemovedExtensionIds.has(extensionId);
+}
+
+export function clearPrototypeRemovedExtensions(): void {
+  prototypeRemovedExtensionIds.clear();
+  prototypeRestoredExtensionIds.clear();
 }
 
 interface InstalledUseCaseOverlay {
@@ -86,42 +131,70 @@ export function applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoU
     return extensions;
   }
 
-  return extensions.map(extension => {
-    const overlay = INSTALLED_STATE_OVERLAYS[extension.id];
+  return extensions
+    .filter(extension => !prototypeRemovedExtensionIds.has(extension.id))
+    .map(extension => {
+      const overlay = INSTALLED_STATE_OVERLAYS[extension.id];
+      const transientState = getPrototypeTransientLifecycleState(extension.id);
 
-    if (isExtensionUserDisabled(extension.id)) {
+      if (transientState) {
+        return {
+          ...extension,
+          state: transientState,
+          error: undefined,
+        };
+      }
+
+      // Extensions that were "re-installed" via the prototype demo show as Active,
+      // overriding any real backend error state.
+      if (prototypeRestoredExtensionIds.has(extension.id)) {
+        return {
+          ...extension,
+          state: 'started',
+          error: undefined,
+        };
+      }
+
+      if (isExtensionUserDisabled(extension.id)) {
+        return {
+          ...extension,
+          state: extension.state === 'stopping' ? 'stopping' : 'stopped',
+          error: undefined,
+        };
+      }
+
+      if (!overlay) {
+        return extension;
+      }
+
+      if (overlay.state === 'stopped' && isExtensionUserEnabled(extension.id)) {
+        return {
+          ...extension,
+          error: undefined,
+        };
+      }
+
+      if (extension.state === 'stopped' || extension.state === 'stopping') {
+        return {
+          ...extension,
+          state: extension.state,
+          error: undefined,
+        };
+      }
+
+      if (overlay.state === 'starting' && getPrototypeTransientLifecycleState(extension.id) !== 'starting') {
+        return {
+          ...extension,
+          error: undefined,
+        };
+      }
+
       return {
         ...extension,
-        state: extension.state === 'stopping' ? 'stopping' : 'stopped',
-        error: undefined,
+        state: overlay.state ?? extension.state,
+        error: overlay.error ?? extension.error,
       };
-    }
-
-    if (!overlay) {
-      return extension;
-    }
-
-    if (overlay.state === 'stopped' && isExtensionUserEnabled(extension.id)) {
-      return {
-        ...extension,
-        error: undefined,
-      };
-    }
-
-    if (extension.state === 'stopped' || extension.state === 'stopping') {
-      return {
-        ...extension,
-        state: extension.state,
-        error: undefined,
-      };
-    }
-
-    return {
-      ...extension,
-      state: overlay.state ?? extension.state,
-      error: overlay.error ?? extension.error,
-    };
-  });
+    });
 }
 
 /** Bump patch segment for prototype update demos (supports semver suffixes like -next). */

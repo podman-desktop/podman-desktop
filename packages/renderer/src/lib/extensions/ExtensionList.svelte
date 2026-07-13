@@ -9,7 +9,9 @@ import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
+import { fetchExtensions } from '/@/stores/extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
+import { fetchWebviews } from '/@/stores/webviews';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import {
@@ -19,9 +21,10 @@ import {
 } from './catalog-list-filters.svelte';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
+import { markNewlyInstalled } from './extension-catalog-settings.svelte';
 import { buildExtensionsListPath } from './extension-list';
-import { showPostInstallTooltipDemo } from './extension-prototype-post-install-tooltip-demo';
-import { arePrototypeUseCasesEnabled } from './extension-prototype-use-cases';
+import { onExtensionNewlyInstalled } from './extension-nav-pointer.svelte';
+import { prototypeLifecycleOverlayRevisionStore } from './extension-prototype-lifecycle-overlay.svelte';
 import { EXTENSION_VERSION_UI_CHANGE_EVENT } from './extension-version-update.svelte';
 import {
   areExtensionsImprovementsSuggested,
@@ -60,6 +63,12 @@ onMount(() => {
   };
   window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, versionHandler);
   window.addEventListener(EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT, scopeHandler);
+  fetchExtensions().catch((error: unknown) => {
+    console.error('Unable to refresh installed extensions', error);
+  });
+  fetchWebviews().catch((error: unknown) => {
+    console.error('Unable to refresh extension webviews', error);
+  });
   return (): void => {
     window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, versionHandler);
     window.removeEventListener(EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT, scopeHandler);
@@ -78,9 +87,19 @@ let enableCatalog = $derived((await window.getConfigurationValue('extensions.cat
 
 const installedExtensionsWithDemos: CombinedExtensionInfoUI[] = $derived(
   isSuggestionScope
-    ? extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions)
+    ? ($prototypeLifecycleOverlayRevisionStore,
+      extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions))
     : $combinedInstalledExtensions,
 );
+
+const installedExtensionsForList: CombinedExtensionInfoUI[] = $derived.by(() => {
+  return extensionsUtils.resolveInstalledExtensionsForUi(
+    installedExtensionsWithDemos,
+    $catalogExtensionInfos,
+    $featuredExtensionInfos,
+    { applyPrototypeUpdateDemo: isSuggestionScope },
+  );
+});
 
 const installedCatalogById = $derived.by(() => {
   if (!isSuggestionScope) {
@@ -89,27 +108,35 @@ const installedCatalogById = $derived.by(() => {
 
   $catalogExtensionInfos;
   $featuredExtensionInfos;
-  const catalogExtensions = installedExtensionsWithDemos.map(extension =>
+  const catalogExtensions = installedExtensionsForList.map(extension =>
     extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos),
   );
-  return new Map(extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions).map(catalog => [catalog.id, catalog]));
+  const catalogWithDemo = extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions);
+  const byId = new Map<string, CatalogExtensionInfoUI>();
+
+  for (const catalog of catalogWithDemo) {
+    byId.set(catalog.id, catalog);
+    if (catalog.installedExtension) {
+      byId.set(catalog.installedExtension.id, catalog);
+    }
+  }
+
+  return byId;
 });
 
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived.by(() => {
   versionUiRevision;
   if (isSuggestionScope) {
     return extensionsUtils.filterInstalledExtensions(
-      installedExtensionsWithDemos,
+      installedExtensionsForList,
       searchTerm,
       installedListFilters.value,
       installedCatalogById,
     );
   }
 
-  return extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm);
+  return extensionsUtils.filterInstalledExtensions(installedExtensionsForList, searchTerm);
 });
-
-let filteredInstalledItems: number = $derived($combinedInstalledExtensions.length - filteredInstalledExtensions.length);
 
 // combine data from featured extensions and catalog extension
 // need to add in the catalog extension a flag to know if extension is featured or not
@@ -118,7 +145,7 @@ const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived.by(() => {
   const catalogExtensions = extensionsUtils.extractCatalogExtensions(
     $catalogExtensionInfos,
     $featuredExtensionInfos,
-    isSuggestionScope ? installedExtensionsWithDemos : $combinedInstalledExtensions,
+    installedExtensionsForList,
   );
 
   return isSuggestionScope ? extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions) : catalogExtensions;
@@ -129,8 +156,6 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
     ? extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm, catalogListFilters.value)
     : extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm),
 );
-
-let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
 const showCatalogFilterEmpty = $derived(
   isSuggestionScope &&
@@ -156,20 +181,13 @@ function closeModal(): void {
   installManualImageModal = false;
 }
 
-function handleExtensionInstalled(extensionId: string): void {
-  console.log(`[DTUX-2854] Extension installed from catalog: ${extensionId}`);
+async function handleExtensionInstalled(extensionId: string): Promise<void> {
+  await fetchExtensions();
+  markNewlyInstalled(extensionId);
+  onExtensionNewlyInstalled(extensionId);
 }
 
 let installManualImageModal: boolean = $state(false);
-let prototypeTooltipDemoMessage = $state('');
-
-async function previewPostInstallTooltipDemo(): Promise<void> {
-  prototypeTooltipDemoMessage = '';
-  const result = await showPostInstallTooltipDemo();
-  if (!result.shown && result.message) {
-    prototypeTooltipDemoMessage = result.message;
-  }
-}
 
 let previousScreen: ExtensionListScreen | undefined;
 
@@ -184,6 +202,9 @@ $effect(() => {
   }
 
   searchTerm = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS).terms.join(' ');
+  if (currentScreen === 'installed' && previousScreen === 'catalog') {
+    resetInstalledListFilters();
+  }
   if (currentScreen !== 'catalog') {
     resetCatalogListFilters();
   }
@@ -199,17 +220,6 @@ $effect(() => {
   title="extensions"
   searchEnabled={isSuggestionScope ? screen !== 'installed' && screen !== 'catalog' : true}>
   {#snippet additionalActions()}
-    {#if enableCatalog && arePrototypeUseCasesEnabled() && screen === 'catalog'}
-      <Button
-        type="secondary"
-        on:click={(): void => {
-          previewPostInstallTooltipDemo().catch((error: unknown) => {
-            console.error('Unable to preview post-install tooltip demo', error);
-          });
-        }}
-        title="Preview the post-install sidebar tooltip with Learn"
-        aria-label="Preview install tooltip">Preview install tooltip</Button>
-    {/if}
     {#if enableCustomExtensions}
       <Button
         on:click={(): void => {
@@ -218,20 +228,6 @@ $effect(() => {
         icon={faCloudDownload}
         title="Install manually an extension"
         aria-label="Install custom">Install custom...</Button>
-    {/if}
-  {/snippet}
-
-  {#snippet bottomAdditionalActions()}
-    {#if !isSuggestionScope}
-      {#if filteredInstalledItems > 0 && screen === 'installed'}
-        <div class="text-sm text-[var(--pd-content-text)]">
-          Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
-        </div>
-      {:else if filteredCatalogItems > 0 && screen === 'catalog'}
-        <div class="text-sm text-[var(--pd-content-text)]">
-          Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
-        </div>
-      {/if}
     {/if}
   {/snippet}
 
@@ -273,7 +269,7 @@ $effect(() => {
         suggestionScope={true}
         bind:searchTerm
         extensionInfos={filteredInstalledExtensions}
-        allExtensionInfos={installedExtensionsWithDemos}
+        allExtensionInfos={installedExtensionsForList}
         showFilteredEmpty={showInstalledFilterEmpty}
         onResetFilter={(): void => {
           searchTerm = '';
@@ -291,9 +287,6 @@ $effect(() => {
             }} />
         </div>
       {/if}
-      {#if prototypeTooltipDemoMessage}
-        <div class="px-5 pt-3 text-sm text-[var(--pd-status-warning)]">{prototypeTooltipDemoMessage}</div>
-      {/if}
       <CatalogExtensionList
         suggestionScope={true}
         showEmptyScreen={!searchTerm && !hasActiveCatalogListFilters()}
@@ -305,7 +298,11 @@ $effect(() => {
         }}
         allCatalogExtensions={enhancedCatalogExtensions}
         catalogExtensions={filteredCatalogExtensions}
-        oninstall={handleExtensionInstalled} />
+        oninstall={(extensionId): void => {
+          handleExtensionInstalled(extensionId).catch((error: unknown) => {
+            console.error('Unable to refresh installed extensions after catalog install', error);
+          });
+        }} />
     {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}

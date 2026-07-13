@@ -19,10 +19,14 @@
 import { router } from 'tinro';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { fetchWebviews } from '/@/stores/webviews';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { clearNewBadge } from './extension-catalog-settings.svelte';
 import { isBuiltInExtension, isBundledCommunityExtension, isExtensionRemovableInUi } from './extension-origin-utils';
+import { prototypeRemoveExtension } from './extension-prototype-use-cases';
+import { resolveInstalledExtensionRuntimeId } from './extension-runtime-id';
+import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
 
 export const EXTENSION_REMOVE_PREFERENCE_TITLE = 'Uninstall extension';
 export const PREFERENCES_MAIN_ROUTE = '/preferences';
@@ -153,15 +157,33 @@ export function removeExtensionWithConfirmation(
 
   withConfirmation(
     async () => {
-      if (installed.type === 'dd') {
-        await window.ddExtensionDelete(installed.id);
-      } else {
-        await window.removeExtension(installed.id);
+      if (areExtensionsImprovementsSuggested()) {
+        prototypeRemoveExtension(installed.id);
+        clearNewBadge(extension.id);
+        if (options?.redirectAfterRemove) {
+          redirectToPreferencesMain(options.redirectAfterRemove);
+        }
+        return;
       }
-      clearNewBadge(extension.id);
 
-      if (options?.redirectAfterRemove) {
-        redirectToPreferencesMain(options.redirectAfterRemove);
+      try {
+        if (installed.type === 'dd') {
+          await window.ddExtensionDelete(installed.id);
+        } else {
+          await window.removeExtension(resolveInstalledExtensionRuntimeId(installed));
+          await fetchWebviews();
+        }
+        clearNewBadge(extension.id);
+
+        if (options?.redirectAfterRemove) {
+          redirectToPreferencesMain(options.redirectAfterRemove);
+        }
+      } catch (error) {
+        await window.showMessageBox({
+          title: 'Uninstall failed',
+          message: error instanceof Error ? error.message : 'Unable to uninstall extension',
+          type: 'danger',
+        });
       }
     },
     `uninstall ${extension.displayName}`,

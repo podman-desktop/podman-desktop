@@ -19,6 +19,7 @@
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { canToggleExtensionLifecycle, isExtensionLifecycleEnabled } from './extension-lifecycle-toggle';
 import { markExtensionUserDisabled, markExtensionUserEnabled } from './extension-lifecycle-user-toggle';
+import { resolveInstalledExtensionRuntimeId } from './extension-runtime-id';
 
 export const EXTENSION_LIFECYCLE_PREFERENCE_TITLE = 'Enabled';
 
@@ -79,12 +80,17 @@ export async function toggleExtensionLifecyclePreference(
     return;
   }
 
-  if (enabling) {
-    await window.startExtension(installed.id);
-    markExtensionUserEnabled(installed.id);
+  const runtimeId = resolveInstalledExtensionRuntimeId(installed);
+  if (!runtimeId) {
     return;
   }
 
-  await window.stopExtension(installed.id);
-  markExtensionUserDisabled(installed.id);
+  if (enabling) {
+    await window.startExtension(runtimeId);
+    markExtensionUserEnabled(runtimeId);
+    return;
+  }
+
+  await window.stopExtension(runtimeId);
+  markExtensionUserDisabled(runtimeId);
 }

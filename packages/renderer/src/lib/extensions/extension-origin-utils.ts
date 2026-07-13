@@ -70,7 +70,8 @@ export function resolveExtensionVerificationStatus(
   publisherDisplayName: string,
   categories: string[] = [],
 ): { isVerified: boolean; isSupportedByRedHat: boolean } {
-  const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
+  const normalizedPublisher = publisherDisplayName.toLowerCase().replace(/\s+/g, ' ').trim();
+  const isSupportedByRedHat = normalizedPublisher.includes('red hat') || normalizedPublisher === 'redhat';
   const isVerified = isSupportedByRedHat || categories.some(category => category.toLowerCase().includes('verified'));
 
   return { isVerified, isSupportedByRedHat };

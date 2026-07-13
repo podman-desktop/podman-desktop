@@ -13,8 +13,11 @@ import {
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
+import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { context } from '/@/stores/context';
+import { extensionInfos } from '/@/stores/extensions';
 import { onboardingList } from '/@/stores/onboarding';
+import { webviews } from '/@/stores/webviews';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { buildExtensionBugReportUrl } from './extension-badge-styles';
@@ -35,6 +38,7 @@ import {
   getExtensionRemoveBlockedReasonShort,
   removeExtensionWithConfirmation,
 } from './extension-remove-preference';
+import { resolveExtensionRuntimeId, toCatalogIdentities } from './extension-runtime-id';
 import { extensionHasVersionChoices, shouldShowExtensionVersionPreference } from './extension-version-preference';
 import ExtensionDropdownMenu from './ExtensionDropdownMenu.svelte';
 import ExtensionDropdownMenuItem from './ExtensionDropdownMenuItem.svelte';
@@ -99,14 +103,21 @@ async function toggleExtensionLifecycle(event: Event): Promise<void> {
     return;
   }
 
+  const runtimeExtensionId = resolveExtensionRuntimeId(
+    installedExtension,
+    $extensionInfos,
+    $webviews,
+    toCatalogIdentities($catalogExtensionInfos),
+  );
+
   if (isExtensionLifecycleEnabled(installedExtension.state)) {
-    await window.stopExtension(installedExtension.id);
-    markExtensionUserDisabled(installedExtension.id);
+    await window.stopExtension(runtimeExtensionId);
+    markExtensionUserDisabled(runtimeExtensionId);
     return;
   }
 
-  await window.startExtension(installedExtension.id);
-  markExtensionUserEnabled(installedExtension.id);
+  await window.startExtension(runtimeExtensionId);
+  markExtensionUserEnabled(runtimeExtensionId);
 }
 
 async function removeExtension(event: Event): Promise<void> {

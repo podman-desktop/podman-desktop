@@ -16,6 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import {
+  startPrototypeActivatingTransient,
+  startPrototypeDisablingTransient,
+} from './extension-prototype-lifecycle-overlay.svelte';
+
 export const EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT = 'extension-lifecycle-user-toggle';
 
 const userDisabledExtensionIds = new Set<string>();
@@ -30,12 +35,14 @@ function notifyLifecycleUserToggle(): void {
 export function markExtensionUserDisabled(extensionId: string): void {
   userDisabledExtensionIds.add(extensionId);
   userEnabledExtensionIds.delete(extensionId);
+  startPrototypeDisablingTransient(extensionId);
   notifyLifecycleUserToggle();
 }
 
 export function markExtensionUserEnabled(extensionId: string): void {
   userEnabledExtensionIds.add(extensionId);
   userDisabledExtensionIds.delete(extensionId);
+  startPrototypeActivatingTransient(extensionId);
   notifyLifecycleUserToggle();
 }
 

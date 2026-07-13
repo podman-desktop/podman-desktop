@@ -29,6 +29,29 @@ import { extensionInfos } from '/@/stores/extensions';
 import { setPrototypeInstalledDemosEnabled } from './extension-prototype-installed-demos';
 import ExtensionList from './ExtensionList.svelte';
 
+const { fetchExtensionsMock, fetchWebviewsMock } = vi.hoisted(() => ({
+  fetchExtensionsMock: vi.fn(async () => undefined),
+  fetchWebviewsMock: vi.fn(async () => undefined),
+}));
+
+vi.mock(import('/@/stores/webviews'), () => ({
+  webviews: {
+    subscribe: (run: (value: never[]) => void): (() => void) => {
+      run([]);
+      return (): void => {};
+    },
+  },
+  fetchWebviews: fetchWebviewsMock,
+}));
+
+vi.mock(import('/@/stores/extensions'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    fetchExtensions: fetchExtensionsMock,
+  };
+});
+
 vi.mock(import('./extensions-prototype-scope'), () => ({
   areExtensionsImprovementsSuggested: (): boolean => false,
   EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT: 'extensions-prototype-scope-change',

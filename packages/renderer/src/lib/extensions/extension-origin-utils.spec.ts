@@ -75,6 +75,12 @@ describe('extension-origin-utils', () => {
     );
   });
 
+  test('marks redhat publisher id as community verified', () => {
+    const { isVerified, isSupportedByRedHat } = resolveExtensionVerificationStatus('redhat', []);
+    expect(isVerified).toBe(true);
+    expect(isSupportedByRedHat).toBe(true);
+  });
+
   test('does not mark podman-desktop publisher as verified by default', () => {
     const { isVerified, isSupportedByRedHat } = resolveExtensionVerificationStatus('Podman Desktop', []);
     expect(isVerified).toBe(false);

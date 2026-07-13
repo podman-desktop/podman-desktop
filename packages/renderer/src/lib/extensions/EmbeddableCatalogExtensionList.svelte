@@ -48,7 +48,7 @@ const catalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
     if (!showInstalled) {
       $catalogExtensionInfos = $catalogExtensionInfos.filter(
         catalogExtension =>
-          !$combinedInstalledExtensions.some(installedExtension => installedExtension.id === catalogExtension.id),
+          !extensionsUtils.findMatchingInstalledExtension(catalogExtension, $combinedInstalledExtensions),
       );
     }
 

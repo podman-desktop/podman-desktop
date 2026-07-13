@@ -21,8 +21,16 @@ import type { ContributionInfo, WebviewInfo } from '@podman-desktop/core-api';
 
 import { buildExtensionNewNavigationTooltip } from '/@/lib/extensions/extension-badge-styles';
 import { isNewBadgeActive } from '/@/lib/extensions/extension-catalog-settings.svelte';
+import { prototypeLifecycleOverlayRevisionStore } from '/@/lib/extensions/extension-prototype-lifecycle-overlay.svelte';
+import { isPrototypeRemovedExtension } from '/@/lib/extensions/extension-prototype-use-cases';
+import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
+import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { contributions } from '/@/stores/contribs';
+import {
+  type CatalogExtensionIdentity,
+  resolveInstalledExtensionIdFromWebview,
+} from '/@/stores/extension-webview-installed';
 import { fetchWebviews, webviews } from '/@/stores/webviews';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
@@ -46,6 +54,7 @@ export const extensionNavigationState = $state<{ items: NavigationRegistryEntry[
 
 let allContribs: ContributionInfo[] = [];
 let allWebviews: WebviewInfo[] = [];
+let allCatalogIdentities: CatalogExtensionIdentity[] = [];
 
 function buildExtensionNavigationItems(
   contribs: ContributionInfo[],
@@ -71,6 +80,13 @@ function buildExtensionNavigationItems(
   });
 
   webviewItems.forEach(webview => {
+    if (areExtensionsImprovementsSuggested()) {
+      const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities) ?? webview.extensionId;
+      if (catalogId && isPrototypeRemovedExtension(catalogId)) {
+        return;
+      }
+    }
+
     const icon = webview.icon
       ? { iconImage: webview.icon }
       : { faIcon: { definition: faPuzzlePiece, size: '1.5x' as const } };
@@ -142,6 +158,18 @@ function ensureExtensionNavigationSubscriptions(): void {
 
   webviews.subscribe(webviewItems => {
     allWebviews = [...webviewItems];
+    publishExtensionNavigationUpdate();
+  });
+
+  catalogExtensionInfos.subscribe(catalogs => {
+    allCatalogIdentities = catalogs.map(c => ({
+      id: c.id,
+      displayName: c.displayName,
+      extensionName: c.extensionName,
+    }));
+  });
+
+  prototypeLifecycleOverlayRevisionStore.subscribe(() => {
     publishExtensionNavigationUpdate();
   });
 }

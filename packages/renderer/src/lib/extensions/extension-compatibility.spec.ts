@@ -16,15 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import {
   resolveExtensionCompatibilityIssues,
   setPrototypeCompatibilityWarningsEnabled,
 } from './extension-compatibility';
-import { USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
+import { resetPrototypeLifecycleOverlaysForTests } from './extension-prototype-lifecycle-overlay.svelte';
+import { setPrototypeUseCasesEnabled, USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
 
 beforeEach(() => {
+  setPrototypeCompatibilityWarningsEnabled(true);
+  setPrototypeUseCasesEnabled(true);
+});
+
+afterEach(() => {
+  setPrototypeUseCasesEnabled(false);
+  resetPrototypeLifecycleOverlaysForTests();
   setPrototypeCompatibilityWarningsEnabled(true);
 });
 

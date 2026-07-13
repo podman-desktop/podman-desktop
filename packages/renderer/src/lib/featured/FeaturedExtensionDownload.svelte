@@ -7,10 +7,15 @@ import { buildExtensionInstallingTooltip, EXTENSION_INSTALL_TOOLTIP } from '/@/l
 import { markNewlyInstalled } from '/@/lib/extensions/extension-catalog-settings.svelte';
 import { syncExtensionNavigationAfterInstall } from '/@/lib/extensions/extension-nav-pointer.svelte';
 import {
+  isPrototypeRemovedExtension,
+  prototypeRestoreExtension,
+} from '/@/lib/extensions/extension-prototype-use-cases';
+import {
   getLatestAvailableVersion,
   normalizeVersionValue,
   resolveExtensionVersionOciUri,
 } from '/@/lib/extensions/extension-version-update.svelte';
+import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
 import { fetchExtensions } from '/@/stores/extensions';
 
@@ -81,10 +86,47 @@ function buildCatalogExtensionForInstall(): CatalogExtensionInfoUI {
   };
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function runPrototypeInstallSimulation(): Promise<void> {
+  const imageRef = extension.fetchLink?.trim() ?? `ghcr.io/podman-desktop/${extension.id}:latest`;
+  const steps: { msg: string; pct: string; ms: number }[] = [
+    { msg: `Pulling from ${imageRef}`, pct: '0%', ms: 300 },
+    { msg: 'Pulling layer sha256:a1b2c3d4… 25%', pct: '25%', ms: 500 },
+    { msg: 'Pulling layer sha256:e5f6a7b8… 50%', pct: '50%', ms: 500 },
+    { msg: 'Pulling layer sha256:c9d0e1f2… 75%', pct: '75%', ms: 500 },
+    { msg: 'Download complete 100%', pct: '100%', ms: 400 },
+    { msg: 'Extracting extension files…', pct: '100%', ms: 600 },
+    { msg: 'Activating extension…', pct: '100%', ms: 400 },
+  ];
+  for (const step of steps) {
+    await delay(step.ms);
+    logs = [...logs, step.msg];
+    percentage = step.pct;
+  }
+}
+
 async function installExtension(): Promise<void> {
   errorInstall = '';
   logs = [];
   installInProgress = true;
+
+  // In prototype/suggestion scope, re-installing a previously prototype-removed extension
+  // simulates the real install flow (progress, logs) then restores the UI state without
+  // calling the backend (which would reject the call since the extension is still installed).
+  if (areExtensionsImprovementsSuggested() && isPrototypeRemovedExtension(extension.id)) {
+    await runPrototypeInstallSimulation();
+    prototypeRestoreExtension(extension.id);
+    logs = [...logs, '☑️ installation finished!'];
+    percentage = '100%';
+    installCompleted = true;
+    installInProgress = false;
+    markNewlyInstalled(extension.id);
+    oninstall(extension.id);
+    return;
+  }
 
   const catalog = buildCatalogExtensionForInstall();
   const latestVersion = normalizeVersionValue(getLatestAvailableVersion(catalog));

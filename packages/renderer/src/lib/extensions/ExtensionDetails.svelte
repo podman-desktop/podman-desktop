@@ -15,7 +15,6 @@ import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import ChangeVersionModal from './ChangeVersionModal.svelte';
-import { EXTENSION_ACTIONS_MENU_CHANGE_EVENT, getOpenExtensionActionsMenuId } from './extension-actions-menu.svelte';
 import {
   mapCompatibilityIssuesToDetailsWarnings,
   resolveExtensionCompatibilityIssues,
@@ -23,6 +22,7 @@ import {
 import type { ExtensionDetailsUI } from './extension-details-ui';
 import { resolveExtensionLifecycleWarnings } from './extension-lifecycle-warning';
 import { buildExtensionsListPath, type ExtensionListScreen } from './extension-list';
+import { prototypeLifecycleOverlayRevisionStore } from './extension-prototype-lifecycle-overlay.svelte';
 import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from './extension-version-update.svelte';
 import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsError from './ExtensionDetailsError.svelte';
@@ -48,7 +48,6 @@ const extensionsUtils = new ExtensionsUtils();
 
 let podmanDesktopVersion = '';
 let uiRevision = 0;
-let actionsMenuRevision = 0;
 let changeVersionExtension: CatalogExtensionInfoUI | undefined;
 let changeVersionPreferredVersion: string | undefined;
 let scopeRevision = 0;
@@ -61,18 +60,31 @@ $: isSuggestionScope = ((): boolean => {
 $: decodedExtensionId = decodeURIComponent(extensionId);
 
 $: installedExtensionsWithDemos = isSuggestionScope
-  ? extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions)
+  ? (scopeRevision, extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions))
   : $combinedInstalledExtensions;
+
+$: installedExtensionsForUi = extensionsUtils.resolveInstalledExtensionsForUi(
+  installedExtensionsWithDemos,
+  $catalogExtensionInfos,
+  $featuredExtensionInfos,
+  { applyPrototypeUpdateDemo: isSuggestionScope },
+);
 
 let extension: Readable<ExtensionDetailsUI | undefined>;
 
 $: extension = derived(
-  [catalogExtensionInfos, combinedInstalledExtensions],
-  ([$catalogExtensionInfos, $combinedInstalledExtensions]) => {
+  [catalogExtensionInfos, combinedInstalledExtensions, featuredExtensionInfos, prototypeLifecycleOverlayRevisionStore],
+  ([$catalogExtensionInfos, $combinedInstalledExtensions, $featuredExtensionInfos]) => {
     const extensions = isSuggestionScope
       ? extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions)
       : $combinedInstalledExtensions;
-    return extensionsUtils.extractExtensionDetail($catalogExtensionInfos, extensions, decodedExtensionId);
+    const installedForUi = extensionsUtils.resolveInstalledExtensionsForUi(
+      extensions,
+      $catalogExtensionInfos,
+      $featuredExtensionInfos,
+      { applyPrototypeUpdateDemo: isSuggestionScope },
+    );
+    return extensionsUtils.extractExtensionDetail($catalogExtensionInfos, installedForUi, decodedExtensionId);
   },
 );
 
@@ -86,7 +98,7 @@ $: catalogExtension = ((): CatalogExtensionInfoUI | undefined => {
     decodedExtensionId,
     $catalogExtensionInfos,
     $featuredExtensionInfos,
-    installedExtensionsWithDemos,
+    installedExtensionsForUi,
   );
   return info ? withDisplayInstalledVersion(info) : undefined;
 })();
@@ -103,7 +115,7 @@ $: compatibilityIssues = ((): ReturnType<typeof resolveExtensionCompatibilityIss
       displayName: $extension?.displayName ?? decodedExtensionId,
       isInstalled: !!$extension?.installedExtension,
     },
-    installedExtensionsWithDemos,
+    installedExtensionsForUi,
     podmanDesktopVersion || undefined,
   );
 })();
@@ -111,23 +123,6 @@ $: compatibilityIssues = ((): ReturnType<typeof resolveExtensionCompatibilityIss
 $: lifecycleWarnings = isSuggestionScope ? resolveExtensionLifecycleWarnings($extension?.installedExtension) : [];
 
 $: detailsWarnings = [...lifecycleWarnings, ...mapCompatibilityIssuesToDetailsWarnings(compatibilityIssues)];
-
-$: hideDisabledLifecycleWarningWhileMenuOpen = ((): boolean => {
-  if (!isSuggestionScope) {
-    return false;
-  }
-
-  actionsMenuRevision;
-  return (
-    $extension?.installedExtension?.state === 'stopped' &&
-    catalogExtension?.id !== undefined &&
-    getOpenExtensionActionsMenuId() === catalogExtension.id
-  );
-})();
-
-$: visibleDetailsWarnings = hideDisabledLifecycleWarningWhileMenuOpen
-  ? mapCompatibilityIssuesToDetailsWarnings(compatibilityIssues)
-  : detailsWarnings;
 
 onMount(() => {
   async function loadPodmanDesktopVersion(): Promise<void> {
@@ -151,18 +146,17 @@ onMount(() => {
   const handler = (): void => {
     uiRevision += 1;
   };
-  const actionsMenuHandler = (): void => {
-    actionsMenuRevision += 1;
-  };
   const scopeHandler = (): void => {
     scopeRevision += 1;
   };
+  const activatingOverlayUnsubscribe = prototypeLifecycleOverlayRevisionStore.subscribe(() => {
+    scopeRevision += 1;
+  });
   window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
-  window.addEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, actionsMenuHandler);
   window.addEventListener(EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT, scopeHandler);
   return (): void => {
+    activatingOverlayUnsubscribe();
     window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
-    window.removeEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, actionsMenuHandler);
     window.removeEventListener(EXTENSIONS_PROTOTYPE_SCOPE_CHANGE_EVENT, scopeHandler);
   };
 });
@@ -235,16 +229,16 @@ function closeChangeVersion(): void {
         <div class="flex w-full h-full overflow-y-auto p-5 flex-col lg:flex-row gap-4">
           {#if screen === 'README'}
             <div class="flex flex-col gap-4 flex-1 min-w-0">
-              {#if visibleDetailsWarnings.length > 0}
-                <ExtensionDetailsWarnings warnings={visibleDetailsWarnings} />
+              {#if detailsWarnings.length > 0}
+                <ExtensionDetailsWarnings warnings={detailsWarnings} />
               {/if}
               <ExtensionDetailsReadme readme={$extension.readme} />
             </div>
             <SuggestionExtensionDetailsSummaryCard extensionDetails={$extension} {catalogExtension} />
           {:else if screen === 'ERROR'}
             <div class="flex flex-col gap-4 flex-1 min-w-0">
-              {#if visibleDetailsWarnings.length > 0}
-                <ExtensionDetailsWarnings warnings={visibleDetailsWarnings} />
+              {#if detailsWarnings.length > 0}
+                <ExtensionDetailsWarnings warnings={detailsWarnings} />
               {/if}
               <ExtensionDetailsError extension={$extension} />
             </div>

@@ -74,7 +74,7 @@ describe('resolveExtensionLifecycleWarnings', () => {
     expect(warnings[0]?.fix).toContain('Error tab');
   });
 
-  test('warns when extension is activating', () => {
+  test('warns when extension is enabling', () => {
     const warnings = resolveExtensionLifecycleWarnings({
       state: 'starting',
       type: 'pd',
@@ -82,7 +82,7 @@ describe('resolveExtensionLifecycleWarnings', () => {
     });
 
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]?.title).toBe('Extension is activating');
+    expect(warnings[0]?.title).toBe('Extension is enabling');
   });
 
   test('warns when extension is disabling', () => {

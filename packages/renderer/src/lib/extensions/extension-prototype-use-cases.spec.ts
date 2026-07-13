@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
@@ -28,6 +28,10 @@ import {
   resetExtensionLifecycleUserTogglesForTests,
 } from './extension-lifecycle-user-toggle';
 import { getPrototypeInstalledDemos } from './extension-prototype-installed-demos';
+import {
+  PROTOTYPE_TRANSIENT_LIFECYCLE_MS,
+  resetPrototypeLifecycleOverlaysForTests,
+} from './extension-prototype-lifecycle-overlay.svelte';
 import {
   applyPrototypeCatalogUseCaseOverlay,
   applyPrototypeUseCaseOverlays,
@@ -43,6 +47,7 @@ describe('prototype use cases on real extensions', () => {
   afterEach(() => {
     setPrototypeUseCasesEnabled(true);
     resetExtensionLifecycleUserTogglesForTests();
+    resetPrototypeLifecycleOverlaysForTests();
   });
 
   test('does not inject fake demo extension rows', () => {
@@ -50,6 +55,9 @@ describe('prototype use cases on real extensions', () => {
   });
 
   test('overlays lifecycle state on real bundled extensions', () => {
+    vi.useFakeTimers();
+    setPrototypeUseCasesEnabled(true);
+
     const registries: CombinedExtensionInfoUI = {
       type: 'pd',
       id: USE_CASE_EXTENSION_IDS.communityDisabled,
@@ -68,6 +76,7 @@ describe('prototype use cases on real extensions', () => {
     const [overlay] = applyPrototypeUseCaseOverlays([registries]);
     expect(overlay.state).toBe('stopped');
     expect(overlay.displayName).toBe('Registries');
+    vi.useRealTimers();
   });
 
   test('respects user-disabled state for failed demo extensions', () => {
@@ -94,7 +103,9 @@ describe('prototype use cases on real extensions', () => {
     expect(overlay.error).toBeUndefined();
   });
 
-  test('restores failed demo overlay after user re-enables extension', () => {
+  test('restores failed demo overlay after user re-enables extension', async () => {
+    vi.useFakeTimers();
+    setPrototypeUseCasesEnabled(true);
     markExtensionUserEnabled(USE_CASE_EXTENSION_IDS.communityFailed);
 
     const kubeContext: CombinedExtensionInfoUI = {
@@ -112,12 +123,20 @@ describe('prototype use cases on real extensions', () => {
       readme: '',
     };
 
-    const [overlay] = applyPrototypeUseCaseOverlays([kubeContext]);
+    let [overlay] = applyPrototypeUseCaseOverlays([kubeContext]);
+    expect(overlay.state).toBe('starting');
+
+    await vi.advanceTimersByTimeAsync(PROTOTYPE_TRANSIENT_LIFECYCLE_MS);
+
+    [overlay] = applyPrototypeUseCaseOverlays([kubeContext]);
     expect(overlay.state).toBe('failed');
     expect(overlay.error?.message).toContain('Failed to activate extension');
+    vi.useRealTimers();
   });
 
-  test('shows disabled state when user disables a demo extension', () => {
+  test('shows disabled state when user disables a demo extension', async () => {
+    vi.useFakeTimers();
+    setPrototypeUseCasesEnabled(true);
     markExtensionUserDisabled(USE_CASE_EXTENSION_IDS.activating);
 
     const kubectl: CombinedExtensionInfoUI = {
@@ -135,11 +154,19 @@ describe('prototype use cases on real extensions', () => {
       readme: '',
     };
 
-    const [overlay] = applyPrototypeUseCaseOverlays([kubectl]);
+    let [overlay] = applyPrototypeUseCaseOverlays([kubectl]);
+    expect(overlay.state).toBe('stopping');
+
+    await vi.advanceTimersByTimeAsync(PROTOTYPE_TRANSIENT_LIFECYCLE_MS);
+
+    [overlay] = applyPrototypeUseCaseOverlays([kubectl]);
     expect(overlay.state).toBe('stopped');
+    vi.useRealTimers();
   });
 
-  test('shows active state when user enables a forced-disabled demo extension', () => {
+  test('shows active state when user enables a forced-disabled demo extension', async () => {
+    vi.useFakeTimers();
+    setPrototypeUseCasesEnabled(true);
     markExtensionUserEnabled(USE_CASE_EXTENSION_IDS.communityDisabled);
 
     const registries: CombinedExtensionInfoUI = {
@@ -157,8 +184,14 @@ describe('prototype use cases on real extensions', () => {
       readme: '',
     };
 
-    const [overlay] = applyPrototypeUseCaseOverlays([registries]);
+    let [overlay] = applyPrototypeUseCaseOverlays([registries]);
+    expect(overlay.state).toBe('starting');
+
+    await vi.advanceTimersByTimeAsync(PROTOTYPE_TRANSIENT_LIFECYCLE_MS);
+
+    [overlay] = applyPrototypeUseCaseOverlays([registries]);
     expect(overlay.state).toBe('started');
+    vi.useRealTimers();
   });
 
   test('marks Kind as having an update in catalog metadata', () => {
@@ -272,6 +305,28 @@ describe('prototype use cases on real extensions', () => {
     expect(enriched.hasUpdate).toBe(true);
     expect(enriched.fetchVersion).toBe('1.28.1-next');
     expect(enriched.installedVersion).toBe('1.28.0-next');
+  });
+
+  test('shows disabling demo state on load for lima', () => {
+    setPrototypeUseCasesEnabled(true);
+
+    const lima: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: USE_CASE_EXTENSION_IDS.disabling,
+      name: 'lima',
+      displayName: 'Lima',
+      description: 'Lima',
+      publisher: 'podman-desktop',
+      removable: true,
+      devMode: false,
+      version: '1.0.0',
+      state: 'started',
+      path: '',
+      readme: '',
+    };
+
+    const [overlay] = applyPrototypeUseCaseOverlays([lima]);
+    expect(overlay.state).toBe('stopping');
   });
 
   test('applyPrototypeUseCaseOverlays keeps list length unchanged', () => {
