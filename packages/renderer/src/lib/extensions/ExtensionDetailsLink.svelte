@@ -12,7 +12,7 @@ export let extension: CombinedExtensionInfoUI;
 export let displayIcon: boolean = true;
 
 $: extensionLabel = extension.displayName || extension.name;
-$: displayText = `${extensionLabel} extension`;
+$: displayText = extensionLabel;
 
 let textElement: HTMLDivElement | undefined;
 let isTruncated = false;

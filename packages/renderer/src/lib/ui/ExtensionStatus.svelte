@@ -22,7 +22,7 @@ const statusesStyle = new Map<string, ConnectionStatusStyle>([
     {
       bgColor: 'bg-[var(--pd-status-starting)]',
       txtColor: 'text-[var(--pd-status-starting)]',
-      label: 'ACTIVATING',
+      label: 'ENABLING',
     },
   ],
   [
@@ -36,8 +36,8 @@ const statusesStyle = new Map<string, ConnectionStatusStyle>([
   [
     'stopping',
     {
-      bgColor: 'bg-[var(--pd-status-terminated)]',
-      txtColor: 'text-[var(--pd-status-terminated)]',
+      bgColor: 'bg-[var(--pd-status-stopped)]',
+      txtColor: 'text-[var(--pd-status-stopped)]',
       label: 'DISABLING',
     },
   ],
