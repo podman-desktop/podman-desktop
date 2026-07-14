@@ -109,9 +109,12 @@ test.describe
           const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
           const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
-          imagesPage = await buildImagePage.buildImage(manifestLabelSimple, dockerfilePath, contextDirectory, {
-            archType: architectures,
-          });
+          imagesPage = await buildImagePage.buildImage(
+            manifestLabelSimple,
+            dockerfilePath,
+            contextDirectory,
+            architectures,
+          );
           await playExpect
             .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 60_000), { timeout: 0 })
             .toBeTruthy();
@@ -234,9 +237,12 @@ test.describe
           );
           const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
 
-          imagesPage = await buildImagePage.buildImage(manifestLabelComplex, dockerfilePath, contextDirectory, {
-            archType: architectures,
-          });
+          imagesPage = await buildImagePage.buildImage(
+            manifestLabelComplex,
+            dockerfilePath,
+            contextDirectory,
+            architectures,
+          );
 
           await playExpect
             .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 60_000), { timeout: 0 })

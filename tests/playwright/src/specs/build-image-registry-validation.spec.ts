@@ -34,6 +34,8 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 // Workaround for https://github.com/podman-desktop/podman-desktop/issues/17610:
 // auth.json must exist before Electron starts, otherwise registry-setup.ts skips
 // setting up its file watcher and credentials added later are never detected.
+// Must run at module scope — the runner fixture launches Electron during fixture
+// resolution, before any beforeAll body executes. Remove when #17610 is fixed.
 ensureAuthFileExists();
 
 const __filename = fileURLToPath(import.meta.url);
