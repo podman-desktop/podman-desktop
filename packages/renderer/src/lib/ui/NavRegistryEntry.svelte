@@ -33,7 +33,7 @@ let { entry, meta = $bindable(), expanded = false }: NavRegistryEntryProps = $pr
         {/if}
       </div>
       {#if expanded && entry.icon}
-        <div class="text-sm truncate ml-2 flex-1 min-w-0" aria-label={`${entry.name} title`}>
+        <div class="text-sm truncate ml-3 flex-1 min-w-0" aria-label={`${entry.name} title`}>
           {entry.name}
         </div>
       {/if}

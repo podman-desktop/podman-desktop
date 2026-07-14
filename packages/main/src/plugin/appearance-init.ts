@@ -57,7 +57,7 @@ export class AppearanceInit {
         [`${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`]: {
           description: 'Width of the navigation bar in pixels. Drag the bar edge to resize.',
           type: 'number',
-          minimum: 60,
+          minimum: 50,
           maximum: 240,
           default: 160,
         },

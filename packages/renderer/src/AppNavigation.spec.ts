@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,6 +118,9 @@ test('Test contributions', () => {
     meta,
     exitSettingsCallback: () => {},
   });
+
+  const navigationBar = screen.getByRole('navigation', { name: 'AppNavigation' });
+  expect(navigationBar).toBeInTheDocument();
 });
 
 test('Navigation bar shows title when expanded', async () => {
@@ -157,8 +160,8 @@ test('Navigation bar width updates on configuration change', async () => {
   callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 200 } });
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 
-  // Simulate width change to collapsed (below threshold of 80)
-  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 70 } });
+  // Simulate width change to collapsed (below threshold of 70)
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 60 } });
   await vi.waitFor(() => expect(screen.queryByLabelText('Dashboard title')).not.toBeInTheDocument());
 });
 
@@ -178,12 +181,12 @@ test('Expanded threshold controls text visibility', async () => {
   // Default is 160px (expanded)
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 
-  // Shrink to 90px — still above threshold (80), should stay expanded
-  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 90 } });
+  // Shrink to 80px — still above threshold (70), should stay expanded
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 80 } });
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 
-  // Shrink below 80px — should collapse (text removed from DOM)
-  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 70 } });
+  // Shrink below 70px — should collapse (text removed from DOM)
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 60 } });
   await vi.waitFor(() => expect(screen.queryByLabelText('Dashboard title')).not.toBeInTheDocument());
 
   // Grow above threshold — should expand again

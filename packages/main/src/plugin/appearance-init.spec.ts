@@ -199,7 +199,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.description).toBeDefined();
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.type).toBe('number');
-  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.minimum).toBe(60);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.minimum).toBe(50);
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.maximum).toBe(240);
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.default).toBe(160);
 });

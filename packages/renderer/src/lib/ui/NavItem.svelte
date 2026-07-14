@@ -47,9 +47,8 @@ onDestroy(() => {
   aria-label={ariaLabel ?? tooltip}
   onclick={handleClick}>
   <div
-    class="flex py-2 px-3.5 items-center cursor-pointer min-h-9"
+    class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
     class:border-l-[4px]={!inSection}
-    class:pl-3={inSection && expanded}
     class:border-[var(--pd-global-nav-bg)]={!inSection}
     class:text-[color:var(--pd-global-nav-icon)]={!selected || !inSection}
     class:text-[color:var(--pd-global-nav-icon-selected)]={selected && inSection}

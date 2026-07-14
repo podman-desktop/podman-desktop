@@ -31,12 +31,12 @@ let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
 let scrollRegionEl = $state<HTMLDivElement>();
 
-const iconSize = '22';
+const iconSize = '24';
 const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
 
-const minWidth = 60;
+const minWidth = 50;
 const maxWidth = 240;
-const expandedThreshold = 80;
+const expandedThreshold = 70;
 
 let navWidth = $state(160);
 let expanded = $derived(navWidth > expandedThreshold);
@@ -212,7 +212,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
         <NewContentOnDashboardBadge />
       </div>
       {#if expanded}
-        <span class="text-sm truncate ml-2 flex-1 min-w-0" aria-label="Dashboard title">Dashboard</span>
+        <span class="text-sm truncate ml-3 flex-1 min-w-0" aria-label="Dashboard title">Dashboard</span>
       {/if}
     </div>
   </NavItem>
@@ -267,7 +267,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
               <AccountIcon size={iconSize} />
             </div>
             {#if expanded}
-              <span class="text-sm truncate ml-2" aria-label="Accounts title">
+              <span class="text-sm truncate ml-3" aria-label="Accounts title">
                 Accounts
               </span>
             {/if}
@@ -282,7 +282,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
         <SettingsIcon size={iconSize} />
       </div>
       {#if expanded}
-        <span class="text-sm truncate ml-2" aria-label="Settings title">
+        <span class="text-sm truncate ml-3" aria-label="Settings title">
           Settings
         </span>
       {/if}
