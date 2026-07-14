@@ -18,7 +18,7 @@
 
 import { join } from 'node:path';
 
-import type { Browser, Locator, Page } from '@playwright/test';
+import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
 import { chromium, expect as playExpect } from '@playwright/test';
 
 import { waitUntil } from './wait';
@@ -124,13 +124,7 @@ export async function getEntryFromConsoleLogs(
   checkString: string,
   timeout = 10_000,
 ): Promise<string | undefined> {
-  const consoleLogPromise = page.waitForEvent('console', {
-    predicate: msg => {
-      return msg.type() === 'log' && filter.test(msg.text());
-    },
-    timeout: timeout,
-  });
-  const consoleMsg = await consoleLogPromise;
+  const consoleMsg = await filterConsoleForEvent(page, 'log', filter, timeout);
   const logLine = consoleMsg.text();
   if (checkString) {
     playExpect(logLine).toContain(checkString);
@@ -139,6 +133,21 @@ export async function getEntryFromConsoleLogs(
   const urlMatch = parsedString ? parsedString[1] : undefined;
   console.log(`Matched string: ${urlMatch}`);
   return urlMatch;
+}
+
+export async function filterConsoleForEvent(
+  page: Page,
+  eventType: string,
+  filter: RegExp,
+  timeout = 10_000,
+): Promise<ConsoleMessage> {
+  const consoleLogPromise = page.waitForEvent('console', {
+    predicate: msg => {
+      return msg.type() === eventType && filter.test(msg.text());
+    },
+    timeout: timeout,
+  });
+  return await consoleLogPromise;
 }
 
 // Accept/Refuse the cooking in the iframe element
