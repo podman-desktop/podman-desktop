@@ -46,6 +46,7 @@ const __dirname = path.dirname(__filename);
 // With validation disabled all credentials are sent but the build still succeeds.
 const TEST_REGISTRY_URL = 'registry.unreachable-test.localhost';
 const INVALID_USERNAME = 'admin';
+// eslint-disable-next-line sonarjs/no-hardcoded-passwords
 const INVALID_PASSWORD = 'sha256~fakeTokenForTestingPurposesOnly';
 
 const CONTAINERFILE_PATH = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
