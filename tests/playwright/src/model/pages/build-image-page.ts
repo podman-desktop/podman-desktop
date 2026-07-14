@@ -19,7 +19,6 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { ArchitectureType } from '/@/model/core/platforms';
-import type { BuildImageOptions } from '/@/model/core/types';
 import { archType } from '/@/utility/platform';
 
 import { BasePage } from './base-page';
@@ -75,7 +74,9 @@ export class BuildImagePage extends BasePage {
     imageName: string,
     containerFilePath: string,
     contextDirectory: string,
-    { archType = [ArchitectureType.Default], timeout = 120_000, target }: BuildImageOptions = {},
+    archType: string[] = [ArchitectureType.Default],
+    timeout = 120_000,
+    target?: string,
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
