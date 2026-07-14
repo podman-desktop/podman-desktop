@@ -422,7 +422,7 @@ async function searchFunction(value: string): Promise<void> {
 </script>
 
 <EngineFormPage
-  title="Pull image from a registry"
+  title="Pull an image from a registry"
   inProgress={pullInProgress}
   showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
