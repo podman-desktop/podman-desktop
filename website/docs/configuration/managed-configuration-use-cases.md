@@ -42,31 +42,31 @@ Control telemetry settings for compliance or privacy requirements.
 }
 ```
 
-## Disabling provider engine updates
+## Controlling provider engine updates
 
-Prevent users from updating container engine providers through the Resources page. This is useful when your organization manages engine versions centrally and wants to prevent users from upgrading independently.
+Control which extensions are permitted to register provider engine updates on the Resources page. This is useful when your organization manages engine versions centrally and wants to prevent users from upgrading independently.
 
-You can disable updates for specific providers by listing their IDs, or use `"*"` to disable updates for all providers.
+By default, `providers.allowUpdate` is set to `["*"]`, which allows all extensions to register updates. You can restrict this to specific extension IDs, or use an empty array to block all updates.
 
-```json title="default-settings.json (disable all providers)"
+```json title="default-settings.json (block all updates)"
 {
-  "providers.disableUpdate": ["*"]
+  "providers.allowUpdate": []
 }
 ```
 
-```json title="default-settings.json (disable specific providers)"
+```json title="default-settings.json (allow only specific extensions)"
 {
-  "providers.disableUpdate": ["podman", "lima"]
+  "providers.allowUpdate": ["podman-desktop.podman"]
 }
 ```
 
 ```json title="locked.json"
 {
-  "locked": ["providers.disableUpdate"]
+  "locked": ["providers.allowUpdate"]
 }
 ```
 
-When this setting is enforced, the update button will not appear on the Resources page for the specified providers, regardless of whether a newer version is available.
+When this setting is enforced, only extensions listed in the array can register updates. The update button will not appear on the Resources page for providers whose extension is not in the list.
 
 ## Configuring default registries and mirrors
 

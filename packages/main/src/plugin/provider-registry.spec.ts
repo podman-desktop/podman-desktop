@@ -99,7 +99,7 @@ beforeEach(() => {
     isApiAttached: vi.fn(),
     onApiAttached: vi.fn(),
   } as unknown as ContainerProviderRegistry;
-  getConfigurationMock.mockReturnValue({ get: () => [] });
+  getConfigurationMock.mockReturnValue({ get: () => ['*'] });
   configurationRegistry = {
     registerConfigurations: vi.fn(),
     getConfiguration: getConfigurationMock,
@@ -2107,78 +2107,56 @@ test('registerUpdate should notify when an update is registered or unregistered'
   expect(apiSenderSendMock).toBeCalledWith('provider-change', {});
 });
 
-test('registerUpdate should not store update when providers.disableUpdate contains wildcard', () => {
-  getConfigurationMock.mockReturnValue({ get: () => ['*'] });
-
-  const provider = providerRegistry.createProvider('id', 'name', {
-    id: 'podman',
-    name: 'Podman',
-    status: 'installed',
-  });
-
-  apiSenderSendMock.mockClear();
-  const disposable = providerRegistry.registerUpdate(
-    provider as unknown as ProviderImpl,
-    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
-  );
-
-  expect(disposable).toBeDefined();
-  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
-
-  const providerInfo = providerRegistry.getProviderInfos();
-  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
-  expect(info?.updateInfo).toBeUndefined();
-});
-
-test('registerUpdate should not store update when providers.disableUpdate contains the provider id', () => {
-  getConfigurationMock.mockReturnValue({ get: () => ['podman', 'lima'] });
-
-  const provider = providerRegistry.createProvider('id', 'name', {
-    id: 'podman',
-    name: 'Podman',
-    status: 'installed',
-  });
-
-  apiSenderSendMock.mockClear();
-  const disposable = providerRegistry.registerUpdate(
-    provider as unknown as ProviderImpl,
-    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
-  );
-
-  expect(disposable).toBeDefined();
-  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
-
-  const providerInfo = providerRegistry.getProviderInfos();
-  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
-  expect(info?.updateInfo).toBeUndefined();
-});
-
-test('registerUpdate should store update when providers.disableUpdate does not contain the provider id', () => {
-  getConfigurationMock.mockReturnValue({ get: () => ['lima'] });
-
-  const provider = providerRegistry.createProvider('id', 'name', {
-    id: 'podman',
-    name: 'Podman',
-    status: 'installed',
-  });
-
-  apiSenderSendMock.mockClear();
-  providerRegistry.registerUpdate(
-    provider as unknown as ProviderImpl,
-    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
-  );
-
-  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
-
-  const providerInfo = providerRegistry.getProviderInfos();
-  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
-  expect(info?.updateInfo?.version).toBe('2.0.0');
-});
-
-test('registerUpdate should store update when providers.disableUpdate is empty', () => {
+test('registerUpdate should not store update when providers.allowUpdate is empty', () => {
   getConfigurationMock.mockReturnValue({ get: () => [] });
 
-  const provider = providerRegistry.createProvider('id', 'name', {
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  const disposable = providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(disposable).toBeDefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo).toBeUndefined();
+});
+
+test('registerUpdate should not store update when extension id is not in providers.allowUpdate', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['podman-desktop.lima'] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  const disposable = providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(disposable).toBeDefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo).toBeUndefined();
+});
+
+test('registerUpdate should store update when extension id is in providers.allowUpdate', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['podman-desktop.podman'] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
     id: 'podman',
     name: 'Podman',
     status: 'installed',
@@ -2197,10 +2175,32 @@ test('registerUpdate should store update when providers.disableUpdate is empty',
   expect(info?.updateInfo?.version).toBe('2.0.0');
 });
 
-test('registerUpdate should store update when providers.disableUpdate is undefined', () => {
+test('registerUpdate should store update when providers.allowUpdate contains wildcard', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['*'] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('registerUpdate should store update when providers.allowUpdate is undefined', () => {
   getConfigurationMock.mockReturnValue({ get: () => undefined });
 
-  const provider = providerRegistry.createProvider('id', 'name', {
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
     id: 'podman',
     name: 'Podman',
     status: 'installed',
@@ -2226,9 +2226,9 @@ test('init should register the providers configuration', () => {
     expect.objectContaining({
       id: 'preferences.providers',
       properties: expect.objectContaining({
-        'providers.disableUpdate': expect.objectContaining({
+        'providers.allowUpdate': expect.objectContaining({
           type: 'array',
-          default: [],
+          default: ['*'],
           hidden: true,
         }),
       }),
