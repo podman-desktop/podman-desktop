@@ -32,12 +32,6 @@ export interface KindClusterOptions {
   containerImage?: string;
 }
 
-export interface BuildImageOptions {
-  archType?: string[];
-  timeout?: number;
-  target?: string;
-}
-
 export interface DeployPodOptions {
   useKubernetesServices?: boolean;
   useRestrictedSecurityContext?: boolean;
