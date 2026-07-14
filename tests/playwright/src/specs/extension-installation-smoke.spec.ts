@@ -19,6 +19,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
+import type { ExtensionInstallConfig } from '/@/model/core/extensions';
 import {
   bootcExtension,
   extensionInstallConfigs,
@@ -276,6 +277,73 @@ for (const { extensionLabel, extensionFullLabel, extensionName, extensionFullNam
         });
     });
 }
+
+test.describe
+  .serial('Install extension via SHA digest', { tag: '@smoke' }, () => {
+    const ext = openshiftDockerExtension;
+    const config: ExtensionInstallConfig | undefined = extensionInstallConfigs[ext.extensionName];
+    const shaDigestUrl = config?.shaDigestImageUrl;
+
+    test.skip(!shaDigestUrl, 'No SHA digest URL configured');
+    test.skip(!!isWindows, 'OpenShift Docker extension times out on Windows');
+
+    test.beforeAll(async () => {
+      await _startup(ext.extensionLabel);
+    });
+
+    test.afterAll(async () => {
+      await pdRunner.close();
+    });
+
+    test('Install extension from OCI image using SHA digest', async () => {
+      test.setTimeout(200_000);
+
+      const extensionsPage = await navigationBar.openExtensions();
+      await playExpect(extensionsPage.heading).toBeVisible();
+
+      if (!shaDigestUrl) throw new Error('shaDigestUrl is required');
+      await extensionsPage.installExtensionFromOCIImage(shaDigestUrl, 180_000);
+
+      await extensionsPage.openInstalledTab();
+      await playExpect
+        .poll(async () => await extensionsPage.extensionIsInstalled(ext.extensionFullLabel), { timeout: 15_000 })
+        .toBeTruthy();
+    });
+
+    test('Extension installed via digest is active with no errors', async () => {
+      const extensionsPage = await navigationBar.openExtensions();
+      const extensionPage = await extensionsPage.openExtensionDetails(
+        ext.extensionLabel,
+        ext.extensionFullLabel,
+        ext.extensionFullName,
+      );
+      await playExpect(extensionPage.heading).toBeVisible();
+      await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 15_000 });
+
+      const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
+      let stackTrace = '';
+      if ((await errorTab.count()) > 0) {
+        stackTrace = await errorTab.innerText();
+      }
+      await playExpect(errorTab, `Error Tab was present with stackTrace: ${stackTrace}`).not.toBeVisible();
+    });
+
+    test('Remove extension installed via digest', async () => {
+      const extensionsPage = await navigationBar.openExtensions();
+      const extensionDetails = await extensionsPage.openExtensionDetails(
+        ext.extensionLabel,
+        ext.extensionFullLabel,
+        ext.extensionFullName,
+      );
+      await extensionDetails.removeExtension(false);
+
+      await goToDashboard();
+      const extensionsPageAfter = await navigationBar.openExtensions();
+      await playExpect
+        .poll(async () => extensionsPageAfter.extensionIsInstalled(ext.extensionFullLabel), { timeout: 15_000 })
+        .toBeFalsy();
+    });
+  });
 
 function initializeLocators(extensionName: string): void {
   const nav = new NavigationBar(page);
