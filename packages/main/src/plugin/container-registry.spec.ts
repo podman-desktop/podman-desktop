@@ -4857,6 +4857,9 @@ describe('listImages', () => {
     const internalContainerProvider = {
       name: 'dummyName',
       id: 'dummyId',
+      connection: {
+        type: 'podman',
+      },
       api: {
         listImages: vi.fn(),
       },
@@ -4886,6 +4889,7 @@ describe('listImages', () => {
       Id: 'dummyImageId',
       engineId: 'dummyId',
       engineName: 'dummyName',
+      engineType: 'podman',
       Digest: 'sha256:dummyImageId',
     });
   });
