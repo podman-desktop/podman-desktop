@@ -141,7 +141,7 @@ export class Exec {
       }
     }
 
-    if (env['FLATPAK_ID']) {
+    if (env['FLATPAK_ID'] && !options?.skipFlatpakSpawn) {
       const customEnvVariables: string[] = [];
       for (const envVar in options?.env) {
         customEnvVariables.push(`--env=${envVar}=${options.env[envVar]}`);

@@ -4593,6 +4593,13 @@ declare module '@podman-desktop/api' {
      * if Podman Desktop exits. Stdout/stderr will not be captured.
      */
     detached?: boolean;
+
+    /**
+     * If true, skip wrapping the command with `flatpak-spawn --host` even when
+     * running inside a Flatpak environment. Use this for binaries that are
+     * shipped inside the Flatpak bundle and should run inside the sandbox.
+     */
+    skipFlatpakSpawn?: boolean;
   }
 
   /**

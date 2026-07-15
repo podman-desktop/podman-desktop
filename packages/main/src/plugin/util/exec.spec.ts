@@ -420,6 +420,72 @@ describe('exec', () => {
     expect(stdout).toContain('Hello, World!');
   });
 
+  test('should skip flatpak-spawn wrapping when skipFlatpakSpawn is true', async () => {
+    const command = 'echo';
+    const args = ['Hello, World!'];
+
+    vi.mocked(isLinux).mockReturnValue(true);
+
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+      if (event === 'data') {
+        cb('Hello, World!');
+      }
+    }) as unknown as Readable;
+    const spawnMock = vi.mocked(spawn).mockReturnValue({
+      stdout: { on, setEncoding: vi.fn() },
+      stderr: { on, setEncoding: vi.fn() },
+      on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+        if (event === 'close') {
+          cb(0);
+        }
+      }),
+    } as unknown as ChildProcess);
+
+    const { stdout } = await exec.exec(command, args, {
+      env: { FLATPAK_ID: 'io.podman_desktop.PodmanDesktop' },
+      skipFlatpakSpawn: true,
+    });
+
+    expect(spawnMock).toHaveBeenCalledWith(command, args, expect.anything());
+    expect(stdout).toBeDefined();
+    expect(stdout).toContain('Hello, World!');
+  });
+
+  test('should still wrap with flatpak-spawn when skipFlatpakSpawn is false', async () => {
+    const command = 'echo';
+    const args = ['Hello, World!'];
+
+    vi.mocked(isLinux).mockReturnValue(true);
+
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+      if (event === 'data') {
+        cb('Hello, World!');
+      }
+    }) as unknown as Readable;
+    const spawnMock = vi.mocked(spawn).mockReturnValue({
+      stdout: { on, setEncoding: vi.fn() },
+      stderr: { on, setEncoding: vi.fn() },
+      on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+        if (event === 'close') {
+          cb(0);
+        }
+      }),
+    } as unknown as ChildProcess);
+
+    const { stdout } = await exec.exec(command, args, {
+      env: { FLATPAK_ID: 'io.podman_desktop.PodmanDesktop' },
+      skipFlatpakSpawn: false,
+    });
+
+    expect(spawnMock).toHaveBeenCalledWith(
+      'flatpak-spawn',
+      expect.arrayContaining(['--host', command, 'Hello, World!']),
+      expect.anything(),
+    );
+    expect(stdout).toBeDefined();
+    expect(stdout).toContain('Hello, World!');
+  });
+
   test('should run the command with privileges using exec on Windows', async () => {
     const command = 'echo';
     const args = ['Hello, World!'];
