@@ -142,6 +142,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     VirtualSize: 0,
     engineId: 'engineid',
     engineName: 'engineName',
+    engineType: 'podman',
   };
   (window.getImageInspect as Mock).mockResolvedValue(imageInfo);
   await waitRender();

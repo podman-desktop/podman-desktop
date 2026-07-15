@@ -858,6 +858,7 @@ export class ContainerProviderRegistry {
                 ...image,
                 engineName: provider.name,
                 engineId: provider.id,
+                engineType: provider.connection.type,
                 isManifest,
                 Id: image.Digest ? `sha256:${image.Id}` : image.Id,
                 Digest: image.Digest ?? `sha256:${image.Id}`,
@@ -2525,6 +2526,7 @@ export class ContainerProviderRegistry {
       return {
         engineName: provider.name,
         engineId: provider.id,
+        engineType: provider.connection.type,
         ...imageInspect,
       };
     } catch (error) {
