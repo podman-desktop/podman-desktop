@@ -65,11 +65,11 @@ function handleCardClick(event: MouseEvent): void {
       </div>
 
       <div class="min-w-0 flex-1 overflow-hidden">
-        <ExtensionCatalogStatusChips extension={catalogExtensionUI} class="mb-1" />
         <ExtensionFeaturedNameLabel
           displayName={catalogExtensionUI.displayName}
           isFeatured={catalogExtensionUI.isFeatured}
           nameClass="font-semibold text-[var(--pd-content-header)]" />
+        <ExtensionCatalogStatusChips extension={catalogExtensionUI} class="mt-0.5 mb-0.5" />
         <div class="pt-0.5">
           <ExtensionPublisherLabel
             publisherName={catalogExtensionUI.publisherDisplayName}

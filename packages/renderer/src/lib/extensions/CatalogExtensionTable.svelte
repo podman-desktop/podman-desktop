@@ -131,8 +131,8 @@ function isSorted(column: CatalogTableSortColumn): boolean {
             isSupportedByRedHat={extension.isSupportedByRedHat} />
         </div>
         <div role="cell" class="min-w-0 overflow-hidden py-2">
-          <div class="flex flex-col gap-1">
-            <div class="text-sm text-[var(--pd-content-text)]">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm text-[var(--pd-content-text)]">
               {#if extension.isInstalled}
                 {#key uiRevision}
                   {@const actualVersion = extension.installedVersion}
@@ -144,15 +144,15 @@ function isSorted(column: CatalogTableSortColumn): boolean {
                       : optimistic && optimistic !== normalizedActual
                         ? optimistic
                         : actualVersion}
-                  <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${extension.installedVersion}`}</span>
+                  {displayInstalledVersion ? `v${displayInstalledVersion}` : `v${extension.installedVersion}`}
                   <ExtensionVersionUpdateStatus
                     extensionId={extension.id}
                     extensionState={extension.installedExtension?.state} />
                 {/key}
               {:else}
-                <span>{extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}</span>
+                {extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}
               {/if}
-            </div>
+            </span>
             {#if extensionRequiresManualUpdate(extension)}
               <Badge
                 label="Update"
