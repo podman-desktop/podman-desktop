@@ -59,7 +59,21 @@ async function updateCalloutPosition(): Promise<void> {
     return;
   }
 
-  navAnchor.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  // Newly installed extensions are appended at the end of the sidebar list.
+  // When the tooltip points at a dedicated extension entry, scroll the nav to the
+  // bottom so the new icon and callout stay visible among many installed items.
+  const pointsAtExtensionEntry = pointer.link.startsWith('/webviews/') || pointer.link.startsWith('/contribs/');
+  if (pointsAtExtensionEntry) {
+    const scrollRegion =
+      navAnchor.closest<HTMLElement>('#nav-scroll-region') ?? document.getElementById('nav-scroll-region');
+    if (scrollRegion) {
+      scrollRegion.scrollTop = scrollRegion.scrollHeight;
+    } else {
+      navAnchor.scrollIntoView({ block: 'end', behavior: 'instant' });
+    }
+  } else {
+    navAnchor.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+  }
 
   const { x, y, middlewareData } = await computePosition(navAnchor, calloutElement, {
     placement: 'right',
