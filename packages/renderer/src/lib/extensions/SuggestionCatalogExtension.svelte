@@ -129,7 +129,7 @@ function handleCardClick(event: MouseEvent): void {
       </div>
 
       <div class="flex shrink-0 items-start gap-1">
-        {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
+        {#if catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
         {/if}
         <CatalogExtensionActions

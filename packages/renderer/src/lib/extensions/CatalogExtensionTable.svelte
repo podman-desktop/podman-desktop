@@ -165,7 +165,7 @@ function isSorted(column: CatalogTableSortColumn): boolean {
         </div>
         <div role="cell" class="justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex shrink-0 items-center justify-end gap-1">
-            {#if !extension.isInstalled && extension.fetchable}
+            {#if extension.fetchable}
               <FeaturedExtensionDownload {oninstall} extension={extension} />
             {/if}
             <CatalogExtensionActions
