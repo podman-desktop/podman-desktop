@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-declare module 'win-ca/api';
 declare module 'micromark-extension-directive';
 declare module 'date.js';
 declare module 'humanize-duration';
