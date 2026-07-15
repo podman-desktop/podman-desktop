@@ -28,6 +28,7 @@ import {
 } from './extension-version-update.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
+import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 import CatalogExtensionTableNameColumn from './table/CatalogExtensionTableNameColumn.svelte';
 
@@ -153,6 +154,9 @@ function isSorted(column: CatalogTableSortColumn): boolean {
                 {extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}
               {/if}
             </span>
+            {#if extension.isInstalled}
+              <ExtensionUpdateVersionLink extension={extension} />
+            {/if}
             {#if extensionRequiresManualUpdate(extension)}
               <Badge
                 label="Update"

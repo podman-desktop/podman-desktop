@@ -18,6 +18,7 @@ import ExtensionFeaturedNameLabel from './ExtensionFeaturedNameLabel.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
+import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
 export let catalogExtensionUI: CatalogExtensionInfoUI;
@@ -60,16 +61,18 @@ function handleCardClick(event: MouseEvent): void {
   onclick={handleCardClick}>
   <div class="px-3 pt-3 pb-2">
     <div class="flex items-start gap-2">
-      <div class="flex size-10 shrink-0 items-center justify-start">
+      <div class="flex size-10 shrink-0 items-start justify-start">
         <CatalogExtensionIcon iconHref={catalogExtensionUI.iconHref} displayName={catalogExtensionUI.displayName} />
       </div>
 
       <div class="min-w-0 flex-1 overflow-hidden">
-        <ExtensionFeaturedNameLabel
-          displayName={catalogExtensionUI.displayName}
-          isFeatured={catalogExtensionUI.isFeatured}
-          nameClass="font-semibold text-[var(--pd-content-header)]" />
-        <ExtensionCatalogStatusChips extension={catalogExtensionUI} class="mt-0.5 mb-0.5" />
+        <div class="flex items-center gap-1.5 min-w-0">
+          <ExtensionFeaturedNameLabel
+            displayName={catalogExtensionUI.displayName}
+            isFeatured={catalogExtensionUI.isFeatured}
+            nameClass="font-semibold text-[var(--pd-content-header)]" />
+          <ExtensionCatalogStatusChips extension={catalogExtensionUI} nowrap={true} />
+        </div>
         <div class="pt-0.5">
           <ExtensionPublisherLabel
             publisherName={catalogExtensionUI.publisherDisplayName}
@@ -103,6 +106,7 @@ function handleCardClick(event: MouseEvent): void {
                   class="shrink-0" />
               {/if}
             {/key}
+            <ExtensionUpdateVersionLink extension={catalogExtensionUI} />
           {:else}
             <span>v{catalogExtensionUI.fetchVersion}</span>
           {/if}
