@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -17,14 +16,13 @@ import { router } from 'tinro';
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { PortInfo, RunOptions } from '/@/lib/image/run/run-options';
+import BasicTab from '/@/lib/image/run/tabs/BasicTab.svelte';
 import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
 import { array2String } from '/@/lib/string/string.js';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
-import FileInput from '/@/lib/ui/FileInput.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
-import { containersInfos } from '/@/stores/containers';
 import { runImageInfo } from '/@/stores/run-image-store';
 
 let options: RunOptions = $state({
@@ -65,32 +63,17 @@ let options: RunOptions = $state({
   },
 });
 
-let imageInspectInfo: ImageInspectInfo;
-
-let containerNameError: string | undefined = $derived.by(() => {
-  // ok, now check if we already have a matching container: same name and same engine ID
-  const containerAlreadyExists = $containersInfos.find(
-    container =>
-      container.engineId === imageInspectInfo.engineId &&
-      container.Names.some(iteratingContainerName => iteratingContainerName === `/${options.basic.containerName}`),
-  );
-  if (containerAlreadyExists) {
-    return `The name ${options.basic.containerName} already exists. Please choose another name or leave blank to generate a name.`;
-  } else {
-    return undefined;
-  }
+let valid: Record<keyof RunOptions, boolean> = $state({
+  basic: true,
+  networking: true,
+  advanced: true,
+  security: true,
 });
+
+let imageInspectInfo: ImageInspectInfo;
 
 let exposedPorts = $state<string[]>([]);
 let createError = $state<string>();
-let onPortInputTimeout: NodeJS.Timeout;
-
-let invalidPorts = $derived.by(() => {
-  const invalidHostPorts = options.basic.hostContainerPortMappings.filter(pair => pair.hostPort.error);
-  const invalidContainerPortMapping = options.basic.containerPortMapping?.filter(port => port.error) ?? [];
-  return invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
-});
-let invalidFields = $derived(!!containerNameError || invalidPorts);
 
 let dataReady = $state(false);
 
@@ -478,47 +461,6 @@ function getStartEndRange(range: string):
   };
 }
 
-function addEnvVariable(): void {
-  options.basic.environmentVariables = [...options.basic.environmentVariables, { key: '', value: '' }];
-}
-
-function deleteEnvVariable(index: number): void {
-  options.basic.environmentVariables = options.basic.environmentVariables.filter((_, i) => i !== index);
-}
-
-function addEnvFile(): void {
-  options.basic.environmentFiles = [...options.basic.environmentFiles, ''];
-}
-
-function deleteEnvFile(index: number): void {
-  options.basic.environmentFiles = options.basic.environmentFiles.filter((_, i) => i !== index);
-}
-
-function addHostContainerPorts(): void {
-  options.basic.hostContainerPortMappings = [
-    ...options.basic.hostContainerPortMappings,
-    {
-      hostPort: {
-        port: '',
-        error: '',
-      },
-      containerPort: '',
-    },
-  ];
-}
-
-async function deleteHostContainerPorts(index: number): Promise<void> {
-  options.basic.hostContainerPortMappings = options.basic.hostContainerPortMappings.filter((_, i) => i !== index);
-}
-
-function addVolumeMount(): void {
-  options.basic.volumeMounts = [...options.basic.volumeMounts, { source: '', target: '' }];
-}
-
-function deleteVolumeMount(index: number): void {
-  options.basic.volumeMounts = options.basic.volumeMounts.filter((_, i) => i !== index);
-}
-
 function deleteSecurityOpt(index: number): void {
   options.security.securityOpts = options.security.securityOpts.filter((_, i) => i !== index);
 }
@@ -568,44 +510,6 @@ function addDevice(): void {
 function deleteDevice(index: number): void {
   options.advanced.devices = options.advanced.devices.filter((_, i) => i !== index);
 }
-
-function onContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, options.basic.containerPortMapping[index]);
-}
-
-function onHostContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, options.basic.hostContainerPortMappings[index].hostPort);
-}
-
-function onPortInput(event: Event, portInfo: PortInfo): void {
-  // clear the timeout so if there was an old call to areAllPortsFree pending is deleted. We will create a new one soon
-  clearTimeout(onPortInputTimeout);
-  const target = event.currentTarget as HTMLInputElement;
-  // convert string to number
-  const _value: number = Number(target.value);
-  onPortInputTimeout = setTimeout(() => {
-    window
-      .isFreePort(_value)
-      .then(_ => {
-        portInfo.error = '';
-      })
-      .catch((error: unknown) => {
-        if (error && typeof error === 'object' && 'message' in error) {
-          portInfo.error = (error as { message: string }).message;
-        }
-      });
-  }, 500);
-}
-
-const volumeDialogOptions: OpenDialogOptions = {
-  title: 'Select a directory to mount in the container',
-  selectors: ['openDirectory'],
-};
-
-const envDialogOptions: OpenDialogOptions = {
-  title: 'Select environment file',
-  selectors: ['openFile'],
-};
 </script>
 
 <Route path="/*">
@@ -633,154 +537,11 @@ const envDialogOptions: OpenDialogOptions = {
         </div>
         <div class="pt-4">
           <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
-            <div class="pr-4">
-              <label
-                for="modalContainerName"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
-              <Input
-                bind:value={options.basic.containerName}
-                name="modalContainerName"
-                id="modalContainerName"
-                placeholder="Leave blank to generate a name"
-                aria-label="Container Name"
-                error={containerNameError} />
-              <label
-                for="modalEntrypoint"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Entrypoint:</label>
-              <Input bind:value={options.basic.entrypoint} name="modalEntrypoint" id="modalEntrypoint" aria-label="Entrypoint" />
-              <label
-                for="modalCommand"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Command:</label>
-              <Input bind:value={options.basic.command} name="modalCommand" id="modalCommand" aria-label="Command" />
-              <label for="volumes" class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Volumes:</label>
-              <!-- Display the list of volumes -->
-              {#each options.basic.volumeMounts as volumeMount, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <FileInput
-                    id="volumeMount.{index}"
-                    placeholder="Path on the host"
-                    bind:value={volumeMount.source}
-                    options={volumeDialogOptions}
-                    aria-label="volumeMount.{index}" />
-                  <Input bind:value={volumeMount.target} placeholder="Path inside the container" class="ml-2" />
-                  <Button
-                    type="link"
-                    hidden={index === options.basic.volumeMounts.length - 1}
-                    aria-label="Delete volume mount at index {index}"
-                    on:click={(): void => deleteVolumeMount(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.basic.volumeMounts.length - 1}
-                    aria-label="Add volume mount after index {index}"
-                    on:click={addVolumeMount}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <!-- add a label for each port-->
-              <label
-                for="modalContainerName"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Port mapping:</label>
-              {#each exposedPorts as port, index (index)}
-                <div class="flex flex-row justify-center items-center w-full">
-                  <span
-                    class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
-                    >Local port for {port}:</span>
-                  <Input
-                    bind:value={options.basic.containerPortMapping[index].port}
-                    on:input={(event): void => onContainerPortMappingInput(event, index)}
-                    placeholder="Enter value for port {port}"
-                    error={options.basic.containerPortMapping[index].error}
-                    class="ml-2 w-full"
-                    title={options.basic.containerPortMapping[index].error} />
-                </div>
-              {/each}
-
-              <Button
-                on:click={addHostContainerPorts}
-                icon={faPlusCircle}
-                type="link"
-                aria-label="Add custom port mapping">
-                Add custom port mapping
-              </Button>
-              <!-- Display the list of existing hostContainerPortMappings -->
-              {#each options.basic.hostContainerPortMappings as hostContainerPortMapping, index (index)}
-                <div class="flex flex-row justify-center w-full py-1">
-                  <Input
-                    bind:value={hostContainerPortMapping.hostPort.port}
-                    on:input={(event): void => onHostContainerPortMappingInput(event, index)}
-                    aria-label="host port"
-                    placeholder="Host Port"
-                    error={hostContainerPortMapping.hostPort.error}
-                    title={hostContainerPortMapping.hostPort.error} />
-                  <Input
-                    bind:value={hostContainerPortMapping.containerPort}
-                    aria-label="container port"
-                    placeholder="Container Port"
-                    class="ml-2" />
-                  <Button type="link" on:click={async (): Promise<void> => await deleteHostContainerPorts(index)} icon={faMinusCircle} aria-label="Remove port mapping" />
-                </div>
-              {/each}
-              <label
-                for="modalEnvironmentVariables"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Environment variables:</label>
-              <!-- Display the list of existing environment variables -->
-              {#each options.basic.environmentVariables as environmentVariable, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={environmentVariable.key} placeholder="Name" class="w-full" />
-
-                  <Input
-                    bind:value={environmentVariable.value}
-                    placeholder="Value (leave blank for empty)"
-                    class="ml-2" />
-                  <Button
-                    type="link"
-                    hidden={index === options.basic.environmentVariables.length - 1}
-                    aria-label="Delete environment variable at index {index}"
-                    on:click={(): void => deleteEnvVariable(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.basic.environmentVariables.length - 1}
-                    aria-label="Add environment variable after index {index}"
-                    on:click={addEnvVariable}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <label
-                for="modalEnvironmentFiles"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Environment files:</label>
-              <!-- Display the list of existing environment files -->
-              {#each options.basic.environmentFiles as _, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <FileInput
-                    id="filePath.{index}"
-                    placeholder="Environment file containing KEY=VALUE items"
-                    bind:value={options.basic.environmentFiles[index]}
-                    options={envDialogOptions}
-                    aria-label="environmentFile.{index}" />
-                  <Button
-                    type="link"
-                    hidden={index === options.basic.environmentFiles.length - 1}
-                    aria-label="Delete env file at index {index}"
-                    on:click={(): void => deleteEnvFile(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.basic.environmentFiles.length - 1}
-                    aria-label="Add env file after index {index}"
-                    on:click={addEnvFile}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-            </div>
+            <BasicTab
+              bind:options={options.basic}
+              bind:valid={valid.basic}
+              image={imageInspectInfo}
+              {exposedPorts} />
           </Route>
           <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
             <div class="pr-4">
@@ -1114,7 +875,7 @@ const envDialogOptions: OpenDialogOptions = {
             on:click={startContainer}
             icon={faPlay}
             aria-label="Start Container"
-            disabled={invalidFields}>
+            disabled={Object.values(valid).some((v) => !v)}>
             Start Container
           </Button>
         </div>
