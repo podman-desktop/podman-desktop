@@ -413,9 +413,27 @@ export class ExtensionsUtils {
   /**
    * Prototype helper (DTUX-2849): ensure two installed extensions show an update
    * when no real version mismatch exists in catalog data.
+   * If an installed demo extension is not in the catalog yet, a synthetic entry is injected.
    */
-  ensurePrototypeUpdateDemo(extensions: CatalogExtensionInfoUI[]): CatalogExtensionInfoUI[] {
-    let result = extensions.map(extension => {
+  ensurePrototypeUpdateDemo(
+    extensions: CatalogExtensionInfoUI[],
+    installedExtensions: CombinedExtensionInfoUI[] = [],
+    catalogExtensions: CatalogExtension[] = [],
+    featuredExtensions: FeaturedExtension[] = [],
+  ): CatalogExtensionInfoUI[] {
+    // Inject synthetic catalog entries for demo extensions that are installed but missing from catalog.
+    const injected: CatalogExtensionInfoUI[] = [];
+    for (const demoId of PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS) {
+      if (extensions.some(e => e.id === demoId)) {
+        continue;
+      }
+      const installed = installedExtensions.find(e => e.id === demoId);
+      if (installed) {
+        injected.push(this.buildCatalogInfoForInstalled(installed, catalogExtensions, featuredExtensions));
+      }
+    }
+
+    let result = [...extensions, ...injected].map(extension => {
       if (extension.isInstalled && isPrototypeUpdateDemoExtension(extension.id)) {
         return applyPrototypeCatalogUseCaseOverlay(extension);
       }

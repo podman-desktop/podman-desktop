@@ -74,5 +74,5 @@ test('Expect to see built-in badge for compose extension', async () => {
   // get role Extension Badge
   const badge = await findByRole('region', { name: 'podman-desktop.compose' });
   expect(badge).toBeInTheDocument();
-  expect(badge).toHaveTextContent('built-in Extension');
+  expect(badge).toHaveTextContent('Built-in extension');
 });

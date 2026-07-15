@@ -148,7 +148,14 @@ const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived.by(() => {
     installedExtensionsForList,
   );
 
-  return isSuggestionScope ? extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions) : catalogExtensions;
+  return isSuggestionScope
+    ? extensionsUtils.ensurePrototypeUpdateDemo(
+        catalogExtensions,
+        installedExtensionsForList,
+        $catalogExtensionInfos,
+        $featuredExtensionInfos,
+      )
+    : catalogExtensions;
 });
 
 const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(

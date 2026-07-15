@@ -7,6 +7,7 @@ import {
   getOptimisticInstalledVersion,
   isExtensionVersionUpdating,
 } from './extension-version-update.svelte';
+import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
 interface Props {
@@ -51,9 +52,7 @@ const displayVersion = $derived.by(() => {
     <span class="font-medium text-[var(--pd-content-header)] break-words">
       {displayVersion ? `v${displayVersion}` : 'N/A'}
     </span>
-    <p class="text-xs text-[var(--pd-content-text)]">
-      Change version from extension preferences.
-    </p>
+    <ExtensionUpdateVersionLink extension={catalogExtension} />
     <ExtensionVersionUpdateStatus
       extensionId={catalogExtension.id}
       extensionState={catalogExtension.installedExtension?.state} />

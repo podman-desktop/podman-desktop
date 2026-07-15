@@ -61,7 +61,7 @@ function persistScope(scope: string): void {
 }
 
 function applyExtensionsPrototypeScope(mode: ExtensionsPrototypeScopeId): void {
-  const isSuggestion = mode === 'suggestion';
+  const isSuggestion = mode !== 'current';
   setPrototypeUseCasesEnabled(isSuggestion);
   setPrototypeVersionChangesEnabled(isSuggestion);
 
@@ -90,7 +90,10 @@ export function initExtensionsPrototypeScope(): void {
   applyExtensionsPrototypeScope(initialScope);
 
   scopeSubscription = currentScreen.subscribe(screen => {
-    const mode: ExtensionsPrototypeScopeId = screen === 'current' ? 'current' : 'suggestion';
+    const validModes: ExtensionsPrototypeScopeId[] = ['current', 'suggestion'];
+    const mode: ExtensionsPrototypeScopeId = (validModes as string[]).includes(screen)
+      ? (screen as ExtensionsPrototypeScopeId)
+      : 'suggestion';
     persistScope(mode);
     applyExtensionsPrototypeScope(mode);
   });
@@ -102,7 +105,7 @@ export function getExtensionsPrototypeScope(): ExtensionsPrototypeScopeId {
 }
 
 export function areExtensionsImprovementsSuggested(): boolean {
-  return getExtensionsPrototypeScope() === 'suggestion';
+  return getExtensionsPrototypeScope() !== 'current';
 }
 
 export function teardownExtensionsPrototypeScopeForTests(): void {

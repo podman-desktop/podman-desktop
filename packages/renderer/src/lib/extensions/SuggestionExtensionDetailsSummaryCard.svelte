@@ -1,9 +1,10 @@
 <script lang="ts">
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { isBuiltInExtension } from './extension-origin-utils';
+import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsVersionRow from './ExtensionDetailsVersionRow.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
-import ExtensionOriginChips from './ExtensionOriginChips.svelte';
 import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
 import ExtensionDetailsSummaryCardEntry from './InstalledExtensionDetailsSummaryCardEntry.svelte';
 
@@ -13,6 +14,10 @@ interface Props {
 }
 
 let { extensionDetails, catalogExtension }: Props = $props();
+
+const showTagBadge = $derived(
+  extensionDetails.type === 'dd' || extensionDetails.devMode || isBuiltInExtension(extensionDetails),
+);
 </script>
 
 <div class="order-first lg:order-last w-full lg:w-56 flex shrink-0 justify-end pb-4 lg:pb-0">
@@ -29,18 +34,21 @@ let { extensionDetails, catalogExtension }: Props = $props();
 
     <ExtensionDetailsSummaryCardEntry label="released" value={extensionDetails.releaseDate} />
 
-    <div class="flex flex-col gap-1">
-      <span class="uppercase text-sm text-[var(--pd-details-card-header)]">published by</span>
-      {#if catalogExtension}
-        <ExtensionPublisherLabel
-          publisherName={extensionDetails.publisherDisplayName}
-          isVerified={catalogExtension.isVerified}
-          isSupportedByRedHat={catalogExtension.isSupportedByRedHat}
-          class="text-sm text-[var(--pd-content-text)]" />
-      {:else}
-        <span class="text-sm text-[var(--pd-content-text)]">{extensionDetails.publisherDisplayName}</span>
-      {/if}
-    </div>
+    {#if extensionDetails.publisherDisplayName}
+      <div class="flex flex-col gap-1">
+        <span class="uppercase text-sm text-[var(--pd-details-card-header)]">published by</span>
+        {#if catalogExtension}
+          <ExtensionPublisherLabel
+            publisherName={extensionDetails.publisherDisplayName}
+            isVerified={catalogExtension.isVerified}
+            isSupportedByRedHat={catalogExtension.isSupportedByRedHat}
+            isFeatured={catalogExtension.isFeatured}
+            class="text-sm text-[var(--pd-content-text)]" />
+        {:else}
+          <span class="text-sm text-[var(--pd-content-text)]">{extensionDetails.publisherDisplayName}</span>
+        {/if}
+      </div>
+    {/if}
 
     {#if catalogExtension?.installedExtension}
       <div class="flex flex-col items-start lg:mb-1">
@@ -53,10 +61,12 @@ let { extensionDetails, catalogExtension }: Props = $props();
       </div>
     {/if}
 
-    {#if catalogExtension}
+    {#if showTagBadge}
       <div class="flex flex-col items-start lg:mb-1">
         <div class="uppercase text-sm text-[var(--pd-details-card-header)]">Tags</div>
-        <ExtensionOriginChips extension={catalogExtension} class="pt-0.5" />
+        <div class="pt-0.5 pointer-events-none">
+          <ExtensionBadge extension={extensionDetails} />
+        </div>
       </div>
     {/if}
 

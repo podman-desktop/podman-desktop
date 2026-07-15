@@ -18,7 +18,7 @@
 
 export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 cursor-pointer m-0';
 
-export const EXTENSION_BUILTIN_CHIP_LABEL = 'built-in Extension';
+export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
 
 export const EXTENSION_BUILTIN_CHIP_TOOLTIP = 'Pre-installed with Podman Desktop';
 

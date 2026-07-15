@@ -5,6 +5,7 @@ import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
+import Badge from '/@/lib/ui/Badge.svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { setCatalogTableCallbacks } from './catalog-extension-table-context';
@@ -15,8 +16,10 @@ import {
 } from './catalog-extension-table-sort.svelte';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
+import { EXTENSION_CHIP_BADGE_CLASS, EXTENSION_CHIP_COLORS, EXTENSION_CHIP_TEXT_CLASS } from './extension-badge-styles';
 import { isExtensionPinnedRow } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
+import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
 import { EXTENSION_TABLE_ROW_BASE_CLASS, extensionTableRowBorderClass } from './extension-table-styles';
 import {
   EXTENSION_VERSION_UI_CHANGE_EVENT,
@@ -128,31 +131,39 @@ function isSorted(column: CatalogTableSortColumn): boolean {
             isSupportedByRedHat={extension.isSupportedByRedHat} />
         </div>
         <div role="cell" class="min-w-0 overflow-hidden py-2">
-          <div class="text-sm text-[var(--pd-content-text)]">
-            {#if extension.isInstalled}
-              {#key uiRevision}
-                {@const actualVersion = extension.installedVersion}
-                {@const normalizedActual = actualVersion?.replace(/^v/i, '').trim()}
-                {@const optimistic = getOptimisticInstalledVersion(extension.id)}
-                {@const displayInstalledVersion =
-                  isExtensionVersionUpdating(extension.id)
-                    ? actualVersion
-                    : optimistic && optimistic !== normalizedActual
-                      ? optimistic
-                      : actualVersion}
-                <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${extension.installedVersion}`}</span>
-                <ExtensionVersionUpdateStatus
-                  extensionId={extension.id}
-                  extensionState={extension.installedExtension?.state} />
-              {/key}
-            {:else}
-              <span>{extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}</span>
+          <div class="flex flex-col gap-1">
+            <div class="text-sm text-[var(--pd-content-text)]">
+              {#if extension.isInstalled}
+                {#key uiRevision}
+                  {@const actualVersion = extension.installedVersion}
+                  {@const normalizedActual = actualVersion?.replace(/^v/i, '').trim()}
+                  {@const optimistic = getOptimisticInstalledVersion(extension.id)}
+                  {@const displayInstalledVersion =
+                    isExtensionVersionUpdating(extension.id)
+                      ? actualVersion
+                      : optimistic && optimistic !== normalizedActual
+                        ? optimistic
+                        : actualVersion}
+                  <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${extension.installedVersion}`}</span>
+                  <ExtensionVersionUpdateStatus
+                    extensionId={extension.id}
+                    extensionState={extension.installedExtension?.state} />
+                {/key}
+              {:else}
+                <span>{extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}</span>
+              {/if}
+            </div>
+            {#if extensionRequiresManualUpdate(extension)}
+              <Badge
+                label="Update"
+                color=""
+                class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.update} ${EXTENSION_CHIP_TEXT_CLASS}`} />
             {/if}
           </div>
         </div>
         <div role="cell" class="min-w-0 overflow-hidden py-2">
           {#if extension.isInstalled && extension.installedExtension}
-            <ExtensionLifecycleStatus extension={extension.installedExtension} />
+            <ExtensionLifecycleStatus extension={extension.installedExtension} catalogExtension={extension} />
           {:else}
             <span class="text-sm text-[var(--pd-table-header-text)]">Not installed</span>
           {/if}

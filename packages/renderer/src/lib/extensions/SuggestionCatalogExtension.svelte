@@ -65,7 +65,7 @@ function handleCardClick(event: MouseEvent): void {
       </div>
 
       <div class="min-w-0 flex-1 overflow-hidden">
-        <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} class="mb-1" />
+        <ExtensionCatalogStatusChips extension={catalogExtensionUI} class="mb-1" />
         <ExtensionFeaturedNameLabel
           displayName={catalogExtensionUI.displayName}
           isFeatured={catalogExtensionUI.isFeatured}
@@ -99,6 +99,7 @@ function handleCardClick(event: MouseEvent): void {
               {#if catalogExtensionUI.installedExtension}
                 <ExtensionLifecycleStatus
                   extension={catalogExtensionUI.installedExtension}
+                  catalogExtension={catalogExtensionUI}
                   class="shrink-0" />
               {/if}
             {/key}
