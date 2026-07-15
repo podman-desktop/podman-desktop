@@ -37,6 +37,7 @@ export let extension: {
   isSupportedByRedHat?: boolean;
   categories?: string[];
   keywords?: string[];
+  iconHref?: string;
 };
 export let catalogExtension: CatalogExtensionInfoUI | undefined = undefined;
 export let oninstall: (extensionId: string) => void = () => {};
@@ -120,7 +121,7 @@ async function installExtension(): Promise<void> {
   // calling the backend (which would reject the call since the extension is still installed).
   if (areExtensionsImprovementsSuggested() && isPrototypeRemovedExtension(extension.id)) {
     await runPrototypeInstallSimulation();
-    prototypeRestoreExtension(extension.id, [], extension.displayName);
+    prototypeRestoreExtension(extension.id, [], extension.displayName, resolveInstallIconHref());
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
     installCompleted = true;
@@ -173,7 +174,7 @@ async function installExtension(): Promise<void> {
     installCompleted = true;
     await fetchExtensions();
     if (areExtensionsImprovementsSuggested()) {
-      ensurePrototypeSidebarEntry(extension.id, extension.displayName);
+      ensurePrototypeSidebarEntry(extension.id, extension.displayName, resolveInstallIconHref());
       refreshExtensionNavigationItems();
     }
     await syncExtensionNavigationAfterInstall(extension.id);
@@ -194,7 +195,7 @@ async function installExtension(): Promise<void> {
 }
 
 async function completePrototypeReinstall(): Promise<void> {
-  prototypeRestoreExtension(extension.id, [], extension.displayName);
+  prototypeRestoreExtension(extension.id, [], extension.displayName, resolveInstallIconHref());
   logs = [...logs, '☑️ installation finished!'];
   percentage = '100%';
   installCompleted = true;
@@ -203,6 +204,10 @@ async function completePrototypeReinstall(): Promise<void> {
   await syncExtensionNavigationAfterInstall(extension.id);
   markNewlyInstalled(extension.id, extension.displayName);
   oninstall(extension.id);
+}
+
+function resolveInstallIconHref(): string | undefined {
+  return catalogExtension?.iconHref ?? extension.iconHref;
 }
 
 function handleInstallClick(event: MouseEvent): void {

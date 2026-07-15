@@ -76,6 +76,8 @@ export interface PrototypeSidebarEntry {
   extensionId: string;
   name: string;
   link: string;
+  /** Catalog or installed extension icon (data URL / http URL). */
+  iconHref?: string;
 }
 
 const prototypeSidebarEntries = new Map<string, PrototypeSidebarEntry>();
@@ -94,19 +96,27 @@ function extensionIdsLooselyMatch(left: string, right: string): boolean {
   return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
 }
 
-export function ensurePrototypeSidebarEntry(extensionId: string, displayName?: string): PrototypeSidebarEntry {
+export function ensurePrototypeSidebarEntry(
+  extensionId: string,
+  displayName?: string,
+  iconHref?: string,
+): PrototypeSidebarEntry {
   const existing = findPrototypeSidebarEntry(extensionId);
   if (existing) {
-    if (displayName && existing.name !== displayName) {
-      existing.name = displayName;
+    if (displayName?.trim() && existing.name !== displayName.trim()) {
+      existing.name = displayName.trim();
+    }
+    if (iconHref && existing.iconHref !== iconHref) {
+      existing.iconHref = iconHref;
     }
     return existing;
   }
 
   const trimmedName = displayName?.trim();
+  // Prefer short sidebar labels for known extensions (e.g. "AI Lab" over "Podman AI Lab").
   const name =
-    (trimmedName && trimmedName.length > 0 ? trimmedName : undefined) ??
     PROTOTYPE_SIDEBAR_DEFAULT_NAMES[extensionId] ??
+    (trimmedName && trimmedName.length > 0 ? trimmedName : undefined) ??
     extensionId.split('.').pop()?.replace(/-/g, ' ') ??
     extensionId;
 
@@ -114,6 +124,7 @@ export function ensurePrototypeSidebarEntry(extensionId: string, displayName?: s
     extensionId,
     name,
     link: `/webviews/prototype-${extensionId.replace(/[^a-zA-Z0-9._-]/g, '-')}`,
+    iconHref,
   };
   prototypeSidebarEntries.set(extensionId, entry);
   return entry;
@@ -192,7 +203,12 @@ export function prototypeRemoveExtension(extensionId: string, relatedIds: string
  * Also marks the extension as "freshly installed" so it shows Active regardless of
  * the real backend state (e.g. a pre-existing failed state).
  */
-export function prototypeRestoreExtension(extensionId: string, relatedIds: string[] = [], displayName?: string): void {
+export function prototypeRestoreExtension(
+  extensionId: string,
+  relatedIds: string[] = [],
+  displayName?: string,
+  iconHref?: string,
+): void {
   const ids = collectRelatedPrototypeIds(extensionId);
   for (const relatedId of relatedIds) {
     if (relatedId) {
@@ -204,7 +220,7 @@ export function prototypeRestoreExtension(extensionId: string, relatedIds: strin
     prototypeRestoredExtensionIds.add(id);
   }
   // Ensure a sidebar anchor exists even when the real webview was disposed (failed extension).
-  ensurePrototypeSidebarEntry(extensionId, displayName);
+  ensurePrototypeSidebarEntry(extensionId, displayName, iconHref);
   prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
 }
 

@@ -58,6 +58,44 @@ export const extensionNavigationState = $state<{ items: NavigationRegistryEntry[
 let allContribs: ContributionInfo[] = [];
 let allWebviews: WebviewInfo[] = [];
 let allCatalogIdentities: CatalogExtensionIdentity[] = [];
+/** Latest non-preview catalog icon href keyed by catalog extension id. */
+let catalogIconByExtensionId = new Map<string, string>();
+
+function extensionIdsMatchNav(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
+  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
+  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
+}
+
+function resolveCatalogIconHref(extensionId: string | undefined): string | undefined {
+  if (!extensionId) {
+    return undefined;
+  }
+  const direct = catalogIconByExtensionId.get(extensionId);
+  if (direct) {
+    return direct;
+  }
+  for (const [id, icon] of catalogIconByExtensionId) {
+    if (extensionIdsMatchNav(id, extensionId)) {
+      return icon;
+    }
+  }
+  return undefined;
+}
+
+function resolveNavEntryIcon(
+  iconHref: string | undefined,
+  extensionId: string | undefined,
+): NavigationRegistryEntry['icon'] {
+  const href = iconHref ?? resolveCatalogIconHref(extensionId);
+  if (href) {
+    return { iconImage: href };
+  }
+  return { faIcon: { definition: faPuzzlePiece, size: '1.5x' as const } };
+}
 
 function buildExtensionNavigationItems(
   contribs: ContributionInfo[],
@@ -80,9 +118,7 @@ function buildExtensionNavigationItems(
 
     newItems.push({
       name: contrib.name,
-      icon: {
-        iconImage: contrib.icon,
-      },
+      icon: resolveNavEntryIcon(contrib.icon, extensionId),
       link: `/contribs/${contrib.name}`,
       type: 'entry',
       extensionId,
@@ -105,15 +141,14 @@ function buildExtensionNavigationItems(
       }
     }
 
-    const icon = webview.icon
-      ? { iconImage: webview.icon }
-      : { faIcon: { definition: faPuzzlePiece, size: '1.5x' as const } };
+    const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities) ?? webview.extensionId;
+    const webviewIcon = typeof webview.icon === 'string' ? webview.icon : undefined;
     const extensionId = webview.extensionId;
     const isNew = extensionId ? isNewBadgeActive(extensionId) : false;
 
     newItems.push({
       name: webview.name,
-      icon,
+      icon: resolveNavEntryIcon(webviewIcon, catalogId ?? extensionId),
       link: `/webviews/${webview.id}`,
       tooltip: isNew ? buildExtensionNewNavigationTooltip(webview.name) : webview.name,
       type: 'entry',
@@ -158,7 +193,7 @@ function buildExtensionNavigationItems(
       const isNew = isNewBadgeActive(entry.extensionId);
       newItems.push({
         name: entry.name,
-        icon: { faIcon: { definition: faPuzzlePiece, size: '1.5x' as const } },
+        icon: resolveNavEntryIcon(entry.iconHref, entry.extensionId),
         link: entry.link,
         tooltip: isNew ? buildExtensionNewNavigationTooltip(entry.name) : entry.name,
         type: 'entry',
@@ -169,15 +204,6 @@ function buildExtensionNavigationItems(
   }
 
   return newItems;
-}
-
-function extensionIdsMatchNav(left: string, right: string): boolean {
-  if (left === right) {
-    return true;
-  }
-  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
-  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
-  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
 }
 
 function createNavigationExtensionGroupShell(): NavigationRegistryEntry {
@@ -240,6 +266,19 @@ function ensureExtensionNavigationSubscriptions(): void {
       displayName: c.displayName,
       extensionName: c.extensionName,
     }));
+
+    const icons = new Map<string, string>();
+    for (const catalog of catalogs) {
+      const nonPreview = catalog.versions.filter(version => version.preview === false);
+      const latest = nonPreview[0] ?? catalog.versions[0];
+      const icon = latest?.files.find(file => file.assetType === 'icon')?.data;
+      if (icon) {
+        icons.set(catalog.id, icon);
+      }
+    }
+    catalogIconByExtensionId = icons;
+    // Catalog icons may load after webviews — rebuild so puzzle fallbacks are replaced.
+    publishExtensionNavigationUpdate();
   });
 
   prototypeLifecycleOverlayRevisionStore.subscribe(() => {
