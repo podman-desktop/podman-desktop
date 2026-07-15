@@ -201,6 +201,25 @@ describe('extension-nav-pointer', () => {
     });
   });
 
+  test('resolves pointer from prototype sidebar entry when no webview exists', async () => {
+    const { ensurePrototypeSidebarEntry, clearPrototypeSidebarEntries } = await import(
+      './extension-prototype-use-cases'
+    );
+    clearPrototypeSidebarEntries();
+    ensurePrototypeSidebarEntry('redhat.ai-lab', 'AI Lab');
+
+    queueExtensionNavPointer('redhat.ai-lab');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'redhat.ai-lab',
+      link: '/webviews/prototype-redhat.ai-lab',
+      label: 'AI Lab',
+      tooltip: 'Open AI Lab from the sidebar to get started.',
+    });
+
+    clearPrototypeSidebarEntries();
+  });
+
   test('syncExtensionNavigationAfterInstall returns true when webview is available', async () => {
     webviewsStore.set([
       {

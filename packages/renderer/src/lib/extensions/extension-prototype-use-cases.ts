@@ -67,6 +67,99 @@ const prototypeRemovedExtensionIds = new Set<string>();
  */
 const prototypeRestoredExtensionIds = new Set<string>();
 
+/**
+ * Synthetic sidebar entries for prototype-restored extensions whose real webview
+ * is missing (e.g. AI Lab failed and disposed its panel). Ensures the nav icon
+ * and post-install tooltip always have an anchor after a demo re-install.
+ */
+export interface PrototypeSidebarEntry {
+  extensionId: string;
+  name: string;
+  link: string;
+}
+
+const prototypeSidebarEntries = new Map<string, PrototypeSidebarEntry>();
+
+const PROTOTYPE_SIDEBAR_DEFAULT_NAMES: Record<string, string> = {
+  'redhat.ai-lab': 'AI Lab',
+  'redhat.bootable-containers': 'Bootable Containers',
+};
+
+function extensionIdsLooselyMatch(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
+  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
+  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
+}
+
+export function ensurePrototypeSidebarEntry(extensionId: string, displayName?: string): PrototypeSidebarEntry {
+  const existing = findPrototypeSidebarEntry(extensionId);
+  if (existing) {
+    if (displayName && existing.name !== displayName) {
+      existing.name = displayName;
+    }
+    return existing;
+  }
+
+  const trimmedName = displayName?.trim();
+  const name =
+    (trimmedName && trimmedName.length > 0 ? trimmedName : undefined) ??
+    PROTOTYPE_SIDEBAR_DEFAULT_NAMES[extensionId] ??
+    extensionId.split('.').pop()?.replace(/-/g, ' ') ??
+    extensionId;
+
+  const entry: PrototypeSidebarEntry = {
+    extensionId,
+    name,
+    link: `/webviews/prototype-${extensionId.replace(/[^a-zA-Z0-9._-]/g, '-')}`,
+  };
+  prototypeSidebarEntries.set(extensionId, entry);
+  return entry;
+}
+
+export function removePrototypeSidebarEntry(extensionId: string): void {
+  for (const key of Array.from(prototypeSidebarEntries.keys())) {
+    if (extensionIdsLooselyMatch(key, extensionId)) {
+      prototypeSidebarEntries.delete(key);
+    }
+  }
+}
+
+export function findPrototypeSidebarEntry(extensionId: string): PrototypeSidebarEntry | undefined {
+  const direct = prototypeSidebarEntries.get(extensionId);
+  if (direct) {
+    return direct;
+  }
+  for (const entry of prototypeSidebarEntries.values()) {
+    if (extensionIdsLooselyMatch(entry.extensionId, extensionId)) {
+      return entry;
+    }
+  }
+  return undefined;
+}
+
+export function getPrototypeSidebarEntries(): PrototypeSidebarEntry[] {
+  return Array.from(prototypeSidebarEntries.values());
+}
+
+export function clearPrototypeSidebarEntries(): void {
+  prototypeSidebarEntries.clear();
+}
+
+export function isPrototypeRestoredExtension(extensionId: string): boolean {
+  if (prototypeRestoredExtensionIds.has(extensionId)) {
+    return true;
+  }
+  for (const restoredId of prototypeRestoredExtensionIds) {
+    if (extensionIdsLooselyMatch(restoredId, extensionId)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function setPrototypeUseCasesEnabled(enabled: boolean): void {
   prototypeUseCasesEnabled = enabled;
   setPrototypeLifecycleDemosEnabled(enabled);
@@ -87,6 +180,10 @@ export function prototypeRemoveExtension(extensionId: string, relatedIds: string
       prototypeRemovedExtensionIds.add(relatedId);
     }
   }
+  removePrototypeSidebarEntry(extensionId);
+  for (const relatedId of relatedIds) {
+    removePrototypeSidebarEntry(relatedId);
+  }
   prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
 }
 
@@ -95,7 +192,7 @@ export function prototypeRemoveExtension(extensionId: string, relatedIds: string
  * Also marks the extension as "freshly installed" so it shows Active regardless of
  * the real backend state (e.g. a pre-existing failed state).
  */
-export function prototypeRestoreExtension(extensionId: string, relatedIds: string[] = []): void {
+export function prototypeRestoreExtension(extensionId: string, relatedIds: string[] = [], displayName?: string): void {
   const ids = collectRelatedPrototypeIds(extensionId);
   for (const relatedId of relatedIds) {
     if (relatedId) {
@@ -106,6 +203,8 @@ export function prototypeRestoreExtension(extensionId: string, relatedIds: strin
     prototypeRemovedExtensionIds.delete(id);
     prototypeRestoredExtensionIds.add(id);
   }
+  // Ensure a sidebar anchor exists even when the real webview was disposed (failed extension).
+  ensurePrototypeSidebarEntry(extensionId, displayName);
   prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
 }
 
@@ -152,6 +251,7 @@ function collectRelatedPrototypeIds(extensionId: string): string[] {
 export function clearPrototypeRemovedExtensions(): void {
   prototypeRemovedExtensionIds.clear();
   prototypeRestoredExtensionIds.clear();
+  clearPrototypeSidebarEntries();
 }
 
 interface InstalledUseCaseOverlay {

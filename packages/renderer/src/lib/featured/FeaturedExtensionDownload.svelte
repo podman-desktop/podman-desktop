@@ -7,6 +7,7 @@ import { buildExtensionInstallingTooltip, EXTENSION_INSTALL_TOOLTIP } from '/@/l
 import { markNewlyInstalled } from '/@/lib/extensions/extension-catalog-settings.svelte';
 import { syncExtensionNavigationAfterInstall } from '/@/lib/extensions/extension-nav-pointer.svelte';
 import {
+  ensurePrototypeSidebarEntry,
   isPrototypeRemovedExtension,
   prototypeRestoreExtension,
 } from '/@/lib/extensions/extension-prototype-use-cases';
@@ -18,6 +19,7 @@ import {
 import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
 import { fetchExtensions } from '/@/stores/extensions';
+import { refreshExtensionNavigationItems } from '/@/stores/navigation/navigation-registry-extension.svelte';
 
 export let extension: {
   id: string;
@@ -118,11 +120,12 @@ async function installExtension(): Promise<void> {
   // calling the backend (which would reject the call since the extension is still installed).
   if (areExtensionsImprovementsSuggested() && isPrototypeRemovedExtension(extension.id)) {
     await runPrototypeInstallSimulation();
-    prototypeRestoreExtension(extension.id);
+    prototypeRestoreExtension(extension.id, [], extension.displayName);
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
     installCompleted = true;
     // Ensure the sidebar entry is visible again before showing the post-install tooltip.
+    refreshExtensionNavigationItems();
     await syncExtensionNavigationAfterInstall(extension.id);
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
@@ -159,14 +162,7 @@ async function installExtension(): Promise<void> {
 
     if (errorInstall) {
       if (areExtensionsImprovementsSuggested() && /already installed/i.test(errorInstall)) {
-        prototypeRestoreExtension(extension.id);
-        logs = [...logs, '☑️ installation finished!'];
-        percentage = '100%';
-        installCompleted = true;
-        errorInstall = '';
-        await syncExtensionNavigationAfterInstall(extension.id);
-        markNewlyInstalled(extension.id);
-        oninstall(extension.id);
+        await completePrototypeReinstall();
       }
       installInProgress = false;
       return;
@@ -176,6 +172,10 @@ async function installExtension(): Promise<void> {
     percentage = '100%';
     installCompleted = true;
     await fetchExtensions();
+    if (areExtensionsImprovementsSuggested()) {
+      ensurePrototypeSidebarEntry(extension.id, extension.displayName);
+      refreshExtensionNavigationItems();
+    }
     await syncExtensionNavigationAfterInstall(extension.id);
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
@@ -184,19 +184,25 @@ async function installExtension(): Promise<void> {
     // In suggestion scope, a backend "already installed" error usually means the
     // extension was only hidden via prototype uninstall — restore UI and show the tooltip.
     if (areExtensionsImprovementsSuggested() && /already installed/i.test(message)) {
-      prototypeRestoreExtension(extension.id);
-      logs = [...logs, '☑️ installation finished!'];
-      percentage = '100%';
-      installCompleted = true;
-      await syncExtensionNavigationAfterInstall(extension.id);
-      markNewlyInstalled(extension.id);
-      oninstall(extension.id);
+      await completePrototypeReinstall();
       errorInstall = '';
     } else {
       errorInstall = message;
     }
   }
   installInProgress = false;
+}
+
+async function completePrototypeReinstall(): Promise<void> {
+  prototypeRestoreExtension(extension.id, [], extension.displayName);
+  logs = [...logs, '☑️ installation finished!'];
+  percentage = '100%';
+  installCompleted = true;
+  errorInstall = '';
+  refreshExtensionNavigationItems();
+  await syncExtensionNavigationAfterInstall(extension.id);
+  markNewlyInstalled(extension.id);
+  oninstall(extension.id);
 }
 
 function handleInstallClick(event: MouseEvent): void {

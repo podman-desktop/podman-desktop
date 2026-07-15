@@ -22,7 +22,10 @@ import type { ContributionInfo, WebviewInfo } from '@podman-desktop/core-api';
 import { buildExtensionNewNavigationTooltip } from '/@/lib/extensions/extension-badge-styles';
 import { isNewBadgeActive } from '/@/lib/extensions/extension-catalog-settings.svelte';
 import { prototypeLifecycleOverlayRevisionStore } from '/@/lib/extensions/extension-prototype-lifecycle-overlay.svelte';
-import { isPrototypeRemovedExtension } from '/@/lib/extensions/extension-prototype-use-cases';
+import {
+  getPrototypeSidebarEntries,
+  isPrototypeRemovedExtension,
+} from '/@/lib/extensions/extension-prototype-use-cases';
 import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
@@ -119,7 +122,62 @@ function buildExtensionNavigationItems(
     });
   });
 
+  // Prototype-restored extensions may have no live webview (e.g. AI Lab failed and
+  // disposed its panel). Inject synthetic sidebar entries so the icon + post-install
+  // tooltip still appear after a demo re-install.
+  if (areExtensionsImprovementsSuggested()) {
+    for (const entry of getPrototypeSidebarEntries()) {
+      if (isPrototypeRemovedExtension(entry.extensionId)) {
+        continue;
+      }
+      const alreadyPresent = newItems.some(item => {
+        if (item.link === entry.link) {
+          return true;
+        }
+        if (item.extensionId && extensionIdsMatchNav(item.extensionId, entry.extensionId)) {
+          return true;
+        }
+        return false;
+      });
+      if (alreadyPresent) {
+        continue;
+      }
+
+      // Also skip when a real webview already maps to this catalog extension.
+      const hasMatchingWebview = webviewItems.some(webview => {
+        const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities);
+        return (
+          (catalogId !== undefined && extensionIdsMatchNav(catalogId, entry.extensionId)) ||
+          (webview.extensionId !== undefined && extensionIdsMatchNav(webview.extensionId, entry.extensionId))
+        );
+      });
+      if (hasMatchingWebview) {
+        continue;
+      }
+
+      const isNew = isNewBadgeActive(entry.extensionId);
+      newItems.push({
+        name: entry.name,
+        icon: { faIcon: { definition: faPuzzlePiece, size: '1.5x' as const } },
+        link: entry.link,
+        tooltip: isNew ? buildExtensionNewNavigationTooltip(entry.name) : entry.name,
+        type: 'entry',
+        extensionId: entry.extensionId,
+        counter: 0,
+      });
+    }
+  }
+
   return newItems;
+}
+
+function extensionIdsMatchNav(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
+  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
+  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
 }
 
 function createNavigationExtensionGroupShell(): NavigationRegistryEntry {

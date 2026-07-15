@@ -21,6 +21,7 @@ import { get } from 'svelte/store';
 
 import { buildExtensionNewNavigationTooltip } from '/@/lib/extensions/extension-badge-styles';
 import { resolveExtensionPostInstallLocation } from '/@/lib/extensions/extension-post-install-locations';
+import { findPrototypeSidebarEntry } from '/@/lib/extensions/extension-prototype-use-cases';
 import { toCatalogIdentities } from '/@/lib/extensions/extension-runtime-id';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { contributions } from '/@/stores/contribs';
@@ -156,6 +157,16 @@ function resolvePointerForExtension(
       link: `/contribs/${contrib.name}`,
       label: contrib.name,
       tooltip: buildExtensionNewNavigationTooltip(contrib.name),
+    };
+  }
+
+  const prototypeSidebar = findPrototypeSidebarEntry(extensionId);
+  if (prototypeSidebar) {
+    return {
+      extensionId,
+      link: prototypeSidebar.link,
+      label: prototypeSidebar.name,
+      tooltip: buildExtensionNewNavigationTooltip(prototypeSidebar.name),
     };
   }
 
