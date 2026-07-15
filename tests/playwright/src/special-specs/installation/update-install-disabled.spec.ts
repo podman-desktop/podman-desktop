@@ -17,12 +17,13 @@
  ***********************************************************************/
 
 import { RunnerOptions } from '/@/runner/runner-options';
-import { filterConsoleForEvent } from '/@/utility/auth-utils';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isCI, isLinux } from '/@/utility/platform';
+import { isLinux } from '/@/utility/platform';
 
-const consoleLogRegexp = new RegExp('Application update is disabled');
-const expectedSettingsValue = 'preferences.update.appUpdate';
+const pluginsInitializtionRegexp = new RegExp('PluginSystem: initialization done');
+const applicationDisabledRegexp = new RegExp(
+  'Application update is disabled with preferences.update.appUpdate settings',
+);
 
 test.skip(isLinux, 'Applicaton update is not supported on Linux');
 
@@ -48,6 +49,12 @@ test.use({
 
 test.beforeAll(async ({ runner }) => {
   runner.setVideoAndTraceName('disabled-update-e2e');
+  await playExpect
+    .poll(() => runner.getConsoleMessages().some((msg: string) => pluginsInitializtionRegexp.test(msg)), {
+      timeout: 30_000,
+      intervals: [500],
+    })
+    .toBeTruthy();
 });
 
 test.afterAll(async ({ runner }) => {
@@ -57,19 +64,19 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Application update can be disabled', { tag: '@update-install' }, () => {
-    test('No update on startup', async ({ page, welcomePage }) => {
-      test.skip(
-        !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
-        'Only run on macOS and Windows in GitHub Actions',
-      );
-      const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
-      await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 20_000 });
-      await welcomePage.handleWelcomePage(true);
+    test('Application update disabled message appears in console log', async ({ runner }) => {
+      await playExpect
+        .poll(() => runner.getConsoleMessages().some((msg: string) => applicationDisabledRegexp.test(msg)), {
+          timeout: 10_000,
+          intervals: [500],
+        })
+        .toBeTruthy();
     });
 
-    test('Application update disabled appears in console log', async ({ page }) => {
-      const consoleLine = await filterConsoleForEvent(page, 'log', consoleLogRegexp);
-      playExpect(consoleLine.text()).toContain(expectedSettingsValue);
+    test('No update on startup', async ({ page, welcomePage }) => {
+      const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
+      await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 5_000 });
+      await welcomePage.handleWelcomePage(true);
     });
 
     test('Version button is visible', async ({ statusBar }) => {

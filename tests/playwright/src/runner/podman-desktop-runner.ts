@@ -24,6 +24,8 @@ import { test } from '@playwright/test';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { isLinux } from '/@/utility/platform';
 
+const MAX_CONSOLE_MESSAGES = 1_000;
+
 export abstract class Runner {
   protected _options: object;
   protected _running: boolean;
@@ -35,9 +37,11 @@ export abstract class Runner {
   protected _runnerOptions: RunnerOptions;
   protected _saveTracesOnPass: boolean;
   protected _saveVideosOnPass: boolean;
+  protected _consoleMessages: string[];
 
   protected constructor(options?: { runnerOptions?: RunnerOptions }) {
     this._running = false;
+    this._consoleMessages = [];
     this._runnerOptions = options?.runnerOptions ?? new RunnerOptions();
     this._profile = this._runnerOptions._profile;
     this._saveTracesOnPass = this._runnerOptions._saveTracesOnPass;
@@ -66,6 +70,17 @@ export abstract class Runner {
     }
 
     throw Error('Application was not started yet');
+  }
+
+  public getConsoleMessages(): string[] {
+    return this._consoleMessages;
+  }
+
+  protected pushConsoleMessage(text: string): void {
+    if (this._consoleMessages.length >= MAX_CONSOLE_MESSAGES) {
+      this._consoleMessages.shift();
+    }
+    this._consoleMessages.push(text);
   }
 
   public get options(): object {
