@@ -92,7 +92,7 @@ function handleCardClick(event: MouseEvent): void {
               tip={EXTENSION_BUILTIN_INDICATOR_TOOLTIP}
               iconClass={EXTENSION_INDICATOR_ICON_CLASS} />
           {/if}
-          <ExtensionCatalogStatusChips extension={catalogExtensionUI} nowrap={true} suppressBuiltIn={true} />
+          <ExtensionCatalogStatusChips extension={catalogExtensionUI} nowrap={true} suppressBuiltIn={true} suppressOrigin={true} />
         </div>
         <div class="pt-0.5">
           <ExtensionPublisherLabel

@@ -19,6 +19,8 @@ interface Props {
   nowrap?: boolean;
   /** When true, suppresses the Built-in chip (caller shows it as an icon instead). */
   suppressBuiltIn?: boolean;
+  /** When true, suppresses Docker Desktop and DevMode origin chips. */
+  suppressOrigin?: boolean;
   class?: string;
 }
 
@@ -27,6 +29,7 @@ let {
   showUpdateChip = true,
   nowrap = false,
   suppressBuiltIn = false,
+  suppressOrigin = false,
   class: className = '',
 }: Props = $props();
 
@@ -44,12 +47,12 @@ const showUpdate = $derived(extensionRequiresManualUpdate(extension));
       color=""
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.update} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
-  {#if installed?.type === 'dd'}
+  {#if !suppressOrigin && installed?.type === 'dd'}
     <Badge
       label="Docker Desktop extension"
       color=""
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.dockerDesktop} ${EXTENSION_CHIP_COLORS.dockerDesktopText}`} />
-  {:else if installed?.devMode}
+  {:else if !suppressOrigin && installed?.devMode}
     <Badge
       label="DevMode extension"
       color=""
