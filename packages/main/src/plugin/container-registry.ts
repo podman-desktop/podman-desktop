@@ -778,6 +778,7 @@ export class ContainerProviderRegistry {
               ...image,
               engineName: provider.name,
               engineId: provider.id,
+              engineType: provider.connection.type,
               Digest: `sha256:${image.Id}`,
             };
             return imageInfo;
