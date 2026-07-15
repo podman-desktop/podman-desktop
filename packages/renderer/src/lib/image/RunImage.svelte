@@ -1,6 +1,5 @@
 <script lang="ts">
-import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
+import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -10,17 +9,20 @@ import type {
   NetworkInspectInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } from '@podman-desktop/ui-svelte';
+import { Button, ErrorMessage, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { PortInfo, RunOptions } from '/@/lib/image/run/run-options';
+import AdvancedTab from '/@/lib/image/run/tabs/AdvancedTab.svelte';
+import BasicTab from '/@/lib/image/run/tabs/BasicTab.svelte';
+import NetworkingTab from '/@/lib/image/run/tabs/NetworkingTab.svelte';
+import SecurityTab from '/@/lib/image/run/tabs/SecurityTab.svelte';
 import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
 import { array2String } from '/@/lib/string/string.js';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
-import FileInput from '/@/lib/ui/FileInput.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
@@ -36,6 +38,7 @@ let options: RunOptions = $state({
     environmentVariables: [{ key: '', value: '' }],
     environmentFiles: [''],
     hostContainerPortMappings: [],
+    containerPortMapping: [],
   },
   networking: {
     hostname: undefined,
@@ -67,7 +70,6 @@ let options: RunOptions = $state({
 let imageInspectInfo: ImageInspectInfo;
 
 let containerNameError: string | undefined = $derived.by(() => {
-  // ok, now check if we already have a matching container: same name and same engine ID
   const containerAlreadyExists = $containersInfos.find(
     container =>
       container.engineId === imageInspectInfo.engineId &&
@@ -80,14 +82,13 @@ let containerNameError: string | undefined = $derived.by(() => {
   }
 });
 
-let containerPortMapping = $state<PortInfo[]>([]);
 let exposedPorts = $state<string[]>([]);
 let createError = $state<string>();
 let onPortInputTimeout: NodeJS.Timeout;
 
 let invalidPorts = $derived.by(() => {
   const invalidHostPorts = options.basic.hostContainerPortMappings.filter(pair => pair.hostPort.error);
-  const invalidContainerPortMapping = containerPortMapping?.filter(port => port.error) ?? [];
+  const invalidContainerPortMapping = options.basic.containerPortMapping?.filter(port => port.error) ?? [];
   return invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
 });
 let invalidFields = $derived(!!containerNameError || invalidPorts);
@@ -103,12 +104,9 @@ const image = $runImageInfo;
 
 onMount(async () => {
   if (!image) {
-    // go back to image list
     router.goto('/images/');
     return;
   }
-
-  containerPortMapping = [];
 
   imageInspectInfo = await window.getImageInspect(image.engineId, image.id);
   exposedPorts = Array.from(Object.keys(imageInspectInfo?.Config?.ExposedPorts ?? {}));
@@ -125,13 +123,12 @@ onMount(async () => {
     options.basic.entrypoint = '';
   }
 
-  // auto-assign ports from available free port
-  containerPortMapping = new Array<PortInfo>(exposedPorts.length);
+  options.basic.containerPortMapping = new Array<PortInfo>(exposedPorts.length);
   await Promise.all(
     exposedPorts.map(async (port, index) => {
       const localPorts = await getPortsInfo(port);
       if (localPorts) {
-        containerPortMapping[index] = { port: localPorts, error: '' };
+        options.basic.containerPortMapping[index] = { port: localPorts, error: '' };
       }
     }),
   );
@@ -142,48 +139,37 @@ onMount(async () => {
     imageDisplayName = image.name;
   }
 
-  // grab all networks
   const allNetworks = await window.listNetworks();
-  // keep only the network matching our engine
   engineNetworks = allNetworks.filter(network => network.engineId === image.engineId);
 
   if (engineNetworks.length > 0) {
-    // try to match the bridge network
     const bridgeNetwork = engineNetworks.find(network => network.Name === 'bridge');
     if (bridgeNetwork) {
       options.networking.networkingModeUserNetwork = bridgeNetwork.Id;
     } else {
-      // fallback to the first network
       options.networking.networkingModeUserNetwork = engineNetworks[0].Id;
     }
   }
 
-  // grab all containers
   const allContainers = await window.listContainers();
   const containerUtils = new ContainerUtils();
-  // keep only the containers matching our engine
   engineContainers = allContainers
     .filter(container => container.engineId === image.engineId)
     .map(container => containerUtils.getContainerInfoUI(container));
 
   if (engineContainers.length > 0) {
-    // do we have a Running container ?
-    // sort from newest to oldest
     const runningContainers = engineContainers
       .filter(container => container.state === 'RUNNING')
       .toSorted((a, b) => b.created - a.created);
     if (runningContainers.length > 0) {
-      // use the first running container
       options.networking.networkingModeUserContainer = runningContainers[0].id;
     } else {
-      // fallback to the first container
       options.networking.networkingModeUserContainer = engineContainers[0].id;
     }
   }
 });
 
 async function getPortsInfo(portDescriptor: string): Promise<string | undefined> {
-  // check if portDescriptor is a range of ports
   if (portDescriptor.includes('-')) {
     return await getPortRange(portDescriptor);
   } else {
@@ -195,11 +181,6 @@ async function getPortsInfo(portDescriptor: string): Promise<string | undefined>
   }
 }
 
-/**
- * return a range of the same length as portDescriptor containing free ports
- * undefined if the portDescriptor range is not valid
- * e.g 5000:5001 -> 9000:9001
- */
 async function getPortRange(portDescriptor: string): Promise<string | undefined> {
   const rangeValues = getStartEndRange(portDescriptor);
   if (!rangeValues) {
@@ -208,7 +189,6 @@ async function getPortRange(portDescriptor: string): Promise<string | undefined>
 
   const rangeSize = rangeValues.endRange + 1 - rangeValues.startRange;
   try {
-    // if free port range fails, return undefined
     return await window.getFreePortRange(rangeSize);
   } catch (e) {
     console.error(e);
@@ -223,12 +203,10 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
   } else {
     port = parseInt(portDescriptor);
   }
-  // invalid port
   if (isNaN(port)) {
     return Promise.resolve(undefined);
   }
   try {
-    // if getFreePort fails, it returns undefined
     return await window.getFreePort(port);
   } catch (e) {
     console.error(e);
@@ -238,17 +216,16 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
 
 async function startContainer(): Promise<void> {
   createError = undefined;
-  // create ExposedPorts objects
   const ExposedPorts: { [key: string]: object } = {};
 
   const PortBindings: HostConfigPortBinding = {};
   try {
     exposedPorts.forEach((port, index) => {
-      if (port.includes('-') || containerPortMapping[index]?.port.includes('-')) {
-        addPortsFromRange(ExposedPorts, PortBindings, port, containerPortMapping[index].port);
+      if (port.includes('-') || options.basic.containerPortMapping[index]?.port.includes('-')) {
+        addPortsFromRange(ExposedPorts, PortBindings, port, options.basic.containerPortMapping[index].port);
       } else {
-        if (containerPortMapping[index]?.port) {
-          PortBindings[port] = [{ HostPort: containerPortMapping[index].port }];
+        if (options.basic.containerPortMapping[index]?.port) {
+          PortBindings[port] = [{ HostPort: options.basic.containerPortMapping[index].port }];
         }
         ExposedPorts[port] = {};
       }
@@ -270,13 +247,8 @@ async function startContainer(): Promise<void> {
     return;
   }
 
-  const Env = options.basic.environmentVariables
-    // filter variables withouts keys
-    .filter(env => env.key)
-    // no value, use empty string
-    .map(env => `${env.key}=${env.value ?? ''}`);
+  const Env = options.basic.environmentVariables.filter(env => env.key).map(env => `${env.key}=${env.value ?? ''}`);
 
-  // filter empty files
   const EnvFiles = options.basic.environmentFiles.filter(env => env);
 
   const Image = image.tag ? `${image.name}:${image.tag}` : image.id;
@@ -285,12 +257,10 @@ async function startContainer(): Promise<void> {
     Name: options.advanced.restartPolicyName,
   };
 
-  // only set MaximumRetryCount if policy is 'on-failure'
   if (options.advanced.restartPolicyName === 'on-failure') {
     RestartPolicy.MaximumRetryCount = options.advanced.restartPolicyMaxRetryCount;
   }
 
-  // need both source and target to be set
   const Binds = options.basic.volumeMounts
     .filter(volume => volume.source && volume.target)
     .map(volume => `${volume.source}:${volume.target}`);
@@ -398,7 +368,6 @@ async function startContainer(): Promise<void> {
   try {
     const data = await window.createAndStartContainer(imageInspectInfo.engineId, createOptions);
 
-    // redirect to containers if no tty, else redirect to the container details
     if (Tty && OpenStdin) {
       handleNavigation({
         page: NavigationPage.CONTAINER_TTY,
@@ -436,7 +405,6 @@ function addPortsFromRange(
   const startHostRange = hostRangeValues.startRange;
   const endHostRange = hostRangeValues.endRange;
 
-  // if the two ranges have different size, do not proceed
   const containerRangeSize = endContainerRange + 1 - startContainerRange;
   const hostRangeSize = endHostRange + 1 - startHostRange;
   if (containerRangeSize !== hostRangeSize) {
@@ -445,10 +413,6 @@ function addPortsFromRange(
     );
   }
 
-  // we add all ports separately - if we have two ranges like 8080-8082 and 9000-9002 we'll end up with a mapping like
-  // 8080 => HostPort: 9000
-  // 8081 => HostPort: 9001
-  // 8082 => HostPort: 9002
   for (let i = 0; i < containerRangeSize; i++) {
     portBindings[`${startContainerRange + i}`] = [{ HostPort: `${startHostRange + i}` }];
     exposedPorts[`${startContainerRange + i}`] = {};
@@ -481,140 +445,27 @@ function getStartEndRange(range: string):
   };
 }
 
-function addEnvVariable(): void {
-  options.basic.environmentVariables = [...options.basic.environmentVariables, { key: '', value: '' }];
-}
-
-function deleteEnvVariable(index: number): void {
-  options.basic.environmentVariables = options.basic.environmentVariables.filter((_, i) => i !== index);
-}
-
-function addEnvFile(): void {
-  options.basic.environmentFiles = [...options.basic.environmentFiles, ''];
-}
-
-function deleteEnvFile(index: number): void {
-  options.basic.environmentFiles = options.basic.environmentFiles.filter((_, i) => i !== index);
-}
-
-function addHostContainerPorts(): void {
-  options.basic.hostContainerPortMappings = [
-    ...options.basic.hostContainerPortMappings,
-    {
-      hostPort: {
-        port: '',
-        error: '',
-      },
-      containerPort: '',
-    },
-  ];
-}
-
-async function deleteHostContainerPorts(index: number): Promise<void> {
-  options.basic.hostContainerPortMappings = options.basic.hostContainerPortMappings.filter((_, i) => i !== index);
-}
-
-function addVolumeMount(): void {
-  options.basic.volumeMounts = [...options.basic.volumeMounts, { source: '', target: '' }];
-}
-
-function deleteVolumeMount(index: number): void {
-  options.basic.volumeMounts = options.basic.volumeMounts.filter((_, i) => i !== index);
-}
-
-function deleteSecurityOpt(index: number): void {
-  options.security.securityOpts = options.security.securityOpts.filter((_, i) => i !== index);
-}
-
-function addSecurityOpt(): void {
-  options.security.securityOpts = [...options.security.securityOpts, ''];
-}
-
-function addCapAdd(): void {
-  options.security.capAdds = [...options.security.capAdds, ''];
-}
-function addCapDrop(): void {
-  options.security.capDrops = [...options.security.capDrops, ''];
-}
-
-function deleteCapAdd(index: number): void {
-  options.security.capAdds = options.security.capAdds.filter((_, i) => i !== index);
-}
-
-function deleteCappDrop(index: number): void {
-  options.security.capDrops = options.security.capDrops.filter((_, i) => i !== index);
-}
-
-function addDnsServer(): void {
-  options.networking.dnsServers = [...options.networking.dnsServers, ''];
-}
-
-function deleteDnsServer(index: number): void {
-  options.networking.dnsServers = options.networking.dnsServers.filter((_, i) => i !== index);
-}
-
-function addExtraHost(): void {
-  options.networking.extraHosts = [...options.networking.extraHosts, { host: '', ip: '' }];
-}
-
-function deleteExtraHost(index: number): void {
-  options.networking.extraHosts = options.networking.extraHosts.filter((_, i) => i !== index);
-}
-
-function addDevice(): void {
-  options.advanced.devices = [
-    ...options.advanced.devices,
-    { host: '', container: '', read: false, write: false, mknod: false },
-  ];
-}
-
-function deleteDevice(index: number): void {
-  options.advanced.devices = options.advanced.devices.filter((_, i) => i !== index);
-}
-
 function onContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, containerPortMapping[index], () => {
-    containerPortMapping = containerPortMapping;
-  });
+  onPortInput(event, options.basic.containerPortMapping[index]);
 }
 
-function onHostContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, options.basic.hostContainerPortMappings[index].hostPort, () => {
-    options.basic.hostContainerPortMappings = options.basic.hostContainerPortMappings;
-  });
-}
-
-function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): void {
-  // clear the timeout so if there was an old call to areAllPortsFree pending is deleted. We will create a new one soon
+function onPortInput(event: Event, portInfo: PortInfo): void {
   clearTimeout(onPortInputTimeout);
   const target = event.currentTarget as HTMLInputElement;
-  // convert string to number
   const _value: number = Number(target.value);
   onPortInputTimeout = setTimeout(() => {
     window
       .isFreePort(_value)
       .then(_ => {
         portInfo.error = '';
-        updateUI();
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
           portInfo.error = (error as { message: string }).message;
         }
-        updateUI();
       });
   }, 500);
 }
-
-const volumeDialogOptions: OpenDialogOptions = {
-  title: 'Select a directory to mount in the container',
-  selectors: ['openDirectory'],
-};
-
-const envDialogOptions: OpenDialogOptions = {
-  title: 'Select environment file',
-  selectors: ['openFile'],
-};
 </script>
 
 <Route path="/*">
@@ -642,472 +493,20 @@ const envDialogOptions: OpenDialogOptions = {
         </div>
         <div class="pt-4">
           <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
-            <div class="pr-4">
-              <label
-                for="modalContainerName"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
-              <Input
-                bind:value={options.basic.containerName}
-                name="modalContainerName"
-                id="modalContainerName"
-                placeholder="Leave blank to generate a name"
-                aria-label="Container Name"
-                error={containerNameError} />
-              <label
-                for="modalEntrypoint"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Entrypoint:</label>
-              <Input bind:value={options.basic.entrypoint} name="modalEntrypoint" id="modalEntrypoint" aria-label="Entrypoint" />
-              <label
-                for="modalCommand"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Command:</label>
-              <Input bind:value={options.basic.command} name="modalCommand" id="modalCommand" aria-label="Command" />
-              <label for="volumes" class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Volumes:</label>
-              <!-- Display the list of volumes -->
-              {#each options.basic.volumeMounts as volumeMount, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <FileInput
-                    id="volumeMount.{index}"
-                    placeholder="Path on the host"
-                    bind:value={volumeMount.source}
-                    options={volumeDialogOptions}
-                    aria-label="volumeMount.{index}" />
-                  <Input bind:value={volumeMount.target} placeholder="Path inside the container" class="ml-2" />
-                  <Button
-                    type="link"
-                    hidden={index === options.basic.volumeMounts.length - 1}
-                    aria-label="Delete volume mount at index {index}"
-                    on:click={(): void => deleteVolumeMount(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.basic.volumeMounts.length - 1}
-                    aria-label="Add volume mount after index {index}"
-                    on:click={addVolumeMount}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <!-- add a label for each port-->
-              <label
-                for="modalContainerName"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Port mapping:</label>
-              {#each exposedPorts as port, index (index)}
-                <div class="flex flex-row justify-center items-center w-full">
-                  <span
-                    class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
-                    >Local port for {port}:</span>
-                  <Input
-                    bind:value={containerPortMapping[index].port}
-                    on:input={(event): void => onContainerPortMappingInput(event, index)}
-                    placeholder="Enter value for port {port}"
-                    error={containerPortMapping[index].error}
-                    class="ml-2 w-full"
-                    title={containerPortMapping[index].error} />
-                </div>
-              {/each}
-
-              <Button
-                on:click={addHostContainerPorts}
-                icon={faPlusCircle}
-                type="link"
-                aria-label="Add custom port mapping">
-                Add custom port mapping
-              </Button>
-              <!-- Display the list of existing hostContainerPortMappings -->
-              {#each options.basic.hostContainerPortMappings as hostContainerPortMapping, index (index)}
-                <div class="flex flex-row justify-center w-full py-1">
-                  <Input
-                    bind:value={hostContainerPortMapping.hostPort.port}
-                    on:input={(event): void => onHostContainerPortMappingInput(event, index)}
-                    aria-label="host port"
-                    placeholder="Host Port"
-                    error={hostContainerPortMapping.hostPort.error}
-                    title={hostContainerPortMapping.hostPort.error} />
-                  <Input
-                    bind:value={hostContainerPortMapping.containerPort}
-                    aria-label="container port"
-                    placeholder="Container Port"
-                    class="ml-2" />
-                  <Button type="link" on:click={async (): Promise<void> => await deleteHostContainerPorts(index)} icon={faMinusCircle} aria-label="Remove port mapping" />
-                </div>
-              {/each}
-              <label
-                for="modalEnvironmentVariables"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Environment variables:</label>
-              <!-- Display the list of existing environment variables -->
-              {#each options.basic.environmentVariables as environmentVariable, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={environmentVariable.key} placeholder="Name" class="w-full" />
-
-                  <Input
-                    bind:value={environmentVariable.value}
-                    placeholder="Value (leave blank for empty)"
-                    class="ml-2" />
-                  <Button
-                    type="link"
-                    hidden={index === options.basic.environmentVariables.length - 1}
-                    aria-label="Delete environment variable at index {index}"
-                    on:click={(): void => deleteEnvVariable(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.basic.environmentVariables.length - 1}
-                    aria-label="Add environment variable after index {index}"
-                    on:click={addEnvVariable}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <label
-                for="modalEnvironmentFiles"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Environment files:</label>
-              <!-- Display the list of existing environment files -->
-              {#each options.basic.environmentFiles as _, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <FileInput
-                    id="filePath.{index}"
-                    placeholder="Environment file containing KEY=VALUE items"
-                    bind:value={options.basic.environmentFiles[index]}
-                    options={envDialogOptions}
-                    aria-label="environmentFile.{index}" />
-                  <Button
-                    type="link"
-                    hidden={index === options.basic.environmentFiles.length - 1}
-                    aria-label="Delete env file at index {index}"
-                    on:click={(): void => deleteEnvFile(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.basic.environmentFiles.length - 1}
-                    aria-label="Add env file after index {index}"
-                    on:click={addEnvFile}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-            </div>
+            <BasicTab
+              bind:options={options.basic}
+              {containerNameError}
+              {exposedPorts}
+              {onContainerPortMappingInput} />
           </Route>
           <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
-            <div class="pr-4">
-              <!-- Use tty -->
-              <label for="containerTty" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Use TTY:</label>
-              <div class="flex flex-col text-[var(--pd-content-card-text)] text-sm ml-2">
-                <Checkbox bind:checked={options.advanced.useTty} title="Attach a pseudo terminal">Attach a pseudo terminal</Checkbox>
-                <Checkbox bind:checked={options.advanced.useInteractive} title="Use interactive">
-                  Interactive: Keep STDIN open even if not attached
-                </Checkbox>
-              </div>
-
-              <!-- Specify user-->
-              <label
-                for="containerUser"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Specify user to run container as:</label>
-              <div class="flex flex-row justify-center items-center w-full">
-                <Input
-                  bind:value={options.advanced.runUser}
-                  placeholder="If you specify a username, user must exist in /etc/passwd file (use user id instead)"
-                  class="ml-2" />
-              </div>
-
-              <!-- Autoremove-->
-              <label
-                for="containerAutoRemove"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Auto removal of container:</label>
-              <Checkbox class="text-[var(--pd-content-card-text)] text-sm ml-2" bind:checked={options.advanced.autoRemove}>
-                Automatically remove the container when the process exits
-              </Checkbox>
-
-              <!-- RestartPolicy-->
-              <label
-                for="containerRestartPolicy"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Restart policy:</label>
-              <div
-                class="p-0 flex flex-row justify-start items-center align-middle w-full text-[var(--pd-content-card-text)]">
-                <span class="text-sm w-28 inline-block align-middle whitespace-nowrap">Policy name:</span>
-
-                <Dropdown class="w-full" name="restartPolicyName" bind:value={options.advanced.restartPolicyName}>
-                  <option value="">No restart</option>
-                  <option value="no">Do not restart automatically</option>
-                  <option value="always">Always restart</option>
-                  <option value="unless-stopped">Restart only if user has not manually stopped</option>
-                  <option value="on-failure">Restart only if exit code is non-zero</option>
-                </Dropdown>
-              </div>
-
-              <div
-                class="flex flex-row justify-center items-center w-full py-1 {options.advanced.restartPolicyName === 'on-failure'
-                  ? 'opacity-100'
-                  : 'opacity-20'}">
-                <span
-                  class="text-sm w-28 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
-                  title="Number of times to retry before giving up.">Retries:</span>
-                <NumberInput
-                  minimum={0}
-                  bind:value={options.advanced.restartPolicyMaxRetryCount}
-                  type="integer"
-                  class="w-24 p-2"
-                  disabled={options.advanced.restartPolicyName !== 'on-failure'} />
-              </div>
-
-              <!-- devices -->
-              <label
-                for="modalDevices"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Devices:</label>
-              <!-- Display the list of existing devices -->
-              {#each options.advanced.devices as device, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input
-                    bind:value={device.host}
-                    placeholder="Host Device"
-                    class="w-full"
-                    aria-label="device.host.{index}" />
-                  <Input
-                    bind:value={device.container}
-                    placeholder="Container Device (leave blank for same as host device)"
-                    class="ml-2"
-                    aria-label="device.container.{index}" />
-                  <div class="flex flew-row space-x-4 ml-2 text-sm">
-                    <Checkbox bind:checked={device.read} title="Read">Read</Checkbox>
-                    <Checkbox bind:checked={device.write} title="Write">Write</Checkbox>
-                    <Checkbox bind:checked={device.mknod} title="Mknod">Mknod</Checkbox>
-                  </div>
-                  <Button
-                    type="link"
-                    hidden={index === options.advanced.devices.length - 1}
-                    aria-label="Delete device at index {index}"
-                    on:click={(): void => deleteDevice(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.advanced.devices.length - 1}
-                    aria-label="Add device after index {index}"
-                    on:click={addDevice}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-            </div>
+            <AdvancedTab bind:options={options.advanced} />
           </Route>
-
           <Route path="/security" breadcrumb="Security" navigationHint="tab">
-            <div class="pr-4">
-              <!-- Privileged-->
-              <label
-                for="containerPrivileged"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Privileged:</label>
-              <Checkbox bind:checked={options.security.privileged} class="text-[var(--pd-content-card-text)] text-sm mx-2">
-                Turn off security<i class="pl-1 fas fa-exclamation-triangle"></i>
-              </Checkbox>
-
-              <!-- Read-Only -->
-              <label
-                for="containerReadOnly"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Read only:</label>
-              <Checkbox bind:checked={options.security.readOnly} class="text-[var(--pd-content-card-text)] text-sm mx-2">
-                Make containers root filesystem read-only
-              </Checkbox>
-
-              <label
-                for="ContainerSecurityOptions"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Security options (security-opt):</label>
-              <!-- Display the list of existing security options -->
-              {#each options.security.securityOpts as _, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input
-                    bind:value={options.security.securityOpts[index]}
-                    placeholder="Enter a security option (Ex. seccomp=/path/to/profile.json)"
-                    class="ml-2" />
-
-                  <Button
-                    type="link"
-                    hidden={index === options.security.securityOpts.length - 1}
-                    aria-label="Delete security option at index {index}"
-                    on:click={(): void => deleteSecurityOpt(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.security.securityOpts.length - 1}
-                    aria-label="Add security option after index {index}"
-                    on:click={addSecurityOpt}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <label
-                for="ContainerSecurityCapabilitiesAdd"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Capabilities:</label>
-
-              <label
-                for="ContainerSecurityCapabilitiesAdd"
-                class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Add to the container (CapAdd):</label>
-              <!-- Display the list of existing capAdd -->
-              {#each options.security.capAdds as _, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={options.security.capAdds[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
-
-                  <Button
-                    type="link"
-                    hidden={index === options.security.capAdds.length - 1}
-                    on:click={(): void => deleteCapAdd(index)}
-                    icon={faMinusCircle}
-                    aria-label="Remove capability" />
-                  <Button type="link" hidden={index < options.security.capAdds.length - 1} on:click={addCapAdd} icon={faPlusCircle} aria-label="Add capability" />
-                </div>
-              {/each}
-              <label
-                for="ContainerSecurityCapabilitiesDrop"
-                class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Drop from the container (CapDrop):</label>
-              <!-- Display the list of existing capDrop -->
-              {#each options.security.capDrops as _, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={options.security.capDrops[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
-
-                  <Button
-                    type="link"
-                    hidden={index === options.security.capDrops.length - 1}
-                    on:click={(): void => deleteCappDrop(index)}
-                    icon={faMinusCircle}
-                    aria-label="Remove capability" />
-                  <Button type="link" hidden={index < options.security.capDrops.length - 1} on:click={addCapDrop} icon={faPlusCircle} aria-label="Add capability" />
-                </div>
-              {/each}
-
-              <!-- Specify user namespace-->
-              <label
-                for="containerUserNamespace"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Specify user namespace to use:</label>
-              <div class="flex flex-row justify-center items-center w-full">
-                <Input bind:value={options.security.userNamespace} placeholder="Enter a user namespace" class="ml-2 w-full" />
-              </div>
-            </div>
+            <SecurityTab bind:options={options.security} />
           </Route>
-
           <Route path="/networking" breadcrumb="Networking" navigationHint="tab">
-            <div class="pr-4">
-              <!-- hostname-->
-              <label
-                for="containerHostname"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Defines container hostname:</label>
-              <div class="flex flex-row justify-center items-center w-full">
-                <Input bind:value={options.networking.hostname} placeholder="Must be a valid RFC 1123 hostname" class="ml-2" />
-              </div>
-
-              <!-- DNS -->
-              <label
-                for="ContainerDns"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Custom DNS server(s):</label>
-
-              {#each options.networking.dnsServers as _, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={options.networking.dnsServers[index]} placeholder="IP Address" class="ml-2" />
-
-                  <Button
-                    type="link"
-                    hidden={index === options.networking.dnsServers.length - 1}
-                    aria-label="Delete DNS server at index {index}"
-                    on:click={(): void => deleteDnsServer(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.networking.dnsServers.length - 1}
-                    aria-label="Add DNS server after index {index}"
-                    on:click={addDnsServer}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <label
-                for="containerExtraHosts"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Add extra hosts (appends to /etc/hosts file):</label>
-              <!-- Display the list of extra hosts -->
-              {#each options.networking.extraHosts as extraHost, index (index)}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={extraHost.host} placeholder="Hostname" class="ml-2" />
-
-                  <Input bind:value={extraHost.ip} placeholder="IP Address" class="ml-2" />
-                  <Button
-                    type="link"
-                    hidden={index === options.networking.extraHosts.length - 1}
-                    aria-label="Delete extra host at index {index}"
-                    on:click={(): void => deleteExtraHost(index)}
-                    icon={faMinusCircle} />
-                  <Button
-                    type="link"
-                    hidden={index < options.networking.extraHosts.length - 1}
-                    aria-label="Add extra host after index {index}"
-                    on:click={addExtraHost}
-                    icon={faPlusCircle} />
-                </div>
-              {/each}
-
-              <!-- Select network -->
-              <label
-                for="containerNetwork"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Select container networking:</label>
-              <div
-                class="p-0 flex flex-row justify-start items-center align-middle w-full text-[var(--pd-content-card-text)]">
-                <span class="text-sm w-28 inline-block align-middle whitespace-nowrap">Mode:</span>
-
-                <Dropdown class="w-full" name="providerChoice" bind:value={options.networking.networkingMode}>
-                  <option value="bridge">Creates a network stack on the default bridge (default)</option>
-                  <option value="none">No networking</option>
-                  <option value="host">Use the host networking stack</option>
-                  <option value="choice-container">Use another container networking stack</option>
-                  <!-- display only if there is at least one network-->
-                  <option value="choice-network">User-defined network</option>
-                </Dropdown>
-              </div>
-
-              {#if options.networking.networkingMode === 'choice-network'}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <span
-                    class="text-sm w-28 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
-                    >Network:</span>
-                  <Dropdown
-                    class="w-full"
-                    disabled={options.networking.networkingMode !== 'choice-network'}
-                    name="networkingModeUserNetwork"
-                    bind:value={options.networking.networkingModeUserNetwork}>
-                    {#each engineNetworks as network (network.Id)}
-                      <option value={network.Id}
-                        >{network.Name} (used by {Object.keys(network.Containers ?? {}).length} containers)</option>
-                    {/each}
-                  </Dropdown>
-                </div>
-              {/if}
-              {#if options.networking.networkingMode === 'choice-container'}
-                <div class="flex flex-row justify-center items-center w-full py-1">
-                  <span
-                    class="text-sm w-28 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
-                    >Container:</span>
-                  <Dropdown
-                    class="w-full"
-                    disabled={options.networking.networkingMode !== 'choice-container'}
-                    name="networkingModeUserContainer"
-                    bind:value={options.networking.networkingModeUserContainer}>
-                    {#each engineContainers as container (container.id)}
-                      <option value={container.id}>{container.name} ({container.shortId})</option>
-                    {/each}
-                  </Dropdown>
-                </div>
-              {/if}
-            </div>
+            <NetworkingTab bind:options={options.networking} {engineNetworks} {engineContainers} />
           </Route>
         </div>
 
