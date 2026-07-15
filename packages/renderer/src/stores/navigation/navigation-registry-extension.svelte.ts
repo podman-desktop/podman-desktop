@@ -63,6 +63,15 @@ function buildExtensionNavigationItems(
   const newItems: NavigationRegistryEntry[] = [];
 
   contribs.forEach(contrib => {
+    if (areExtensionsImprovementsSuggested()) {
+      // DD extensions (type: 'dd') register as contributions. Check both the raw extensionId
+      // and any matching catalog id so that prototype-uninstalled DD extensions are hidden.
+      const contribExtensionId = contrib.extensionId;
+      if (contribExtensionId && isPrototypeRemovedExtension(contribExtensionId)) {
+        return;
+      }
+    }
+
     const extensionId = contrib.extensionId;
     const isNew = extensionId ? isNewBadgeActive(extensionId) : false;
 
@@ -82,7 +91,13 @@ function buildExtensionNavigationItems(
   webviewItems.forEach(webview => {
     if (areExtensionsImprovementsSuggested()) {
       const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities) ?? webview.extensionId;
-      if (catalogId && isPrototypeRemovedExtension(catalogId)) {
+      // Check both the resolved catalog id and the raw webview extensionId.
+      // The stored prototype-removed id may use either format depending on which
+      // code path triggered the removal (e.g. Installed tab vs Catalog kebab menu).
+      if (
+        (catalogId && isPrototypeRemovedExtension(catalogId)) ||
+        (webview.extensionId && webview.extensionId !== catalogId && isPrototypeRemovedExtension(webview.extensionId))
+      ) {
         return;
       }
     }
