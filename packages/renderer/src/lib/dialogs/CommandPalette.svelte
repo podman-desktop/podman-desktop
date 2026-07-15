@@ -18,7 +18,7 @@ import ArrowUpIcon from '/@/lib/images/ArrowUpIcon.svelte';
 import EnterIcon from '/@/lib/images/EnterIcon.svelte';
 import NotFoundIcon from '/@/lib/images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '/@/lib/preferences/Util';
-import { handleNavigation } from '/@/navigation';
+import { handleNavigation, resolveRoute } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { context } from '/@/stores/context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
@@ -328,6 +328,18 @@ function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
   return 'category' in item;
 }
 
+function getItemKey(item: CommandPaletteItem, index: number): string {
+  if (isGoToItem(item)) {
+    return `goto:${resolveRoute(item)}`;
+  }
+
+  if (isDocItem(item)) {
+    return `doc:${item.category}:${item.name}:${item.url ?? ''}:${index}`;
+  }
+
+  return `command:${item.id ?? ''}:${item.title ?? ''}:${index}`;
+}
+
 function getTextToHighlight(item: CommandPaletteItem): string {
   if (isDocItem(item)) {
     return `${item.category}: ${item.name}`;
@@ -404,7 +416,7 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
           {/each}
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
-          {#each filteredItems as item, i (getTextToHighlight(item))}
+          {#each filteredItems as item, i (getItemKey(item, i))}
             {@const goToItem = isGoToItem(item)}
             {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}

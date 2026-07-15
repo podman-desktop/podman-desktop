@@ -62,7 +62,7 @@ test('createNavigationImageEntry', async () => {
   expect(second).toHaveProperty('parameters', {
     id: '3456',
     engineId: 'docker',
-    tag: '3456',
+    tag: '<none>',
   });
   expect(second.name).toContain('Image:');
 
