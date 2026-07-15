@@ -158,7 +158,7 @@ export function removeExtensionWithConfirmation(
   withConfirmation(
     async () => {
       if (areExtensionsImprovementsSuggested()) {
-        prototypeRemoveExtension(installed.id);
+        prototypeRemoveExtension(installed.id, [extension.id]);
         clearNewBadge(extension.id);
         if (options?.redirectAfterRemove) {
           redirectToPreferencesMain(options.redirectAfterRemove);

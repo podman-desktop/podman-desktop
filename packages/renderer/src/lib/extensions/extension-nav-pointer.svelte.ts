@@ -21,7 +21,13 @@ import { get } from 'svelte/store';
 
 import { buildExtensionNewNavigationTooltip } from '/@/lib/extensions/extension-badge-styles';
 import { resolveExtensionPostInstallLocation } from '/@/lib/extensions/extension-post-install-locations';
+import { toCatalogIdentities } from '/@/lib/extensions/extension-runtime-id';
+import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { contributions } from '/@/stores/contribs';
+import {
+  type CatalogExtensionIdentity,
+  resolveInstalledExtensionIdFromWebview,
+} from '/@/stores/extension-webview-installed';
 import { refreshExtensionNavigationItems } from '/@/stores/navigation/navigation-registry-extension.svelte';
 import { fetchWebviews, webviews } from '/@/stores/webviews';
 
@@ -39,12 +45,13 @@ const pendingExtensionQueue: string[] = [];
 const pendingExtensionIds = new Set<string>();
 
 const NAV_POINTER_POLL_INTERVAL_MS = 500;
-const NAV_POINTER_MAX_ATTEMPTS = 60;
+const NAV_POINTER_MAX_ATTEMPTS = 10;
 const POST_INSTALL_SYNC_INTERVAL_MS = 250;
 const POST_INSTALL_SYNC_MAX_ATTEMPTS = 40;
 
 const AI_LAB_EXTENSION_ID = 'redhat.ai-lab';
 const AI_LAB_NAV_NAME = 'AI Lab';
+const EXTENSIONS_NAV_LINK = '/extensions';
 
 let pollTimeout: ReturnType<typeof setTimeout> | undefined;
 let pollAttempts = 0;
@@ -75,10 +82,38 @@ function dequeueExtensionNavPointer(extensionId: string): void {
   }
 }
 
-export function findWebviewForExtension(extensionId: string, allWebviews: WebviewInfo[]): WebviewInfo | undefined {
+function extensionIdsMatch(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+
+  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
+  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
+  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
+}
+
+function getCatalogIdentities(): CatalogExtensionIdentity[] {
+  return toCatalogIdentities(get(catalogExtensionInfos) ?? []);
+}
+
+export function findWebviewForExtension(
+  extensionId: string,
+  allWebviews: WebviewInfo[],
+  catalogIdentities: CatalogExtensionIdentity[] = getCatalogIdentities(),
+): WebviewInfo | undefined {
   const byExtensionId = allWebviews.find(item => item.extensionId === extensionId);
   if (byExtensionId) {
     return byExtensionId;
+  }
+
+  // Match webviews whose runtime extensionId differs from the catalog id
+  // (e.g. AI Lab webview is registered under redhat.redhat-pack).
+  const byCatalogIdentity = allWebviews.find(webview => {
+    const resolved = resolveInstalledExtensionIdFromWebview(webview, catalogIdentities);
+    return resolved !== undefined && extensionIdsMatch(resolved, extensionId);
+  });
+  if (byCatalogIdentity) {
+    return byCatalogIdentity;
   }
 
   if (extensionId === AI_LAB_EXTENSION_ID) {
@@ -88,12 +123,23 @@ export function findWebviewForExtension(extensionId: string, allWebviews: Webvie
   return undefined;
 }
 
+function findContribForExtension(extensionId: string, allContribs: ContributionInfo[]): ContributionInfo | undefined {
+  return allContribs.find(
+    item =>
+      item.extensionId === extensionId ||
+      extensionIdsMatch(item.extensionId, extensionId) ||
+      item.name.toLowerCase() === extensionId.split('.').pop()?.toLowerCase(),
+  );
+}
+
 function resolvePointerForExtension(
   extensionId: string,
   allWebviews: WebviewInfo[],
   allContribs: ContributionInfo[],
+  options: { allowFallback?: boolean } = {},
 ): ExtensionNavPointerTarget | null {
-  const webview = findWebviewForExtension(extensionId, allWebviews);
+  const catalogIdentities = getCatalogIdentities();
+  const webview = findWebviewForExtension(extensionId, allWebviews, catalogIdentities);
   if (webview) {
     return {
       extensionId,
@@ -103,7 +149,7 @@ function resolvePointerForExtension(
     };
   }
 
-  const contrib = allContribs.find(item => item.extensionId === extensionId);
+  const contrib = findContribForExtension(extensionId, allContribs);
   if (contrib) {
     return {
       extensionId,
@@ -123,13 +169,25 @@ function resolvePointerForExtension(
     };
   }
 
+  if (options.allowFallback) {
+    const catalog = catalogIdentities.find(item => item.id === extensionId || extensionIdsMatch(item.id, extensionId));
+    const label = catalog?.displayName ?? extensionId.split('.').pop() ?? 'extension';
+    return {
+      extensionId,
+      link: EXTENSIONS_NAV_LINK,
+      label: 'Extensions',
+      tooltip: buildExtensionNewNavigationTooltip(label),
+    };
+  }
+
   return null;
 }
 
 function hasExtensionNavigationTarget(extensionId: string): boolean {
   const allWebviews = get(webviews) ?? [];
   const allContribs = get(contributions) ?? [];
-  return resolvePointerForExtension(extensionId, allWebviews, allContribs) !== null;
+  // Do not count the Extensions fallback — sync must wait for a real sidebar target when possible.
+  return resolvePointerForExtension(extensionId, allWebviews, allContribs, { allowFallback: false }) !== null;
 }
 
 /** Wait until the extension webview/contrib is registered, then refresh sidebar nav. */
@@ -149,7 +207,7 @@ export async function syncExtensionNavigationAfterInstall(extensionId: string): 
   return false;
 }
 
-function resolveNavPointer(): boolean {
+function resolveNavPointer(options: { allowFallback?: boolean } = {}): boolean {
   const currentPointer = extensionNavPointerState.value;
   if (currentPointer && pendingExtensionIds.has(currentPointer.extensionId)) {
     return true;
@@ -159,7 +217,9 @@ function resolveNavPointer(): boolean {
   const allContribs = get(contributions) ?? [];
 
   for (const extensionId of pendingExtensionQueue) {
-    const pointer = resolvePointerForExtension(extensionId, allWebviews, allContribs);
+    const pointer = resolvePointerForExtension(extensionId, allWebviews, allContribs, {
+      allowFallback: options.allowFallback === true,
+    });
     if (pointer) {
       setExtensionNavPointer(pointer);
       refreshExtensionNavigationItems();
@@ -194,6 +254,9 @@ function scheduleNavPointerPoll(): void {
   }
 
   if (pollAttempts >= NAV_POINTER_MAX_ATTEMPTS) {
+    // Always surface a tooltip — fall back to the Extensions nav entry when no
+    // dedicated sidebar target appeared in time.
+    resolveNavPointer({ allowFallback: true });
     stopNavPointerPolling();
     return;
   }

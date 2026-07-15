@@ -80,8 +80,13 @@ export function arePrototypeUseCasesEnabled(): boolean {
 }
 
 /** Mark an extension as uninstalled in the prototype (no backend call). */
-export function prototypeRemoveExtension(extensionId: string): void {
+export function prototypeRemoveExtension(extensionId: string, relatedIds: string[] = []): void {
   prototypeRemovedExtensionIds.add(extensionId);
+  for (const relatedId of relatedIds) {
+    if (relatedId) {
+      prototypeRemovedExtensionIds.add(relatedId);
+    }
+  }
   prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
 }
 
@@ -90,14 +95,58 @@ export function prototypeRemoveExtension(extensionId: string): void {
  * Also marks the extension as "freshly installed" so it shows Active regardless of
  * the real backend state (e.g. a pre-existing failed state).
  */
-export function prototypeRestoreExtension(extensionId: string): void {
-  prototypeRemovedExtensionIds.delete(extensionId);
-  prototypeRestoredExtensionIds.add(extensionId);
+export function prototypeRestoreExtension(extensionId: string, relatedIds: string[] = []): void {
+  const ids = collectRelatedPrototypeIds(extensionId);
+  for (const relatedId of relatedIds) {
+    if (relatedId) {
+      ids.push(relatedId);
+    }
+  }
+  for (const id of ids) {
+    prototypeRemovedExtensionIds.delete(id);
+    prototypeRestoredExtensionIds.add(id);
+  }
   prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
 }
 
 export function isPrototypeRemovedExtension(extensionId: string): boolean {
-  return prototypeRemovedExtensionIds.has(extensionId);
+  if (prototypeRemovedExtensionIds.has(extensionId)) {
+    return true;
+  }
+
+  const extensionName = extensionId.includes('.') ? extensionId.split('.').slice(1).join('.') : extensionId;
+  for (const removedId of prototypeRemovedExtensionIds) {
+    if (removedId === extensionId) {
+      return true;
+    }
+    const removedName = removedId.includes('.') ? removedId.split('.').slice(1).join('.') : removedId;
+    if (
+      removedName === extensionName ||
+      removedId.endsWith(`.${extensionName}`) ||
+      extensionId.endsWith(`.${removedName}`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function collectRelatedPrototypeIds(extensionId: string): string[] {
+  const related = new Set<string>([extensionId]);
+  const extensionName = extensionId.includes('.') ? extensionId.split('.').slice(1).join('.') : extensionId;
+  for (const removedId of prototypeRemovedExtensionIds) {
+    const removedName = removedId.includes('.') ? removedId.split('.').slice(1).join('.') : removedId;
+    if (
+      removedId === extensionId ||
+      removedName === extensionName ||
+      removedId.endsWith(`.${extensionName}`) ||
+      extensionId.endsWith(`.${removedName}`)
+    ) {
+      related.add(removedId);
+    }
+  }
+  return Array.from(related);
 }
 
 export function clearPrototypeRemovedExtensions(): void {
@@ -132,7 +181,7 @@ export function applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoU
   }
 
   return extensions
-    .filter(extension => !prototypeRemovedExtensionIds.has(extension.id))
+    .filter(extension => !isPrototypeRemovedExtension(extension.id))
     .map(extension => {
       const overlay = INSTALLED_STATE_OVERLAYS[extension.id];
       const transientState = getPrototypeTransientLifecycleState(extension.id);

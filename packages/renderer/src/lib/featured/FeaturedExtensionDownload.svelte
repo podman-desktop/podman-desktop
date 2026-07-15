@@ -122,9 +122,11 @@ async function installExtension(): Promise<void> {
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
     installCompleted = true;
-    installInProgress = false;
+    // Ensure the sidebar entry is visible again before showing the post-install tooltip.
+    await syncExtensionNavigationAfterInstall(extension.id);
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
+    installInProgress = false;
     return;
   }
 
@@ -150,11 +152,26 @@ async function installExtension(): Promise<void> {
         }
       },
       (error: string) => {
-        installInProgress = false;
         errorInstall = error;
       },
       extension.id,
     );
+
+    if (errorInstall) {
+      if (areExtensionsImprovementsSuggested() && /already installed/i.test(errorInstall)) {
+        prototypeRestoreExtension(extension.id);
+        logs = [...logs, '☑️ installation finished!'];
+        percentage = '100%';
+        installCompleted = true;
+        errorInstall = '';
+        await syncExtensionNavigationAfterInstall(extension.id);
+        markNewlyInstalled(extension.id);
+        oninstall(extension.id);
+      }
+      installInProgress = false;
+      return;
+    }
+
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
     installCompleted = true;
@@ -163,7 +180,21 @@ async function installExtension(): Promise<void> {
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
   } catch (error) {
-    errorInstall = String(error);
+    const message = String(error);
+    // In suggestion scope, a backend "already installed" error usually means the
+    // extension was only hidden via prototype uninstall — restore UI and show the tooltip.
+    if (areExtensionsImprovementsSuggested() && /already installed/i.test(message)) {
+      prototypeRestoreExtension(extension.id);
+      logs = [...logs, '☑️ installation finished!'];
+      percentage = '100%';
+      installCompleted = true;
+      await syncExtensionNavigationAfterInstall(extension.id);
+      markNewlyInstalled(extension.id);
+      oninstall(extension.id);
+      errorInstall = '';
+    } else {
+      errorInstall = message;
+    }
   }
   installInProgress = false;
 }

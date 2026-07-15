@@ -28,36 +28,56 @@ import {
   syncExtensionNavigationAfterInstall,
 } from './extension-nav-pointer.svelte';
 
-function createMockStore<T>(initial: T): {
-  subscribe: (run: (value: T) => void) => () => void;
-  set: (value: T) => void;
-} {
-  let value = initial;
-  const subscribers = new Set<(next: T) => void>();
+const { webviewsStore, fetchWebviewsMock, catalogStore, createMockStore } = vi.hoisted(() => {
+  function createMockStore<T>(initial: T): {
+    subscribe: (run: (value: T) => void) => () => void;
+    set: (value: T) => void;
+  } {
+    let value = initial;
+    const subscribers = new Set<(next: T) => void>();
+
+    return {
+      subscribe(run: (next: T) => void): () => void {
+        run(value);
+        subscribers.add(run);
+        return (): void => {
+          subscribers.delete(run);
+        };
+      },
+      set(next: T): void {
+        value = next;
+        subscribers.forEach(run => run(value));
+      },
+    };
+  }
 
   return {
-    subscribe(run: (next: T) => void): () => void {
-      run(value);
-      subscribers.add(run);
-      return (): void => {
-        subscribers.delete(run);
-      };
-    },
-    set(next: T): void {
-      value = next;
-      subscribers.forEach(run => run(value));
-    },
+    createMockStore,
+    webviewsStore: createMockStore<WebviewInfo[]>([]),
+    fetchWebviewsMock: vi.fn(async () => undefined),
+    catalogStore: createMockStore<
+      {
+        id: string;
+        displayName: string;
+        extensionName: string;
+        publisherDisplayName: string;
+        categories: string[];
+        keywords: string[];
+        shortDescription: string;
+        unlisted: boolean;
+        versions: unknown[];
+      }[]
+    >([]),
   };
-}
-
-const { webviewsStore, fetchWebviewsMock } = vi.hoisted(() => ({
-  webviewsStore: createMockStore<WebviewInfo[]>([]),
-  fetchWebviewsMock: vi.fn(async () => undefined),
-}));
+});
 
 vi.mock(import('/@/stores/webviews'), () => ({
   webviews: webviewsStore,
   fetchWebviews: fetchWebviewsMock,
+}));
+
+vi.mock(import('/@/stores/catalog-extensions'), () => ({
+  catalogExtensionInfos: catalogStore,
 }));
 
 vi.mock(import('/@/stores/contribs'), () => ({
@@ -79,6 +99,19 @@ describe('extension-nav-pointer', () => {
   beforeEach(() => {
     resetExtensionNavPointerQueueForTests();
     webviewsStore.set([]);
+    catalogStore.set([
+      {
+        id: 'redhat.ai-lab',
+        displayName: 'Podman AI Lab',
+        extensionName: 'ai-lab',
+        publisherDisplayName: 'Red Hat',
+        categories: [],
+        keywords: [],
+        shortDescription: '',
+        unlisted: false,
+        versions: [],
+      },
+    ]);
     vi.clearAllMocks();
   });
 
@@ -141,6 +174,31 @@ describe('extension-nav-pointer', () => {
       tooltip: 'Open AI Lab from the sidebar to get started.',
     });
     expect(isExtensionNavPointerActive('/webviews/webview-1')).toBe(true);
+  });
+
+  test('resolves AI Lab pointer when webview is registered under redhat-pack', () => {
+    webviewsStore.set([
+      {
+        id: 'webview-ai-lab',
+        uuid: 'uuid-ai-lab',
+        viewType: 'studio',
+        sourcePath: '/tmp/ai-lab',
+        icon: 'icon.png',
+        name: 'AI Lab',
+        html: '',
+        extensionId: 'redhat.redhat-pack',
+        state: undefined,
+      },
+    ]);
+
+    queueExtensionNavPointer('redhat.ai-lab');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'redhat.ai-lab',
+      link: '/webviews/webview-ai-lab',
+      label: 'AI Lab',
+      tooltip: 'Open AI Lab from the sidebar to get started.',
+    });
   });
 
   test('syncExtensionNavigationAfterInstall returns true when webview is available', async () => {
