@@ -15,6 +15,7 @@ import {
   normalizeVersionValue,
   resolveExtensionVersionOciUri,
 } from '/@/lib/extensions/extension-version-update.svelte';
+import ExtensionInstallSuccessDialog from '/@/lib/extensions/ExtensionInstallSuccessDialog.svelte';
 import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
 import { fetchExtensions } from '/@/stores/extensions';
@@ -41,6 +42,8 @@ export let oninstall: (extensionId: string) => void = () => {};
 
 let installInProgress = false;
 let installCompleted = false;
+let showSuccessDialog = false;
+let installedVersion = '';
 let logs: string[] = [];
 let errorInstall = '';
 let percentage = '0%';
@@ -123,8 +126,10 @@ async function installExtension(): Promise<void> {
     percentage = '100%';
     installCompleted = true;
     installInProgress = false;
+    installedVersion = extension.fetchVersion ?? 'unknown';
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
+    showSuccessDialog = true;
     return;
   }
 
@@ -158,10 +163,12 @@ async function installExtension(): Promise<void> {
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
     installCompleted = true;
+    installedVersion = extension.fetchVersion ?? 'unknown';
     await fetchExtensions();
     await syncExtensionNavigationAfterInstall(extension.id);
     markNewlyInstalled(extension.id);
     oninstall(extension.id);
+    showSuccessDialog = true;
   } catch (error) {
     errorInstall = String(error);
   }
@@ -177,6 +184,12 @@ function handleInstallClick(event: MouseEvent): void {
 </script>
 
 <ErrorMessage icon wrapMessage class="-top-[15px] right-0 absolute" error={errorInstall}/>
+{#if showSuccessDialog}
+  <ExtensionInstallSuccessDialog
+    extension={buildCatalogExtensionForInstall()}
+    installedVersion={installedVersion}
+    closeCallback={(): void => { showSuccessDialog = false; }} />
+{/if}
 {#if showInstallButton}
   <Tooltip top tip={installTooltip} class="inline-flex shrink-0">
     <button
