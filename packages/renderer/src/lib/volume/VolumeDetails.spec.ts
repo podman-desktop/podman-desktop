@@ -39,6 +39,7 @@ const myVolume: VolumeListInfo = {
       Name: 'myVolume',
       engineId: 'engine0',
       engineName: 'podman',
+      engineType: 'podman',
       CreatedAt: '',
       containersUsage: [],
       Driver: '',
