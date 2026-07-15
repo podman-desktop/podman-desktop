@@ -1,7 +1,5 @@
 <script lang="ts">
-import { faCheckCircle, faShieldHalved } from '@fortawesome/free-solid-svg-icons';
-import { Tooltip } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { faShieldHalved } from '@fortawesome/free-solid-svg-icons';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -10,11 +8,7 @@ import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
-import {
-  EXTENSION_BUILTIN_INDICATOR_TOOLTIP,
-  EXTENSION_INDICATOR_ICON_CLASS,
-  EXTENSION_INSTALLED_TOOLTIP,
-} from './extension-badge-styles';
+import { EXTENSION_BUILTIN_INDICATOR_TOOLTIP, EXTENSION_INDICATOR_ICON_CLASS } from './extension-badge-styles';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import { shouldShowBuiltInNameIndicator } from './extension-origin-utils';
 import {
@@ -135,11 +129,7 @@ function handleCardClick(event: MouseEvent): void {
       </div>
 
       <div class="flex shrink-0 items-start gap-1">
-        {#if catalogExtensionUI.isInstalled}
-          <Tooltip top tip={EXTENSION_INSTALLED_TOOLTIP}>
-            <Icon icon={faCheckCircle} class="mt-2 text-[var(--pd-invert-content-info-icon)]" size="1.1x" />
-          </Tooltip>
-        {:else if catalogExtensionUI.fetchable}
+        {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
         {/if}
         <CatalogExtensionActions
