@@ -1,4 +1,5 @@
 <script lang="ts">
+import { faShieldHalved } from '@fortawesome/free-solid-svg-icons';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -7,7 +8,9 @@ import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
+import { EXTENSION_BUILTIN_INDICATOR_TOOLTIP, EXTENSION_INDICATOR_ICON_CLASS } from './extension-badge-styles';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
+import { shouldShowBuiltInNameIndicator } from './extension-origin-utils';
 import {
   EXTENSION_VERSION_UI_CHANGE_EVENT,
   getOptimisticInstalledVersion,
@@ -15,6 +18,7 @@ import {
 } from './extension-version-update.svelte';
 import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
 import ExtensionFeaturedNameLabel from './ExtensionFeaturedNameLabel.svelte';
+import ExtensionIndicatorIcon from './ExtensionIndicatorIcon.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
@@ -27,6 +31,11 @@ export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 
 let uiRevision = 0;
+
+$: showBuiltIn = shouldShowBuiltInNameIndicator(
+  catalogExtensionUI.installedExtension,
+  catalogExtensionUI.fetchable === true,
+);
 
 function refreshVersionUi(): void {
   uiRevision += 1;
@@ -71,7 +80,13 @@ function handleCardClick(event: MouseEvent): void {
             displayName={catalogExtensionUI.displayName}
             isFeatured={catalogExtensionUI.isFeatured}
             nameClass="font-semibold text-[var(--pd-content-header)]" />
-          <ExtensionCatalogStatusChips extension={catalogExtensionUI} nowrap={true} />
+          {#if showBuiltIn}
+            <ExtensionIndicatorIcon
+              icon={faShieldHalved}
+              tip={EXTENSION_BUILTIN_INDICATOR_TOOLTIP}
+              iconClass={EXTENSION_INDICATOR_ICON_CLASS} />
+          {/if}
+          <ExtensionCatalogStatusChips extension={catalogExtensionUI} nowrap={true} suppressBuiltIn={true} />
         </div>
         <div class="pt-0.5">
           <ExtensionPublisherLabel

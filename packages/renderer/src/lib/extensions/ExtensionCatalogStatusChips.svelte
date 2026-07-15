@@ -17,10 +17,18 @@ interface Props {
   showUpdateChip?: boolean;
   /** When true, prevents wrapping (for table layout). */
   nowrap?: boolean;
+  /** When true, suppresses the Built-in chip (caller shows it as an icon instead). */
+  suppressBuiltIn?: boolean;
   class?: string;
 }
 
-let { extension, showUpdateChip = true, nowrap = false, class: className = '' }: Props = $props();
+let {
+  extension,
+  showUpdateChip = true,
+  nowrap = false,
+  suppressBuiltIn = false,
+  class: className = '',
+}: Props = $props();
 
 const installed = $derived(extension.installedExtension);
 const showUpdate = $derived(extensionRequiresManualUpdate(extension));
@@ -46,7 +54,7 @@ const showUpdate = $derived(extensionRequiresManualUpdate(extension));
       label="DevMode extension"
       color=""
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.devMode} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-  {:else if installed && isBuiltInExtension(installed)}
+  {:else if !suppressBuiltIn && installed && isBuiltInExtension(installed)}
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
       color=""
