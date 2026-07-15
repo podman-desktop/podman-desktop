@@ -20,7 +20,7 @@ import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { isLinux } from '/@/utility/platform';
 
-const pluginsInitializtionRegexp = new RegExp('PluginSystem: initialization done');
+const pluginsInitializationRegexp = new RegExp('PluginSystem: initialization done');
 const applicationDisabledRegexp = new RegExp(
   'Application update is disabled with preferences.update.appUpdate settings',
 );
@@ -50,7 +50,7 @@ test.use({
 test.beforeAll(async ({ runner }) => {
   runner.setVideoAndTraceName('disabled-update-e2e');
   await playExpect
-    .poll(() => runner.getConsoleMessages().some((msg: string) => pluginsInitializtionRegexp.test(msg)), {
+    .poll(() => runner.getConsoleMessages().some((msg: string) => pluginsInitializationRegexp.test(msg)), {
       timeout: 30_000,
       intervals: [500],
     })
