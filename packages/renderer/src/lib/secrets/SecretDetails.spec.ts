@@ -42,6 +42,8 @@ const secret: SecretInfo = {
 beforeEach(() => {
   vi.resetAllMocks();
   secretsInfo.set([]);
+
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
 });
 
 test('expect secret details page to render when secret exists', async () => {

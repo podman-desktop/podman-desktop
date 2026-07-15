@@ -496,7 +496,7 @@ async function searchFunction(value: string): Promise<void> {
     <footer>
       <div class="w-full flex flex-col justify-end">
         {#if !pullFinished}
-          <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
+          <div class="space-x-2 flex flex-nowrap justify-end text-[var(--pd-content-text)]">
             <Button
               icon={faArrowCircleDown}
               disabled={imageNameIsInvalid || pullInProgress}
@@ -509,9 +509,9 @@ async function searchFunction(value: string): Promise<void> {
             {/if}
           </div>
         {:else}
-        <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
-          <Button type='secondary' on:click={pullImageFinished}>Close</Button>
-          <Button type='link' on:click={gotoImageDetails}>View details</Button>
+        <div class="space-x-2 flex flex-nowrap justify-end text-[var(--pd-content-text)]">
+          <Button type='link' on:click={pullImageFinished}>Close</Button>
+          <Button type='secondary' on:click={gotoImageDetails}>View details</Button>
           <Button type='primary' on:click={gotoImageRun}>Run</Button>
         </div>
         {/if}
