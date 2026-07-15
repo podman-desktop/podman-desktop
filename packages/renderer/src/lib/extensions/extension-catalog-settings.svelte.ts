@@ -176,12 +176,12 @@ export function isNewBadgeActive(extensionId: string): boolean {
   return getNewBadgeInstalledAt(extensionId) !== undefined;
 }
 
-export function markNewlyInstalled(extensionId: string): void {
+export function markNewlyInstalled(extensionId: string, displayName?: string): void {
   newlyInstalledAt.set(extensionId, Date.now());
   persistNewBadges();
   bumpNewBadgeRevision();
   scheduleNewBadgeExpiryCheck();
-  onExtensionNewlyInstalled(extensionId);
+  onExtensionNewlyInstalled(extensionId, displayName);
 }
 
 export function clearNewBadge(extensionId: string): void {

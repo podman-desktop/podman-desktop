@@ -220,6 +220,17 @@ describe('extension-nav-pointer', () => {
     clearPrototypeSidebarEntries();
   });
 
+  test('falls back to Extensions immediately when no dedicated target exists', () => {
+    queueExtensionNavPointer('community.headlamp', 'Headlamp');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'community.headlamp',
+      link: '/extensions',
+      label: 'Extensions',
+      tooltip: 'Open Extensions from the sidebar to get started with Headlamp.',
+    });
+  });
+
   test('syncExtensionNavigationAfterInstall returns true when webview is available', async () => {
     webviewsStore.set([
       {

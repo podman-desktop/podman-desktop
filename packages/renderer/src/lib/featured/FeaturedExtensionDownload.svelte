@@ -127,7 +127,7 @@ async function installExtension(): Promise<void> {
     // Ensure the sidebar entry is visible again before showing the post-install tooltip.
     refreshExtensionNavigationItems();
     await syncExtensionNavigationAfterInstall(extension.id);
-    markNewlyInstalled(extension.id);
+    markNewlyInstalled(extension.id, extension.displayName);
     oninstall(extension.id);
     installInProgress = false;
     return;
@@ -177,7 +177,7 @@ async function installExtension(): Promise<void> {
       refreshExtensionNavigationItems();
     }
     await syncExtensionNavigationAfterInstall(extension.id);
-    markNewlyInstalled(extension.id);
+    markNewlyInstalled(extension.id, extension.displayName);
     oninstall(extension.id);
   } catch (error) {
     const message = String(error);
@@ -201,7 +201,7 @@ async function completePrototypeReinstall(): Promise<void> {
   errorInstall = '';
   refreshExtensionNavigationItems();
   await syncExtensionNavigationAfterInstall(extension.id);
-  markNewlyInstalled(extension.id);
+  markNewlyInstalled(extension.id, extension.displayName);
   oninstall(extension.id);
 }
 

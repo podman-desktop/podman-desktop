@@ -44,6 +44,8 @@ export const extensionNavPointerState = $state<{ value: ExtensionNavPointerTarge
 /** FIFO queue of extension ids waiting for a post-install nav pointer. */
 const pendingExtensionQueue: string[] = [];
 const pendingExtensionIds = new Set<string>();
+/** Optional display names for fallback tooltip copy when catalog metadata is not loaded yet. */
+const pendingExtensionDisplayNames = new Map<string, string>();
 
 const NAV_POINTER_POLL_INTERVAL_MS = 500;
 const NAV_POINTER_MAX_ATTEMPTS = 10;
@@ -67,7 +69,10 @@ function setExtensionNavPointer(pointer: ExtensionNavPointerTarget | null): void
   extensionNavPointerState.value = pointer;
 }
 
-function enqueueExtensionNavPointer(extensionId: string): void {
+function enqueueExtensionNavPointer(extensionId: string, displayName?: string): void {
+  if (displayName?.trim()) {
+    pendingExtensionDisplayNames.set(extensionId, displayName.trim());
+  }
   if (pendingExtensionIds.has(extensionId)) {
     return;
   }
@@ -77,6 +82,7 @@ function enqueueExtensionNavPointer(extensionId: string): void {
 
 function dequeueExtensionNavPointer(extensionId: string): void {
   pendingExtensionIds.delete(extensionId);
+  pendingExtensionDisplayNames.delete(extensionId);
   const index = pendingExtensionQueue.indexOf(extensionId);
   if (index >= 0) {
     pendingExtensionQueue.splice(index, 1);
@@ -182,12 +188,16 @@ function resolvePointerForExtension(
 
   if (options.allowFallback) {
     const catalog = catalogIdentities.find(item => item.id === extensionId || extensionIdsMatch(item.id, extensionId));
-    const label = catalog?.displayName ?? extensionId.split('.').pop() ?? 'extension';
+    const label =
+      pendingExtensionDisplayNames.get(extensionId) ??
+      catalog?.displayName ??
+      extensionId.split('.').pop() ??
+      'extension';
     return {
       extensionId,
       link: EXTENSIONS_NAV_LINK,
       label: 'Extensions',
-      tooltip: buildExtensionNewNavigationTooltip(label),
+      tooltip: `Open Extensions from the sidebar to get started with ${label}.`,
     };
   }
 
@@ -218,7 +228,35 @@ export async function syncExtensionNavigationAfterInstall(extensionId: string): 
   return false;
 }
 
+function tryUpgradeExtensionsFallbackPointer(): boolean {
+  const currentPointer = extensionNavPointerState.value;
+  if (currentPointer?.link !== EXTENSIONS_NAV_LINK) {
+    return false;
+  }
+  if (!pendingExtensionIds.has(currentPointer.extensionId)) {
+    return false;
+  }
+
+  const allWebviews = get(webviews) ?? [];
+  const allContribs = get(contributions) ?? [];
+  const better = resolvePointerForExtension(currentPointer.extensionId, allWebviews, allContribs, {
+    allowFallback: false,
+  });
+  if (!better) {
+    return false;
+  }
+
+  setExtensionNavPointer(better);
+  refreshExtensionNavigationItems();
+  stopNavPointerPolling();
+  return true;
+}
+
 function resolveNavPointer(options: { allowFallback?: boolean } = {}): boolean {
+  if (tryUpgradeExtensionsFallbackPointer()) {
+    return true;
+  }
+
   const currentPointer = extensionNavPointerState.value;
   if (currentPointer && pendingExtensionIds.has(currentPointer.extensionId)) {
     return true;
@@ -234,7 +272,13 @@ function resolveNavPointer(options: { allowFallback?: boolean } = {}): boolean {
     if (pointer) {
       setExtensionNavPointer(pointer);
       refreshExtensionNavigationItems();
-      stopNavPointerPolling();
+      // Keep polling when we only have the Extensions fallback — a dedicated
+      // webview/contrib may still appear shortly after install.
+      if (pointer.link === EXTENSIONS_NAV_LINK) {
+        scheduleNavPointerPoll();
+      } else {
+        stopNavPointerPolling();
+      }
       return true;
     }
   }
@@ -260,22 +304,26 @@ function scheduleNavPointerPoll(): void {
     return;
   }
 
-  if (resolveNavPointer()) {
+  if (pollTimeout !== undefined) {
     return;
   }
 
   if (pollAttempts >= NAV_POINTER_MAX_ATTEMPTS) {
-    // Always surface a tooltip — fall back to the Extensions nav entry when no
-    // dedicated sidebar target appeared in time.
-    resolveNavPointer({ allowFallback: true });
     stopNavPointerPolling();
     return;
   }
 
   pollAttempts += 1;
   pollTimeout = setTimeout(() => {
+    pollTimeout = undefined;
     fetchWebviews()
       .finally(() => {
+        if (tryUpgradeExtensionsFallbackPointer()) {
+          return;
+        }
+        if (!extensionNavPointerState.value) {
+          resolveNavPointer({ allowFallback: true });
+        }
         scheduleNavPointerPoll();
       })
       .catch((error: unknown) => {
@@ -291,22 +339,24 @@ function showNextNavPointer(): void {
   }
 
   pollAttempts = 0;
-  if (!resolveNavPointer()) {
-    scheduleNavPointerPoll();
+  if (resolveNavPointer({ allowFallback: false })) {
+    return;
   }
+  resolveNavPointer({ allowFallback: true });
 }
 
 function refreshExtensionNavigation(): void {
   fetchWebviews()
     .finally(() => {
       refreshExtensionNavigationItems();
-      if (!extensionNavPointerState.value) {
-        if (!resolveNavPointer()) {
-          scheduleNavPointerPoll();
-        }
+      if (tryUpgradeExtensionsFallbackPointer()) {
         return;
       }
-      resolveNavPointer();
+      if (!extensionNavPointerState.value) {
+        if (!resolveNavPointer({ allowFallback: false })) {
+          resolveNavPointer({ allowFallback: true });
+        }
+      }
     })
     .catch((error: unknown) => {
       console.error('Unable to refresh extension navigation', error);
@@ -314,11 +364,15 @@ function refreshExtensionNavigation(): void {
 }
 
 webviews.subscribe(() => {
-  resolveNavPointer();
+  if (!tryUpgradeExtensionsFallbackPointer()) {
+    resolveNavPointer({ allowFallback: false });
+  }
 });
 
 contributions.subscribe(() => {
-  resolveNavPointer();
+  if (!tryUpgradeExtensionsFallbackPointer()) {
+    resolveNavPointer({ allowFallback: false });
+  }
 });
 
 if (typeof window !== 'undefined' && window.events) {
@@ -329,23 +383,25 @@ if (typeof window !== 'undefined' && window.events) {
   }
 }
 
-export function queueExtensionNavPointer(extensionId: string): void {
-  enqueueExtensionNavPointer(extensionId);
+export function queueExtensionNavPointer(extensionId: string, displayName?: string): void {
+  enqueueExtensionNavPointer(extensionId, displayName);
   pollAttempts = 0;
 
+  // Another install callout is already visible — stay queued until it is dismissed.
   if (extensionNavPointerState.value) {
     return;
   }
 
-  if (resolveNavPointer()) {
+  // Prefer a dedicated sidebar target; otherwise show the Extensions fallback
+  // immediately so every Catalog install gets a post-install tooltip.
+  if (resolveNavPointer({ allowFallback: false })) {
     return;
   }
-
-  refreshExtensionNavigation();
+  resolveNavPointer({ allowFallback: true });
 }
 
-export function onExtensionNewlyInstalled(extensionId: string): void {
-  queueExtensionNavPointer(extensionId);
+export function onExtensionNewlyInstalled(extensionId: string, displayName?: string): void {
+  queueExtensionNavPointer(extensionId, displayName);
 }
 
 export function dismissExtensionNavPointer(): void {
@@ -379,6 +435,7 @@ export function getExtensionNavPointer(): ExtensionNavPointerTarget | null {
 export function resetExtensionNavPointerQueueForTests(): void {
   pendingExtensionQueue.length = 0;
   pendingExtensionIds.clear();
+  pendingExtensionDisplayNames.clear();
   setExtensionNavPointer(null);
   stopNavPointerPolling();
 }
