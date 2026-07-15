@@ -712,4 +712,75 @@ describe('Command Palette', () => {
     expect(screen.getByRole('listitem', { name: 'Extensions: AI Lab' })).toBeInTheDocument();
     expect(screen.getByRole('listitem', { name: 'Extensions: Nested' })).toBeInTheDocument();
   });
+
+  test('Expect hidden navigation entries are excluded from GoTo items', async () => {
+    const mockEntries: NavigationRegistryEntry[] = [
+      {
+        name: 'Visible',
+        icon: {},
+        link: '/visible',
+        tooltip: 'Visible',
+        type: 'entry',
+        counter: 0,
+        destinations: [
+          {
+            page: NavigationPage.CONTAINERS,
+            icon: {},
+            name: 'Visible destination',
+          },
+        ],
+      },
+      {
+        name: 'Hidden parent',
+        icon: {},
+        link: '/hidden-parent',
+        tooltip: 'Hidden parent',
+        type: 'group',
+        hidden: true,
+        counter: 0,
+        destinations: [
+          {
+            page: NavigationPage.PODMAN_PODS,
+            icon: {},
+            name: 'Hidden parent destination',
+          },
+        ],
+        items: [
+          {
+            name: 'Hidden child',
+            icon: {},
+            link: '/hidden-child',
+            tooltip: 'Hidden child',
+            type: 'entry',
+            counter: 0,
+            destinations: [
+              {
+                page: NavigationPage.PODMAN_POD_SUMMARY,
+                parameters: { name: 'pod-a', engineId: 'podman' },
+                icon: {},
+                name: 'Hidden child destination',
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    navigationRegistry.set(mockEntries);
+
+    const { getByRole, queryByRole } = render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = getByRole('button', { name: 'Ctrl+F Category 4 text' });
+    await userEvent.click(gotoTab);
+
+    await waitFor(() => {
+      expect(getByRole('listitem', { name: 'Visible destination' })).toBeInTheDocument();
+    });
+    expect(queryByRole('listitem', { name: 'Hidden parent destination' })).not.toBeInTheDocument();
+    expect(queryByRole('listitem', { name: 'Hidden child destination' })).not.toBeInTheDocument();
+  });
 });

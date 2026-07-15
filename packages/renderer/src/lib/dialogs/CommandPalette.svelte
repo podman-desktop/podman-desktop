@@ -73,6 +73,9 @@ let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
 // Recursively extract all destinations from the navigation registry (entries can nest via `items`)
 let goToItems: GoToInfo[] = $derived.by(() => {
   function extract(entry: NavigationRegistryEntry): GoToInfo[] {
+    if (entry.hidden) {
+      return [];
+    }
     return [...(entry.destinations ?? []), ...(entry.items ?? []).flatMap(extract)];
   }
   return navigationItems.flatMap(extract);
