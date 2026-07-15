@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
+import type { ImageInfo, OpenDialogOptions } from '@podman-desktop/api';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -16,6 +16,8 @@ import { router } from 'tinro';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { ImageUtils } from '/@/lib/image/image-utils';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import type { PortInfo, RunOptions } from '/@/lib/image/run/run-options';
 import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
 import { array2String } from '/@/lib/string/string.js';
@@ -25,7 +27,22 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
-import { runImageInfo } from '/@/stores/run-image-store';
+import { imagesInfos } from '/@/stores/images';
+
+interface Props {
+  imageID: string;
+  engineId: string;
+  base64RepoTag: string;
+}
+
+let { imageID, engineId, base64RepoTag }: Props = $props();
+
+const imageUtils = new ImageUtils();
+
+let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
+let image: ImageInfoUI | undefined = $derived(
+  imageInfo ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos) : undefined,
+);
 
 let options: RunOptions = $state({
   basic: {
@@ -98,8 +115,6 @@ let imageDisplayName = $state('');
 
 let engineNetworks = $state<NetworkInspectInfo[]>([]);
 let engineContainers = $state<ContainerInfoUI[]>([]);
-
-const image = $runImageInfo;
 
 onMount(async () => {
   if (!image) {
@@ -234,6 +249,8 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
 }
 
 async function startContainer(): Promise<void> {
+  if (!image) return;
+
   createError = undefined;
   // create ExposedPorts objects
   const ExposedPorts: { [key: string]: object } = {};
@@ -609,7 +626,7 @@ const envDialogOptions: OpenDialogOptions = {
 </script>
 
 <Route path="/*">
-  {#if dataReady}
+  {#if dataReady && image}
     <EngineFormPage title="Create a container from image {imageDisplayName}:{image.tag}">
     {#snippet icon()}
       <i class="fas fa-play fa-2x" aria-hidden="true"></i>

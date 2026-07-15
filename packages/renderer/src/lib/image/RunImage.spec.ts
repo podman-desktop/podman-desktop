@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInfo } from '@podman-desktop/api';
 import type { ImageInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -26,11 +27,16 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import RunImage from '/@/lib/image/RunImage.svelte';
-import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
-import { runImageInfo } from '/@/stores/run-image-store';
+import { imagesInfos } from '/@/stores/images';
 
 const originalConsoleDebug = console.debug;
+
+const MY_IMAGE = {
+  engineId: 'podman',
+  Id: 'sha256:5555',
+  Size: 0,
+} as unknown as ImageInfo;
 
 // fake the window.events object
 beforeAll(() => {
@@ -57,31 +63,17 @@ afterEach(() => {
 });
 
 async function waitRender(): Promise<void> {
-  render(RunImage);
+  render(RunImage, {
+    engineId: MY_IMAGE.engineId,
+    imageID: MY_IMAGE.Id,
+    base64RepoTag: btoa('<none>'),
+  });
   await tick();
   await tick();
 }
 
 async function createRunImage(entrypoint?: string | string[], cmd?: string[]): Promise<void> {
-  runImageInfo.set({
-    age: '',
-    base64RepoTag: '',
-    createdAt: 0,
-    engineId: '',
-    engineName: '',
-    size: 0,
-    humanSize: '',
-    id: '',
-    arch: '',
-    status: 'UNUSED',
-    name: '',
-    selected: false,
-    shortId: '',
-    tag: '',
-    icon: ImageIcon,
-    badges: [],
-    digest: 'sha256:1234567890',
-  });
+  imagesInfos.set([MY_IMAGE]);
   const imageInfo: ImageInspectInfo = {
     Architecture: '',
     Author: '',

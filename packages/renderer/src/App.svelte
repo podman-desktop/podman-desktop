@@ -224,9 +224,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/existing-image-create-container" breadcrumb="Select image" >
             <CreateContainerFromExistingImage />
           </Route>
-          <Route path="/run/*" breadcrumb="Run Image">
-            <RunImage />
-          </Route>
           <Route path="/build" breadcrumb="Build an Image" let:meta>
             <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
           </Route>
@@ -247,13 +244,24 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
           <Route
             path="/:id/:engineId/:base64RepoTag/*"
-            breadcrumb="Image Details"
             let:meta
-            navigationHint="details">
-            <ImageDetails
-              imageID={meta.params.id}
-              engineId={decodeURI(meta.params.engineId)}
-              base64RepoTag={meta.params.base64RepoTag} />
+            firstmatch>
+            <Route path="/run/*" breadcrumb="Run Image">
+              <RunImage
+                imageID={meta.params.id}
+                engineId={decodeURI(meta.params.engineId)}
+                base64RepoTag={meta.params.base64RepoTag}
+              />
+            </Route>
+            <Route
+              path="/*"
+              breadcrumb="Image Details"
+              navigationHint="details">
+              <ImageDetails
+                imageID={meta.params.id}
+                engineId={decodeURI(meta.params.engineId)}
+                base64RepoTag={meta.params.base64RepoTag} />
+            </Route>
           </Route>
         </Route>
         <Route

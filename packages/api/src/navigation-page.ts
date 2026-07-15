@@ -30,6 +30,7 @@ export enum NavigationPage {
   CONTAINER_KUBE = 'container-kube',
   IMAGES = 'images',
   IMAGE_BUILD = 'image-build',
+  IMAGE_RUN = 'image-run',
   IMAGE = 'image',
   MANIFEST = 'manifest',
   ONBOARDING = 'preferences-onboarding',

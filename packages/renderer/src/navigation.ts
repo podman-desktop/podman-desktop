@@ -62,6 +62,8 @@ export const resolveRoute = (request: InferredNavigationRequest<NavigationPage>)
       return `/images/build?taskId=${request.parameters.taskId}`;
     case NavigationPage.IMAGE:
       return `/images/${request.parameters.id}/${request.parameters.engineId}/${btoa(request.parameters.tag)}/summary`;
+    case NavigationPage.IMAGE_RUN:
+      return `/images/${request.parameters.id}/${request.parameters.engineId}/${request.parameters.base64RepoTag}/run/basic`;
     case NavigationPage.MANIFEST:
       return `/manifests/${request.parameters.id}/${request.parameters.engineId}/${btoa(request.parameters.tag)}/summary`;
     case NavigationPage.ONBOARDING:

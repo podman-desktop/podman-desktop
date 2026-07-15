@@ -29,7 +29,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
-import { runImageInfo } from '/@/stores/run-image-store';
 
 import PullImage from './PullImage.svelte';
 

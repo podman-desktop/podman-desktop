@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
-import { MenuContext } from '@podman-desktop/core-api';
+import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -9,8 +9,8 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { ContextUI } from '/@/lib/context/context';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { handleNavigation } from '/@/navigation';
 import { context } from '/@/stores/context';
-import { runImageInfo } from '/@/stores/run-image-store';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 
 import ActionsWrapper from './ActionsMenu.svelte';
@@ -58,9 +58,15 @@ onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_IMAGE);
 });
 
-async function runImage(imageInfo: ImageInfoUI): Promise<void> {
-  runImageInfo.set(imageInfo);
-  router.goto('/images/run/basic');
+async function runImage(): Promise<void> {
+  handleNavigation({
+    page: NavigationPage.IMAGE_RUN,
+    parameters: {
+      id: image.id,
+      engineId: image.engineId,
+      base64RepoTag: image.base64RepoTag,
+    },
+  });
 }
 
 async function deleteImage(): Promise<void> {
@@ -104,7 +110,7 @@ function saveImage(): void {
 }
 </script>
 
-<ListItemButtonIcon title="Run Image" onClick={(): Promise<void> => runImage(image)} detailed={detailed} icon={faPlay} />
+<ListItemButtonIcon title="Run Image" onClick={runImage} detailed={detailed} icon={faPlay} />
 
 <ListItemButtonIcon
   title="Delete Image"

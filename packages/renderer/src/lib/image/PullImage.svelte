@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faArrowCircleDown, faBan, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
-import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
@@ -16,8 +16,8 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
+import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
-import { runImageInfo } from '/@/stores/run-image-store';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
@@ -230,8 +230,14 @@ async function gotoImageDetails(): Promise<void> {
 async function gotoImageRun(): Promise<void> {
   const image = await getFirstPulledImageInfo();
   if (image) {
-    runImageInfo.set(image);
-    router.goto('/images/run/basic');
+    handleNavigation({
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: image.id,
+        engineId: image.engineId,
+        base64RepoTag: image.base64RepoTag,
+      },
+    });
   }
 }
 async function cancelPullImage(): Promise<void> {

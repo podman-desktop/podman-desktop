@@ -35,6 +35,7 @@ export interface NavigationParameters {
   [NavigationPage.IMAGES]: never;
   [NavigationPage.IMAGE_BUILD]: { taskId: number | undefined };
   [NavigationPage.IMAGE]: { id: string; engineId: string; tag: string };
+  [NavigationPage.IMAGE_RUN]: { id: string; engineId: string; base64RepoTag: string };
   [NavigationPage.MANIFEST]: { id: string; engineId: string; tag: string };
   [NavigationPage.ONBOARDING]: { extensionId: string };
   [NavigationPage.PODMAN_PODS]: never;
