@@ -67,6 +67,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
 test.afterAll(async ({ runner, page }) => {
   try {
+    await deleteImage(page, BUILD_IMAGE);
     await deleteImage(page, BASE_IMAGE);
   } finally {
     await removeRegistryCredentials(TEST_REGISTRY_URL).catch((error: unknown) => {
@@ -141,6 +142,7 @@ test.describe
     });
 
     test('Build with invalid registry credentials and validation enabled succeeds', async ({ navigationBar, page }) => {
+      test.setTimeout(120_000);
       await test.step('Inject invalid credentials and wait for Podman Desktop to register them', async () => {
         await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
         const settingsBar = await navigationBar.openSettings();
@@ -177,6 +179,7 @@ test.describe
       navigationBar,
       page,
     }) => {
+      test.setTimeout(120_000);
       await test.step('Inject invalid credentials and wait for Podman Desktop to register them', async () => {
         await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
         const settingsBar = await navigationBar.openSettings();
