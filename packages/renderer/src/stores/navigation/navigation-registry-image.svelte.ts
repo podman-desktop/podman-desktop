@@ -24,7 +24,7 @@ import { imagesInfos } from '/@/stores/images';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
 
-let count = $derived(0);
+let count = $state(0);
 let destinations = $state<GoToInfo[]>([]);
 
 const imageUtils = new ImageUtils();
