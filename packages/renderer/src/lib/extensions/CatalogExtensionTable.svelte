@@ -1,5 +1,7 @@
 <script lang="ts">
-import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
+import { Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
@@ -15,6 +17,7 @@ import {
 } from './catalog-extension-table-sort.svelte';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
+import { EXTENSION_INSTALLED_TOOLTIP } from './extension-badge-styles';
 import { isExtensionPinnedRow } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
 import { EXTENSION_TABLE_ROW_BASE_CLASS, extensionTableRowBorderClass } from './extension-table-styles';
@@ -165,7 +168,11 @@ function isSorted(column: CatalogTableSortColumn): boolean {
         </div>
         <div role="cell" class="justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex shrink-0 items-center justify-end gap-1">
-            {#if !extension.isInstalled && extension.fetchable}
+            {#if extension.isInstalled}
+              <Tooltip top tip={EXTENSION_INSTALLED_TOOLTIP}>
+                <Icon icon={faCheckCircle} class="text-[var(--pd-invert-content-info-icon)]" size="1.1x" />
+              </Tooltip>
+            {:else if extension.fetchable}
               <FeaturedExtensionDownload {oninstall} extension={extension} />
             {/if}
             <CatalogExtensionActions
