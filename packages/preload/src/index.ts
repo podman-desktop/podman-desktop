@@ -1554,12 +1554,6 @@ export function initExposure(): void {
       return ipcInvoke('image-registry:getSuggestedRegistries');
     },
   );
-  contextBridge.exposeInMainWorld(
-    'invokeImageRegistryConfigHandler',
-    async (url: string, label: string): Promise<void> => {
-      return ipcInvoke('image-registry:invokeConfigHandler', url, label);
-    },
-  );
   contextBridge.exposeInMainWorld('getImageRegistryProviderNames', async (): Promise<string[]> => {
     return ipcInvoke('image-registry:getProviderNames');
   });
