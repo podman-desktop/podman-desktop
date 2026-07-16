@@ -48,7 +48,6 @@ const TIMEOUT_SHORT = 10_000;
 const TIMEOUT_MEDIUM = 20_000;
 const TIMEOUT_STANDARD = 30_000;
 const TIMEOUT_LONG = 60_000;
-const TIMEOUT_VERY_LONG = 90_000;
 const TIMEOUT_SETUP = 120_000;
 const PODMAN_MACHINE_STARTUP_TIMEOUT = 360_000;
 
@@ -244,20 +243,20 @@ test.describe
 
     test('Podman machine operations - START', async ({ page, navigationBar }) => {
       test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-      test.setTimeout(TIMEOUT_SETUP);
+      test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_STANDARD);
 
       const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
       await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
       await podmanMachineDetails.podmanMachineStartButton.click();
       await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-        timeout: TIMEOUT_VERY_LONG,
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
       });
     });
 
     test('Podman machine operations - RESTART', async ({ page, navigationBar }) => {
       test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-      test.setTimeout(TIMEOUT_SETUP);
+      test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_STANDARD);
 
       const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
@@ -270,7 +269,7 @@ test.describe
       await openMachineDetailsPage(page, navigationBar);
 
       await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-        timeout: TIMEOUT_VERY_LONG,
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
       });
     });
 
