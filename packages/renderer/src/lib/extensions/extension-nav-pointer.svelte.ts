@@ -47,10 +47,12 @@ const pendingExtensionIds = new Set<string>();
 /** Optional display names for fallback tooltip copy when catalog metadata is not loaded yet. */
 const pendingExtensionDisplayNames = new Map<string, string>();
 
-const NAV_POINTER_POLL_INTERVAL_MS = 500;
-const NAV_POINTER_MAX_ATTEMPTS = 10;
-const POST_INSTALL_SYNC_INTERVAL_MS = 250;
-const POST_INSTALL_SYNC_MAX_ATTEMPTS = 40;
+/** Background upgrade from Extensions fallback → real webview/contrib after install. */
+const NAV_POINTER_POLL_INTERVAL_MS = 400;
+const NAV_POINTER_MAX_ATTEMPTS = 30;
+/** Best-effort sync only — tooltip must not wait on this. */
+const POST_INSTALL_SYNC_INTERVAL_MS = 200;
+const POST_INSTALL_SYNC_MAX_ATTEMPTS = 15;
 
 const AI_LAB_EXTENSION_ID = 'redhat.ai-lab';
 const AI_LAB_NAV_NAME = 'AI Lab';
@@ -211,17 +213,26 @@ function hasExtensionNavigationTarget(extensionId: string): boolean {
   return resolvePointerForExtension(extensionId, allWebviews, allContribs, { allowFallback: false }) !== null;
 }
 
-/** Wait until the extension webview/contrib is registered, then refresh sidebar nav. */
+/**
+ * Best-effort wait for a dedicated sidebar target after install.
+ * Callers should show the post-install tooltip first (Extensions fallback is fine);
+ * this only helps refresh nav / upgrade the pointer when a webview appears.
+ */
 export async function syncExtensionNavigationAfterInstall(extensionId: string): Promise<boolean> {
-  for (let attempt = 0; attempt < POST_INSTALL_SYNC_MAX_ATTEMPTS; attempt += 1) {
+  await fetchWebviews();
+  refreshExtensionNavigationItems();
+  if (hasExtensionNavigationTarget(extensionId)) {
+    return true;
+  }
+
+  for (let attempt = 1; attempt < POST_INSTALL_SYNC_MAX_ATTEMPTS; attempt += 1) {
+    await delay(POST_INSTALL_SYNC_INTERVAL_MS);
     await fetchWebviews();
     refreshExtensionNavigationItems();
 
     if (hasExtensionNavigationTarget(extensionId)) {
       return true;
     }
-
-    await delay(POST_INSTALL_SYNC_INTERVAL_MS);
   }
 
   refreshExtensionNavigationItems();

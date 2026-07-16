@@ -271,7 +271,7 @@ $effect(() => {
         url={buildExtensionsListPath('installed', searchTerm)} />
       {#if enableLocalExtensions}
         <Tab
-          title="Install custom/local extensions"
+          title="Custom and local extensions"
           selected={screen === 'development'}
           url={buildExtensionsListPath('development', searchTerm)} />
       {/if}

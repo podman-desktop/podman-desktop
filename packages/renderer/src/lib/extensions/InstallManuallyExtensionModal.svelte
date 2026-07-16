@@ -84,10 +84,12 @@ async function finishCustomInstall(extensionId: string, ociImage: string): Promi
   rememberCustomInstalledExtension(extensionId, ociToken, ociImage);
   // Suggestion scope hides non-built-ins until restored for this session.
   prototypeRestoreExtension(extensionId);
-  await syncExtensionNavigationAfterInstall(extensionId);
   markNewlyInstalled(extensionId);
   router.goto(buildExtensionsListPath('development'));
   closeCallback();
+  syncExtensionNavigationAfterInstall(extensionId).catch((error: unknown) => {
+    console.error(error);
+  });
 }
 
 async function completeSuccessfulInstall(ociImage: string, installedBefore: Set<string>): Promise<void> {
@@ -99,10 +101,12 @@ async function completeSuccessfulInstall(ociImage: string, installedBefore: Set<
     return;
   }
 
-  await syncExtensionNavigationAfterInstall(extensionId);
   markNewlyInstalled(extensionId);
   router.goto(buildExtensionsListPath('installed'));
   closeCallback();
+  syncExtensionNavigationAfterInstall(extensionId).catch((error: unknown) => {
+    console.error(error);
+  });
 }
 
 async function completeAlreadyInstalled(ociImage: string): Promise<void> {

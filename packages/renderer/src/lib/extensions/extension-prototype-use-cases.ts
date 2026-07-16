@@ -51,10 +51,29 @@ let prototypeUseCasesEnabled = false;
 const prototypeRemovedExtensionIds = new Set<string>();
 const prototypeRestoredExtensionIds = new Set<string>();
 
+/**
+ * Extensions that normally contribute a real sidebar webview/panel.
+ * Only these may get a synthetic prototype sidebar entry when the live
+ * webview is missing — other installs must use the post-install fallback
+ * (known page or Extensions) instead of inventing a nav item.
+ */
 const PROTOTYPE_SIDEBAR_DEFAULT_NAMES: Record<string, string> = {
   'redhat.ai-lab': 'AI Lab',
   'redhat.bootable-containers': 'Bootable Containers',
 };
+
+/** True when this extension is allowed a synthetic prototype sidebar entry. */
+export function shouldEnsurePrototypeSidebarEntry(extensionId: string): boolean {
+  if (PROTOTYPE_SIDEBAR_DEFAULT_NAMES[extensionId]) {
+    return true;
+  }
+  for (const knownId of Object.keys(PROTOTYPE_SIDEBAR_DEFAULT_NAMES)) {
+    if (extensionIdsLooselyMatch(knownId, extensionId)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function getPrototypeSidebarEntriesMap(): Map<string, PrototypeSidebarEntry> {
   prototypeSidebarEntries ??= new Map();
@@ -177,7 +196,20 @@ export function setPrototypeUseCasesEnabled(enabled: boolean): void {
   prototypeUseCasesEnabled = enabled;
   setPrototypeLifecycleDemosEnabled(enabled);
   if (enabled) {
+    // Drop any previously invented nav items for non-webview extensions.
+    prunePrototypeSidebarEntries();
     startPrototypeActivatingOverlay();
+  } else {
+    clearPrototypeSidebarEntries();
+  }
+}
+
+/** Remove synthetic sidebar entries for extensions that do not own a real nav item. */
+export function prunePrototypeSidebarEntries(): void {
+  for (const entry of getPrototypeSidebarEntries()) {
+    if (!shouldEnsurePrototypeSidebarEntry(entry.extensionId)) {
+      removePrototypeSidebarEntry(entry.extensionId);
+    }
   }
 }
 
@@ -252,11 +284,15 @@ export function prototypeRestoreExtension(
     }
   }
 
-  // Ensure a sidebar anchor exists even when the real webview was disposed (failed extension).
-  const existingSidebar = findPrototypeSidebarEntry(extensionId);
-  ensurePrototypeSidebarEntry(extensionId, displayName, iconHref);
-  if (!existingSidebar) {
-    changed = true;
+  // Only webview extensions get a synthetic sidebar when the panel is missing.
+  // Kind/Compose/etc. must not invent nav items — post-install tooltip uses
+  // known locations or the Extensions fallback instead.
+  if (shouldEnsurePrototypeSidebarEntry(extensionId)) {
+    const existingSidebar = findPrototypeSidebarEntry(extensionId);
+    ensurePrototypeSidebarEntry(extensionId, displayName, iconHref);
+    if (!existingSidebar) {
+      changed = true;
+    }
   }
 
   // Avoid bumping revision when already restored — callers in $effect would loop forever.

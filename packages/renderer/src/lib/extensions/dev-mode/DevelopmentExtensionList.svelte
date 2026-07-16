@@ -226,7 +226,7 @@ async function addLocalFolderExtension(): Promise<void> {
         <div class="flex min-h-[40vh] flex-1 items-center justify-center px-5">
           <EmptyScreen
             icon={ExtensionIcon}
-            title="Install custom/local extensions"
+            title="Custom and local extensions"
             message="Install an extension from a container image, or enable Development Mode to track a local folder."
             detail="Use Install custom for OCI images, or add a local folder after enabling Preferences > Extensions > Development Mode.">
             <div class="flex flex-wrap gap-2 justify-center">
@@ -241,7 +241,7 @@ async function addLocalFolderExtension(): Promise<void> {
         <div class="flex min-h-[40vh] flex-1 items-center justify-center px-5">
           <EmptyScreen
             icon={ExtensionIcon}
-            title="Install custom/local extensions"
+            title="Custom and local extensions"
             message="Install from a container image or add a folder on your machine to load and test an extension."
             detail="Tracked folders appear here with load status and actions.">
             <div class="flex flex-wrap gap-2 justify-center">

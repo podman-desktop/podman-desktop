@@ -231,6 +231,35 @@ describe('extension-nav-pointer', () => {
     });
   });
 
+  test('Developer Sandbox falls back to Extensions immediately without waiting for a webview', () => {
+    queueExtensionNavPointer('redhat.redhat-sandbox', 'Developer Sandbox');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'redhat.redhat-sandbox',
+      link: '/extensions',
+      label: 'Extensions',
+      tooltip: 'Open Extensions from the sidebar to get started with Developer Sandbox.',
+    });
+  });
+
+  test('Kind post-install tooltip anchors on Kubernetes without inventing a Kind nav item', async () => {
+    const { prototypeRestoreExtension, clearPrototypeSidebarEntries, findPrototypeSidebarEntry } = await import(
+      './extension-prototype-use-cases'
+    );
+    clearPrototypeSidebarEntries();
+    prototypeRestoreExtension('podman-desktop.kind', [], 'Kind');
+    expect(findPrototypeSidebarEntry('podman-desktop.kind')).toBeUndefined();
+
+    queueExtensionNavPointer('podman-desktop.kind', 'Kind');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'podman-desktop.kind',
+      link: '/kubernetes',
+      label: 'Kubernetes',
+      tooltip: 'Open Kubernetes from the sidebar to create a Kind cluster.',
+    });
+  });
+
   test('syncExtensionNavigationAfterInstall returns true when webview is available', async () => {
     webviewsStore.set([
       {

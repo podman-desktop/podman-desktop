@@ -162,5 +162,5 @@ test('suggestion scope seeds default custom and local example rows', async () =>
   await vi.waitFor(() => expect(screen.getByText('Kubernetes Dashboard')).toBeInTheDocument());
   expect(screen.getByText('Hello Local Extension')).toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: 'search extensions' })).toBeInTheDocument();
-  expect(screen.queryByText('Install custom/local extensions')).not.toBeInTheDocument();
+  expect(screen.queryByText('Custom and local extensions')).not.toBeInTheDocument();
 });

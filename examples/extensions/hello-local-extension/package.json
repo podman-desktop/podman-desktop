@@ -1,7 +1,7 @@
 {
   "name": "hello-local-extension",
   "displayName": "Hello Local Extension",
-  "description": "Minimal local extension example for the Install custom/local extensions tab flow.",
+  "description": "Minimal local extension example for the Custom and local extensions tab flow.",
   "version": "0.0.1",
   "publisher": "podman-desktop-examples",
   "license": "Apache-2.0",

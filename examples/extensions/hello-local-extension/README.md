@@ -1,9 +1,9 @@
 # Hello Local Extension (example)
 
-Minimal extension used to exercise the **Install custom/local extensions** tab:
+Minimal extension used to exercise the **Custom and local extensions** tab:
 
 1. In Podman Desktop, enable **Preferences → Extensions → Development Mode**.
-2. Open **Extensions → Install custom/local extensions**.
+2. Open **Extensions → Custom and local extensions**.
 3. Click **Add a local folder extension…** and select this directory:
 
    `examples/extensions/hello-local-extension`

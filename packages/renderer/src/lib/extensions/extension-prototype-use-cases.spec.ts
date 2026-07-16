@@ -36,11 +36,14 @@ import {
   applyPrototypeCatalogUseCaseOverlay,
   applyPrototypeUseCaseOverlays,
   clearPrototypeRemovedExtensions,
+  clearPrototypeSidebarEntries,
   ensurePrototypeManualUpdateSettings,
+  findPrototypeSidebarEntry,
   isPrototypeRemovedExtension,
   prototypeRemoveExtension,
   prototypeRestoreExtension,
   setPrototypeUseCasesEnabled,
+  shouldEnsurePrototypeSidebarEntry,
   USE_CASE_EXTENSION_IDS,
 } from './extension-prototype-use-cases';
 import { ExtensionsUtils } from './extensions-utils';
@@ -50,9 +53,27 @@ describe('prototype use cases on real extensions', () => {
 
   afterEach(() => {
     clearPrototypeRemovedExtensions();
+    clearPrototypeSidebarEntries();
     setPrototypeUseCasesEnabled(true);
     resetExtensionLifecycleUserTogglesForTests();
     resetPrototypeLifecycleOverlaysForTests();
+  });
+
+  test('only webview extensions may get a synthetic prototype sidebar entry', () => {
+    expect(shouldEnsurePrototypeSidebarEntry('redhat.ai-lab')).toBe(true);
+    expect(shouldEnsurePrototypeSidebarEntry('redhat.bootable-containers')).toBe(true);
+    expect(shouldEnsurePrototypeSidebarEntry('podman-desktop.kind')).toBe(false);
+    expect(shouldEnsurePrototypeSidebarEntry('community.headlamp')).toBe(false);
+  });
+
+  test('restoring Kind does not invent a sidebar nav item', () => {
+    prototypeRestoreExtension('podman-desktop.kind', [], 'Kind');
+    expect(findPrototypeSidebarEntry('podman-desktop.kind')).toBeUndefined();
+  });
+
+  test('restoring AI Lab may create a synthetic sidebar when the webview is missing', () => {
+    prototypeRestoreExtension('redhat.ai-lab', [], 'Podman AI Lab');
+    expect(findPrototypeSidebarEntry('redhat.ai-lab')?.name).toBe('AI Lab');
   });
 
   test('does not inject fake demo extension rows', () => {

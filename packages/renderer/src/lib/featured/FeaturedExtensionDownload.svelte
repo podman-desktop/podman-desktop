@@ -11,6 +11,7 @@ import {
   ensurePrototypeSidebarEntry,
   isPrototypeRemovedExtension,
   prototypeRestoreExtension,
+  shouldEnsurePrototypeSidebarEntry,
 } from '/@/lib/extensions/extension-prototype-use-cases';
 import {
   getLatestAvailableVersion,
@@ -154,11 +155,14 @@ async function installExtension(): Promise<void> {
       logs = [...logs, '☑️ installation finished!'];
       percentage = '100%';
       installCompleted = true;
-      // Ensure the sidebar entry is visible again before showing the post-install tooltip.
       refreshExtensionNavigationItems();
-      await syncExtensionNavigationAfterInstall(extension.id);
+      // Show the post-install tooltip immediately; upgrade the nav target in the background
+      // when a webview/contrib appears (e.g. Developer Sandbox).
       markNewlyInstalled(extension.id, extension.displayName);
       oninstall(extension.id);
+      syncExtensionNavigationAfterInstall(extension.id).catch((error: unknown) => {
+        console.error(error);
+      });
       return;
     }
 
@@ -223,12 +227,19 @@ async function installExtension(): Promise<void> {
       installCompleted = true;
       await fetchExtensions();
       if (suggestionScope) {
-        ensurePrototypeSidebarEntry(extension.id, extension.displayName, resolveInstallIconHref());
+        // Do not invent sidebar items for every install — only extensions that
+        // normally have a webview may get a synthetic anchor when it's missing.
+        if (shouldEnsurePrototypeSidebarEntry(extension.id)) {
+          ensurePrototypeSidebarEntry(extension.id, extension.displayName, resolveInstallIconHref());
+        }
         refreshExtensionNavigationItems();
       }
-      await syncExtensionNavigationAfterInstall(extension.id);
+      // Tooltip first — do not wait on webview registration (can take many seconds).
       markNewlyInstalled(extension.id, extension.displayName);
       oninstall(extension.id);
+      syncExtensionNavigationAfterInstall(extension.id).catch((error: unknown) => {
+        console.error(error);
+      });
     } catch (error) {
       const message = String(error);
       // In suggestion scope, a backend "already installed" error usually means the
@@ -253,9 +264,11 @@ async function completePrototypeReinstall(): Promise<void> {
   installCompleted = true;
   errorInstall = '';
   refreshExtensionNavigationItems();
-  await syncExtensionNavigationAfterInstall(extension.id);
   markNewlyInstalled(extension.id, extension.displayName);
   oninstall(extension.id);
+  syncExtensionNavigationAfterInstall(extension.id).catch((error: unknown) => {
+    console.error(error);
+  });
 }
 
 function resolveInstallIconHref(): string | undefined {
