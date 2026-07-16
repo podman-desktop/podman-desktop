@@ -70,3 +70,26 @@ test('createNavigationVolumeEntry', async () => {
   expect(listEntry.page).toBe('volumes');
   expect(listEntry.name).toBe('Volumes (2)');
 });
+
+test('createNavigationVolumeEntry truncates long volume names in destinations', async () => {
+  const entry = createNavigationVolumeEntry();
+  volumeListInfos.set([
+    {
+      Volumes: [
+        {
+          Id: '1234',
+          Size: 0,
+          Name: '1234567890abcdef',
+          engineId: 'podman',
+        },
+      ],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  await vi.waitFor(() => {
+    expect(entry.destinations).toHaveLength(2);
+  });
+
+  const [first] = entry.destinations;
+  expect(first.name).toBe('Volume: 1234567890ab');
+});

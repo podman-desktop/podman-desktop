@@ -88,7 +88,7 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
         page: NavigationPage.CONTRIBUTION,
         parameters: { name: contrib.name },
         icon: { iconImage: contrib.icon },
-        name: `Contribution: ${contrib.name}`,
+        name: `Extensions: ${contrib.name}`,
       };
     });
 

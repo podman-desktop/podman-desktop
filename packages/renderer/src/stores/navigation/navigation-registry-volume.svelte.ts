@@ -35,7 +35,7 @@ export function createNavigationVolumeEntry(): NavigationRegistryEntry {
         page: NavigationPage.VOLUME as const,
         parameters: { engineId: volume.engineId, name: volume.Name },
         icon: { iconComponent: VolumeIcon },
-        name: `Volume: ${volume.Name}`,
+        name: `Volume: ${volume.Name.substring(0, 12)}`,
       })),
       {
         page: NavigationPage.VOLUMES as const,
