@@ -35,6 +35,7 @@ const mockPersistence = {
 
 beforeEach(() => {
   extensionTableViewport.hideOrigin = false;
+  extensionTableViewport.hideStatus = false;
   tablePersistence.storage = mockPersistence;
   vi.stubGlobal(
     'matchMedia',
@@ -109,5 +110,21 @@ test('hides Type column on small viewports', async () => {
 
   expect(screen.getByRole('columnheader', { name: 'Location' })).toBeInTheDocument();
   expect(screen.queryByRole('columnheader', { name: 'Type' })).not.toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Status' })).toBeInTheDocument();
   expect(screen.getByTitle('Configure Columns')).toBeInTheDocument();
+});
+
+test('hides Status column on very small viewports', async () => {
+  extensionTableViewport.hideOrigin = true;
+  extensionTableViewport.hideStatus = true;
+  render(DevelopmentExtensionListTable, {
+    extensionFolderUIInfos: [extensionFolderWithExtensionStopped],
+    selectedItemsNumber: 0,
+  });
+
+  expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Location' })).toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: 'Type' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: 'Status' })).not.toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
 });

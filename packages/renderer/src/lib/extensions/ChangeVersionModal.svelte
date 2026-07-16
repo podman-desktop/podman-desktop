@@ -255,7 +255,7 @@ function handleAutoUpdateToggle(checked: boolean): void {
       {#if showAutoUpdateToggle}
         <div class="flex shrink-0 items-center justify-between gap-4">
           <label for="auto-update-{extension.id}" class="text-sm text-[var(--pd-content-text)] cursor-pointer">
-            Enable automatic updates for this extension
+            Enable automatic version upgrades for this extension
           </label>
           <SlideToggle
             id="auto-update-{extension.id}"
@@ -263,7 +263,7 @@ function handleAutoUpdateToggle(checked: boolean): void {
             on:checked={(event): void => {
               handleAutoUpdateToggle(event.detail);
             }}
-            aria-label="Enable automatic updates for {extension.displayName}" />
+            aria-label="Enable automatic version upgrades for {extension.displayName}" />
         </div>
       {/if}
     </div>

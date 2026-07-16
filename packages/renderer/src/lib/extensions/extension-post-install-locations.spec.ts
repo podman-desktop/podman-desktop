@@ -40,4 +40,9 @@ describe('extension-post-install-locations', () => {
   test('returns undefined for unknown extensions', () => {
     expect(resolveExtensionPostInstallLocation('unknown.extension')).toBeUndefined();
   });
+
+  test('matches catalog ids with publisher prefix variants', () => {
+    expect(resolveExtensionPostInstallLocation('minikube')?.link).toBe('/kubernetes');
+    expect(resolveExtensionPostInstallLocation('redhat.minikube')?.link).toBe('/kubernetes');
+  });
 });

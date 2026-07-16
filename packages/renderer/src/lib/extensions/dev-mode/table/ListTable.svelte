@@ -27,6 +27,7 @@ onMount(() => {
 });
 
 const showOrigin = $derived(!extensionTableViewport.hideOrigin);
+const showStatus = $derived(!extensionTableViewport.hideStatus);
 
 function extensionDisplayName(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): string {
   const installedName = extensionFolder.installedExtension?.displayName?.trim();
@@ -79,14 +80,16 @@ const actionsColumn = new TableColumn<SelectableExtensionDevelopmentFolderInfoUI
   overflow: true,
 });
 
-// Order: Name → Location → Type → Status → Actions
-const columns = $derived(
-  showOrigin
-    ? [nameColumn, locationColumn, typeColumn, extensionStatusColumn, actionsColumn]
-    : [nameColumn, locationColumn, extensionStatusColumn, actionsColumn],
-);
+// Order: Name → Location → Type → Status → Actions (Type/Status drop on small viewports)
+const columns = $derived([
+  nameColumn,
+  locationColumn,
+  ...(showOrigin ? [typeColumn] : []),
+  ...(showStatus ? [extensionStatusColumn] : []),
+  actionsColumn,
+]);
 
-const tableLayoutKey = $derived(showOrigin ? 'with-type' : 'without-type');
+const tableLayoutKey = $derived(`type:${showOrigin}-status:${showStatus}`);
 
 const row = new TableRow<SelectableExtensionDevelopmentFolderInfoUI>({
   selectable: (): boolean => true,
@@ -107,7 +110,7 @@ function label(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): str
 <div class="min-w-0 [&>[role='table']]:mx-0">
   {#key tableLayoutKey}
     <Table
-      kind="custom-local-extension-list-v2"
+      kind="custom-local-extension-list-v3"
       data={extensionFolderUIInfos}
       {columns}
       {row}

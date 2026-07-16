@@ -207,7 +207,7 @@ test('Expect installed catalog card shows active status next to version', async 
   expect(screen.queryByRole('button', { name: 'Installed' })).not.toBeInTheDocument();
 });
 
-test('Expect installed catalog card shows version without upgrade link', async () => {
+test('Expect installed catalog card shows upgrade link aligned with version and status', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'minikube',
     displayName: 'minikube',
@@ -241,5 +241,10 @@ test('Expect installed catalog card shows version without upgrade link', async (
   render(SuggestionCatalogExtension, { catalogExtensionUI });
 
   expect(screen.getByText('v0.4.0')).toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: 'Upgrade to v0.4.1' })).not.toBeInTheDocument();
+  expect(screen.getByText('Installed')).toBeInTheDocument();
+  const upgradeLink = screen.getByRole('link', { name: 'Upgrade to v0.4.1' });
+  expect(upgradeLink).toBeInTheDocument();
+  expect(upgradeLink.className).toContain('!p-0');
+  expect(upgradeLink.className).toContain('leading-none');
+  expect(upgradeLink.className).toContain('items-center');
 });

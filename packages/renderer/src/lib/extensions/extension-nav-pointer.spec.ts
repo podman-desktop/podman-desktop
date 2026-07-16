@@ -25,6 +25,7 @@ import {
   isExtensionNavPointerActive,
   queueExtensionNavPointer,
   resetExtensionNavPointerQueueForTests,
+  setSidebarNavLinkAvailabilityForTests,
   syncExtensionNavigationAfterInstall,
 } from './extension-nav-pointer.svelte';
 
@@ -99,6 +100,8 @@ describe('extension-nav-pointer', () => {
   beforeEach(() => {
     resetExtensionNavPointerQueueForTests();
     webviewsStore.set([]);
+    // Default: Kubernetes sidebar present (matches typical desktop with internal K8s nav).
+    setSidebarNavLinkAvailabilityForTests(link => link === '/kubernetes');
     catalogStore.set([
       {
         id: 'redhat.ai-lab',
@@ -125,6 +128,30 @@ describe('extension-nav-pointer', () => {
       tooltip: 'Open Kubernetes from the sidebar to create a Kind cluster.',
     });
     expect(isExtensionNavPointerActive('/kubernetes')).toBe(true);
+  });
+
+  test('minikube falls back to Extensions when Kubernetes sidebar is unavailable', () => {
+    setSidebarNavLinkAvailabilityForTests(() => false);
+
+    queueExtensionNavPointer('podman-desktop.minikube', 'minikube');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'podman-desktop.minikube',
+      link: '/extensions',
+      label: 'Extensions',
+      tooltip: 'Open Extensions from the sidebar to get started with minikube.',
+    });
+  });
+
+  test('resolves pointer to Kubernetes for minikube when Kubernetes sidebar is present', () => {
+    queueExtensionNavPointer('podman-desktop.minikube', 'minikube');
+
+    expect(extensionNavPointerState.value).toEqual({
+      extensionId: 'podman-desktop.minikube',
+      link: '/kubernetes',
+      label: 'Kubernetes',
+      tooltip: 'Open Kubernetes from the sidebar to create a Minikube cluster.',
+    });
   });
 
   test('prefers webview target over known page location', () => {

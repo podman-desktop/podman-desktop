@@ -6,7 +6,11 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
-import { dismissExtensionNavPointer, extensionNavPointerState } from '/@/lib/extensions/extension-nav-pointer.svelte';
+import {
+  dismissExtensionNavPointer,
+  extensionNavPointerState,
+  retargetExtensionNavPointerToExtensionsFallback,
+} from '/@/lib/extensions/extension-nav-pointer.svelte';
 import {
   resolveExtensionOnboardingStatusById,
   resolveOnboardingRouteExtensionId,
@@ -15,12 +19,16 @@ import { context } from '/@/stores/context';
 import { extensionNavigationGroupRevision } from '/@/stores/navigation/navigation-registry-extension.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 
+/** After this many missed anchors, fall back to Extensions so the callout is never stuck invisible. */
+const MAX_POSITION_RETRIES = 8;
+
 let calloutElement = $state<HTMLDivElement>();
 let arrowElement = $state<HTMLDivElement>();
 let arrowTop = $state(16);
 let isPositioned = $state(false);
 let cleanupAutoUpdate: (() => void) | undefined;
 let positionRetryTimeout: ReturnType<typeof setTimeout> | undefined;
+let positionRetryCount = $state(0);
 let onboardingRevision = $state(0);
 
 onMount(() => {
@@ -121,6 +129,16 @@ function schedulePositionRetry(): void {
     if (!extensionNavPointerState.value || isPositioned) {
       return;
     }
+
+    positionRetryCount += 1;
+    if (positionRetryCount >= MAX_POSITION_RETRIES) {
+      // Missing sidebar anchor (e.g. Kubernetes nav disabled) — show Extensions instead.
+      if (retargetExtensionNavPointerToExtensionsFallback()) {
+        positionRetryCount = 0;
+        return;
+      }
+    }
+
     updateCalloutPosition()
       .then(() => {
         if (!isPositioned && extensionNavPointerState.value) {
@@ -149,6 +167,7 @@ $effect((): (() => void) => {
   teardownAutoUpdate();
   clearPositionRetry();
   isPositioned = false;
+  positionRetryCount = 0;
 
   if (!pointer || !element || !arrow) {
     return (): void => {

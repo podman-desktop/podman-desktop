@@ -83,6 +83,22 @@ export const EXTENSION_POST_INSTALL_LOCATIONS: Record<string, ExtensionPostInsta
   },
 };
 
+function extensionIdsMatch(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+
+  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
+  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
+  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
+}
+
 export function resolveExtensionPostInstallLocation(extensionId: string): ExtensionPostInstallLocation | undefined {
-  return EXTENSION_POST_INSTALL_LOCATIONS[extensionId];
+  const exact = EXTENSION_POST_INSTALL_LOCATIONS[extensionId];
+  if (exact) {
+    return exact;
+  }
+
+  const matchedId = Object.keys(EXTENSION_POST_INSTALL_LOCATIONS).find(id => extensionIdsMatch(id, extensionId));
+  return matchedId ? EXTENSION_POST_INSTALL_LOCATIONS[matchedId] : undefined;
 }

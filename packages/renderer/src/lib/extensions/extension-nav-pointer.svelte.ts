@@ -133,12 +133,56 @@ export function findWebviewForExtension(
 }
 
 function findContribForExtension(extensionId: string, allContribs: ContributionInfo[]): ContributionInfo | undefined {
-  return allContribs.find(
-    item =>
-      item.extensionId === extensionId ||
-      extensionIdsMatch(item.extensionId, extensionId) ||
-      item.name.toLowerCase() === extensionId.split('.').pop()?.toLowerCase(),
-  );
+  // Only match by extension id — name-only matching can steal the pointer for
+  // catalog extensions like minikube when an unrelated contrib shares the name.
+  return allContribs.find(item => item.extensionId === extensionId || extensionIdsMatch(item.extensionId, extensionId));
+}
+
+/** Sidebar anchors that always exist in AppNavigation chrome (outside the scroll list). */
+const ALWAYS_AVAILABLE_NAV_LINKS = new Set(['/', '/preferences', EXTENSIONS_NAV_LINK]);
+
+/** Test-only override so unit tests can assert Kubernetes/etc. without mounting AppNavigation. */
+let sidebarNavLinkAvailabilityOverride: ((link: string) => boolean) | undefined;
+
+/** @internal Test helper */
+export function setSidebarNavLinkAvailabilityForTests(checker: ((link: string) => boolean) | undefined): void {
+  sidebarNavLinkAvailabilityOverride = checker;
+}
+
+/**
+ * True when a `data-nav-link` for this route exists (or is known to always exist).
+ * Avoids pointing the post-install callout at missing anchors (e.g. Kubernetes when
+ * internal Kubernetes nav is disabled) — that left the tooltip stuck at opacity-0.
+ *
+ * Uses the live DOM rather than importing `navigationRegistry` (circular init risk).
+ */
+export function isSidebarNavLinkAvailable(link: string): boolean {
+  if (ALWAYS_AVAILABLE_NAV_LINKS.has(link)) {
+    return true;
+  }
+  if (sidebarNavLinkAvailabilityOverride) {
+    return sidebarNavLinkAvailabilityOverride(link);
+  }
+  if (typeof document === 'undefined') {
+    return false;
+  }
+  return document.querySelector(`[data-nav-link="${link}"]`) !== null;
+}
+
+function buildExtensionsFallbackPointer(extensionId: string): ExtensionNavPointerTarget {
+  const catalogIdentities = getCatalogIdentities();
+  const catalog = catalogIdentities.find(item => item.id === extensionId || extensionIdsMatch(item.id, extensionId));
+  const label =
+    pendingExtensionDisplayNames.get(extensionId) ??
+    catalog?.displayName ??
+    extensionId.split('.').pop() ??
+    'extension';
+  return {
+    extensionId,
+    link: EXTENSIONS_NAV_LINK,
+    label: 'Extensions',
+    tooltip: `Open Extensions from the sidebar to get started with ${label}.`,
+  };
 }
 
 function resolvePointerForExtension(
@@ -179,7 +223,9 @@ function resolvePointerForExtension(
   }
 
   const knownLocation = resolveExtensionPostInstallLocation(extensionId);
-  if (knownLocation) {
+  // Only anchor on known pages when the sidebar actually has that item.
+  // Otherwise the callout stays opacity-0 forever (no `data-nav-link` target).
+  if (knownLocation && isSidebarNavLinkAvailable(knownLocation.link)) {
     return {
       extensionId,
       link: knownLocation.link,
@@ -189,21 +235,25 @@ function resolvePointerForExtension(
   }
 
   if (options.allowFallback) {
-    const catalog = catalogIdentities.find(item => item.id === extensionId || extensionIdsMatch(item.id, extensionId));
-    const label =
-      pendingExtensionDisplayNames.get(extensionId) ??
-      catalog?.displayName ??
-      extensionId.split('.').pop() ??
-      'extension';
-    return {
-      extensionId,
-      link: EXTENSIONS_NAV_LINK,
-      label: 'Extensions',
-      tooltip: `Open Extensions from the sidebar to get started with ${label}.`,
-    };
+    return buildExtensionsFallbackPointer(extensionId);
   }
 
   return null;
+}
+
+/** Retarget a stuck/invisible pointer to the always-present Extensions nav item. */
+export function retargetExtensionNavPointerToExtensionsFallback(): boolean {
+  const currentPointer = extensionNavPointerState.value;
+  if (!currentPointer || !pendingExtensionIds.has(currentPointer.extensionId)) {
+    return false;
+  }
+  if (currentPointer.link === EXTENSIONS_NAV_LINK) {
+    return false;
+  }
+
+  setExtensionNavPointer(buildExtensionsFallbackPointer(currentPointer.extensionId));
+  refreshExtensionNavigationItems();
+  return true;
 }
 
 function hasExtensionNavigationTarget(extensionId: string): boolean {
@@ -449,4 +499,5 @@ export function resetExtensionNavPointerQueueForTests(): void {
   pendingExtensionDisplayNames.clear();
   setExtensionNavPointer(null);
   stopNavPointerPolling();
+  sidebarNavLinkAvailabilityOverride = undefined;
 }

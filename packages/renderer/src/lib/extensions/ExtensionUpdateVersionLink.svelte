@@ -88,7 +88,7 @@ async function handleUpdate(event: Event): Promise<void> {
 
 {#if showLink && targetVersion}
   <Link
-    class="inline-flex shrink-0"
+    class="inline-flex shrink-0 items-center !p-0 text-sm leading-none"
     aria-label={linkLabel}
     on:click={(event): void => {
       handleUpdate(event).catch(() => undefined);

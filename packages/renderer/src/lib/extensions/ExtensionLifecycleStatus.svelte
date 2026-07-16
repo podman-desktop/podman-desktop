@@ -141,9 +141,9 @@ const showLabel = $derived(!!presentation);
 
 {#if presentation}
   {#if (!!tooltip && showTooltip) || (compact && !showLabel)}
-    <Tooltip top tip={tooltip ?? presentation.label}>
+    <Tooltip top tip={tooltip ?? presentation.label} class="min-w-0 max-w-full">
       <div class="min-w-0 max-w-full cursor-help">
-        <div class="inline-flex items-center gap-1.5 min-w-0 max-w-full {className}">
+        <div class="flex items-center gap-1.5 min-w-0 max-w-full {className}">
           <span class="inline-flex w-3 shrink-0 items-center justify-center" aria-hidden="true">
             <StatusDotIcon status={presentation.statusDotStatus} size="12" />
           </span>
@@ -156,7 +156,7 @@ const showLabel = $derived(!!presentation);
       </div>
     </Tooltip>
   {:else}
-    <div class="inline-flex items-center gap-1.5 min-w-0 max-w-full {className}">
+    <div class="flex items-center gap-1.5 min-w-0 max-w-full {className}">
       <span class="inline-flex w-3 shrink-0 items-center justify-center" aria-hidden="true">
         <StatusDotIcon status={presentation.statusDotStatus} size="12" />
       </span>

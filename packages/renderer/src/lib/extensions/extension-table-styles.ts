@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 export const EXTENSION_TABLE_ROW_BASE_CLASS =
-  'grid gap-x-4 min-h-[56px] mb-2 rounded-lg border bg-[var(--pd-content-card-bg)] cursor-pointer transition-colors hover:bg-[var(--pd-content-card-hover-bg)]';
+  'grid w-full gap-x-3 min-h-[56px] mb-2 rounded-lg border bg-[var(--pd-content-card-bg)] cursor-pointer transition-colors hover:bg-[var(--pd-content-card-hover-bg)]';
 
 export function extensionTableRowBorderClass(isPinned: boolean): string {
   if (isPinned) {

@@ -50,8 +50,12 @@ const installedUserForcedVisible = new Set<string>();
 export const extensionTableViewport = $state({
   hidePublisher: false,
   hideVersion: false,
-  /** Custom/local tab: hide Origin on narrow viewports. */
+  /** Custom/local tab: hide Origin (Type) on narrow viewports. */
   hideOrigin: false,
+  /** Custom/local tab: hide Status on very small viewports. */
+  hideStatus: false,
+  /** Installed tab: shrink Status so Name can grow; status text truncates with ellipsis. */
+  compactInstalledStatus: false,
 });
 
 let viewportListenersReady = false;
@@ -65,16 +69,22 @@ export function ensureExtensionTableViewportListeners(): void {
   const publisherMq = window.matchMedia('(max-width: 1279px)');
   const versionMq = window.matchMedia('(max-width: 1023px)');
   const originMq = window.matchMedia('(max-width: 1023px)');
+  const statusMq = window.matchMedia('(max-width: 767px)');
+  const compactInstalledStatusMq = window.matchMedia('(max-width: 1023px)');
 
   const sync = (): void => {
     extensionTableViewport.hidePublisher = publisherMq.matches;
     extensionTableViewport.hideVersion = versionMq.matches;
     extensionTableViewport.hideOrigin = originMq.matches;
+    extensionTableViewport.hideStatus = statusMq.matches;
+    extensionTableViewport.compactInstalledStatus = compactInstalledStatusMq.matches;
   };
   sync();
   publisherMq.addEventListener('change', sync);
   versionMq.addEventListener('change', sync);
   originMq.addEventListener('change', sync);
+  statusMq.addEventListener('change', sync);
+  compactInstalledStatusMq.addEventListener('change', sync);
 }
 
 function isColumnEnabled(items: ListOrganizerItem[], id: string): boolean {
@@ -328,10 +338,21 @@ export function buildCatalogGridTemplateColumns(): string {
 }
 
 export function buildInstalledGridTemplateColumns(): string {
-  const parts = ['56px', 'minmax(0, 3fr)'];
+  const narrow = extensionTableViewport.compactInstalledStatus;
+  // Each row is its own grid — optional columns must use fixed tracks on small screens
+  // so Status aligns across rows. Keep Status/Actions tight so Name (1fr) gets the width.
+  const parts = ['56px', narrow ? 'minmax(0, 1fr)' : 'minmax(0, 3fr)'];
   for (const id of getOrderedVisibleInstalledColumns()) {
-    parts.push(INSTALLED_OPTIONAL_COLUMN_WIDTH[id]);
+    if (narrow && id === 'Version') {
+      parts.push('4.5rem');
+    } else if (narrow && id === 'Status') {
+      // Longest label ellipsizes with tooltip; fixed width keeps column aligned and frees Name.
+      parts.push('8.5rem');
+    } else {
+      parts.push(INSTALLED_OPTIONAL_COLUMN_WIDTH[id]);
+    }
   }
-  parts.push('minmax(140px, max-content)');
+  // Actions: toggle + uninstall + kebab only — do not leave a wide empty track before them.
+  parts.push(narrow ? '6.75rem' : 'minmax(140px, max-content)');
   return parts.join(' ');
 }

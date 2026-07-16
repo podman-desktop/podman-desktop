@@ -47,6 +47,7 @@ const userSortApplied = $derived(currentSort !== null);
 
 const orderedOptionalColumns = $derived.by((): InstalledTableColumnId[] => {
   extensionTableViewport.hideVersion;
+  extensionTableViewport.compactInstalledStatus;
   installedTableColumnItems;
   installedTableColumnOrdering;
   return getOrderedVisibleInstalledColumns();
@@ -54,6 +55,7 @@ const orderedOptionalColumns = $derived.by((): InstalledTableColumnId[] => {
 
 const gridTemplateColumns = $derived.by(() => {
   extensionTableViewport.hideVersion;
+  extensionTableViewport.compactInstalledStatus;
   installedTableColumnItems;
   installedTableColumnOrdering;
   return buildInstalledGridTemplateColumns();
@@ -98,16 +100,16 @@ function isSorted(column: InstalledTableSortColumn): boolean {
     <div role="rowgroup" class="relative">
       <div
         role="row"
-        class="grid gap-x-4 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
+        class="grid w-full gap-x-3 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
         style:grid-template-columns={gridTemplateColumns}>
         <div role="columnheader"></div>
         {#each visibleSortableColumns as column (column)}
           <div
             role="columnheader"
-            class="flex items-center gap-1 text-sm font-semibold self-center cursor-pointer select-none {column ===
+            class="flex min-w-0 items-center gap-1 text-sm font-semibold self-center cursor-pointer select-none {column ===
             'Version'
-              ? 'pr-6'
-              : ''} {column === 'Status' ? 'pl-2' : ''}"
+              ? 'pr-2'
+              : ''} {column === 'Status' ? 'pl-1' : ''} {column === 'Name' ? 'pr-2' : ''}"
             onclick={(): void => handleSort(column)}>
             <span>{column}</span>
             <Fa
@@ -118,7 +120,7 @@ function isSorted(column: InstalledTableSortColumn): boolean {
         <!-- gap-0.5 matches Table.svelte column gap between Actions and the pencil. -->
         <div
           role="columnheader"
-          class="flex items-center justify-self-end gap-0.5 self-center text-sm font-semibold">
+          class="flex items-center justify-end gap-0.5 self-center text-sm font-semibold">
           <span>Actions</span>
           <ListOrganizer
             items={installedTableColumnItems}
@@ -137,7 +139,7 @@ function isSorted(column: InstalledTableSortColumn): boolean {
     <div role="rowgroup">
       {#each rows as row (row.extension.id)}
         <div
-          class="{EXTENSION_TABLE_ROW_BASE_CLASS} {extensionTableRowBorderClass(isExtensionPinnedRow(row.extension.id, userSortApplied))} grid items-center"
+          class="{EXTENSION_TABLE_ROW_BASE_CLASS} {extensionTableRowBorderClass(isExtensionPinnedRow(row.extension.id, userSortApplied))} w-full items-center"
           style:grid-template-columns={gridTemplateColumns}
           role="row"
           aria-label={row.name}
@@ -150,16 +152,16 @@ function isSorted(column: InstalledTableSortColumn): boolean {
           </div>
           {#each orderedOptionalColumns as column (column)}
             {#if column === 'Version'}
-              <div role="cell" class="self-center min-w-0 py-2 pr-6" onclick={(event): void => event.stopPropagation()}>
+              <div role="cell" class="self-center min-w-0 py-2 pr-2" onclick={(event): void => event.stopPropagation()}>
                 <InstalledExtensionTableVersionColumn object={row} />
               </div>
             {:else if column === 'Status'}
-              <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pl-2">
+              <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pl-1">
                 <InstalledExtensionTableLifecycleColumn object={row} />
               </div>
             {/if}
           {/each}
-          <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
+          <div role="cell" class="self-center flex justify-end py-2" onclick={(event): void => event.stopPropagation()}>
             <InstalledExtensionTableActionsColumn object={row} />
           </div>
         </div>

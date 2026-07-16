@@ -97,7 +97,8 @@ function handleCardClick(event: MouseEvent): void {
         <ExtensionTruncatedText
           text={catalogExtensionUI.shortDescription}
           class="pt-0.5 text-sm text-[var(--pd-content-text)]" />
-        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 pb-1.5 text-sm text-[var(--pd-content-text)]">
+        <div
+          class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 pb-1.5 text-sm leading-none text-[var(--pd-content-text)]">
           {#if catalogExtensionUI.isInstalled}
             {#key uiRevision}
               {@const actualVersion = catalogExtensionUI.installedVersion}
@@ -109,7 +110,8 @@ function handleCardClick(event: MouseEvent): void {
                   : optimistic && optimistic !== normalizedActual
                     ? optimistic
                     : actualVersion}
-              <span>{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${catalogExtensionUI.installedVersion}`}</span>
+              <span class="leading-none"
+                >{displayInstalledVersion ? `v${displayInstalledVersion}` : `v${catalogExtensionUI.installedVersion}`}</span>
               <ExtensionVersionUpdateStatus
                 extensionId={catalogExtensionUI.id}
                 extensionState={catalogExtensionUI.installedExtension?.state} />
@@ -117,12 +119,12 @@ function handleCardClick(event: MouseEvent): void {
                 <ExtensionLifecycleStatus
                   extension={catalogExtensionUI.installedExtension}
                   catalogExtension={catalogExtensionUI}
-                  class="shrink-0" />
+                  class="shrink-0 leading-none" />
               {/if}
             {/key}
             <ExtensionUpdateVersionLink extension={catalogExtensionUI} />
           {:else}
-            <span>v{catalogExtensionUI.fetchVersion}</span>
+            <span class="leading-none">v{catalogExtensionUI.fetchVersion}</span>
           {/if}
         </div>
       </div>
