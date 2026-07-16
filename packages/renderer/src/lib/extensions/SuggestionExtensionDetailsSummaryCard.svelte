@@ -4,6 +4,7 @@ import type { ExtensionDetailsUI } from './extension-details-ui';
 import { isBuiltInExtension } from './extension-origin-utils';
 import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsVersionRow from './ExtensionDetailsVersionRow.svelte';
+import ExtensionFeaturedChip from './ExtensionFeaturedChip.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionPublisherLabel from './ExtensionPublisherLabel.svelte';
 import ExtensionDetailsSummaryCardEntry from './InstalledExtensionDetailsSummaryCardEntry.svelte';
@@ -36,17 +37,22 @@ const showTagBadge = $derived(
 
     {#if extensionDetails.publisherDisplayName}
       <div class="flex flex-col gap-1">
-        <span class="uppercase text-sm text-[var(--pd-details-card-header)]">published by</span>
+        <span class="uppercase text-sm text-[var(--pd-details-card-header)]">Publisher</span>
         {#if catalogExtension}
           <ExtensionPublisherLabel
             publisherName={extensionDetails.publisherDisplayName}
             isVerified={catalogExtension.isVerified}
-            isSupportedByRedHat={catalogExtension.isSupportedByRedHat}
-            isFeatured={catalogExtension.isFeatured}
             class="text-sm text-[var(--pd-content-text)]" />
         {:else}
           <span class="text-sm text-[var(--pd-content-text)]">{extensionDetails.publisherDisplayName}</span>
         {/if}
+      </div>
+    {/if}
+
+    {#if catalogExtension?.isFeatured}
+      <div class="flex flex-col items-start gap-1">
+        <div class="uppercase text-sm text-[var(--pd-details-card-header)]">Labels</div>
+        <ExtensionFeaturedChip />
       </div>
     {/if}
 
@@ -56,6 +62,7 @@ const showTagBadge = $derived(
         <ExtensionLifecycleStatus
           extension={catalogExtension.installedExtension}
           catalogExtension={catalogExtension}
+          catalogInstalledPresence={true}
           showTooltip={false}
           class="pt-0.5" />
       </div>

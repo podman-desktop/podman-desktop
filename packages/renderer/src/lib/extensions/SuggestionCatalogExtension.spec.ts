@@ -202,7 +202,7 @@ test('Expect installed catalog card shows active status next to version', async 
 
   render(SuggestionCatalogExtension, { catalogExtensionUI });
 
-  expect(screen.getByText('Active')).toBeInTheDocument();
+  expect(screen.getByText('Installed')).toBeInTheDocument();
   expect(screen.getByText('v0.4.0')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Installed' })).not.toBeInTheDocument();
 });

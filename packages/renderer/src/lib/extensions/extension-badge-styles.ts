@@ -70,6 +70,9 @@ export const EXTENSION_OUTLINED_CHIP_CLASS =
 export const EXTENSION_OUTLINED_CHIP_UP_TO_DATE_CLASS =
   'border-[var(--pd-status-running)] text-[var(--pd-status-running)] bg-transparent';
 
+export const EXTENSION_OUTLINED_CHIP_FEATURED_CLASS =
+  'border-[var(--pd-status-running)] text-[var(--pd-status-running)] bg-transparent';
+
 /** @deprecated Use EXTENSION_CHIP_TEXT_CLASS for gray-background chips. */
 export const EXTENSION_BUILTIN_CHIP_TEXT_CLASS = EXTENSION_CHIP_TEXT_CLASS;
 

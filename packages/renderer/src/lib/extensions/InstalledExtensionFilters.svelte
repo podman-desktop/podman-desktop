@@ -15,12 +15,14 @@ import {
 interface Props {
   catalogExtensions: CatalogExtensionInfoUI[];
   searchTerm?: string;
+  updateCount?: number;
 }
 
-let { catalogExtensions, searchTerm = $bindable('') }: Props = $props();
+let { catalogExtensions, searchTerm = $bindable(''), updateCount = 0 }: Props = $props();
 
 const categories = $derived(collectCatalogCategories(catalogExtensions));
 const filters = $derived(installedListFilters.value);
+const hasUpgradeLabel = $derived(updateCount > 0 ? `Has upgrade (${updateCount})` : 'Has upgrade');
 
 const categoryOptions = $derived([
   { value: '', label: 'All categories' },
@@ -64,7 +66,7 @@ function handleCategoryFilterChange(value: string): void {
       onToggle={(): void => toggleInstalledBooleanFilter('builtIn')} />
     <ExtensionFilterCheckbox
       checked={filters.hasUpdate === true}
-      label="Has update"
+      label={hasUpgradeLabel}
       onToggle={(): void => toggleInstalledBooleanFilter('hasUpdate')} />
   </div>
   {#if hasActiveInstalledListFilters()}

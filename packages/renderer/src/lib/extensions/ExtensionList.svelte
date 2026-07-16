@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
@@ -22,6 +22,8 @@ import {
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { markNewlyInstalled } from './extension-catalog-settings.svelte';
+import { customInstalledRevision, isCustomOrLocalTabExtension } from './extension-custom-local';
+import { EXAMPLE_CUSTOM_EXTENSION_OCI } from './extension-install-examples';
 import { buildExtensionsListPath } from './extension-list';
 import { onExtensionNewlyInstalled } from './extension-nav-pointer.svelte';
 import { isBuiltInExtensionId } from './extension-origin-utils';
@@ -125,11 +127,22 @@ const installedCatalogById = $derived.by(() => {
   return byId;
 });
 
+/** Installed tab excludes custom OCI + local-dev (those live on Install custom/local). */
+const installedExtensionsForInstalledTab: CombinedExtensionInfoUI[] = $derived.by(() => {
+  customInstalledRevision.value;
+  if (!isSuggestionScope) {
+    return installedExtensionsForList;
+  }
+  return installedExtensionsForList.filter(
+    extension => !isCustomOrLocalTabExtension(extension, $catalogExtensionInfos),
+  );
+});
+
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived.by(() => {
   versionUiRevision;
   if (isSuggestionScope) {
     return extensionsUtils.filterInstalledExtensions(
-      installedExtensionsForList,
+      installedExtensionsForInstalledTab,
       searchTerm,
       installedListFilters.value,
       installedCatalogById,
@@ -231,35 +244,54 @@ $effect(() => {
 <NavPage
   bind:searchTerm={searchTerm}
   title="extensions"
-  searchEnabled={isSuggestionScope ? screen !== 'installed' && screen !== 'catalog' : true}>
+  searchEnabled={!isSuggestionScope}>
   {#snippet additionalActions()}
-    {#if enableCustomExtensions}
+    {#if enableCustomExtensions && !isSuggestionScope}
       <Button
         on:click={(): void => {
           installManualImageModal = true;
         }}
-        icon={faCloudDownload}
+        icon={faDownload}
         title="Install manually an extension"
         aria-label="Install custom">Install custom...</Button>
     {/if}
   {/snippet}
 
   {#snippet tabs()}
-    <Tab
-      title="Installed"
-      selected={screen === 'installed'}
-      url={buildExtensionsListPath('installed', searchTerm)} />
-    {#if enableCatalog}
+    {#if isSuggestionScope}
+      {#if enableCatalog}
+        <Tab
+          title="Catalog"
+          selected={screen === 'catalog'}
+          url={buildExtensionsListPath('catalog', searchTerm)} />
+      {/if}
       <Tab
-        title="Catalog"
-        selected={screen === 'catalog'}
-        url={buildExtensionsListPath('catalog', searchTerm)} />
-    {/if}
-    {#if enableLocalExtensions}
+        title="Installed"
+        selected={screen === 'installed'}
+        url={buildExtensionsListPath('installed', searchTerm)} />
+      {#if enableLocalExtensions}
+        <Tab
+          title="Install custom/local extensions"
+          selected={screen === 'development'}
+          url={buildExtensionsListPath('development', searchTerm)} />
+      {/if}
+    {:else}
       <Tab
-        title="Local Extensions"
-        selected={screen === 'development'}
-        url={buildExtensionsListPath('development', searchTerm)} />
+        title="Installed"
+        selected={screen === 'installed'}
+        url={buildExtensionsListPath('installed', searchTerm)} />
+      {#if enableCatalog}
+        <Tab
+          title="Catalog"
+          selected={screen === 'catalog'}
+          url={buildExtensionsListPath('catalog', searchTerm)} />
+      {/if}
+      {#if enableLocalExtensions}
+        <Tab
+          title="Local Extensions"
+          selected={screen === 'development'}
+          url={buildExtensionsListPath('development', searchTerm)} />
+      {/if}
     {/if}
   {/snippet}
 
@@ -282,7 +314,7 @@ $effect(() => {
         suggestionScope={true}
         bind:searchTerm
         extensionInfos={filteredInstalledExtensions}
-        allExtensionInfos={installedExtensionsForList}
+        allExtensionInfos={installedExtensionsForInstalledTab}
         showFilteredEmpty={showInstalledFilterEmpty}
         onResetFilter={(): void => {
           searchTerm = '';
@@ -317,7 +349,11 @@ $effect(() => {
           });
         }} />
     {:else if screen === 'development' && enableLocalExtensions}
-      <DevelopmentExtensionList />
+      <DevelopmentExtensionList
+        enableCustomExtensions={enableCustomExtensions}
+        onInstallCustom={(): void => {
+          installManualImageModal = true;
+        }} />
     {/if}
   </div>
   {:else}
@@ -357,5 +393,6 @@ $effect(() => {
 
 {#if installManualImageModal}
   <InstallManuallyExtensionModal
-    closeCallback={closeModal} />
+    closeCallback={closeModal}
+    defaultImageName={isSuggestionScope ? EXAMPLE_CUSTOM_EXTENSION_OCI : ''} />
 {/if}

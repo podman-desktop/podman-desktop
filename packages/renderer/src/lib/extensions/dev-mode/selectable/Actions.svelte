@@ -10,5 +10,7 @@ interface Props {
 const { extensionFolder }: Props = $props();
 </script>
 
-<ActionToggle {extensionFolder} />
-<ActionUntrack {extensionFolder} />
+<div class="flex items-center justify-end gap-0.5" onclick={(event): void => event.stopPropagation()} role="presentation">
+  <ActionToggle {extensionFolder} />
+  <ActionUntrack {extensionFolder} />
+</div>

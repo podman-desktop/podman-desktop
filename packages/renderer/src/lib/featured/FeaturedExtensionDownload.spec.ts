@@ -20,9 +20,11 @@ import '@testing-library/jest-dom/vitest';
 
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import type { CatalogExtensionInfoUI } from '/@/lib/extensions/catalog-extension-info-ui';
+import { extensionInstallInProgressIds } from '/@/lib/extensions/extension-install-progress.svelte';
 import {
   clearPrototypeRemovedExtensions,
   prototypeRemoveExtension,
@@ -72,6 +74,7 @@ beforeEach(() => {
   vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(false);
   setPrototypeUseCasesEnabled(false);
   clearPrototypeRemovedExtensions();
+  extensionInstallInProgressIds.set(new Set());
 });
 
 test('Expect that the install button is hidden if extension is not installable', async () => {
@@ -209,4 +212,50 @@ test('Expect Install button returns after prototype uninstall of a previously in
   });
 
   expect(screen.getByRole('button', { name: 'Install redhat.ai-lab Extension' })).toBeInTheDocument();
+}, 15_000);
+
+test('Suggestion scope: Install is icon-only and shows filled pie while locking the row', async () => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+  setPrototypeUseCasesEnabled(true);
+
+  const catalogExtension: CatalogExtensionInfoUI = {
+    id: 'redhat.ai-lab',
+    displayName: 'Podman AI Lab',
+    isFeatured: true,
+    fetchable: true,
+    fetchLink: 'oci:ai-lab',
+    fetchVersion: '1.9.3',
+    publisherDisplayName: 'Red Hat',
+    isInstalled: false,
+    installedVersion: undefined,
+    shortDescription: 'Work with LLMs locally',
+    categories: [],
+    keywords: [],
+    availableVersions: [{ version: '1.9.3', ociUri: 'oci:ai-lab', preview: false }],
+    hasUpdate: false,
+    isVerified: true,
+    isSupportedByRedHat: true,
+  };
+
+  render(FeaturedExtensionDownload, { extension: catalogExtension });
+
+  const installButton = screen.getByRole('button', { name: 'Install redhat.ai-lab Extension' });
+  // Images-page pattern: no bordered secondary box.
+  expect(installButton.className).not.toContain('border-2');
+  expect(installButton.className).toContain('rounded-full');
+
+  await fireEvent.click(installButton);
+
+  await vi.waitFor(() => {
+    expect(screen.getByRole('progressbar', { name: /Install progress/ })).toBeInTheDocument();
+    expect(get(extensionInstallInProgressIds).has('redhat.ai-lab')).toBe(true);
+  });
+
+  // Let the prototype install simulation finish so afterEach cleanup is not left hanging.
+  await vi.waitFor(
+    () => {
+      expect(get(extensionInstallInProgressIds).has('redhat.ai-lab')).toBe(false);
+    },
+    { timeout: 10_000 },
+  );
 }, 15_000);

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  buildExtensionDetailsPath,
-  buildExtensionsListPath,
-  parseExtensionDetailsRequest,
-  parseExtensionListRequest,
-} from './extension-list';
+import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
+
+vi.mock(import('./extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: vi.fn(() => false),
+}));
+
+const { buildExtensionDetailsPath, buildExtensionsListPath, parseExtensionDetailsRequest, parseExtensionListRequest } =
+  await import('./extension-list');
+
+beforeEach(() => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(false);
+});
 
 describe('parseExtensionListRequest', () => {
   it('should return the correct query params when specified correctly', () => {
@@ -43,11 +49,22 @@ describe('parseExtensionListRequest', () => {
     const result = parseExtensionListRequest(request);
     expect(result).toEqual({ searchTerm: '', screen: 'installed' });
   });
+
+  it('defaults to catalog in suggestion scope', () => {
+    vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+    expect(parseExtensionListRequest({})).toEqual({ searchTerm: '', screen: 'catalog' });
+  });
 });
 
 describe('extension navigation helpers', () => {
-  it('builds catalog list path with screen query', () => {
+  it('builds catalog list path with screen query in current scope', () => {
     expect(buildExtensionsListPath('catalog')).toBe('/extensions?screen=catalog');
+  });
+
+  it('omits catalog screen query in suggestion scope (catalog is default)', () => {
+    vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+    expect(buildExtensionsListPath('catalog')).toBe('/extensions/');
+    expect(buildExtensionsListPath('installed')).toBe('/extensions?screen=installed');
   });
 
   it('builds details path with return screen query', () => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { get } from 'svelte/store';
@@ -9,24 +9,34 @@ import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import { extensionInfos } from '/@/stores/extensions';
 
 import { markNewlyInstalled } from './extension-catalog-settings.svelte';
+import { normalizeCustomExtensionKey, rememberCustomInstalledExtension } from './extension-custom-local';
 import { buildExtensionsListPath } from './extension-list';
 import { syncExtensionNavigationAfterInstall } from './extension-nav-pointer.svelte';
+import { prototypeRestoreExtension } from './extension-prototype-use-cases';
+import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
 
 interface Props {
   closeCallback: () => void;
+  /** Optional prefilled OCI image (e.g. example for the custom/local tab). */
+  defaultImageName?: string;
 }
 
-let { closeCallback }: Props = $props();
-let imageName = $state('');
+let { closeCallback, defaultImageName = '' }: Props = $props();
+let imageName = $state(defaultImageName);
+const suggestionScope = $derived(areExtensionsImprovementsSuggested());
 
 let installInProgress = $state(false);
-let inputfieldError: string | undefined = $state('');
+let inputfieldError: string | undefined = $state(defaultImageName.trim() ? undefined : '');
 let progressPercent = $state(0);
 let logs: string[] = [];
 
 const inputAriaLabel = 'Image name to install custom extension';
 
 onMount(async () => {
+  if (defaultImageName.trim()) {
+    imageName = defaultImageName.trim();
+    inputfieldError = undefined;
+  }
   // search input field and make focus by aria-label Image name to install custom extension
   const imageNameInputField = document.querySelector(`[aria-label="${inputAriaLabel}"]`);
   if (imageNameInputField && imageNameInputField instanceof HTMLInputElement) {
@@ -48,10 +58,6 @@ function validateImageName(event: Event): void {
   inputfieldError = 'Invalid input';
 }
 
-function resolveInstalledExtensionId(installedBefore: Set<string>): string | undefined {
-  return get(extensionInfos).find(extension => !installedBefore.has(extension.id))?.id;
-}
-
 function extractExtensionIdFromOciImage(ociImage: string): string {
   const parts = ociImage.split('/');
   const lastPart = parts[parts.length - 1];
@@ -59,12 +65,51 @@ function extractExtensionIdFromOciImage(ociImage: string): string {
   return name || ociImage;
 }
 
+function resolveInstalledExtensionId(installedBefore: Set<string>): string | undefined {
+  return get(extensionInfos).find(extension => !installedBefore.has(extension.id))?.id;
+}
+
+function resolveExistingExtensionId(ociImage: string): string | undefined {
+  const ociToken = extractExtensionIdFromOciImage(ociImage);
+  const key = normalizeCustomExtensionKey(ociToken);
+  return get(extensionInfos).find(extension => {
+    const idKey = normalizeCustomExtensionKey(extension.id);
+    const nameKey = normalizeCustomExtensionKey(extension.name);
+    return idKey === key || nameKey === key || idKey.includes(key) || key.includes(nameKey);
+  })?.id;
+}
+
+async function finishCustomInstall(extensionId: string, ociImage: string): Promise<void> {
+  const ociToken = extractExtensionIdFromOciImage(ociImage);
+  rememberCustomInstalledExtension(extensionId, ociToken, ociImage);
+  // Suggestion scope hides non-built-ins until restored for this session.
+  prototypeRestoreExtension(extensionId);
+  await syncExtensionNavigationAfterInstall(extensionId);
+  markNewlyInstalled(extensionId);
+  router.goto(buildExtensionsListPath('development'));
+  closeCallback();
+}
+
 async function completeSuccessfulInstall(ociImage: string, installedBefore: Set<string>): Promise<void> {
-  const extensionId = resolveInstalledExtensionId(installedBefore) ?? extractExtensionIdFromOciImage(ociImage);
+  const ociToken = extractExtensionIdFromOciImage(ociImage);
+  const extensionId = resolveInstalledExtensionId(installedBefore) ?? resolveExistingExtensionId(ociImage) ?? ociToken;
+
+  if (suggestionScope) {
+    await finishCustomInstall(extensionId, ociImage);
+    return;
+  }
+
   await syncExtensionNavigationAfterInstall(extensionId);
   markNewlyInstalled(extensionId);
   router.goto(buildExtensionsListPath('installed'));
   closeCallback();
+}
+
+async function completeAlreadyInstalled(ociImage: string): Promise<void> {
+  const extensionId = resolveExistingExtensionId(ociImage) ?? extractExtensionIdFromOciImage(ociImage);
+  inputfieldError = undefined;
+  progressPercent = 100;
+  await finishCustomInstall(extensionId, ociImage);
 }
 
 async function installExtension(): Promise<void> {
@@ -98,13 +143,23 @@ async function installExtension(): Promise<void> {
     );
 
     if (inputfieldError) {
+      // Suggestion: "already installed" usually means the extension is only hidden in the
+      // prototype UI — restore it onto the custom/local tab instead of blocking the user.
+      if (suggestionScope && /already installed/i.test(inputfieldError)) {
+        await completeAlreadyInstalled(ociImage);
+      }
       return;
     }
 
     progressPercent = 100;
     await completeSuccessfulInstall(ociImage, installedBefore);
   } catch (error) {
-    console.error('error', error);
+    const message = String(error);
+    if (suggestionScope && /already installed/i.test(message)) {
+      await completeAlreadyInstalled(ociImage);
+    } else {
+      console.error('error', error);
+    }
   } finally {
     installInProgress = false;
   }
@@ -165,7 +220,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
         on:click={closeCallback}>Cancel</Button>
       <Button
         type="primary"
-        icon={faCloudDownload}
+        icon={faDownload}
         disabled={inputfieldError !== undefined}
         on:click={installExtension}
         inProgress={installInProgress}>Install</Button>

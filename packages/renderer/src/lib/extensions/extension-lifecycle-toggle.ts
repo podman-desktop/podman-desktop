@@ -27,11 +27,8 @@ export function getExtensionLifecycleToggleLabel(state: string): ExtensionLifecy
 }
 
 export function canToggleExtensionLifecycle(state: string): boolean {
-  if (isExtensionLifecycleEnabled(state)) {
-    return state === 'started' || state === 'starting';
-  }
-
-  return state === 'stopped' || state === 'failed';
+  // Only stable states — disable the control while enabling/disabling is in progress.
+  return state === 'started' || state === 'stopped' || state === 'failed';
 }
 
 export function getExtensionLifecycleToggleAction(state: string): 'start' | 'stop' {

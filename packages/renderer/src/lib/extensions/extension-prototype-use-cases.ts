@@ -185,7 +185,8 @@ export function arePrototypeUseCasesEnabled(): boolean {
   return prototypeUseCasesEnabled;
 }
 
-function isExplicitlyPrototypeRemoved(extensionId: string): boolean {
+/** True when the user (or demo) explicitly uninstalled this id in the current session. */
+export function isExplicitlyPrototypeRemoved(extensionId: string): boolean {
   if (prototypeRemovedExtensionIds.has(extensionId)) {
     return true;
   }
@@ -224,7 +225,7 @@ export function prototypeRemoveExtension(extensionId: string, relatedIds: string
 
 /**
  * Restore a prototype-removed extension (undo the demo uninstall, no backend call).
- * Also marks the extension as "freshly installed" so it shows Active regardless of
+ * Also marks the extension as "freshly installed" so it shows Installed regardless of
  * the real backend state (e.g. a pre-existing failed state).
  */
 export function prototypeRestoreExtension(
@@ -239,13 +240,29 @@ export function prototypeRestoreExtension(
       ids.push(relatedId);
     }
   }
+
+  let changed = false;
   for (const id of ids) {
-    prototypeRemovedExtensionIds.delete(id);
-    prototypeRestoredExtensionIds.add(id);
+    if (prototypeRemovedExtensionIds.delete(id)) {
+      changed = true;
+    }
+    if (!prototypeRestoredExtensionIds.has(id)) {
+      prototypeRestoredExtensionIds.add(id);
+      changed = true;
+    }
   }
+
   // Ensure a sidebar anchor exists even when the real webview was disposed (failed extension).
+  const existingSidebar = findPrototypeSidebarEntry(extensionId);
   ensurePrototypeSidebarEntry(extensionId, displayName, iconHref);
-  prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
+  if (!existingSidebar) {
+    changed = true;
+  }
+
+  // Avoid bumping revision when already restored — callers in $effect would loop forever.
+  if (changed) {
+    prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
+  }
 }
 
 /**
@@ -338,7 +355,7 @@ export function applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoU
         };
       }
 
-      // Extensions that were "re-installed" via the prototype demo show as Active,
+      // Extensions that were "re-installed" via the prototype demo show as Installed,
       // overriding any real backend error state (but only when not manually disabled).
       if (prototypeRestoredExtensionIds.has(extension.id)) {
         return {

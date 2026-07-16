@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,42 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { SelectableExtensionDevelopmentFolderInfoUI } from '/@/lib/extensions/dev-mode/development-folder-info-ui';
+import { extensionTableViewport } from '/@/lib/extensions/extension-table-columns.svelte';
 
 import DevelopmentExtensionListTable from './ListTable.svelte';
+
+const mockPersistence = {
+  load: vi.fn().mockResolvedValue([]),
+  save: vi.fn().mockResolvedValue(undefined),
+  reset: vi.fn().mockResolvedValue([]),
+};
+
+beforeEach(() => {
+  extensionTableViewport.hideOrigin = false;
+  tablePersistence.storage = mockPersistence;
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
+    })),
+  );
+});
+
+afterEach(() => {
+  tablePersistence.storage = undefined;
+});
 
 const extensionFolderWithExtensionStopped: SelectableExtensionDevelopmentFolderInfoUI = {
   path: 'foo',
@@ -57,7 +87,27 @@ test('Expect dev folders being displayed', async () => {
   // check if all folders are displayed
   expect(rows).toHaveLength(3);
 
-  // check if all ext folders are displayed
-  expect(screen.getByText('Extension A')).toBeInTheDocument();
-  expect(screen.getByText('Extension B')).toBeInTheDocument();
+  // Location shows path; Name shows extension name
+  expect(screen.getByText('foo')).toBeInTheDocument();
+  expect(screen.getByText('bar')).toBeInTheDocument();
+  expect(screen.getByText('My Extension A')).toBeInTheDocument();
+  expect(screen.getByText('My Extension B')).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Location' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Status' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
+  expect(screen.getByTitle('Configure Columns')).toBeInTheDocument();
+});
+
+test('hides Type column on small viewports', async () => {
+  extensionTableViewport.hideOrigin = true;
+  render(DevelopmentExtensionListTable, {
+    extensionFolderUIInfos: [extensionFolderWithExtensionStopped],
+    selectedItemsNumber: 0,
+  });
+
+  expect(screen.getByRole('columnheader', { name: 'Location' })).toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: 'Type' })).not.toBeInTheDocument();
+  expect(screen.getByTitle('Configure Columns')).toBeInTheDocument();
 });

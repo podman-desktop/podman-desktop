@@ -45,18 +45,18 @@ const extensionFolderWithExtensionStarted: SelectableExtensionDevelopmentFolderI
 
 test('Expect enable action being displayed', async () => {
   render(ActionsColumn, { object: extensionFolderWithExtensionStopped });
-  const enableButton = screen.getByRole('button', { name: 'Enable the extension' });
+  const enableButton = screen.getByRole('button', { name: 'Enable' });
   expect(enableButton).toBeInTheDocument();
 });
 
 test('Expect disable action being displayed', async () => {
   render(ActionsColumn, { object: extensionFolderWithExtensionStarted });
-  const disableButton = screen.getByRole('button', { name: 'Disable the extension' });
+  const disableButton = screen.getByRole('button', { name: 'Disable' });
   expect(disableButton).toBeInTheDocument();
 });
 
-test('Expect untrack action being displayed', async () => {
+test('Expect uninstall action being displayed', async () => {
   render(ActionsColumn, { object: extensionFolderWithExtensionStopped });
-  const untrackButton = screen.getByRole('button', { name: 'Untrack extension folder' });
-  expect(untrackButton).toBeInTheDocument();
+  const uninstallButton = screen.getByRole('button', { name: 'Uninstall' });
+  expect(uninstallButton).toBeInTheDocument();
 });

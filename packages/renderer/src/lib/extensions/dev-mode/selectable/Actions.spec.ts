@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,18 +44,23 @@ const extensionFolderWithExtensionStarted: SelectableExtensionDevelopmentFolderI
 
 test('Expect enable action being displayed', async () => {
   render(Actions, { extensionFolder: extensionFolderWithExtensionStopped });
-  const enableButton = screen.getByRole('button', { name: 'Enable the extension' });
+  const enableButton = screen.getByRole('button', { name: 'Enable' });
   expect(enableButton).toBeInTheDocument();
 });
 
 test('Expect disable action being displayed', async () => {
   render(Actions, { extensionFolder: extensionFolderWithExtensionStarted });
-  const disableButton = screen.getByRole('button', { name: 'Disable the extension' });
+  const disableButton = screen.getByRole('button', { name: 'Disable' });
   expect(disableButton).toBeInTheDocument();
 });
 
-test('Expect untrack action being displayed', async () => {
+test('Expect uninstall action being displayed', async () => {
   render(Actions, { extensionFolder: extensionFolderWithExtensionStopped });
-  const untrackButton = screen.getByRole('button', { name: 'Untrack extension folder' });
-  expect(untrackButton).toBeInTheDocument();
+  const uninstallButton = screen.getByRole('button', { name: 'Uninstall' });
+  expect(uninstallButton).toBeInTheDocument();
+});
+
+test('Expect more actions menu not being displayed', async () => {
+  render(Actions, { extensionFolder: extensionFolderWithExtensionStarted });
+  expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
 });

@@ -56,7 +56,7 @@ function openExtensionDetails(): void {
         <div
           class="flex flex-1 text-[var(--pd-invert-content-info-icon)] p-1 justify-items-end flex-row place-content-end items-center">
           <Icon class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
-          <div class="uppercase text-sm cursor-default">Already installed</div>
+          <div class="uppercase text-sm cursor-default">Installed</div>
         </div>
       {:else if catalogExtensionUI.fetchable}
         <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">

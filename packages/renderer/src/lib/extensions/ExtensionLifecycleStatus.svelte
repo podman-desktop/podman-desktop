@@ -24,10 +24,21 @@ interface Props {
   extension?: CombinedExtensionInfoUI;
   catalogExtension?: Pick<CatalogExtensionInfoUI, 'id' | 'displayName' | 'isInstalled'>;
   showTooltip?: boolean;
+  /** Catalog context (kept for call-site compatibility; label is always "Installed"). */
+  catalogInstalledPresence?: boolean;
+  /** Compact status: hide idle labels (tooltip keeps the text). Prefer showing labels. */
+  compact?: boolean;
   class?: string;
 }
 
-let { extension, catalogExtension, showTooltip = true, class: className = '' }: Props = $props();
+let {
+  extension,
+  catalogExtension,
+  showTooltip = true,
+  catalogInstalledPresence = false,
+  compact = false,
+  class: className = '',
+}: Props = $props();
 
 let podmanDesktopVersion = $state('');
 let uiRevision = $state(0);
@@ -91,7 +102,11 @@ const compatibilityPresentation = $derived(
 );
 
 const lifecyclePresentation = $derived(
-  extension ? getExtensionLifecyclePresentation(extension.state, extension.type) : undefined,
+  extension
+    ? getExtensionLifecyclePresentation(extension.state, extension.type, {
+        catalogInstalledPresence,
+      })
+    : undefined,
 );
 
 const presentation = $derived.by(() => {
@@ -118,21 +133,25 @@ const showFailureTooltip = $derived(
 );
 const showCompatibilityTooltip = $derived(!!compatibilityPresentation && compatibilityIssues.length > 0);
 const tooltip = $derived(
-  showCompatibilityTooltip ? compatibilityTooltip : showFailureTooltip ? failureReason : undefined,
+  showCompatibilityTooltip ? compatibilityTooltip : showFailureTooltip ? failureReason : presentation?.label,
 );
+
+const showLabel = $derived(!!presentation);
 </script>
 
 {#if presentation}
-  {#if tooltip && showTooltip}
-    <Tooltip top tip={tooltip}>
+  {#if (!!tooltip && showTooltip) || (compact && !showLabel)}
+    <Tooltip top tip={tooltip ?? presentation.label}>
       <div class="min-w-0 max-w-full cursor-help">
         <div class="inline-flex items-center gap-1.5 min-w-0 max-w-full {className}">
           <span class="inline-flex w-3 shrink-0 items-center justify-center" aria-hidden="true">
             <StatusDotIcon status={presentation.statusDotStatus} size="12" />
           </span>
-          <span
-            class="text-sm truncate whitespace-nowrap min-w-0"
-            style:color={presentation.textColorVar}>{presentation.label}</span>
+          {#if showLabel}
+            <span
+              class="text-sm truncate whitespace-nowrap min-w-0"
+              style:color={presentation.textColorVar}>{presentation.label}</span>
+          {/if}
         </div>
       </div>
     </Tooltip>
@@ -141,9 +160,11 @@ const tooltip = $derived(
       <span class="inline-flex w-3 shrink-0 items-center justify-center" aria-hidden="true">
         <StatusDotIcon status={presentation.statusDotStatus} size="12" />
       </span>
-      <span
-        class="text-sm truncate whitespace-nowrap min-w-0"
-        style:color={presentation.textColorVar}>{presentation.label}</span>
+      {#if showLabel}
+        <span
+          class="text-sm truncate whitespace-nowrap min-w-0"
+          style:color={presentation.textColorVar}>{presentation.label}</span>
+      {/if}
     </div>
   {/if}
 {/if}

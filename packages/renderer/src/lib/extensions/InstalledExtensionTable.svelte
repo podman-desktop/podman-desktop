@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
+import { ListOrganizer } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
@@ -7,6 +8,19 @@ import { router } from 'tinro';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { isExtensionPinnedRow } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
+import {
+  buildInstalledGridTemplateColumns,
+  ensureExtensionTableViewportListeners,
+  extensionTableViewport,
+  getOrderedVisibleInstalledColumns,
+  handleInstalledColumnOrderChange,
+  handleInstalledColumnToggle,
+  initInstalledTableColumns,
+  type InstalledTableColumnId,
+  installedTableColumnItems,
+  installedTableColumnOrdering,
+  resetInstalledTableColumns,
+} from './extension-table-columns.svelte';
 import { EXTENSION_TABLE_ROW_BASE_CLASS, extensionTableRowBorderClass } from './extension-table-styles';
 import { setInstalledTableCallbacks } from './installed-extension-table-context';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
@@ -28,15 +42,31 @@ interface Props {
 
 let { rows, onChangeVersion }: Props = $props();
 
-const sortableColumns: InstalledTableSortColumn[] = ['Name', 'Version', 'Status'];
-
-const gridTemplateColumns = '56px 2fr 1.35fr minmax(9rem, 1.25fr) 140px';
-
 const currentSort = $derived(installedTableSortState.value);
 const userSortApplied = $derived(currentSort !== null);
 
+const orderedOptionalColumns = $derived.by((): InstalledTableColumnId[] => {
+  extensionTableViewport.hideVersion;
+  installedTableColumnItems;
+  installedTableColumnOrdering;
+  return getOrderedVisibleInstalledColumns();
+});
+
+const gridTemplateColumns = $derived.by(() => {
+  extensionTableViewport.hideVersion;
+  installedTableColumnItems;
+  installedTableColumnOrdering;
+  return buildInstalledGridTemplateColumns();
+});
+
+const visibleSortableColumns = $derived(['Name', ...orderedOptionalColumns] as InstalledTableSortColumn[]);
+
 onMount(() => {
   setInstalledTableCallbacks({ onChangeVersion });
+  ensureExtensionTableViewportListeners();
+  initInstalledTableColumns().catch((error: unknown) => {
+    console.error(error);
+  });
 });
 
 function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
@@ -63,50 +93,77 @@ function isSorted(column: InstalledTableSortColumn): boolean {
 }
 </script>
 
-<div class="w-full" role="table" aria-label="installed extensions">
-  <div
-    role="rowgroup"
-    class="grid gap-x-4 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
-    style:grid-template-columns={gridTemplateColumns}>
-    <div role="columnheader"></div>
-    {#each sortableColumns as column (column)}
+<div class="w-full">
+  <div role="table" aria-label="installed extensions">
+    <div role="rowgroup" class="relative">
       <div
-        role="columnheader"
-        class="flex items-center gap-1 text-sm font-semibold self-center cursor-pointer select-none"
-        onclick={(): void => handleSort(column)}>
-        <span>{column}</span>
-        <Fa
-          icon={sortIcon(column)}
-          class="text-xs {isSorted(column) ? 'text-[var(--pd-content-header)]' : 'text-[var(--pd-table-header-unsorted)]'}" />
-      </div>
-    {/each}
-    <div role="columnheader" class="text-sm font-semibold self-center justify-self-end">Actions</div>
-  </div>
-
-  <div role="rowgroup">
-    {#each rows as row (row.extension.id)}
-      <div
-        class="{EXTENSION_TABLE_ROW_BASE_CLASS} {extensionTableRowBorderClass(isExtensionPinnedRow(row.extension.id, userSortApplied))} grid items-center"
-        style:grid-template-columns={gridTemplateColumns}
         role="row"
-        aria-label={row.name}
-        onclick={(event): void => openDetails(row, event)}>
-        <div role="cell" class="self-center pl-3 pr-1 py-2">
-          <InstalledExtensionTableIconColumn object={row} />
-        </div>
-        <div role="cell" class="self-center min-w-0 py-2 pr-2">
-          <InstalledExtensionTableNameColumn object={row} />
-        </div>
-        <div role="cell" class="self-center py-2 pr-4 min-w-0" onclick={(event): void => event.stopPropagation()}>
-          <InstalledExtensionTableVersionColumn object={row} />
-        </div>
-        <div role="cell" class="self-center py-2 min-w-0 overflow-hidden">
-          <InstalledExtensionTableLifecycleColumn object={row} />
-        </div>
-        <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
-          <InstalledExtensionTableActionsColumn object={row} />
+        class="grid gap-x-4 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
+        style:grid-template-columns={gridTemplateColumns}>
+        <div role="columnheader"></div>
+        {#each visibleSortableColumns as column (column)}
+          <div
+            role="columnheader"
+            class="flex items-center gap-1 text-sm font-semibold self-center cursor-pointer select-none {column ===
+            'Version'
+              ? 'pr-6'
+              : ''} {column === 'Status' ? 'pl-2' : ''}"
+            onclick={(): void => handleSort(column)}>
+            <span>{column}</span>
+            <Fa
+              icon={sortIcon(column)}
+              class="text-xs {isSorted(column) ? 'text-[var(--pd-content-header)]' : 'text-[var(--pd-table-header-unsorted)]'}" />
+          </div>
+        {/each}
+        <!-- gap-0.5 matches Table.svelte column gap between Actions and the pencil. -->
+        <div
+          role="columnheader"
+          class="flex items-center justify-self-end gap-0.5 self-center text-sm font-semibold">
+          <span>Actions</span>
+          <ListOrganizer
+            items={installedTableColumnItems}
+            ordering={installedTableColumnOrdering}
+            title="Configure Columns"
+            enableReorder={true}
+            enableToggle={true}
+            onOrderChange={handleInstalledColumnOrderChange}
+            onToggle={handleInstalledColumnToggle}
+            onReset={resetInstalledTableColumns}
+            resetButtonLabel="Reset to default" />
         </div>
       </div>
-    {/each}
+    </div>
+
+    <div role="rowgroup">
+      {#each rows as row (row.extension.id)}
+        <div
+          class="{EXTENSION_TABLE_ROW_BASE_CLASS} {extensionTableRowBorderClass(isExtensionPinnedRow(row.extension.id, userSortApplied))} grid items-center"
+          style:grid-template-columns={gridTemplateColumns}
+          role="row"
+          aria-label={row.name}
+          onclick={(event): void => openDetails(row, event)}>
+          <div role="cell" class="self-center pl-3 pr-1 py-2">
+            <InstalledExtensionTableIconColumn object={row} />
+          </div>
+          <div role="cell" class="self-center min-w-0 py-2 pr-2">
+            <InstalledExtensionTableNameColumn object={row} />
+          </div>
+          {#each orderedOptionalColumns as column (column)}
+            {#if column === 'Version'}
+              <div role="cell" class="self-center min-w-0 py-2 pr-6" onclick={(event): void => event.stopPropagation()}>
+                <InstalledExtensionTableVersionColumn object={row} />
+              </div>
+            {:else if column === 'Status'}
+              <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pl-2">
+                <InstalledExtensionTableLifecycleColumn object={row} />
+              </div>
+            {/if}
+          {/each}
+          <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
+            <InstalledExtensionTableActionsColumn object={row} />
+          </div>
+        </div>
+      {/each}
+    </div>
   </div>
 </div>

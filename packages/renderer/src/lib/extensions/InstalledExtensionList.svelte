@@ -15,9 +15,11 @@ import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from '
 import { ExtensionsUtils } from './extensions-utils';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 import { installedTableSortState, orderInstalledTableRows } from './installed-extension-table-sort.svelte';
+import { installedListFilters } from './installed-list-filters.svelte';
 import InstalledExtensionCard from './InstalledExtensionCard.svelte';
 import InstalledExtensionFilters from './InstalledExtensionFilters.svelte';
 import InstalledExtensionTable from './InstalledExtensionTable.svelte';
+import InstalledExtensionUpdateAllBar from './InstalledExtensionUpdateAllBar.svelte';
 
 interface Props {
   extensionInfos?: CombinedExtensionInfoUI[];
@@ -116,12 +118,25 @@ function closeChangeVersion(): void {
   changeVersionExtension = undefined;
   changeVersionPreferredVersion = undefined;
 }
+
+const extensionsWithUpdate = $derived(tableRows.map(row => row.catalogExtension).filter(ext => ext.hasUpdate));
+const showUpgradeAllBar = $derived(
+  suggestionScope && installedListFilters.value.hasUpdate === true && extensionsWithUpdate.length > 1,
+);
 </script>
 
 {#if suggestionScope}
   <div class="flex grow flex-col py-3">
     <div class="sticky top-0 z-20 bg-[var(--pd-content-bg)] px-5 pb-4 pt-1">
-      <InstalledExtensionFilters catalogExtensions={filterCatalogExtensions} bind:searchTerm />
+      <InstalledExtensionFilters
+        catalogExtensions={filterCatalogExtensions}
+        updateCount={extensionsWithUpdate.length}
+        bind:searchTerm />
+      {#if showUpgradeAllBar}
+        <div class="pt-3">
+          <InstalledExtensionUpdateAllBar extensionsWithUpdate={extensionsWithUpdate} />
+        </div>
+      {/if}
     </div>
 
     <div class="grow px-5">

@@ -43,18 +43,31 @@ describe('getExtensionLifecyclePresentation', () => {
     });
   });
 
-  test('docker desktop extension is always active', () => {
+  test('docker desktop extension is always installed', () => {
     expect(getExtensionLifecyclePresentation('stopped', 'dd')).toEqual({
       statusDotStatus: 'running',
-      label: 'Active',
+      label: 'Installed',
       textColorVar: 'var(--pd-status-running)',
     });
   });
 
-  test('started extension is active', () => {
+  test('started extension is installed', () => {
     expect(getExtensionLifecyclePresentation('started', 'pd')).toEqual({
       statusDotStatus: 'running',
-      label: 'Active',
+      label: 'Installed',
+      textColorVar: 'var(--pd-status-running)',
+    });
+  });
+
+  test('catalog and installed contexts both use Installed label', () => {
+    expect(getExtensionLifecyclePresentation('started', 'pd', { catalogInstalledPresence: true })).toEqual({
+      statusDotStatus: 'running',
+      label: 'Installed',
+      textColorVar: 'var(--pd-status-running)',
+    });
+    expect(getExtensionLifecyclePresentation('stopped', 'dd', { catalogInstalledPresence: true })).toEqual({
+      statusDotStatus: 'running',
+      label: 'Installed',
       textColorVar: 'var(--pd-status-running)',
     });
   });

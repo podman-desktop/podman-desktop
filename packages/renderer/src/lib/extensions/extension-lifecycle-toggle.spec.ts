@@ -38,9 +38,9 @@ describe('extension-lifecycle-toggle', () => {
 
   test('allows toggling from stable states only', () => {
     expect(canToggleExtensionLifecycle('started')).toBe(true);
-    expect(canToggleExtensionLifecycle('starting')).toBe(true);
     expect(canToggleExtensionLifecycle('stopped')).toBe(true);
     expect(canToggleExtensionLifecycle('failed')).toBe(true);
+    expect(canToggleExtensionLifecycle('starting')).toBe(false);
     expect(canToggleExtensionLifecycle('stopping')).toBe(false);
   });
 

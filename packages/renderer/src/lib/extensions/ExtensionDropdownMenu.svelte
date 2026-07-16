@@ -18,11 +18,12 @@ interface Props {
   menuId: string;
   icon?: IconDefinition | Component | string;
   hidden?: boolean;
+  disabled?: boolean;
   title?: string;
   children?: Snippet;
 }
 
-let { menuId, icon = faEllipsisVertical, hidden = false, title = '', children }: Props = $props();
+let { menuId, icon = faEllipsisVertical, hidden = false, disabled = false, title = '', children }: Props = $props();
 
 let menuRevision = $state(0);
 let outsideWindow = $state<HTMLButtonElement>();
@@ -84,6 +85,9 @@ function onWindowClick(e: MouseEvent): void {
 
 function onButtonClick(e: MouseEvent): void {
   e.stopPropagation();
+  if (disabled) {
+    return;
+  }
   clientY = e.clientY;
   clientX = e.clientX;
 
@@ -103,10 +107,12 @@ function onButtonClick(e: MouseEvent): void {
     <button
       aria-label={title.length > 0 ? title : 'kebab menu'}
       aria-expanded={isOpen}
+      aria-disabled={disabled}
+      disabled={disabled}
       onclick={onButtonClick}
       title={title}
       bind:this={outsideWindow}
-      class="text-[var(--pd-action-button-text)] hover:bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-action-button-hover-text)] font-medium rounded-md inline-flex items-center px-2 py-2 text-center">
+      class="text-[var(--pd-action-button-text)] hover:bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-action-button-hover-text)] font-medium rounded-md inline-flex items-center px-2 py-2 text-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent">
       <Icon class="h-4 w-4" {icon} />
     </button>
   </div>

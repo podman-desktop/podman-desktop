@@ -21,13 +21,20 @@ import type { ContributionInfo, WebviewInfo } from '@podman-desktop/core-api';
 
 import { buildExtensionNewNavigationTooltip } from '/@/lib/extensions/extension-badge-styles';
 import { isNewBadgeActive } from '/@/lib/extensions/extension-catalog-settings.svelte';
+import {
+  EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT,
+  isExtensionUserDisabled,
+  isExtensionUserEnabled,
+} from '/@/lib/extensions/extension-lifecycle-user-toggle';
 import { prototypeLifecycleOverlayRevisionStore } from '/@/lib/extensions/extension-prototype-lifecycle-overlay.svelte';
 import {
+  applyPrototypeUseCaseOverlays,
   getPrototypeSidebarEntries,
   isPrototypeRemovedExtension,
 } from '/@/lib/extensions/extension-prototype-use-cases';
 import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
+import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { contributions } from '/@/stores/contribs';
 import {
@@ -58,6 +65,7 @@ export const extensionNavigationState = $state<{ items: NavigationRegistryEntry[
 let allContribs: ContributionInfo[] = [];
 let allWebviews: WebviewInfo[] = [];
 let allCatalogIdentities: CatalogExtensionIdentity[] = [];
+let allInstalledExtensions: CombinedExtensionInfoUI[] = [];
 /** Latest non-preview catalog icon href keyed by catalog extension id. */
 let catalogIconByExtensionId = new Map<string, string>();
 
@@ -68,6 +76,54 @@ function extensionIdsMatchNav(left: string, right: string): boolean {
   const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
   const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
   return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
+}
+
+/**
+ * In suggestion scope, hide sidebar entries for removed or disabled (stopped/stopping) extensions.
+ * Exported for unit tests.
+ */
+export function shouldHideExtensionNavigationItem(...extensionIds: Array<string | undefined>): boolean {
+  if (!areExtensionsImprovementsSuggested()) {
+    return false;
+  }
+
+  const candidates = [...new Set(extensionIds.filter((id): id is string => !!id))];
+  if (candidates.length === 0) {
+    return false;
+  }
+
+  for (const id of candidates) {
+    if (isPrototypeRemovedExtension(id)) {
+      return true;
+    }
+  }
+
+  for (const id of candidates) {
+    if (isExtensionUserDisabled(id)) {
+      return true;
+    }
+  }
+
+  // Keep the nav item visible while / after the user re-enables (including starting).
+  for (const id of candidates) {
+    if (isExtensionUserEnabled(id)) {
+      return false;
+    }
+  }
+
+  const overlaid = applyPrototypeUseCaseOverlays(allInstalledExtensions);
+  for (const id of candidates) {
+    const match = overlaid.find(
+      extension =>
+        extensionIdsMatchNav(extension.id, id) ||
+        (extension.name !== undefined && extensionIdsMatchNav(extension.name, id)),
+    );
+    if (match && (match.state === 'stopped' || match.state === 'stopping')) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function resolveCatalogIconHref(extensionId: string | undefined): string | undefined {
@@ -104,13 +160,10 @@ function buildExtensionNavigationItems(
   const newItems: NavigationRegistryEntry[] = [];
 
   contribs.forEach(contrib => {
-    if (areExtensionsImprovementsSuggested()) {
-      // DD extensions (type: 'dd') register as contributions. Check both the raw extensionId
-      // and any matching catalog id so that prototype-uninstalled DD extensions are hidden.
-      const contribExtensionId = contrib.extensionId;
-      if (contribExtensionId && isPrototypeRemovedExtension(contribExtensionId)) {
-        return;
-      }
+    // DD extensions (type: 'dd') register as contributions. Check both the raw extensionId
+    // and any matching catalog id so that prototype-uninstalled / disabled DD extensions are hidden.
+    if (shouldHideExtensionNavigationItem(contrib.extensionId)) {
+      return;
     }
 
     const extensionId = contrib.extensionId;
@@ -128,20 +181,14 @@ function buildExtensionNavigationItems(
   });
 
   webviewItems.forEach(webview => {
-    if (areExtensionsImprovementsSuggested()) {
-      const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities) ?? webview.extensionId;
-      // Check both the resolved catalog id and the raw webview extensionId.
-      // The stored prototype-removed id may use either format depending on which
-      // code path triggered the removal (e.g. Installed tab vs Catalog kebab menu).
-      if (
-        (catalogId && isPrototypeRemovedExtension(catalogId)) ||
-        (webview.extensionId && webview.extensionId !== catalogId && isPrototypeRemovedExtension(webview.extensionId))
-      ) {
-        return;
-      }
+    const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities) ?? webview.extensionId;
+    // Check both the resolved catalog id and the raw webview extensionId.
+    // The stored prototype-removed / disabled id may use either format depending on which
+    // code path triggered the change (e.g. Installed tab vs Catalog kebab menu).
+    if (shouldHideExtensionNavigationItem(catalogId, webview.extensionId)) {
+      return;
     }
 
-    const catalogId = resolveInstalledExtensionIdFromWebview(webview, allCatalogIdentities) ?? webview.extensionId;
     const webviewIcon = typeof webview.icon === 'string' ? webview.icon : undefined;
     const extensionId = webview.extensionId;
     const isNew = extensionId ? isNewBadgeActive(extensionId) : false;
@@ -162,7 +209,7 @@ function buildExtensionNavigationItems(
   // tooltip still appear after a demo re-install.
   if (areExtensionsImprovementsSuggested()) {
     for (const entry of getPrototypeSidebarEntries()) {
-      if (isPrototypeRemovedExtension(entry.extensionId)) {
+      if (shouldHideExtensionNavigationItem(entry.extensionId)) {
         continue;
       }
       const alreadyPresent = newItems.some(item => {
@@ -281,6 +328,11 @@ function ensureExtensionNavigationSubscriptions(): void {
     publishExtensionNavigationUpdate();
   });
 
+  combinedInstalledExtensions.subscribe(extensions => {
+    allInstalledExtensions = extensions;
+    publishExtensionNavigationUpdate();
+  });
+
   prototypeLifecycleOverlayRevisionStore.subscribe(() => {
     publishExtensionNavigationUpdate();
   });
@@ -292,24 +344,30 @@ function ensureExtensionNavigationEventListeners(): void {
   }
   extensionNavigationEventListenersReady = true;
 
-  if (typeof window !== 'undefined' && window.events) {
-    for (const eventName of [
-      'extension-started',
-      'extension-stopped',
-      'extensions-started',
-      'webview-create',
-      'webview-delete',
-      'webview-update',
-    ] as const) {
-      window.events.receive(eventName, () => {
-        fetchWebviews()
-          .finally(() => {
-            publishExtensionNavigationUpdate();
-          })
-          .catch((error: unknown) => {
-            console.error('Unable to fetch webviews for extension navigation', error);
-          });
-      });
+  if (typeof window !== 'undefined') {
+    window.addEventListener(EXTENSION_LIFECYCLE_USER_TOGGLE_EVENT, () => {
+      publishExtensionNavigationUpdate();
+    });
+
+    if (window.events) {
+      for (const eventName of [
+        'extension-started',
+        'extension-stopped',
+        'extensions-started',
+        'webview-create',
+        'webview-delete',
+        'webview-update',
+      ] as const) {
+        window.events.receive(eventName, () => {
+          fetchWebviews()
+            .finally(() => {
+              publishExtensionNavigationUpdate();
+            })
+            .catch((error: unknown) => {
+              console.error('Unable to fetch webviews for extension navigation', error);
+            });
+        });
+      }
     }
   }
 }

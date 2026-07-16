@@ -62,8 +62,26 @@ export function setPrototypeLifecycleDemosEnabled(enabled: boolean): void {
   }
 }
 
+function extensionIdsLooselyMatch(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+  const leftName = left.includes('.') ? left.split('.').slice(1).join('.') : left;
+  const rightName = right.includes('.') ? right.split('.').slice(1).join('.') : right;
+  return leftName === rightName || left.endsWith(`.${rightName}`) || right.endsWith(`.${leftName}`);
+}
+
 export function getPrototypeTransientLifecycleState(extensionId: string): PrototypeTransientLifecycleState | undefined {
-  return transientLifecycleOverlays.get(extensionId)?.state;
+  const direct = transientLifecycleOverlays.get(extensionId)?.state;
+  if (direct) {
+    return direct;
+  }
+  for (const [id, overlay] of transientLifecycleOverlays) {
+    if (extensionIdsLooselyMatch(id, extensionId)) {
+      return overlay.state;
+    }
+  }
+  return undefined;
 }
 
 export function isPrototypeActivatingOverlayActive(): boolean {

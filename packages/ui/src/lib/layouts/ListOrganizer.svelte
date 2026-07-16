@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { faCheck, faGripVertical, faPen, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
@@ -34,6 +35,8 @@ interface Props {
   items: ListOrganizerItem[];
   ordering?: SvelteMap<string, number>;
   title?: string;
+  /** Trigger icon; defaults to pencil for existing screens. */
+  icon?: IconDefinition;
   enableReorder?: boolean;
   enableToggle?: boolean;
   onOrderChange?: (newOrdering: SvelteMap<string, number>) => void;
@@ -47,6 +50,7 @@ let {
   items = [],
   ordering = new SvelteMap(),
   title = 'Select items',
+  icon = faPen,
   enableReorder = false,
   enableToggle = false,
   onOrderChange,
@@ -135,12 +139,18 @@ function startDrag(event: MouseEvent, index: number): void {
 function handleWindowMouseMove(event: MouseEvent): void {
   if (!isDraggingActive) return;
 
-  const targetElement = (event.target as Element).closest('[data-item-id]');
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+
+  const targetElement = target.closest('[data-item-id]');
   if (!targetElement) return;
 
-  const allItemElements = Array.from(containerElement.querySelectorAll('[data-item-id]'));
-  const hoverIndex = allItemElements.findIndex(el => el === targetElement);
+  // Resolve against the stable ordered list (not the live preview DOM). Preview
+  // reordering would otherwise make DOM indices diverge from draggedIndex.
+  const itemId = targetElement.getAttribute('data-item-id');
+  if (!itemId) return;
 
+  const hoverIndex = orderedItems.findIndex(item => item.id === itemId);
   if (hoverIndex !== -1 && dragOverIndex !== hoverIndex) {
     dragOverIndex = hoverIndex;
   }
@@ -252,7 +262,7 @@ function handleReset(): void {
     title={title}
     tabindex="0"
   >
-    <Icon icon={faPen} />
+    <Icon icon={icon} />
   </button>
 
   {#if isOpen}
@@ -289,11 +299,12 @@ function handleReset(): void {
                 class="text-[var(--pd-dropdown-item-text)] flex-shrink-0 rounded-sm p-1"
                 class:cursor-grab={!isDraggingActive}
                 class:cursor-grabbing={isDraggingActive}
-                draggable={true}
+                draggable="true"
                 role="button"
                 tabindex="0"
                 data-grip-index={originalIndex}
                 onmousedown={(e): void => startDrag(e, originalIndex)}
+                ondragstart={(e): void => e.preventDefault()}
                 onclick={(e): void => e.stopPropagation()}
                 onkeydown={(e): void => handleGripKeydown(e, originalIndex)}
                 onmouseenter={(): void => {isGripHovered = true;}}

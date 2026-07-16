@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
+
 const screens = ['installed', 'catalog', 'development'] as const;
 
 export type ExtensionListScreen = (typeof screens)[number];
@@ -29,10 +31,15 @@ interface ExtensionDetailsRequest {
   returnScreen: ExtensionListScreen;
 }
 
-export function buildExtensionsListPath(screen: ExtensionListScreen = 'installed', searchTerm = ''): string {
+export function getDefaultExtensionListScreen(): ExtensionListScreen {
+  return areExtensionsImprovementsSuggested() ? 'catalog' : 'installed';
+}
+
+export function buildExtensionsListPath(screen?: ExtensionListScreen, searchTerm = ''): string {
+  const resolved = screen ?? getDefaultExtensionListScreen();
   const params = new URLSearchParams();
-  if (screen !== 'installed') {
-    params.set('screen', screen);
+  if (resolved !== getDefaultExtensionListScreen()) {
+    params.set('screen', resolved);
   }
   if (searchTerm) {
     params.set('searchTerm', searchTerm);
@@ -41,10 +48,11 @@ export function buildExtensionsListPath(screen: ExtensionListScreen = 'installed
   return query ? `/extensions?${query}` : '/extensions/';
 }
 
-export function buildExtensionDetailsPath(id: string, returnScreen: ExtensionListScreen = 'installed'): string {
+export function buildExtensionDetailsPath(id: string, returnScreen?: ExtensionListScreen): string {
+  const resolvedReturn = returnScreen ?? getDefaultExtensionListScreen();
   const params = new URLSearchParams();
-  if (returnScreen !== 'installed') {
-    params.set('returnScreen', returnScreen);
+  if (resolvedReturn !== getDefaultExtensionListScreen()) {
+    params.set('returnScreen', resolvedReturn);
   }
   const query = params.toString();
   const path = `/extensions/details/${encodeURIComponent(id)}/`;
@@ -55,7 +63,7 @@ export function parseExtensionDetailsRequest(request: { query?: Record<string, s
   return {
     returnScreen: screens.includes(request.query?.returnScreen as ExtensionListScreen)
       ? (request.query?.returnScreen as ExtensionListScreen)
-      : 'installed',
+      : getDefaultExtensionListScreen(),
   };
 }
 
@@ -64,6 +72,6 @@ export function parseExtensionListRequest(request: { query?: Record<string, stri
     searchTerm: request.query?.searchTerm ? decodeURIComponent(request.query.searchTerm) : '',
     screen: screens.includes(request.query?.screen as ExtensionListScreen)
       ? (request.query?.screen as ExtensionListScreen)
-      : 'installed',
+      : getDefaultExtensionListScreen(),
   };
 }

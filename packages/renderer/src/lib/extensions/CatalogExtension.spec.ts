@@ -112,7 +112,7 @@ test('Expect More details opens extension details route', async () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/');
 });
 
-test('Expect installed production catalog card shows Already installed', async () => {
+test('Expect installed production catalog card shows Installed', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'myId',
     displayName: 'Installed extension',
@@ -134,6 +134,6 @@ test('Expect installed production catalog card shows Already installed', async (
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  expect(screen.getByText('Already installed')).toBeInTheDocument();
+  expect(screen.getByText('Installed')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Install myId Extension' })).not.toBeInTheDocument();
 });

@@ -55,11 +55,16 @@ export function getExtensionVersionUpdatePresentation(
 export function getExtensionLifecyclePresentation(
   extensionState: string,
   extensionType: 'dd' | 'pd',
+  _options?: { catalogInstalledPresence?: boolean },
 ): ExtensionLifecyclePresentation {
+  // Started / DD extensions use a consistent "Installed" label everywhere
+  // (catalog, installed list, details). Disabled stays a separate lifecycle state.
+  const installedLabel = 'Installed';
+
   if (extensionType === 'dd') {
     return {
       statusDotStatus: 'running',
-      label: 'Active',
+      label: installedLabel,
       textColorVar: 'var(--pd-status-running)',
     };
   }
@@ -68,7 +73,7 @@ export function getExtensionLifecyclePresentation(
     case 'started':
       return {
         statusDotStatus: 'running',
-        label: 'Active',
+        label: installedLabel,
         textColorVar: 'var(--pd-status-running)',
       };
     case 'stopped':
