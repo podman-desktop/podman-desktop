@@ -4,34 +4,29 @@ import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelt
 import MockContainerEngineEnvironmentColumn from './helpers/MockContainerEngineEnvironmentColumn.svelte';
 
 /**
- * Stories for the `ContainerEngineEnvironmentColumn` component from `packages/renderer`.
+ * Stories for `ContainerEngineEnvironmentColumn` (`packages/renderer`).
  *
- * Engine/provider indicator column used in Containers, Images, Volumes, Networks,
- * and Pods list tables. Renders a `Label` with a colored `ProviderInfoCircle` and
- * an optional tooltip showing the connection socket path.
+ * Environment column in Containers, Images, Volumes, Networks, and Pods tables.
+ * Renders a pill `Label` with `ProviderInfoIcon` (StatusDot glyph for connection
+ * lifecycle) and an optional socket-path tooltip.
  *
- * The real column resolves `object.engineId` against `providerInfos` /
- * `containerConnectionCount` stores. These stories use a presentation helper that
- * accepts the resolved props (`type`, `name`, `tip`) so current visuals can be
- * documented without store wiring.
+ * Stories use a presentation helper with resolved props (`status`, `name`, `tip`)
+ * because Storybook cannot wire provider stores.
  *
- * **Theming**: Uses CSS custom properties `--pd-provider-podman`,
- * `--pd-provider-docker`, `--pd-provider-kubernetes`, `--pd-provider-unknown`,
- * `--pd-label-bg`, and `--pd-label-text` from the color registry.
+ * **Tokens**: `--pd-status-*` for the icon; `--pd-label-bg` / `--pd-label-text` for the pill.
+ * Deprecated `--pd-provider-*` tokens appear only in the Before/After story.
  *
- * **Planned modernization** (#18120): Replace the plain colored circle with an
- * icon-based provider indicator consistent with the design system (e.g. StatusDot
- * / StatusDotIcon pattern).
+ * **#18120**: Replaced color-only provider dots with connection status icons.
  */
 const { Story } = defineMeta({
   render: template,
   title: 'ContainerEngineEnvironmentColumn',
   tags: ['autodocs'],
   argTypes: {
-    type: {
+    status: {
       control: 'select',
-      options: ['podman', 'docker', 'kubernetes', undefined],
-      description: 'Provider connection type (colored circle)',
+      options: ['started', 'stopped', 'starting', 'stopping', 'unknown'],
+      description: 'Provider connection lifecycle status',
     },
     name: {
       control: 'text',
@@ -47,53 +42,60 @@ const { Story } = defineMeta({
   },
 });
 
-type ProviderType = 'podman' | 'docker' | 'kubernetes' | undefined;
+/** Matches `ProviderConnectionStatus` from `@podman-desktop/api`. */
+type ConnectionStatus = 'started' | 'stopped' | 'starting' | 'stopping' | 'unknown';
 
-type ProviderVariant = {
+type StatusVariant = {
   label: string;
-  type: ProviderType;
+  status: ConnectionStatus;
   name: string;
   tip: string;
-  token: string;
+  mapped: string;
   note?: string;
 };
 
-const providerVariants: ProviderVariant[] = [
+const statusVariants: StatusVariant[] = [
   {
-    label: 'Podman',
-    type: 'podman',
-    name: 'podman',
+    label: 'Started',
+    status: 'started',
+    name: 'Podman Machine Default',
     tip: '/var/run/podman-machine.sock',
-    token: '--pd-provider-podman',
+    mapped: 'started → running',
   },
   {
-    label: 'Docker',
-    type: 'docker',
+    label: 'Stopped',
+    status: 'stopped',
+    name: 'Podman Machine Default',
+    tip: '/var/run/podman-machine.sock',
+    mapped: 'stopped → stopped',
+  },
+  {
+    label: 'Starting',
+    status: 'starting',
+    name: 'podman',
+    tip: '/run/podman/podman.sock',
+    mapped: 'starting → waiting',
+  },
+  {
+    label: 'Stopping',
+    status: 'stopping',
     name: 'docker',
     tip: '/var/run/docker.sock',
-    token: '--pd-provider-docker',
-  },
-  {
-    label: 'Kubernetes',
-    type: 'kubernetes',
-    name: 'kubernetes',
-    tip: '',
-    token: '--pd-provider-kubernetes',
-    note: 'Rare in this column; circle supports kubernetes type',
+    mapped: 'stopping → stopped',
   },
   {
     label: 'Unknown / unresolved',
-    type: undefined,
+    status: 'unknown',
     name: 'podman.missing-connection',
     tip: '',
-    token: '--pd-provider-unknown',
-    note: 'Falls back to engineId as label when connection is missing',
+    mapped: 'unknown → unknown',
+    note: 'No matching connection → engineId as label + unknown status',
   },
 ];
 
 type DisplayNameCase = {
   label: string;
-  type: ProviderType;
+  status: ConnectionStatus;
   name: string;
   tip: string;
   note: string;
@@ -102,38 +104,38 @@ type DisplayNameCase = {
 const displayNameCases: DisplayNameCase[] = [
   {
     label: 'Single docker connection',
-    type: 'docker',
+    status: 'started',
     name: 'docker',
     tip: '/var/run/docker.sock',
     note: 'containerConnectionCount[docker] === 1 → show connection.type',
   },
   {
     label: 'Multiple podman — default machine',
-    type: 'podman',
+    status: 'started',
     name: 'Podman Machine Default',
     tip: '/var/run/podman-machine.sock',
     note: 'containerConnectionCount[podman] > 1 → show connection.displayName',
   },
   {
-    label: 'Multiple podman — remote',
-    type: 'podman',
+    label: 'Multiple podman — remote (stopped)',
+    status: 'stopped',
     name: 'Podman Remote',
     tip: '/var/run/podman-remote.sock',
-    note: 'containerConnectionCount[podman] > 1 → show connection.displayName',
+    note: 'Status icon reflects connection.status independently of label',
   },
   {
     label: 'Unresolved engineId',
-    type: undefined,
+    status: 'unknown',
     name: 'podman.unknown-machine',
     tip: '',
-    note: 'No matching connection → show raw object.engineId',
+    note: 'No matching connection → show raw object.engineId + unknown icon',
   },
 ];
 
 type TableContextRow = {
   resource: string;
   list: string;
-  type: ProviderType;
+  status: ConnectionStatus;
   name: string;
   tip: string;
 };
@@ -142,35 +144,35 @@ const tableContextRows: TableContextRow[] = [
   {
     resource: 'nginx',
     list: 'Containers',
-    type: 'podman',
+    status: 'started',
     name: 'Podman Machine Default',
     tip: '/var/run/podman-machine.sock',
   },
   {
     resource: 'docker.io/library/alpine:latest',
     list: 'Images',
-    type: 'docker',
+    status: 'started',
     name: 'docker',
     tip: '/var/run/docker.sock',
   },
   {
     resource: 'my-volume',
     list: 'Volumes',
-    type: 'podman',
+    status: 'stopped',
     name: 'Podman Remote',
     tip: '/var/run/podman-remote.sock',
   },
   {
     resource: 'bridge',
     list: 'Networks',
-    type: 'podman',
+    status: 'started',
     name: 'podman',
     tip: '/run/podman/podman.sock',
   },
   {
     resource: 'my-web-app-pod',
     list: 'Pods',
-    type: 'podman',
+    status: 'starting',
     name: 'Podman Machine Default',
     tip: '/var/run/podman-machine.sock',
   },
@@ -178,23 +180,28 @@ const tableContextRows: TableContextRow[] = [
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}
-  {#if args.kind === 'providers'}
+  {#if args.kind === 'statuses'}
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
-        Provider type drives the colored circle via <code>ProviderInfoCircle</code> and
-        <code>providerColors</code>. Colors come from the color registry tokens below.
+        Connection lifecycle status drives the StatusDot glyph via
+        <code>ProviderInfoIcon</code> → <code>StatusDotIcon</code>.
+        Shape and <code>--pd-status-*</code> fill encode
+        status — not provider brand.
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {#each providerVariants as variant (variant.label)}
+        {#each statusVariants as variant (variant.label)}
           <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
             <div class="text-xs font-semibold text-(--pd-content-header)">{variant.label}</div>
 
             <div class="max-w-xs py-2">
-              <MockContainerEngineEnvironmentColumn type={variant.type} name={variant.name} tip={variant.tip} />
+              <MockContainerEngineEnvironmentColumn
+                status={variant.status}
+                name={variant.name}
+                tip={variant.tip} />
             </div>
 
-            <code class="text-[10px] text-(--pd-content-text) break-all">{variant.token}</code>
+            <code class="text-[10px] text-(--pd-content-text) break-all">{variant.mapped}</code>
             {#if variant.note}
               <div class="text-[10px] text-(--pd-content-text)">{variant.note}</div>
             {/if}
@@ -205,17 +212,20 @@ const tableContextRows: TableContextRow[] = [
   {:else if args.kind === 'displayNames'}
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
-        Display name logic from <code>ContainerEngineEnvironmentColumn</code>: when more than one
-        connection shares a type, show <code>connection.displayName</code>; otherwise show
-        <code>connection.type</code>. If no connection matches, fall back to
-        <code>object.engineId</code>.
+        Display name from <code>ContainerEngineEnvironmentColumn</code>: when more than one
+        connection shares a type, show <code>connection.displayName</code>; otherwise
+        <code>connection.type</code>. Unresolved connection → <code>object.engineId</code>.
+        Icon always uses an explicit connection status.
       </div>
 
       <div class="flex flex-col gap-3">
         {#each displayNameCases as variant (variant.label)}
           <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3 sm:flex-row sm:items-center sm:gap-6">
             <div class="w-full max-w-xs shrink-0">
-              <MockContainerEngineEnvironmentColumn type={variant.type} name={variant.name} tip={variant.tip} />
+              <MockContainerEngineEnvironmentColumn
+                status={variant.status}
+                name={variant.name}
+                tip={variant.tip} />
             </div>
             <div class="flex flex-col gap-1">
               <div class="text-xs font-semibold text-(--pd-content-header)">{variant.label}</div>
@@ -228,8 +238,8 @@ const tableContextRows: TableContextRow[] = [
   {:else if args.kind === 'tooltips'}
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
-        Tooltip content is <code>connection?.endpoint?.socketPath</code>. Hover each label to verify
-        tip behavior is preserved.
+        Tooltip content is the connection socket path when a connection is resolved.
+        Hover each label to verify tip behavior.
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -237,7 +247,7 @@ const tableContextRows: TableContextRow[] = [
           <div class="text-xs font-semibold text-(--pd-content-header)">With socket path</div>
           <div class="max-w-xs py-2">
             <MockContainerEngineEnvironmentColumn
-              type="podman"
+              status="started"
               name="Podman Machine Default"
               tip="/var/run/podman-machine.sock" />
           </div>
@@ -247,7 +257,7 @@ const tableContextRows: TableContextRow[] = [
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
           <div class="text-xs font-semibold text-(--pd-content-header)">Empty tip (no tooltip)</div>
           <div class="max-w-xs py-2">
-            <MockContainerEngineEnvironmentColumn type="docker" name="docker" tip="" />
+            <MockContainerEngineEnvironmentColumn status="started" name="docker" tip="" />
           </div>
           <code class="text-[10px] text-(--pd-content-text)">tip="" — Label still renders, no tip</code>
         </div>
@@ -255,7 +265,7 @@ const tableContextRows: TableContextRow[] = [
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
           <div class="text-xs font-semibold text-(--pd-content-header)">Docker socket</div>
           <div class="max-w-xs py-2">
-            <MockContainerEngineEnvironmentColumn type="docker" name="docker" tip="/var/run/docker.sock" />
+            <MockContainerEngineEnvironmentColumn status="started" name="docker" tip="/var/run/docker.sock" />
           </div>
           <code class="text-[10px] text-(--pd-content-text) break-all">tip="/var/run/docker.sock"</code>
         </div>
@@ -264,7 +274,7 @@ const tableContextRows: TableContextRow[] = [
           <div class="text-xs font-semibold text-(--pd-content-header)">Long path truncation in label</div>
           <div class="max-w-[10rem] py-2">
             <MockContainerEngineEnvironmentColumn
-              type="podman"
+              status="stopped"
               name="Very Long Podman Machine Display Name"
               tip="/Users/example/.local/share/containers/podman/machine/qemu/podman.sock" />
           </div>
@@ -296,7 +306,7 @@ const tableContextRows: TableContextRow[] = [
               <span class="text-xs text-(--pd-content-text)">Running</span>
             </div>
             <div class="w-48 shrink-0 px-3 py-2">
-              <MockContainerEngineEnvironmentColumn type={row.type} name={row.name} tip={row.tip} />
+              <MockContainerEngineEnvironmentColumn status={row.status} name={row.name} tip={row.tip} />
             </div>
           </div>
         </div>
@@ -305,27 +315,27 @@ const tableContextRows: TableContextRow[] = [
   {:else if args.kind === 'accessibility'}
     <div class="flex flex-col gap-6">
       <div class="text-sm text-(--pd-content-text)">
-        Current accessibility surface before modernization. The circle is a plain
-        <code>div</code> with <code>aria-label="Provider info circle"</code> — color is the only
-        differentiator by provider type.
+        Status icon is an SVG with <code>role="img"</code> and a capitalized
+        <code>aria-label</code> for the mapped StatusDot status. Shape and color both
+        communicate connection lifecycle.
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-          <div class="text-xs font-semibold text-(--pd-content-header)">ARIA on circle</div>
+          <div class="text-xs font-semibold text-(--pd-content-header)">ARIA on status icon</div>
           <div class="max-w-xs py-2">
             <MockContainerEngineEnvironmentColumn
-              type="podman"
+              status="started"
               name="Podman Machine Default"
               tip="/var/run/podman-machine.sock" />
           </div>
-          <code class="text-[10px] text-(--pd-content-text)">aria-label="Provider info circle"</code>
+          <code class="text-[10px] text-(--pd-content-text)">role="img" aria-label="Running"</code>
         </div>
 
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
           <div class="text-xs font-semibold text-(--pd-content-header)">Tooltip conveys socket path</div>
           <div class="max-w-xs py-2">
-            <MockContainerEngineEnvironmentColumn type="docker" name="docker" tip="/var/run/docker.sock" />
+            <MockContainerEngineEnvironmentColumn status="started" name="docker" tip="/var/run/docker.sock" />
           </div>
           <code class="text-[10px] text-(--pd-content-text)">Pointer-hover only — no focusable trigger for keyboard access</code>
         </div>
@@ -333,19 +343,19 @@ const tableContextRows: TableContextRow[] = [
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
           <div class="text-xs font-semibold text-(--pd-content-header)">High-contrast themes</div>
           <div class="flex max-w-xs flex-col gap-2 py-2">
-            <MockContainerEngineEnvironmentColumn type="podman" name="podman" tip="/run/podman/podman.sock" />
-            <MockContainerEngineEnvironmentColumn type="docker" name="docker" tip="/var/run/docker.sock" />
-            <MockContainerEngineEnvironmentColumn name="unknown.engine" />
+            <MockContainerEngineEnvironmentColumn status="started" name="podman" tip="/run/podman/podman.sock" />
+            <MockContainerEngineEnvironmentColumn status="stopped" name="docker" tip="/var/run/docker.sock" />
+            <MockContainerEngineEnvironmentColumn status="unknown" name="unknown.engine" />
           </div>
-          <code class="text-[10px] text-(--pd-content-text)">Switch to hc-light / hc-dark to verify tokens</code>
+          <code class="text-[10px] text-(--pd-content-text)">Switch to hc-light / hc-dark to verify --pd-status-* tokens</code>
         </div>
 
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-          <div class="text-xs font-semibold text-(--pd-content-header)">Known gaps (modernization)</div>
+          <div class="text-xs font-semibold text-(--pd-content-header)">A11y (#18120)</div>
           <ul class="list-disc space-y-1 pl-5 text-[10px] text-(--pd-content-text)">
-            <li>Color-only differentiation — no icon shape per provider</li>
-            <li>Circle is a raw <code>div</code>, not an SVG icon</li>
-            <li>Dot is 8×8px (<code>min-w-2 min-h-2</code>) — small visible size; color-only non-text contrast</li>
+            <li>Shape + color encode connection status (same as StatusDot)</li>
+            <li>12×12 SVG with <code>role="img"</code> and status <code>aria-label</code></li>
+            <li>Fill via <code>var(--pd-status-*)</code> with HC theme support</li>
           </ul>
         </div>
       </div>
@@ -353,43 +363,37 @@ const tableContextRows: TableContextRow[] = [
   {:else if args.kind === 'comparison'}
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
-        Side-by-side of the current plain-dot treatment versus the icon-based pattern used by
-        modernized status indicators (reference for #18120).
+        Before: color-only 8×8 provider-type dots (<code>--pd-provider-*</code>, deprecated).
+        After: StatusDot glyphs for connection lifecycle (<code>--pd-status-*</code>).
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-          <div class="text-xs font-semibold text-(--pd-content-header)">Current — ProviderInfoCircle</div>
+          <div class="text-xs font-semibold text-(--pd-content-header)">Before — provider color dots</div>
           <div class="flex items-center gap-3 py-2">
             <div aria-label="Provider info circle" class="min-h-2 min-w-2 rounded-full bg-(--pd-provider-podman)"></div>
             <div aria-label="Provider info circle" class="min-h-2 min-w-2 rounded-full bg-(--pd-provider-docker)"></div>
             <div aria-label="Provider info circle" class="min-h-2 min-w-2 rounded-full bg-(--pd-provider-kubernetes)"></div>
             <div aria-label="Provider info circle" class="min-h-2 min-w-2 rounded-full bg-(--pd-provider-unknown)"></div>
           </div>
-          <code class="text-[10px] text-(--pd-content-text)">8×8px colored divs — color only</code>
+          <code class="text-[10px] text-(--pd-content-text)">8×8px — color only, no status (deprecated tokens)</code>
         </div>
 
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-          <div class="text-xs font-semibold text-(--pd-content-header)">Target direction — icon-based</div>
-          <div class="text-sm text-(--pd-content-text) py-2">
-            Match <code>StatusDot</code> / <code>StatusDotIcon</code>: SVG icons with
-            <code>role="img"</code>, larger visible indicator, and shape + color differentiation.
+          <div class="text-xs font-semibold text-(--pd-content-header)">After — connection status icons</div>
+          <div class="flex max-w-xs flex-col gap-2 py-2">
+            <MockContainerEngineEnvironmentColumn status="started" name="started" tip="" />
+            <MockContainerEngineEnvironmentColumn status="stopped" name="stopped" tip="" />
+            <MockContainerEngineEnvironmentColumn status="starting" name="starting" tip="" />
+            <MockContainerEngineEnvironmentColumn status="unknown" name="unknown" tip="" />
           </div>
-          <code class="text-[10px] text-(--pd-content-text)">See StatusDot stories and #14008</code>
+          <code class="text-[10px] text-(--pd-content-text)">StatusDot glyphs + --pd-status-* fills</code>
         </div>
-      </div>
-
-      <div class="max-w-xs">
-        <div class="mb-2 text-xs font-semibold text-(--pd-content-header)">Full column (current)</div>
-        <MockContainerEngineEnvironmentColumn
-          type="podman"
-          name="Podman Machine Default"
-          tip="/var/run/podman-machine.sock" />
       </div>
     </div>
   {:else}
     <div class="max-w-xs">
-      <MockContainerEngineEnvironmentColumn type={args.type} name={args.name ?? 'podman'} tip={args.tip ?? ''} />
+      <MockContainerEngineEnvironmentColumn status={args.status} name={args.name} tip={args.tip} />
     </div>
   {/if}
 {/snippet}
@@ -397,14 +401,14 @@ const tableContextRows: TableContextRow[] = [
 <Story
   name="Basic"
   args={{
-    type: 'podman',
+    status: 'started',
     name: 'Podman Machine Default',
     tip: '/var/run/podman-machine.sock',
   }} />
 
 <Story
-  name="Provider Types"
-  args={{ kind: 'providers' }} />
+  name="Connection Statuses"
+  args={{ kind: 'statuses' }} />
 
 <Story
   name="Display Names"
@@ -423,5 +427,5 @@ const tableContextRows: TableContextRow[] = [
   args={{ kind: 'accessibility' }} />
 
 <Story
-  name="Comparison"
+  name="Before After"
   args={{ kind: 'comparison' }} />

@@ -3,40 +3,48 @@
  * Storybook stand-in for `ContainerEngineEnvironmentColumn`.
  *
  * The real column resolves `engineId` against provider stores. Storybook cannot
- * load those stores, so this helper accepts the already-resolved display props
- * and recreates the same `Label` + `ProviderInfoCircle` markup used in production.
+ * load those stores, so this helper accepts already-resolved display props and
+ * recreates the same `Label` + `ProviderInfoIcon` markup used in production.
  *
- * Markup and color class strings are inlined (not imported from `packages/renderer`)
- * so Tailwind scans them — Storybook's content paths do not include the renderer package.
+ * Status→glyph mapping mirrors `connectionStatusToDotStatus` in
+ * `packages/renderer/src/lib/ui/ProviderInfoIcon.svelte` (cannot import renderer from Storybook).
  */
 import { Tooltip } from '@podman-desktop/ui-svelte';
 
-/** Mirrors `providerColors` from `packages/renderer/src/lib/ui/ProviderInfoCircle.ts`. */
-const providerColors: Record<string, string> = {
-  podman: 'bg-(--pd-provider-podman)',
-  docker: 'bg-(--pd-provider-docker)',
-  kubernetes: 'bg-(--pd-provider-kubernetes)',
-  unknown: 'bg-(--pd-provider-unknown)',
+import MockStatusDotIcon from './MockStatusDotIcon.svelte';
+
+/** Matches `ProviderConnectionStatus` from `@podman-desktop/api`. */
+type ConnectionStatus = 'started' | 'stopped' | 'starting' | 'stopping' | 'unknown';
+
+/** Keep in sync with `connectionStatusToDotStatus` in ProviderInfoIcon.svelte */
+const CONNECTION_STATUS_TO_STATUS_DOT: Record<ConnectionStatus, string> = {
+  started: 'running',
+  stopped: 'stopped',
+  starting: 'waiting',
+  stopping: 'stopped',
+  unknown: 'unknown',
 };
 
 interface Props {
-  /** Provider connection type driving the colored indicator. */
-  type?: 'kubernetes' | 'podman' | 'docker';
+  /** Connection lifecycle status (required — use `unknown` when unresolved). */
+  status: ConnectionStatus;
   /** Label text (connection type, or displayName when multiple connections share a type). */
   name: string;
   /** Tooltip content — typically `connection.endpoint.socketPath`. */
   tip?: string;
 }
 
-let { type, name, tip = '' }: Props = $props();
+let { status, name, tip = '' }: Props = $props();
 
-let color = $derived(providerColors[type ?? 'unknown']);
+let dotStatus = $derived(CONNECTION_STATUS_TO_STATUS_DOT[status]);
 </script>
 
 <Tooltip {tip}>
   <div
-    class="flex w-full items-center gap-x-1 rounded-md bg-[var(--pd-label-bg)] p-1 text-sm text-[var(--pd-label-text)]">
-    <div aria-label="Provider info circle" class="min-h-2 min-w-2 shrink-0 rounded-full {color}"></div>
+    class="flex w-full items-center gap-x-1 rounded-full bg-[var(--pd-label-bg)] py-1 px-[calc(0.25rem+2pt)] text-sm text-[var(--pd-label-text)] select-none">
+    <span class="shrink-0">
+      <MockStatusDotIcon status={dotStatus} />
+    </span>
     <span class="min-w-0 flex-1 overflow-x-hidden text-ellipsis whitespace-nowrap">
       {name}
     </span>

@@ -17,6 +17,7 @@ const statusCssVars: Record<string, string> = {
   created: 'var(--pd-status-created)',
   degraded: 'var(--pd-status-degraded)',
   unknown: 'var(--pd-status-unknown)',
+  starting: 'var(--pd-status-starting)',
 };
 
 function capitalize(text: string): string {
