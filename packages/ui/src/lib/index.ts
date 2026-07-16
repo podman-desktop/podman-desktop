@@ -20,8 +20,6 @@ import type { ButtonType } from './button/Button';
 import Button from './button/Button.svelte';
 import CloseButton from './button/CloseButton.svelte';
 import Expandable from './button/Expandable.svelte';
-import type { SplitButtonOption } from './button/SplitButton.svelte';
-import SplitButton from './button/SplitButton.svelte';
 import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
@@ -81,7 +79,6 @@ export {
   SearchInput,
   SettingsNavItem,
   Spinner,
-  SplitButton,
   StatusIcon,
   Tab,
   Table,
