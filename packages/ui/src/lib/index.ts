@@ -52,7 +52,7 @@ import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType, ListOrganizerItem, SplitButtonOption, TablePersistence };
+export type { ButtonType, ListOrganizerItem, TablePersistence };
 export {
   Button,
   Carousel,
