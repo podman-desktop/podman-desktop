@@ -292,7 +292,7 @@ describe('PreferencesRegistriesEditing', () => {
     await userEvent.click(addRegistryBtn);
     let button = screen.getByRole('button', { name: 'Add' });
     const password = screen.getByPlaceholderText('Password');
-    const username = screen.getByPlaceholderText('username');
+    const username = screen.getByPlaceholderText('Username');
     const url = screen.getByPlaceholderText('https://registry.io');
     expect(button).toBeVisible();
     expect(button).toBeDisabled();
