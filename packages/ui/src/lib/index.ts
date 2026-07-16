@@ -88,7 +88,6 @@ export {
   SearchInput,
   SettingsNavItem,
   Spinner,
-  SplitButton,
   StatusIcon,
   Tab,
   Table,
