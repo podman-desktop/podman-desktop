@@ -20,9 +20,8 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import {
   BUILT_IN_EXTENSION_IDS,
-  BUNDLED_COMMUNITY_EXTENSION_IDS,
   isBuiltInExtension,
-  isBundledCommunityExtension,
+  isBuiltInExtensionId,
   isExtensionPreinstalled,
   isExtensionRemovableInUi,
   resolveExtensionOriginSortLabel,
@@ -49,21 +48,24 @@ function createInstalled(id: string, overrides: Partial<CombinedExtensionInfoUI>
 }
 
 describe('extension-origin-utils', () => {
-  test('treats compose, docker, and podman as built-in', () => {
+  test('treats platform extensions as built-in', () => {
     for (const id of BUILT_IN_EXTENSION_IDS) {
       expect(isBuiltInExtension(createInstalled(id))).toBe(true);
       expect(isExtensionPreinstalled(createInstalled(id))).toBe(true);
       expect(resolveExtensionOriginSortLabel(createInstalled(id))).toBe('Built-in extension');
+      expect(shouldShowBuiltInNameIndicator(createInstalled(id))).toBe(true);
+      expect(shouldShowBuiltInNameIndicator(createInstalled(id), true)).toBe(true);
+      expect(isExtensionRemovableInUi(createInstalled(id))).toBe(false);
+      expect(isExtensionRemovableInUi(createInstalled(id), true)).toBe(false);
     }
   });
 
-  test('treats bundled community extensions as community even when removable is false', () => {
-    for (const id of BUNDLED_COMMUNITY_EXTENSION_IDS) {
-      expect(isBundledCommunityExtension(id)).toBe(true);
-      expect(isBuiltInExtension(createInstalled(id))).toBe(false);
-      expect(isExtensionPreinstalled(createInstalled(id))).toBe(false);
-      expect(resolveExtensionOriginSortLabel(createInstalled(id))).toBe('Community');
-    }
+  test('includes kind and kube-context as built-in', () => {
+    expect(isBuiltInExtension(createInstalled('podman-desktop.kind'))).toBe(true);
+    expect(isBuiltInExtension(createInstalled('podman-desktop.kube-context'))).toBe(true);
+    expect(isBuiltInExtensionId('podman-desktop.kind')).toBe(true);
+    expect(isBuiltInExtensionId('kind')).toBe(true);
+    expect(isBuiltInExtensionId('redhat.ai-lab')).toBe(false);
   });
 
   test('marks red hat catalog publishers as community verified', () => {
@@ -99,14 +101,14 @@ describe('extension-origin-utils', () => {
   test('only built-ins are non-removable in the UI', () => {
     expect(isExtensionRemovableInUi(createInstalled('podman-desktop.compose'))).toBe(false);
     expect(isExtensionRemovableInUi(createInstalled('podman-desktop.kind'))).toBe(false);
-    expect(isExtensionRemovableInUi(createInstalled('podman-desktop.kind'), true)).toBe(true);
+    expect(isExtensionRemovableInUi(createInstalled('podman-desktop.kind'), true)).toBe(false);
     expect(isExtensionRemovableInUi(createInstalled('podman-desktop.quadlet', { removable: true }))).toBe(true);
   });
 
-  test('shouldShowBuiltInNameIndicator matches non-removable platform extensions', () => {
+  test('shouldShowBuiltInNameIndicator matches built-in platform extensions', () => {
     expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.compose'))).toBe(true);
     expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.kind'))).toBe(true);
-    expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.kind'), true)).toBe(false);
+    expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.kube-context'))).toBe(true);
     expect(shouldShowBuiltInNameIndicator(createInstalled('podman-desktop.quadlet', { removable: true }))).toBe(false);
     expect(shouldShowBuiltInNameIndicator(createInstalled('local-dev', { devMode: true }))).toBe(false);
   });

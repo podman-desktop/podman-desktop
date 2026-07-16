@@ -40,7 +40,7 @@ describe('extension-remove-preference', () => {
       },
     } as CatalogExtensionInfoUI;
 
-    const bundled = {
+    const kindBuiltIn = {
       id: 'podman-desktop.kind',
       displayName: 'Kind',
       fetchable: false,
@@ -65,8 +65,8 @@ describe('extension-remove-preference', () => {
     } as CatalogExtensionInfoUI;
 
     expect(getExtensionRemoveBlockedReason(builtIn)).toContain('Built-in extensions');
-    expect(getExtensionRemoveBlockedReason(bundled)).toBe('Bundled with Podman Desktop and cannot be uninstalled');
-    expect(getExtensionRemoveBlockedReasonShort(bundled)).toBe('Bundled extension cannot be uninstalled');
+    expect(getExtensionRemoveBlockedReason(kindBuiltIn)).toContain('Built-in extensions');
+    expect(getExtensionRemoveBlockedReasonShort(kindBuiltIn)).toBe('Built-in extension cannot be uninstalled');
     expect(getExtensionRemoveBlockedReasonShort(builtIn)).toBe('Built-in extension cannot be uninstalled');
     expect(getExtensionRemoveBlockedReason(removable)).toBeUndefined();
     expect(getExtensionRemovePreferenceDetail(removable)).toContain('Permanently uninstall Podman Quadlet');

@@ -103,3 +103,41 @@ export function getExtensionLifecyclePresentation(
       };
   }
 }
+
+/**
+ * Lower rank = more severe / actionable. Ascending Status sort puts problems first.
+ * Compatibility warnings (incompatible / missing dependency) share the failed tier.
+ */
+export function getExtensionStatusSeverityRank(options: {
+  isInstalled: boolean;
+  state?: string;
+  type?: 'dd' | 'pd';
+  hasCompatibilityIssue?: boolean;
+}): number {
+  if (!options.isInstalled) {
+    return 60;
+  }
+
+  if (options.type === 'dd') {
+    return 40;
+  }
+
+  if (options.hasCompatibilityIssue) {
+    return 5;
+  }
+
+  switch (options.state) {
+    case 'failed':
+      return 0;
+    case 'stopped':
+      return 10;
+    case 'stopping':
+      return 20;
+    case 'starting':
+      return 30;
+    case 'started':
+      return 40;
+    default:
+      return 50;
+  }
+}

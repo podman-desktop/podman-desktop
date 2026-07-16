@@ -24,7 +24,7 @@ const categories = $derived(collectCatalogCategories(catalogExtensions));
 const filters = $derived(catalogListFilters.value);
 
 const installOptions = [
-  { value: 'all', label: 'All extensions' },
+  { value: 'all', label: 'All statuses' },
   { value: 'installed', label: 'Installed' },
   { value: 'not-installed', label: 'Not installed' },
 ];

@@ -29,12 +29,16 @@ import {
   resetInstalledTableSort,
 } from './installed-extension-table-sort.svelte';
 
-function createRow(id: string, name: string, options?: { hasUpdate?: boolean }): InstalledExtensionTableRow {
+function createRow(
+  id: string,
+  name: string,
+  options?: { hasUpdate?: boolean; state?: string },
+): InstalledExtensionTableRow {
   const extension = {
     id,
     name,
     displayName: name,
-    state: 'started',
+    state: options?.state ?? 'started',
     removable: true,
     devMode: false,
     type: 'pd',
@@ -105,5 +109,19 @@ describe('installed-extension-table-sort', () => {
     const ordered = orderInstalledTableRows(rows);
 
     expect(ordered.map(row => row.extension.id)).toEqual(['alpha', 'beta']);
+  });
+
+  test('sorts Status by severity with problems first', () => {
+    const rows = [
+      createRow('active', 'Active Ext', { state: 'started' }),
+      createRow('failed', 'Failed Ext', { state: 'failed' }),
+      createRow('disabled', 'Disabled Ext', { state: 'stopped' }),
+      createRow('enabling', 'Enabling Ext', { state: 'starting' }),
+    ];
+
+    applyInstalledTableSort('Status');
+    const ordered = orderInstalledTableRows(rows);
+
+    expect(ordered.map(row => row.extension.id)).toEqual(['failed', 'disabled', 'enabling', 'active']);
   });
 });

@@ -23,7 +23,7 @@ import { fetchWebviews } from '/@/stores/webviews';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { clearNewBadge } from './extension-catalog-settings.svelte';
-import { isBuiltInExtension, isBundledCommunityExtension, isExtensionRemovableInUi } from './extension-origin-utils';
+import { isBuiltInExtension, isExtensionRemovableInUi } from './extension-origin-utils';
 import { prototypeRemoveExtension } from './extension-prototype-use-cases';
 import { resolveInstalledExtensionRuntimeId } from './extension-runtime-id';
 import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
@@ -75,16 +75,12 @@ export function getExtensionRemoveBlockedReason(extension: CatalogExtensionInfoU
     return 'Untrack this extension in Local Extensions before uninstalling it';
   }
 
-  if (!installed.removable && isBundledCommunityExtension(installed.id)) {
-    return 'Bundled with Podman Desktop and cannot be uninstalled';
-  }
-
   if (!installed.removable && !extension.fetchable) {
-    return 'Pre-installed extension cannot be uninstalled';
+    return 'Built-in extension cannot be uninstalled';
   }
 
   if (!installed.removable) {
-    return 'Extension is marked as non-uninstallable';
+    return 'Built-in extension cannot be uninstalled';
   }
 
   return 'This extension cannot be uninstalled';
@@ -109,16 +105,12 @@ export function getExtensionRemoveBlockedReasonShort(extension: CatalogExtension
     return 'Untrack in Local Extensions first';
   }
 
-  if (!installed.removable && isBundledCommunityExtension(installed.id)) {
-    return 'Bundled extension cannot be uninstalled';
-  }
-
   if (!installed.removable && !extension.fetchable) {
-    return 'Pre-installed extension cannot be uninstalled';
+    return 'Built-in extension cannot be uninstalled';
   }
 
   if (!installed.removable) {
-    return 'Extension cannot be uninstalled';
+    return 'Built-in extension cannot be uninstalled';
   }
 
   return 'Cannot be uninstalled';

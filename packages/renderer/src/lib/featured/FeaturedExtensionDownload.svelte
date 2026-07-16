@@ -44,11 +44,16 @@ export let oninstall: (extensionId: string) => void = () => {};
 
 let installInProgress = false;
 let installCompleted = false;
+/** Once the parent has reported installed, ignore installCompleted so uninstall can show Install again. */
+let sawInstalled = false;
 let logs: string[] = [];
 let errorInstall = '';
 let percentage = '0%';
 
-$: showInstallButton = extension.fetchable && !extension.isInstalled && !installCompleted;
+$: if (extension.isInstalled) {
+  sawInstalled = true;
+}
+$: showInstallButton = extension.fetchable && !extension.isInstalled && (!installCompleted || sawInstalled);
 $: installTooltip = installInProgress ? buildExtensionInstallingTooltip(percentage) : EXTENSION_INSTALL_TOOLTIP;
 
 function buildCatalogExtensionForInstall(): CatalogExtensionInfoUI {

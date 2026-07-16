@@ -63,14 +63,18 @@ test('Expect to have badge for devMode Extension', async () => {
   expect(screen.getByText('DevMode extension')).toBeInTheDocument();
 });
 
-test('Expect bundled catalog extension with removable false to have no built-in badge', async () => {
-  const extension: ExtensionType = {
-    id: 'podman-desktop.kind',
-    type: 'pd',
-    removable: false,
-    devMode: false,
-  };
-  render(ExtensionBadge, { extension });
+test('Expect kind and kube-context built-in extensions to show built-in badge', async () => {
+  for (const id of ['podman-desktop.kind', 'podman-desktop.kube-context']) {
+    const { unmount } = render(ExtensionBadge, {
+      extension: {
+        id,
+        type: 'pd',
+        removable: false,
+        devMode: false,
+      },
+    });
 
-  expect(screen.queryByText('Built-in extension')).not.toBeInTheDocument();
+    expect(screen.getByText('Built-in extension')).toBeInTheDocument();
+    unmount();
+  }
 });

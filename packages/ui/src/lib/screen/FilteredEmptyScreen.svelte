@@ -29,13 +29,15 @@ function doResetFilter(): void {
   onResetFilter();
 }
 
-let filter = $derived(searchTerm && searchTerm.length > 20 ? 'filter' : `'${searchTerm}'`);
+const hasSearchTerm = $derived(!!searchTerm?.trim());
+const filter = $derived(!hasSearchTerm || searchTerm.length > 20 ? 'filter' : `'${searchTerm}'`);
+const message = $derived(hasSearchTerm ? 'Not what you expected? Double-check your spelling.' : '');
 </script>
 
 <EmptyScreen
   icon={icon}
   title="No {kind} matching {filter} found"
-  message="Not what you expected? Double-check your spelling."
-  detail="Just want to view all of your {kind}?">
+  {message}
+  detail="Just want to view all {kind}?">
   <Button on:click={doResetFilter}>Clear filter</Button>
 </EmptyScreen>

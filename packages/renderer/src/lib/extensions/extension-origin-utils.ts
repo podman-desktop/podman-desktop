@@ -23,13 +23,6 @@ export const BUILT_IN_EXTENSION_IDS = new Set([
   'podman-desktop.compose',
   'podman-desktop.docker',
   'podman-desktop.podman',
-]);
-
-/**
- * Bundled community extensions shipped with Podman Desktop.
- * They are pre-installed in dev builds (`removable: false`) but are not built-ins.
- */
-export const BUNDLED_COMMUNITY_EXTENSION_IDS = new Set([
   'podman-desktop.kind',
   'podman-desktop.registries',
   'podman-desktop.kube-context',
@@ -38,12 +31,39 @@ export const BUNDLED_COMMUNITY_EXTENSION_IDS = new Set([
   'podman-desktop.podman-docker-context',
 ]);
 
+/**
+ * @deprecated Built-in covers all previously bundled platform extensions.
+ * Kept as an empty set for test/import compatibility.
+ */
+export const BUNDLED_COMMUNITY_EXTENSION_IDS = new Set<string>();
+
 export type ExtensionOriginSortLabel =
   | 'Built-in extension'
   | 'Community Verified'
   | 'Community'
   | 'Docker Desktop extension'
   | 'DevMode extension';
+
+/** True when the id matches a known built-in platform extension. */
+export function isBuiltInExtensionId(extensionId: string): boolean {
+  if (BUILT_IN_EXTENSION_IDS.has(extensionId)) {
+    return true;
+  }
+
+  const extensionName = extensionId.includes('.') ? extensionId.split('.').slice(1).join('.') : extensionId;
+  for (const builtInId of BUILT_IN_EXTENSION_IDS) {
+    const builtInName = builtInId.includes('.') ? builtInId.split('.').slice(1).join('.') : builtInId;
+    if (
+      builtInName === extensionName ||
+      builtInId.endsWith(`.${extensionName}`) ||
+      extensionId.endsWith(`.${builtInName}`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export function isBuiltInExtension(
   installed?: Pick<CombinedExtensionInfoUI, 'id' | 'removable' | 'devMode' | 'type'>,
@@ -52,9 +72,9 @@ export function isBuiltInExtension(
     return false;
   }
 
-  return BUILT_IN_EXTENSION_IDS.has(installed.id);
+  return isBuiltInExtensionId(installed.id);
 }
-
+/** @deprecated Use isBuiltInExtension — platform extensions are labeled Built-in. */
 export function isBundledCommunityExtension(extensionId: string): boolean {
   return BUNDLED_COMMUNITY_EXTENSION_IDS.has(extensionId);
 }
@@ -111,14 +131,10 @@ export function isExtensionRemovableInUi(
   return installed.removable ? true : fetchable;
 }
 
-/** Show the built-in shield next to the name when uninstall is blocked for platform extensions. */
+/** Show the built-in shield next to the name for platform built-in extensions. */
 export function shouldShowBuiltInNameIndicator(
   installed?: Pick<CombinedExtensionInfoUI, 'id' | 'removable' | 'devMode' | 'type'>,
-  fetchable = false,
+  _fetchable = false,
 ): boolean {
-  if (!installed || installed.devMode || installed.type === 'dd') {
-    return false;
-  }
-
-  return !isExtensionRemovableInUi(installed, fetchable);
+  return isBuiltInExtension(installed);
 }

@@ -79,7 +79,7 @@ test('Expect to show pre-installed only for built-in extensions', async () => {
   expect(region).toHaveTextContent('Pre-installed');
 });
 
-test('Expect bundled community extensions to omit pre-installed label', async () => {
+test('Expect kind built-in extension to show pre-installed label', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',
     id: 'podman-desktop.kind',
@@ -97,5 +97,5 @@ test('Expect bundled community extensions to omit pre-installed label', async ()
   render(InstalledExtensionCardRight, { extension });
 
   const region = screen.getByRole('region', { name: 'Extension Kind right actions' });
-  expect(region).not.toHaveTextContent('Pre-installed');
+  expect(region).toHaveTextContent('Pre-installed');
 });

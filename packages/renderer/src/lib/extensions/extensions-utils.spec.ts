@@ -719,6 +719,33 @@ describe('extension id matching', () => {
     expect(catalogInfo.installedExtension?.id).toBe('publisher.ai-lab');
   });
 
+  test('extractCatalogExtensions excludes built-in platform extensions', () => {
+    const kindCatalog: CatalogExtension = {
+      id: 'podman-desktop.kind',
+      publisherName: 'podman-desktop',
+      shortDescription: 'Kind clusters',
+      publisherDisplayName: 'Podman Desktop',
+      extensionName: 'kind',
+      displayName: 'Kind',
+      categories: [],
+      keywords: [],
+      unlisted: false,
+      versions: [
+        {
+          version: '1.0.0',
+          preview: false,
+          files: [],
+          ociUri: 'oci:kind',
+          lastUpdated: new Date(),
+        },
+      ],
+    };
+
+    const catalogInfo = extensionsUtils.extractCatalogExtensions([kindCatalog, aiLabCatalog], [], []);
+
+    expect(catalogInfo.map(extension => extension.id)).toEqual(['redhat.ai-lab']);
+  });
+
   test('extractCatalogExtensions marks AI Lab installed from webview-only runtime row', () => {
     const webviewOnlyInstalled = {
       ...aiLabInstalled,

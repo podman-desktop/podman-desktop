@@ -25,7 +25,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
 import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
-import { resolveExtensionVerificationStatus, shouldShowBuiltInNameIndicator } from './extension-origin-utils';
+import { isBuiltInExtension, isBuiltInExtensionId, resolveExtensionVerificationStatus } from './extension-origin-utils';
 import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
 import {
   applyPrototypeCatalogUseCaseOverlay,
@@ -265,9 +265,9 @@ export class ExtensionsUtils {
     featuredExtensions: FeaturedExtension[],
     installedExtensions: CombinedExtensionInfoUI[],
   ): CatalogExtensionInfoUI[] {
-    // filter out unlisted extensions
+    // Filter out unlisted and built-in platform extensions (Installed tab only).
     const values: CatalogExtensionInfoUI[] = catalogExtensions
-      .filter(e => !e.unlisted)
+      .filter(e => !e.unlisted && !isBuiltInExtensionId(e.id))
       .map(catalogExtension => {
         // grab latest version
         const nonPreviewVersions = catalogExtension.versions.filter(v => !v.preview);
@@ -283,7 +283,9 @@ export class ExtensionsUtils {
         const isFeatured = featuredExtensions.some(featuredExtension => featuredExtension.id === catalogExtension.id);
 
         const shortDescription = catalogExtension.shortDescription;
-        const installedVersion = installed?.version ?? fetchVersion;
+        const rawInstalledVersion = installed?.version;
+        const installedVersion =
+          rawInstalledVersion !== undefined && rawInstalledVersion !== '' ? rawInstalledVersion : fetchVersion;
         const categories = catalogExtension.categories;
         const keywords = catalogExtension.keywords;
         const availableVersions = nonPreviewVersions.map(version => ({
@@ -421,10 +423,11 @@ export class ExtensionsUtils {
     catalogExtensions: CatalogExtension[] = [],
     featuredExtensions: FeaturedExtension[] = [],
   ): CatalogExtensionInfoUI[] {
-    // Inject synthetic catalog entries for demo extensions that are installed but missing from catalog.
+    // Inject synthetic catalog entries for non-built-in demo extensions missing from catalog.
+    // Built-ins stay on the Installed tab only and get update demos via installedCatalogById.
     const injected: CatalogExtensionInfoUI[] = [];
     for (const demoId of PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS) {
-      if (extensions.some(e => e.id === demoId)) {
+      if (isBuiltInExtensionId(demoId) || extensions.some(e => e.id === demoId)) {
         continue;
       }
       const installed = installedExtensions.find(e => e.id === demoId);
@@ -628,7 +631,7 @@ export class ExtensionsUtils {
       }
 
       if (listFilters.builtIn === true) {
-        if (!shouldShowBuiltInNameIndicator(extension, catalogExtension?.fetchable === true)) {
+        if (!isBuiltInExtension(extension)) {
           return false;
         }
       }

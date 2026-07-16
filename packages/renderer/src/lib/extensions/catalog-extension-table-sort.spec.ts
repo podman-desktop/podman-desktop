@@ -25,7 +25,13 @@ import {
   resetCatalogTableSort,
 } from './catalog-extension-table-sort.svelte';
 
-function createExtension(id: string, name: string, featured = false): CatalogExtensionInfoUI {
+function createExtension(
+  id: string,
+  name: string,
+  featured = false,
+  options?: { isInstalled?: boolean; state?: string },
+): CatalogExtensionInfoUI {
+  const isInstalled = options?.isInstalled ?? false;
   return {
     id,
     displayName: name,
@@ -34,7 +40,18 @@ function createExtension(id: string, name: string, featured = false): CatalogExt
     fetchLink: '',
     fetchVersion: '1.0.0',
     publisherDisplayName: 'Publisher',
-    isInstalled: false,
+    isInstalled,
+    installedExtension: isInstalled
+      ? ({
+          id,
+          name,
+          displayName: name,
+          state: options?.state ?? 'started',
+          type: 'pd',
+          removable: true,
+          devMode: false,
+        } as CatalogExtensionInfoUI['installedExtension'])
+      : undefined,
     shortDescription: '',
     categories: [],
     keywords: [],
@@ -76,5 +93,19 @@ describe('catalog-extension-table-sort', () => {
     const ordered = orderCatalogTableExtensions(extensions);
 
     expect(ordered.map(extension => extension.id)).toEqual(['alpha', 'beta', 'featured']);
+  });
+
+  test('sorts Status by severity with problems first', () => {
+    const extensions = [
+      createExtension('available', 'Available'),
+      createExtension('active', 'Active', false, { isInstalled: true, state: 'started' }),
+      createExtension('failed', 'Failed', false, { isInstalled: true, state: 'failed' }),
+      createExtension('disabled', 'Disabled', false, { isInstalled: true, state: 'stopped' }),
+    ];
+
+    applyCatalogTableSort('Status');
+    const ordered = orderCatalogTableExtensions(extensions);
+
+    expect(ordered.map(extension => extension.id)).toEqual(['failed', 'disabled', 'active', 'available']);
   });
 });

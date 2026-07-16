@@ -35,7 +35,11 @@ import {
 import {
   applyPrototypeCatalogUseCaseOverlay,
   applyPrototypeUseCaseOverlays,
+  clearPrototypeRemovedExtensions,
   ensurePrototypeManualUpdateSettings,
+  isPrototypeRemovedExtension,
+  prototypeRemoveExtension,
+  prototypeRestoreExtension,
   setPrototypeUseCasesEnabled,
   USE_CASE_EXTENSION_IDS,
 } from './extension-prototype-use-cases';
@@ -45,6 +49,7 @@ describe('prototype use cases on real extensions', () => {
   const extensionsUtils = new ExtensionsUtils();
 
   afterEach(() => {
+    clearPrototypeRemovedExtensions();
     setPrototypeUseCasesEnabled(true);
     resetExtensionLifecycleUserTogglesForTests();
     resetPrototypeLifecycleOverlaysForTests();
@@ -348,6 +353,61 @@ describe('prototype use cases on real extensions', () => {
     const result = extensionsUtils.applyPrototypeUseCaseOverlays([existing]);
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe('podman-desktop.compose');
+  });
+
+  test('hides non-built-in extensions on refresh until prototype re-install', () => {
+    setPrototypeUseCasesEnabled(true);
+
+    const compose: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: 'podman-desktop.compose',
+      name: 'compose',
+      displayName: 'Compose',
+      description: 'Compose',
+      publisher: 'podman-desktop',
+      removable: false,
+      devMode: false,
+      version: '1.0.0',
+      state: 'started',
+      path: '',
+      readme: '',
+    };
+    const aiLab: CombinedExtensionInfoUI = {
+      type: 'pd',
+      id: 'redhat.ai-lab',
+      name: 'ai-lab',
+      displayName: 'Podman AI Lab',
+      description: 'AI Lab',
+      publisher: 'redhat',
+      removable: true,
+      devMode: false,
+      version: '1.9.3',
+      state: 'started',
+      path: '',
+      readme: '',
+    };
+
+    expect(isPrototypeRemovedExtension('redhat.ai-lab')).toBe(true);
+    expect(isPrototypeRemovedExtension('podman-desktop.compose')).toBe(false);
+
+    let result = applyPrototypeUseCaseOverlays([compose, aiLab]);
+    expect(result.map(extension => extension.id)).toEqual(['podman-desktop.compose']);
+
+    prototypeRestoreExtension('redhat.ai-lab', [], 'Podman AI Lab');
+    expect(isPrototypeRemovedExtension('redhat.ai-lab')).toBe(false);
+    result = applyPrototypeUseCaseOverlays([compose, aiLab]);
+    expect(result.map(extension => extension.id)).toEqual(['podman-desktop.compose', 'redhat.ai-lab']);
+
+    prototypeRemoveExtension('redhat.ai-lab');
+    expect(isPrototypeRemovedExtension('redhat.ai-lab')).toBe(true);
+    result = applyPrototypeUseCaseOverlays([compose, aiLab]);
+    expect(result.map(extension => extension.id)).toEqual(['podman-desktop.compose']);
+
+    // Simulate app refresh: in-memory prototype session state is cleared.
+    clearPrototypeRemovedExtensions();
+    expect(isPrototypeRemovedExtension('redhat.ai-lab')).toBe(true);
+    result = applyPrototypeUseCaseOverlays([compose, aiLab]);
+    expect(result.map(extension => extension.id)).toEqual(['podman-desktop.compose']);
   });
 
   test('ensurePrototypeManualUpdateSettings disables auto-update on manual update demos', () => {

@@ -20,9 +20,21 @@ import '@testing-library/jest-dom/vitest';
 
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+
+import type { CatalogExtensionInfoUI } from '/@/lib/extensions/catalog-extension-info-ui';
+import {
+  clearPrototypeRemovedExtensions,
+  prototypeRemoveExtension,
+  setPrototypeUseCasesEnabled,
+} from '/@/lib/extensions/extension-prototype-use-cases';
+import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
+
+vi.mock(import('/@/lib/extensions/extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: vi.fn(() => false),
+}));
 
 vi.mock(import('/@/stores/extensions'), () => ({
   fetchExtensions: vi.fn(async () => undefined),
@@ -52,6 +64,14 @@ beforeAll(() => {
       func();
     },
   };
+});
+
+beforeEach(() => {
+  vi.useRealTimers();
+  vi.resetAllMocks();
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(false);
+  setPrototypeUseCasesEnabled(false);
+  clearPrototypeRemovedExtensions();
 });
 
 test('Expect that the install button is hidden if extension is not installable', async () => {
@@ -132,3 +152,61 @@ test('Expect that clicking install installs the latest version directly', async 
     expect(screen.queryByRole('button', { name: 'Install foo.bar Extension' })).not.toBeInTheDocument();
   });
 });
+
+test('Expect Install button returns after prototype uninstall of a previously installed extension', async () => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+  setPrototypeUseCasesEnabled(true);
+
+  const catalogExtension: CatalogExtensionInfoUI = {
+    id: 'redhat.ai-lab',
+    displayName: 'Podman AI Lab',
+    isFeatured: true,
+    fetchable: true,
+    fetchLink: 'oci:ai-lab',
+    fetchVersion: '1.9.3',
+    publisherDisplayName: 'Red Hat',
+    isInstalled: false,
+    installedVersion: undefined,
+    shortDescription: 'Work with LLMs locally',
+    categories: [],
+    keywords: [],
+    availableVersions: [{ version: '1.9.3', ociUri: 'oci:ai-lab', preview: false }],
+    hasUpdate: false,
+    isVerified: true,
+    isSupportedByRedHat: true,
+  };
+
+  const renderResult = render(FeaturedExtensionDownload, { extension: catalogExtension });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Install redhat.ai-lab Extension' }));
+
+  // Prototype install simulation takes a few seconds of real delays.
+  await vi.waitFor(
+    () => {
+      expect(screen.queryByRole('button', { name: 'Install redhat.ai-lab Extension' })).not.toBeInTheDocument();
+    },
+    { timeout: 10_000 },
+  );
+
+  // Parent reflects installed state (clears local installCompleted latch).
+  await renderResult.rerender({
+    extension: {
+      ...catalogExtension,
+      isInstalled: true,
+      installedVersion: '1.9.3',
+    },
+  });
+
+  prototypeRemoveExtension('redhat.ai-lab');
+
+  // Catalog card reflects prototype uninstall.
+  await renderResult.rerender({
+    extension: {
+      ...catalogExtension,
+      isInstalled: false,
+      installedVersion: undefined,
+    },
+  });
+
+  expect(screen.getByRole('button', { name: 'Install redhat.ai-lab Extension' })).toBeInTheDocument();
+}, 15_000);

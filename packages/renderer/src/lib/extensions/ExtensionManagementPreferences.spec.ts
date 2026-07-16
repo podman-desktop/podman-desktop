@@ -107,12 +107,12 @@ describe('ExtensionLifecyclePreference', () => {
 describe('ExtensionRemovePreference', () => {
   test('renders uninstall button for removable extensions', async () => {
     const extension = {
-      id: 'podman-desktop.kind',
-      displayName: 'Kind',
+      id: 'podman-desktop.quadlet',
+      displayName: 'Podman Quadlet',
       isInstalled: true,
       fetchable: true,
       installedExtension: {
-        id: 'podman-desktop.kind',
+        id: 'podman-desktop.quadlet',
         state: 'started',
         devMode: false,
         removable: true,
@@ -123,7 +123,7 @@ describe('ExtensionRemovePreference', () => {
     render(ExtensionRemovePreference, { extension });
 
     expect(screen.getByRole('button', { name: /Uninstall/i })).toBeEnabled();
-    expect(getExtensionRemovePreferenceDetail(extension)).toContain('Permanently uninstall Kind');
+    expect(getExtensionRemovePreferenceDetail(extension)).toContain('Permanently uninstall Podman Quadlet');
   });
 
   test('disables uninstall button for built-in extensions', async () => {
@@ -150,7 +150,7 @@ describe('ExtensionRemovePreference', () => {
     expect(canRemoveExtensionFromPreferences(extension)).toBe(false);
   });
 
-  test('explains why bundled extensions such as Kind cannot be uninstalled', () => {
+  test('explains why built-in extensions such as Kind cannot be uninstalled', () => {
     const extension = {
       id: 'podman-desktop.kind',
       displayName: 'Kind',
@@ -165,8 +165,12 @@ describe('ExtensionRemovePreference', () => {
       },
     } as CatalogExtensionInfoUI;
 
-    expect(getExtensionRemoveBlockedReason(extension)).toBe('Bundled with Podman Desktop and cannot be uninstalled');
-    expect(getExtensionRemovePreferenceDetail(extension)).toBe('Bundled with Podman Desktop and cannot be uninstalled');
+    expect(getExtensionRemoveBlockedReason(extension)).toContain(
+      'Built-in extensions are integrated with Podman Desktop and cannot be uninstalled',
+    );
+    expect(getExtensionRemovePreferenceDetail(extension)).toContain(
+      'Built-in extensions are integrated with Podman Desktop and cannot be uninstalled',
+    );
     expect(canRemoveExtensionFromPreferences(extension)).toBe(false);
   });
 
@@ -175,12 +179,12 @@ describe('ExtensionRemovePreference', () => {
     vi.spyOn(window, 'removeExtension').mockResolvedValue(undefined);
 
     const extension = {
-      id: 'podman-desktop.kind',
-      displayName: 'Kind',
+      id: 'podman-desktop.quadlet',
+      displayName: 'Podman Quadlet',
       isInstalled: true,
       fetchable: true,
       installedExtension: {
-        id: 'podman-desktop.kind',
+        id: 'podman-desktop.quadlet',
         state: 'started',
         devMode: false,
         removable: true,
@@ -209,12 +213,12 @@ describe('ExtensionRemovePreference', () => {
     vi.spyOn(window, 'removeExtension').mockResolvedValue(undefined);
 
     const extension = {
-      id: 'podman-desktop.kind',
-      displayName: 'Kind',
+      id: 'podman-desktop.quadlet',
+      displayName: 'Podman Quadlet',
       isInstalled: true,
       fetchable: true,
       installedExtension: {
-        id: 'podman-desktop.kind',
+        id: 'podman-desktop.quadlet',
         state: 'started',
         devMode: false,
         removable: true,
@@ -225,7 +229,7 @@ describe('ExtensionRemovePreference', () => {
     removeExtensionWithConfirmation(extension, { redirectAfterRemove: PREFERENCES_MAIN_ROUTE });
 
     await waitFor(() => {
-      expect(window.removeExtension).toHaveBeenCalledWith('podman-desktop.kind');
+      expect(window.removeExtension).toHaveBeenCalledWith('podman-desktop.quadlet');
       expect(router.goto).toHaveBeenCalledWith(PREFERENCES_MAIN_ROUTE, true);
     });
   });

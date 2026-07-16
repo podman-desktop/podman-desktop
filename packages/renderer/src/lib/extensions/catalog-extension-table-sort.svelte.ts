@@ -16,7 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { hasExtensionCompatibilityIssues } from './extension-compatibility';
+import { getExtensionStatusSeverityRank } from './extension-lifecycle-status';
 
 export type CatalogTableSortColumn = 'Name' | 'Publisher' | 'Version' | 'Status';
 
@@ -37,13 +41,6 @@ export function resetCatalogTableSort(): void {
   catalogTableSortState.value = null;
 }
 
-function resolveStatusLabel(extension: CatalogExtensionInfoUI): string {
-  if (extension.isInstalled && extension.installedExtension) {
-    return extension.installedExtension.state ?? 'installed';
-  }
-  return 'not installed';
-}
-
 function resolveVersionLabel(extension: CatalogExtensionInfoUI): string {
   if (extension.isInstalled) {
     return extension.installedVersion ?? '';
@@ -51,10 +48,24 @@ function resolveVersionLabel(extension: CatalogExtensionInfoUI): string {
   return extension.fetchVersion ?? '';
 }
 
+function resolveCatalogStatusRank(
+  extension: CatalogExtensionInfoUI,
+  installedExtensions: CombinedExtensionInfoUI[],
+): number {
+  const installed = extension.isInstalled ? extension.installedExtension : undefined;
+  return getExtensionStatusSeverityRank({
+    isInstalled: !!installed,
+    state: installed?.state,
+    type: installed?.type,
+    hasCompatibilityIssue: !!installed && hasExtensionCompatibilityIssues(extension, installedExtensions),
+  });
+}
+
 function compareExtensions(
   a: CatalogExtensionInfoUI,
   b: CatalogExtensionInfoUI,
   column: CatalogTableSortColumn,
+  statusRankById: ReadonlyMap<string, number>,
 ): number {
   switch (column) {
     case 'Name':
@@ -63,8 +74,13 @@ function compareExtensions(
       return a.publisherDisplayName.localeCompare(b.publisherDisplayName);
     case 'Version':
       return resolveVersionLabel(a).localeCompare(resolveVersionLabel(b), undefined, { numeric: true });
-    case 'Status':
-      return resolveStatusLabel(a).localeCompare(resolveStatusLabel(b));
+    case 'Status': {
+      const rankDiff = (statusRankById.get(a.id) ?? 50) - (statusRankById.get(b.id) ?? 50);
+      if (rankDiff !== 0) {
+        return rankDiff;
+      }
+      return a.displayName.localeCompare(b.displayName);
+    }
     default:
       return 0;
   }
@@ -86,7 +102,14 @@ export function orderCatalogTableExtensions(extensions: CatalogExtensionInfoUI[]
     return [...extensions].sort(defaultCatalogOrder);
   }
 
-  const sorted = [...extensions].sort((a, b) => compareExtensions(a, b, sort.column));
+  const installedExtensions = extensions
+    .map(extension => extension.installedExtension)
+    .filter((extension): extension is CombinedExtensionInfoUI => !!extension);
+  const statusRankById = new Map(
+    extensions.map(extension => [extension.id, resolveCatalogStatusRank(extension, installedExtensions)]),
+  );
+
+  const sorted = [...extensions].sort((a, b) => compareExtensions(a, b, sort.column, statusRankById));
   if (!sort.ascending) {
     sorted.reverse();
   }

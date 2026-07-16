@@ -23,12 +23,43 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { isExtensionUserDisabled, isExtensionUserEnabled } from './extension-lifecycle-user-toggle';
+import { isBuiltInExtensionId } from './extension-origin-utils';
 import {
   getPrototypeTransientLifecycleState,
   prototypeLifecycleOverlayRevisionStore,
   setPrototypeLifecycleDemosEnabled,
   startPrototypeActivatingOverlay,
 } from './extension-prototype-lifecycle-overlay.svelte';
+
+/**
+ * Synthetic sidebar entries for prototype-restored extensions whose real webview
+ * is missing (e.g. AI Lab failed and disposed its panel). Ensures the nav icon
+ * and post-install tooltip always have an anchor after a demo re-install.
+ */
+export interface PrototypeSidebarEntry {
+  extensionId: string;
+  name: string;
+  link: string;
+  /** Catalog or installed extension icon (data URL / http URL). */
+  iconHref?: string;
+}
+
+// Use var so circular imports can call getters during module load without TDZ errors.
+// eslint-disable-next-line no-var
+var prototypeSidebarEntries: Map<string, PrototypeSidebarEntry> | undefined;
+let prototypeUseCasesEnabled = false;
+const prototypeRemovedExtensionIds = new Set<string>();
+const prototypeRestoredExtensionIds = new Set<string>();
+
+const PROTOTYPE_SIDEBAR_DEFAULT_NAMES: Record<string, string> = {
+  'redhat.ai-lab': 'AI Lab',
+  'redhat.bootable-containers': 'Bootable Containers',
+};
+
+function getPrototypeSidebarEntriesMap(): Map<string, PrototypeSidebarEntry> {
+  prototypeSidebarEntries ??= new Map();
+  return prototypeSidebarEntries;
+}
 
 /** Real bundled / catalog extension IDs used to demo DTUX-2849 UI states. */
 export const USE_CASE_EXTENSION_IDS = {
@@ -55,37 +86,6 @@ export const PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS = [
 export function isPrototypeUpdateDemoExtension(extensionId: string): boolean {
   return (PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS as readonly string[]).includes(extensionId);
 }
-
-let prototypeUseCasesEnabled = false;
-
-/** Extension ids removed during this session via the prototype uninstall demo. */
-const prototypeRemovedExtensionIds = new Set<string>();
-
-/**
- * Extension ids that were restored via a prototype re-install demo.
- * These are forced to the 'started' state to override any real backend error state.
- */
-const prototypeRestoredExtensionIds = new Set<string>();
-
-/**
- * Synthetic sidebar entries for prototype-restored extensions whose real webview
- * is missing (e.g. AI Lab failed and disposed its panel). Ensures the nav icon
- * and post-install tooltip always have an anchor after a demo re-install.
- */
-export interface PrototypeSidebarEntry {
-  extensionId: string;
-  name: string;
-  link: string;
-  /** Catalog or installed extension icon (data URL / http URL). */
-  iconHref?: string;
-}
-
-const prototypeSidebarEntries = new Map<string, PrototypeSidebarEntry>();
-
-const PROTOTYPE_SIDEBAR_DEFAULT_NAMES: Record<string, string> = {
-  'redhat.ai-lab': 'AI Lab',
-  'redhat.bootable-containers': 'Bootable Containers',
-};
 
 function extensionIdsLooselyMatch(left: string, right: string): boolean {
   if (left === right) {
@@ -126,24 +126,26 @@ export function ensurePrototypeSidebarEntry(
     link: `/webviews/prototype-${extensionId.replace(/[^a-zA-Z0-9._-]/g, '-')}`,
     iconHref,
   };
-  prototypeSidebarEntries.set(extensionId, entry);
+  getPrototypeSidebarEntriesMap().set(extensionId, entry);
   return entry;
 }
 
 export function removePrototypeSidebarEntry(extensionId: string): void {
-  for (const key of Array.from(prototypeSidebarEntries.keys())) {
+  const entries = getPrototypeSidebarEntriesMap();
+  for (const key of Array.from(entries.keys())) {
     if (extensionIdsLooselyMatch(key, extensionId)) {
-      prototypeSidebarEntries.delete(key);
+      entries.delete(key);
     }
   }
 }
 
 export function findPrototypeSidebarEntry(extensionId: string): PrototypeSidebarEntry | undefined {
-  const direct = prototypeSidebarEntries.get(extensionId);
+  const entries = getPrototypeSidebarEntriesMap();
+  const direct = entries.get(extensionId);
   if (direct) {
     return direct;
   }
-  for (const entry of prototypeSidebarEntries.values()) {
+  for (const entry of entries.values()) {
     if (extensionIdsLooselyMatch(entry.extensionId, extensionId)) {
       return entry;
     }
@@ -152,11 +154,11 @@ export function findPrototypeSidebarEntry(extensionId: string): PrototypeSidebar
 }
 
 export function getPrototypeSidebarEntries(): PrototypeSidebarEntry[] {
-  return Array.from(prototypeSidebarEntries.values());
+  return Array.from(getPrototypeSidebarEntriesMap().values());
 }
 
 export function clearPrototypeSidebarEntries(): void {
-  prototypeSidebarEntries.clear();
+  getPrototypeSidebarEntriesMap().clear();
 }
 
 export function isPrototypeRestoredExtension(extensionId: string): boolean {
@@ -183,13 +185,35 @@ export function arePrototypeUseCasesEnabled(): boolean {
   return prototypeUseCasesEnabled;
 }
 
+function isExplicitlyPrototypeRemoved(extensionId: string): boolean {
+  if (prototypeRemovedExtensionIds.has(extensionId)) {
+    return true;
+  }
+
+  const extensionName = extensionId.includes('.') ? extensionId.split('.').slice(1).join('.') : extensionId;
+  for (const removedId of prototypeRemovedExtensionIds) {
+    if (removedId === extensionId) {
+      return true;
+    }
+    const removedName = removedId.includes('.') ? removedId.split('.').slice(1).join('.') : removedId;
+    if (
+      removedName === extensionName ||
+      removedId.endsWith(`.${extensionName}`) ||
+      extensionId.endsWith(`.${removedName}`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /** Mark an extension as uninstalled in the prototype (no backend call). */
 export function prototypeRemoveExtension(extensionId: string, relatedIds: string[] = []): void {
-  prototypeRemovedExtensionIds.add(extensionId);
-  for (const relatedId of relatedIds) {
-    if (relatedId) {
-      prototypeRemovedExtensionIds.add(relatedId);
-    }
+  const ids = [extensionId, ...relatedIds.filter(Boolean)];
+  for (const id of ids) {
+    prototypeRemovedExtensionIds.add(id);
+    prototypeRestoredExtensionIds.delete(id);
   }
   removePrototypeSidebarEntry(extensionId);
   for (const relatedId of relatedIds) {
@@ -224,27 +248,22 @@ export function prototypeRestoreExtension(
   prototypeLifecycleOverlayRevisionStore.update(r => r + 1);
 }
 
+/**
+ * Whether the extension should appear uninstalled in suggestion-scope UI.
+ * Explicit uninstalls always hide. Non-built-ins are hidden by default on each
+ * app refresh unless restored via a prototype install in this session.
+ */
 export function isPrototypeRemovedExtension(extensionId: string): boolean {
-  if (prototypeRemovedExtensionIds.has(extensionId)) {
+  if (isExplicitlyPrototypeRemoved(extensionId)) {
     return true;
   }
 
-  const extensionName = extensionId.includes('.') ? extensionId.split('.').slice(1).join('.') : extensionId;
-  for (const removedId of prototypeRemovedExtensionIds) {
-    if (removedId === extensionId) {
-      return true;
-    }
-    const removedName = removedId.includes('.') ? removedId.split('.').slice(1).join('.') : removedId;
-    if (
-      removedName === extensionName ||
-      removedId.endsWith(`.${extensionName}`) ||
-      extensionId.endsWith(`.${removedName}`)
-    ) {
-      return true;
-    }
+  if (isPrototypeRestoredExtension(extensionId)) {
+    return false;
   }
 
-  return false;
+  // Fresh session / refresh: only built-ins start as installed.
+  return prototypeUseCasesEnabled && !isBuiltInExtensionId(extensionId);
 }
 
 function collectRelatedPrototypeIds(extensionId: string): string[] {

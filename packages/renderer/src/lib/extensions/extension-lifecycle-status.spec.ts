@@ -22,6 +22,7 @@ import type { ExtensionCompatibilityIssue } from './extension-compatibility';
 import {
   getExtensionCompatibilityPresentation,
   getExtensionLifecyclePresentation,
+  getExtensionStatusSeverityRank,
   getExtensionVersionUpdatePresentation,
 } from './extension-lifecycle-status';
 
@@ -118,5 +119,22 @@ describe('getExtensionCompatibilityPresentation', () => {
       label: 'Missing dependency',
       textColorVar: 'var(--pd-state-warning)',
     });
+  });
+});
+
+describe('getExtensionStatusSeverityRank', () => {
+  test('orders problems ahead of healthy and not-installed states', () => {
+    expect(getExtensionStatusSeverityRank({ isInstalled: true, state: 'failed' })).toBeLessThan(
+      getExtensionStatusSeverityRank({ isInstalled: true, state: 'stopped' }),
+    );
+    expect(getExtensionStatusSeverityRank({ isInstalled: true, state: 'stopped' })).toBeLessThan(
+      getExtensionStatusSeverityRank({ isInstalled: true, state: 'started' }),
+    );
+    expect(getExtensionStatusSeverityRank({ isInstalled: true, state: 'started' })).toBeLessThan(
+      getExtensionStatusSeverityRank({ isInstalled: false }),
+    );
+    expect(
+      getExtensionStatusSeverityRank({ isInstalled: true, state: 'started', hasCompatibilityIssue: true }),
+    ).toBeLessThan(getExtensionStatusSeverityRank({ isInstalled: true, state: 'stopped' }));
   });
 });

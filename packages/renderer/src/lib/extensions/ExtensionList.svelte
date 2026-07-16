@@ -24,6 +24,7 @@ import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte
 import { markNewlyInstalled } from './extension-catalog-settings.svelte';
 import { buildExtensionsListPath } from './extension-list';
 import { onExtensionNewlyInstalled } from './extension-nav-pointer.svelte';
+import { isBuiltInExtensionId } from './extension-origin-utils';
 import { prototypeLifecycleOverlayRevisionStore } from './extension-prototype-lifecycle-overlay.svelte';
 import { EXTENSION_VERSION_UI_CHANGE_EVENT } from './extension-version-update.svelte';
 import {
@@ -148,14 +149,19 @@ const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived.by(() => {
     installedExtensionsForList,
   );
 
+  // Built-in platform extensions belong on Installed only, never in Catalog.
+  const withoutBuiltIns = catalogExtensions.filter(extension => !isBuiltInExtensionId(extension.id));
+
   return isSuggestionScope
-    ? extensionsUtils.ensurePrototypeUpdateDemo(
-        catalogExtensions,
-        installedExtensionsForList,
-        $catalogExtensionInfos,
-        $featuredExtensionInfos,
-      )
-    : catalogExtensions;
+    ? extensionsUtils
+        .ensurePrototypeUpdateDemo(
+          withoutBuiltIns,
+          installedExtensionsForList,
+          $catalogExtensionInfos,
+          $featuredExtensionInfos,
+        )
+        .filter(extension => !isBuiltInExtensionId(extension.id))
+    : withoutBuiltIns;
 });
 
 const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(

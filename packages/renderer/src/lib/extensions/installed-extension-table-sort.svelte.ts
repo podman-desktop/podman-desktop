@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { hasExtensionCompatibilityIssues } from './extension-compatibility';
+import { getExtensionStatusSeverityRank } from './extension-lifecycle-status';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
 
 export type InstalledTableSortColumn = 'Name' | 'Version' | 'Status';
@@ -41,10 +43,23 @@ export function resetInstalledTableSort(): void {
   installedTableSortState.value = null;
 }
 
+function resolveInstalledStatusRank(
+  row: InstalledExtensionTableRow,
+  installedExtensions: InstalledExtensionTableRow['extension'][],
+): number {
+  return getExtensionStatusSeverityRank({
+    isInstalled: true,
+    state: row.extension.state,
+    type: row.extension.type,
+    hasCompatibilityIssue: hasExtensionCompatibilityIssues(row.catalogExtension, installedExtensions),
+  });
+}
+
 function compareRows(
   a: InstalledExtensionTableRow,
   b: InstalledExtensionTableRow,
   column: InstalledTableSortColumn,
+  statusRankById: ReadonlyMap<string, number>,
 ): number {
   switch (column) {
     case 'Name':
@@ -57,8 +72,13 @@ function compareRows(
           numeric: true,
         },
       );
-    case 'Status':
-      return (a.extension.state ?? '').localeCompare(b.extension.state ?? '');
+    case 'Status': {
+      const rankDiff = (statusRankById.get(a.extension.id) ?? 50) - (statusRankById.get(b.extension.id) ?? 50);
+      if (rankDiff !== 0) {
+        return rankDiff;
+      }
+      return a.name.localeCompare(b.name);
+    }
     default:
       return 0;
   }
@@ -70,7 +90,12 @@ export function orderInstalledTableRows(rows: InstalledExtensionTableRow[]): Ins
     return [...rows].sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  const sorted = [...rows].sort((a, b) => compareRows(a, b, sort.column));
+  const installedExtensions = rows.map(row => row.extension);
+  const statusRankById = new Map(
+    rows.map(row => [row.extension.id, resolveInstalledStatusRank(row, installedExtensions)]),
+  );
+
+  const sorted = [...rows].sort((a, b) => compareRows(a, b, sort.column, statusRankById));
   if (!sort.ascending) {
     sorted.reverse();
   }
