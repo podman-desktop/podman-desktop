@@ -122,10 +122,15 @@ beforeEach(() => {
 });
 
 test('single connection connection type should use it as label', async () => {
-  const { getByText } = render(EnvironmentColumn, { object: DOCKER_IMAGE });
+  const { getByText, getByTestId } = render(EnvironmentColumn, { object: DOCKER_IMAGE });
 
   const text = getByText('docker');
   expect(text).toBeInTheDocument();
+
+  const icon = getByTestId('status-dot-icon');
+  expect(icon).toBeInTheDocument();
+  expect(icon).toHaveAttribute('aria-label', 'Running');
+  expect(icon.querySelector('path')).toHaveAttribute('fill', 'var(--pd-status-running)');
 });
 
 test.each<{
@@ -141,8 +146,9 @@ test.each<{
     expected: 'Podman Machine Default',
   },
 ])('multiple connection connection type should use the $expected', async ({ image, expected }) => {
-  const { getByText } = render(EnvironmentColumn, { object: image });
+  const { getByText, getByTestId } = render(EnvironmentColumn, { object: image });
 
   const text = getByText(expected);
   expect(text).toBeInTheDocument();
+  expect(getByTestId('status-dot-icon')).toHaveAttribute('aria-label', 'Running');
 });

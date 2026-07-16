@@ -47,7 +47,7 @@ let {
   {bottomRight} tip={tip}>
   <div
     role={role}
-    class="flex items-center bg-[var(--pd-label-bg)] p-1 rounded-md text-sm text-[var(--pd-label-text)] gap-x-1 w-full">
+    class="flex items-center bg-[var(--pd-label-bg)] py-1 px-[calc(0.25rem+2pt)] rounded-full text-sm text-[var(--pd-label-text)] gap-x-1 w-full select-none">
     {@render children?.()}
     <span class:capitalize={capitalize} class="overflow-x-hidden text-ellipsis w-full">
       {name}

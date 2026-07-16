@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,51 +18,80 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo as ProviderInfoType } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { writable } from 'svelte/store';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import * as providers from '/@/stores/providers';
 
 import ProviderInfo from './ProviderInfo.svelte';
 
-test('Expect podman is purple', async () => {
-  const provider = 'podman';
-  render(ProviderInfo, {
-    provider,
-  });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-podman)');
+vi.mock(import('/@/stores/providers'));
+
+const PODMAN_PROVIDER = {
+  id: 'podman',
+  name: 'Podman',
+  containerConnections: [
+    {
+      name: 'podman-machine-default',
+      displayName: 'Podman Machine Default',
+      status: 'started',
+      type: 'podman',
+      endpoint: { socketPath: '/var/run/podman-machine.sock' },
+    },
+  ],
+} as unknown as ProviderInfoType;
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(providers).providerInfos = writable([PODMAN_PROVIDER]);
 });
 
-test('Expect Podman (different case) is purple', async () => {
-  const provider = 'Podman';
+test('Expect provider label and status icon for started connection', async () => {
+  // `context` is a reserved testing-library option — nest component props under `props`
   render(ProviderInfo, {
-    provider,
+    props: {
+      provider: 'podman',
+      context: 'podman.podman-machine-default',
+    },
   });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-podman)');
+  expect(screen.getByText('podman')).toBeInTheDocument();
+  const icon = screen.getByTestId('status-dot-icon');
+  expect(icon).toHaveAttribute('aria-label', 'Running');
+  expect(icon.querySelector('path')).toHaveAttribute('fill', 'var(--pd-status-running)');
 });
 
-test('Expect docker is blue', async () => {
-  const provider = 'docker';
+test('Expect capitalize label for Podman', async () => {
   render(ProviderInfo, {
-    provider,
+    props: {
+      provider: 'Podman',
+      context: 'podman.podman-machine-default',
+    },
   });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-docker)');
+  expect(screen.getByText('Podman')).toBeInTheDocument();
+  expect(screen.getByTestId('status-dot-icon')).toHaveAttribute('aria-label', 'Running');
 });
 
-test('Expect kubernetes is blue', async () => {
-  const provider = 'Kubernetes';
+test('Expect unknown status when connection cannot be resolved', async () => {
   render(ProviderInfo, {
-    provider,
+    props: {
+      provider: 'docker',
+    },
   });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-kubernetes)');
+  expect(screen.getByText('docker')).toBeInTheDocument();
+  const icon = screen.getByTestId('status-dot-icon');
+  expect(icon).toHaveAttribute('aria-label', 'Unknown');
+  expect(icon.querySelector('path')).toHaveAttribute('fill', 'var(--pd-status-unknown)');
+});
+
+test('Expect kubernetes label still renders', async () => {
+  render(ProviderInfo, {
+    props: {
+      provider: 'Kubernetes',
+      context: 'some-context',
+    },
+  });
+  expect(screen.getByText('Kubernetes')).toBeInTheDocument();
+  expect(screen.getByTestId('status-dot-icon')).toHaveAttribute('aria-label', 'Unknown');
 });

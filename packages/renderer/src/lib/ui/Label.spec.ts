@@ -35,9 +35,11 @@ test('Expect basic styling', async () => {
   expect(label.parentElement).toHaveClass('bg-[var(--pd-label-bg)]');
   expect(label.parentElement).toHaveClass('text-[var(--pd-label-text)]');
   expect(label.parentElement).toHaveClass('text-sm');
-  expect(label.parentElement).toHaveClass('rounded-md');
-  expect(label.parentElement).toHaveClass('p-1');
+  expect(label.parentElement).toHaveClass('rounded-full');
+  expect(label.parentElement).toHaveClass('py-1');
+  expect(label.parentElement).toHaveClass('px-[calc(0.25rem+2pt)]');
   expect(label.parentElement).toHaveClass('gap-x-1');
+  expect(label.parentElement).toHaveClass('select-none');
 });
 
 test('Expect tooltip', async () => {

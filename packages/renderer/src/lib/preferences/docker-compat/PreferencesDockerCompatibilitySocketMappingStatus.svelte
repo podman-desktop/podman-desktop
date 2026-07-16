@@ -7,7 +7,7 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import Label from '/@/lib/ui/Label.svelte';
-import ProviderInfoCircle from '/@/lib/ui/ProviderInfoCircle.svelte';
+import ProviderInfoIcon from '/@/lib/ui/ProviderInfoIcon.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 
 let isMac = $state(false);
@@ -16,18 +16,8 @@ let isLinux = $state(false);
 
 let dockerSocketMappingStatusInfo: DockerSocketMappingStatusInfo | undefined = $state(undefined);
 
-let engineType: 'kubernetes' | 'podman' | 'docker' | undefined = $state(undefined);
-
 async function refreshSocketMappingStatus(): Promise<void> {
   dockerSocketMappingStatusInfo = await window.getSystemDockerSocketMappingStatus();
-
-  if (dockerSocketMappingStatusInfo?.serverInfo?.type === 'podman') {
-    engineType = 'podman';
-  } else if (dockerSocketMappingStatusInfo?.serverInfo?.type === 'docker') {
-    engineType = 'docker';
-  } else {
-    engineType = undefined;
-  }
 }
 
 onMount(async () => {
@@ -54,11 +44,11 @@ onMount(async () => {
         </div>
         {#if dockerSocketMappingStatusInfo?.status === 'running' && dockerSocketMappingStatusInfo?.serverInfo}
           <Label name="{dockerSocketMappingStatusInfo.serverInfo.type} is listening">
-            <ProviderInfoCircle type={engineType} />
+            <ProviderInfoIcon status="started" />
           </Label>
         {:else if dockerSocketMappingStatusInfo?.status === 'unreachable'}
           <Label name="socket not reachable">
-            <ProviderInfoCircle type={undefined} />
+            <ProviderInfoIcon status="unknown" />
           </Label>
         {/if}
       </div>
