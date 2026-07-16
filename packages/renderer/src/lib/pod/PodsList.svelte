@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { PodInfo } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -70,7 +69,7 @@ const podUtils = new PodUtils();
 
 onMount(() => {
   return filtered.subscribe(value => {
-    const computedPods = value.map((podInfo: PodInfo) => podUtils.getPodInfoUI(podInfo)).flat();
+    const computedPods = value.map((podInfo: PodInfoUI) => podInfo).flat();
 
     // Map engineName, engineId and engineType from currentContainers to EngineInfoUI[]
     const engines = computedPods.map(container => {

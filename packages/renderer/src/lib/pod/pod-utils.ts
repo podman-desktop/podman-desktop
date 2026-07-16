@@ -74,14 +74,14 @@ export class PodUtils {
     };
   }
 
-  calculateNewPodName(existedPods?: PodInfo[]): string {
+  calculateNewPodName(existedPods?: PodInfoUI[]): string {
     const proposedPodName = 'my-pod';
 
     if (!existedPods) {
       return proposedPodName;
     }
 
-    const existedNames = existedPods.map(pod => pod.Name);
+    const existedNames = existedPods.map(pod => pod.name);
 
     if (!existedNames.includes(proposedPodName)) {
       return proposedPodName;

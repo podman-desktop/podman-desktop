@@ -92,5 +92,5 @@ test.each([
   // now get list
   const podListResult = get(podsInfos);
   expect(podListResult.length).toBe(1);
-  expect(podListResult[0].Id).toEqual('id123');
+  expect(podListResult[0].id).toEqual('id123');
 });
