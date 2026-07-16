@@ -18,8 +18,6 @@
 
 import type { InferredNavigationRequest } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-// eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer } from 'buffer';
 import { router } from 'tinro';
 
 /**
@@ -63,9 +61,9 @@ export const resolveRoute = (request: InferredNavigationRequest<NavigationPage>)
     case NavigationPage.IMAGE_BUILD:
       return `/images/build?taskId=${request.parameters.taskId}`;
     case NavigationPage.IMAGE:
-      return `/images/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`;
+      return `/images/${request.parameters.id}/${request.parameters.engineId}/${btoa(request.parameters.tag)}/summary`;
     case NavigationPage.MANIFEST:
-      return `/manifests/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`;
+      return `/manifests/${request.parameters.id}/${request.parameters.engineId}/${btoa(request.parameters.tag)}/summary`;
     case NavigationPage.ONBOARDING:
       return `/preferences/onboarding/${request.parameters.extensionId}`;
     case NavigationPage.PODMAN_PODS:
@@ -109,9 +107,9 @@ export const resolveRoute = (request: InferredNavigationRequest<NavigationPage>)
     case NavigationPage.EXTENSIONS_CATALOG:
       return `/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`;
     case NavigationPage.CONTAINER_CONNECTION:
-      return `/preferences/container-connection/view/${request.parameters.provider}/${Buffer.from(request.parameters.name).toString('base64')}/${Buffer.from(request.parameters.socketPath).toString('base64')}/summary`;
+      return `/preferences/container-connection/view/${request.parameters.provider}/${btoa(request.parameters.name)}/${btoa(request.parameters.socketPath)}/summary`;
     case NavigationPage.KUBERNETES_CONNECTION:
-      return `/preferences/kubernetes-connection/${request.parameters.provider}/${Buffer.from(request.parameters.apiURL).toString('base64')}/summary`;
+      return `/preferences/kubernetes-connection/${request.parameters.provider}/${btoa(request.parameters.apiURL)}/summary`;
     case NavigationPage.VM_CONNECTION:
       return `/preferences/vm-connection/${request.parameters.provider}/${request.parameters.name}/terminal`;
     case NavigationPage.SECRETS:
