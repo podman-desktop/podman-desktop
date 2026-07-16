@@ -327,7 +327,7 @@ const tableContextRows: TableContextRow[] = [
           <div class="max-w-xs py-2">
             <MockContainerEngineEnvironmentColumn type="docker" name="docker" tip="/var/run/docker.sock" />
           </div>
-          <code class="text-[10px] text-(--pd-content-text)">Hover for tip — keyboard access depends on Tooltip</code>
+          <code class="text-[10px] text-(--pd-content-text)">Pointer-hover only — no focusable trigger for keyboard access</code>
         </div>
 
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
@@ -345,7 +345,7 @@ const tableContextRows: TableContextRow[] = [
           <ul class="list-disc space-y-1 pl-5 text-[10px] text-(--pd-content-text)">
             <li>Color-only differentiation — no icon shape per provider</li>
             <li>Circle is a raw <code>div</code>, not an SVG icon</li>
-            <li>Dot size is 8×8px (<code>min-w-2 min-h-2</code>), below WCAG touch target</li>
+            <li>Dot is 8×8px (<code>min-w-2 min-h-2</code>) — small visible size; color-only non-text contrast</li>
           </ul>
         </div>
       </div>
@@ -373,7 +373,7 @@ const tableContextRows: TableContextRow[] = [
           <div class="text-xs font-semibold text-(--pd-content-header)">Target direction — icon-based</div>
           <div class="text-sm text-(--pd-content-text) py-2">
             Match <code>StatusDot</code> / <code>StatusDotIcon</code>: SVG icons with
-            <code>role="img"</code>, larger hit area, and shape + color differentiation.
+            <code>role="img"</code>, larger visible indicator, and shape + color differentiation.
           </div>
           <code class="text-[10px] text-(--pd-content-text)">See StatusDot stories and #14008</code>
         </div>

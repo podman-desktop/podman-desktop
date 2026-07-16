@@ -37,7 +37,7 @@ let color = $derived(providerColors[type ?? 'unknown']);
   <div
     class="flex w-full items-center gap-x-1 rounded-md bg-[var(--pd-label-bg)] p-1 text-sm text-[var(--pd-label-text)]">
     <div aria-label="Provider info circle" class="min-h-2 min-w-2 shrink-0 rounded-full {color}"></div>
-    <span class="w-full overflow-x-hidden text-ellipsis">
+    <span class="min-w-0 flex-1 overflow-x-hidden text-ellipsis whitespace-nowrap">
       {name}
     </span>
   </div>
