@@ -1179,15 +1179,10 @@ declare module '@podman-desktop/api' {
    * for a suggested registry (e.g. "Red Hat SSO", "Registry Authorizer").
    */
   export interface RegistrySuggestedProviderConfigHandler {
-    /** Display name shown in the SplitButton dropdown (e.g. "Configure with Company Name SSO") */
+    /** Display name shown in the dropdown (e.g. "Red Hat SSO") */
     label: string;
-    /** When true, this handler is pre-selected when the Registries settings page opens */
-    isDefault?: boolean;
-    /**
-     * Called in the main process when the user selects this configuration handler.
-     * The handler is stripped before forwarding registry info to the renderer via IPC.
-     */
-    handler: () => void | Promise<void>;
+    /** The command to execute when the user selects this configuration handler */
+    commandId: string;
   }
 
   // An interface for "Default" registries that include the name, URL as well as an icon
@@ -1202,7 +1197,7 @@ declare module '@podman-desktop/api' {
 
     /**
      * Optional additional configuration handlers beyond username/password.
-     * When provided, the Registries settings page shows a SplitButton
+     * When provided, the Registries settings page shows a dropdown
      * instead of the regular "Configure" button.
      */
     additionalConfigHandlers?: RegistrySuggestedProviderConfigHandler[];

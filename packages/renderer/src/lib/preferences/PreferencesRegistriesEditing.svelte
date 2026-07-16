@@ -3,9 +3,8 @@ import { faPlusCircle, faTrash, faUser, faUserPen } from '@fortawesome/free-soli
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import type { SplitButtonOption } from '@podman-desktop/ui-svelte';
-import { Button, DropdownMenu, ErrorMessage, Input, SplitButton } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { Button, Dropdown, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { onMount, tick } from 'svelte';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
@@ -176,36 +175,44 @@ function clearSavedCredentials(): void {
 
 const CONFIG_HANDLER_DEFAULT = 'username-password';
 
-function buildConfigureOptions(registry: containerDesktopAPI.RegistrySuggestedProvider): SplitButtonOption[] {
-  const options: SplitButtonOption[] = [{ id: CONFIG_HANDLER_DEFAULT, label: 'Configure' }];
-  for (const method of registry.additionalConfigHandlers ?? []) {
-    options.push({ id: method.label, label: `Configure with ${method.label}` });
+let configDropdownOpen: Record<string, boolean> = $state({});
+
+function buildDropdownOptions(
+  registry: containerDesktopAPI.RegistrySuggestedProvider,
+): { value: string; label: string }[] {
+  const options = [{ value: CONFIG_HANDLER_DEFAULT, label: 'Username and password' }];
+  for (const handler of registry.additionalConfigHandlers ?? []) {
+    options.push({ value: handler.commandId, label: handler.label });
   }
   return options;
 }
 
-let configureSelections: Record<string, string> = $state({});
-
-function getDefaultConfigHandler(registry: containerDesktopAPI.RegistrySuggestedProvider): string {
-  const defaultHandler = registry.additionalConfigHandlers?.find(h => h.isDefault);
-  return defaultHandler?.label ?? CONFIG_HANDLER_DEFAULT;
+function closeAllConfigDropdowns(): void {
+  configDropdownOpen = {};
 }
 
-function getConfigureSelection(registry: containerDesktopAPI.RegistrySuggestedProvider): string {
-  return configureSelections[registry.url] ?? getDefaultConfigHandler(registry);
+async function toggleConfigDropdown(registryUrl: string): Promise<void> {
+  const wasOpen = configDropdownOpen[registryUrl];
+  closeAllConfigDropdowns();
+  if (!wasOpen) {
+    configDropdownOpen = { [registryUrl]: true };
+    await tick();
+    const dropdown = document.querySelector<HTMLElement>(`[data-config-dropdown="${registryUrl}"] button`);
+    dropdown?.focus();
+  }
 }
 
-function setConfigureSelection(registryUrl: string, optionId: string): void {
-  configureSelections = { ...configureSelections, [registryUrl]: optionId };
-}
-
-function handleConfigureAction(i: number, registry: containerDesktopAPI.RegistrySuggestedProvider): void {
-  const selection = getConfigureSelection(registry);
-  if (selection === CONFIG_HANDLER_DEFAULT) {
+function handleConfigSelection(
+  i: number,
+  registry: containerDesktopAPI.RegistrySuggestedProvider,
+  value: string,
+): void {
+  configDropdownOpen = { ...configDropdownOpen, [registry.url]: false };
+  if (value === CONFIG_HANDLER_DEFAULT) {
     setNewSuggestedRegistryFormVisible(i, registry);
   } else {
-    window.invokeImageRegistryConfigHandler(registry.url, selection).catch((error: unknown) => {
-      console.error(`Failed to invoke config handler "${selection}" for ${registry.url}`, error);
+    window.executeCommand(value).catch((error: unknown) => {
+      console.error(`Failed to execute config handler command "${value}" for ${registry.url}`, error);
     });
   }
 }
@@ -279,6 +286,12 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
   setPasswordForRegistryVisible(registry, false);
 }
 </script>
+
+<svelte:window
+  onclick={closeAllConfigDropdowns}
+  onkeydown={(e: KeyboardEvent): void => {
+    if (e.key === 'Escape') closeAllConfigDropdowns();
+  }} />
 
 <SettingsPage title="Registries">
   {#snippet actions()}
@@ -491,15 +504,17 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               {#if listedSuggestedRegistries[i]}
                 <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
               {:else if registry.additionalConfigHandlers?.length}
-                <SplitButton
-                  options={buildConfigureOptions(registry)}
-                  selectedOptionIds={[getConfigureSelection(registry)]}
-                  noSelectionLabel="Configure"
-                  onSelect={(options): void => {
-                    if (options.length > 0) setConfigureSelection(registry.url, options[0].id);
-                  }}
-                  onAction={(): void => handleConfigureAction(i, registry)} />
-
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="relative" data-config-dropdown={registry.url} onclick={(e: MouseEvent): void => e.stopPropagation()}>
+                  <Button onclick={(): Promise<void> => toggleConfigDropdown(registry.url)}>Configure…</Button>
+                  <Dropdown
+                    triggerless
+                    opened={configDropdownOpen[registry.url] ?? false}
+                    options={buildDropdownOptions(registry)}
+                    onChange={(value): void => handleConfigSelection(i, registry, value)}
+                    class="absolute top-full right-0 z-10 mt-1 min-w-[200px]" />
+                </div>
               {:else}
                 <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
               {/if}

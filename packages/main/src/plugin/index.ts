@@ -2177,13 +2177,6 @@ export class PluginSystem {
       },
     );
 
-    this.ipcHandle(
-      'image-registry:invokeConfigHandler',
-      async (_listener, url: string, label: string): Promise<void> => {
-        return imageRegistry.invokeRegistryConfigHandler(url, label);
-      },
-    );
-
     this.ipcHandle('image-registry:hasAuthconfigForImage', async (_listener, imageName: string): Promise<boolean> => {
       if (imageName.indexOf(',') !== -1) {
         const allImageNames = imageName.split(',');
