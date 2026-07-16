@@ -1588,7 +1588,8 @@ describe('initProviderInfo', () => {
     colorRegistry.initProviderInfo();
   });
 
-  test('registers provider-podman with purple', () => {
+  // provider-* tokens remain registered (deprecated but not removed) — #18120
+  test('registers deprecated provider-podman with purple', () => {
     expect(spyOnRegisterColor).toBeCalledWith('provider-podman', {
       dark: tailwindColorPalette.purple[600],
       light: tailwindColorPalette.purple[600],
@@ -1597,7 +1598,7 @@ describe('initProviderInfo', () => {
     });
   });
 
-  test('registers provider-docker with sky blue', () => {
+  test('registers deprecated provider-docker with sky blue', () => {
     expect(spyOnRegisterColor).toBeCalledWith('provider-docker', {
       dark: tailwindColorPalette.sky[400],
       light: tailwindColorPalette.sky[400],
@@ -1606,7 +1607,7 @@ describe('initProviderInfo', () => {
     });
   });
 
-  test('registers provider-kubernetes with sky blue', () => {
+  test('registers deprecated provider-kubernetes with sky blue', () => {
     expect(spyOnRegisterColor).toBeCalledWith('provider-kubernetes', {
       dark: tailwindColorPalette.sky[600],
       light: tailwindColorPalette.sky[600],
@@ -1615,7 +1616,7 @@ describe('initProviderInfo', () => {
     });
   });
 
-  test('registers provider-unknown with gray', () => {
+  test('registers deprecated provider-unknown with gray', () => {
     expect(spyOnRegisterColor).toBeCalledWith('provider-unknown', {
       dark: tailwindColorPalette.gray[900],
       light: tailwindColorPalette.gray[900],

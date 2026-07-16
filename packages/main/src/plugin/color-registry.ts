@@ -2371,6 +2371,8 @@ export class ColorRegistry {
   protected initProviderInfo(): void {
     const provider = 'provider-';
 
+    // @deprecated since 2026-07-16. See https://github.com/podman-desktop/podman-desktop/issues/18120
+    // Use `--pd-status-*` / StatusDotIcon instead
     this.registerColor(`${provider}podman`, {
       dark: purple[600],
       light: purple[600],
@@ -2378,6 +2380,8 @@ export class ColorRegistry {
       hcLight: purple[700],
     });
 
+    // @deprecated since 2026-07-16. See https://github.com/podman-desktop/podman-desktop/issues/18120
+    // Use `--pd-status-*` / StatusDotIcon instead
     this.registerColor(`${provider}docker`, {
       dark: sky[400],
       light: sky[400],
@@ -2385,6 +2389,8 @@ export class ColorRegistry {
       hcLight: sky[600],
     });
 
+    // @deprecated since 2026-07-16. See https://github.com/podman-desktop/podman-desktop/issues/18120
+    // Use `--pd-status-*` / StatusDotIcon instead
     this.registerColor(`${provider}kubernetes`, {
       dark: sky[600],
       light: sky[600],
@@ -2392,6 +2398,8 @@ export class ColorRegistry {
       hcLight: sky[700],
     });
 
+    // @deprecated since 2026-07-16. See https://github.com/podman-desktop/podman-desktop/issues/18120
+    // Use `--pd-status-*` / StatusDotIcon instead
     this.registerColor(`${provider}unknown`, {
       dark: gray[900],
       light: gray[900],
