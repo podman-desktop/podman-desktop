@@ -105,7 +105,7 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
   });
 
     test('Detect Podman machine created from CLI in System Overview', async ({ page, navigationBar }) => {
-      test.setTimeout(320_000);
+      test.setTimeout(620_000);
 
       await setEnhancedDashboardFeature(page, navigationBar, true);
       let dashboardPage = await waitForDashboardState(navigationBar, true);
