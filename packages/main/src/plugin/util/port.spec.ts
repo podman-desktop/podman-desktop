@@ -18,10 +18,19 @@
 
 import { once } from 'node:events';
 import * as net from 'node:net';
+import { type NetworkInterfaceInfo, networkInterfaces } from 'node:os';
 
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import * as port from './port.js';
+
+vi.mock(import('node:os'), async importOriginal => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    networkInterfaces: vi.fn(original.networkInterfaces),
+  };
+});
 
 const hosts = ['127.0.0.1', '0.0.0.0'];
 
@@ -192,4 +201,36 @@ test('should fail if all ports are exhausted starting near the upper limit', asy
   );
 
   await closeServer(server);
+});
+
+test('should find a free port when the same IP appears on multiple interfaces', async () => {
+  const mockedNetworkInterfaces = vi.mocked(networkInterfaces);
+  mockedNetworkInterfaces.mockReturnValue({
+    lo: [
+      {
+        address: '127.0.0.1',
+        netmask: '255.0.0.0',
+        family: 'IPv4',
+        mac: '00:00:00:00:00:00',
+        internal: true,
+        cidr: '127.0.0.1/8',
+      },
+    ] as NetworkInterfaceInfo[],
+    'nm-xfrm-1234': [
+      {
+        address: '127.0.0.1',
+        netmask: '255.255.255.255',
+        family: 'IPv4',
+        mac: '00:00:00:00:00:00',
+        internal: false,
+        cidr: '127.0.0.1/32',
+      },
+    ] as NetworkInterfaceInfo[],
+  });
+
+  const freePort = await port.getFreePort(65000);
+  expect(freePort).toBeGreaterThanOrEqual(65000);
+  expect(freePort).toBeLessThanOrEqual(65535);
+
+  mockedNetworkInterfaces.mockRestore();
 });

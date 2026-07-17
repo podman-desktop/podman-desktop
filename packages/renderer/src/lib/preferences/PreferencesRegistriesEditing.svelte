@@ -489,7 +489,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         <div class="flex flex-row space-x-5 justify-stretch w-full">
           <div class="w-full">
             <div>Username</div>
-            <Input placeholder="username" bind:value={newRegistryRequest.username}></Input>
+            <Input placeholder="Username" bind:value={newRegistryRequest.username}></Input>
           </div>
 
           <div class="w-full">

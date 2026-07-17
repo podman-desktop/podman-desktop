@@ -4857,6 +4857,9 @@ describe('listImages', () => {
     const internalContainerProvider = {
       name: 'dummyName',
       id: 'dummyId',
+      connection: {
+        type: 'podman',
+      },
       api: {
         listImages: vi.fn(),
       },
@@ -4886,6 +4889,7 @@ describe('listImages', () => {
       Id: 'dummyImageId',
       engineId: 'dummyId',
       engineName: 'dummyName',
+      engineType: 'podman',
       Digest: 'sha256:dummyImageId',
     });
   });
@@ -6696,7 +6700,7 @@ describe('createSecret', () => {
       containerRegistry.createSecret({
         name: 'my-secret',
         data: 'secret-value',
-        selectedProvider: undefined,
+        provider: undefined,
       }),
     ).rejects.toThrow('cannot create secret without selected provider');
   });
@@ -6723,7 +6727,7 @@ describe('createSecret', () => {
       containerRegistry.createSecret({
         name: 'my-secret',
         data: 'secret-value',
-        selectedProvider: {
+        provider: {
           name: 'podman',
           endpoint: { socketPath: '/endpoint1.sock' },
         } as ProviderContainerConnectionInfo,
@@ -6756,7 +6760,7 @@ describe('createSecret', () => {
     const result = await containerRegistry.createSecret({
       name: 'my-secret',
       data: 'secret-value',
-      selectedProvider: {
+      provider: {
         name: 'podman',
         endpoint: { socketPath: '/endpoint1.sock' },
       } as ProviderContainerConnectionInfo,
@@ -6796,7 +6800,7 @@ describe('createSecret', () => {
       name: 'my-secret',
       data: 'secret-value',
       labels: { env: 'prod' },
-      selectedProvider: {
+      provider: {
         name: 'podman',
         endpoint: { socketPath: '/endpoint1.sock' },
       } as ProviderContainerConnectionInfo,
@@ -6836,7 +6840,7 @@ describe('createSecret', () => {
     await containerRegistry.createSecret({
       name: 'my-secret',
       data: 'secret-value',
-      selectedProvider: {
+      provider: {
         name: 'podman',
         endpoint: { socketPath: '/endpoint1.sock' },
       } as ProviderContainerConnectionInfo,
@@ -6873,7 +6877,7 @@ describe('createSecret', () => {
       containerRegistry.createSecret({
         name: 'my-secret',
         data: 'secret-value',
-        selectedProvider: {
+        provider: {
           name: 'podman',
           endpoint: { socketPath: '/endpoint1.sock' },
         } as ProviderContainerConnectionInfo,

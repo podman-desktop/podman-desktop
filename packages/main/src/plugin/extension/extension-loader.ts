@@ -1235,6 +1235,26 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const containerProviderRegistry = this.containerProviderRegistry;
     const containerEngine: typeof containerDesktopAPI.containerEngine = {
+      createSecret(
+        name: string,
+        data: string,
+        options?: containerDesktopAPI.SecretCreateOptions,
+      ): Promise<containerDesktopAPI.SecretCreateResult> {
+        return containerProviderRegistry.createSecret({
+          name,
+          data,
+          ...options,
+        });
+      },
+      inspectSecret(engineId: string, id: string): Promise<containerDesktopAPI.SecretInspectInfo> {
+        return containerProviderRegistry.inspectSecret(engineId, id);
+      },
+      listSecrets(): Promise<containerDesktopAPI.SecretInfo[]> {
+        return containerProviderRegistry.listSecrets();
+      },
+      removeSecret(engineId: string, secretId: string): Promise<void> {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
       listContainers(): Promise<containerDesktopAPI.ContainerInfo[]> {
         return containerProviderRegistry.listSimpleContainers();
       },

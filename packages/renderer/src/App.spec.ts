@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
   KubernetesDashboard: vi.fn(),
   SecretsList: vi.fn(),
   SecretDetails: vi.fn(),
+  SecretCreate: vi.fn(),
 }));
 
 vi.mock(import('./lib/dashboard/DashboardPage.svelte'), () => ({
@@ -73,6 +74,9 @@ vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
 vi.mock(import('./lib/secrets/SecretsList.svelte'), () => ({
   default: mocks.SecretsList,
 }));
+vi.mock(import('./lib/secrets/SecretCreate.svelte'), () => ({
+  default: mocks.SecretCreate,
+}));
 
 vi.mock(import('./lib/secrets/SecretDetails.svelte'), () => ({
   default: mocks.SecretDetails,
@@ -100,11 +104,11 @@ beforeEach(() => {
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
-test('test /images/run/* route', async () => {
+test('test /images/an-image/an-engine/tag/run/basic route', async () => {
   render(App);
   expect(mocks.RunImage).not.toHaveBeenCalled();
   expect(mocks.DashboardPage).toHaveBeenCalled();
-  router.goto('/images/run/basic');
+  router.goto('/images/an-image/an-engine/tag/run/basic');
   await tick();
   expect(mocks.RunImage).toHaveBeenCalled();
 });
@@ -155,6 +159,7 @@ test('opens submenu when a `submenu` menu is opened', async () => {
       get counter(): number {
         return 0;
       },
+      destinations: [],
       items: [{} as NavigationRegistryEntry],
     },
   ]);
@@ -195,6 +200,16 @@ test('test /secrets route', async () => {
   });
 });
 
+test('test /secrets/create route', async () => {
+  render(App);
+  expect(mocks.SecretCreate).not.toHaveBeenCalled();
+
+  router.goto('/secrets/create');
+  await vi.waitFor(() => {
+    expect(mocks.SecretCreate).toHaveBeenCalled();
+  });
+});
+
 test('test /secrets/:engineId/:secretId/* route', async () => {
   render(App);
   expect(mocks.SecretDetails).not.toHaveBeenCalled();
@@ -225,7 +240,7 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
       link: '/pods',
       tooltip: 'Pods',
       type: 'entry',
-
+      destinations: [],
       get counter(): number {
         return 0;
       },
@@ -236,7 +251,7 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
       link: '/images',
       tooltip: 'Images',
       type: 'entry',
-
+      destinations: [],
       get counter(): number {
         return 0;
       },

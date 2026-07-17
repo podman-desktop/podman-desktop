@@ -32,9 +32,13 @@ test('createNavigationPodEntry', async () => {
   podsInfos.set([
     {
       Id: '1234',
+      Name: 'pod-a',
+      engineId: 'podman',
     } as unknown as PodInfo,
     {
       Id: '3456',
+      Name: 'pod-b',
+      engineId: 'podman',
     } as unknown as PodInfo,
   ]);
 
@@ -44,5 +48,19 @@ test('createNavigationPodEntry', async () => {
   expect(entry.tooltip).toBe('Pods');
   await vi.waitFor(() => {
     expect(entry.counter).toBe(2);
+    expect(entry.destinations).toHaveLength(3);
   });
+
+  const [first, second, listEntry] = entry.destinations;
+
+  expect(first.page).toBe('pod-summary');
+  expect(first).toHaveProperty('parameters', { name: 'pod-a', engineId: 'podman' });
+  expect(first.name).toBe('Pod: pod-a');
+
+  expect(second.page).toBe('pod-summary');
+  expect(second).toHaveProperty('parameters', { name: 'pod-b', engineId: 'podman' });
+  expect(second.name).toBe('Pod: pod-b');
+
+  expect(listEntry.page).toBe('pods');
+  expect(listEntry.name).toBe('Pods (2)');
 });

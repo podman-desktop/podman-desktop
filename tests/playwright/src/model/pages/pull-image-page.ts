@@ -41,7 +41,7 @@ export class PullImagePage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.heading = page.getByRole('heading', {
-      name: 'Pull Image From a Registry',
+      name: 'Pull an Image From a Registry',
     });
     this.pullImageButton = page.getByRole('button', { name: 'Pull' });
     this.closeLink = page.getByRole('link', { name: 'Close' });

@@ -30,6 +30,7 @@ export interface RunOptions {
     environmentVariables: { key: string; value: string }[];
     environmentFiles: string[];
     hostContainerPortMappings: { hostPort: PortInfo; containerPort: string }[];
+    containerPortMapping: Array<PortInfo>;
   };
   networking: {
     hostname?: string;

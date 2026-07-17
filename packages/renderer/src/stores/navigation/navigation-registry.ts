@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import type { GoToInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -43,6 +44,7 @@ export interface NavigationRegistryEntry {
   tooltip: string;
   link: string;
   counter: number;
+  destinations: Array<GoToInfo>;
   type: 'entry' | 'group' | 'submenu';
   enabled?: boolean;
   items?: NavigationRegistryEntry[];

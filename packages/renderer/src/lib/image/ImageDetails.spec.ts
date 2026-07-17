@@ -48,6 +48,7 @@ const myImage: ImageInfo = {
   Labels: {},
   engineId: 'engine0',
   engineName: 'podman',
+  engineType: 'podman',
   ParentId: '',
   RepoTags: ['myImageTag'],
   Created: 0,

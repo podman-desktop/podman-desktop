@@ -8,6 +8,7 @@ import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
+import SecretCreate from '/@/lib/secrets/SecretCreate.svelte';
 import SecretDetails from '/@/lib/secrets/SecretDetails.svelte';
 import SecretsList from '/@/lib/secrets/SecretsList.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
@@ -224,9 +225,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/existing-image-create-container" breadcrumb="Select image" >
             <CreateContainerFromExistingImage />
           </Route>
-          <Route path="/run/*" breadcrumb="Run Image">
-            <RunImage />
-          </Route>
           <Route path="/build" breadcrumb="Build an Image" let:meta>
             <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
           </Route>
@@ -247,13 +245,24 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
           <Route
             path="/:id/:engineId/:base64RepoTag/*"
-            breadcrumb="Image Details"
             let:meta
-            navigationHint="details">
-            <ImageDetails
-              imageID={meta.params.id}
-              engineId={decodeURI(meta.params.engineId)}
-              base64RepoTag={meta.params.base64RepoTag} />
+            firstmatch>
+            <Route path="/run/*" breadcrumb="Run Image">
+              <RunImage
+                imageID={meta.params.id}
+                engineId={decodeURI(meta.params.engineId)}
+                base64RepoTag={meta.params.base64RepoTag}
+              />
+            </Route>
+            <Route
+              path="/*"
+              breadcrumb="Image Details"
+              navigationHint="details">
+              <ImageDetails
+                imageID={meta.params.id}
+                engineId={decodeURI(meta.params.engineId)}
+                base64RepoTag={meta.params.base64RepoTag} />
+            </Route>
           </Route>
         </Route>
         <Route
@@ -323,6 +332,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/secrets/*" breadcrumb="Secrets" navigationHint="root" firstmatch>
           <Route path="/" breadcrumb="Secrets" navigationHint="root">
             <SecretsList />
+          </Route>
+          <Route path="/create" breadcrumb="Create a Secret">
+            <SecretCreate />
           </Route>
           <Route path="/:engineId/:secretId/*" breadcrumb="Secret Details" let:meta navigationHint="details">
             <SecretDetails secretId={decodeURIComponent(meta.params.secretId)} engineId={decodeURIComponent(meta.params.engineId)} />

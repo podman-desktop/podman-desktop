@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInfo } from '@podman-desktop/api';
 import type { ImageInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -26,12 +27,18 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import RunImage from '/@/lib/image/RunImage.svelte';
-import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
-import { runImageInfo } from '/@/stores/run-image-store';
+import { imagesInfos } from '/@/stores/images';
 
 const originalConsoleDebug = console.debug;
 
+const MY_IMAGE = {
+  engineId: 'podman',
+  Id: 'sha256:5555',
+  Size: 0,
+} as unknown as ImageInfo;
+
+// fake the window.events object
 beforeAll(() => {
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
     (func as () => void)();
@@ -51,34 +58,21 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleDebug;
+  vi.useRealTimers();
 });
 
 async function waitRender(): Promise<void> {
-  render(RunImage);
+  render(RunImage, {
+    engineId: MY_IMAGE.engineId,
+    imageID: MY_IMAGE.Id,
+    base64RepoTag: btoa('<none>'),
+  });
   await tick();
   await tick();
 }
 
 async function createRunImage(entrypoint?: string | string[], cmd?: string[]): Promise<void> {
-  runImageInfo.set({
-    age: '',
-    base64RepoTag: '',
-    createdAt: 0,
-    engineId: '',
-    engineName: '',
-    size: 0,
-    humanSize: '',
-    id: '',
-    arch: '',
-    status: 'UNUSED',
-    name: '',
-    selected: false,
-    shortId: '',
-    tag: '',
-    icon: ImageIcon,
-    badges: [],
-    digest: 'sha256:1234567890',
-  });
+  imagesInfos.set([MY_IMAGE]);
   const imageInfo: ImageInspectInfo = {
     Architecture: '',
     Author: '',
@@ -139,6 +133,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     VirtualSize: 0,
     engineId: 'engineid',
     engineName: 'engineName',
+    engineType: 'podman',
   };
   (window.getImageInspect as Mock).mockResolvedValue(imageInfo);
   await waitRender();
@@ -456,6 +451,38 @@ describe('RunImage', () => {
       'engineid',
       expect.objectContaining({ EnvFiles: [customEnvFile, 'foo3'] }),
     );
+  });
+
+  test('Expect error to be visible if isFreePort is not free', async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+    });
+
+    vi.mocked(window.isFreePort).mockRejectedValue(new Error('Port 8080 is already in use.'));
+    router.goto('/basic');
+
+    await createRunImage(undefined, ['command1', 'command2']);
+
+    const customMappingButton = screen.getByRole('button', { name: 'Add custom port mapping' });
+    await fireEvent.click(customMappingButton);
+
+    const hostInput = screen.getByLabelText('host port');
+    await userEvent.click(hostInput);
+    await userEvent.clear(hostInput);
+    await userEvent.keyboard('8080');
+
+    const containerInput = screen.getByLabelText('container port');
+    await userEvent.click(containerInput);
+    await userEvent.clear(containerInput);
+    await userEvent.keyboard('8080');
+
+    // wait for debounce
+    await vi.advanceTimersByTimeAsync(800);
+
+    const error = await vi.waitFor(() => {
+      return screen.getByText('Port 8080 is already in use.');
+    });
+    expect(error).toBeInTheDocument();
   });
 
   test('Expect "start container" button to be disabled when port is not free', async () => {

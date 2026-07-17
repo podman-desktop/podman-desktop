@@ -362,3 +362,9 @@ test(`Test navigationHandle for ${NavigationPage.SECRET}`, () => {
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/secrets/engine%20id/secret%2Fid/summary');
 });
+
+test(`Test navigationHandle for ${NavigationPage.SECRET_CREATE}`, () => {
+  handleNavigation({ page: NavigationPage.SECRET_CREATE });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/secrets/create');
+});

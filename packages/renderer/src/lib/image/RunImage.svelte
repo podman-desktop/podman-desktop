@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
+import type { ImageInfo, OpenDialogOptions } from '@podman-desktop/api';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -16,6 +16,8 @@ import { router } from 'tinro';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { ImageUtils } from '/@/lib/image/image-utils';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import type { PortInfo, RunOptions } from '/@/lib/image/run/run-options';
 import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
 import { array2String } from '/@/lib/string/string.js';
@@ -25,7 +27,22 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
-import { runImageInfo } from '/@/stores/run-image-store';
+import { imagesInfos } from '/@/stores/images';
+
+interface Props {
+  imageID: string;
+  engineId: string;
+  base64RepoTag: string;
+}
+
+let { imageID, engineId, base64RepoTag }: Props = $props();
+
+const imageUtils = new ImageUtils();
+
+let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
+let image: ImageInfoUI | undefined = $derived(
+  imageInfo ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos) : undefined,
+);
 
 let options: RunOptions = $state({
   basic: {
@@ -36,6 +53,7 @@ let options: RunOptions = $state({
     environmentVariables: [{ key: '', value: '' }],
     environmentFiles: [''],
     hostContainerPortMappings: [],
+    containerPortMapping: [],
   },
   networking: {
     hostname: undefined,
@@ -80,14 +98,13 @@ let containerNameError: string | undefined = $derived.by(() => {
   }
 });
 
-let containerPortMapping = $state<PortInfo[]>([]);
 let exposedPorts = $state<string[]>([]);
 let createError = $state<string>();
 let onPortInputTimeout: NodeJS.Timeout;
 
 let invalidPorts = $derived.by(() => {
   const invalidHostPorts = options.basic.hostContainerPortMappings.filter(pair => pair.hostPort.error);
-  const invalidContainerPortMapping = containerPortMapping?.filter(port => port.error) ?? [];
+  const invalidContainerPortMapping = options.basic.containerPortMapping?.filter(port => port.error) ?? [];
   return invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
 });
 let invalidFields = $derived(!!containerNameError || invalidPorts);
@@ -99,16 +116,12 @@ let imageDisplayName = $state('');
 let engineNetworks = $state<NetworkInspectInfo[]>([]);
 let engineContainers = $state<ContainerInfoUI[]>([]);
 
-const image = $runImageInfo;
-
 onMount(async () => {
   if (!image) {
     // go back to image list
     router.goto('/images/');
     return;
   }
-
-  containerPortMapping = [];
 
   imageInspectInfo = await window.getImageInspect(image.engineId, image.id);
   exposedPorts = Array.from(Object.keys(imageInspectInfo?.Config?.ExposedPorts ?? {}));
@@ -125,13 +138,12 @@ onMount(async () => {
     options.basic.entrypoint = '';
   }
 
-  // auto-assign ports from available free port
-  containerPortMapping = new Array<PortInfo>(exposedPorts.length);
+  options.basic.containerPortMapping = new Array<PortInfo>(exposedPorts.length);
   await Promise.all(
     exposedPorts.map(async (port, index) => {
       const localPorts = await getPortsInfo(port);
       if (localPorts) {
-        containerPortMapping[index] = { port: localPorts, error: '' };
+        options.basic.containerPortMapping[index] = { port: localPorts, error: '' };
       }
     }),
   );
@@ -237,6 +249,8 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
 }
 
 async function startContainer(): Promise<void> {
+  if (!image) return;
+
   createError = undefined;
   // create ExposedPorts objects
   const ExposedPorts: { [key: string]: object } = {};
@@ -244,11 +258,11 @@ async function startContainer(): Promise<void> {
   const PortBindings: HostConfigPortBinding = {};
   try {
     exposedPorts.forEach((port, index) => {
-      if (port.includes('-') || containerPortMapping[index]?.port.includes('-')) {
-        addPortsFromRange(ExposedPorts, PortBindings, port, containerPortMapping[index].port);
+      if (port.includes('-') || options.basic.containerPortMapping[index]?.port.includes('-')) {
+        addPortsFromRange(ExposedPorts, PortBindings, port, options.basic.containerPortMapping[index].port);
       } else {
-        if (containerPortMapping[index]?.port) {
-          PortBindings[port] = [{ HostPort: containerPortMapping[index].port }];
+        if (options.basic.containerPortMapping[index]?.port) {
+          PortBindings[port] = [{ HostPort: options.basic.containerPortMapping[index].port }];
         }
         ExposedPorts[port] = {};
       }
@@ -573,18 +587,14 @@ function deleteDevice(index: number): void {
 }
 
 function onContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, containerPortMapping[index], () => {
-    containerPortMapping = containerPortMapping;
-  });
+  onPortInput(event, options.basic.containerPortMapping[index]);
 }
 
 function onHostContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, options.basic.hostContainerPortMappings[index].hostPort, () => {
-    options.basic.hostContainerPortMappings = options.basic.hostContainerPortMappings;
-  });
+  onPortInput(event, options.basic.hostContainerPortMappings[index].hostPort);
 }
 
-function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): void {
+function onPortInput(event: Event, portInfo: PortInfo): void {
   // clear the timeout so if there was an old call to areAllPortsFree pending is deleted. We will create a new one soon
   clearTimeout(onPortInputTimeout);
   const target = event.currentTarget as HTMLInputElement;
@@ -595,13 +605,11 @@ function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): vo
       .isFreePort(_value)
       .then(_ => {
         portInfo.error = '';
-        updateUI();
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
           portInfo.error = (error as { message: string }).message;
         }
-        updateUI();
       });
   }, 500);
 }
@@ -618,7 +626,7 @@ const envDialogOptions: OpenDialogOptions = {
 </script>
 
 <Route path="/*">
-  {#if dataReady}
+  {#if dataReady && image}
     <EngineFormPage title="Create a container from image {imageDisplayName}:{image.tag}">
     {#snippet icon()}
       <i class="fas fa-play fa-2x" aria-hidden="true"></i>
@@ -700,12 +708,12 @@ const envDialogOptions: OpenDialogOptions = {
                     class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
                     >Local port for {port}:</span>
                   <Input
-                    bind:value={containerPortMapping[index].port}
+                    bind:value={options.basic.containerPortMapping[index].port}
                     on:input={(event): void => onContainerPortMappingInput(event, index)}
                     placeholder="Enter value for port {port}"
-                    error={containerPortMapping[index].error}
+                    error={options.basic.containerPortMapping[index].error}
                     class="ml-2 w-full"
-                    title={containerPortMapping[index].error} />
+                    title={options.basic.containerPortMapping[index].error} />
                 </div>
               {/each}
 

@@ -1,18 +1,26 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { SecretInfo } from '@podman-desktop/core-api';
+import type { Menu, SecretInfo } from '@podman-desktop/core-api';
+import { MenuContext } from '@podman-desktop/core-api';
+import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
+import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 interface Props {
   object: SecretInfo;
+  dropdownMenu?: boolean;
   detailed?: boolean;
 }
 
-let { object, detailed = false }: Props = $props();
+let { object, dropdownMenu = true, detailed = false }: Props = $props();
 
 let loading: boolean = $state(false);
+let contributions: Promise<Menu[]> = $derived(window.getContributedMenus(MenuContext.DASHBOARD_SECRET));
+
+const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 
 function onDeleteSecret(): void {
   withConfirmation(
@@ -37,3 +45,17 @@ function onDeleteSecret(): void {
   inProgress={loading}
   detailed={detailed}
   enabled={true} />
+
+{#await contributions then menus}
+  {#if menus.length > 0}
+    <MenuComponent>
+      <ContributionActions
+        args={[object]}
+        contextPrefix="secretItem"
+        dropdownMenu={dropdownMenu}
+        contributions={menus}
+        detailed={detailed}
+        onError={(errorMessage: string): void => console.error(errorMessage)} />
+    </MenuComponent>
+  {/if}
+{/await}

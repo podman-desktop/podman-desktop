@@ -94,7 +94,7 @@ $: extension = derived(
     {/snippet}
 
     {#snippet contentSnippet()}
-      <div class="flex w-full h-full overflow-y-auto p-5 flex-col">
+      <div class="flex w-full h-full overflow-y-auto p-5 flex-col lg:flex-row">
         {#if screen === 'README'}
           <ExtensionDetailsSummaryCard extensionDetails={$extension} />
           <ExtensionDetailsReadme readme={$extension.readme} />
