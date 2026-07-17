@@ -101,11 +101,11 @@ beforeEach(() => {
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
-test('test /images/run/* route', async () => {
+test('test /images/an-image/an-engine/tag/run/basic route', async () => {
   render(App);
   expect(mocks.RunImage).not.toHaveBeenCalled();
   expect(mocks.DashboardPage).toHaveBeenCalled();
-  router.goto('/images/run/basic');
+  router.goto('/images/an-image/an-engine/tag/run/basic');
   await tick();
   expect(mocks.RunImage).toHaveBeenCalled();
 });
