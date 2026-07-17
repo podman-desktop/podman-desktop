@@ -459,8 +459,13 @@ async function registerCliTool(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  const octokit = new Octokit();
-  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokit);
+  // Create the Octokit factory for GitHub authentication
+  const octokitFactory = async (): Promise<Octokit> => {
+    const auth = await extensionApi.authentication.getSession('github-authentication', []);
+    return new Octokit({ auth: auth?.accessToken });
+  };
+
+  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokitFactory);
 
   let binary: { path: string; version: string } | undefined = undefined;
   let installationSource: extensionApi.CliToolInstallationSource | undefined;

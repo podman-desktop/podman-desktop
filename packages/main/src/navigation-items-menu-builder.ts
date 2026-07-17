@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
 
@@ -23,6 +24,8 @@ import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
 // items that can't be hidden
 const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
+
+const EXPANDED_WIDTH = 160;
 
 // This class is responsible of creating the items to hide a given selected item of the left navigation bar
 // and also display a list of all items with the ability to toggle the visibility of each item.
@@ -115,17 +118,23 @@ export class NavigationItemsMenuBuilder {
     return items;
   }
 
+  protected getNavWidth(): number {
+    const configuration = this.configurationRegistry.getConfiguration(AppearanceSettings.SectionName);
+    return configuration.get<number>(AppearanceSettings.NavigationBarWidth, EXPANDED_WIDTH);
+  }
+
   buildNavigationMenu(parameters: ContextMenuParams): MenuItemConstructorOptions[] {
     const items: MenuItemConstructorOptions[] = [];
+    const navWidth = this.getNavWidth();
+
     // allow to hide the item being selected
-    if (parameters.linkText && parameters.x < 48 && parameters.y > 76) {
+    if (parameters.linkText && parameters.x < navWidth && parameters.y > 76) {
       const menu = this.buildHideMenuItem(parameters.linkText);
       if (menu) {
         items.push(menu);
       }
     }
-    if (parameters.x < 48) {
-      // add all navigation items to be able to show/hide them
+    if (parameters.x < navWidth) {
       items.push(...this.buildNavigationToggleMenuItems());
     }
     return items;

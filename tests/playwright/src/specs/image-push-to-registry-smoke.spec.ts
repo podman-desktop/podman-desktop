@@ -17,11 +17,15 @@
  ***********************************************************************/
 
 import { ImagesPage } from '/@/model/pages/images-page';
-import { RegistriesPage } from '/@/model/pages/registries-page';
-import { SettingsBar } from '/@/model/pages/settings-bar';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteImage, deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
+import {
+  createRegistryAndVerify,
+  deleteImage,
+  deleteRegistry,
+  ensureNoImagesPresentCLI,
+  removeRegistryAndVerify,
+} from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'ghcr.io/podmandesktop-ci/hello';
@@ -61,17 +65,8 @@ test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
 test.describe
   .serial('Push image to container registry', { tag: '@smoke' }, () => {
-    test('Add registry', async ({ navigationBar, page }) => {
-      await navigationBar.openSettings();
-      const settingsBar = new SettingsBar(page);
-      const registryPage = await settingsBar.openTabPage(RegistriesPage);
-      await playExpect(registryPage.heading).toBeVisible();
-
-      await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
-
-      const registryBox = registryPage.registriesTable.getByLabel('GitHub');
-      const username = registryBox.getByText(registryUsername);
-      await playExpect(username).toBeVisible({ timeout: 10_000 });
+    test('Add registry', async ({ page }) => {
+      await createRegistryAndVerify(page, registryUrl, registryUsername, registryPswdSecret, 'GitHub');
     });
 
     test('Pull image', async ({ navigationBar }) => {
@@ -147,15 +142,7 @@ test.describe
         .toBeTruthy();
     });
 
-    test('Registry removal verification', async ({ page, navigationBar }) => {
-      await navigationBar.openSettings();
-      const settingsBar = new SettingsBar(page);
-      const registryPage = await settingsBar.openTabPage(RegistriesPage);
-      await playExpect(registryPage.heading).toBeVisible();
-
-      await registryPage.removeRegistry(registryName);
-      const registryBox = registryPage.registriesTable.getByLabel(registryName);
-      const username = registryBox.getByText(registryUsername);
-      await playExpect(username).toBeHidden({ timeout: 10_000 });
+    test('Registry removal verification', async ({ page }) => {
+      await removeRegistryAndVerify(page, registryName, registryUsername);
     });
   });

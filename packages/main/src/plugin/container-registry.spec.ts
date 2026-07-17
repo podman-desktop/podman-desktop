@@ -3099,6 +3099,43 @@ describe('createContainer', () => {
   });
 });
 
+describe('unpauseContainer', () => {
+  test('test unpause Container', async () => {
+    const unpauseMock = vi.fn().mockResolvedValue({});
+
+    const fakeDockerodeContainer = {
+      unpause: unpauseMock,
+    } as unknown as Dockerode.Container;
+
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(fakeDockerodeContainer);
+
+    await containerRegistry.unpauseContainer('podman1', '1234');
+
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+
+  test('test unpause Container for error handling', async () => {
+    const unpauseError = new Error('unpause failed');
+    const unpauseMock = vi.fn().mockRejectedValue(unpauseError);
+
+    const fakeDockerodeContainer = {
+      unpause: unpauseMock,
+    } as unknown as Dockerode.Container;
+
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(fakeDockerodeContainer);
+
+    await expect(containerRegistry.unpauseContainer('podman1', '1234')).rejects.toThrow(unpauseError);
+
+    expect(telemetry.track).toHaveBeenCalledWith(
+      'unpauseContainer',
+      expect.objectContaining({
+        error: unpauseError,
+      }),
+    );
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+});
+
 describe('attach container', () => {
   test('container attach stream', async () => {
     // create a read/write stream
@@ -4244,6 +4281,42 @@ test('check createPod uses running podman connection if ProviderContainerConnect
   expect(result.engineId).equal('podman1');
 });
 
+describe('unpausePod', () => {
+  test('test unpause Pod', async () => {
+    const unpauseMock = vi.fn().mockResolvedValue({});
+
+    const fakeLibPod = {
+      unpausePod: unpauseMock,
+    } as unknown as LibPod;
+
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(fakeLibPod);
+
+    await containerRegistry.unpausePod('podman1', '1234');
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+
+  test('test unpause Pod for error handling', async () => {
+    const unpauseError = new Error('unpause failed');
+    const unpauseMock = vi.fn().mockRejectedValue(unpauseError);
+
+    const fakeLibPod = {
+      unpausePod: unpauseMock,
+    } as unknown as LibPod;
+
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(fakeLibPod);
+
+    await expect(containerRegistry.unpausePod('podman1', '1234')).rejects.toThrow(unpauseError);
+
+    expect(telemetry.track).toHaveBeenCalledWith(
+      'unpausePod',
+      expect.objectContaining({
+        error: unpauseError,
+      }),
+    );
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+});
+
 test('check that fails if there is no podman provider running', async () => {
   const internalProvider = {
     name: 'podman1',
@@ -4784,6 +4857,9 @@ describe('listImages', () => {
     const internalContainerProvider = {
       name: 'dummyName',
       id: 'dummyId',
+      connection: {
+        type: 'podman',
+      },
       api: {
         listImages: vi.fn(),
       },
@@ -4813,6 +4889,7 @@ describe('listImages', () => {
       Id: 'dummyImageId',
       engineId: 'dummyId',
       engineName: 'dummyName',
+      engineType: 'podman',
       Digest: 'sha256:dummyImageId',
     });
   });
@@ -5014,6 +5091,7 @@ test('pass options to compat api when using podmanListImages', async () => {
 
   expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
     all: true,
+    digests: true,
     filters: '{"dangling":["false"]}',
   });
 });
@@ -6613,5 +6691,573 @@ describe('ContainerRegistrySettings', () => {
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.default).toBe(30);
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.minimum).toBe(5);
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.maximum).toBe(120);
+  });
+});
+
+describe('createSecret', () => {
+  test('should throw if no selectedProvider', async () => {
+    await expect(
+      containerRegistry.createSecret({
+        name: 'my-secret',
+        data: 'secret-value',
+        provider: undefined,
+      }),
+    ).rejects.toThrow('cannot create secret without selected provider');
+  });
+
+  test('should throw if provider has no api', async () => {
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: undefined,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman', internalContainerProvider);
+
+    await expect(
+      containerRegistry.createSecret({
+        name: 'my-secret',
+        data: 'secret-value',
+        provider: {
+          name: 'podman',
+          endpoint: { socketPath: '/endpoint1.sock' },
+        } as ProviderContainerConnectionInfo,
+      }),
+    ).rejects.toThrow('no running provider for the matching container');
+  });
+
+  test('should create secret with base64-encoded data', async () => {
+    const createSecretMock = vi.fn().mockResolvedValue({ id: 'secret-id-123' });
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        createSecret: createSecretMock,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman', internalContainerProvider);
+
+    const result = await containerRegistry.createSecret({
+      name: 'my-secret',
+      data: 'secret-value',
+      provider: {
+        name: 'podman',
+        endpoint: { socketPath: '/endpoint1.sock' },
+      } as ProviderContainerConnectionInfo,
+    });
+
+    expect(result).toEqual({ id: 'secret-id-123', engineId: 'podman1' });
+    expect(createSecretMock).toHaveBeenCalledWith({
+      Data: Buffer.from('secret-value').toString('base64'),
+      Name: 'my-secret',
+      Labels: undefined,
+    });
+  });
+
+  test('should pass labels when provided', async () => {
+    const createSecretMock = vi.fn().mockResolvedValue({ id: 'secret-id-456' });
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        createSecret: createSecretMock,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman', internalContainerProvider);
+
+    await containerRegistry.createSecret({
+      name: 'my-secret',
+      data: 'secret-value',
+      labels: { env: 'prod' },
+      provider: {
+        name: 'podman',
+        endpoint: { socketPath: '/endpoint1.sock' },
+      } as ProviderContainerConnectionInfo,
+    });
+
+    expect(createSecretMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        Labels: { env: 'prod' },
+      }),
+    );
+  });
+
+  test('should track telemetry on success', async () => {
+    const createSecretMock = vi.fn().mockResolvedValue({ id: 'secret-id-123' });
+    const api = {
+      createSecret: createSecretMock,
+    } as unknown as Dockerode;
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman', internalContainerProvider);
+    telemetryTrackMock.mockClear();
+
+    await containerRegistry.createSecret({
+      name: 'my-secret',
+      data: 'secret-value',
+      provider: {
+        name: 'podman',
+        endpoint: { socketPath: '/endpoint1.sock' },
+      } as ProviderContainerConnectionInfo,
+    });
+
+    expect(telemetryTrackMock).toHaveBeenCalledWith('createSecret', {});
+  });
+
+  test('should track telemetry with error on failure', async () => {
+    const error = new Error('create failed');
+    const createSecretMock = vi.fn().mockRejectedValue(error);
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        createSecret: createSecretMock,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman', internalContainerProvider);
+    telemetryTrackMock.mockClear();
+
+    await expect(
+      containerRegistry.createSecret({
+        name: 'my-secret',
+        data: 'secret-value',
+        provider: {
+          name: 'podman',
+          endpoint: { socketPath: '/endpoint1.sock' },
+        } as ProviderContainerConnectionInfo,
+      }),
+    ).rejects.toThrow('create failed');
+
+    expect(telemetryTrackMock).toHaveBeenCalledWith('createSecret', { error });
+  });
+});
+
+describe('removeSecret', () => {
+  test('should throw if no matching engine', async () => {
+    await expect(containerRegistry.removeSecret('nonexistent', 'secret1')).rejects.toThrow(
+      'internal providers with engineId nonexistent has no api',
+    );
+  });
+
+  test('should use libpodApi when available', async () => {
+    const removeSecretMock = vi.fn().mockResolvedValue(undefined);
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {} as unknown as Dockerode,
+      libpodApi: {
+        removeSecret: removeSecretMock,
+      } as unknown as LibPod,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+
+    await containerRegistry.removeSecret('podman1', 'secret123');
+
+    expect(removeSecretMock).toHaveBeenCalledWith('secret123');
+  });
+
+  test('should fall back to dockerode api when libpodApi is not available', async () => {
+    const removeMock = vi.fn().mockResolvedValue(undefined);
+    const getSecretMock = vi.fn().mockReturnValue({ remove: removeMock });
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'docker',
+      id: 'docker1',
+      api: {
+        getSecret: getSecretMock,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('docker1', internalContainerProvider);
+
+    await containerRegistry.removeSecret('docker1', 'secret456');
+
+    expect(getSecretMock).toHaveBeenCalledWith('secret456');
+    expect(removeMock).toHaveBeenCalled();
+  });
+
+  test('should track telemetry on success', async () => {
+    const removeSecretMock = vi.fn().mockResolvedValue(undefined);
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {} as unknown as Dockerode,
+      libpodApi: {
+        removeSecret: removeSecretMock,
+      } as unknown as LibPod,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+    telemetryTrackMock.mockClear();
+
+    await containerRegistry.removeSecret('podman1', 'secret123');
+
+    expect(telemetryTrackMock).toHaveBeenCalledWith('removeSecret', {});
+  });
+
+  test('should track telemetry with error on failure', async () => {
+    const error = new Error('remove failed');
+    const removeSecretMock = vi.fn().mockRejectedValue(error);
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {} as unknown as Dockerode,
+      libpodApi: {
+        removeSecret: removeSecretMock,
+      } as unknown as LibPod,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+    telemetryTrackMock.mockClear();
+
+    await expect(containerRegistry.removeSecret('podman1', 'secret123')).rejects.toThrow('remove failed');
+
+    expect(telemetryTrackMock).toHaveBeenCalledWith('removeSecret', { error });
+  });
+});
+
+describe('listSecrets', () => {
+  test('should return empty array when no providers', async () => {
+    const result = await containerRegistry.listSecrets();
+    expect(result).toEqual([]);
+  });
+
+  test('should return empty array when provider has no api', async () => {
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: undefined,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+
+    const result = await containerRegistry.listSecrets();
+    expect(result).toEqual([]);
+  });
+
+  test('should list secrets from a single provider', async () => {
+    const mockSecrets = [
+      {
+        ID: 'secret1',
+        Spec: { Name: 'my-secret', Labels: { env: 'dev' } },
+        CreatedAt: '2024-01-01T00:00:00Z',
+        UpdatedAt: '2024-01-02T00:00:00Z',
+      },
+    ];
+
+    const listSecretsMock = vi.fn().mockResolvedValue(mockSecrets);
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        listSecrets: listSecretsMock,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+
+    const result = await containerRegistry.listSecrets();
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      engineName: 'podman',
+      engineId: 'podman1',
+      engineType: 'podman',
+      Name: 'my-secret',
+      Id: 'secret1',
+      CreatedAt: '2024-01-01T00:00:00Z',
+      UpdatedAt: '2024-01-02T00:00:00Z',
+      Labels: { env: 'dev' },
+      SecretData: undefined,
+    });
+  });
+
+  test('should aggregate secrets from multiple providers', async () => {
+    const listSecretsMock1 = vi.fn().mockResolvedValue([
+      {
+        ID: 'secret1',
+        Spec: { Name: 'secret-a' },
+        CreatedAt: '2024-01-01T00:00:00Z',
+        UpdatedAt: '2024-01-01T00:00:00Z',
+      },
+    ]);
+
+    const listSecretsMock2 = vi.fn().mockResolvedValue([
+      {
+        ID: 'secret2',
+        Spec: { Name: 'secret-b' },
+        CreatedAt: '2024-02-01T00:00:00Z',
+        UpdatedAt: '2024-02-01T00:00:00Z',
+      },
+    ]);
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { listSecrets: listSecretsMock1 } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: { socketPath: '/endpoint1.sock' },
+        status: () => 'started',
+      },
+    });
+
+    containerRegistry.addInternalProvider('docker1', {
+      name: 'docker',
+      id: 'docker1',
+      api: { listSecrets: listSecretsMock2 } as unknown as Dockerode,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: { socketPath: '/endpoint2.sock' },
+        status: () => 'started',
+      },
+    });
+
+    const result = await containerRegistry.listSecrets();
+
+    expect(result).toHaveLength(2);
+    expect(result.map(s => s.Id)).toEqual(['secret1', 'secret2']);
+  });
+
+  test('should use secret ID as Name when Spec.Name is missing', async () => {
+    const listSecretsMock = vi.fn().mockResolvedValue([
+      {
+        ID: 'secret-no-name',
+        Spec: {},
+        CreatedAt: '2024-01-01T00:00:00Z',
+        UpdatedAt: '2024-01-01T00:00:00Z',
+      },
+    ]);
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { listSecrets: listSecretsMock } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: { socketPath: '/endpoint1.sock' },
+        status: () => 'started',
+      },
+    });
+
+    const result = await containerRegistry.listSecrets();
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.Name).toBe('secret-no-name');
+  });
+
+  test('should gracefully handle provider errors and return empty for that provider', async () => {
+    const listSecretsMockOk = vi.fn().mockResolvedValue([
+      {
+        ID: 'secret1',
+        Spec: { Name: 'good-secret' },
+        CreatedAt: '2024-01-01T00:00:00Z',
+        UpdatedAt: '2024-01-01T00:00:00Z',
+      },
+    ]);
+    const listSecretsMockFail = vi.fn().mockRejectedValue(new Error('connection refused'));
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { listSecrets: listSecretsMockOk } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: { socketPath: '/endpoint1.sock' },
+        status: () => 'started',
+      },
+    });
+
+    containerRegistry.addInternalProvider('docker1', {
+      name: 'docker',
+      id: 'docker1',
+      api: { listSecrets: listSecretsMockFail } as unknown as Dockerode,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: { socketPath: '/endpoint2.sock' },
+        status: () => 'started',
+      },
+    });
+
+    const result = await containerRegistry.listSecrets();
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.Id).toBe('secret1');
+  });
+});
+
+describe('inspectSecret', () => {
+  test('should throw if no matching engine', async () => {
+    await expect(containerRegistry.inspectSecret('nonexistent', 'secret1')).rejects.toThrow(
+      'internal providers with engineId nonexistent has no api',
+    );
+  });
+
+  test('should return secret info on success', async () => {
+    const inspectMock = vi.fn().mockResolvedValue({
+      ID: 'secret-id-123',
+      Spec: { Name: 'my-secret' },
+      CreatedAt: '2024-01-01T00:00:00Z',
+      UpdatedAt: '2024-01-02T00:00:00Z',
+    });
+    const getSecretMock = vi.fn().mockReturnValue({ inspect: inspectMock });
+
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        getSecret: getSecretMock,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+
+    const result = await containerRegistry.inspectSecret('podman1', 'secret-id-123');
+
+    expect(getSecretMock).toHaveBeenCalledWith('secret-id-123');
+    expect(inspectMock).toHaveBeenCalled();
+    expect(result).toEqual({
+      engineName: 'podman',
+      engineId: 'podman1',
+      engineType: 'podman',
+      Name: 'my-secret',
+      Id: 'secret-id-123',
+      CreatedAt: '2024-01-01T00:00:00Z',
+      UpdatedAt: '2024-01-02T00:00:00Z',
+    });
   });
 });

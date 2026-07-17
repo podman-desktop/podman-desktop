@@ -64,8 +64,8 @@ test('Expect Delete Manifest to be there', async () => {
 });
 
 test('Expect Push Manifest to be there', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Dismiss'
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
   getContributedMenusMock.mockResolvedValue([]);
 
   render(ManifestActions, { manifest: fakedManifest, onPushManifest: vi.fn() });
@@ -99,7 +99,7 @@ test('Expect withConfirmation to be called with delete variant when clicking Del
 test('Expect error dialog with correct message when manifest deletion fails', async () => {
   const errorMessage = 'manifest not found';
   vi.mocked(withConfirmation).mockImplementation(f => f());
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
   vi.mocked(window.removeManifest).mockRejectedValueOnce(new Error(errorMessage));
   getContributedMenusMock.mockResolvedValue([]);
 

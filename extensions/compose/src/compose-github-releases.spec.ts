@@ -19,34 +19,41 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Octokit } from '@octokit/rest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ComposeGitHubReleases } from './compose-github-releases';
 
 vi.mock(import('node:fs'));
 
-let composeGitHubReleases: ComposeGitHubReleases;
-
-const listReleaseAssetsMock = vi.fn();
-const listReleasesMock = vi.fn();
-const getReleaseAssetMock = vi.fn();
-const octokitMock: Octokit = {
+const mockOctokit = {
   repos: {
-    listReleases: listReleasesMock,
-    listReleaseAssets: listReleaseAssetsMock,
-    getReleaseAsset: getReleaseAssetMock,
+    listReleases: vi.fn(),
+    getReleaseAsset: vi.fn(),
   },
   paginate: vi.fn(),
-} as unknown as Octokit;
+};
+
+const mockOctokitFactory = vi.fn();
+
+let composeGitHubReleases: ComposeGitHubReleases;
 
 beforeEach(() => {
-  composeGitHubReleases = new ComposeGitHubReleases(octokitMock);
+  vi.resetAllMocks();
+  mockOctokitFactory.mockResolvedValue(mockOctokit);
+  composeGitHubReleases = new ComposeGitHubReleases(mockOctokitFactory);
 });
 
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+});
+
+test('Auth token is passed to Octokit factory', async () => {
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: [] });
+
+  await composeGitHubReleases.grabLatestsReleasesMetadata();
+
+  expect(mockOctokitFactory).toHaveBeenCalled();
 });
 
 test('expect grab 5 releases', async () => {
@@ -57,7 +64,8 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/compose-github-release-all.json'), 'utf8'),
   );
-  listReleasesMock.mockReturnValue({ data: resultREST });
+
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
 
   const result = await composeGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();
@@ -105,7 +113,7 @@ describe.each([
     // mock the result of listReleaseAssetsMock REST API
     const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
 
-    vi.mocked(octokitMock.paginate).mockReturnValue(resultREST);
+    mockOctokit.paginate.mockResolvedValue(resultREST);
   });
 
   test('macOS x86_64', async () => {
@@ -152,7 +160,7 @@ describe.each([
 });
 
 test('should download the file if parent folder does exist', async () => {
-  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
+  mockOctokit.repos.getReleaseAsset.mockResolvedValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -170,7 +178,7 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
+  mockOctokit.repos.getReleaseAsset.mockResolvedValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);

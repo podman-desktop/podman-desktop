@@ -60,3 +60,28 @@ export interface ImageUpdateStatus {
    */
   message: string;
 }
+
+/**
+ * Describes a single image to be updated via the backend.
+ */
+export interface ImageUpdateInfo {
+  engineId: string;
+  /** Full image reference, e.g. "quay.io/podman/hello:latest" */
+  image: string;
+  /** Image tag, e.g. "latest" */
+  tag: string;
+  /** Current local digest of the image */
+  digest: string;
+  /** Current local repository digests of the image */
+  repoDigests?: string[];
+}
+
+/**
+ * Per-image result returned by the backend updateImages call.
+ */
+export interface ImageUpdateResult {
+  imageRef: string;
+  updated: boolean;
+  status: ImageUpdateStatus['status'] | 'updated';
+  message: string;
+}

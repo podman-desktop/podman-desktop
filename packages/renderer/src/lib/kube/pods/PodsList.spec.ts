@@ -189,14 +189,14 @@ describe.each<{
 
     vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
     const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
     await fireEvent.click(deleteButton);
 
     expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
     await fireEvent.click(deleteButton);
     expect(window.showMessageBox).toHaveBeenCalledTimes(2);
     await vi.waitFor(() => expect(window.kubernetesDeletePod).toHaveBeenCalled());

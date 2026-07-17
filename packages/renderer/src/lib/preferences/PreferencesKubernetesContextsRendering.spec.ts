@@ -163,7 +163,7 @@ test('Test that context-name2 is the current context', async () => {
 test('when deleting the current context, a popup should ask confirmation', async () => {
   vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
   vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   render(PreferencesKubernetesContextsRendering, {});
   const currentContext = screen.getAllByRole('row')[1];
@@ -181,7 +181,7 @@ test('when deleting the current context, a popup should ask confirmation', async
 test('when deleting the non current context, no popup should ask confirmation', async () => {
   vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
   vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   render(PreferencesKubernetesContextsRendering, {});
   const currentContext = screen.getAllByRole('row')[0];

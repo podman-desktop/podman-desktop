@@ -33,7 +33,7 @@ beforeAll(() => {
 });
 
 test('Check cleanupProviders is called and button is in progress', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean Up' });
 
   render(TroubleshootingRepairCleanup);
 
@@ -75,7 +75,7 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 });
 
 test('Check errors are displayed with clipboard button', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean Up' });
 
   render(TroubleshootingRepairCleanup);
 

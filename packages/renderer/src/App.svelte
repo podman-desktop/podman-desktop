@@ -8,6 +8,9 @@ import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
+import SecretCreate from '/@/lib/secrets/SecretCreate.svelte';
+import SecretDetails from '/@/lib/secrets/SecretDetails.svelte';
+import SecretsList from '/@/lib/secrets/SecretsList.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
@@ -18,7 +21,7 @@ import Appearance from './lib/appearance/Appearance.svelte';
 import ComposeDetails from './lib/compose/ComposeDetails.svelte';
 import ConfigMapDetails from './lib/configmaps-secrets/ConfigMapDetails.svelte';
 import ConfigMapSecretList from './lib/configmaps-secrets/ConfigMapSecretList.svelte';
-import SecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
+import KubernetesSecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
 import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
@@ -186,7 +189,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
       {/each}
 
       <div
-        class="flex flex-col w-full h-full overflow-hidden"
+        class="flex flex-col w-full min-w-0 h-full overflow-hidden"
         class:bg-[var(--pd-content-bg)]={!meta.url.startsWith('/preferences')}
         class:bg-[var(--pd-invert-content-bg)]={meta.url.startsWith('/preferences')}>
         <TaskManager />
@@ -211,7 +214,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
         </Route>
 
-        <Route path="/kube/play" breadcrumb="Podman Kube Play">
+        <Route path="/kube/play" breadcrumb="Podman kube play">
           <KubePlayYAML />
         </Route>
 
@@ -221,9 +224,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
           <Route path="/existing-image-create-container" breadcrumb="Select image" >
             <CreateContainerFromExistingImage />
-          </Route>
-          <Route path="/run/*" breadcrumb="Run Image">
-            <RunImage />
           </Route>
           <Route path="/build" breadcrumb="Build an Image" let:meta>
             <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
@@ -245,13 +245,24 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
           <Route
             path="/:id/:engineId/:base64RepoTag/*"
-            breadcrumb="Image Details"
             let:meta
-            navigationHint="details">
-            <ImageDetails
-              imageID={meta.params.id}
-              engineId={decodeURI(meta.params.engineId)}
-              base64RepoTag={meta.params.base64RepoTag} />
+            firstmatch>
+            <Route path="/run/*" breadcrumb="Run Image">
+              <RunImage
+                imageID={meta.params.id}
+                engineId={decodeURI(meta.params.engineId)}
+                base64RepoTag={meta.params.base64RepoTag}
+              />
+            </Route>
+            <Route
+              path="/*"
+              breadcrumb="Image Details"
+              navigationHint="details">
+              <ImageDetails
+                imageID={meta.params.id}
+                engineId={decodeURI(meta.params.engineId)}
+                base64RepoTag={meta.params.base64RepoTag} />
+            </Route>
           </Route>
         </Route>
         <Route
@@ -304,7 +315,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/pod-create-from-containers" breadcrumb="Create Pod">
           <PodCreateFromContainers />
         </Route>
-        
+
         <Route path="/volumes/*" breadcrumb="Volumes" navigationHint="root" firstmatch>
           <Route path="/" breadcrumb="Volumes" navigationHint="root">
             <VolumesList />
@@ -314,6 +325,19 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
           <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
             <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+          </Route>
+        </Route>
+
+        <!--- secrets -->
+        <Route path="/secrets/*" breadcrumb="Secrets" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Secrets" navigationHint="root">
+            <SecretsList />
+          </Route>
+          <Route path="/create" breadcrumb="Create a Secret">
+            <SecretCreate />
+          </Route>
+          <Route path="/:engineId/:secretId/*" breadcrumb="Secret Details" let:meta navigationHint="details">
+            <SecretDetails secretId={decodeURIComponent(meta.params.secretId)} engineId={decodeURIComponent(meta.params.engineId)} />
           </Route>
         </Route>
         {#if $kubernetesNoCurrentContext}
@@ -410,7 +434,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             breadcrumb="Secret Details"
             let:meta
             navigationHint="details">
-            <SecretDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
+            <KubernetesSecretDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route
             path="/kubernetes/ingressesRoutes/route/:name/:namespace/*"

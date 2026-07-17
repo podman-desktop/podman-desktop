@@ -47,7 +47,7 @@ async function hideModal(confirm = true): Promise<void> {
     buttons: ['Close', 'Cancel'],
   });
 
-  if (result?.response === 0) {
+  if (result?.response === 'Close') {
     closeModal();
     hasContent = false;
   }

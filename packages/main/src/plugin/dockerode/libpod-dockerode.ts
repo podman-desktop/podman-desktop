@@ -238,6 +238,7 @@ export interface LibPod {
   podmanAttach(containerId: string): Promise<NodeJS.ReadWriteStream>;
   getPodInspect(podId: string): Promise<LibPodPodInspectInfo>;
   startPod(podId: string): Promise<void>;
+  unpausePod(podId: string): Promise<void>;
   stopPod(podId: string): Promise<void>;
   removePod(podId: string, options?: PodRemoveOptions): Promise<void>;
   resolveShortnameImage(shortname: string): Promise<{ Names: string[] }>;
@@ -256,6 +257,15 @@ export interface LibPod {
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
   podmanRemoveManifest(manifestName: string): Promise<void>;
   updateNetwork(networkId: string, addDNSServer: string[], removeDNSServer: string[]): Promise<void>;
+  /**
+   * The compatibility endpoint to delete a secret on the podman service has an issue where the path is not recognised;
+   * Therefore, we need to use the official libpod api to be able to remove a secret
+   *
+   * Ref https://github.com/containers/podman/issues/27548
+   * This has been fixed in podman >=5.7
+   * @param secretId
+   */
+  removeSecret(secretId: string): Promise<void>;
 }
 
 // change the method from private to public as we're overriding it
@@ -530,7 +540,7 @@ export class LibpodDockerode {
         statusCodes: {
           200: true,
           204: true,
-          304: 'pod already stopped',
+          304: 'pod already started',
           404: 'no such pod',
           409: 'unexpected error',
           500: 'server error',
@@ -556,6 +566,29 @@ export class LibpodDockerode {
               return reject(err.json.Errs.join(' '));
             }
 
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
+        });
+      });
+    };
+
+    // add unpausePod
+    prototypeOfDockerode.unpausePod = function (podId: string): Promise<void> {
+      const optsf = {
+        path: `/v4.2.0/libpod/pods/${podId}/unpause`,
+        method: 'POST',
+        statusCodes: {
+          200: true,
+          404: 'no such pod',
+          409: 'unexpected error',
+          500: 'server error',
+        },
+      };
+
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
             return reject(err);
           }
           resolve(wrapAs<void>(data));
@@ -940,6 +973,27 @@ export class LibpodDockerode {
         path: `/v4.2.0/libpod/networks/${networkId}/update`,
         method: 'POST',
         options: options,
+        statusCodes: {
+          200: true,
+          204: true,
+          400: 'bad parameter',
+          500: 'server error',
+        },
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
+        });
+      });
+    };
+
+    prototypeOfDockerode.removeSecret = function (secretId: string): Promise<void> {
+      const optsf = {
+        path: `/v4.2.0/libpod/secrets/${secretId}`,
+        method: 'DELETE',
         statusCodes: {
           200: true,
           204: true,

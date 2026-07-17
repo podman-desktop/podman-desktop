@@ -18,8 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInfo } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -27,12 +28,13 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
-import { runImageInfo } from '/@/stores/run-image-store';
 
 import PullImage from './PullImage.svelte';
 
+vi.mock(import('/@/navigation'));
 vi.mock(import('/@/lib/ui/TerminalWindow.svelte'));
 
 beforeAll(() => {
@@ -430,18 +432,15 @@ test('Expect details action to open pulled image summary route', async () => {
 });
 
 test('Expect run action to set image info and go to run page', async () => {
-  const gotoSpy = vi.spyOn(router, 'goto');
-  const runImageInfoSetSpy = vi.spyOn(runImageInfo, 'set');
-  vi.mocked(window.listImages).mockResolvedValue([
-    {
-      Id: 'sha256:1234567890123',
-      RepoTags: ['docker.io/library/alpine:latest'],
-      Created: 1644009612,
-      Size: 123,
-      engineId: 'podman',
-      engineName: 'podman',
-    } as never,
-  ]);
+  const image = {
+    Id: 'sha256:1234567890123',
+    RepoTags: ['docker.io/library/alpine:latest'],
+    Created: 1644009612,
+    Size: 123,
+    engineId: 'podman',
+    engineName: 'podman',
+  } as unknown as ImageInfo;
+  vi.mocked(window.listImages).mockResolvedValue([image]);
   render(PullImage, { imageToPull: 'docker.io/alpine' });
 
   const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
@@ -450,15 +449,14 @@ test('Expect run action to set image info and go to run page', async () => {
   await userEvent.click(runButton);
 
   await vi.waitFor(() => {
-    expect(runImageInfoSetSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'sha256:1234567890123',
-        engineId: 'podman',
-        name: 'docker.io/library/alpine',
-        tag: 'latest',
-      }),
-    );
-    expect(gotoSpy).toHaveBeenLastCalledWith('/images/run/basic');
+    expect(handleNavigation).toHaveBeenCalledWith({
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        base64RepoTag: btoa(image.RepoTags?.[0] ?? ''),
+        engineId: image.engineId,
+        id: image.Id,
+      },
+    });
   });
 });
 

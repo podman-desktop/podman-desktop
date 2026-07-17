@@ -86,8 +86,11 @@ export class ElectronRunner extends Runner {
       throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
     }
 
-    // Direct Electron console to Node terminal.
-    this.getPage().on('console', console.log);
+    // Direct Electron console to Node terminal and collect in buffer.
+    this.getPage().on('console', msg => {
+      this.pushConsoleMessage(msg.text());
+      console.log(msg);
+    });
 
     // Start playwright tracing
     await this.startTracing();

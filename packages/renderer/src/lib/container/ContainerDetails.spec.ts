@@ -116,8 +116,8 @@ test('Expect show tty if container has tty enabled', async () => {
 
 test('Expect redirect to previous page if container is deleted', async () => {
   getConfigurationValueMock.mockResolvedValue(undefined);
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Delete' (confirmed)
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   router.goto('/');
 
   vi.mocked(window.getContainerInspect).mockResolvedValue({

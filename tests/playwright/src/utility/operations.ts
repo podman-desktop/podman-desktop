@@ -135,6 +135,60 @@ export async function deleteRegistry(page: Page, name: string, failIfNotExist = 
   });
 }
 
+export async function createRegistryAndVerify(
+  page: Page,
+  url: string,
+  username: string,
+  pswd: string,
+  registryLabel: string,
+  handleUntrustedCert?: boolean,
+): Promise<void> {
+  return test.step('Create registry and verify', async () => {
+    const navigationBar = new NavigationBar(page);
+    const settingsBar = await navigationBar.openSettings();
+    const registryPage = await settingsBar.openTabPage(RegistriesPage);
+    await registryPage.createRegistry(url, username, pswd, handleUntrustedCert);
+    const registryRow = await registryPage.getRegistryRowByName(registryLabel);
+    await playExpect(registryRow.getByText(username)).toBeVisible({ timeout: 50_000 });
+  });
+}
+
+export async function removeRegistryAndVerify(page: Page, registryLabel: string, username: string): Promise<void> {
+  return test.step('Remove registry and verify', async () => {
+    const navigationBar = new NavigationBar(page);
+    const settingsBar = await navigationBar.openSettings();
+    const registryPage = await settingsBar.openTabPage(RegistriesPage);
+    await registryPage.removeRegistry(registryLabel);
+    const registryRow = await registryPage.getRegistryRowByName(registryLabel);
+    await playExpect(registryRow.getByText(username)).toBeHidden();
+  });
+}
+
+export async function pushImageExpectFailure(page: Page, pushButton: Locator): Promise<string> {
+  return test.step('Push image and expect failure', async () => {
+    const dialog = page.getByRole('dialog', { name: 'Push image', exact: true });
+
+    await playExpect(pushButton).toBeEnabled();
+    await pushButton.click();
+
+    await playExpect(dialog).toBeVisible({ timeout: 10_000 });
+
+    const pushConfirmButton = dialog.getByRole('button', { name: 'Push image' });
+    await playExpect(pushConfirmButton).toBeEnabled();
+    await pushConfirmButton.click();
+
+    const doneButton = dialog.getByRole('button', { name: 'Done' });
+    await playExpect(doneButton).toBeEnabled({ timeout: 60_000 });
+
+    const dialogContent = (await dialog.textContent()) ?? '';
+
+    await doneButton.click();
+    await playExpect(dialog).toBeHidden({ timeout: 10_000 });
+
+    return dialogContent;
+  });
+}
+
 export async function deletePod(page: Page, name: string, timeout = 50_000): Promise<void> {
   return test.step(`Delete pod ${name}`, async () => {
     const navigationBar = new NavigationBar(page);

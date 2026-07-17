@@ -52,7 +52,7 @@ class StatusHolder {
 }
 
 test('Expect no error and status deleting ingress', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 }); // Mock confirmation dialog
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' }); // Mock confirmation dialog
 
   const ingressUI: IngressUI = new StatusHolder('RUNNING') as unknown as IngressUI;
   ingressUI.name = 'my-ingress';
@@ -74,7 +74,7 @@ test('Expect no error and status deleting ingress', async () => {
 });
 
 test('Expect no error and status deleting route', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 }); // Mock confirmation dialog
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' }); // Mock confirmation dialog
 
   const routeUI: RouteUI = new StatusHolder('RUNNING') as unknown as RouteUI;
   routeUI.name = 'my-route';

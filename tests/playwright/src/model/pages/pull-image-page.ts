@@ -36,11 +36,12 @@ export class PullImagePage extends BasePage {
   readonly cancelButton: Locator;
   readonly viewDetailsButton: Locator;
   readonly runButton: Locator;
+  readonly pullErrorMessage: Locator;
 
   constructor(page: Page) {
     super(page);
     this.heading = page.getByRole('heading', {
-      name: 'Pull Image From a Registry',
+      name: 'Pull an Image From a Registry',
     });
     this.pullImageButton = page.getByRole('button', { name: 'Pull' });
     this.closeLink = page.getByRole('link', { name: 'Close' });
@@ -60,12 +61,13 @@ export class PullImagePage extends BasePage {
     this.cancelButton = this.tabContent.getByRole('button', { name: 'Cancel', exact: true });
     this.viewDetailsButton = this.tabContent.getByRole('button', { name: 'View details', exact: true });
     this.runButton = this.tabContent.getByRole('button', { name: 'Run', exact: true });
+    this.pullErrorMessage = page.getByRole('alert').filter({ hasText: 'no running provider' });
   }
 
   async pullImage(imageName: string, tag = '', timeout = 60_000): Promise<ImagesPage> {
     return test.step(`Pulling image ${imageName}:${tag}`, async () => {
       await this.startPull(imageName, tag);
-      await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
+      await this.waitForPullCompletion(timeout);
       await this.closeButton.click();
       return new ImagesPage(this.page);
     });
@@ -75,7 +77,7 @@ export class PullImagePage extends BasePage {
     return test.step(`Pull image and view details ${imageName}:${tag}`, async () => {
       const fullImageName = this.buildFullImageName(imageName, tag);
       await this.startPull(imageName, tag);
-      await playExpect(this.viewDetailsButton).toBeEnabled({ timeout: timeout });
+      await this.waitForPullCompletion(timeout);
       await this.viewDetailsButton.click();
       return new ImageDetailsPage(this.page, fullImageName);
     });
@@ -85,7 +87,7 @@ export class PullImagePage extends BasePage {
     return test.step(`Pull image and run ${imageName}:${tag}`, async () => {
       const fullImageName = this.buildFullImageName(imageName, tag);
       await this.startPull(imageName, tag);
-      await playExpect(this.runButton).toBeEnabled({ timeout: timeout });
+      await this.waitForPullCompletion(timeout);
       await this.runButton.click();
       return new RunImagePage(this.page, fullImageName);
     });
@@ -180,7 +182,7 @@ export class PullImagePage extends BasePage {
   async pullImageFromSearchResults(pattern: string, timeout = 60_000): Promise<ImagesPage> {
     return test.step(`Pull image from search results: ${pattern}`, async () => {
       await this.startPullFromSearchResults(pattern);
-      await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
+      await this.waitForPullCompletion(timeout);
       await this.closeButton.click();
       return new ImagesPage(this.page);
     });
@@ -189,7 +191,7 @@ export class PullImagePage extends BasePage {
   async pullImageFromSearchResultsAndViewDetails(pattern: string, timeout = 60_000): Promise<ImageDetailsPage> {
     return test.step(`Pull image from search results and view details: ${pattern}`, async () => {
       await this.startPullFromSearchResults(pattern);
-      await playExpect(this.viewDetailsButton).toBeEnabled({ timeout: timeout });
+      await this.waitForPullCompletion(timeout);
       await this.viewDetailsButton.click();
       return new ImageDetailsPage(this.page, this.extractImageName(pattern));
     });
@@ -198,7 +200,7 @@ export class PullImagePage extends BasePage {
   async pullImageFromSearchResultsAndRun(pattern: string, timeout = 60_000): Promise<RunImagePage> {
     return test.step(`Pull image from search results and run: ${pattern}`, async () => {
       await this.startPullFromSearchResults(pattern);
-      await playExpect(this.runButton).toBeEnabled({ timeout: timeout });
+      await this.waitForPullCompletion(timeout);
       await this.runButton.click();
       return new RunImagePage(this.page, this.extractImageName(pattern));
     });
@@ -251,6 +253,21 @@ export class PullImagePage extends BasePage {
     await this.selectValueFromSearchResults(pattern);
     await playExpect(this.pullImageButton).toBeEnabled();
     await this.pullImageButton.click();
+  }
+
+  private async waitForPullCompletion(timeout: number, maxRetries = 3): Promise<void> {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      await this.page.waitForTimeout(2_000);
+      const errorAppeared = await this.pullErrorMessage.isVisible();
+
+      if (!errorAppeared) break;
+
+      console.log(`Pull failed with "no running provider" error (attempt ${attempt + 1}/${maxRetries}), retrying...`);
+      await playExpect(this.pullImageButton).toBeEnabled();
+      await this.pullImageButton.click();
+    }
+
+    await playExpect(this.closeButton).toBeEnabled({ timeout });
   }
 
   private getAllResultButtonLocators(pattern: string): Promise<Locator[]> {

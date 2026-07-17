@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import { extensionsExternalList, podmanExtension } from '/@/model/core/extension
 import { ExtensionCardPage } from '/@/model/pages/extension-card-page';
 import { ExtensionCatalogCardPage } from '/@/model/pages/extension-catalog-card-page';
 import type { StatusBar } from '/@/model/workbench/status-bar';
+import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { handleConfirmationDialog } from '/@/utility/operations';
 import { isLinux, isMac, isWindows } from '/@/utility/platform';
@@ -38,6 +39,28 @@ let updateDialog: Locator;
 let updateDownloadedDialog: Locator;
 
 test.skip(isLinux, 'Update is not supported on Linux');
+
+test.use({
+  runnerOptions: new RunnerOptions({
+    /**
+     * For performance reasons, disable extensions which are not necessary for the e2e
+     */
+    customSettings: {
+      'preferences.update.appUpdate': true,
+      'extensions.disabled': installExtensions
+        ? []
+        : [
+            'podman-desktop.compose',
+            'podman-desktop.docker',
+            'podman-desktop.kind',
+            'podman-desktop.kube-context',
+            'podman-desktop.kubectl-cli',
+            'podman-desktop.lima',
+            'podman-desktop.registries',
+          ],
+    },
+  }),
+});
 
 test.beforeAll(async ({ runner, page, statusBar }) => {
   runner.setVideoAndTraceName('update-e2e');

@@ -123,6 +123,7 @@ const fakedImageInspect: ImageInspectInfo = {
   VirtualSize: 0,
   engineId: 'engineid',
   engineName: 'engineName',
+  engineType: 'podman',
 };
 
 async function waitRender(customProperties: object): Promise<void> {

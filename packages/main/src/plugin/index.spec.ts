@@ -209,7 +209,7 @@ test('Check SecurityRestrictions on Links and user accept', async () => {
   await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
 
   // expect user click on Yes
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  showMessageBoxMock.mockResolvedValue({ response: 'Open' });
 
   // call with a link
   const value = await securityRestrictionCurrentHandler.handler?.('https://www.my-custom-domain.io');
@@ -236,7 +236,7 @@ test('Check SecurityRestrictions on Links and user copy link', async () => {
   await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
 
   // expect user click on Yes
-  showMessageBoxMock.mockResolvedValue({ response: 1 });
+  showMessageBoxMock.mockResolvedValue({ response: 'Copy Link' });
 
   // call with a link
   const value = await securityRestrictionCurrentHandler.handler?.('https://www.my-custom-domain.io');
@@ -265,7 +265,7 @@ test('Check SecurityRestrictions on Links and user refuses', async () => {
   await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
 
   // expect user click on Yes
-  showMessageBoxMock.mockResolvedValue({ response: 2 });
+  showMessageBoxMock.mockResolvedValue({ response: 'Cancel' });
 
   // call with a link
   const value = await securityRestrictionCurrentHandler.handler?.('https://www.my-custom-domain.io');

@@ -3,7 +3,7 @@
     "module": "esnext",
     "target": "esnext",
     "sourceMap": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "declaration": true,
     "outDir": "dist",
     "rootDirs": ["src", "../../playwright.config.ts"],

@@ -59,7 +59,7 @@ describe('OrCheck', () => {
     expect(orCheck.title).toBe('orcheck');
     const result = await orCheck.execute();
     expect(result.successful).toBeFalsy();
-    expect(result.description).toBe('check has failed');
+    expect(result.description).toBe('failed check: check has failed\nfailed check: check has failed');
   });
 });
 

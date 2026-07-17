@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo } from '@podman-desktop/core-api';
+import { type ContainerInfo, NavigationPage } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -27,6 +27,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import CommandPalette from './CommandPalette.svelte';
 
@@ -630,5 +631,156 @@ describe('Command Palette', () => {
     // Click All tab and verify placeholder changes back
     await userEvent.click(allTab);
     await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Enter category 1 item'));
+  });
+
+  test('Expect GoTo items are extracted from navigation registry destinations', async () => {
+    const mockEntries: NavigationRegistryEntry[] = [
+      {
+        name: 'Containers',
+        icon: {},
+        link: '/containers',
+        tooltip: 'Containers',
+        type: 'entry',
+        counter: 1,
+        destinations: [
+          {
+            page: NavigationPage.CONTAINER_SUMMARY,
+            parameters: { id: 'abc123' },
+            icon: {},
+            name: 'Container: web-app',
+          },
+          {
+            page: NavigationPage.CONTAINERS,
+            icon: {},
+            name: 'Containers (1)',
+          },
+        ],
+      },
+      {
+        name: 'Extensions',
+        icon: {},
+        link: '/extensions',
+        tooltip: 'Extensions',
+        type: 'group',
+        counter: 0,
+        destinations: [
+          {
+            page: NavigationPage.WEBVIEW,
+            parameters: { id: 'my-webview' },
+            icon: {},
+            name: 'Extensions: AI Lab',
+          },
+        ],
+        items: [
+          {
+            name: 'AI Lab',
+            icon: {},
+            link: '/webviews/my-webview',
+            tooltip: 'AI Lab',
+            type: 'entry',
+            counter: 0,
+            destinations: [
+              {
+                page: NavigationPage.WEBVIEW,
+                parameters: { id: 'nested-webview' },
+                icon: {},
+                name: 'Extensions: Nested',
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    navigationRegistry.set(mockEntries);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    // Switch to the GoTo tab (category 4)
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    // Should see all destinations including nested ones
+    await waitFor(() => {
+      expect(screen.getByRole('listitem', { name: 'Container: web-app' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('listitem', { name: 'Containers (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Extensions: AI Lab' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Extensions: Nested' })).toBeInTheDocument();
+  });
+
+  test('Expect hidden navigation entries are excluded from GoTo items', async () => {
+    const mockEntries: NavigationRegistryEntry[] = [
+      {
+        name: 'Visible',
+        icon: {},
+        link: '/visible',
+        tooltip: 'Visible',
+        type: 'entry',
+        counter: 0,
+        destinations: [
+          {
+            page: NavigationPage.CONTAINERS,
+            icon: {},
+            name: 'Visible destination',
+          },
+        ],
+      },
+      {
+        name: 'Hidden parent',
+        icon: {},
+        link: '/hidden-parent',
+        tooltip: 'Hidden parent',
+        type: 'group',
+        hidden: true,
+        counter: 0,
+        destinations: [
+          {
+            page: NavigationPage.PODMAN_PODS,
+            icon: {},
+            name: 'Hidden parent destination',
+          },
+        ],
+        items: [
+          {
+            name: 'Hidden child',
+            icon: {},
+            link: '/hidden-child',
+            tooltip: 'Hidden child',
+            type: 'entry',
+            counter: 0,
+            destinations: [
+              {
+                page: NavigationPage.PODMAN_POD_SUMMARY,
+                parameters: { name: 'pod-a', engineId: 'podman' },
+                icon: {},
+                name: 'Hidden child destination',
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    navigationRegistry.set(mockEntries);
+
+    const { getByRole, queryByRole } = render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = getByRole('button', { name: 'Ctrl+F Category 4 text' });
+    await userEvent.click(gotoTab);
+
+    await waitFor(() => {
+      expect(getByRole('listitem', { name: 'Visible destination' })).toBeInTheDocument();
+    });
+    expect(queryByRole('listitem', { name: 'Hidden parent destination' })).not.toBeInTheDocument();
+    expect(queryByRole('listitem', { name: 'Hidden child destination' })).not.toBeInTheDocument();
   });
 });

@@ -81,7 +81,7 @@ beforeEach(() => {
 
 test('Expect error dialog with correct message when image deletion fails', async () => {
   vi.mocked(withConfirmation).mockImplementation(f => f());
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
   getContributedMenusMock.mockResolvedValue([]);
 
   const image: ImageInfoUI = new Image('dummy', 'UNUSED') as unknown as ImageInfoUI;

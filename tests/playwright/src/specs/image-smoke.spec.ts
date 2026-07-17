@@ -223,7 +223,7 @@ test.describe
       playExpect(await imagesPage.waitForImageDelete('docker.io/library/staged-build-stage2-test')).toBeTruthy();
     });
 
-    test('Prune all images', async ({ navigationBar }) => {
+    test('Filter and prune all images', async ({ navigationBar }) => {
       test.setTimeout(240_000);
 
       const imagesPage = await navigationBar.openImages();
@@ -242,6 +242,22 @@ test.describe
           .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
           .toBeTruthy();
       }
+
+      await test.step('Verify search filtering works for each image', async () => {
+        for (const image of imageList) {
+          await imagesPage.filterByName(image);
+          await playExpect
+            .poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 })
+            .toBeGreaterThanOrEqual(1);
+          await playExpect
+            .poll(async () => await imagesPage.getImageRowByName(image), { timeout: 5_000 })
+            .toBeDefined();
+        }
+        await imagesPage.clearFilterByName();
+        await playExpect
+          .poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 })
+          .toBeGreaterThanOrEqual(imageList.length);
+      });
 
       await imagesPage.pruneImages();
       await playExpect(imagesPage.heading).toBeVisible();

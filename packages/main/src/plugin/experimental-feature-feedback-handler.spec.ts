@@ -299,7 +299,7 @@ describe('showFeedbackDialog', () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 1 });
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 'Share Feedback on GitHub' });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
@@ -316,7 +316,7 @@ describe('showFeedbackDialog', () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 0 });
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 'Remind me later', dropdownIndex: 0 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
@@ -332,7 +332,7 @@ describe('showFeedbackDialog', () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 1 });
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 'Remind me later', dropdownIndex: 1 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
@@ -348,7 +348,7 @@ describe('showFeedbackDialog', () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 2 });
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 'Remind me later', dropdownIndex: 2 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 

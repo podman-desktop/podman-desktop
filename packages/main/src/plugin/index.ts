@@ -112,6 +112,9 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
@@ -471,12 +474,10 @@ export class PluginSystem {
         cancelId: 2,
       });
 
-      if (result.response === 0) {
-        // open externally the URL
+      if (result.response === 'Open') {
         await shell.openExternal(url);
         return true;
-      } else if (result.response === 1) {
-        // copy to clipboard
+      } else if (result.response === 'Copy Link') {
         clipboard.writeText(url);
       }
       return false;
@@ -877,6 +878,31 @@ export class PluginSystem {
       return containerProviderRegistry.listContainers();
     });
 
+    this.ipcHandle('container-provider-registry:listSecrets', async (): Promise<Array<SecretInfo>> => {
+      return containerProviderRegistry.listSecrets();
+    });
+
+    this.ipcHandle(
+      'container-provider-registry:removeSecret',
+      async (_listener, engineId: string, secretId: string): Promise<void> => {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:inspectSecret',
+      async (_listener, engineId: string, secretId: string): Promise<SecretInfo> => {
+        return containerProviderRegistry.inspectSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:createSecret',
+      async (_listener, options: SecretCreateOptions): Promise<SecretCreateResult> => {
+        return containerProviderRegistry.createSecret(options);
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:listSimpleContainersByLabel',
       async (_listener, label: string, key: string): Promise<SimpleContainerInfo[]> => {
@@ -1015,6 +1041,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:unpausePod',
+      async (_listener, engine: string, podId: string): Promise<void> => {
+        return containerProviderRegistry.unpausePod(engine, podId);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:restartPod',
       async (_listener, engine: string, podId: string): Promise<void> => {
         return containerProviderRegistry.restartPod(engine, podId);
@@ -1146,6 +1178,12 @@ export class PluginSystem {
       'container-provider-registry:startContainer',
       async (_listener, engine: string, containerId: string): Promise<void> => {
         return containerProviderRegistry.startContainer(engine, containerId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:unpauseContainer',
+      async (_listener, engine: string, containerId: string): Promise<void> => {
+        return containerProviderRegistry.unpauseContainer(engine, containerId);
       },
     );
     this.ipcHandle(
@@ -3386,6 +3424,13 @@ export class PluginSystem {
       'extension-development-folders:removeDevelopmentFolder',
       async (_listener: unknown, path: string): Promise<void> => {
         return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development:getExtensionDevelopmentDocsLink',
+      async (_listener): Promise<string | undefined> => {
+        return product.extensions.developmentDocumentation;
       },
     );
 

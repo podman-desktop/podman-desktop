@@ -33,6 +33,7 @@ import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode'
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
+  PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
   PODMAN_MACHINE_EDIT_CPU,
@@ -3954,6 +3955,29 @@ describe('monitorProvider', () => {
 
     await vi.runAllTimersAsync();
     expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('activate sets PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY', () => {
+  const cases = (
+    [
+      ['5.0.0', false],
+      ['5.4.2', false],
+      ['5.9.9', false],
+      ['6.0.0', true],
+      ['6.1.0', true],
+      ['6.3.2', true],
+      ['7.0.0', true],
+    ] as const
+  ).map(([version, supported]) => ({ version, supported }));
+
+  test.for(cases)('Podman $version sets native CA import supported to $supported', async ({ version, supported }) => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version } as InstalledPodman);
+    vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
+      hasUpdate: false,
+    } as unknown as UpdateCheck);
+    await extension.activate(getContextMock());
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, supported);
   });
 });
 
