@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,12 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Table, TableColumn, tablePersistence } from '/@/lib';
 import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
 import { Column, Row } from '/@/lib/table/table';
+import { collapsedStateMap } from '/@/lib/table/table-persistence-store.svelte';
 
 import TestTable from './TestTable.svelte';
 
@@ -648,5 +649,151 @@ describe('Table#collapsed', () => {
     // Should not have layout management button
     const layoutButton = screen.queryByTitle('Configure Columns');
     expect(layoutButton).not.toBeInTheDocument();
+  });
+});
+
+describe('Table collapse state persistence across remounts', () => {
+  interface Item {
+    id: string;
+    name?: string;
+  }
+
+  const ROW = new Row<Item>({
+    children: (item): Item[] => [{ id: `${item.id}-child`, name: `${item.name} child` }],
+  });
+
+  const COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name ?? 'unknown',
+    renderer: SimpleColumn,
+  });
+
+  beforeEach(() => {
+    collapsedStateMap.clear();
+  });
+
+  test('collapsed state is restored when Table with same kind is remounted', async () => {
+    const data: Item[] = [{ id: 'group1', name: 'Group 1' }];
+
+    const { unmount, getByRole } = render(Table<Item>, {
+      kind: 'remount-test',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    const collapseBtn = getByRole('button', { name: 'Collapse Row' });
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'true');
+
+    await fireEvent.click(collapseBtn);
+
+    const expandBtn = getByRole('button', { name: 'Expand Row' });
+    expect(expandBtn).toHaveAttribute('aria-expanded', 'false');
+
+    unmount();
+
+    const { getByRole: getByRole2 } = render(Table<Item>, {
+      kind: 'remount-test',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    const expandBtn2 = getByRole2('button', { name: 'Expand Row' });
+    expect(expandBtn2).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('different kind values maintain independent collapsed state', async () => {
+    const data: Item[] = [{ id: 'group1', name: 'Group 1' }];
+
+    const { unmount, getByRole } = render(Table<Item>, {
+      kind: 'kind-a',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    await fireEvent.click(getByRole('button', { name: 'Collapse Row' }));
+    unmount();
+
+    const { getByRole: getByRole2 } = render(Table<Item>, {
+      kind: 'kind-b',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    const collapseBtn = getByRole2('button', { name: 'Collapse Row' });
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('expanding a previously collapsed row updates the persisted state', async () => {
+    const data: Item[] = [{ id: 'group1', name: 'Group 1' }];
+
+    const { unmount, getByRole } = render(Table<Item>, {
+      kind: 'toggle-back-test',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    await fireEvent.click(getByRole('button', { name: 'Collapse Row' }));
+    await fireEvent.click(getByRole('button', { name: 'Expand Row' }));
+
+    unmount();
+
+    const { getByRole: getByRole2 } = render(Table<Item>, {
+      kind: 'toggle-back-test',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    const collapseBtn = getByRole2('button', { name: 'Collapse Row' });
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('multiple rows persist their individual collapsed state', async () => {
+    const data: Item[] = [
+      { id: 'g1', name: 'Group 1' },
+      { id: 'g2', name: 'Group 2' },
+    ];
+
+    const { unmount, getAllByRole } = render(Table<Item>, {
+      kind: 'multi-row-test',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    const collapseButtons = getAllByRole('button', { name: 'Collapse Row' });
+    expect(collapseButtons).toHaveLength(2);
+
+    await fireEvent.click(collapseButtons[0]);
+
+    unmount();
+
+    const { getByRole: getByRole2 } = render(Table<Item>, {
+      kind: 'multi-row-test',
+      data,
+      columns: [COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+    });
+
+    const g1Row = getByRole2('row', { name: 'Group 1' });
+    const g1Btn = within(g1Row).getByRole('button', { name: 'Expand Row' });
+    expect(g1Btn).toHaveAttribute('aria-expanded', 'false');
+
+    const g2Row = getByRole2('row', { name: 'Group 2' });
+    const g2Btn = within(g2Row).getByRole('button', { name: 'Collapse Row' });
+    expect(g2Btn).toHaveAttribute('aria-expanded', 'true');
   });
 });

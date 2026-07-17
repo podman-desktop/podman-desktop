@@ -4281,6 +4281,42 @@ test('check createPod uses running podman connection if ProviderContainerConnect
   expect(result.engineId).equal('podman1');
 });
 
+describe('unpausePod', () => {
+  test('test unpause Pod', async () => {
+    const unpauseMock = vi.fn().mockResolvedValue({});
+
+    const fakeLibPod = {
+      unpausePod: unpauseMock,
+    } as unknown as LibPod;
+
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(fakeLibPod);
+
+    await containerRegistry.unpausePod('podman1', '1234');
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+
+  test('test unpause Pod for error handling', async () => {
+    const unpauseError = new Error('unpause failed');
+    const unpauseMock = vi.fn().mockRejectedValue(unpauseError);
+
+    const fakeLibPod = {
+      unpausePod: unpauseMock,
+    } as unknown as LibPod;
+
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(fakeLibPod);
+
+    await expect(containerRegistry.unpausePod('podman1', '1234')).rejects.toThrow(unpauseError);
+
+    expect(telemetry.track).toHaveBeenCalledWith(
+      'unpausePod',
+      expect.objectContaining({
+        error: unpauseError,
+      }),
+    );
+    expect(unpauseMock).toHaveBeenCalled();
+  });
+});
+
 test('check that fails if there is no podman provider running', async () => {
   const internalProvider = {
     name: 'podman1',
@@ -4821,6 +4857,9 @@ describe('listImages', () => {
     const internalContainerProvider = {
       name: 'dummyName',
       id: 'dummyId',
+      connection: {
+        type: 'podman',
+      },
       api: {
         listImages: vi.fn(),
       },
@@ -4850,6 +4889,7 @@ describe('listImages', () => {
       Id: 'dummyImageId',
       engineId: 'dummyId',
       engineName: 'dummyName',
+      engineType: 'podman',
       Digest: 'sha256:dummyImageId',
     });
   });
@@ -5051,6 +5091,7 @@ test('pass options to compat api when using podmanListImages', async () => {
 
   expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
     all: true,
+    digests: true,
     filters: '{"dangling":["false"]}',
   });
 });
@@ -6659,7 +6700,7 @@ describe('createSecret', () => {
       containerRegistry.createSecret({
         name: 'my-secret',
         data: 'secret-value',
-        selectedProvider: undefined,
+        provider: undefined,
       }),
     ).rejects.toThrow('cannot create secret without selected provider');
   });
@@ -6686,7 +6727,7 @@ describe('createSecret', () => {
       containerRegistry.createSecret({
         name: 'my-secret',
         data: 'secret-value',
-        selectedProvider: {
+        provider: {
           name: 'podman',
           endpoint: { socketPath: '/endpoint1.sock' },
         } as ProviderContainerConnectionInfo,
@@ -6719,7 +6760,7 @@ describe('createSecret', () => {
     const result = await containerRegistry.createSecret({
       name: 'my-secret',
       data: 'secret-value',
-      selectedProvider: {
+      provider: {
         name: 'podman',
         endpoint: { socketPath: '/endpoint1.sock' },
       } as ProviderContainerConnectionInfo,
@@ -6759,7 +6800,7 @@ describe('createSecret', () => {
       name: 'my-secret',
       data: 'secret-value',
       labels: { env: 'prod' },
-      selectedProvider: {
+      provider: {
         name: 'podman',
         endpoint: { socketPath: '/endpoint1.sock' },
       } as ProviderContainerConnectionInfo,
@@ -6799,7 +6840,7 @@ describe('createSecret', () => {
     await containerRegistry.createSecret({
       name: 'my-secret',
       data: 'secret-value',
-      selectedProvider: {
+      provider: {
         name: 'podman',
         endpoint: { socketPath: '/endpoint1.sock' },
       } as ProviderContainerConnectionInfo,
@@ -6836,7 +6877,7 @@ describe('createSecret', () => {
       containerRegistry.createSecret({
         name: 'my-secret',
         data: 'secret-value',
-        selectedProvider: {
+        provider: {
           name: 'podman',
           endpoint: { socketPath: '/endpoint1.sock' },
         } as ProviderContainerConnectionInfo,

@@ -3,10 +3,8 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 /* eslint-enable import/no-duplicates */
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
@@ -14,60 +12,56 @@ import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos } from '/@/stores/volumes';
 
-let providers: ProviderInfo[] = [];
-let providerConnections: ProviderContainerConnectionInfo[] = [];
-let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
+interface Props {
+  volumeName?: string;
+}
+const { volumeName: initialVolumeName = '' }: Props = $props();
 
-onMount(async () => {
-  providers = get(providerInfos);
-  providerConnections = providers
-    .map(provider => provider.containerConnections)
-    .flat()
-    .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-
-  selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-  selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
-});
-
-let createVolumeInProgress = false;
-let createError: string | undefined = undefined;
-let volumeNameError: string | undefined = undefined;
-let invalidName = false;
-onDestroy(() => {});
-
-function checkVolumeName(nameValue: string, provider: ProviderContainerConnectionInfo | undefined): void {
-  if (!nameValue || !provider) {
-    volumeNameError = undefined;
-    invalidName = false;
-    return;
-  }
-
-  const parentProvider = providers.find(p => p.containerConnections.includes(provider));
-  const engineId = parentProvider ? `${parentProvider.id}.${provider.name}` : undefined;
-
-  const volumeAlreadyExists = engineId
-    ? $volumeListInfos
-        .filter(vli => vli.engineId === engineId)
-        .flatMap(vli => vli.Volumes)
-        .some(volume => volume.Name === nameValue)
-    : false;
-
-  if (volumeAlreadyExists) {
-    volumeNameError = `The name "${nameValue}" already exists. Please choose a different name.`;
-    invalidName = true;
-  } else {
-    volumeNameError = undefined;
-    invalidName = false;
-  }
+interface ConnectionWithEngine {
+  connection: ProviderContainerConnectionInfo;
+  engineId: string;
 }
 
-$: checkVolumeName(volumeName, selectedProvider);
+let volumeName = $state(initialVolumeName);
+let selectedIndex = $state(-1);
+let createVolumeInProgress = $state(false);
+let createError: string | undefined = $state(undefined);
+let createVolumeFinished = $state(false);
+
+let connectionsWithEngine: ConnectionWithEngine[] = $derived(
+  $providerInfos.flatMap(provider =>
+    provider.containerConnections
+      .filter(c => c.status === 'started')
+      .map(c => ({ connection: c, engineId: `${provider.id}.${c.name}` })),
+  ),
+);
+
+let providerConnections = $derived(connectionsWithEngine.map(x => x.connection));
+let selectedProvider = $derived(providerConnections[selectedIndex]);
+let selectedEngineId = $derived(connectionsWithEngine[selectedIndex]?.engineId);
+
+$effect(() => {
+  if (connectionsWithEngine.length === 0) {
+    selectedIndex = -1;
+  } else if (selectedIndex < 0 || selectedIndex >= connectionsWithEngine.length) {
+    selectedIndex = 0;
+  }
+});
+
+let invalidName = $derived.by(() => {
+  if (!volumeName || !selectedEngineId) return false;
+  return $volumeListInfos
+    .filter(vli => vli.engineId === selectedEngineId)
+    .flatMap(vli => vli.Volumes)
+    .some(volume => volume.Name === volumeName);
+});
+
+let volumeNameError: string | undefined = $derived(
+  invalidName ? `The name "${volumeName}" already exists. Please choose a different name.` : undefined,
+);
 
 async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
   createError = undefined;
-  volumeNameError = undefined;
-  invalidName = false;
   createVolumeInProgress = true;
   try {
     await window.createVolume(providerConnectionInfo, { Name: volumeName });
@@ -83,10 +77,6 @@ function end(): void {
   // redirect to the volumes page
   router.goto('/volumes');
 }
-
-let createVolumeFinished = false;
-
-export let volumeName = '';
 </script>
 
 <EngineFormPage
@@ -111,23 +101,23 @@ export let volumeName = '';
             class="w-full p-2 outline-hidden bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
             aria-label="Provider Choice"
             disabled={createVolumeFinished}
-            bind:value={selectedProvider}>
+            bind:value={selectedIndex}>
             {#each providerConnections as providerConnection, index (index)}
-              <option value={providerConnection}>{providerConnection.name}</option>
+              <option value={index}>{providerConnection.name}</option>
             {/each}
           </select>
         </label>
       {/if}
     </div>
-    {#if providerConnections.length === 1 && selectedProviderConnection}
-      <input type="hidden" aria-label="Provider Choice" readonly bind:value={selectedProvider} />
+    {#if providerConnections.length === 1 && providerConnections[0]}
+      <input type="hidden" aria-label="Provider Choice" readonly value={selectedIndex} />
     {/if}
 
     <div class="w-full flex flex-row space-x-4">
       {#if !createVolumeFinished && selectedProvider}
         {@const connection = selectedProvider}
         <Button
-          on:click={(): Promise<void> => createVolume(connection)}
+          onclick={(): Promise<void> => createVolume(connection)}
           disabled={createVolumeInProgress || invalidName}
           class="w-full"
           inProgress={createVolumeInProgress}
@@ -137,7 +127,7 @@ export let volumeName = '';
       {/if}
 
       {#if createVolumeFinished}
-        <Button on:click={end} class="w-full">Done</Button>
+        <Button onclick={end} class="w-full">Done</Button>
       {/if}
     </div>
 

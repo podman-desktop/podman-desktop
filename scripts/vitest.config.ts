@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,12 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { defineConfig } from 'vitest/config';
 
-import type { Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
-
-import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
-
-/**
- * Defines the store used to define the image to run when starting a container.
- */
-export const runImageInfo: Writable<ImageInfoUI> = writable();
+export default defineConfig({
+  test: {
+    name: 'scripts',
+    include: ['**/*.spec.ts'],
+    environment: 'node',
+  },
+});

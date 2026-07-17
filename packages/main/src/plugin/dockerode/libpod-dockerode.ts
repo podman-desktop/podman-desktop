@@ -238,6 +238,7 @@ export interface LibPod {
   podmanAttach(containerId: string): Promise<NodeJS.ReadWriteStream>;
   getPodInspect(podId: string): Promise<LibPodPodInspectInfo>;
   startPod(podId: string): Promise<void>;
+  unpausePod(podId: string): Promise<void>;
   stopPod(podId: string): Promise<void>;
   removePod(podId: string, options?: PodRemoveOptions): Promise<void>;
   resolveShortnameImage(shortname: string): Promise<{ Names: string[] }>;
@@ -565,6 +566,29 @@ export class LibpodDockerode {
               return reject(err.json.Errs.join(' '));
             }
 
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
+        });
+      });
+    };
+
+    // add unpausePod
+    prototypeOfDockerode.unpausePod = function (podId: string): Promise<void> {
+      const optsf = {
+        path: `/v4.2.0/libpod/pods/${podId}/unpause`,
+        method: 'POST',
+        statusCodes: {
+          200: true,
+          404: 'no such pod',
+          409: 'unexpected error',
+          500: 'server error',
+        },
+      };
+
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
             return reject(err);
           }
           resolve(wrapAs<void>(data));

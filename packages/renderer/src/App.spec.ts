@@ -36,6 +36,9 @@ const mocks = vi.hoisted(() => ({
   SubmenuNavigation: vi.fn(),
   DeploymentsList: vi.fn(),
   KubernetesDashboard: vi.fn(),
+  SecretsList: vi.fn(),
+  SecretDetails: vi.fn(),
+  SecretCreate: vi.fn(),
 }));
 
 vi.mock(import('./lib/dashboard/DashboardPage.svelte'), () => ({
@@ -68,6 +71,17 @@ vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
   default: mocks.DeploymentsList,
 }));
 
+vi.mock(import('./lib/secrets/SecretsList.svelte'), () => ({
+  default: mocks.SecretsList,
+}));
+vi.mock(import('./lib/secrets/SecretCreate.svelte'), () => ({
+  default: mocks.SecretCreate,
+}));
+
+vi.mock(import('./lib/secrets/SecretDetails.svelte'), () => ({
+  default: mocks.SecretDetails,
+}));
+
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
@@ -90,11 +104,11 @@ beforeEach(() => {
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
-test('test /images/run/* route', async () => {
+test('test /images/an-image/an-engine/tag/run/basic route', async () => {
   render(App);
   expect(mocks.RunImage).not.toHaveBeenCalled();
   expect(mocks.DashboardPage).toHaveBeenCalled();
-  router.goto('/images/run/basic');
+  router.goto('/images/an-image/an-engine/tag/run/basic');
   await tick();
   expect(mocks.RunImage).toHaveBeenCalled();
 });
@@ -145,6 +159,7 @@ test('opens submenu when a `submenu` menu is opened', async () => {
       get counter(): number {
         return 0;
       },
+      destinations: [],
       items: [{} as NavigationRegistryEntry],
     },
   ]);
@@ -174,6 +189,41 @@ test('displays kubernetes empty screen if no current context, without Kubernetes
   expect(mocks.SubmenuNavigation).not.toHaveBeenCalled();
 });
 
+test('test /secrets route', async () => {
+  render(App);
+  expect(mocks.SecretsList).not.toHaveBeenCalled();
+  expect(mocks.DashboardPage).toHaveBeenCalled();
+  router.goto('/secrets');
+
+  await vi.waitFor(() => {
+    expect(mocks.SecretsList).toHaveBeenCalled();
+  });
+});
+
+test('test /secrets/create route', async () => {
+  render(App);
+  expect(mocks.SecretCreate).not.toHaveBeenCalled();
+
+  router.goto('/secrets/create');
+  await vi.waitFor(() => {
+    expect(mocks.SecretCreate).toHaveBeenCalled();
+  });
+});
+
+test('test /secrets/:engineId/:secretId/* route', async () => {
+  render(App);
+  expect(mocks.SecretDetails).not.toHaveBeenCalled();
+  expect(mocks.DashboardPage).toHaveBeenCalled();
+  router.goto('/secrets/engine%201/secret%2Fid/summary');
+
+  await vi.waitFor(() => {
+    expect(mocks.SecretDetails).toHaveBeenCalledWith(expect.anything(), {
+      secretId: 'secret/id',
+      engineId: 'engine 1',
+    });
+  });
+});
+
 test('receive show-release-notes event from main', async () => {
   render(App);
 
@@ -190,7 +240,7 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
       link: '/pods',
       tooltip: 'Pods',
       type: 'entry',
-
+      destinations: [],
       get counter(): number {
         return 0;
       },
@@ -201,7 +251,7 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
       link: '/images',
       tooltip: 'Images',
       type: 'entry',
-
+      destinations: [],
       get counter(): number {
         return 0;
       },

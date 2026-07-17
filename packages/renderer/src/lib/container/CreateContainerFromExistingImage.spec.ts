@@ -19,17 +19,24 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo, ProviderStatus } from '@podman-desktop/api';
-import type { ImageSearchResult, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import {
+  type ImageSearchResult,
+  NavigationPage,
+  type ProviderContainerConnectionInfo,
+  type ProviderInfo,
+} from '@podman-desktop/core-api';
 import { render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
-import { router } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
 
 import CreateContainerFromExistingImage from './CreateContainerFromExistingImage.svelte';
+
+vi.mock(import('/@/navigation'));
 
 const registryImageList: ImageSearchResult[] = [
   { name: 'image12', description: '', star_count: 3, is_official: true },
@@ -226,7 +233,18 @@ test('Expect a local image to have an active run image button', async () => {
   expect(selectImagebutton).not.toBeDisabled();
 
   await user.click(selectImagebutton);
-  expect(router.goto).toHaveBeenCalledWith('/images/run/basic');
+  await vi.waitFor(() => {
+    const selected = localImageList[localImageList.length - 1];
+
+    expect(handleNavigation).toHaveBeenCalledWith({
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        base64RepoTag: expect.any(String),
+        engineId: selected.engineId,
+        id: selected.Id,
+      },
+    });
+  });
 });
 
 test('Expect no user input to show only local images', async () => {

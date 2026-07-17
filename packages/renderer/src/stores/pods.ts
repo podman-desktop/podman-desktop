@@ -34,6 +34,8 @@ const windowEvents = [
   'container-removed-event',
   'container-created-event',
   'container-started-event',
+  'container-paused-event',
+  'container-unpaused-event',
   'provider-change',
   'provider-container-connection-update-status',
   'pod-event',

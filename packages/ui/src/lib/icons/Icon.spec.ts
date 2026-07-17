@@ -33,6 +33,14 @@ describe('font awesome', () => {
     expect(img).not.toHaveAttribute('style');
   });
 
+  test('icon with ariaHidden should be hidden from screen readers', () => {
+    render(Icon, { icon: faGithub, ariaHidden: true });
+
+    const svg = screen.getByRole('img', { hidden: true });
+    expect(svg).toBeInTheDocument();
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+  });
+
   test('icon should reflect prefered {number}x size', () => {
     render(Icon, { icon: faGithub, size: '2x' });
 
@@ -84,6 +92,15 @@ describe('class icon', () => {
     expect(img.nodeName).toBe('SPAN');
   });
 
+  test('icon with ariaHidden should not have role img', () => {
+    const { container } = render(Icon, { icon: 'fas fa-icon', ariaHidden: true });
+
+    const span = container.querySelector('span');
+    expect(span).toBeInTheDocument();
+    expect(span).not.toHaveAttribute('role');
+    expect(span).toHaveAttribute('aria-hidden', 'true');
+  });
+
   test('icon should reflect prefered fa-{number}x size', () => {
     render(Icon, { icon: 'fas fa-icon', size: 'fa-2x' });
 
@@ -126,6 +143,15 @@ describe('component icon', () => {
     expect(img).toBeInTheDocument();
   });
 
+  test('icon with ariaHidden should not have role img', () => {
+    const { container } = render(Icon, { icon: ContainerIcon, ariaHidden: true });
+
+    const span = container.querySelector('span');
+    expect(span).toBeInTheDocument();
+    expect(span).not.toHaveAttribute('role');
+    expect(span).toHaveAttribute('aria-hidden', 'true');
+  });
+
   test('icon should reflect prefered {number} size', () => {
     render(Icon, { icon: ContainerIcon, size: '42' });
 
@@ -161,6 +187,17 @@ describe('string icon', () => {
     const img = screen.getByRole('img', { hidden: true });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', icon);
+  });
+
+  test('icon with ariaHidden should not have role img', () => {
+    const icon = 'data:image/png;base64,fooBar';
+    const { container } = render(Icon, { icon: icon, ariaHidden: true });
+
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).not.toHaveAttribute('role');
+    expect(img).toHaveAttribute('aria-hidden', 'true');
+    expect(img).toHaveAttribute('alt', '');
   });
 
   test('icon should reflect prefered {number} size', () => {

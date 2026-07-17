@@ -35,6 +35,7 @@ export interface NavigationParameters {
   [NavigationPage.IMAGES]: never;
   [NavigationPage.IMAGE_BUILD]: { taskId: number | undefined };
   [NavigationPage.IMAGE]: { id: string; engineId: string; tag: string };
+  [NavigationPage.IMAGE_RUN]: { id: string; engineId: string; base64RepoTag: string };
   [NavigationPage.MANIFEST]: { id: string; engineId: string; tag: string };
   [NavigationPage.ONBOARDING]: { extensionId: string };
   [NavigationPage.PODMAN_PODS]: never;
@@ -60,6 +61,9 @@ export interface NavigationParameters {
   [NavigationPage.CONTAINER_CONNECTION]: { provider: string; name: string; socketPath: string };
   [NavigationPage.KUBERNETES_CONNECTION]: { provider: string; apiURL: string };
   [NavigationPage.VM_CONNECTION]: { provider: string; name: string };
+  [NavigationPage.SECRETS]: never;
+  [NavigationPage.SECRET]: { id: string; engineId: string };
+  [NavigationPage.SECRET_CREATE]: never;
 }
 
 // the parameters property is optional when the NavigationParameters say it is
@@ -71,3 +75,9 @@ export type NavigationRequest<T extends NavigationPage> = NavigationParameters[T
       page: T;
       parameters: NavigationParameters[T];
     };
+
+// help method to ensure the handleNavigation is able to infer type properly through the switch
+// ref https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+export type InferredNavigationRequest<T extends NavigationPage> = T extends NavigationPage
+  ? NavigationRequest<T>
+  : never;

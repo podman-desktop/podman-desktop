@@ -448,11 +448,11 @@ export class ContainerProviderRegistry {
   }
 
   async createSecret(options: SecretCreateOptions): Promise<SecretCreateResult> {
-    if (!options.selectedProvider) throw new Error('cannot create secret without selected provider');
+    if (!options.provider) throw new Error('cannot create secret without selected provider');
 
     const telemetryOptions: Record<string, unknown> = {};
     try {
-      const provider = this.getMatchingContainerProvider(options.selectedProvider);
+      const provider = this.getMatchingContainerProvider(options.provider);
       if (!provider.api) throw new Error(`provider ${provider.name} has no api`);
       const { id } = await provider.api.createSecret({
         // The data need to be encoded in base64 url safe
@@ -772,12 +772,13 @@ export class ContainerProviderRegistry {
           if (!provider.api) {
             return [];
           }
-          const images = await provider.api.listImages({ all: false });
+          const images = await provider.api.listImages({ all: false, digests: true });
           return images.map(image => {
             const imageInfo: ImageInfo = {
               ...image,
               engineName: provider.name,
               engineId: provider.id,
+              engineType: provider.connection.type,
               Digest: `sha256:${image.Id}`,
             };
             return imageInfo;
@@ -824,6 +825,7 @@ export class ContainerProviderRegistry {
           // Create list options with explicit defaults
           const listOptions = {
             all: options?.all ?? false,
+            digests: true,
             filters: options?.filters,
           };
 
@@ -856,6 +858,7 @@ export class ContainerProviderRegistry {
                 ...image,
                 engineName: provider.name,
                 engineId: provider.id,
+                engineType: provider.connection.type,
                 isManifest,
                 Id: image.Digest ? `sha256:${image.Id}` : image.Id,
                 Digest: image.Digest ?? `sha256:${image.Id}`,
@@ -1545,6 +1548,18 @@ export class ContainerProviderRegistry {
       throw error;
     } finally {
       this.telemetryService.track('startPod', telemetryOptions);
+    }
+  }
+
+  async unpausePod(engineId: string, podId: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingPodmanEngineLibPod(engineId).unpausePod(podId);
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpausePod', telemetryOptions);
     }
   }
 
@@ -2511,6 +2526,7 @@ export class ContainerProviderRegistry {
       return {
         engineName: provider.name,
         engineId: provider.id,
+        engineType: provider.connection.type,
         ...imageInspect,
       };
     } catch (error) {

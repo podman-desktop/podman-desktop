@@ -394,6 +394,9 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('startPod', async (engine: string, podId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:startPod', engine, podId);
   });
+  contextBridge.exposeInMainWorld('unpausePod', async (engine: string, podId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:unpausePod', engine, podId);
+  });
   contextBridge.exposeInMainWorld('restartPod', async (engine: string, podId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:restartPod', engine, podId);
   });
@@ -2741,6 +2744,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('trackExtensionFolder', async (path: string): Promise<void> => {
     return ipcInvoke('extension-development-folders:addDevelopmentFolder', path);
+  });
+
+  contextBridge.exposeInMainWorld('getExtensionDevelopmentDocsLink', async (): Promise<string | undefined> => {
+    return ipcInvoke('extension-development:getExtensionDevelopmentDocsLink');
   });
 
   contextBridge.exposeInMainWorld(

@@ -75,6 +75,7 @@ beforeEach(() => {
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
   vi.mocked(product).extensions = {
     remote: [],
+    developmentDocumentation: '',
   };
 
   vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue(MANIFEST_MOCK);

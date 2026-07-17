@@ -33,6 +33,7 @@ import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
   PODMAN_DOCKER_COMPAT_ENABLE_KEY,
+  PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
   PODMAN_MACHINE_EDIT_CPU,
@@ -1342,6 +1343,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionApi.context.setValue(START_NOW_MACHINE_INIT_SUPPORTED_KEY, isStartNowAtMachineInitSupported(version));
     extensionApi.context.setValue(USER_MODE_NETWORKING_SUPPORTED_KEY, isUserModeNetworkingSupported(version));
     extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, isLibkrunSupported(version));
+    extensionApi.context.setValue(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, isPodman6OrLater(version));
     isMovedPodmanSocket = isPodmanSocketLocationMoved(version);
   }
 
@@ -1936,6 +1938,10 @@ export function setWSLEnabled(enabled: boolean): void {
 
 export function isPodman5OrLater(podmanVersion: string): boolean {
   return compare(podmanVersion, '5.0.0') >= 0;
+}
+
+export function isPodman6OrLater(podmanVersion: string): boolean {
+  return compare(podmanVersion, '6.0.0') >= 0;
 }
 
 export function sendTelemetryRecords(

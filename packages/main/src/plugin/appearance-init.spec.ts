@@ -196,10 +196,10 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.default).toBe(0);
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBeCloseTo(0.1);
 
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.description).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.type).toBe('string');
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
-    AppearanceSettings.IconAndTitle,
-  );
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.description).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.type).toBe('number');
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.minimum).toBe(50);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.maximum).toBe(240);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.default).toBe(160);
 });

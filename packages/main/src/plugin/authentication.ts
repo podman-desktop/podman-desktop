@@ -27,7 +27,9 @@ import type {
 } from '@podman-desktop/api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo, SessionRequestInfo } from '@podman-desktop/core-api/authentication';
-import { inject, injectable } from 'inversify';
+import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { inject, injectable, postConstruct } from 'inversify';
+import * as z from 'zod';
 
 import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
@@ -61,11 +63,15 @@ export interface ExtensionInfo {
   icon?: string | { light: string; dark: string };
 }
 
-export interface AllowedExtension {
-  id: string;
-  name: string;
-  allowed?: boolean;
-}
+export const AllowedExtensionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  allowed: z.boolean().optional(),
+});
+
+export type AllowedExtension = z.output<typeof AllowedExtensionSchema>;
+
+export const AllowedExtensionRecordSchema = z.record(z.string(), z.array(AllowedExtensionSchema));
 
 interface AccountUsageRecord {
   providerId: string;
@@ -127,16 +133,56 @@ export class AuthenticationImpl {
   private _signInRequestsData: Map<string, SessionRequestInfo> = new Map();
   // store account usage to show confirmation when sign out requested
   private _accountUsageData: AccountUsageRecord[] = [];
-  // In-memory store for extension allowances
-  // Key format: `${providerId}:${accountId}` -> AllowedExtension[]
-  private _extensionAllowances: Map<string, AllowedExtension[]> = new Map();
 
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
     @inject(MessageBox)
     private messageBox: MessageBox,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
   ) {}
+
+  @postConstruct()
+  init(): void {
+    this.configurationRegistry.registerConfigurations([
+      {
+        id: 'authentication',
+        title: 'Authentication',
+        type: 'object',
+        properties: {
+          'authentication.trustedExtensions': {
+            type: 'object',
+            default: {},
+            hidden: true,
+            description: 'Trusted extensions for authentication providers',
+          },
+        },
+      },
+    ]);
+  }
+
+  /**
+   * Reads trusted extensions from configuration. Expected JSON shape:
+   * {
+   *   "providerId:accountId": [
+   *     { "id": "ext.one", "name": "Extension One", "allowed": true },
+   *     { "id": "ext.two", "name": "Extension Two", "allowed": false }
+   *   ]
+   * }
+   */
+  private get extensionAllowances(): Record<string, AllowedExtension[]> {
+    const config = this.configurationRegistry.getConfiguration('authentication');
+    const raw = config.get<unknown>('trustedExtensions');
+
+    const { data, success, error } = AllowedExtensionRecordSchema.safeParse(raw);
+    if (success) {
+      return data;
+    }
+
+    console.error('configuration registry has invalid trustedExtensions', z.prettifyError(error));
+    return {};
+  }
 
   public async getAuthenticationProvidersInfo(): Promise<AuthenticationProviderInfo[]> {
     const values = Array.from(this._authenticationProviders.values());
@@ -239,13 +285,14 @@ export class AuthenticationImpl {
     );
   }
 
+  /**
+   * Builds a stable key for storing per-account extension allowances.
+   * The accountId is a provider-specific stable user identifier (e.g. OIDC `sub`
+   * claim for Red Hat SSO, numeric user ID for GitHub) that remains constant
+   * across sessions and scopes.
+   */
   private getAllowanceKey(providerId: string, accountId: string): string {
     return `${providerId}:${accountId}`;
-  }
-
-  readAllowedExtensions(providerId: string, accountId: string): AllowedExtension[] {
-    const key = this.getAllowanceKey(providerId, accountId);
-    return this._extensionAllowances.get(key) ?? [];
   }
 
   updateAllowedExtension(
@@ -256,18 +303,21 @@ export class AuthenticationImpl {
     isAllowed: boolean,
   ): void {
     const key = this.getAllowanceKey(providerId, accountId);
-    const allowances = this._extensionAllowances.get(key) ?? [];
+    const allAllowances = this.extensionAllowances;
+    const allowances = allAllowances[key] ?? [];
 
     const existingIndex = allowances.findIndex(ext => ext.id === extensionId);
     if (existingIndex > -1) {
-      // Update existing entry
       allowances[existingIndex] = { id: extensionId, name: extensionName, allowed: isAllowed };
     } else {
-      // Add new entry
       allowances.push({ id: extensionId, name: extensionName, allowed: isAllowed });
     }
 
-    this._extensionAllowances.set(key, allowances);
+    allAllowances[key] = allowances;
+    const config = this.configurationRegistry.getConfiguration('authentication');
+    config.update('trustedExtensions', allAllowances).catch((err: unknown) => {
+      console.error('Failed to persist trusted extensions to settings', err);
+    });
     this.apiSender.send('authentication-provider-update', { id: providerId });
   }
 
@@ -281,10 +331,10 @@ export class AuthenticationImpl {
    */
   isAccessAllowed(providerId: string, accountId: string, extensionId: string): boolean | undefined {
     const key = this.getAllowanceKey(providerId, accountId);
-    const allowances = this._extensionAllowances.get(key);
+    const allowances = this.extensionAllowances[key];
 
     if (!allowances) {
-      return undefined; // No decision made yet
+      return undefined;
     }
 
     const extensionAllowance = allowances.find(ext => ext.id === extensionId);
@@ -449,6 +499,7 @@ export class AuthenticationImpl {
     if (session) {
       this._signInRequestsData.delete(id);
       this._signInRequests.delete(data.providerId);
+      this.updateAllowedExtension(data.providerId, session.account.id, data.extensionId, data.extensionLabel, true);
     }
   }
 

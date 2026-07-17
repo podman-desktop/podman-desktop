@@ -23,6 +23,7 @@ import { Octokit } from '@octokit/rest';
 import type { Logger, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
+import product from '../product.json' with { type: 'json' };
 import { getSystemBinaryPath, installBinaryToSystem } from './cli-run';
 import type { ComposeGithubReleaseArtifactMetadata } from './compose-github-releases';
 import { ComposeGitHubReleases } from './compose-github-releases';
@@ -46,7 +47,7 @@ export function initTelemetryLogger(): void {
 
 const composeCliName = 'docker-compose';
 const composeDisplayName = 'Compose';
-const composeDescription = `The Compose extension provides optional command line support for [Compose files](https://compose-spec.io/) with Podman.\n\nMore information: [Podman Desktop Documentation](https://podman-desktop.io/docs/tags/compose)`;
+const composeDescription = product.composeDescription ?? '';
 const imageLocation = './icon.png';
 
 let binaryVersion: string | undefined;

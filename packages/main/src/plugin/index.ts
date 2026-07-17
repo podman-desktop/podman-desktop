@@ -1041,6 +1041,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:unpausePod',
+      async (_listener, engine: string, podId: string): Promise<void> => {
+        return containerProviderRegistry.unpausePod(engine, podId);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:restartPod',
       async (_listener, engine: string, podId: string): Promise<void> => {
         return containerProviderRegistry.restartPod(engine, podId);
@@ -3418,6 +3424,13 @@ export class PluginSystem {
       'extension-development-folders:removeDevelopmentFolder',
       async (_listener: unknown, path: string): Promise<void> => {
         return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development:getExtensionDevelopmentDocsLink',
+      async (_listener): Promise<string | undefined> => {
+        return product.extensions.developmentDocumentation;
       },
     );
 

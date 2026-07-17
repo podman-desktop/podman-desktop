@@ -19,7 +19,7 @@
 import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { handleConfirmationDialog } from '/@/utility/operations';
-import { isCI, isLinux } from '/@/utility/platform';
+import { isLinux } from '/@/utility/platform';
 
 test.skip(isLinux, 'Applicaton update is not supported on Linux');
 
@@ -56,10 +56,6 @@ test.afterAll(async ({ runner }) => {
 test.describe
   .serial('Application update reminder preferences set to Never', { tag: '@update-install' }, () => {
     test('No update on startup', async ({ page, welcomePage }) => {
-      test.skip(
-        !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
-        'Only run on macOS and Windows in GitHub Actions',
-      );
       const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
       await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 20_000 });
       await welcomePage.handleWelcomePage(true);

@@ -29,7 +29,8 @@
     "default": "https://registry.podman-desktop.io/api/extensions.json"
   },
   "extensions": {
-    "remote": []
+    "remote": [],
+    "developmentDocumentation": "https://podman-desktop.io/docs/extensions/developing"
   },
   "helpMenu": {
     "items": [

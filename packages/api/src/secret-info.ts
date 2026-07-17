@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { ContainerProviderConnection } from '@podman-desktop/api';
+
 import type { ProviderContainerConnectionInfo } from '/@/provider-info.js';
 
 export interface SecretInfo {
@@ -30,7 +32,7 @@ export interface SecretInfo {
 
 export interface SecretCreateOptions {
   name: string;
-  selectedProvider: ProviderContainerConnectionInfo | undefined;
+  provider?: ProviderContainerConnectionInfo | ContainerProviderConnection;
   data: string;
   labels?: Record<string, string>;
 }

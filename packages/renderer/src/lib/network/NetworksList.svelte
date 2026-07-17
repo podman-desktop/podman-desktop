@@ -151,7 +151,7 @@ function key(network: NetworkInfoUI): string {
   {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full grow">
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />

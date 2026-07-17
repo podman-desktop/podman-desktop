@@ -17,7 +17,7 @@ import type { ListOrganizerItem } from '../layouts/ListOrganizer';
 import ListOrganizer from '../layouts/ListOrganizer.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
-import { tablePersistence } from './table-persistence-store.svelte';
+import { collapsedStateMap, tablePersistence } from './table-persistence-store.svelte';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +25,7 @@ export let columns: Column<T, any>[];
 export let row: Row<T>;
 export let data: T[];
 export let defaultSortColumn: string | undefined = undefined;
-export let collapsed: string[] = [];
+export let collapsed: string[] = collapsedStateMap.get(kind) ?? [];
 /**
  * To better distinct individual row, you can provide a dedicated key method
  *
@@ -332,6 +332,7 @@ function toggleChildren(name: string | undefined): void {
   }
   // trigger Svelte update
   collapsed = collapsed;
+  collapsedStateMap.set(kind, [...collapsed]);
 }
 
 // Handle column order changes from ListOrganizer

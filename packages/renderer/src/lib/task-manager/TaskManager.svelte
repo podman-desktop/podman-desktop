@@ -65,7 +65,7 @@ const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
       {/snippet}
 
       {#snippet content()}
-      <div class="flex min-w-full h-full">
+      <div class="flex min-w-full grow">
         <TaskManagerTable bind:selectedItemsNumber={selectedItemsNumber} tasks={$filtered} />
         {#if $filtered.length === 0}
           <TaskManagerNoFilteredTasks bind:searchTerm={searchTerm} />

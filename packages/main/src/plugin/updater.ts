@@ -335,6 +335,12 @@ export class Updater {
             default: isWindows(),
             hidden: true,
           },
+          ['preferences.update.appUpdate']: {
+            description: 'Check for application updates',
+            type: 'boolean',
+            default: true,
+            hidden: false,
+          },
         },
       },
     ]);
@@ -348,6 +354,10 @@ export class Updater {
     return this.configurationRegistry
       .getConfiguration('preferences')
       .get<boolean>('update.disableDifferentialDownload', isWindows());
+  }
+
+  private getAppUpdateEnabled(): boolean {
+    return this.configurationRegistry.getConfiguration('preferences').get<boolean>('update.appUpdate', true);
   }
 
   /**
@@ -465,6 +475,10 @@ export class Updater {
   }
 
   public updateAvailable(): boolean {
+    if (!this.getAppUpdateEnabled()) {
+      console.log('Application update is disabled with preferences.update.appUpdate settings');
+      return false;
+    }
     return !!this.#nextVersion;
   }
 
@@ -490,6 +504,7 @@ export class Updater {
     autoUpdater.disableDifferentialDownload = this.getDisableDifferentialDownloadConfigurationValue();
 
     this.registerDefaultCommands();
+    this.registerConfiguration();
 
     // Only check on production builds for Windows and macOS users
     if (!import.meta.env.PROD || isLinux()) {
@@ -497,8 +512,12 @@ export class Updater {
       return Disposable.noop();
     }
 
+    if (!this.getAppUpdateEnabled()) {
+      this.defaultVersionEntry();
+      return Disposable.noop();
+    }
+
     this.registerCommands();
-    this.registerConfiguration();
 
     // setup the event listeners
     autoUpdater.on('update-available', this.onUpdateAvailable.bind(this));

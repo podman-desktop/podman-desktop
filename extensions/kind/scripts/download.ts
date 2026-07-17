@@ -19,7 +19,8 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
+import { Octokit } from '@octokit/rest';
+import type { RestEndpointMethodTypes } from '@octokit/rest';
 import type { OctokitResponse } from '@octokit/types';
 import type { OctokitOptions } from '@octokit/core/types';
 type ReposGetContentResponseData = RestEndpointMethodTypes['repos']['getContent']['response']['data'] & {
@@ -43,7 +44,7 @@ const octokit = new Octokit(octokitOptions);
 export {};
 
 async function download(tagVersion: string, repoPath: string, fileName: string): Promise<void> {
-  const destDir = path.resolve(__dirname, '..', 'src', 'resources');
+  const destDir = path.resolve(import.meta.dirname, '..', 'src', 'resources');
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir);
   }

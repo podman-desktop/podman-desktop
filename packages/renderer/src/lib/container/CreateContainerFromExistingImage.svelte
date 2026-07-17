@@ -1,10 +1,11 @@
 <script lang="ts">
 import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import type {
-  ImageInfo,
-  ImageSearchOptions,
-  ProviderContainerConnectionInfo,
-  PullEvent,
+import {
+  type ImageInfo,
+  type ImageSearchOptions,
+  NavigationPage,
+  type ProviderContainerConnectionInfo,
+  type PullEvent,
 } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
@@ -22,9 +23,9 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
+import { handleNavigation } from '/@/navigation';
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
-import { runImageInfo } from '/@/stores/run-image-store';
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
@@ -298,8 +299,14 @@ async function buildContainerFromImage(): Promise<void> {
   if (localImages.length > 0) {
     const chosenImage = imageUtils.getImagesInfoUI(localImages[0], []);
     if (chosenImage.length > 0) {
-      runImageInfo.set(chosenImage[0]);
-      router.goto('/images/run/basic');
+      handleNavigation({
+        page: NavigationPage.IMAGE_RUN,
+        parameters: {
+          id: chosenImage[0].id,
+          engineId: chosenImage[0].engineId,
+          base64RepoTag: chosenImage[0].base64RepoTag,
+        },
+      });
     }
   }
 }
