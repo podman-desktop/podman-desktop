@@ -88,6 +88,7 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { isWindows } from '/@/util.js';
 
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
@@ -1421,6 +1422,49 @@ export class ContainerProviderRegistry {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
 
+  private completeUpdateImagesTask(task: Task, results: ImageUpdateResult[]): void {
+    if (results.length === 1) {
+      const result = results[0];
+      if (!result) {
+        task.status = 'success';
+        return;
+      }
+      task.name = `Update ${result.imageRef}: ${result.message}`;
+      if (result.status === 'error') {
+        task.error = result.message;
+        task.status = 'failure';
+      } else {
+        task.status = 'success';
+      }
+      return;
+    }
+
+    const updatedCount = results.filter(result => result.updated).length;
+    const upToDateCount = results.filter(result => result.status === 'normal' && !result.updated).length;
+    const skippedCount = results.filter(result => result.status === 'skipped').length;
+    const failedResults = results.filter(result => result.status === 'error');
+    const parts = [
+      this.formatUpdateImagesTaskPart(updatedCount, 'updated'),
+      this.formatUpdateImagesTaskPart(upToDateCount, 'already up to date'),
+      this.formatUpdateImagesTaskPart(skippedCount, 'skipped'),
+      this.formatUpdateImagesTaskPart(failedResults.length, 'failed'),
+    ].filter(part => part.length > 0);
+
+    if (parts.length > 0) {
+      task.name = `Image update results: ${parts.join(', ')}`;
+    }
+    if (failedResults.length > 0) {
+      task.error = failedResults.map(result => `${result.imageRef}: ${result.message}`).join('\n');
+      task.status = 'failure';
+    } else {
+      task.status = 'success';
+    }
+  }
+
+  private formatUpdateImagesTaskPart(count: number, label: string): string {
+    return count > 0 ? `${count} ${label}` : '';
+  }
+
   async updateImages(images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> {
     const cancellationTokenSourceId = this.cancellationTokenRegistry.createCancellationTokenSource();
     const cancellationTokenSource =
@@ -1484,7 +1528,11 @@ export class ContainerProviderRegistry {
         const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
         return { imageRef: images[index]!.image, updated: false, status: 'error', message };
       });
-      task.status = cancellationTokenSource.token.isCancellationRequested ? 'canceled' : 'success';
+      if (cancellationTokenSource.token.isCancellationRequested) {
+        task.status = 'canceled';
+      } else {
+        this.completeUpdateImagesTask(task, results);
+      }
       return results;
     } catch (error: unknown) {
       if (cancellationTokenSource.token.isCancellationRequested) {

@@ -7337,6 +7337,7 @@ describe('updateImages', () => {
       cancellable: true,
       cancellationTokenSourceId: expect.any(Number),
     });
+    expect(task.name).toBe('Update nginx:latest: Up to date');
     expect(task.status).toBe('success');
   });
 
@@ -7443,6 +7444,9 @@ describe('updateImages', () => {
       expect.objectContaining({ imageRef: 'missing:latest', updated: false, status: 'error' }),
       { imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' },
     ]);
+    expect(task.name).toBe('Image update results: 1 already up to date, 1 failed');
+    expect(task.error).toContain('missing:latest:');
+    expect(task.status).toBe('failure');
     expect(telemetryTrackMock).toHaveBeenCalledTimes(2);
   });
 
@@ -7471,6 +7475,9 @@ describe('updateImages', () => {
     expect(results[0]).toEqual(expect.objectContaining({ updated: true, status: 'updated', imageRef: 'nginx:latest' }));
     expect(results[1]?.updated).toBe(false);
     expect(results[1]?.status).toBe('error');
+    expect(task.name).toBe('Image update results: 1 updated, 1 failed');
+    expect(task.error).toBe('redis:latest: Registry unavailable');
+    expect(task.status).toBe('failure');
     expect(pullMock).toHaveBeenCalledTimes(1);
     expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
       authconfig: undefined,
