@@ -828,7 +828,7 @@ const envDialogOptions: OpenDialogOptions = {
                 </div>
               {/each}
 
-              {#if imageInspectInfo?.engineName === 'Podman'}
+              {#if imageInspectInfo?.engineType === 'podman'}
                 <label
                   for="secrets"
                   class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"

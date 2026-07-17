@@ -58,6 +58,7 @@ beforeEach(() => {
   console.error = vi.fn();
   vi.clearAllMocks();
   secretsInfo.set([]);
+  router.goto('/basic');
 });
 
 afterEach(() => {
