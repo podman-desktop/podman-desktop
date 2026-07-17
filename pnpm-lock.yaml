@@ -860,7 +860,7 @@ importers:
         version: 5.56.4(@typescript-eslint/types@8.64.0)
       svelte-check:
         specifier: ^4.7.2
-        version: 4.7.2(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3)
+        version: 4.7.2(picomatch@4.0.5)(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3)
       svelte-eslint-parser:
         specifier: ^1.8.0
         version: 1.8.0(svelte@5.56.4(@typescript-eslint/types@8.64.0))
@@ -957,7 +957,7 @@ importers:
         version: 5.56.4(@typescript-eslint/types@8.64.0)
       svelte-check:
         specifier: ^4.7.2
-        version: 4.7.2(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3)
+        version: 4.7.2(picomatch@4.0.5)(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3)
       svelte-eslint-parser:
         specifier: ^1.8.0
         version: 1.8.0(svelte@5.56.4(@typescript-eslint/types@8.64.0))
@@ -1068,7 +1068,7 @@ importers:
         version: 5.56.4(@typescript-eslint/types@8.64.0)
       svelte-check:
         specifier: ^4.7.2
-        version: 4.7.2(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3)
+        version: 4.7.2(picomatch@4.0.5)(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3)
       tailwindcss:
         specifier: ^4.3.2
         version: 4.3.2
@@ -11862,10 +11862,6 @@ packages:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
     engines: {node: '>=6'}
 
-  tough-cookie@6.0.1:
-    resolution: {integrity: sha512-LktZQb3IeoUWB9lqR5EWTHgW/VTITCXg4D21M+lvybRVdylLrRMnqaIONLVb5mav8vM19m44HIcGq4qASeu2Qw==}
-    engines: {node: '>=16'}
-
   tough-cookie@6.0.2:
     resolution: {integrity: sha512-exgYmnmL/sJpR3upZfXG5PoatXQii55xAiXGXzY+sROLZ/Y+SLcp9PgJNI9Vz37HpQ74WvDcLT8eqm+kV3FzrA==}
     engines: {node: '>=16'}
@@ -14628,7 +14624,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.10.1(acorn@8.17.0)(esbuild@0.28.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@types/react-router-config': 5.0.11
       combine-promises: 1.2.0
-      fs-extra: 11.3.5
+      fs-extra: 11.3.6
       js-yaml: 4.3.0
       lodash: 4.18.1
       react: 18.2.0
@@ -15242,7 +15238,7 @@ snapshots:
       read-binary-file-arch: 1.0.6
       semver: 7.8.5
       tar: 7.5.20
-      yargs: 17.7.2
+      yargs: 17.7.3
     transitivePeerDependencies:
       - supports-color
 
@@ -15252,7 +15248,7 @@ snapshots:
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.4.3
       dir-compare: 4.2.0
-      fs-extra: 11.3.5
+      fs-extra: 11.3.6
       minimatch: 9.0.9
       plist: 3.1.0
     transitivePeerDependencies:
@@ -17229,7 +17225,7 @@ snapshots:
     dependencies:
       '@types/http-cache-semantics': 4.2.0
       '@types/keyv': 3.1.4
-      '@types/node': 26.1.1
+      '@types/node': 24.13.3
       '@types/responselike': 1.0.3
 
   '@types/chai@5.2.3':
@@ -17429,7 +17425,7 @@ snapshots:
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 24.13.3
 
   '@types/geojson@7946.0.16': {}
 
@@ -17475,7 +17471,7 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 24.13.3
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -17520,7 +17516,7 @@ snapshots:
 
   '@types/plist@3.0.5':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 24.13.3
       xmlbuilder: 15.1.1
     optional: true
 
@@ -17560,7 +17556,7 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 24.13.3
 
   '@types/retry@0.12.2': {}
 
@@ -20939,7 +20935,6 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
       universalify: 2.0.1
-    optional: true
 
   fs-extra@7.0.1:
     dependencies:
@@ -21925,7 +21920,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 24.13.3
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -21991,11 +21986,11 @@ snapshots:
       decimal.js: 10.6.0
       html-encoding-sniffer: 6.0.0
       is-potential-custom-element-name: 1.0.1
-      lru-cache: 11.3.5
+      lru-cache: 11.4.0
       parse5: 8.0.1
       saxes: 6.0.0
       symbol-tree: 3.2.4
-      tough-cookie: 6.0.1
+      tough-cookie: 6.0.2
       undici: 7.28.0
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
@@ -25554,7 +25549,7 @@ snapshots:
       svelte: 5.56.4(@typescript-eslint/types@8.64.0)
       zimmerframe: 1.1.2
 
-  svelte-check@4.7.2(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3):
+  svelte-check@4.7.2(picomatch@4.0.5)(svelte@5.56.4(@typescript-eslint/types@8.64.0))(typescript@6.0.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@sveltejs/load-config': 0.2.0
@@ -25808,10 +25803,6 @@ snapshots:
   toidentifier@1.0.1: {}
 
   totalist@3.0.1: {}
-
-  tough-cookie@6.0.1:
-    dependencies:
-      tldts: 7.4.7
 
   tough-cookie@6.0.2:
     dependencies:
