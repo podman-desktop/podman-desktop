@@ -16,8 +16,8 @@ import { providerInfos } from '/@/stores/providers';
 let createError: string | undefined = $state(undefined);
 let loading = $state(false);
 
-let secretCreateOptions: SecretCreateOptions = $state({
-  selectedProvider: undefined,
+let secretCreateOptions: SecretCreateOptions & { provider?: ProviderContainerConnectionInfo } = $state({
+  provider: undefined,
   name: '',
   data: '',
 });
@@ -30,19 +30,19 @@ let providerConnections = $derived(
 );
 
 $effect(() => {
-  if (providerConnections.length > 0 && secretCreateOptions.selectedProvider === undefined) {
-    secretCreateOptions.selectedProvider = providerConnections[0];
+  if (providerConnections.length > 0 && secretCreateOptions.provider === undefined) {
+    secretCreateOptions.provider = providerConnections[0];
   }
 });
 
 let valid = $derived(
-  secretCreateOptions.selectedProvider !== undefined &&
+  secretCreateOptions.provider !== undefined &&
     secretCreateOptions.name.trim().length > 0 &&
     secretCreateOptions.data.length > 0,
 );
 
 async function createSecret(): Promise<void> {
-  if (!secretCreateOptions.selectedProvider) return;
+  if (!secretCreateOptions.provider) return;
 
   try {
     loading = true;
@@ -74,7 +74,7 @@ function close(): void {
           <ContainerConnectionDropdown
             id="providerChoice"
             name="providerChoice"
-            bind:value={secretCreateOptions.selectedProvider}
+            bind:value={secretCreateOptions.provider}
             connections={providerConnections} />
         </div>
       {/if}
