@@ -3,7 +3,9 @@
  * 'important' configuration so default style will be Tailwind css
  */
 
-@import 'tailwindcss';
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
 @config '../../tailwind.config.js';
 
 /* Manrope latin subset font */
@@ -199,7 +201,7 @@ li.footer__item a svg {
   align-items: center;
 }
 
-a {
+article a {
   color: var(--ifm-link-color);
 }
 

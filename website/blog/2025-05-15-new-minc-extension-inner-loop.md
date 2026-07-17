@@ -16,7 +16,7 @@ In this blog post, we’ll introduce a new extension called `MINC (MicroShift IN
 
 ![hero](/img/blog/iterate-quickly-inner-loop-with-a-kubernetes-cluster/iterate-quickly-inner-loop-with-a-kubernetes-cluster.png)
 
-<!--truncate-->
+{/_ truncate _/}
 
 ---
 

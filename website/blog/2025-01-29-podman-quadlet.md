@@ -22,7 +22,7 @@ What’s a more lightweight solution for running autonomous applications with mu
 
 In this blog, we'll dive into what Quadlets are, their benefits, and how to use them within Podman Desktop.
 
-<!-- truncate -->
+{/_ truncate _/}
 
 ## What Are Quadlets?
 

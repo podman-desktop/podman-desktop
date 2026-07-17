@@ -13,7 +13,7 @@ Let see how we can use a [Development Container](https://containers.dev/) having
 
 The challenges are to run a desktop tool (Podman Desktop) and running a container engine (Podman) inside this Development Container without using too many memory !
 
-<!--truncate-->
+{/_ truncate _/}
 
 ## Defining image of the container
 
@@ -30,8 +30,6 @@ FROM quay.io/fedora/fedora:37
 ```
 
 Then I install Node.js 16 from official nodejs.org repository. It's easier to switch to the version that we need.
-
-<!-- markdownlint-disable MD034 -->
 
 ```docker
 # install Node.js + yarn

@@ -12,16 +12,16 @@ Installing an extension is a great way to expand the capabilities of Podman Desk
 
 #### Procedure
 
-1. Click the **Extensions** button. <!-- markdownlint-disable-line MD029 -->
+1. Click the **Extensions** button.
 
    ![Extension Screenshot](../img/extensions-icon.png)
 
 2. Perform one of the following steps:
-   - Browse the **Catalog** and install the required extension. <!-- markdownlint-disable-line MD029 -->
+   - Browse the **Catalog** and install the required extension.
 
      ![Catalog Screenshot](../img/browse-catalog.png)
 
-   - Click the **Install custom...** button to install an extension from a container image: <!-- markdownlint-disable-line MD029 -->
+   - Click the **Install custom...** button to install an extension from a container image:
      1. Go to any registry, such as Docker Hub, GitHub, or any other registry.
      1. Find your extension.
      1. Copy the OCI image name of the extension, such as `redhatdeveloper/openshift-dd-ext:0.0.1-100`, and paste it into the **OCI Image** field.

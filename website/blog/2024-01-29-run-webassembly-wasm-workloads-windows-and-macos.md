@@ -21,7 +21,7 @@ The wait is over. Our blog post unveils the solution, guiding you through the pr
 
 ![hero](img/run-webassembly-wasm-workloads-windows-and-macos/webassembly-podman.webp)
 
-<!--truncate-->
+{/_ truncate _/}
 
 ---
 
