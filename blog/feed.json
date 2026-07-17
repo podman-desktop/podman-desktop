@@ -10,7 +10,7 @@
             "url": "https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop",
             "title": "See your Docker containers inside Podman Desktop",
             "summary": "Install Podman Desktop alongside Docker Desktop and immediately browse your Docker containers, images, and volumes, no migration, no configuration.",
-            "date_modified": "2026-07-10T00:00:00.000Z",
+            "date_modified": "2026-07-17T00:00:00.000Z",
             "author": {
                 "name": "Simon Rey",
                 "url": "https://github.com/simonrey1"

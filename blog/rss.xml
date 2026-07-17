@@ -4,7 +4,7 @@
         <title>Podman Desktop Blog</title>
         <link>https://podman-desktop.io/blog</link>
         <description>Podman Desktop Blog</description>
-        <lastBuildDate>Fri, 10 Jul 2026 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 17 Jul 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
@@ -13,7 +13,7 @@
             <title><![CDATA[See your Docker containers inside Podman Desktop]]></title>
             <link>https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop</link>
             <guid>https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop</guid>
-            <pubDate>Fri, 10 Jul 2026 00:00:00 GMT</pubDate>
+            <pubDate>Fri, 17 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Install Podman Desktop alongside Docker Desktop and immediately browse your Docker containers, images, and volumes, no migration, no configuration.]]></description>
             <content:encoded><![CDATA[<p>Thinking about switching from Docker Desktop to Podman Desktop? You don't have to commit to anything yet. Podman Desktop ships with a built-in Docker extension that automatically detects your running Docker engine and displays all your Docker containers, images, and volumes right inside the Podman Desktop UI.</p>
 <p>No configuration. No migration. Just install and open.</p>
