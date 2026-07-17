@@ -87,8 +87,10 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { isWindows } from '/@/util.js';
 
+import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
@@ -145,6 +147,10 @@ export class ContainerProviderRegistry {
     private imageRegistry: ImageRegistry,
     @inject(Telemetry)
     private telemetryService: Telemetry,
+    @inject(TaskManager)
+    private taskManager: TaskManager,
+    @inject(CancellationTokenRegistry)
+    private cancellationTokenRegistry: CancellationTokenRegistry,
   ) {
     const libPodDockerode = new LibpodDockerode();
     libPodDockerode.enhancePrototypeWithLibPod();
@@ -1416,43 +1422,80 @@ export class ContainerProviderRegistry {
   }
 
   async updateImages(images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> {
-    return Promise.all(
-      images.map(async (info): Promise<ImageUpdateResult> => {
-        let telemetryOptions: Record<string, unknown> = {};
-        try {
-          const matchingEngine = this.getMatchingEngine(info.engineId);
-          const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
-          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
+    const cancellationTokenSourceId = this.cancellationTokenRegistry.createCancellationTokenSource();
+    const cancellationTokenSource =
+      this.cancellationTokenRegistry.getCancellationTokenSource(cancellationTokenSourceId);
+    if (!cancellationTokenSource) {
+      throw new Error('Failed to create CancellationTokenSource');
+    }
 
-          if (status.status === 'skipped' || status.status === 'error' || !status.updateAvailable) {
-            telemetryOptions = { skipped: true, reason: status.status };
-            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
-          }
+    const task = this.taskManager.createTask({
+      title: `Updating image${images.length === 1 ? '' : 's'}`,
+      cancellable: true,
+      cancellationTokenSourceId,
+    });
+    const abortController = new AbortController();
+    const cancellationListener = cancellationTokenSource.token.onCancellationRequested(() => abortController.abort());
 
-          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
-          const pullStream = await matchingEngine.pull(info.image, { authconfig });
+    try {
+      const settledResults = await Promise.allSettled(
+        images.map(async (info): Promise<ImageUpdateResult> => {
+          let telemetryOptions: Record<string, unknown> = {};
+          try {
+            const matchingEngine = this.getMatchingEngine(info.engineId);
+            const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
+            const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
 
-          await new Promise<void>((resolve, reject) => {
+            if (status.status === 'skipped' || status.status === 'error' || !status.updateAvailable) {
+              telemetryOptions = { skipped: true, reason: status.status };
+              return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+            }
+
+            const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+            const pullStream = await matchingEngine.pull(info.image, {
+              authconfig,
+              abortSignal: abortController.signal,
+            });
+
+            const { resolve, reject, promise } = Promise.withResolvers<void>();
             matchingEngine.modem.followProgress(
               pullStream,
               (err: Error | null) => (err ? reject(err) : resolve()),
               () => {},
             );
-          });
+            await promise;
 
-          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
-        } catch (error: unknown) {
-          telemetryOptions = { error: error };
-          const message = error instanceof Error ? error.message : String(error);
-          return { imageRef: info.image, updated: false, status: 'error', message };
-        } finally {
-          this.telemetryService.track('updateImage', {
-            imageName: this.getImageHash(info.image),
-            ...telemetryOptions,
-          });
+            return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
+          } catch (error: unknown) {
+            telemetryOptions = { error: error };
+            throw error;
+          } finally {
+            this.telemetryService.track('updateImage', {
+              imageName: this.getImageHash(info.image),
+              ...telemetryOptions,
+            });
+          }
+        }),
+      );
+      const results = settledResults.map((result, index): ImageUpdateResult => {
+        if (result.status === 'fulfilled') {
+          return result.value;
         }
-      }),
-    );
+        const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        return { imageRef: images[index]!.image, updated: false, status: 'error', message };
+      });
+      task.status = cancellationTokenSource.token.isCancellationRequested ? 'canceled' : 'success';
+      return results;
+    } catch (error: unknown) {
+      if (cancellationTokenSource.token.isCancellationRequested) {
+        task.status = 'canceled';
+      } else {
+        task.error = String(error);
+      }
+      throw error;
+    } finally {
+      cancellationListener.dispose();
+    }
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {

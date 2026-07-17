@@ -49,6 +49,8 @@ import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
+import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import * as util from '/@/util.js';
 
@@ -402,6 +404,11 @@ class DockerodeTestStatusError extends Error {
 }
 
 let containerRegistry: TestContainerProviderRegistry;
+let cancellationTokenRegistry: CancellationTokenRegistry;
+let task: Task;
+
+const createTaskMock = vi.fn();
+const taskManager = { createTask: createTaskMock } as unknown as TaskManager;
 
 const telemetryTrackMock = vi.fn().mockResolvedValue({});
 const telemetry: Telemetry = { track: telemetryTrackMock } as unknown as Telemetry;
@@ -448,7 +455,18 @@ beforeEach(() => {
   } as unknown as Proxy;
 
   const imageRegistry = new ImageRegistry({} as ApiSenderType, telemetry, certificates, proxy);
-  containerRegistry = new TestContainerProviderRegistry(apiSender, configurationRegistry, imageRegistry, telemetry);
+  cancellationTokenRegistry = new CancellationTokenRegistry();
+  task = { status: 'in-progress' } as Task;
+  createTaskMock.mockReset();
+  createTaskMock.mockReturnValue(task);
+  containerRegistry = new TestContainerProviderRegistry(
+    apiSender,
+    configurationRegistry,
+    imageRegistry,
+    telemetry,
+    taskManager,
+    cancellationTokenRegistry,
+  );
 });
 
 afterEach(() => {
@@ -6627,9 +6645,14 @@ describe('ContainerRegistrySettings', () => {
       receive: vi.fn(),
     };
 
-    const containerProviderRegistry = new TestContainerProviderRegistry(apiSender, configRegistry, imageRegistry, {
-      track: vi.fn(),
-    } as unknown as Telemetry);
+    const containerProviderRegistry = new TestContainerProviderRegistry(
+      apiSender,
+      configRegistry,
+      imageRegistry,
+      { track: vi.fn() } as unknown as Telemetry,
+      taskManager,
+      cancellationTokenRegistry,
+    );
 
     containerProviderRegistry.init();
 
@@ -7298,6 +7321,58 @@ describe('updateImages', () => {
     } as unknown as InternalContainerProvider);
   });
 
+  test('creates a cancellable task and completes it after updating images', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(createTaskMock).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating image',
+      cancellable: true,
+      cancellationTokenSourceId: expect.any(Number),
+    });
+    expect(task.status).toBe('success');
+  });
+
+  test('cancels in-progress image pulls from the task', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest: 'sha256:new',
+      message: '',
+    });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockImplementation(
+      (_image: string, options: { abortSignal?: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          options.abortSignal?.addEventListener('abort', () => reject(new Error('Update canceled')));
+        }),
+    );
+
+    const updatePromise = containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+    await vi.waitFor(() => expect(pullMock).toHaveBeenCalledOnce());
+
+    const cancellationTokenSourceId = createTaskMock.mock.calls[0]?.[0]?.cancellationTokenSourceId as number;
+    cancellationTokenRegistry.getCancellationTokenSource(cancellationTokenSourceId)?.cancel();
+
+    await expect(updatePromise).resolves.toEqual([
+      { imageRef: 'nginx:latest', updated: false, status: 'error', message: 'Update canceled' },
+    ]);
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
+      authconfig: undefined,
+      abortSignal: expect.objectContaining({ aborted: true }),
+    });
+    expect(task.status).toBe('canceled');
+  });
+
   test.each<ImageUpdateStatus>([
     { status: 'normal', updateAvailable: false, message: 'Up to date' },
     { status: 'skipped', updateAvailable: false, message: 'Skipped' },
@@ -7352,6 +7427,25 @@ describe('updateImages', () => {
     expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
   });
 
+  test('returns every result when one image update rejects', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'nonexistent', image: 'missing:latest', tag: 'latest', digest: 'sha256:missing' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(results).toEqual([
+      expect.objectContaining({ imageRef: 'missing:latest', updated: false, status: 'error' }),
+      { imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' },
+    ]);
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(2);
+  });
+
   test('pulls updated images, skips failures, and tracks telemetry per image', async () => {
     vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus')
       .mockResolvedValueOnce({
@@ -7378,7 +7472,10 @@ describe('updateImages', () => {
     expect(results[1]?.updated).toBe(false);
     expect(results[1]?.status).toBe('error');
     expect(pullMock).toHaveBeenCalledTimes(1);
-    expect(pullMock).toHaveBeenCalledWith('nginx:latest', { authconfig: undefined });
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
+      authconfig: undefined,
+      abortSignal: expect.any(AbortSignal),
+    });
     expect(telemetryTrackMock).toHaveBeenCalledTimes(2);
     expect(telemetryTrackMock).toHaveBeenCalledWith(
       'updateImage',
