@@ -193,15 +193,6 @@ export interface BuildImageOptions {
   validateRegistries?: boolean;
 }
 
-export interface ListImagesOptions {
-  /**
-   * The provider we want to list the images. If not provided, will return all container images across all container engines.
-   *
-   * @defaultValue undefined
-   */
-  provider?: ContainerProviderConnection | ProviderContainerConnectionInfo;
-}
-
 export interface PodmanListImagesOptions {
   /**
    * Show all images. By default all images from a final layer (no children) are shown.

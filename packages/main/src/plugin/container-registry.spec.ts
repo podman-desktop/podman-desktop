@@ -28,7 +28,7 @@ import type {
   ContainerCreateOptions,
   ContainerInspectInfo,
   HostConfig,
-  ImageInfo,
+  ImageInspectInfo,
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -4844,57 +4844,6 @@ describe('getContainerCreateMountOptionFromBind', () => {
   });
 });
 
-describe('listImages', () => {
-  test('list images without arguments', async () => {
-    const result = await containerRegistry.listImages();
-    expect(result.length).toBe(0);
-
-    expect(vi.spyOn(containerRegistry, 'getMatchingContainerProvider')).not.toHaveBeenCalled();
-  });
-
-  test('list images on a specific provider', async () => {
-    const getMatchingContainerProviderMock = vi.spyOn(containerRegistry, 'getMatchingContainerProvider');
-    const internalContainerProvider = {
-      name: 'dummyName',
-      id: 'dummyId',
-      connection: {
-        type: 'podman',
-      },
-      api: {
-        listImages: vi.fn(),
-      },
-    } as unknown as InternalContainerProvider;
-    getMatchingContainerProviderMock.mockReturnValue(internalContainerProvider);
-
-    const api = internalContainerProvider.api;
-    if (api === undefined) throw new Error('api should not be undefined');
-    vi.spyOn(api, 'listImages').mockResolvedValue([
-      {
-        Id: 'dummyImageId',
-      } as unknown as ImageInfo,
-    ]);
-
-    // List images
-    const result = await containerRegistry.listImages({
-      provider: {
-        id: 'dummyProviderId',
-      } as unknown as podmanDesktopAPI.ContainerProviderConnection,
-    });
-
-    expect(getMatchingContainerProviderMock).toHaveBeenCalled();
-    expect(api.listImages).toHaveBeenCalled();
-
-    expect(result.length).toBe(1);
-    expect(result[0]).toStrictEqual({
-      Id: 'dummyImageId',
-      engineId: 'dummyId',
-      engineName: 'dummyName',
-      engineType: 'podman',
-      Digest: 'sha256:dummyImageId',
-    });
-  });
-});
-
 test('list images with podmanListImages correctly', async () => {
   const imagesList = [
     {
@@ -7259,5 +7208,70 @@ describe('inspectSecret', () => {
       CreatedAt: '2024-01-01T00:00:00Z',
       UpdatedAt: '2024-01-02T00:00:00Z',
     });
+  });
+});
+
+describe('getImageInspect', () => {
+  test('should throw if no matching engine', async () => {
+    await expect(containerRegistry.getImageInspect('nonexistent', 'secret1')).rejects.toThrow(
+      'no engine matching this container',
+    );
+  });
+
+  test('should use the getImage & inspect', async () => {
+    // setup
+    const imageMock: Dockerode.Image = {
+      inspect: vi.fn(),
+    } as unknown as Dockerode.Image;
+    const imageInspectMock: Dockerode.ImageInspectInfo = {} as unknown as Dockerode.ImageInspectInfo;
+
+    const internalContainerProvider: InternalContainerProvider & { api: Dockerode } = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        getImage: vi.fn(),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+    vi.mocked(internalContainerProvider.api.getImage).mockReturnValue(imageMock);
+    vi.mocked(imageMock.inspect).mockResolvedValue(imageInspectMock);
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+
+    // get the inspect
+    const image = await containerRegistry.getImageInspect('podman1', 'bar');
+    expect(image).toEqual(expect.objectContaining(imageInspectMock));
+    expect(image.engineType).toBe(internalContainerProvider.connection.type);
+
+    expect(internalContainerProvider.api.getImage).toHaveBeenCalledExactlyOnceWith('bar');
+    expect(imageMock.inspect).toHaveBeenCalledOnce();
+  });
+});
+
+describe('imageExist', () => {
+  test('should use ContainerRegistry#getImageInspect', async () => {
+    // mock error on getImageInspect
+    vi.spyOn(containerRegistry, 'getImageInspect').mockRejectedValue(new Error('does not exists'));
+
+    const exists = await containerRegistry.imageExist('foo', 'bar', 'fi');
+    expect(exists).toBeFalsy();
+  });
+
+  test('should match tag in RepoTags', async () => {
+    const imageInspectMock: ImageInspectInfo = {
+      RepoTags: ['localhost/foo:latest'],
+    } as unknown as ImageInspectInfo;
+
+    vi.spyOn(containerRegistry, 'getImageInspect').mockResolvedValue(imageInspectMock);
+
+    const exists = await containerRegistry.imageExist('foo', 'bar', 'localhost/foo:latest');
+    expect(exists).toBeTruthy();
   });
 });

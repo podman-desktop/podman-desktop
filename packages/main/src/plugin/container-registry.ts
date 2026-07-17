@@ -41,7 +41,6 @@ import type {
   ImageLoadOptions,
   ImagesSaveOptions,
   LibPodPodInfo,
-  ListImagesOptions,
   ManifestCreateOptions,
   ManifestInspectInfo,
   ManifestPushOptions,
@@ -754,46 +753,6 @@ export class ContainerProviderRegistry {
     this.telemetryService.track('listContainers', { total: flattenedContainers.length, ...telemetryOptions });
 
     return flattenedContainers;
-  }
-
-  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
-    let telemetryOptions = {};
-
-    let providers: InternalContainerProvider[];
-    if (options?.provider === undefined) {
-      providers = Array.from(this.internalProviders.values());
-    } else {
-      providers = [this.getMatchingContainerProvider(options?.provider)];
-    }
-
-    const images = await Promise.all(
-      Array.from(providers).map(async provider => {
-        try {
-          if (!provider.api) {
-            return [];
-          }
-          const images = await provider.api.listImages({ all: false, digests: true });
-          return images.map(image => {
-            const imageInfo: ImageInfo = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              engineType: provider.connection.type,
-              Digest: `sha256:${image.Id}`,
-            };
-            return imageInfo;
-          });
-        } catch (error) {
-          this.notifyConsole(`error in engine ${provider.name} ${error}`);
-          telemetryOptions = { error: error };
-          return [];
-        }
-      }),
-    );
-    const flattenedImages = images.flat();
-    this.telemetryService.track('listImages', { total: flattenedImages.length, ...telemetryOptions });
-
-    return flattenedImages;
   }
 
   // Podman list images will prefer to use libpod API of the provider
@@ -3013,9 +2972,12 @@ export class ContainerProviderRegistry {
   }
 
   async imageExist(id: string, engineId: string, tag: string): Promise<boolean> {
-    const images = await this.listImages();
-    const imageInfo = images.find(c => c.Id === id && c.engineId === engineId);
-    return imageInfo?.RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    try {
+      const { RepoTags } = await this.getImageInspect(engineId, id);
+      return RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    } catch (_: unknown) {
+      return false;
+    }
   }
 
   async volumeExist(name: string, engineId: string): Promise<boolean> {
