@@ -2,12 +2,86 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://podman-desktop.io/blog</id>
     <title>Podman Desktop Blog</title>
-    <updated>2026-06-08T00:00:00.000Z</updated>
+    <updated>2026-07-10T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://podman-desktop.io/blog"/>
     <subtitle>Podman Desktop Blog</subtitle>
     <icon>https://podman-desktop.io/img/favicon.ico</icon>
     <rights>Copyright © 2026 Podman Desktop</rights>
+    <entry>
+        <title type="html"><![CDATA[See your Docker containers inside Podman Desktop]]></title>
+        <id>https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop</id>
+        <link href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop"/>
+        <updated>2026-07-10T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Install Podman Desktop alongside Docker Desktop and immediately browse your Docker containers, images, and volumes, no migration, no configuration.]]></summary>
+        <content type="html"><![CDATA[<p>Thinking about switching from Docker Desktop to Podman Desktop? You don't have to commit to anything yet. Podman Desktop ships with a built-in Docker extension that automatically detects your running Docker engine and displays all your Docker containers, images, and volumes right inside the Podman Desktop UI.</p>
+<p>No configuration. No migration. Just install and open.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="how-it-works">How it works<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#how-it-works" class="hash-link" aria-label="Direct link to How it works" title="Direct link to How it works" translate="no">​</a></h2>
+<p>Podman Desktop is a multi-engine container management tool. Unlike Docker Desktop, which only manages Docker, Podman Desktop can connect to multiple container engines at the same time: Podman, Docker, and even <a class="" href="https://podman-desktop.io/blog/apple-container-extension">Apple Container</a>.</p>
+<p>The built-in <strong>Docker extension</strong> monitors the standard Docker socket (<code>/var/run/docker.sock</code> on macOS/Linux, named pipe on Windows). When it detects a running Docker daemon, it automatically registers it as a provider. From that point on, every Docker container, image, and volume appears in Podman Desktop alongside any Podman resources you might have.</p>
+<p>There is nothing to configure: if Docker Desktop is running, Podman Desktop sees it.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="what-you-need">What you need<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#what-you-need" class="hash-link" aria-label="Direct link to What you need" title="Direct link to What you need" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Docker Desktop</strong> running with some containers or images.</li>
+<li class=""><strong>Podman Desktop</strong>: <a href="https://podman-desktop.io/downloads" target="_blank" rel="noopener noreferrer" class="">Download here</a> for macOS, Windows, or Linux.</li>
+</ul>
+<p>That's it. You don't need Podman installed. You don't need a Podman machine. You don't need to change any settings.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="step-1-install-and-open-podman-desktop">Step 1: Install and open Podman Desktop<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#step-1-install-and-open-podman-desktop" class="hash-link" aria-label="Direct link to Step 1: Install and open Podman Desktop" title="Direct link to Step 1: Install and open Podman Desktop" translate="no">​</a></h2>
+<p>Download and install <a href="https://podman-desktop.io/downloads" target="_blank" rel="noopener noreferrer" class="">Podman Desktop</a>. Launch it.</p>
+<p>If Podman Desktop offers to set up a Podman machine on first launch, you can skip it for now (we're only looking at Docker containers in this tutorial).</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="step-2-check-that-docker-is-detected">Step 2: Check that Docker is detected<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#step-2-check-that-docker-is-detected" class="hash-link" aria-label="Direct link to Step 2: Check that Docker is detected" title="Direct link to Step 2: Check that Docker is detected" translate="no">​</a></h2>
+<p>Navigate to <strong>Settings &gt; Resources</strong>. You should see a <strong>Docker</strong> provider listed with a "running" status.</p>
+<img src="https://podman-desktop.io/assets/images/docker-provider-running-light-e4e8eb028b3047e93b3918125585d038.png" alt="Settings > Resources showing Docker provider running" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/docker-provider-running-dark-eb24502815c8a26618a3ce08c6684359.png" alt="Settings > Resources showing Docker provider running" class="themedComponent_siVc themedComponent--dark_yETr">
+<p>If Docker doesn't appear, make sure Docker Desktop is running and that the Docker socket is accessible.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="step-3-browse-your-docker-containers">Step 3: Browse your Docker containers<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#step-3-browse-your-docker-containers" class="hash-link" aria-label="Direct link to Step 3: Browse your Docker containers" title="Direct link to Step 3: Browse your Docker containers" translate="no">​</a></h2>
+<p>Go to the <strong>Containers</strong> tab. You will see all containers running in Docker, the same ones you see in Docker Desktop or with <code>docker ps</code>. You can:</p>
+<ul>
+<li class="">View container details, environment variables, and ports.</li>
+<li class="">Read container logs in real time.</li>
+<li class="">Open a terminal session inside a running container.</li>
+<li class="">Stop, restart, or delete containers.</li>
+</ul>
+<img src="https://podman-desktop.io/assets/images/docker-container-running-light-6c0e08bc6bad21e80daa20c4e5fe3eeb.png" alt="Containers tab showing Docker containers" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/docker-container-running-dark-1f7390eb17d1b0a7b8253d6787c2ff4d.png" alt="Containers tab showing Docker containers" class="themedComponent_siVc themedComponent--dark_yETr">
+<p>Every operation you perform here goes through the Docker engine. Podman Desktop is acting as an alternative UI for your existing Docker setup.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="step-4-browse-your-docker-images">Step 4: Browse your Docker images<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#step-4-browse-your-docker-images" class="hash-link" aria-label="Direct link to Step 4: Browse your Docker images" title="Direct link to Step 4: Browse your Docker images" translate="no">​</a></h2>
+<p>Go to the <strong>Images</strong> tab. All images pulled or built by Docker are listed. You can:</p>
+<ul>
+<li class="">Inspect image layers and metadata.</li>
+<li class="">Run a new container from any image.</li>
+<li class="">Delete images you no longer need.</li>
+</ul>
+<img src="https://podman-desktop.io/assets/images/docker-images-light-fcd1a124ed0ff91c29998816b6832209.png" alt="Images tab showing Docker images" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/docker-images-dark-f073bf5dc279711cfbde0bc694bda95a.png" alt="Images tab showing Docker images" class="themedComponent_siVc themedComponent--dark_yETr">
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="what-you-get-from-this">What you get from this<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#what-you-get-from-this" class="hash-link" aria-label="Direct link to What you get from this" title="Direct link to What you get from this" translate="no">​</a></h2>
+<p>At this point you haven't changed anything about your Docker workflow. Docker Desktop is still your engine. But you now have:</p>
+<ul>
+<li class=""><strong>Centralized container management</strong>: Podman Desktop gives you one place to view and manage containers across engines, so you can work with Docker today and Podman tomorrow without switching tools.</li>
+<li class=""><strong>A way to compare</strong>: When you're ready to try Podman, you can create a Podman machine and see Docker and Podman containers side by side in the same UI. This makes it easy to validate that workloads behave the same way on both engines.</li>
+<li class=""><strong>An integrated path to Kubernetes</strong>: As you migrate, you can move from local containers toward Kubernetes workflows in the same tool using Podman Desktop features like Kube Play.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="running-docker-and-podman-side-by-side">Running Docker and Podman side by side<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#running-docker-and-podman-side-by-side" class="hash-link" aria-label="Direct link to Running Docker and Podman side by side" title="Direct link to Running Docker and Podman side by side" translate="no">​</a></h2>
+<p>Once you're comfortable, you can set up Podman alongside Docker:</p>
+<ol>
+<li class="">In Podman Desktop, go to <strong>Settings &gt; Resources</strong> and create a Podman machine.</li>
+<li class="">Pull the same image on both engines.</li>
+<li class="">Both sets of containers appear in the same <strong>Containers</strong> tab, labeled by their engine.</li>
+</ol>
+<p>This lets you migrate workloads one at a time, no big-bang switch required.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="whats-next">What's next?<a href="https://podman-desktop.io/blog/see-docker-containers-in-podman-desktop#whats-next" class="hash-link" aria-label="Direct link to What's next?" title="Direct link to What's next?" translate="no">​</a></h2>
+<p>This was the zero-commitment first step: see your Docker world inside Podman Desktop. In upcoming posts, we'll cover:</p>
+<ul>
+<li class=""><strong>Running your Docker Compose files with Podman</strong>: Use your existing <code>docker-compose.yml</code> on the Podman engine.</li>
+<li class=""><strong>From Compose to Kubernetes with Podman Kube Play</strong>: Generate real Kubernetes manifests from your running containers and test them locally without a cluster.</li>
+<li class=""><strong>Common migration gotchas</strong>: Rootless permissions, privileged ports, and networking differences explained with fixes.</li>
+</ul>
+<p>Questions or feedback? Start a <a href="https://github.com/podman-desktop/podman-desktop/discussions" target="_blank" rel="noopener noreferrer" class="">discussion on GitHub</a> or read the <a href="https://podman-desktop.io/docs/migrating-from-docker" target="_blank" rel="noopener noreferrer" class="">migration documentation</a>.</p>]]></content>
+        <author>
+            <name>Simon Rey</name>
+            <uri>https://github.com/simonrey1</uri>
+        </author>
+        <category label="podman-desktop" term="podman-desktop"/>
+        <category label="docker" term="docker"/>
+        <category label="migrating" term="migrating"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Podman Desktop 1.28 Release]]></title>
         <id>https://podman-desktop.io/blog/podman-desktop-release-1.28</id>
@@ -3584,94 +3658,5 @@ Your Pod is now deployed to the MINC cluster.</p>
         <category label="images" term="images"/>
         <category label="kubernetes" term="kubernetes"/>
         <category label="microshift" term="microshift"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Supercharge Your Container Development in VS Code with Podman and Podman Desktop]]></title>
-        <id>https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop</id>
-        <link href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop"/>
-        <updated>2025-05-05T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[How to develop apps with VS Code and Podman Desktop]]></summary>
-        <content type="html"><![CDATA[<p>Developing containerized applications can sometimes feel complex, but with the right tools, it can be a smooth and efficient process. In this blog post, we'll explore how to leverage the power of Visual Studio Code (VS Code) together with Podman and Podman Desktop to streamline your container development workflow. We'll cover setting up and using two VS Code extensions that integrate with Podman.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="vs-code-your-ide-for-container-development">VS Code: Your IDE for Container Development<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#vs-code-your-ide-for-container-development" class="hash-link" aria-label="Direct link to VS Code: Your IDE for Container Development" title="Direct link to VS Code: Your IDE for Container Development" translate="no">​</a></h2>
-<p>VS Code is a popular and versatile code editor that can be extended to enhance its functionality. For container development, several excellent extensions integrate seamlessly with Podman.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="prerequisites">Prerequisites<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#prerequisites" class="hash-link" aria-label="Direct link to Prerequisites" title="Direct link to Prerequisites" translate="no">​</a></h2>
-<p>Before we begin, ensure you have the following installed:</p>
-<ul>
-<li class=""><strong>Podman:</strong> Follow the installation instructions on the <a href="https://podman.io/" target="_blank" rel="noopener noreferrer" class="">official website</a>.</li>
-<li class=""><strong>Podman Desktop:</strong> Download and install Podman Desktop from the <a href="https://podman-desktop.io/downloads" target="_blank" rel="noopener noreferrer" class="">official website</a>.</li>
-<li class=""><strong>Visual Studio Code:</strong> Download and install VS Code from the <a href="https://code.visualstudio.com/download" target="_blank" rel="noopener noreferrer" class="">official website</a>.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="vs-code-extensions"><strong>VS Code Extensions</strong><a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#vs-code-extensions" class="hash-link" aria-label="Direct link to vs-code-extensions" title="Direct link to vs-code-extensions" translate="no">​</a></h2>
-<p>To integrate VS Code with Podman, we have 2 extensions as options:</p>
-<ol>
-<li class=""><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-containers" target="_blank" rel="noopener noreferrer" class=""><strong>Microsoft’s Container Tools extension</strong></a><strong>:</strong> The "Container Tools" extension provides excellent support for container-related tasks, including building images, managing containers, and working with Containerfiles and Dockerfiles. Microsoft <a href="https://techcommunity.microsoft.com/blog/AppsonAzureBlog/major-updates-to-vs-code-docker-introducing-container-tools/4400609" target="_blank" rel="noopener noreferrer" class="">recently announced</a> that they will be evolving the Docker extension into the Container Tools extension to support other tools like Podman!</li>
-<li class=""><a href="https://marketplace.visualstudio.com/items/?itemName=dreamcatcher45.podmanager" target="_blank" rel="noopener noreferrer" class=""><strong>Pod Manager</strong></a>: This extension was created by one of the members of our community and is completely open source. It is designed to help you manage Podman containers, images, volumes, and networks directly from the VS Code interface.</li>
-</ol>
-<p>While it's unlikely that you would use both extensions simultaneously, comparing them will help you understand the strengths and weaknesses of each, ultimately making it easier to select the one that best fits your needs. So for this blog post, we'll install them one by one.</p>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="option-1-microsofts-container-tools-extension">Option 1: Microsoft’s Container Tools extension<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#option-1-microsofts-container-tools-extension" class="hash-link" aria-label="Direct link to Option 1: Microsoft’s Container Tools extension" title="Direct link to Option 1: Microsoft’s Container Tools extension" translate="no">​</a></h3>
-<p>To install the extension:</p>
-<ol>
-<li class="">Open VS Code.</li>
-<li class="">Click on the Extensions icon in the Activity Bar (or press <code>Ctrl+Shift+X</code> or <code>Cmd+Shift+X</code>).</li>
-<li class="">Search for "Container Tools" and install the extension by Microsoft.</li>
-</ol>
-<h4 class="anchor anchorTargetStickyNavbar_tleR" id="configuring-vs-code-for-podman">Configuring VS Code for Podman<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#configuring-vs-code-for-podman" class="hash-link" aria-label="Direct link to Configuring VS Code for Podman" title="Direct link to Configuring VS Code for Podman" translate="no">​</a></h4>
-<p>The Container Tools extension usually automatically detects Podman if Docker isn't running, by looking at the <code>DOCKER_HOST</code> environment variable. In Podman Desktop navigate to Settings &gt; Docker Compatibility &gt; Third-Party Tool Compatibility and make sure the option is enabled. Learn more about the <a href="https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility" target="_blank" rel="noopener noreferrer" class="">Docker Compatibility in our documentation</a>.</p>
-<p><img decoding="async" loading="lazy" alt="enabling docker compatibility in the settings" src="https://podman-desktop.io/assets/images/docker-compatibility-2a38bdd29669787699a3b65180e7a5a3.png" width="1158" height="877" class="img_SS3x"></p>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="option-2-pod-manager">Option 2: Pod Manager<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#option-2-pod-manager" class="hash-link" aria-label="Direct link to Option 2: Pod Manager" title="Direct link to Option 2: Pod Manager" translate="no">​</a></h3>
-<p>To install the extension:</p>
-<ol>
-<li class="">Open VS Code.</li>
-<li class="">Click on the Extensions icon in the Activity Bar (or press <code>Ctrl+Shift+X</code> or <code>Cmd+Shift+X</code>).</li>
-<li class="">Search for "Pod Manager" and install the extension by dreamcatcher45.</li>
-</ol>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="using-the-vs-code-extensions">Using the VS Code Extensions<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#using-the-vs-code-extensions" class="hash-link" aria-label="Direct link to Using the VS Code Extensions" title="Direct link to Using the VS Code Extensions" translate="no">​</a></h2>
-<p>Now that we have the extensions installed and configured, let's see how to use them.</p>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="working-with-containerfiles-and-dockerfiles">Working with Containerfiles and Dockerfiles<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#working-with-containerfiles-and-dockerfiles" class="hash-link" aria-label="Direct link to Working with Containerfiles and Dockerfiles" title="Direct link to Working with Containerfiles and Dockerfiles" translate="no">​</a></h3>
-<p>Both extensions provide syntax highlighting, code completion, and linting for Containerfiles and Dockerfiles. Open a Containerfile in VS Code, and you'll immediately benefit from these features.</p>
-<p>You can also build images directly from VS Code:</p>
-<ol>
-<li class="">Right-click on the Containerfile in the Explorer view.</li>
-<li class="">Select "Build Image".</li>
-<li class="">VS Code will prompt you for an image name and tag.</li>
-<li class="">The extension will then build the image using Podman.</li>
-<li class="">After that you will see the built image in the sidebar.</li>
-</ol>
-<p>If you are using the CLI commands to build images, you will also see them here.</p>
-<p><img decoding="async" loading="lazy" alt="building a Containerfile in vs code using the microsoft extension" src="https://podman-desktop.io/assets/images/build-image-04e4423d037ee472e0c36e839faeede0.png" width="1240" height="839" class="img_SS3x"></p>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="managing-containers">Managing Containers<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#managing-containers" class="hash-link" aria-label="Direct link to Managing Containers" title="Direct link to Managing Containers" translate="no">​</a></h3>
-<p>The extensions also allow you to manage containers directly from VS Code. You can start, stop, restart, and remove containers, as well as view their logs and inspect their configuration.</p>
-<p>To view the container logs:</p>
-<ol>
-<li class="">Click on the Container icon in the Activity Bar.</li>
-<li class="">You'll see a list of your containers, images, and networks.</li>
-<li class="">Right-click on a container to perform actions.</li>
-</ol>
-<p><img decoding="async" loading="lazy" alt="using Container Tools extension to view the logs of the container" src="https://podman-desktop.io/assets/images/view-logs-6a65fac970eda5cbfb42994409776fca.png" width="1313" height="824" class="img_SS3x"></p>
-<p>Similarly using the Pod manager extension we can visually inspect containers, images, and volumes.</p>
-<ol>
-<li class="">Click on the Pod manager icon in the Activity Bar.</li>
-<li class="">You'll see a list of your containers, images, and networks.</li>
-</ol>
-<p><img decoding="async" loading="lazy" alt="using podmanager to view all the running containers, images and volumes" src="https://podman-desktop.io/assets/images/podmanager-550a0e854a09a434e319967ae9e32016.png" width="1314" height="836" class="img_SS3x"></p>
-<p>and manage the container lifecycle.</p>
-<p><img decoding="async" loading="lazy" alt="using podmanager to manage the lifecycle of the container" src="https://podman-desktop.io/assets/images/interact-with-container-702c2db1805e3f359176e24bec8d0cf5.png" width="1317" height="825" class="img_SS3x"></p>
-<p>and of course troubleshoot issues with a visual interface.</p>
-<p><img decoding="async" loading="lazy" alt="using podmanager to enter the container" src="https://podman-desktop.io/assets/images/podmanager-details-29cb303f118f1f0eb985bfa4522f80b7.png" width="1318" height="835" class="img_SS3x"></p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="conclusion">Conclusion<a href="https://podman-desktop.io/blog/2025/05/05/vs-code-with-podman-desktop#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
-<p>In comparison, both extensions provide a nearly identical set of features, so it is really up to you which UI you prefer. Personally I will stick with the Pod Manager because the logo is a seal 🦭. Remember if you encounter any issues using these tools or with Podman Desktop let us know by <a href="https://github.com/podman-desktop/podman-desktop/discussions" target="_blank" rel="noopener noreferrer" class="">starting a discussion</a> or <a href="https://github.com/podman-desktop/podman-desktop/issues" target="_blank" rel="noopener noreferrer" class="">creating an issue</a>.</p>
-<p>By combining the power of VS Code, Podman, and Podman Desktop, you can create a streamlined and efficient container development workflow. The VS Code extensions provide excellent integration with Podman, allowing you to manage containers, build images, and work with Containerfiles directly from your code editor. We are excited to see that Microsoft is embracing Podman and building support into their ecosystem. Podman Desktop complements this with a visual interface for managing your container environment and will help to move from your development environment to a production Kubernetes environment. Embrace these tools and elevate your container development experience!</p>]]></content>
-        <author>
-            <name>Matt Demyttenaere</name>
-            <uri>https://github.com/firewall</uri>
-        </author>
-        <category label="podman-desktop" term="podman-desktop"/>
-        <category label="podman" term="podman"/>
-        <category label="vscode" term="vscode"/>
-        <category label="docker" term="docker"/>
-        <category label="extension" term="extension"/>
-        <category label="development" term="development"/>
-        <category label="container" term="container"/>
-        <category label="tools" term="tools"/>
     </entry>
 </feed>
