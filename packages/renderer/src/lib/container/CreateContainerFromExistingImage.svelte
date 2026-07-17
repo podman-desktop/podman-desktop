@@ -304,7 +304,7 @@ async function buildContainerFromImage(): Promise<void> {
         parameters: {
           id: chosenImage[0].id,
           engineId: chosenImage[0].engineId,
-          base64RepoTag: chosenImage[0].base64RepoTag,
+          tag: chosenImage[0].tag ? `${chosenImage[0].name}:${chosenImage[0].tag}` : chosenImage[0].name,
         },
       });
     }

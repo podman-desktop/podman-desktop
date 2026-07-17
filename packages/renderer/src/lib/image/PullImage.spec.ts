@@ -452,7 +452,7 @@ test('Expect run action to set image info and go to run page', async () => {
     expect(handleNavigation).toHaveBeenCalledWith({
       page: NavigationPage.IMAGE_RUN,
       parameters: {
-        base64RepoTag: btoa(image.RepoTags?.[0] ?? ''),
+        tag: image.RepoTags?.[0],
         engineId: image.engineId,
         id: image.Id,
       },
