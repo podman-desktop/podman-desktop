@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { ContainerInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import {
@@ -190,6 +190,54 @@ async function runSelectedContainers(): Promise<void> {
     );
   }
   bulkRunInProgress = false;
+}
+
+// stop the items selected in the list
+let bulkStopInProgress = $state(false);
+async function stopSelectedContainers(): Promise<void> {
+  const podGroups = filterContainersByGroupTypePod();
+  const selectedContainers = filterContainersByGroupTypeNotPod();
+  if (podGroups.length + selectedContainers.length === 0) {
+    return;
+  }
+
+  const podGroupsToStop = podGroups.filter(
+    podGroup => podGroup.engineId && podGroup.id && podGroup.status === 'RUNNING',
+  );
+  const containersToStop = selectedContainers.filter(container => container.state === 'RUNNING');
+
+  bulkStopInProgress = true;
+  try {
+    podGroupsToStop.forEach(podGroup => (podGroup.status = 'STOPPING'));
+    containersToStop.forEach(container => {
+      container.state = 'STOPPING';
+      container.actionInProgress = true;
+      container.actionError = '';
+    });
+    containerGroups = [...containerGroups];
+
+    const results = await Promise.allSettled([
+      ...podGroupsToStop.map(podGroup => window.stopPod(podGroup.engineId, podGroup.id)),
+      ...containersToStop.map(container => window.stopContainer(container.engineId, container.id)),
+    ]);
+
+    results.slice(0, podGroupsToStop.length).forEach(result => {
+      if (result.status === 'rejected') {
+        console.error('error while stopping pod', result.reason);
+      }
+    });
+    results.slice(podGroupsToStop.length).forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error('error while stopping container', result.reason);
+        containersToStop[index].actionError = String(result.reason);
+        containersToStop[index].state = 'ERROR';
+      }
+    });
+  } finally {
+    containersToStop.forEach(container => (container.actionInProgress = false));
+    containerGroups = [...containerGroups];
+    bulkStopInProgress = false;
+  }
 }
 
 function createPodFromContainers(): void {
@@ -409,6 +457,13 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           title="Run {selectedItemsNumber} selected items"
           inProgress={bulkRunInProgress}
           icon={faPlay}>
+        </Button>
+        <Button
+          on:click={stopSelectedContainers}
+          aria-label="Stop selected containers and pods"
+          title="Stop {selectedItemsNumber} selected items"
+          inProgress={bulkStopInProgress}
+          icon={faStop}>
         </Button>
         <Button
           on:click={(): void => {
