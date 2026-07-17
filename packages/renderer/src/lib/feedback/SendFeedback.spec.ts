@@ -33,7 +33,7 @@ vi.mock(import('./feedbackForms/DirectFeedback.svelte'));
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    (func as () => void)();
+    func();
     return { dispose: vi.fn() };
   });
   vi.mocked(window.getGitHubFeedbackLinks).mockResolvedValue({

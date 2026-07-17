@@ -24,7 +24,7 @@ import { disconnectUI, eventCollect, reconnectUI, startBuild } from './build-ima
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    (func as () => void)();
+    func();
     return { dispose: vi.fn() };
   });
 });

@@ -29,7 +29,7 @@ import FeaturedExtensions from './FeaturedExtensions.svelte';
 
 beforeAll(() => {
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    (func as () => void)();
+    func();
     return { dispose: vi.fn() };
   });
 });

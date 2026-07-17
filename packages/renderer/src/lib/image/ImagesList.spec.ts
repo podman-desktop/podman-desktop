@@ -47,7 +47,7 @@ beforeEach(() => {
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
 
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    (func as () => void)();
+    func();
     return { dispose: vi.fn() };
   });
 });
