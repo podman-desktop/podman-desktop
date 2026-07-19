@@ -37,7 +37,7 @@ export function getSystemBinaryPath(binaryName: string): string {
   }
 }
 
-// Takes a binary path (e.g. /tmp/kubectl) and installs it to the system. Renames it based on binaryName
+// Takes a binary path (e.g. /tmp/kind) and installs it to the system. Renames it based on binaryName
 export async function installBinaryToSystem(binaryPath: string, binaryName: string): Promise<string | undefined> {
   const system = process.platform;
 
