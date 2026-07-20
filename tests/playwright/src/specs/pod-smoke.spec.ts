@@ -271,10 +271,11 @@ test.describe
       await playExpect(containerDetailsPage.terminalContent).toContainText('@');
       await page.waitForTimeout(1_000);
 
-      const curlRetry = 'for i in $(seq 1 30); do curl -s http://localhost:5000 && break; sleep 2; done';
-      await containerDetailsPage.terminalInput.pressSequentially(curlRetry, { delay: 15 });
+      // Pipe through grep to keep output short — the full HTML response overflows the xterm buffer
+      const curlCheck = `for i in $(seq 1 30); do curl -sf http://localhost:5000 | grep -oE "Hello World|time\\(s\\)" | sort -u && break; sleep 2; done`;
+      await containerDetailsPage.terminalInput.pressSequentially(curlCheck, { delay: 15 });
       await containerDetailsPage.terminalInput.press('Enter');
-      await playExpect(containerDetailsPage.terminalContent).toContainText('Hello World!', { timeout: 60_000 });
+      await playExpect(containerDetailsPage.terminalContent).toContainText('Hello World', { timeout: 60_000 });
       await playExpect(containerDetailsPage.terminalContent).toContainText('time(s)');
     });
 
