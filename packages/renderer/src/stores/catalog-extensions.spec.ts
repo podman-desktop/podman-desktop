@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { get } from 'svelte/store';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   catalogExtensionEventStore,
@@ -124,8 +124,8 @@ test('catalog extension should be updated in refresh event is published', async 
 
   const callback = callbacks.get('refresh-catalog');
   // send 'refresh-catalog' event
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   // check that getCatalogExtensions is called
   expect(window.getCatalogExtensions).toBeCalled();

@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesContextsHealths, kubernetesContextsHealthsStore } from './kubernetes-context-health';
 
@@ -82,8 +82,8 @@ test('kubernetesContextsHealths in experimental states mode', async () => {
   // send an event indicating the data is updated
   const event = 'kubernetes-contexts-healths';
   const callback = callbacks.get(event);
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   // check received data is updated
   await vi.waitFor(() => {

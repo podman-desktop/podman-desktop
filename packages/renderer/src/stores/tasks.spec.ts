@@ -18,7 +18,7 @@
 
 import { type IDisposable, type NotificationTaskInfo, TASK_STATUSES, type TaskInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   clearNotifications,
@@ -165,8 +165,8 @@ describe('normalizeTask via task-created event', () => {
 
     // Trigger the task-created event
     const callback = callbacks.get('task-created');
-    expect(callback).toBeDefined();
-    callback?.(task);
+    assert(callback);
+    callback(task);
 
     // Check tasksInfo has the normalized task with body copied to error
     const tasks = get(tasksInfo);
@@ -185,8 +185,8 @@ describe('normalizeTask via task-created event', () => {
 
     // Trigger the task-created event
     const callback = callbacks.get('task-created');
-    expect(callback).toBeDefined();
-    callback?.(task);
+    assert(callback);
+    callback(task);
 
     // Check tasksInfo has the task without error field
     const tasks = get(tasksInfo);

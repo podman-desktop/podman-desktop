@@ -18,7 +18,7 @@
 
 import type { PodInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { podsEventStore, podsInfos } from './pods';
 
@@ -64,8 +64,8 @@ test.each([
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   // wait listContainersMock is called
   while (vi.mocked(window.listPods).mock.calls.length === 0) {

@@ -18,7 +18,7 @@
 
 import type { ImageInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { filtered, imagesEventStore, imagesInfos } from './images';
 
@@ -64,8 +64,8 @@ test('images should be updated in case of a image is loaded from an archive', as
 
   // call 'image-loadfromarchive-event' event
   const imageLoadFromArchiveCallback = callbacks.get('image-loadfromarchive-event');
-  expect(imageLoadFromArchiveCallback).toBeDefined();
-  await imageLoadFromArchiveCallback?.();
+  assert(imageLoadFromArchiveCallback);
+  await imageLoadFromArchiveCallback();
 
   // wait debounce
   await new Promise(resolve => setTimeout(resolve, 2000));

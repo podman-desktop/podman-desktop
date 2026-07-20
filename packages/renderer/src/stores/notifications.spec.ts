@@ -18,7 +18,7 @@
 
 import type { NotificationCard } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchNotifications, notificationEventStore, notificationQueue } from './notifications';
 
@@ -62,8 +62,8 @@ test('notifications should be updated in case of an extension is stopped', async
 
   // call 'notifications-updated' event
   const extensionStoppedCallback = callbacks.get('notifications-updated');
-  expect(extensionStoppedCallback).toBeDefined();
-  await extensionStoppedCallback?.();
+  assert(extensionStoppedCallback);
+  await extensionStoppedCallback();
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));

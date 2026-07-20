@@ -18,7 +18,7 @@
 
 import type { IDisposable } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   extensionDevelopmentFolders,
@@ -57,8 +57,8 @@ test('should be updated in case of an extension is stopped', async () => {
 
   const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  callback?.();
+  assert(callback);
+  callback();
 
   // now ready to fetch extension folders
   await fetchExtensionDevelopmentFolders();
@@ -73,9 +73,9 @@ test('should be updated in case of an extension is stopped', async () => {
 
   // call 'extension-stopped' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
+  assert(extensionStoppedCallback);
 
-  extensionStoppedCallback?.();
+  extensionStoppedCallback();
 
   // check if the onboardings are updated
   await vi.waitFor(() => {
@@ -95,8 +95,8 @@ test('should be updated in case of an extension is started', async () => {
 
   const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  callback?.();
+  assert(callback);
+  callback();
 
   // now ready to fetch extension folders
   await fetchExtensionDevelopmentFolders();
@@ -111,8 +111,8 @@ test('should be updated in case of an extension is started', async () => {
 
   // call 'extension-stopped' event
   const extensionStoppedCallback = callbacks.get('extension-started');
-  expect(extensionStoppedCallback).toBeDefined();
-  extensionStoppedCallback?.();
+  assert(extensionStoppedCallback);
+  extensionStoppedCallback();
 
   // check if the onboardings are updated
   await vi.waitFor(() => {

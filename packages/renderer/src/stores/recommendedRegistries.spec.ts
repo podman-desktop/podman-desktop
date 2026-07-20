@@ -18,7 +18,7 @@
 
 import type { RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   fetchRecommendedRegistries,
@@ -64,8 +64,8 @@ test('recommendedRegistries should be updated in case of an extension is stopped
 
   // call 'container-removed-event' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
-  await extensionStoppedCallback?.();
+  assert(extensionStoppedCallback);
+  await extensionStoppedCallback();
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -104,8 +104,8 @@ test('recommendedRegistries should be updated in case configuration changed is c
   vi.mocked(window.getRecommendedRegistries).mockClear();
   // call 'container-removed-event' event
   const configurationChangedCallback = callbacks.get('configuration-changed');
-  expect(configurationChangedCallback).toBeDefined();
-  await configurationChangedCallback?.({ key: 'extensions.ignoreRecommendations' });
+  assert(configurationChangedCallback);
+  await configurationChangedCallback({ key: 'extensions.ignoreRecommendations' });
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -140,8 +140,8 @@ test('recommendedRegistries should not be updated in case configuration changed 
   vi.mocked(window.getRecommendedRegistries).mockClear();
   // call 'container-removed-event' event
   const configurationChangedCallback = callbacks.get('configuration-changed');
-  expect(configurationChangedCallback).toBeDefined();
-  await configurationChangedCallback?.({ key: 'extensions.otherKey' });
+  assert(configurationChangedCallback);
+  await configurationChangedCallback({ key: 'extensions.otherKey' });
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));

@@ -18,7 +18,7 @@
 
 import type { OnboardingInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchOnboarding, onboardingEventStore, onboardingList } from './onboarding';
 
@@ -61,8 +61,8 @@ test('onboarding should be updated in case of an extension is stopped', async ()
 
   // call 'extension-stopped' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
-  await extensionStoppedCallback?.();
+  assert(extensionStoppedCallback);
+  await extensionStoppedCallback();
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -100,8 +100,8 @@ test('onboarding should be updated in case of an extension is started', async ()
 
   // call 'extension-started' event
   const extensionStartedCallback = callbacks.get('extension-started');
-  expect(extensionStartedCallback).toBeDefined();
-  await extensionStartedCallback?.();
+  assert(extensionStartedCallback);
+  await extensionStartedCallback();
 
   // wait that the onboarding is updated
   await vi.waitFor(() => {

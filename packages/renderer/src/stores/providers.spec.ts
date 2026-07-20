@@ -18,7 +18,7 @@
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { containerConnectionCount, eventStore, providerInfos } from './providers';
 
@@ -88,8 +88,8 @@ test.each([
     window.dispatchEvent(new CustomEvent(eventName));
   } else {
     const callback = callbacks.get(eventName);
-    expect(callback).toBeDefined();
-    await callback?.();
+    assert(callback);
+    await callback();
   }
 
   // wait listContainersMock is called

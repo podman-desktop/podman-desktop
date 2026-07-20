@@ -18,7 +18,7 @@
 
 import type { KubernetesObject } from '@kubernetes/client-node';
 import type { Readable } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   kubernetesCurrentContextCronJobs,
@@ -104,8 +104,8 @@ async function testKubernetesStore(resourceName: string, store: Readable<Kuberne
 
   // update object via an event
   const callback = callbacks.get(event);
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   await callbacks.get(event)?.([object2, object1]);
 

@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { onDidChangeConfiguration, setupConfigurationChange } from './configurationProperties';
 
@@ -45,10 +45,10 @@ test('notified when there is a change', async () => {
 
   // now, send an event
   const onDidChangeCallback = callbacks.get('onDidChangeConfiguration');
-  expect(onDidChangeCallback).toBeDefined();
+  assert(onDidChangeCallback);
 
   // call the callback with a new value
-  await onDidChangeCallback?.({
+  await onDidChangeCallback({
     key: 'my.property',
     value: 'new value',
     scope: 'DEFAULT',

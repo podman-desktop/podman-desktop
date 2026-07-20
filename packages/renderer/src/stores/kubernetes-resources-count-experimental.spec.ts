@@ -18,7 +18,7 @@
 
 import type { ResourceCount } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesResourcesCount, kubernetesResourcesCountStore } from './kubernetes-resources-count';
 
@@ -67,8 +67,8 @@ test('kubernetesResourcesCount in experimental states mode', async () => {
   // send an event indicating the data is updated
   const event = 'kubernetes-resources-count';
   const callback = callbacks.get(event);
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   await vi.waitFor(() => {
     // check received data is updated

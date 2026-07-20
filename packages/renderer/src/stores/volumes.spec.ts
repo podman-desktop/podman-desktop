@@ -18,7 +18,7 @@
 
 import type { VolumeListInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchVolumesWithData, volumeListInfos, volumesEventStore } from './volumes';
 
@@ -64,8 +64,8 @@ test('volumes should be updated in case of a container is removed', async () => 
 
   // call 'container-removed-event' event
   const containerRemovedCallback = callbacks.get('container-removed-event');
-  expect(containerRemovedCallback).toBeDefined();
-  await containerRemovedCallback?.();
+  assert(containerRemovedCallback);
+  await containerRemovedCallback();
 
   // wait debounce
   await new Promise(resolve => setTimeout(resolve, 2000));
@@ -112,8 +112,8 @@ test.each([
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   // wait listContainersMock is called
   while (vi.mocked(window.listVolumes).mock.calls.length === 0) {

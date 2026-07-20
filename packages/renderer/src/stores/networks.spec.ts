@@ -18,7 +18,7 @@
 
 import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { networksEventStore, networksListInfo } from './networks';
 
@@ -65,8 +65,8 @@ test.each([
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
-  await callback?.();
+  assert(callback);
+  await callback();
 
   await vi.waitFor(() => {
     expect(vi.mocked(window.listNetworks).mock.calls.length).not.equal(0);

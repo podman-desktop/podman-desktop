@@ -18,7 +18,7 @@
 
 import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchViews, viewsContributions, viewsEventStore } from './views';
 
@@ -61,8 +61,8 @@ test('views should be updated in case of an extension is stopped', async () => {
 
   // call 'container-removed-event' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
-  await extensionStoppedCallback?.();
+  assert(extensionStoppedCallback);
+  await extensionStoppedCallback();
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));

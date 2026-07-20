@@ -45,7 +45,7 @@ global.window.matchMedia = query => ({
 Object.defineProperty(window, 'events', {
   value: {
     send: vi.fn(),
-    receive: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    receive: vi.fn(),
   },
   configurable: true,
   writable: true,
