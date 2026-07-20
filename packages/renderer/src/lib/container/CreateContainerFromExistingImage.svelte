@@ -45,6 +45,7 @@ let values: TypeaheadItem[] = $state([]);
 
 let imageToPull: string = $state('');
 let sortResults: ((a: string, b: string) => number) | undefined = $state();
+let searchRequestId = 0;
 
 let providerConnections = $derived(
   $providerInfos
@@ -315,9 +316,13 @@ async function searchFunction(value: string): Promise<void> {
   // do not search for images if no connection is selected
   if (!selectedProviderConnection) return;
 
+  const requestId = ++searchRequestId;
   value = value.trim();
   const localImagesValues = await searchLocalImages(value);
   const remoteImagesValues = await searchImages(value);
+
+  if (requestId !== searchRequestId) return;
+
   sortResults = (a: string, b: string): number => {
     const dockerIoValue = `docker.io/${value}`;
     const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
@@ -361,7 +366,9 @@ function onContainerConnectionChange(): void {
 }
 
 // trigger search on mount to populate the typeahead with local images
-onMount(() => searchFunction(''));
+onMount(() => {
+  searchFunction('').catch(() => {});
+});
 </script>
 
 <EngineFormPage title="Select an image">
