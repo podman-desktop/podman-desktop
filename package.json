@@ -181,7 +181,7 @@
     "prettier": "^3.8.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
-    "vite": "^8.1.4",
+    "vite": "^8.1.5",
     "mustache": "^4.2.0",
     "vitest": "^4.1.10",
     "xvfb-maybe": "^0.2.1"
