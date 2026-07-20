@@ -47,7 +47,9 @@ const apiSender: ApiSenderType = {
   receive: vi.fn(),
 };
 
-const containerRegistry = {} as unknown as ContainerProviderRegistry;
+const containerRegistry = {
+  imageExist: vi.fn(),
+} as unknown as ContainerProviderRegistry;
 
 const contributionManager = {
   listContributions: vi.fn(),
@@ -150,6 +152,35 @@ test('check navigateToImageBuild', async () => {
     parameters: {
       taskId: undefined,
     },
+  });
+});
+
+describe('navigateToImageRun', () => {
+  test('expect to thrown error if image does not exists', async () => {
+    vi.mocked(containerRegistry.imageExist).mockResolvedValue(false);
+
+    await expect(async () => {
+      await navigationManager.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+    }).rejects.toThrow(
+      `Image with id sha256:55, engine id podman.Podman and tag localhost/squid:latest cannot be found.`,
+    );
+
+    expect(apiSender.send).not.toHaveBeenCalled();
+  });
+
+  test('check navigateToImageRun', async () => {
+    vi.mocked(containerRegistry.imageExist).mockResolvedValue(true);
+
+    await navigationManager.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: 'sha256:55',
+        engineId: 'podman.Podman',
+        tag: 'localhost/squid:latest',
+      },
+    });
   });
 });
 

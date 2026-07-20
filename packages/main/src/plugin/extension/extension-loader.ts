@@ -1619,6 +1619,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       navigateToImage: async (id: string, engineId: string, tag: string): Promise<void> => {
         await this.navigationManager.navigateToImage(id, engineId, tag);
       },
+      navigateToImageRun: async (id: string, engineId: string, tag: string): Promise<void> => {
+        await this.navigationManager.navigateToImageRun(id, engineId, tag);
+      },
       navigateToVolumes: async (): Promise<void> => {
         await this.navigationManager.navigateToVolumes();
       },
