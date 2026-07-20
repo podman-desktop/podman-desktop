@@ -146,7 +146,6 @@ function onUpKey(e: KeyboardEvent): void {
       value = items[highlightIndex];
       makeVisible();
     } else if (highlightIndex === 0) {
-      highlightIndex = -1;
       value = userValue;
       close();
     }
@@ -231,6 +230,7 @@ function open(): void {
 }
 
 function close(): void {
+  highlightIndex = -1;
   opened = false;
 }
 
