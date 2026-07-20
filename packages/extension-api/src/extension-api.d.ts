@@ -5115,7 +5115,7 @@ declare module '@podman-desktop/api' {
      * const helloWorld = images.find(image => image.RepoTags?.find(tag => tag === 'quay.io/podman/hello:latest'));
      *
      * if(helloWorld) {
-     *   await navigation.navigateToImage(helloWorld.Id, helloWorld.engineId, helloWorld.RepoTags?.[0] ?? '<none>');
+     *   await navigation.navigateToImageRun(helloWorld.Id, helloWorld.engineId, helloWorld.RepoTags?.[0] ?? '<none>');
      * }
      * ```
      */
