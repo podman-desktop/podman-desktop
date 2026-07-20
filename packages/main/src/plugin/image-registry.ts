@@ -21,7 +21,6 @@ import * as fs from 'node:fs';
 import { createWriteStream } from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
@@ -33,11 +32,9 @@ import type {
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type * as Dockerode from 'dockerode';
 import * as fzstd from 'fzstd';
-import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
-import got, { HTTPError, RequestError } from 'got';
-import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
+import { Agent, ProxyAgent } from 'undici';
 import validator from 'validator';
 
 import { isMac, isWindows } from '/@/util.js';
@@ -346,57 +343,31 @@ export class ImageRegistry {
     return undefined;
   }
 
-  getOptions(insecure?: boolean): OptionsOfTextResponseBody {
-    const httpsOptions: HttpsOptions = {};
-    const options: OptionsOfTextResponseBody = {
-      https: httpsOptions,
-    };
-
-    if (options.https) {
-      options.https.certificateAuthority = this.certificates.getAllCertificates();
-      if (insecure) {
-        options.https.rejectUnauthorized = false;
-      }
+  getFetchOptions(insecure?: boolean): RequestInit {
+    if (!insecure) {
+      return {};
     }
+
+    const ca = this.certificates.getAllCertificates();
 
     if (this.proxyEnabled) {
-      // use proxy when performing got request
-      const proxy = this.proxySettings;
-      const httpProxyUrl = proxy?.httpProxy;
-      const httpsProxyUrl = proxy?.httpsProxy;
-
-      if (httpProxyUrl) {
-        options.agent ??= {};
-        try {
-          options.agent.http = new HttpProxyAgent({
-            keepAlive: true,
-            keepAliveMsecs: 1000,
-            maxSockets: 256,
-            maxFreeSockets: 256,
-            scheduling: 'lifo',
-            proxy: httpProxyUrl,
-          });
-        } catch (error) {
-          throw new Error(`Failed to create http proxy agent from ${httpProxyUrl}: ${error}`);
-        }
-      }
-      if (httpsProxyUrl) {
-        options.agent ??= {};
-        try {
-          options.agent.https = new HttpsProxyAgent({
-            keepAlive: true,
-            keepAliveMsecs: 1000,
-            maxSockets: 256,
-            maxFreeSockets: 256,
-            scheduling: 'lifo',
-            proxy: httpsProxyUrl,
-          });
-        } catch (error) {
-          throw new Error(`Failed to create https proxy agent from ${httpsProxyUrl}: ${error}`);
-        }
+      const proxyUrl = this.proxySettings?.httpsProxy ?? this.proxySettings?.httpProxy;
+      if (proxyUrl) {
+        return {
+          dispatcher: new ProxyAgent({
+            uri: proxyUrl,
+            requestTls: { ca, rejectUnauthorized: false },
+            proxyTls: { ca },
+          }),
+        } as RequestInit;
       }
     }
-    return options;
+
+    return {
+      dispatcher: new Agent({
+        connect: { ca, rejectUnauthorized: false },
+      }),
+    } as RequestInit;
   }
 
   // Adds the missing registry URL to the image name
@@ -610,13 +581,6 @@ export class ImageRegistry {
     totalSize: number,
     logger: (event: { message: string; progress: number }) => void,
   ): Promise<void> {
-    const options = this.getOptions();
-    options.headers = options.headers ?? {};
-
-    // add the Bearer token
-    options.headers['Authorization'] = `Bearer ${token}`;
-
-    // replace all special characters with _ in digest
     const digestWithoutSpecialChars = digest.replace(/[^a-zA-Z0-9]/g, '_');
 
     if (!fs.existsSync(destFolder)) {
@@ -626,7 +590,6 @@ export class ImageRegistry {
     const suffix = compressionType === 'gzip' ? '.tar' : '.zst';
     const tmpFileName = path.resolve(os.tmpdir(), `${digestWithoutSpecialChars}${suffix}`);
 
-    // ensure the folder exists
     const parentDir = path.dirname(tmpFileName);
     if (!fs.existsSync(parentDir)) {
       await fs.promises.mkdir(parentDir, { recursive: true });
@@ -634,19 +597,36 @@ export class ImageRegistry {
 
     const blobURL = `${imageData.registryURL}/${imageData.name}/blobs/${digest}`;
 
-    const readStream = got.stream(blobURL, options);
-
-    readStream.on('downloadProgress', ({ transferred }) => {
-      const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
-      logger({
-        message: `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
-        progress: globalPercentage,
-      });
+    const response = await fetch(blobURL, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    await pipeline(readStream, createWriteStream(tmpFileName));
-    // in case of zstd, we need to unpack the file first
+
+    if (!response.ok || !response.body) {
+      throw new Error(`Failed to fetch blob ${blobURL}: ${response.statusText}`);
+    }
+
+    const reader = response.body.getReader();
+    const fileStream = createWriteStream(tmpFileName);
+    let transferred = 0;
+
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        transferred += value.byteLength;
+        const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
+        logger({
+          message: `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
+          progress: globalPercentage,
+        });
+        fileStream.write(value);
+      }
+    } finally {
+      fileStream.end();
+      await new Promise<void>((resolve, reject) => fileStream.on('finish', resolve).on('error', reject));
+    }
+
     if (compressionType === 'zstd') {
-      //use fstd library to extract the file
       const content = await fs.promises.readFile(tmpFileName);
       const decompressed = fzstd.decompress(content);
       const unpackedFileName = tmpFileName.replace('.zst', '.tar');
@@ -655,34 +635,26 @@ export class ImageRegistry {
     } else {
       await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
     }
-    // remove the temporary file
     await fs.promises.rm(tmpFileName);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected async fetchOciImageConfig(imageData: ImageRegistryNameTag, digest: string, token: string): Promise<any> {
-    const options = this.getOptions();
-    options.headers = options.headers ?? {};
-    // add the Bearer token
-    options.headers['Authorization'] = `Bearer ${token}`;
-
-    // say we want to return JSON from got
     const blobURL = `${imageData.registryURL}/${imageData.name}/blobs/${digest}`;
 
-    let jsonConfig: string | undefined;
-    try {
-      jsonConfig = await got.get(blobURL, options).json();
-    } catch (requestErr) {
-      if (
-        requestErr instanceof RequestError &&
-        (requestErr.response?.statusCode === 401 || requestErr.response?.statusCode === 403)
-      ) {
-        throw Error('Unable to get access');
-      } else if (requestErr instanceof Error) {
-        throw Error(requestErr.message);
-      }
+    const response = await fetch(blobURL, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      throw Error('Unable to get access');
     }
-    return jsonConfig;
+
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
+    return response.json();
   }
 
   /**
@@ -700,52 +672,33 @@ export class ImageRegistry {
     token: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ manifest: unknown; digest: string | undefined; listDigest?: string }> {
-    const options = this.getOptions();
-    options.headers = options.headers ?? {};
+    const acceptHeaders = [
+      'application/vnd.oci.image.manifest.v1+json',
+      'application/vnd.docker.distribution.manifest.v2+json',
+      'application/vnd.docker.distribution.manifest.v1+prettyjws',
+      'application/vnd.docker.distribution.manifest.v1+json',
+      'application/vnd.docker.distribution.manifest.list.v2+json',
+      'application/vnd.oci.image.index.v1+json',
+    ];
 
-    // add the Bearer token
-    options.headers['Authorization'] = `Bearer ${token}`;
+    const response = await fetch(manifestURL, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: acceptHeaders.join(', '),
+      },
+    });
 
-    // add the manifest accept headers
-    const acceptHeaders = [];
-    if (options.headers['Accept']) {
-      if (typeof options.headers['Accept'] === 'string') {
-        acceptHeaders.push(options.headers['Accept']);
-      } else if (Array.isArray(options.headers['Accept'])) {
-        acceptHeaders.push(...options.headers['Accept']);
-      }
+    if (response.status === 401 || response.status === 403) {
+      throw Error('Unable to get access');
     }
-    acceptHeaders.push('application/vnd.oci.image.manifest.v1+json');
-    acceptHeaders.push('application/vnd.docker.distribution.manifest.v2+json');
-    acceptHeaders.push('application/vnd.docker.distribution.manifest.v1+prettyjws');
-    acceptHeaders.push('application/vnd.docker.distribution.manifest.v1+json');
-    acceptHeaders.push('application/vnd.docker.distribution.manifest.list.v2+json');
-    acceptHeaders.push('application/vnd.oci.image.index.v1+json');
 
-    options.headers['Accept'] = acceptHeaders;
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let parsedManifest: any;
-    let digest: string | undefined;
-    try {
-      const response = await got.get(manifestURL, options);
-      parsedManifest = JSON.parse(response.body);
-      const digestHeader = response.headers['docker-content-digest'];
-      if (typeof digestHeader === 'string') {
-        digest = digestHeader;
-      } else if (Array.isArray(digestHeader)) {
-        digest = digestHeader[0];
-      }
-    } catch (requestErr) {
-      if (
-        requestErr instanceof RequestError &&
-        (requestErr.response?.statusCode === 401 || requestErr.response?.statusCode === 403)
-      ) {
-        throw Error('Unable to get access');
-      } else if (requestErr instanceof Error) {
-        throw Error(requestErr.message);
-      }
-    }
+    const parsedManifest: any = await response.json();
+    const digest = response.headers.get('docker-content-digest') ?? undefined;
 
     // https://github.com/opencontainers/image-spec/blob/main/image-index.md
     // check schemaVersion and (mediaType of the manifest or if it contains manifests field being an array)
@@ -962,7 +915,6 @@ export class ImageRegistry {
 
   async getAuthInfo(serviceUrl: string, insecure?: boolean): Promise<{ authUrl: string; scheme: string }> {
     let registryUrl: string;
-    const options = this.getOptions(insecure);
 
     if (serviceUrl.includes('docker.io')) {
       registryUrl = 'https://index.docker.io/v2/';
@@ -974,44 +926,36 @@ export class ImageRegistry {
       }
     }
 
-    let authUrl: string | undefined;
-    let scheme = '';
-
+    let response: Response;
     try {
-      await got.get(registryUrl, options);
-    } catch (requestErr) {
-      if (requestErr instanceof HTTPError) {
-        const wwwAuthenticate = requestErr.response?.headers['www-authenticate'];
-        if (wwwAuthenticate) {
-          const authInfo = this.extractAuthData(wwwAuthenticate);
-          if (authInfo) {
-            scheme = authInfo.scheme?.toLowerCase();
-            // in case of basic auth, we use directly the registry URL
-            if (scheme === 'basic') {
-              return { authUrl: registryUrl, scheme };
-            }
-            const url = new URL(authInfo.authUrl);
-            if (authInfo.service) {
-              url.searchParams.set('service', authInfo.service);
-            }
-            if (authInfo.scope) {
-              url.searchParams.set('scope', authInfo.scope);
-            }
-            authUrl = url.toString();
+      response = await fetch(registryUrl, this.getFetchOptions(insecure));
+    } catch (error) {
+      throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${error}`);
+    }
+
+    if (!response.ok) {
+      const wwwAuthenticate = response.headers.get('www-authenticate');
+      if (wwwAuthenticate) {
+        const authInfo = this.extractAuthData(wwwAuthenticate);
+        if (authInfo) {
+          const scheme = authInfo.scheme?.toLowerCase();
+          if (scheme === 'basic') {
+            return { authUrl: registryUrl, scheme };
           }
-        } else {
-          throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${requestErr.message}`);
+          const url = new URL(authInfo.authUrl);
+          if (authInfo.service) {
+            url.searchParams.set('service', authInfo.service);
+          }
+          if (authInfo.scope) {
+            url.searchParams.set('scope', authInfo.scope);
+          }
+          return { authUrl: url.toString(), scheme };
         }
-      } else {
-        throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${requestErr}`);
       }
+      throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${response.statusText}`);
     }
 
-    if (authUrl === undefined) {
-      throw Error('Not a valid registry.');
-    }
-
-    return { authUrl, scheme };
+    throw Error('Not a valid registry.');
   }
 
   async checkCredentials(serviceUrl: string, username: string, password: string, insecure?: boolean): Promise<void> {
@@ -1046,43 +990,37 @@ export class ImageRegistry {
   }
 
   async getToken(authInfo: { authUrl: string; scheme: string }, imageData: ImageRegistryNameTag): Promise<string> {
-    let rawResponse: string | undefined;
-    const options = this.getOptions();
+    const headers: Record<string, string> = {};
 
-    // if we have auth for this registry, add basic auth to the headers
     const authServer = this.getAuthconfigForServer(imageData.registry);
     if (authServer) {
-      options.headers = options.headers ?? {};
       const loginAndPassWord = `${authServer.username}:${authServer.password}`;
-      options.headers['Authorization'] = `Basic ${Buffer.from(loginAndPassWord).toString('base64')}`;
+      headers['Authorization'] = `Basic ${Buffer.from(loginAndPassWord).toString('base64')}`;
     }
-    // need to replace repository%3Auser with repository:user coming from imageData
+
     let tokenUrl = authInfo.authUrl.replace('user%2Fimage', imageData.name.replaceAll('/', '%2F'));
 
-    // no scope ? we add it
     if (!tokenUrl.includes('scope')) {
       const url = new URL(tokenUrl);
       url.searchParams.set('scope', `repository:${imageData.name}:pull`);
       tokenUrl = url.toString();
     }
-    try {
-      const { body } = await got.get(tokenUrl, options);
-      rawResponse = body;
-    } catch (requestErr) {
-      if (
-        requestErr instanceof RequestError &&
-        (requestErr.response?.statusCode === 401 || requestErr.response?.statusCode === 403)
-      ) {
-        throw Error('Required authentication. Not supported.');
-      } else if (requestErr instanceof Error) {
-        throw Error(requestErr.message);
-      }
+
+    const response = await fetch(tokenUrl, { headers });
+
+    if (response.status === 401 || response.status === 403) {
+      throw Error('Required authentication. Not supported.');
     }
-    if (!rawResponse?.includes('token')) {
+
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
+    const rawResponse = await response.text();
+    if (!rawResponse.includes('token')) {
       throw Error('Unable to validate registry URL.');
     }
-    const response = JSON.parse(rawResponse);
-    return response.token;
+    return JSON.parse(rawResponse).token;
   }
 
   async doCheckCredentials(
@@ -1092,34 +1030,29 @@ export class ImageRegistry {
     password: string,
     insecure?: boolean,
   ): Promise<void> {
-    const options = this.getOptions(insecure);
-
-    let rawResponse: string | undefined;
-    // add credentials in the header
-    // encode username:password in base64
     const token = Buffer.from(`${username}:${password}`).toString('base64');
-    options.headers = {
-      Authorization: `Basic ${token}`,
-    };
-    try {
-      const { body } = await got.get(authUrl, options);
-      rawResponse = body;
-    } catch (requestErr) {
-      if (
-        requestErr instanceof RequestError &&
-        (requestErr.response?.statusCode === 401 || requestErr.response?.statusCode === 403)
-      ) {
-        throw Error('Wrong Username or Password.');
-      } else if (requestErr instanceof Error) {
-        throw Error(requestErr.message);
-      }
+
+    const response = await fetch(authUrl, {
+      ...this.getFetchOptions(insecure),
+      headers: {
+        Authorization: `Basic ${token}`,
+      },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      throw Error('Wrong Username or Password.');
     }
 
-    // no error with basic scheme, it means it's a valid connection
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
     if (scheme === 'basic') {
       return;
     }
-    if (!rawResponse?.includes('token')) {
+
+    const rawResponse = await response.text();
+    if (!rawResponse.includes('token')) {
       throw Error('Unable to validate provided credentials.');
     }
   }
@@ -1133,11 +1066,12 @@ export class ImageRegistry {
       if (!options.registry.startsWith('http')) {
         options.registry = 'https://' + options.registry;
       }
-      const resultJSON = await got.get(
-        `${options.registry}/v1/search?q=${options.query}&n=${options.limit ?? 25}`,
-        this.getOptions(),
-      );
-      return JSON.parse(resultJSON.body).results;
+      const response = await fetch(`${options.registry}/v1/search?q=${options.query}&n=${options.limit ?? 25}`);
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      const result = await response.json();
+      return result.results;
     } catch (e: unknown) {
       throw new Error(`searching images. ${String(e)}`);
     }
@@ -1146,20 +1080,21 @@ export class ImageRegistry {
   async listImageTags(options: ImageTagsListOptions): Promise<string[]> {
     const imageData = this.extractImageDataFromImageName(options.image);
 
-    // grab auth info from the registry
     const authInfo = await this.getAuthInfo(imageData.registry);
     const token = await this.getToken(authInfo, imageData);
     if (authInfo.scheme.toLowerCase() !== 'bearer') {
       throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
     }
-    const opts = this.getOptions();
-    opts.headers = opts.headers ?? {};
-    // add the Bearer token
-    opts.headers['Authorization'] = `Bearer ${token}`;
 
     try {
-      const catalog = await got.get(`${imageData.registryURL}/${imageData.name}/tags/list`, opts);
-      return JSON.parse(catalog.body).tags;
+      const response = await fetch(`${imageData.registryURL}/${imageData.name}/tags/list`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      const result = await response.json();
+      return result.tags;
     } catch (e: unknown) {
       throw new Error(`getting tags of image ${options.image}. ${String(e)}`);
     }

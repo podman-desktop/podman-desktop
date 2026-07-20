@@ -20,6 +20,7 @@ import type { Event, ProxySettings } from '@podman-desktop/api';
 import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
+import type { fetch, RequestInfo, RequestInit, Response } from 'undici';
 import { Agent, ProxyAgent } from 'undici';
 
 import { Certificates } from '/@/plugin/certificates.js';
@@ -205,10 +206,15 @@ export class Proxy {
   }
 
   private overrideFetch(): void {
-    const original = globalThis.fetch;
+    const original = globalThis.fetch as unknown as typeof fetch;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const _me = this;
-    globalThis.fetch = function (url: URL | RequestInfo, opts?: object): Promise<Response> {
+    (globalThis.fetch as unknown as typeof fetch) = function (url: RequestInfo, opts?: RequestInit): Promise<Response> {
+      // respect a caller-provided dispatcher (e.g. for insecure TLS)
+      if (opts && 'dispatcher' in opts) {
+        return original(url, opts);
+      }
+
       const urlObj = asURL(url);
       const isHttps = urlObj.protocol === 'https:';
       const proxyurl = getProxyUrl(_me, isHttps);
