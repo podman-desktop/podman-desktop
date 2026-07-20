@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { fireEvent, render } from '@testing-library/svelte';
@@ -552,6 +553,124 @@ describe('manual proxy settings persistence', () => {
 
     await vi.waitFor(() => {
       expect(manualProxySettings.settings?.httpProxy).toBe('http://new-proxy:8080');
+    });
+  });
+});
+
+describe('proxy update message', () => {
+  function setupUpdateTest(providers: ProviderInfo[]): void {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getProxySettings).mockResolvedValue({ httpProxy: '', httpsProxy: '', noProxy: '' });
+    vi.mocked(window.setProxyState).mockResolvedValue(undefined);
+    vi.mocked(window.updateProxySettings).mockResolvedValue(undefined);
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
+    vi.mocked(window.getProviderInfos).mockResolvedValue(providers);
+  }
+
+  async function clickUpdate(getByRole: (role: string, options?: object) => HTMLElement): Promise<void> {
+    const updateBtn = getByRole('button', { name: 'Update' });
+    await fireEvent.click(updateBtn);
+  }
+
+  test('should show info message when no running connections', async () => {
+    setupUpdateTest([]);
+
+    const { getByRole } = render(PreferencesProxiesRendering);
+    await vi.waitFor(() => expect(window.getProxyState).toHaveBeenCalled());
+    await clickUpdate(getByRole);
+
+    await vi.waitFor(() => {
+      expect(window.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'info',
+          message: 'Proxy settings have been applied.',
+        }),
+      );
+    });
+  });
+
+  test('should warn about Podman machine restart for machine connections', async () => {
+    setupUpdateTest([
+      {
+        containerConnections: [{ status: 'started', vmType: { id: 'applehv', name: 'Apple HV' } }],
+      } as unknown as ProviderInfo,
+    ]);
+
+    const { getByRole } = render(PreferencesProxiesRendering);
+    await vi.waitFor(() => expect(window.getProxyState).toHaveBeenCalled());
+    await clickUpdate(getByRole);
+
+    await vi.waitFor(() => {
+      expect(window.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'warning',
+          message: expect.stringContaining('restart the Podman machine'),
+        }),
+      );
+    });
+  });
+
+  test('should warn about restarting containers for native connections', async () => {
+    setupUpdateTest([
+      {
+        containerConnections: [{ status: 'started', vmType: undefined }],
+      } as unknown as ProviderInfo,
+    ]);
+
+    const { getByRole } = render(PreferencesProxiesRendering);
+    await vi.waitFor(() => expect(window.getProxyState).toHaveBeenCalled());
+    await clickUpdate(getByRole);
+
+    await vi.waitFor(() => {
+      expect(window.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'warning',
+          message: expect.stringContaining('Running containers will need to be restarted'),
+        }),
+      );
+    });
+  });
+
+  test('should include both warnings when machine and native connections are running', async () => {
+    setupUpdateTest([
+      {
+        containerConnections: [
+          { status: 'started', vmType: { id: 'libkrun', name: 'LibKrun' } },
+          { status: 'started', vmType: undefined },
+        ],
+      } as unknown as ProviderInfo,
+    ]);
+
+    const { getByRole } = render(PreferencesProxiesRendering);
+    await vi.waitFor(() => expect(window.getProxyState).toHaveBeenCalled());
+    await clickUpdate(getByRole);
+
+    await vi.waitFor(() => {
+      const call = vi.mocked(window.showMessageBox).mock.calls[0]?.[0];
+      expect(call?.type).toBe('warning');
+      expect(call?.message).toContain('restart the Podman machine');
+      expect(call?.message).toContain('Running containers will need to be restarted');
+    });
+  });
+
+  test('should not warn for stopped connections', async () => {
+    setupUpdateTest([
+      {
+        containerConnections: [{ status: 'stopped', vmType: { id: 'applehv', name: 'Apple HV' } }],
+      } as unknown as ProviderInfo,
+    ]);
+
+    const { getByRole } = render(PreferencesProxiesRendering);
+    await vi.waitFor(() => expect(window.getProxyState).toHaveBeenCalled());
+    await clickUpdate(getByRole);
+
+    await vi.waitFor(() => {
+      expect(window.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'info',
+          message: 'Proxy settings have been applied.',
+        }),
+      );
     });
   });
 });

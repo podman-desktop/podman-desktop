@@ -92,15 +92,21 @@ async function updateProxySettings(): Promise<void> {
 
   // loop over all providers and container connections to see if there are any running engines
   const providerInfos = await window.getProviderInfos();
-  const runningProviders =
-    providerInfos.filter(p => p.containerConnections.filter(c => c.status !== 'stopped').length > 0).length > 0;
+  const runningConnections = providerInfos.flatMap(p => p.containerConnections.filter(c => c.status !== 'stopped'));
+  const hasMachineConnections = runningConnections.some(c => c.vmType);
+  const hasNativeConnections = runningConnections.some(c => !c.vmType);
 
   // show a simple message to confirm that the settings are applied,
   // or a longer warning if the user may need to take action
   let message = 'Proxy settings have been applied.';
   let type: DialogType = 'info';
-  if (runningProviders) {
-    message += ' You might need to restart running container engines for the changes to take effect.';
+  if (hasMachineConnections) {
+    message +=
+      ' You might need to restart the Podman machine for the changes to take effect. Running containers without a restart policy will need to be restarted manually after the machine restart.';
+    type = 'warning';
+  }
+  if (hasNativeConnections) {
+    message += ' Running containers will need to be restarted to pick up the new proxy settings.';
     type = 'warning';
   }
 
