@@ -66,15 +66,15 @@ onDestroy(async () => {
 
 {#if showBanner}
   {#if notesAvailable}
-    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md p-5 gap-3 flex-row flex-nowrap h-[200px] items-center">
+    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md flex-row flex-nowrap h-[200px] overflow-hidden">
       {#if notesInfo?.image && !imageError}
         <img
           src={notesInfo.image}
           onerror={onImageError}
-          class="max-h-[100%] w-auto max-w-[20%] object-contain rounded-md self-start"
+          class="h-full max-w-[20%] object-cover rounded-l-md"
           alt={`Podman Desktop ${currentVersion} release image`} />
       {/if}
-      <div class="flex flex-col flex-1 h-100% self-start">
+      <div class="flex flex-col flex-1 h-full p-5">
         <div class="flex flex-row items-center justify-between">
           <p class="text-[var(--pd-content-card-header-text)] font-bold text-xl ml-2">
             {notesInfo?.title ?? ''}
@@ -82,12 +82,13 @@ onDestroy(async () => {
           <CloseButton onclick={onClose} />
         </div>
         {#if notesInfo?.summary}
-          <div
-            class="text-[var(--pd-content-card-text)] truncate text-ellipsis overflow-hidden whitespace-pre-line line-clamp-6">
-            <Markdown markdown={notesInfo?.summary}/>
+          <div class="flex-1 min-h-0 overflow-hidden">
+            <div class="text-[var(--pd-content-card-text)] line-clamp-6 overflow-hidden text-ellipsis">
+              <Markdown markdown={notesInfo?.summary}/>
+            </div>
           </div>
         {/if}
-        <div class="flex flex-row justify-end items-center gap-3 mt-2">
+        <div class="flex flex-row justify-end items-center gap-3 mt-auto">
           <Link on:click={openReleaseNotes}>Learn more</Link>
           <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>Update</Button>
         </div>
