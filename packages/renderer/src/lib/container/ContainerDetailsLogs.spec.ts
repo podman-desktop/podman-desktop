@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -93,5 +93,14 @@ test('Render container logs ', async () => {
 
   // expect the button to clear
   const clearButton = screen.getByRole('button', { name: 'Clear logs' });
+  expect(clearButton).toBeInTheDocument();
+
+  expect(screen.queryByRole('textbox', { name: 'Find' })).not.toBeInTheDocument();
+  await fireEvent.keyDown(screen.getByRole('term'), {
+    key: 'f',
+    ctrlKey: true,
+  });
+
+  expect(await screen.findByRole('textbox', { name: 'Find' })).toHaveFocus();
   expect(clearButton).toBeInTheDocument();
 });

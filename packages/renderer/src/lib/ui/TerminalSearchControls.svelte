@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowUp, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { SearchAddon } from '@xterm/addon-search';
@@ -8,9 +8,10 @@ import { onDestroy, onMount } from 'svelte';
 
 interface Props {
   terminal: Terminal;
+  closeSearch: () => void;
 }
 
-let { terminal }: Props = $props();
+let { terminal, closeSearch }: Props = $props();
 
 let searchAddon: SearchAddon | undefined;
 let searchTerm: string = $state('');
@@ -20,6 +21,7 @@ let input: HTMLInputElement | undefined = $state();
 onMount(() => {
   searchAddon = new SearchAddon();
   searchAddon.activate(terminal);
+  focus();
 });
 
 onDestroy(() => {
@@ -44,22 +46,27 @@ function onSearchPrevious(incremental = false): void {
   });
 }
 
+function onSearchNextIncremental(): void {
+  onSearchNext(true);
+}
+
+function onSearchPreviousIncremental(): void {
+  onSearchPrevious(true);
+}
+
 function onSearch(event: Event): void {
   searchTerm = (event.target as HTMLInputElement).value;
   onSearchNext();
 }
 
-function onKeyUp(e: KeyboardEvent): void {
-  if (e.ctrlKey && e.key === 'f') {
-    input?.focus();
-  }
+export function focus(): void {
+  input?.focus();
 }
 </script>
 
-<svelte:window
-  on:keyup|preventDefault={onKeyUp}
-/>
-<div class="flex flex-row py-2 h-[40px] items-center">
+<div
+  class="absolute top-1 right-12 z-10 flex flex-row h-[40px] px-1 items-center rounded shadow-lg bg-[var(--pd-terminal-background)]"
+  role="search">
   <div
     class="w-200px mx-4">
     <Input
@@ -72,11 +79,14 @@ function onKeyUp(e: KeyboardEvent): void {
     />
   </div>
   <div class="space-x-1">
-    <button aria-label="Previous Match" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={(): void => onSearchPrevious(true)}>
+    <button aria-label="Previous Match" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={onSearchPreviousIncremental}>
       <Icon icon={faArrowUp}/>
     </button>
-    <button aria-label="Next Match" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={(): void => onSearchNext(true)}>
+    <button aria-label="Next Match" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={onSearchNextIncremental}>
       <Icon icon={faArrowDown}/>
+    </button>
+    <button aria-label="Close Search" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={closeSearch}>
+      <Icon icon={faXmark}/>
     </button>
   </div>
 </div>

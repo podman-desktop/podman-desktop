@@ -39,18 +39,14 @@ beforeEach(() => {
 });
 
 test('search addon should be loaded to the terminal', () => {
-  render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+  render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   expect(SearchAddon.prototype.activate).toHaveBeenCalledOnce();
   expect(SearchAddon.prototype.activate).toHaveBeenCalledWith(TerminalMock);
 });
 
 test('search addon should be disposed on component destroy', async () => {
-  const { unmount } = render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+  const { unmount } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   unmount();
 
@@ -61,9 +57,7 @@ test('search addon should be disposed on component destroy', async () => {
 
 test('input should call findNext on search addon', async () => {
   const user = userEvent.setup();
-  const { getByRole } = render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   const searchTextbox = getByRole('textbox', {
     name: 'Find',
@@ -81,9 +75,7 @@ test('input should call findNext on search addon', async () => {
 
 test('key Enter should call findNext with incremental', async () => {
   const user = userEvent.setup();
-  const { getByRole } = render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   const searchTextbox = getByRole('textbox', {
     name: 'Find',
@@ -100,9 +92,7 @@ test('key Enter should call findNext with incremental', async () => {
 });
 
 test('arrow down should call findNext', async () => {
-  const { getByRole } = render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   const upBtn = getByRole('button', {
     name: 'Next Match',
@@ -119,9 +109,7 @@ test('arrow down should call findNext', async () => {
 });
 
 test('arrow up should call findPrevious', async () => {
-  const { getByRole } = render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   const upBtn = getByRole('button', {
     name: 'Previous Match',
@@ -137,23 +125,33 @@ test('arrow up should call findPrevious', async () => {
   });
 });
 
-test('ctrl+F should focus input', async () => {
-  const { getByRole, container } = render(TerminalSearchControls, {
-    terminal: TerminalMock,
-  });
+test('input should be focused on mount', () => {
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
 
   const searchTextbox: HTMLInputElement = getByRole('textbox', {
     name: 'Find',
   }) as HTMLInputElement;
 
-  const focusSpy = vi.spyOn(searchTextbox, 'focus');
+  expect(searchTextbox).toHaveFocus();
+});
 
-  await fireEvent.keyUp(container, {
-    ctrlKey: true,
-    key: 'f',
-  });
+test('close button should close search', async () => {
+  const closeSearch = vi.fn();
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch });
+
+  await fireEvent.click(
+    getByRole('button', {
+      name: 'Close Search',
+    }),
+  );
 
   await vi.waitFor(() => {
-    expect(focusSpy).toHaveBeenCalled();
+    expect(closeSearch).toHaveBeenCalledOnce();
   });
+});
+
+test('search controls should float above the terminal', () => {
+  const { getByRole } = render(TerminalSearchControls, { terminal: TerminalMock, closeSearch: vi.fn() });
+
+  expect(getByRole('search')).toHaveClass('absolute', 'right-12');
 });

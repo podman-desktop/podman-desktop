@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { TerminalSettings } from '@podman-desktop/core-api/terminal';
-import { render } from '@testing-library/svelte';
+import { fireEvent, render, within } from '@testing-library/svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { writable } from 'svelte/store';
@@ -155,15 +155,139 @@ test('matchMedia resize listener should trigger fit addon', async () => {
   expect(FitAddon.prototype.fit).toHaveBeenCalled();
 });
 
-test('search props should add terminal search controls', async () => {
+test('search controls should open without changing the terminal mount point', async () => {
+  const { findByRole, getByRole, queryByRole } = render(TerminalWindow, {
+    terminal: createTerminalMock(),
+    search: true,
+  });
+
+  expect(queryByRole('textbox', { name: 'Find' })).not.toBeInTheDocument();
+
+  const terminalWindow = getByRole('term');
+  const xtermMountPoint = terminalWindow.firstElementChild;
+  expect(xtermMountPoint).toHaveClass('h-full');
+
+  const findEvent = new KeyboardEvent('keydown', {
+    key: 'f',
+    ctrlKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+  terminalWindow.dispatchEvent(findEvent);
+
+  const searchTextbox = await findByRole('textbox', { name: 'Find' });
+  expect(findEvent.defaultPrevented).toBeTruthy();
+  expect(searchTextbox).toHaveFocus();
+  expect(xtermMountPoint).not.toContainElement(searchTextbox);
+  expect(getByRole('search')).toHaveClass('absolute');
+});
+
+test('search shortcut should be captured before xterm handles it', async () => {
+  const xtermKeydown = vi.fn((event: KeyboardEvent): void => event.stopPropagation());
+  vi.mocked(Terminal.prototype.open).mockImplementation((element: HTMLElement) => {
+    const xterm = document.createElement('div');
+    const textarea = document.createElement('textarea');
+    textarea.className = 'xterm-helper-textarea';
+    xterm.appendChild(textarea);
+    textarea.addEventListener('keydown', xtermKeydown, true);
+    element.appendChild(xterm);
+  });
+
+  const { container, findByRole } = render(TerminalWindow, {
+    terminal: createTerminalMock(),
+    search: true,
+  });
+
+  const textarea = await vi.waitFor(() => {
+    const element = container.querySelector<HTMLTextAreaElement>('.xterm-helper-textarea');
+    expect(element).toBeInTheDocument();
+    return element as HTMLTextAreaElement;
+  });
+
+  const findEvent = new KeyboardEvent('keydown', {
+    key: 'f',
+    ctrlKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+  textarea.dispatchEvent(findEvent);
+
+  expect(await findByRole('textbox', { name: 'Find' })).toHaveFocus();
+  expect(findEvent.defaultPrevented).toBeTruthy();
+  expect(xtermKeydown).not.toHaveBeenCalled();
+});
+
+test('search shortcut should work with the macOS modifier', async () => {
+  const { findByRole, getByRole } = render(TerminalWindow, {
+    terminal: createTerminalMock(),
+    search: true,
+  });
+
+  await fireEvent.keyDown(getByRole('term'), {
+    key: 'F',
+    metaKey: true,
+  });
+
+  expect(await findByRole('textbox', { name: 'Find' })).toHaveFocus();
+});
+
+test('unrelated shortcuts should not be prevented', () => {
   const { getByRole } = render(TerminalWindow, {
     terminal: createTerminalMock(),
     search: true,
   });
 
-  const searchTextbox = getByRole('textbox', {
-    name: 'Find',
+  const unrelatedEvent = new KeyboardEvent('keydown', {
+    key: 'g',
+    ctrlKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+  getByRole('term').dispatchEvent(unrelatedEvent);
+
+  expect(unrelatedEvent.defaultPrevented).toBeFalsy();
+});
+
+test('search shortcut should only open controls for its terminal', async () => {
+  const first = render(TerminalWindow, {
+    terminal: createTerminalMock(),
+    search: true,
+  });
+  const second = render(TerminalWindow, {
+    terminal: createTerminalMock(),
+    search: true,
   });
 
-  expect(searchTextbox).toBeInTheDocument();
+  const firstTerminal = within(first.container);
+  const secondTerminal = within(second.container);
+
+  await fireEvent.keyDown(secondTerminal.getByRole('term'), {
+    key: 'f',
+    ctrlKey: true,
+  });
+
+  expect(firstTerminal.queryByRole('textbox', { name: 'Find' })).not.toBeInTheDocument();
+  expect(await secondTerminal.findByRole('textbox', { name: 'Find' })).toHaveFocus();
+});
+
+test('Escape should close search and restore terminal focus', async () => {
+  const { findByRole, getByRole, queryByRole } = render(TerminalWindow, {
+    terminal: createTerminalMock(),
+    search: true,
+  });
+
+  await fireEvent.keyDown(getByRole('term'), {
+    key: 'f',
+    ctrlKey: true,
+  });
+  const searchTextbox = await findByRole('textbox', { name: 'Find' });
+
+  await fireEvent.keyDown(searchTextbox, {
+    key: 'Escape',
+  });
+
+  await vi.waitFor(() => {
+    expect(queryByRole('textbox', { name: 'Find' })).not.toBeInTheDocument();
+    expect(Terminal.prototype.focus).toHaveBeenCalledOnce();
+  });
 });

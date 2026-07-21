@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { SearchAddon } from '@xterm/addon-search';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -77,11 +77,18 @@ test('No logs should display EmptyScreen', async () => {
 });
 
 test('terminal used should have search enabled', async () => {
-  render(PodDetailsLogs, {
+  const { getByRole } = render(PodDetailsLogs, {
     pod: PODMAN_POD,
   });
 
+  expect(SearchAddon).not.toHaveBeenCalled();
+
+  await fireEvent.keyDown(getByRole('term'), {
+    key: 'f',
+    ctrlKey: true,
+  });
+
   await vi.waitFor(() => {
-    expect(SearchAddon).toHaveBeenCalled();
+    expect(SearchAddon).toHaveBeenCalledOnce();
   });
 });
