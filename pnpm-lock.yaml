@@ -545,6 +545,22 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/cli-installer:
+    dependencies:
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../extension-api
+    devDependencies:
+      vite:
+        specifier: ^8.1.5
+        version: 8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
+      vite-plugin-dts:
+        specifier: ^5.0.3
+        version: 5.0.3(@microsoft/api-extractor@7.55.2(@types/node@26.1.1))(esbuild@0.28.1)(rolldown@1.1.5)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.28.1))
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))
+
   packages/extension-api: {}
 
   packages/main:
