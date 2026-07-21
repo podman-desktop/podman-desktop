@@ -45,4 +45,6 @@ export interface ExtensionInfo {
     version: string;
     ociUri: string;
   };
+  repository?: string | { type: string; url: string; directory?: string };
+  homepage?: string;
 }

@@ -235,7 +235,7 @@ async function gotoImageRun(): Promise<void> {
       parameters: {
         id: image.id,
         engineId: image.engineId,
-        base64RepoTag: image.base64RepoTag,
+        tag: image.tag ? `${image.name}:${image.tag}` : image.name,
       },
     });
   }

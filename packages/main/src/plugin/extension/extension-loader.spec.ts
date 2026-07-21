@@ -1737,6 +1737,24 @@ describe('Navigation', async () => {
     // Valid we listed the contains properly each time
     expect(imageExistSpy).toHaveBeenCalledOnce();
   });
+  test('navigateToImageRun', async () => {
+    vi.mocked(containerProviderRegistry.imageExist).mockResolvedValue(true);
+
+    const api = createApi();
+
+    // Spy send method
+    const sendMock = vi.spyOn(apiSender, 'send');
+
+    await api.navigation.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+    expect(sendMock).toBeCalledWith('navigate', {
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: 'sha256:55',
+        engineId: 'podman.Podman',
+        tag: 'localhost/squid:latest',
+      },
+    });
+  });
   test('navigateToVolumes', async () => {
     const api = createApi();
 

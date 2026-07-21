@@ -48,6 +48,32 @@
             }
           ]
         },
+        "repository": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "directory": {
+                  "type": "string"
+                }
+              },
+              "required": ["type", "url"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "homepage": {
+          "type": "string"
+        },
         "extensionDependencies": {
           "type": "array",
           "items": {
