@@ -20,7 +20,7 @@ name: e2e-tests-main
 run-name: >-
   ${{ inputs.release_tag
       && format('e2e-tests-main [{0}]', inputs.release_tag)
-      || '' }}
+      || github.workflow }}
 
 on:
   push:

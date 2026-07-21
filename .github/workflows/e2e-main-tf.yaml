@@ -19,7 +19,7 @@ name: PD E2E Testing Farm
 run-name: >-
   ${{ inputs.release_tag
       && format('PD E2E Testing Farm [{0}]', inputs.release_tag)
-      || '' }}
+      || github.workflow }}
 
 on:
   schedule:

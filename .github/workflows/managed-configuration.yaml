@@ -3,7 +3,7 @@ name: Managed configuration tests
 run-name: >-
   ${{ inputs.release_tag
       && format('Managed configuration tests [{0}]', inputs.release_tag)
-      || '' }}
+      || github.workflow }}
 
 on:
   workflow_dispatch:
