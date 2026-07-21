@@ -16,6 +16,11 @@
 
 name: PD E2E Testing Farm
 
+run-name: >-
+  ${{ inputs.release_tag
+      && format('PD E2E Testing Farm [{0}]', inputs.release_tag)
+      || '' }}
+
 on:
   schedule:
     - cron:  '0 0 * * *'
@@ -35,6 +40,11 @@ on:
         default: 'main'
         description: 'Podman Desktop repo branch'
         type: string
+        required: false
+      release_tag:
+        description: 'Tag to identify this run for report-portal'
+        type: string
+        default: ''
         required: false
 
 permissions:

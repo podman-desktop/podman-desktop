@@ -1,0 +1,81 @@
+#
+# Copyright (C) 2026 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: e2e-tests-prerelease
+
+on:
+  release:
+    types: [prereleased]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  trigger-e2e:
+    name: Trigger E2E tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Trigger e2e-tests-main with all targets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run e2e-main.yaml \
+            --repo ${{ github.repository }} \
+            -f organization=podman-desktop \
+            -f repositoryName=podman-desktop \
+            -f npm_target=test:e2e:all \
+            -f branch=${{ github.event.release.name || github.ref_name }} \
+            -f release_tag=release
+
+  trigger-testing-farm:
+    name: Trigger Testing Farm E2E tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.release.name || github.ref_name }}
+          sparse-checkout: extensions/podman/packages/extension/src
+          sparse-checkout-cone-mode: false
+
+      - name: Read bundled Podman version and trigger Testing Farm
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PODMAN_VERSION=$(jq -r '.version' extensions/podman/packages/extension/src/podman*.json)
+          echo "Podman version from JSON: $PODMAN_VERSION"
+
+          gh workflow run e2e-main-tf.yaml \
+            --repo ${{ github.repository }} \
+            -f podman_version="$PODMAN_VERSION" \
+            -f npm_target=all \
+            -f release_tag=release
+
+  trigger-managed-configuration:
+    name: Trigger managed configuration tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Trigger managed configuration tests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run managed-configuration.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.event.release.name || github.ref_name }} \
+            -f release_tag=release

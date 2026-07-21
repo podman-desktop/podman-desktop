@@ -1,7 +1,18 @@
 name: Managed configuration tests
 
+run-name: >-
+  ${{ inputs.release_tag
+      && format('Managed configuration tests [{0}]', inputs.release_tag)
+      || '' }}
+
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag to identify this run for report-portal'
+        type: string
+        default: ''
+        required: false
   push:
     branches: [ main ]
 

@@ -17,6 +17,11 @@
 
 name: e2e-tests-main
 
+run-name: >-
+  ${{ inputs.release_tag
+      && format('e2e-tests-main [{0}]', inputs.release_tag)
+      || '' }}
+
 on:
   push:
     branches: [main]
@@ -74,6 +79,11 @@ on:
         - 'true'
         - 'false'
         default: 'true'
+        required: false
+      release_tag:
+        description: 'Tag to identify this run for report-portal'
+        type: string
+        default: ''
         required: false
 
 permissions:
