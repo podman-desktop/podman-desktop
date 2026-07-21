@@ -59,7 +59,9 @@ jobs:
     runs-on: ubuntu-22.04
     # disable when running in a fork of this repo, or on a PR opened from a fork:
     # OIDC tokens aren't issued in either case, so Argos auth would fail
-    if: github.event.repository.fork == false && github.event.pull_request.head.repo.fork != true
+    if: >-
+      github.event.repository.fork == false &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
