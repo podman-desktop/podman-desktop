@@ -35,13 +35,14 @@ jobs:
       - name: Trigger e2e-tests-main with all targets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REF: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
           gh workflow run e2e-main.yaml \
             --repo ${{ github.repository }} \
             -f organization=podman-desktop \
             -f repositoryName=podman-desktop \
             -f npm_target=test:e2e:all \
-            -f branch=${{ github.event.release.name || github.ref_name }} \
+            -f branch="$TARGET_REF" \
             -f release_tag=release
 
   trigger-testing-farm:
@@ -50,13 +51,15 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: ${{ github.event.release.name || github.ref_name }}
+          ref: ${{ github.event.release.tag_name || github.ref_name }}
+          persist-credentials: false
           sparse-checkout: extensions/podman/packages/extension/src
           sparse-checkout-cone-mode: false
 
       - name: Read bundled Podman version and trigger Testing Farm
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REF: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
           PODMAN_VERSION=$(jq -r '.version' extensions/podman/packages/extension/src/podman*.json)
           echo "Podman version from JSON: $PODMAN_VERSION"
@@ -65,6 +68,7 @@ jobs:
             --repo ${{ github.repository }} \
             -f podman_version="$PODMAN_VERSION" \
             -f npm_target=all \
+            -f branch="$TARGET_REF" \
             -f release_tag=release
 
   trigger-managed-configuration:
@@ -74,8 +78,9 @@ jobs:
       - name: Trigger managed configuration tests
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REF: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
           gh workflow run managed-configuration.yaml \
             --repo ${{ github.repository }} \
-            --ref ${{ github.event.release.name || github.ref_name }} \
+            --ref "$TARGET_REF" \
             -f release_tag=release
