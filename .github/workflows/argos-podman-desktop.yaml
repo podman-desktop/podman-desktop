@@ -50,6 +50,13 @@ permissions:
 jobs:
   podman-desktop:
     name: podman desktop
+    permissions:
+      # Required to check out the repository and read its metadata
+      contents: read
+      # Required for Argos to authenticate via OIDC
+      id-token: write
+      # Lets Argos link the build to its pull request
+      pull-requests: read
     runs-on: ubuntu-24.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
@@ -112,5 +119,3 @@ jobs:
         continue-on-error: true
         working-directory: tests/playwright
         run: pnpm run argos-ci:upload
-        env:
-          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
