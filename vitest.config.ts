@@ -47,7 +47,7 @@ export default defineConfig({
         // projects with sources at root
         '{website,scripts}/*',
       ],
-      exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
+      exclude: [...(configDefaults.coverage.exclude ?? []), ...PODMAN_DESKTOP_EXCLUDED],
     },
     exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
   },

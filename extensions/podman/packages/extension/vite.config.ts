@@ -15,20 +15,32 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-const PACKAGE_ROOT = __dirname;
 
-/**
- * Config for extensions tests
- * placed in project root tests folder
- * @type {import('vite').UserConfig}
- * @see https://vitest.dev/config/
- */
-const config = {
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { mergeConfig, type UserConfig } from 'vite';
+
+import baseConfig from '../../../vite.base.config';
+
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+export default mergeConfig(baseConfig as UserConfig, {
   root: PACKAGE_ROOT,
-  test: {
-    globals: true,
-    include: ['*.{test,spec}.ts'],
+  resolve: {
+    alias: {
+      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+    },
   },
-};
-
-export default config;
+  build: {
+    rollupOptions: {
+      external: ['ssh2', '@podman-desktop/podman-extension-api'],
+      output: {
+        entryFileNames: '[name].cjs',
+      },
+    },
+  },
+  test: {
+    include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+  },
+});

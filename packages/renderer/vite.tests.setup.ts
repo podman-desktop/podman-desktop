@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
+import path, { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import 'vitest-canvas-mock';
 import typescript from 'typescript';
@@ -73,7 +74,7 @@ function extractWindowMethods(filePath) {
 }
 
 // methods being exposed
-const declarationsPath = path.resolve(__dirname, '../preload/exposedInMainWorld.d.ts');
+const declarationsPath = path.resolve(dirname(fileURLToPath(import.meta.url)), '../preload/exposedInMainWorld.d.ts');
 
 // Extract method names from the Window interface
 const methodNames = extractWindowMethods(declarationsPath);

@@ -102,7 +102,7 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
 
   return getWatcher({
     name: 'reload-app-on-main-package-change',
-    configFile: 'packages/main/vite.config.js',
+    configFile: 'packages/main/vite.config.ts',
     writeBundle() {
       if (spawnProcess !== null) {
         spawnProcess.off('exit', process.exit);
@@ -177,7 +177,7 @@ const setupUiPackageWatcher = () => {
 const setupCoreApiPackageWatcher = ({ ws }) =>
   getWatcher({
     name: 'reload-page-on-core-api-package-change',
-    configFile: 'packages/api/vite.config.js',
+    configFile: 'packages/api/vite.config.ts',
     writeBundle() {
       if (ws) {
         ws.send({
@@ -194,7 +194,7 @@ const setupCoreApiPackageWatcher = ({ ws }) =>
 const setupPreloadPackageWatcher = ({ ws }) =>
   getWatcher({
     name: 'reload-page-on-preload-package-change',
-    configFile: 'packages/preload/vite.config.js',
+    configFile: 'packages/preload/vite.config.ts',
     writeBundle() {
       // Generating exposedInMainWorld.d.ts when preload package is changed.
       generateAsync({
@@ -212,7 +212,7 @@ const setupPreloadPackageWatcher = ({ ws }) =>
 const setupPreloadDockerExtensionPackageWatcher = ({ ws }) =>
   getWatcher({
     name: 'reload-page-on-preload-docker-extension-package-change',
-    configFile: 'packages/preload-docker-extension/vite.config.js',
+    configFile: 'packages/preload-docker-extension/vite.config.ts',
     writeBundle() {
       // Generating exposedInMainWorld.d.ts when preload package is changed.
       generateAsync({
@@ -231,7 +231,7 @@ const setupPreloadDockerExtensionPackageWatcher = ({ ws }) =>
 const setupPreloadWebviewPackageWatcher = ({ ws }) =>
   getWatcher({
     name: 'reload-page-on-preload-webview-package-change',
-    configFile: 'packages/preload-webview/vite.config.js',
+    configFile: 'packages/preload-webview/vite.config.ts',
     writeBundle() {
       // Generating exposedInWebview.d.ts when preload package is changed.
       generateAsync({
@@ -279,7 +279,7 @@ const setupExtensionApiWatcher = name => {
     }
     const viteDevServer = await createServer({
       ...sharedConfig,
-      configFile: 'packages/renderer/vite.config.js',
+      configFile: 'packages/renderer/vite.config.ts',
       extensions: extensions,
     });
 

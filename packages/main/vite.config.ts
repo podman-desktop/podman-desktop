@@ -16,16 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { node } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
-import { builtinModules } from 'module';
+import { builtinModules } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const PACKAGE_ROOT = __dirname;
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
+import { defineConfig } from 'vitest/config';
+
+import { node } from '../../.electron-vendors.cache.json';
+
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
@@ -52,7 +53,6 @@ const config = {
       formats: ['cjs'],
     },
     rollupOptions: {
-      platform: 'node',
       external: [
         'electron',
         'chokidar',
@@ -76,6 +76,4 @@ const config = {
     include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     setupFiles: ['./vitest.setup.ts'],
   },
-};
-
-export default config;
+});

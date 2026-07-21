@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,16 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-/* eslint-env node */
-import { join } from 'path';
-import { defineConfig } from 'vite';
 
-const PACKAGE_ROOT = __dirname;
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  mode: process.env.MODE,
+import { mergeConfig, type UserConfig } from 'vite';
+
+import baseConfig from '../vite.base.config';
+
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+export default mergeConfig(baseConfig as UserConfig, {
   root: PACKAGE_ROOT,
-  resolve: {
-    alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
-    },
-  },
-  base: '',
-  server: {
-    fs: {
-      strict: true,
-    },
-  },
-  build: {
-    sourcemap: true,
-    outDir: 'dist',
-    assetsDir: '.',
-
-    emptyOutDir: true,
-    reportCompressedSize: false,
-  },
-  test: {
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    passWithNoTests: true,
-  },
 });

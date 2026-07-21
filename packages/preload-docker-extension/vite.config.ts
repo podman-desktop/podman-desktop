@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,53 +16,54 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { svelteTesting } from '@testing-library/svelte/vite';
-import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
-import tailwindcss from '@tailwindcss/vite';
+import { builtinModules } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-let filename = fileURLToPath(import.meta.url);
-const PACKAGE_ROOT = path.dirname(filename);
+import { defineConfig } from 'vitest/config';
 
-// https://vitejs.dev/config/
+import { chrome } from '../../.electron-vendors.cache.json';
+
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
+  envDir: process.cwd(),
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js', hot: !process.env.VITEST }), svelteTesting()],
-  test: {
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    globals: true,
-    environment: 'jsdom',
-    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
-    deps: {
-      inline: ['moment'],
-    },
-  },
-  base: '',
-  server: {
-    fs: {
-      strict: true,
-    },
-  },
+  /*plugins: [
+     commonjs({
+       dynamicRequireTargets: [
+         // include using a glob pattern (either a string or an array of strings)
+         'node_modules/ssh2/lib/protocol/crypto/poly1305.js',
+       ]
+       }),
+   ],*/
   build: {
-    sourcemap: true,
+    sourcemap: 'inline',
+    target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
+    minify: process.env.MODE !== 'development',
     lib: {
-      entry: 'src/lib/index.ts',
-      formats: ['es'],
+      entry: 'src/index.ts',
+      formats: ['cjs'],
     },
-
+    rollupOptions: {
+      external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
+      output: {
+        entryFileNames: '[name].cjs',
+      },
+    },
     emptyOutDir: true,
     reportCompressedSize: false,
+  },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 });

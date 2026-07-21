@@ -53,6 +53,7 @@ const TYPESCRIPT_PROJECTS = [
   './extensions/*/packages/*/tsconfig.json',
   './tests/playwright/tsconfig.json',
   './storybook/tsconfig.json',
+  './tsconfig.vite.json',
 ];
 
 export default [
@@ -62,6 +63,7 @@ export default [
       '*.config.*js',
       '**/*.config.*js',
       '**/*.tests.setup.*js',
+      '**/*.tests.setup.ts',
       '**/dist/**/*',
       '**/test-resources',
       '**/__mocks__/',
@@ -418,6 +420,15 @@ export default [
           ],
         },
       ],
+    },
+  },
+
+  {
+    files: ['**/vite.config.ts', '**/vite.base.config.ts', '**/vitest.config.ts'],
+    rules: {
+      'import/no-extraneous-dependencies': 'off',
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
     },
   },
 ];

@@ -17,11 +17,13 @@
  ***********************************************************************/
 
 import { builtinModules } from 'node:module';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
-const WORKSPACE_ROOT = join(__dirname, '..');
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..');
 
 export default defineConfig({
   mode: process.env.MODE,
@@ -40,7 +42,6 @@ export default defineConfig({
       formats: ['cjs'],
     },
     rollupOptions: {
-      platform: 'node',
       external: ['@podman-desktop/api', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].js',
