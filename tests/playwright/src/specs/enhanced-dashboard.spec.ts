@@ -16,10 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Page } from '@playwright/test';
+
 import { ResourceElementActions } from '/@/model/core/operations';
-import { SystemOverviewState } from '/@/model/core/states';
+import { ResourceElementState, SystemOverviewState } from '/@/model/core/states';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
+import type { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
@@ -35,6 +38,10 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 const PODMAN_MACHINE_NAME: string = 'podman-machine-default';
 const PODMAN_MACHINE_VISIBLE_NAME: string = 'Podman Machine';
 const CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION: string = 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension';
+const DUMMY_K8S_RESOURCE_NAME: string = 'pd-dummy-k8s';
+const DUMMY_K8S_EXTENSION_LABEL: string = 'you.pd-dummy-k8s';
+const DUMMY_K8S_EXTENSION_NAME: string = 'Dummy Resources';
+const DUMMY_CLUSTER_NAME: string = 'dummy-cluster';
 
 const TIMEOUT_SHORT = 10_000;
 const TIMEOUT_STANDARD = 30_000;
@@ -58,10 +65,13 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   }
 });
 
-test.afterAll(async ({ runner, page }) => {
+test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(TIMEOUT_SETUP);
 
   try {
+    await deleteDummyCluster(page, navigationBar);
+    await uninstallDummyClusterExtension(navigationBar);
+
     if (test.info().status === 'failed') {
       await resetPodmanMachinesFromCLI();
       await createPodmanMachineFromCLI();
@@ -69,9 +79,9 @@ test.afterAll(async ({ runner, page }) => {
     }
   } catch (error) {
     console.log('Error during cleanup:', error);
+  } finally {
+    await runner.close();
   }
-
-  await runner.close();
 });
 
 test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'] }, () => {
@@ -102,42 +112,6 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
       const dashboardPage = await waitForDashboardState(navigationBar, false);
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: TIMEOUT_SHORT });
-    });
-
-    test('Verify Kubernetes/VM Connections', async ({ page, navigationBar }) => {
-      test.setTimeout(150_000);
-      // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
-      const dashboardPage = await navigationBar.openDashboard();
-      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
-      await playExpect(dashboardPage.k8sVmConnectionLabel).not.toBeVisible();
-      // go to extensions, click on 'install custom'
-      // enter 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension' in OCI image field, click 'install'
-      const extensionsPage = await navigationBar.openExtensions();
-      await extensionsPage.installExtensionFromOCIImage(CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION);
-      // go to settings/resources, find 'Dummy Resources' card
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.openTabPage(ResourcesPage);
-      const dummyK8sResourceCard = new ResourceConnectionCardPage(page, 'pd-dummy-k8s');
-      // click on 'Create new...'
-      await playExpect(dummyK8sResourceCard.createButton).toBeVisible();
-      await playExpect(dummyK8sResourceCard.createButton).toBeEnabled();
-      await dummyK8sResourceCard.createButton.scrollIntoViewIfNeeded();
-      await dummyK8sResourceCard.createButton.click();
-      // Create Kubernetes cluster (second form)
-      const createK8sClusterButton = page
-        .locator('form')
-        .filter({ hasText: 'Cluster name' })
-        .getByRole('button', { name: 'Create' });
-      await playExpect(createK8sClusterButton).toBeEnabled();
-      await createK8sClusterButton.click();
-      // verify the 'Kubernetes/VM connections:' label is visible
-      await navigationBar.openDashboard();
-      await dashboardPage.k8sVmConnectionLabel.scrollIntoViewIfNeeded();
-      await playExpect(dashboardPage.k8sVmConnectionLabel).toBeVisible();
-      // verify the new k8s connection button appears on the enhanced dashboard card
-      const dummyK8sClusterButton = dashboardPage.getNavigateToConnectionButton('dummy-cluster');
-      await playExpect(dummyK8sClusterButton).toBeVisible();
-      await playExpect(dummyK8sClusterButton).toBeEnabled();
     });
   });
 
@@ -203,4 +177,105 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
       await playExpect(resourcesPage.header).toBeVisible();
     });
   });
+
+  test('Verify Kubernetes/VM Connections', async ({ page, navigationBar }) => {
+    test.setTimeout(150_000);
+
+    const { dashboardPage, dummyK8sResourceCard } = await test.step(
+      'Install dummy K8s extension and open Dummy Resources',
+      async () => {
+        // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
+        const dashboard = await navigationBar.openDashboard();
+        await dashboard.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboard.k8sVmConnectionLabel).not.toBeVisible();
+        // go to extensions, click on 'install custom'
+        // enter 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension' in OCI image field, click 'install'
+        const extensionsPage = await navigationBar.openExtensions();
+        await extensionsPage.installExtensionFromOCIImage(CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION);
+        // go to settings/resources, find 'Dummy Resources' card
+        const settingsBar = await navigationBar.openSettings();
+        await settingsBar.openTabPage(ResourcesPage);
+        const resourceCard = new ResourceConnectionCardPage(page, DUMMY_K8S_RESOURCE_NAME);
+        return { dashboardPage: dashboard, dummyK8sResourceCard: resourceCard };
+      },
+    );
+
+    await test.step('Create dummy-cluster', async () => {
+      // click on 'Create new...'
+      await playExpect(dummyK8sResourceCard.createButton).toBeVisible();
+      await playExpect(dummyK8sResourceCard.createButton).toBeEnabled();
+      await dummyK8sResourceCard.createButton.scrollIntoViewIfNeeded();
+      await dummyK8sResourceCard.createButton.click();
+      // Create Kubernetes cluster (second form)
+      const k8sClusterForm = page
+        .getByRole('form', { name: 'Properties Information' })
+        .filter({ has: page.getByRole('textbox', { name: 'Cluster name' }) });
+      const createK8sClusterButton = k8sClusterForm.getByRole('button', { name: 'Create' });
+      await playExpect(createK8sClusterButton).toBeEnabled();
+      await createK8sClusterButton.click();
+    });
+
+    await test.step('Verify Kubernetes/VM connection on dashboard', async () => {
+      // check the resource has been created
+      const goBackButton = page.getByRole('button', { name: 'Go back to resources' });
+      await playExpect(goBackButton).toBeVisible();
+      await goBackButton.click();
+      // verify the 'Kubernetes/VM connections:' label is visible
+      await navigationBar.openDashboard();
+      await dashboardPage.k8sVmConnectionLabel.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.k8sVmConnectionLabel).toBeVisible();
+      // verify the new k8s connection button appears on the enhanced dashboard card
+      const dummyK8sClusterButton = dashboardPage.getNavigateToConnectionButton(DUMMY_CLUSTER_NAME);
+      await playExpect(dummyK8sClusterButton).toBeVisible();
+      await playExpect(dummyK8sClusterButton).toBeEnabled();
+    });
+  });
 });
+
+async function deleteDummyCluster(page: Page, navigationBar: NavigationBar): Promise<void> {
+  return test.step('Remove dummy-cluster from Dummy Resources', async () => {
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.openTabPage(ResourcesPage);
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: TIMEOUT_SHORT });
+
+    if (!(await resourcesPage.resourceCardIsVisible(DUMMY_K8S_RESOURCE_NAME))) {
+      console.log(`Dummy Resources card [${DUMMY_K8S_RESOURCE_NAME}] not present, skipping deletion.`);
+      return;
+    }
+
+    const dummyK8sResourceCard = new ResourceConnectionCardPage(page, DUMMY_K8S_RESOURCE_NAME, DUMMY_CLUSTER_NAME);
+    if (!(await dummyK8sResourceCard.doesResourceElementExist())) {
+      console.log(`Dummy cluster [${DUMMY_CLUSTER_NAME}] not present, skipping deletion.`);
+      return;
+    }
+
+    await dummyK8sResourceCard.performConnectionAction(ResourceElementActions.Stop);
+    await playExpect(dummyK8sResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
+      timeout: TIMEOUT_STANDARD,
+    });
+    await dummyK8sResourceCard.performConnectionAction(ResourceElementActions.Delete);
+    await playExpect
+      .poll(async () => await dummyK8sResourceCard.doesResourceElementExist(), { timeout: TIMEOUT_STANDARD })
+      .toBeFalsy();
+  });
+}
+
+async function uninstallDummyClusterExtension(navigationBar: NavigationBar): Promise<void> {
+  return test.step('Uninstall Dummy Resources extension', async () => {
+    const extensionsPage = await navigationBar.openExtensions();
+    if (!(await extensionsPage.extensionIsInstalled(DUMMY_K8S_EXTENSION_LABEL))) {
+      console.log(`Extension [${DUMMY_K8S_EXTENSION_LABEL}] not installed, skipping uninstall.`);
+      return;
+    }
+
+    const extensionCard = await extensionsPage.getInstalledExtension(
+      DUMMY_K8S_EXTENSION_NAME,
+      DUMMY_K8S_EXTENSION_LABEL,
+    );
+    await extensionCard.removeExtension();
+    await playExpect
+      .poll(async () => await extensionsPage.extensionIsInstalled(DUMMY_K8S_EXTENSION_LABEL), { timeout: 15_000 })
+      .toBeFalsy();
+  });
+}
