@@ -57,7 +57,7 @@ jobs:
       # Lets Argos link the build to its pull request
       pull-requests: read
     runs-on: ubuntu-22.04
-    # disable on forks as secrets are not available
+    # disable on forks: OIDC tokens aren't issued for fork PRs, so Argos auth would fail
     if: github.event.repository.fork == false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
