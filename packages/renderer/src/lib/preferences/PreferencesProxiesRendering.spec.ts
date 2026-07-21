@@ -558,14 +558,9 @@ describe('manual proxy settings persistence', () => {
 });
 
 describe('proxy update message', () => {
-  function setupUpdateTest(providers: ProviderInfo[]): void {
-    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
-    vi.mocked(window.getProxySettings).mockResolvedValue({ httpProxy: '', httpsProxy: '', noProxy: '' });
-    vi.mocked(window.setProxyState).mockResolvedValue(undefined);
-    vi.mocked(window.updateProxySettings).mockResolvedValue(undefined);
+  beforeEach(() => {
     vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
-    vi.mocked(window.getProviderInfos).mockResolvedValue(providers);
-  }
+  });
 
   async function clickUpdate(getByRole: (role: string, options?: object) => HTMLElement): Promise<void> {
     const updateBtn = getByRole('button', { name: 'Update' });
@@ -573,8 +568,6 @@ describe('proxy update message', () => {
   }
 
   test('should show info message when no running connections', async () => {
-    setupUpdateTest([]);
-
     const { getByRole } = render(PreferencesProxiesRendering);
     await vi.waitFor(() => expect(window.getProxyState).toHaveBeenCalled());
     await clickUpdate(getByRole);
@@ -590,7 +583,7 @@ describe('proxy update message', () => {
   });
 
   test('should warn about Podman machine restart for machine connections', async () => {
-    setupUpdateTest([
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
       {
         containerConnections: [{ status: 'started', vmType: { id: 'applehv', name: 'Apple HV' } }],
       } as unknown as ProviderInfo,
@@ -611,7 +604,7 @@ describe('proxy update message', () => {
   });
 
   test('should warn about restarting containers for native connections', async () => {
-    setupUpdateTest([
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
       {
         containerConnections: [{ status: 'started', vmType: undefined }],
       } as unknown as ProviderInfo,
@@ -632,7 +625,7 @@ describe('proxy update message', () => {
   });
 
   test('should include both warnings when machine and native connections are running', async () => {
-    setupUpdateTest([
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
       {
         containerConnections: [
           { status: 'started', vmType: { id: 'libkrun', name: 'LibKrun' } },
@@ -654,7 +647,7 @@ describe('proxy update message', () => {
   });
 
   test('should not warn for stopped connections', async () => {
-    setupUpdateTest([
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
       {
         containerConnections: [{ status: 'stopped', vmType: { id: 'applehv', name: 'Apple HV' } }],
       } as unknown as ProviderInfo,
