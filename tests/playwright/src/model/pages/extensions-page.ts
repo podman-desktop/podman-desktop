@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,18 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { ExtensionCardPage } from './extension-card-page';
+import { ExtensionCatalogCardPage } from './extension-catalog-card-page';
 import type { ExtensionDetailsPage } from './extension-details-page';
 
 export class ExtensionsPage {
   readonly page: Page;
   readonly heading: Locator;
   readonly header: Locator;
+  readonly search: Locator;
+  readonly searchInput: Locator;
   readonly content: Locator;
   readonly additionalActions: Locator;
+  readonly catalogExtensions: Locator;
   readonly installedTab: Locator;
   readonly catalogTab: Locator;
   readonly localExtensionsTab: Locator;
@@ -36,11 +40,14 @@ export class ExtensionsPage {
   constructor(page: Page) {
     this.page = page;
     this.header = page.getByRole('region', { name: 'header' });
+    this.search = page.getByRole('region', { name: 'search' });
+    this.searchInput = this.search.getByLabel('search extensions');
     this.content = page.getByRole('region', { name: 'content' });
     this.heading = this.header.getByRole('heading', { name: 'extensions' });
     this.additionalActions = this.header.getByRole('group', {
       name: 'additionalActions',
     });
+    this.catalogExtensions = this.content.getByRole('region', { name: 'Catalog Extensions' });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
     this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
     this.localExtensionsTab = this.page.getByRole('button', { name: 'Local Extensions' });
@@ -91,7 +98,36 @@ export class ExtensionsPage {
   }
 
   public async openCatalogTab(): Promise<void> {
-    await this.catalogTab.click();
+    return test.step('Open Catalog tab', async () => {
+      await playExpect(this.catalogTab).toBeVisible({ timeout: 10_000 });
+      await this.catalogTab.click();
+    });
+  }
+
+  public async filterByName(name: string): Promise<void> {
+    return test.step(`Filter extensions by name: ${name}`, async () => {
+      await playExpect(this.searchInput).toBeVisible();
+      await this.searchInput.fill(name);
+      await playExpect(this.searchInput).toHaveValue(name);
+    });
+  }
+
+  public async clearFilterByName(): Promise<void> {
+    return test.step('Clear extensions name filter', async () => {
+      await playExpect(this.searchInput).toBeVisible();
+      await this.searchInput.clear();
+      await playExpect(this.searchInput).toHaveValue('');
+    });
+  }
+
+  public getCatalogExtension(extensionName: string): ExtensionCatalogCardPage {
+    return new ExtensionCatalogCardPage(this.page, extensionName);
+  }
+
+  public async countCatalogExtensions(): Promise<number> {
+    return test.step('Count catalog extension cards', async () => {
+      return await this.catalogExtensions.getByRole('group').count();
+    });
   }
 
   public async openExtensionDetails(name: string, label: string, heading: string): Promise<ExtensionDetailsPage> {
