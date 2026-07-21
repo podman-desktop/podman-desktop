@@ -916,7 +916,7 @@ export class PluginSystem {
     this.ipcHandle(
       'container-provider-registry:listImages',
       async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
-        return containerProviderRegistry.podmanListImages(options);
+        return containerProviderRegistry.listImages(options);
       },
     );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
