@@ -83,7 +83,7 @@ onDestroy(async () => {
         </div>
         {#if notesInfo?.summary}
           <div class="flex-1 min-h-0 overflow-hidden">
-            <div class="text-(--pd-content-card-text) line-clamp-6 overflow-hidden text-ellipsis">
+            <div class="text-(--pd-content-card-text) line-clamp-6">
               <Markdown markdown={notesInfo?.summary}/>
             </div>
           </div>
