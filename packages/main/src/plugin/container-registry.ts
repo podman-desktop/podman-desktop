@@ -755,7 +755,7 @@ export class ContainerProviderRegistry {
     return flattenedContainers;
   }
 
-  // Podman list images will prefer to use libpod API of the provider
+  // list images will prefer to use libpod API of the provider if podman
   // before falling back to using the regular API
   async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
     // Get timeout from configuration

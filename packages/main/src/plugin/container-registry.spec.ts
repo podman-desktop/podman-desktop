@@ -4844,7 +4844,7 @@ describe('getContainerCreateMountOptionFromBind', () => {
   });
 });
 
-test('list images with podmanListImages correctly', async () => {
+test('list images with listImages correctly', async () => {
   const imagesList = [
     {
       Id: 'dummyImageId',
