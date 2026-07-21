@@ -194,41 +194,41 @@ test.each([
   expect(openExternalMock).toHaveBeenCalledWith(link);
 });
 
-test.each<GitHubFeedbackCategory>([
-  'bug',
-  'feature',
-])('Expect %s to be included in previewOnGitHub call', async category => {
-  const onCloseFormMock = vi.fn();
-  const { preview, title, description } = renderGitHubIssueFeedback({
-    category: category,
-    onCloseForm: onCloseFormMock,
-    contentChange: vi.fn(),
-    categoryLinks: {
-      bug: '/bug/link',
-      feature: '/feature/link',
-    },
-  });
-
-  // type dummy data
-  await userEvent.type(title, 'Bug title');
-  await userEvent.type(description, 'Bug description');
-
-  // wait enable
-  await vi.waitFor(() => {
-    expect(preview).toBeEnabled();
-  });
-
-  // preview
-  await userEvent.click(preview);
-
-  expect(previewOnGitHubMock).toHaveBeenCalledWith(
-    expect.objectContaining({
+test.each<GitHubFeedbackCategory>(['bug', 'feature'])(
+  'Expect %s to be included in previewOnGitHub call',
+  async category => {
+    const onCloseFormMock = vi.fn();
+    const { preview, title, description } = renderGitHubIssueFeedback({
       category: category,
-    }),
-  );
+      onCloseForm: onCloseFormMock,
+      contentChange: vi.fn(),
+      categoryLinks: {
+        bug: '/bug/link',
+        feature: '/feature/link',
+      },
+    });
 
-  expect(onCloseFormMock).toHaveBeenCalled();
-});
+    // type dummy data
+    await userEvent.type(title, 'Bug title');
+    await userEvent.type(description, 'Bug description');
+
+    // wait enable
+    await vi.waitFor(() => {
+      expect(preview).toBeEnabled();
+    });
+
+    // preview
+    await userEvent.click(preview);
+
+    expect(previewOnGitHubMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: category,
+      }),
+    );
+
+    expect(onCloseFormMock).toHaveBeenCalled();
+  },
+);
 
 describe('includeSystemInfo', () => {
   test('should not be visible on category feature', async () => {
@@ -352,59 +352,61 @@ describe('includeExtensionInfo', () => {
   });
 });
 
-test.each<GitHubFeedbackCategory>([
-  'bug',
-  'feature',
-])('Expect %s to have specific telemetry track events', async category => {
-  const { title, description, preview } = renderGitHubIssueFeedback({
-    category: category,
-    onCloseForm: vi.fn(),
-    contentChange: vi.fn(),
-    categoryLinks: {
-      bug: '/bug/link',
-      feature: '/feature/link',
-    },
-  });
+test.each<GitHubFeedbackCategory>(['bug', 'feature'])(
+  'Expect %s to have specific telemetry track events',
+  async category => {
+    const { title, description, preview } = renderGitHubIssueFeedback({
+      category: category,
+      onCloseForm: vi.fn(),
+      contentChange: vi.fn(),
+      categoryLinks: {
+        bug: '/bug/link',
+        feature: '/feature/link',
+      },
+    });
 
-  expect(window.telemetryTrack).toHaveBeenNthCalledWith(1, `feedback.FormOpened`, { feedbackCategory: category });
+    expect(window.telemetryTrack).toHaveBeenNthCalledWith(1, `feedback.FormOpened`, { feedbackCategory: category });
 
-  await userEvent.type(title, `${category} title`);
-  await userEvent.type(description, `${category} description`);
-  await userEvent.click(preview);
+    await userEvent.type(title, `${category} title`);
+    await userEvent.type(description, `${category} description`);
+    await userEvent.click(preview);
 
-  await vi.waitFor(() =>
-    expect(window.telemetryTrack).toHaveBeenNthCalledWith(2, `feedback.FormSubmitted`, { feedbackCategory: category }),
-  );
-});
+    await vi.waitFor(() =>
+      expect(window.telemetryTrack).toHaveBeenNthCalledWith(2, `feedback.FormSubmitted`, {
+        feedbackCategory: category,
+      }),
+    );
+  },
+);
 
-test.each<GitHubFeedbackCategory>([
-  'bug',
-  'feature',
-])('Expect %s to have specific telemetry track events with error if the preview on GitHub fails', async category => {
-  vi.mocked(window.previewOnGitHub).mockRejectedValue('error: unable to preview on GitHub');
-  const { title, description, preview } = renderGitHubIssueFeedback({
-    category: category,
-    onCloseForm: vi.fn(),
-    contentChange: vi.fn(),
-    categoryLinks: {
-      bug: '/bug/link',
-      feature: '/feature/link',
-    },
-  });
+test.each<GitHubFeedbackCategory>(['bug', 'feature'])(
+  'Expect %s to have specific telemetry track events with error if the preview on GitHub fails',
+  async category => {
+    vi.mocked(window.previewOnGitHub).mockRejectedValue('error: unable to preview on GitHub');
+    const { title, description, preview } = renderGitHubIssueFeedback({
+      category: category,
+      onCloseForm: vi.fn(),
+      contentChange: vi.fn(),
+      categoryLinks: {
+        bug: '/bug/link',
+        feature: '/feature/link',
+      },
+    });
 
-  expect(window.telemetryTrack).toHaveBeenNthCalledWith(1, `feedback.FormOpened`, { feedbackCategory: category });
+    expect(window.telemetryTrack).toHaveBeenNthCalledWith(1, `feedback.FormOpened`, { feedbackCategory: category });
 
-  await userEvent.type(title, `${category} title`);
-  await userEvent.type(description, `${category} description`);
-  await userEvent.click(preview);
+    await userEvent.type(title, `${category} title`);
+    await userEvent.type(description, `${category} description`);
+    await userEvent.click(preview);
 
-  await vi.waitFor(() =>
-    expect(window.telemetryTrack).toHaveBeenNthCalledWith(2, `feedback.FormSubmitted`, {
-      feedbackCategory: category,
-      error: 'error: unable to preview on GitHub',
-    }),
-  );
-});
+    await vi.waitFor(() =>
+      expect(window.telemetryTrack).toHaveBeenNthCalledWith(2, `feedback.FormSubmitted`, {
+        feedbackCategory: category,
+        error: 'error: unable to preview on GitHub',
+      }),
+    );
+  },
+);
 
 test('Expect close confirmation to be true if cancel clicked', async () => {
   const closeMock = vi.fn();
