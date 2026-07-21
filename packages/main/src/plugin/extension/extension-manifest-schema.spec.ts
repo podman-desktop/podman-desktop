@@ -160,20 +160,19 @@ describe('ExtensionManifestSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  test.each([
-    'name',
-    'displayName',
-    'version',
-    'publisher',
-    'description',
-  ] as const)('rejects manifest missing required %s field', field => {
-    const incomplete = { ...minimalValidManifest };
-    delete (incomplete as Record<string, unknown>)[field];
-    const result = ExtensionManifestSchema.safeParse(incomplete);
-    expect(result.success).toBe(false);
-    assert(result.error);
-    expect(z.prettifyError(result.error)).toBe(`✖ Invalid input: expected string, received undefined\n  → at ${field}`);
-  });
+  test.each(['name', 'displayName', 'version', 'publisher', 'description'] as const)(
+    'rejects manifest missing required %s field',
+    field => {
+      const incomplete = { ...minimalValidManifest };
+      delete (incomplete as Record<string, unknown>)[field];
+      const result = ExtensionManifestSchema.safeParse(incomplete);
+      expect(result.success).toBe(false);
+      assert(result.error);
+      expect(z.prettifyError(result.error)).toBe(
+        `✖ Invalid input: expected string, received undefined\n  → at ${field}`,
+      );
+    },
+  );
 
   test('rejects manifest with wrong type for name', () => {
     const result = ExtensionManifestSchema.safeParse({

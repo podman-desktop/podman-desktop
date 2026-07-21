@@ -130,16 +130,16 @@ describe('findAuthEnvironment', () => {
     });
   });
 
-  test.each<string>([
-    'AUTH_QUAY_IO_USER',
-    'AUTH_QUAY_IO_SECRET',
-  ])('should throw an error if %s is the only env defined', env => {
-    vi.stubEnv(env, 'foo');
+  test.each<string>(['AUTH_QUAY_IO_USER', 'AUTH_QUAY_IO_SECRET'])(
+    'should throw an error if %s is the only env defined',
+    env => {
+      vi.stubEnv(env, 'foo');
 
-    expect(() => {
-      findAuthEnvironment('quay.io');
-    }).toThrowError('if one of AUTH_QUAY_IO_USER and AUTH_QUAY_IO_SECRET is specified, both need to be defined.');
-  });
+      expect(() => {
+        findAuthEnvironment('quay.io');
+      }).toThrowError('if one of AUTH_QUAY_IO_USER and AUTH_QUAY_IO_SECRET is specified, both need to be defined.');
+    },
+  );
 });
 
 describe('downloadExtension', () => {

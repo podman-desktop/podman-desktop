@@ -463,60 +463,60 @@ describe('Command Palette', () => {
     },
   ];
 
-  test.each(shortcutTabTestCases)('Expect that $description selects $expectedTabText tab', async ({
-    shortcut,
-    expectedTabText,
-  }) => {
-    render(CommandPalette, { display: true });
+  test.each(shortcutTabTestCases)(
+    'Expect that $description selects $expectedTabText tab',
+    async ({ shortcut, expectedTabText }) => {
+      render(CommandPalette, { display: true });
 
-    await waitFor(() => {
-      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
-    });
+      await waitFor(() => {
+        expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+      });
 
-    // press the shortcut
-    await userEvent.keyboard(shortcut);
+      // press the shortcut
+      await userEvent.keyboard(shortcut);
 
-    // check command palette is now displayed
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
+      // check command palette is now displayed
+      const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+      expect(input).toBeInTheDocument();
 
-    const expectedTab = screen.getByRole('button', { name: expectedTabText });
-    expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+      const expectedTab = screen.getByRole('button', { name: expectedTabText });
+      expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+      expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
-    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
-    const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
-    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
-    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
+      const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
+      const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+      const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
+      const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 
-    [allTab, commandsTab, docsTab, gotoTab].forEach(button => {
-      if (button !== expectedTab) {
-        expect(button).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-        expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+      [allTab, commandsTab, docsTab, gotoTab].forEach(button => {
+        if (button !== expectedTab) {
+          expect(button).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+          expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+        }
+      });
+    },
+  );
+
+  test.each(shortcutTabTestCases)(
+    'Check that $description key can open the command palette: $shouldOpen',
+    async ({ shortcut, shouldOpen }) => {
+      render(CommandPalette);
+
+      await waitFor(() => {
+        expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+      });
+      // check command palette is not displayed initially
+      const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+      expect(inputBefore).not.toBeInTheDocument();
+
+      await userEvent.keyboard(shortcut);
+      if (shouldOpen) {
+        expect(screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).toBeInTheDocument();
+      } else {
+        expect(screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).not.toBeInTheDocument();
       }
-    });
-  });
-
-  test.each(shortcutTabTestCases)('Check that $description key can open the command palette: $shouldOpen', async ({
-    shortcut,
-    shouldOpen,
-  }) => {
-    render(CommandPalette);
-
-    await waitFor(() => {
-      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
-    });
-    // check command palette is not displayed initially
-    const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(inputBefore).not.toBeInTheDocument();
-
-    await userEvent.keyboard(shortcut);
-    if (shouldOpen) {
-      expect(screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).toBeInTheDocument();
-    } else {
-      expect(screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).not.toBeInTheDocument();
-    }
-  });
+    },
+  );
 
   test('Expect that clicking tabs switches between them correctly', async () => {
     // Set up some commands so tab switching logic gets triggered
