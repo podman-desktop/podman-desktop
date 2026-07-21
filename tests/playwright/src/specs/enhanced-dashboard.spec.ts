@@ -181,9 +181,8 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
   test('Verify Kubernetes/VM Connections', async ({ page, navigationBar }) => {
     test.setTimeout(150_000);
 
-    const { dashboardPage, dummyK8sResourceCard } = await test.step(
-      'Install dummy K8s extension and open Dummy Resources',
-      async () => {
+    const { dashboardPage, dummyK8sResourceCard } =
+      await test.step('Install dummy K8s extension and open Dummy Resources', async () => {
         // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
         const dashboard = await navigationBar.openDashboard();
         await dashboard.statusButton.scrollIntoViewIfNeeded();
@@ -197,8 +196,7 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
         await settingsBar.openTabPage(ResourcesPage);
         const resourceCard = new ResourceConnectionCardPage(page, DUMMY_K8S_RESOURCE_NAME);
         return { dashboardPage: dashboard, dummyK8sResourceCard: resourceCard };
-      },
-    );
+      });
 
     await test.step('Create dummy-cluster', async () => {
       // click on 'Create new...'
