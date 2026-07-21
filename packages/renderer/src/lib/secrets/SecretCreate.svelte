@@ -61,7 +61,7 @@ function close(): void {
 }
 </script>
 
-<EngineFormPage title="Create a Secret" showEmptyScreen={providerConnections.length === 0}>
+<EngineFormPage title="Create a secret" showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
     <Icon icon={SecretIcon} size={27} />
   {/snippet}

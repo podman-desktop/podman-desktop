@@ -56,6 +56,8 @@ test('Expect create secret to call API and navigate back', async () => {
 
   const { getByPlaceholderText, getByRole } = render(SecretCreate);
 
+  expect(getByRole('heading', { name: 'Create a secret' })).toBeInTheDocument();
+
   await fireEvent.input(getByPlaceholderText('Secret name'), { target: { value: 'my-secret' } });
   await fireEvent.input(getByPlaceholderText('Secret data'), { target: { value: 'my-secret-data' } });
 

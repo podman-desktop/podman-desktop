@@ -333,7 +333,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/" breadcrumb="Secrets" navigationHint="root">
             <SecretsList />
           </Route>
-          <Route path="/create" breadcrumb="Create a Secret">
+          <Route path="/create" breadcrumb="Create a secret">
             <SecretCreate />
           </Route>
           <Route path="/:engineId/:secretId/*" breadcrumb="Secret Details" let:meta navigationHint="details">
