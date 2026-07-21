@@ -1313,7 +1313,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         );
       },
       listImages(options?: containerDesktopAPI.ListImagesOptions): Promise<containerDesktopAPI.ImageInfo[]> {
-        return containerProviderRegistry.podmanListImages(options);
+        return containerProviderRegistry.listImages(options);
       },
       saveImage(engineId: string, id: string, filename: string, token?: containerDesktopAPI.CancellationToken) {
         return containerProviderRegistry.saveImage(engineId, id, filename, token);

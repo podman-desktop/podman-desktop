@@ -4867,7 +4867,7 @@ test('list images with podmanListImages correctly', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -4901,7 +4901,7 @@ test('expect images with podmanListImages to also include History as well as eng
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -4935,7 +4935,7 @@ test('expect images with podmanListImages to also include Digest as engineId and
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -4970,7 +4970,7 @@ test('If image does not have Digest in list images, expect the Digest to be sha2
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
 
   // ensure the field are correct
   expect(images).toBeDefined();
@@ -5012,7 +5012,7 @@ test('expect to fall back to compat api images if podman provider does not have 
     // purposely NOT have libpodApi
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -5036,7 +5036,7 @@ test('pass options to compat api when using podmanListImages', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  await containerRegistry.podmanListImages({ all: true, filters: '{"dangling":["false"]}' });
+  await containerRegistry.listImages({ all: true, filters: '{"dangling":["false"]}' });
 
   expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
     all: true,
@@ -5055,7 +5055,7 @@ test('expect a blank array if there is no api or libpod API when doing podmanLis
     // purposely NOT have api or libpodApi
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(0);
@@ -5071,7 +5071,7 @@ test('expect to get get zero images if podman provider has neither libpod API no
     // purposely NOT have libpod API or compat api
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(0);
@@ -5123,7 +5123,7 @@ test('expect podmanListImages to return images from working providers even if on
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
 
   // Should return images from working provider despite the error
   expect(images).toBeDefined();
@@ -5738,7 +5738,7 @@ test('manifest is listed as true with podmanListImages correctly', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(4);
@@ -5803,7 +5803,7 @@ test('if configuration setting is disabled for using libpodApi, it should fall b
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
 
   // ensure the field are correct
   expect(images).toBeDefined();

@@ -193,7 +193,7 @@ export interface BuildImageOptions {
   validateRegistries?: boolean;
 }
 
-export interface PodmanListImagesOptions {
+export interface ListImagesOptions {
   /**
    * Show all images. By default all images from a final layer (no children) are shown.
    * @defaultValue false

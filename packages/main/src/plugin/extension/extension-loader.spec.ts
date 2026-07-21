@@ -2433,7 +2433,7 @@ describe('containerEngine', async () => {
   });
 
   test('listImages without option ', async () => {
-    vi.mocked(containerProviderRegistry.podmanListImages).mockResolvedValue([]);
+    vi.mocked(containerProviderRegistry.listImages).mockResolvedValue([]);
 
     const api = createApi();
 
@@ -2441,11 +2441,11 @@ describe('containerEngine', async () => {
 
     const images = await api.containerEngine.listImages();
     expect(images.length).toBe(0);
-    expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith(undefined);
+    expect(containerProviderRegistry.listImages).toHaveBeenCalledWith(undefined);
   });
 
   test('listImages with provider option', async () => {
-    vi.mocked(containerProviderRegistry.podmanListImages).mockResolvedValue([]);
+    vi.mocked(containerProviderRegistry.listImages).mockResolvedValue([]);
     const api = createApi();
 
     expect(api).toBeDefined();
@@ -2454,7 +2454,7 @@ describe('containerEngine', async () => {
       provider: CONTAINER_PROVIDER_MOCK,
     });
     expect(images.length).toBe(0);
-    expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith({
+    expect(containerProviderRegistry.listImages).toHaveBeenCalledWith({
       provider: CONTAINER_PROVIDER_MOCK,
     });
   });

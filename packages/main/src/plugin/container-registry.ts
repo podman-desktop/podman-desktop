@@ -41,6 +41,7 @@ import type {
   ImageLoadOptions,
   ImagesSaveOptions,
   LibPodPodInfo,
+  ListImagesOptions,
   ManifestCreateOptions,
   ManifestInspectInfo,
   ManifestPushOptions,
@@ -50,7 +51,6 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   ProviderContainerConnectionInfo,
   PullEvent,
   SecretCreateOptions,
@@ -757,7 +757,7 @@ export class ContainerProviderRegistry {
 
   // Podman list images will prefer to use libpod API of the provider
   // before falling back to using the regular API
-  async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
     // Get timeout from configuration
     const timeoutSeconds = this.configurationRegistry
       .getConfiguration(ContainerRegistrySettings.SectionName)
