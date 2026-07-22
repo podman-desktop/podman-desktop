@@ -21,7 +21,7 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { inject, injectable, optional } from 'inversify';
-import { compare } from 'semver';
+import { compare, major } from 'semver';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import {
@@ -184,15 +184,15 @@ export class PodmanInstall {
 
   // return true if data have been cleaned or if user skip it
   // return false if user cancel
-  protected async wipeAllDataBeforeUpdatingToV5(
+  protected async wipeAllDataBeforeMajorUpdate(
     installedPodman: InstalledPodman,
     updateInfo: UpdateCheck,
   ): Promise<boolean> {
-    // if (v4 --> v5)
+    // major update, prompt user to wipe all data
     if (
-      installedPodman.version.startsWith('4.') &&
-      updateInfo.bundledVersion?.startsWith('5.') &&
-      this.providerCleanup
+      updateInfo.bundledVersion &&
+      this.providerCleanup &&
+      major(updateInfo.bundledVersion) > major(installedPodman.version)
     ) {
       // prompt if user wants to wipe all data
       const answer = await extensionApi.window.showInformationMessage(
@@ -253,8 +253,8 @@ export class PodmanInstall {
         return;
       }
 
-      // podman v4 -> v5 migration: ask to wipe all data before doing the update
-      const wipeAllDataCompleted = await this.wipeAllDataBeforeUpdatingToV5(
+      // podman major update (first digit change ), prompt user to wipe all data before doing the update
+      const wipeAllDataCompleted = await this.wipeAllDataBeforeMajorUpdate(
         { version: updateInfo.installedVersion },
         updateInfo,
       );
