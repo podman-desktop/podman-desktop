@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ColorInfo, WebviewInfo } from '@podman-desktop/core-api';
+import type { ColorInfo, ThemeInfo, WebviewInfo } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { IpcRendererEvent } from 'electron';
@@ -96,8 +96,8 @@ export class WebviewPreload {
       userTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
-    const isDarkTheme = await this.isDarkTheme(userTheme);
-    const colorSchemeValue = isDarkTheme ? 'dark' : 'light';
+    const themeInfo = await this.getThemeInfo(userTheme);
+    const colorSchemeValue = themeInfo.isDark ? 'dark' : 'light';
 
     // grab colors from the main process
     const colors = await this.getColors(userTheme);
@@ -169,8 +169,8 @@ export class WebviewPreload {
     return this.ipcInvoke('colorRegistry:listColors', themeId) as Promise<ColorInfo[]>;
   }
 
-  protected isDarkTheme(themeId: string): Promise<boolean> {
-    return this.ipcInvoke('colorRegistry:isDarkTheme', themeId) as Promise<boolean>;
+  protected getThemeInfo(themeId: string): Promise<ThemeInfo> {
+    return this.ipcInvoke('colorRegistry:getThemeInfo', themeId) as Promise<ThemeInfo>;
   }
 
   protected getWebviews(): Promise<WebviewInfo[]> {

@@ -27,3 +27,8 @@ export const RawThemeContributionSchema = z.object({
 });
 
 export type RawThemeContribution = z.output<typeof RawThemeContributionSchema>;
+
+export interface ThemeInfo {
+  isDark: boolean;
+  isHighContrast: boolean;
+}

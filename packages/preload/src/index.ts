@@ -1778,6 +1778,13 @@ export function initExposure(): void {
     return ipcInvoke('colorRegistry:listColors', themeId);
   });
 
+  contextBridge.exposeInMainWorld(
+    'getThemeInfo',
+    async (themeId: string): Promise<{ isDark: boolean; isHighContrast: boolean }> => {
+      return ipcInvoke('colorRegistry:getThemeInfo', themeId);
+    },
+  );
+
   // Handle callback to open devtools for extensions
   // by delegating to the renderer process
   ipcRenderer.on('dev-tools:open-extension', (_, extensionId: string) => {

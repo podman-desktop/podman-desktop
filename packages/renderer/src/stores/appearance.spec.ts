@@ -23,8 +23,14 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { isDark, isHighContrast } from './appearance';
 import { configurationProperties } from './configurationProperties';
 
+// mock window.getConfigurationValue
+const getConfigurationValueMock = vi.fn();
+const getThemeInfoMock = vi.fn();
+
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
+  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
+  Object.defineProperty(window, 'getThemeInfo', { value: getThemeInfoMock, configurable: true });
 });
 
 test('Expect light mode using system when OS is set to light', async () => {
@@ -113,4 +119,44 @@ test('Expect high contrast using hc-dark configuration', async () => {
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+});
+
+test('Expect dark mode for custom theme with dark parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: true, isHighContrast: false });
+  getConfigurationValueMock.mockResolvedValue('zenburn');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(true));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('zenburn');
+});
+
+test('Expect light mode for custom theme with light parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: false, isHighContrast: false });
+  getConfigurationValueMock.mockResolvedValue('solarized-light');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(false));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('solarized-light');
+});
+
+test('Expect high contrast for custom theme with hc-dark parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: true, isHighContrast: true });
+  getConfigurationValueMock.mockResolvedValue('my-hc-dark-theme');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(true));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('my-hc-dark-theme');
+});
+
+test('Expect high contrast for custom theme with hc-light parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: false, isHighContrast: true });
+  getConfigurationValueMock.mockResolvedValue('my-hc-light-theme');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(false));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('my-hc-light-theme');
 });
