@@ -34,6 +34,20 @@ function getArchEntry(os: string, architecture: string): { versionRef: string; f
 }
 
 export function getBundledPodmanVersion(os: string = process.platform, architecture: string = process.arch): string {
+  const platformEntry = podmanJSON.platform[os as PlatformKey];
+  if (!platformEntry) {
+    // On platforms where we don't ship a bundled installer (e.g. linux), callers still use this
+    // for messaging/version comparisons. Fall back to the newest known bundled version.
+    if (os === process.platform) {
+      const fallback = podmanJSON.versions.v6 ?? Object.values(podmanJSON.versions)[0];
+      if (!fallback) {
+        throw new Error('No bundled podman versions configured');
+      }
+      return fallback.version;
+    }
+    throw new Error(`No bundled podman for platform ${os}`);
+  }
+
   const archEntry = getArchEntry(os, architecture);
   const versionGroup = podmanJSON.versions[archEntry.versionRef as keyof typeof podmanJSON.versions];
   if (!versionGroup) {
