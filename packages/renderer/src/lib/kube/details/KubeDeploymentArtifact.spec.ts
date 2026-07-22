@@ -65,7 +65,7 @@ test('DeploymentSpec artifact renders with correct values', async () => {
   expect(screen.getByText('RollingUpdate')).toBeInTheDocument();
 });
 
-test('Container compoennt called for each container in the template', async () => {
+test('Container component called for each container in the template', async () => {
   const containerSpy = vi.spyOn(Container, 'default');
   render(KubeDeploymentArtifact, {
     artifact: fakeDeploymentSpec,

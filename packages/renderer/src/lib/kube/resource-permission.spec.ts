@@ -50,7 +50,7 @@ beforeEach(() => {
 });
 
 describe('listenResourcePermitted', () => {
-  test('resource shoudl be permitted', async () => {
+  test('resource should be permitted', async () => {
     const callbackMock = vi.fn();
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
 
@@ -61,7 +61,7 @@ describe('listenResourcePermitted', () => {
     expect(callbackMock).toBeCalledWith(true);
   });
 
-  test('resource shoudl be not permitted', async () => {
+  test('resource should be not permitted', async () => {
     const callbackMock = vi.fn();
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
 

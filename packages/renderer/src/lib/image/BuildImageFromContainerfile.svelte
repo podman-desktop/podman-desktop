@@ -300,7 +300,7 @@ let providerConnections = $derived(
 let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
 $effect(() => {
   if (taskId && taskId !== buildImageInfo.taskId) {
-    // switching previous task wich could be finished or still running
+    // switching previous task which could be finished or still running
     if (buildImageInfo.buildImageKey) {
       // disconnect UI regardless of state
       disconnectUI(buildImageInfo.buildImageKey);

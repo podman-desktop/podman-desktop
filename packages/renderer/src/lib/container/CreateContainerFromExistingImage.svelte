@@ -72,7 +72,7 @@ async function resolveShortname(): Promise<void> {
     shortnameImages = [];
     usePodmanFQN = false;
   }
-  // checks if there is no FQN that is from dokcer hub
+  // checks if there is no FQN that is from docker hub
   if (!shortnameImages.find(name => name.includes('docker.io'))) {
     podmanFQN = shortnameImages[0];
   } else {

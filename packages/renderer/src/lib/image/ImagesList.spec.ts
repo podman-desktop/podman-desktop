@@ -335,7 +335,7 @@ describe('Contributions', () => {
 
       await waitRender({});
 
-      // check image icon of status being overrided due to contributed menu
+      // check image icon of status being overridden due to contributed menu
 
       const fedoraOld = screen.getByRole('cell', { name: 'fedora 123456789012 old' });
       expect(fedoraOld).toBeInTheDocument();

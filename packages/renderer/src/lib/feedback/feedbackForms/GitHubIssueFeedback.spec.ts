@@ -99,7 +99,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
   };
 }
 
-test('Expect feedback form to to be GitHub issue feedback form', async () => {
+test('Expect feedback form to be GitHub issue feedback form', async () => {
   const { title, description, includeSystemInfo } = renderGitHubIssueFeedback({
     category: 'bug',
     onCloseForm: vi.fn(),
