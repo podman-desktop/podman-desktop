@@ -214,7 +214,7 @@ export class RegistriesPage extends SettingsPage {
         );
         await loginButton.click({ timeout: 3000 });
       } catch (err) {
-        throw Error(`An error occured when trying to log into registry: ${(err as Error).message}`);
+        throw Error(`An error occurred when trying to log into registry: ${(err as Error).message}`);
       }
     });
   }

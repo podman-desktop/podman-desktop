@@ -150,7 +150,7 @@ test.describe
       await test.step('Verify default form values', async () => {
         await playExpect(machineCreationForm.podmanMachineName).toHaveValue(PODMAN_MACHINE_NAME);
         await playExpect(machineCreationForm.imagePathBox).toHaveValue('');
-        await playExpect(machineCreationForm.rootPriviledgesCheckbox).toBeChecked();
+        await playExpect(machineCreationForm.rootPrivilegesCheckbox).toBeChecked();
         await playExpect(machineCreationForm.startNowCheckbox).toBeChecked();
       });
 
