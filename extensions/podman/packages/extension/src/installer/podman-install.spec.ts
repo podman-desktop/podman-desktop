@@ -22,9 +22,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as extensionObj from '/@/extension';
-import { releaseNotes } from '/@/podman5.json';
 import type { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
-import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getBundledPodmanVersion, getBundledReleaseNotesHref } from '/@/utils/podman-bundled';
 import type { PodmanInfo } from '/@/utils/podman-info';
 import * as utils from '/@/utils/util';
 
@@ -423,7 +422,7 @@ describe('performUpdate', () => {
 
     await podmanInstall.performUpdate(providerMock, undefined);
 
-    expect(extensionApi.Uri.parse).toHaveBeenCalledWith(releaseNotes.href);
+    expect(extensionApi.Uri.parse).toHaveBeenCalledWith(getBundledReleaseNotesHref());
     expect(extensionApi.env.openExternal).toHaveBeenCalled();
   });
 

@@ -39,10 +39,9 @@ import {
   isUserModeNetworkingSupported,
 } from '/@/extension';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
-import * as podman5JSON from '/@/podman5.json';
 import { MachineJSON } from '/@/types';
 import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
-import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getBundledPodmanVersion, getBundledReleaseNotesHref } from '/@/utils/podman-bundled';
 import type { PodmanInfo } from '/@/utils/podman-info';
 import { PodmanInfoImpl } from '/@/utils/podman-info';
 import { execPodman } from '/@/utils/util';
@@ -322,7 +321,7 @@ export class PodmanInstall {
         } else if (answer === 'Ignore') {
           this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
         } else if (answer === 'Open release notes') {
-          await extensionApi.env.openExternal(extensionApi.Uri.parse(podman5JSON.releaseNotes.href));
+          await extensionApi.env.openExternal(extensionApi.Uri.parse(getBundledReleaseNotesHref()));
         }
       }
     }

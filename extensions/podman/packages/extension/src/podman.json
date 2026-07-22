@@ -1,0 +1,44 @@
+{
+  "versions": {
+    "v5": {
+      "version": "5.8.5",
+      "tagVersion": "v5.8.5",
+      "releaseNotes": {
+        "href": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.5"
+      }
+    },
+    "v6": {
+      "version": "6.0.2",
+      "tagVersion": "v6.0.2",
+      "releaseNotes": {
+        "href": "https://github.com/podman-container-tools/podman/releases/tag/v6.0.2"
+      }
+    }
+  },
+  "platform": {
+    "win32": {
+      "arch": {
+        "x64": {
+          "versionRef": "v6",
+          "fileName": "podman-installer-windows-amd64.msi"
+        },
+        "arm64": {
+          "versionRef": "v6",
+          "fileName": "podman-installer-windows-arm64.msi"
+        }
+      }
+    },
+    "darwin": {
+      "arch": {
+        "x64": {
+          "versionRef": "v5",
+          "fileName": "podman-installer-macos-amd64-v5.8.5.pkg"
+        },
+        "arm64": {
+          "versionRef": "v6",
+          "fileName": "podman-installer-macos-aarch64-v6.0.2.pkg"
+        }
+      }
+    }
+  }
+}

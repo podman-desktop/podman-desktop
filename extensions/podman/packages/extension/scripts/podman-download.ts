@@ -52,12 +52,31 @@ type ManifestsResponse = {
   manifests: Manifest[];
 };
 
+export type PodmanJsonVersionGroup = {
+  version: string;
+  tagVersion: string;
+  releaseNotes: { href: string };
+};
+
+export type PodmanJsonArchEntry = {
+  versionRef: string;
+  fileName: string;
+};
+
+export type PodmanJsonSchema = {
+  versions: Record<string, PodmanJsonVersionGroup>;
+  platform: Record<string, { arch: Record<string, PodmanJsonArchEntry> }>;
+};
+
+export type MachineOSDownloaderEntry = {
+  downloader: Podman5DownloadMachineOS;
+  architectures: Set<string>;
+};
+
 // to make this file a module
 export class PodmanDownload {
-  #podmanVersion: string;
-
   #downloadAndCheck: DownloadAndCheck;
-  #podman5DownloadMachineOS: Podman5DownloadMachineOS;
+  #machineOSDownloaders: MachineOSDownloaderEntry[] = [];
 
   #shaCheck: ShaCheck;
 
@@ -72,19 +91,7 @@ export class PodmanDownload {
   }[] = [];
 
   constructor(
-    podmanJSON: {
-      version: string;
-      platform: {
-        win32: {
-          version: string;
-          arch: { x64: { fileName: string }; arm64: { fileName: string } };
-        };
-        darwin: {
-          version: string;
-          arch: { x64: { fileName: string }; arm64: { fileName: string }; universal?: { fileName: string } };
-        };
-      };
-    },
+    podmanJSON: PodmanJsonSchema,
     private airgapSupport: boolean,
   ) {
     const octokitOptions: OctokitOptions = {};
@@ -94,50 +101,35 @@ export class PodmanDownload {
     this.#octokit = new Octokit(octokitOptions);
     this.#platform = process.platform;
 
-    this.#podmanVersion = podmanJSON.version;
-
     const dirname = path.dirname(fileURLToPath(import.meta.url));
     this.#assetsFolder = path.resolve(dirname, '..', 'assets');
 
-    if (this.#platform === 'win32') {
-      const tagVersion = podmanJSON.platform.win32.version;
-      const downloadNameAmd64 = podmanJSON.platform.win32.arch.x64.fileName;
-      this.#artifactsToDownload.push({
-        version: tagVersion,
-        downloadName: downloadNameAmd64,
-        artifactName: 'podman-installer-windows-amd64.msi',
-      });
-      const downloadNameArm64 = podmanJSON.platform.win32.arch.arm64.fileName;
-      this.#artifactsToDownload.push({
-        version: tagVersion,
-        downloadName: downloadNameArm64,
-        artifactName: 'podman-installer-windows-arm64.msi',
-      });
-    } else if (this.#platform === 'darwin') {
-      const tagVersion = podmanJSON.platform.darwin.version;
-      const downloadNameAmd64 = podmanJSON.platform.darwin.arch.x64.fileName;
-      this.#artifactsToDownload.push({
-        version: tagVersion,
-        downloadName: downloadNameAmd64,
-        artifactName: 'podman-installer-macos-amd64.pkg',
-      });
+    const platformEntry = podmanJSON.platform[this.#platform];
+    if (platformEntry) {
+      for (const [archKey, archEntry] of Object.entries(platformEntry.arch)) {
+        const versionGroup = podmanJSON.versions[archEntry.versionRef];
+        if (!versionGroup) {
+          throw new Error(`Unknown versionRef "${archEntry.versionRef}" for ${this.#platform}/${archKey}`);
+        }
+        const tagVersion = versionGroup.tagVersion;
 
-      const downloadNameArm64 = podmanJSON.platform.darwin.arch.arm64.fileName;
-      this.#artifactsToDownload.push({
-        version: tagVersion,
-        downloadName: downloadNameArm64,
-        artifactName: 'podman-installer-macos-arm64.pkg',
-      });
+        let artifactName: string;
+        if (this.#platform === 'win32') {
+          const archSuffix = archKey === 'arm64' ? 'arm64' : 'amd64';
+          artifactName = `podman-installer-windows-${archSuffix}.msi`;
+        } else {
+          const archSuffix = archKey === 'arm64' ? 'arm64' : 'amd64';
+          artifactName = `podman-installer-macos-${archSuffix}.pkg`;
+        }
 
-      if (podmanJSON.platform.darwin.arch.universal) {
-        const downloadUniversalName = podmanJSON.platform.darwin.arch.universal.fileName;
         this.#artifactsToDownload.push({
           version: tagVersion,
-          downloadName: downloadUniversalName,
-          artifactName: 'podman-installer-macos-universal.pkg',
+          downloadName: archEntry.fileName,
+          artifactName,
         });
       }
     }
+
     this.#shaCheck = new ShaCheck();
     this.#downloadAndCheck = new DownloadAndCheck(this.#octokit, this.#shaCheck, this.#assetsFolder);
 
@@ -145,17 +137,32 @@ export class PodmanDownload {
       fs.mkdirSync(this.#assetsFolder);
     }
 
-    // grab only first 2 digits from the version
-    const majorMinorVersion = podmanJSON.version.split('.').slice(0, 2).join('.');
-    this.#podman5DownloadMachineOS = new Podman5DownloadMachineOS(
-      majorMinorVersion,
-      this.#shaCheck,
-      this.#assetsFolder,
-    );
+    const versionToArchs = new Map<string, Set<string>>();
+    if (platformEntry) {
+      for (const [archKey, archEntry] of Object.entries(platformEntry.arch)) {
+        const versionGroup = podmanJSON.versions[archEntry.versionRef];
+        if (versionGroup) {
+          const majorMinorVersion = versionGroup.version.split('.').slice(0, 2).join('.');
+          let archSet = versionToArchs.get(majorMinorVersion);
+          if (!archSet) {
+            archSet = new Set<string>();
+            versionToArchs.set(majorMinorVersion, archSet);
+          }
+          archSet.add(archKey);
+        }
+      }
+    }
+
+    for (const [majorMinorVersion, architectures] of versionToArchs) {
+      this.#machineOSDownloaders.push({
+        downloader: new Podman5DownloadMachineOS(majorMinorVersion, this.#shaCheck, this.#assetsFolder),
+        architectures,
+      });
+    }
   }
 
-  protected getPodman5DownloadMachineOS(): Podman5DownloadMachineOS {
-    return this.#podman5DownloadMachineOS;
+  protected getMachineOSDownloaders(): MachineOSDownloaderEntry[] {
+    return this.#machineOSDownloaders;
   }
 
   protected getShaCheck(): ShaCheck {
@@ -189,7 +196,9 @@ export class PodmanDownload {
       return;
     }
 
-    await this.#podman5DownloadMachineOS?.setAndDownload(this.#platform);
+    for (const entry of this.#machineOSDownloaders) {
+      await entry.downloader.setAndDownload(this.#platform, entry.architectures);
+    }
   }
 }
 
@@ -408,20 +417,20 @@ export class Podman5DownloadMachineOS {
     }
   }
 
-  async setAndDownload(platform: string): Promise<void> {
+  async setAndDownload(platform: string, architectures?: Set<string>): Promise<void> {
     this.#ociRegistryProjectLink = 'https://quay.io/v2/podman/machine-os';
     // download the podman 5 machines OS
     if (platform === 'win32') {
       // Here add downloading of HyperV
-      await this.download(DiskType.WSL);
+      await this.download(DiskType.WSL, architectures);
     } else {
-      await this.download(DiskType.Applehv);
+      await this.download(DiskType.Applehv, architectures);
     }
   }
 
   // For Windows WSL, need to grab images from quay.io/podman/machine-os-wsl repository
   // Otherwise grab images from quay.io/podman/machine-os repository
-  async download(diskType: DiskType): Promise<void> {
+  async download(diskType: DiskType, architectures?: Set<string>): Promise<void> {
     const manifestUrl = `${this.#ociRegistryProjectLink}/manifests/${this.#version}`;
 
     // get first level of manifests
@@ -444,36 +453,43 @@ export class Podman5DownloadMachineOS {
       );
     });
 
-    // should have aarch64 for arm64 and x86_64 for x64
-    const amd64Manifest = keepManifests.find(
-      manifest => manifest.platform.architecture === 'x86_64' && manifest.platform.os === 'linux',
-    );
-    const arm64Manifest = keepManifests.find(
-      manifest => manifest.platform.architecture === 'aarch64' && manifest.platform.os === 'linux',
-    );
+    const wantAmd64 = !architectures || architectures.has('x64');
+    const wantArm64 = !architectures || architectures.has('arm64');
 
-    if (!amd64Manifest || !arm64Manifest) {
-      throw new Error('❌ Cannot find amd64 or arm64 manifest');
+    const amd64Manifest = wantAmd64
+      ? keepManifests.find(manifest => manifest.platform.architecture === 'x86_64' && manifest.platform.os === 'linux')
+      : undefined;
+    const arm64Manifest = wantArm64
+      ? keepManifests.find(manifest => manifest.platform.architecture === 'aarch64' && manifest.platform.os === 'linux')
+      : undefined;
+
+    if (wantAmd64 && !amd64Manifest) {
+      throw new Error('❌ Cannot find amd64 manifest');
+    }
+    if (wantArm64 && !arm64Manifest) {
+      throw new Error('❌ Cannot find arm64 manifest');
     }
 
-    // now get the zstd entry from the arch manifest
-    const amd64ZstdManifest = await this.getManifest(
-      `${this.#ociRegistryProjectLink}/manifests/${amd64Manifest.digest}`,
-    );
-    const arm64ZstdManifest = await this.getManifest(
-      `${this.#ociRegistryProjectLink}/manifests/${arm64Manifest.digest}`,
-    );
+    if (arm64Manifest) {
+      const arm64ZstdManifest = await this.getManifest(
+        `${this.#ociRegistryProjectLink}/manifests/${arm64Manifest.digest}`,
+      );
+      await this.downloadZstdFromManifest(
+        `${manifestUrl} for arm64`,
+        'podman-image-arm64.zst',
+        arm64ZstdManifest.layers[0],
+      );
+    }
 
-    // download the zstd layers
-    await this.downloadZstdFromManifest(
-      `${manifestUrl} for arm64`,
-      'podman-image-arm64.zst',
-      arm64ZstdManifest.layers[0],
-    );
-    await this.downloadZstdFromManifest(
-      `${manifestUrl} for amd64`,
-      'podman-image-x64.zst',
-      amd64ZstdManifest.layers[0],
-    );
+    if (amd64Manifest) {
+      const amd64ZstdManifest = await this.getManifest(
+        `${this.#ociRegistryProjectLink}/manifests/${amd64Manifest.digest}`,
+      );
+      await this.downloadZstdFromManifest(
+        `${manifestUrl} for amd64`,
+        'podman-image-x64.zst',
+        amd64ZstdManifest.layers[0],
+      );
+    }
   }
 }
