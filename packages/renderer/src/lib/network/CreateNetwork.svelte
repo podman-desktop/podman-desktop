@@ -202,7 +202,7 @@ function removeDnsServer(index: number): void {
 
 <Route path="/*">
   <EngineFormPage
-    title="Create a Network"
+    title="Create a network"
     showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
     {#snippet icon()}
       <Icon icon={NetworkIcon} class="2x" />
