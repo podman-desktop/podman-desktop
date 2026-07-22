@@ -2340,7 +2340,7 @@ declare module '@podman-desktop/api' {
      * export async function activate(extensionContext: api.ExtensionContext): Promise<void> {
      *   const statusBarItem = api.window.createStatusBarItem();
      *   statusBarItem.text = 'Information';
-     *   statusBarItem.tooltip = 'A problem occured';
+     *   statusBarItem.tooltip = 'A problem occurred';
      *   statusBarItem.command = 'extension-name.my-command';
      *   statusBarItem.iconClass = 'fa fa-exclamation-triangle';
      *   extensionContext.subscriptions.push(

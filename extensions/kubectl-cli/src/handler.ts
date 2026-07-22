@@ -76,7 +76,7 @@ export async function installKubectlBinary(
       // Regardless of what happens, always update the configuration setting and context
       // for example, if this fails when installing, the configuration setting will be set back to false
       // again for the user to try again. If the installation succeeds, the configuration setting will be set to true
-      // and it will dissapear from the UI, etc.
+      // and it will disappear from the UI, etc.
       await checkAndUpdateKubectlBinaryInstalledContexts(detect);
     }
   } else {

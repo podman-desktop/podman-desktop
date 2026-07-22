@@ -200,7 +200,7 @@ async function doUpdateMachines(
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-  // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
+  // if there is at least one machine which does not need to be cleaned and the OS is not Linux
   // podman is correctly setup so if there is an old notification asking the user to take action
   // we dispose it as not needed anymore
   if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
@@ -699,7 +699,7 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       provider.updateStatus('not-installed');
       extensionApi.context.setValue('podmanIsNotInstalled', true, 'onboarding');
       // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)
-      // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existance
+      // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existence
       // and the notification is handled by checking the machine
       if (extensionApi.env.isLinux) {
         // push setup notification

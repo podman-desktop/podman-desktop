@@ -73,7 +73,7 @@ test('Auth token is passed to Octokit factory', async () => {
   expect(mockOctokitFactory).toHaveBeenCalled();
 });
 
-test.skip('expect installBinaryToSystem to succesfully pass with a binary', async () => {
+test.skip('expect installBinaryToSystem to successfully pass with a binary', async () => {
   (extensionApi.env.isLinux as unknown as boolean) = true;
 
   // Create a tmp file using Node.js built-ins
