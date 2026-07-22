@@ -277,3 +277,58 @@ test('if kubernetes connection has delete lifecycle method, delete button has to
   const button = screen.getByRole('button', { name: 'Delete' });
   expect(button).toBeInTheDocument();
 });
+
+describe('restart', () => {
+  test('restart should add to restarting queue before calling stop', async () => {
+    const callOrder: string[] = [];
+    const trackingAddConnectionToRestartingQueue = vi.fn().mockImplementation(() => {
+      callOrder.push('addConnectionToRestartingQueue');
+    });
+    vi.mocked(window.stopProviderConnectionLifecycle).mockImplementation(async () => {
+      callOrder.push('stopProviderConnectionLifecycle');
+    });
+
+    render(PreferencesConnectionActions, {
+      connectionStatus: { status: 'started', inProgress: false },
+      provider: containerProviderInfo,
+      connection: containerConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue: trackingAddConnectionToRestartingQueue,
+    });
+
+    const restartButton = screen.getByRole('button', { name: 'Restart' });
+    await fireEvent.click(restartButton);
+
+    await vi.waitFor(() => {
+      expect(callOrder).toContain('addConnectionToRestartingQueue');
+      expect(callOrder).toContain('stopProviderConnectionLifecycle');
+    });
+
+    expect(trackingAddConnectionToRestartingQueue).toHaveBeenCalledOnce();
+    expect(callOrder.indexOf('addConnectionToRestartingQueue')).toBeLessThan(
+      callOrder.indexOf('stopProviderConnectionLifecycle'),
+    );
+  });
+
+  test('restart should call stop with correct parameters', async () => {
+    render(PreferencesConnectionActions, {
+      connectionStatus: { status: 'started', inProgress: false },
+      provider: containerProviderInfo,
+      connection: containerConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue: vi.fn(),
+    });
+
+    const restartButton = screen.getByRole('button', { name: 'Restart' });
+    await fireEvent.click(restartButton);
+
+    await vi.waitFor(() => {
+      expect(window.stopProviderConnectionLifecycle).toHaveBeenCalledWith(
+        containerProviderInfo.internalId,
+        expect.objectContaining({ name: containerConnection.name }),
+        expect.any(Symbol),
+        expect.any(Function),
+      );
+    });
+  });
+});

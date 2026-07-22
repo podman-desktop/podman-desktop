@@ -379,6 +379,65 @@ test('Expect startContainerProvider to only be called once when restarting', asy
   expect(startConnectionMock).toBeCalledTimes(1);
 });
 
+test('Expect restart to not trigger start when connection goes through intermediate stopping state', async () => {
+  const socketPath = '/my/common-socket-path';
+  const podmanMachineName = 'podman machine';
+
+  const stopConnectionMock = vi.fn();
+  const startConnectionMock = vi.fn();
+  (window as any).stopProviderConnectionLifecycle = stopConnectionMock;
+  (window as any).startProviderConnectionLifecycle = startConnectionMock;
+
+  const providerInfo: ProviderInfo = {
+    ...EMPTY_PROVIDER_MOCK,
+    containerConnections: [
+      {
+        connectionType: 'container',
+        name: podmanMachineName,
+        displayName: podmanMachineName,
+        status: 'started',
+        endpoint: {
+          socketPath,
+        },
+        type: 'podman',
+        lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
+        canEdit: false,
+        canDelete: false,
+      },
+    ],
+  };
+
+  providerInfos.set([providerInfo]);
+
+  const name = Buffer.from(podmanMachineName).toString('base64');
+  const connection = Buffer.from(socketPath).toString('base64');
+
+  render(PreferencesContainerConnectionRendering, {
+    name,
+    connection,
+    providerInternalId: '0',
+  });
+
+  const restartButton = screen.getByRole('button', { name: 'Restart' });
+  await userEvent.click(restartButton);
+
+  // simulate intermediate 'stopping' state before reaching 'stopped'
+  providerInfo.containerConnections[0].status = 'stopping';
+  providerInfos.set([providerInfo]);
+
+  // start should NOT be called during an intermediate state
+  expect(startConnectionMock).not.toHaveBeenCalled();
+
+  // now transition to 'stopped'
+  providerInfo.containerConnections[0].status = 'stopped';
+  providerInfos.set([providerInfo]);
+
+  // start SHOULD be called once the connection reaches 'stopped'
+  expect(startConnectionMock).toHaveBeenCalledOnce();
+});
+
 test('Expect display name to be used in favor of name for page title', async () => {
   const socketPath = '/my/common-socket-path';
   const podmanMachineName = 'podman-machine-default';

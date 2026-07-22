@@ -213,7 +213,7 @@ test('Expect to see error message if action fails', async () => {
   expect(deleteFailedButton).toBeInTheDocument();
 });
 
-test('startProviderConnectionLifecycle is called when addConnectionToRestartingQueue is called by sub-component', async () => {
+test('restart should not trigger start during intermediate stopping state', async () => {
   vi.spyOn(preferencesConnectionActions, 'default');
   const providerInfo: ProviderInfo = {
     id: 'vmprovider',
@@ -232,10 +232,81 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
       {
         connectionType: 'vm',
         name: 'vm 1',
-        status: 'stopped',
-        lifecycleMethods: ['delete'],
-        canStart: false,
-        canStop: false,
+        status: 'started',
+        lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
+        canEdit: false,
+        canDelete: false,
+      },
+    ],
+    vmProviderConnectionCreation: true,
+    kubernetesConnections: [],
+    kubernetesProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    containerProviderConnectionInitialization: false,
+    containerProviderConnectionCreationDisplayName: 'Podman machine',
+    kubernetesProviderConnectionInitialization: false,
+    extensionId: '',
+    cleanupSupport: false,
+    canStart: false,
+    canStop: false,
+  };
+
+  providerInfos.set([providerInfo]);
+  render(PreferencesVmConnectionRendering, {
+    connectionName: 'vm 1',
+    providerInternalId: '0',
+  });
+
+  // simulate PreferencesConnectionActions calling addConnectionToRestartingQueue
+  expect(preferencesConnectionActions.default).toHaveBeenCalledOnce();
+  const params = vi.mocked(preferencesConnectionActions.default).mock.calls[0][1];
+  assert(params);
+  const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
+
+  addConnectionToRestartingQueue({
+    loggerHandlerKey: Symbol('test-key'),
+  } as unknown as IConnectionRestart);
+
+  // transition to intermediate 'stopping' state
+  providerInfo.vmConnections[0].status = 'stopping';
+  providerInfos.set([providerInfo]);
+
+  // start should NOT be called during intermediate state
+  expect(window.startProviderConnectionLifecycle).not.toHaveBeenCalled();
+
+  // now transition to 'stopped' - start should be triggered
+  providerInfo.vmConnections[0].status = 'stopped';
+  providerInfos.set([providerInfo]);
+
+  expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
+});
+
+test('startProviderConnectionLifecycle is called when addConnectionToRestartingQueue is called and status reaches stopped', async () => {
+  vi.spyOn(preferencesConnectionActions, 'default');
+  const providerInfo: ProviderInfo = {
+    id: 'vmprovider',
+    name: 'vmp',
+    images: {
+      icon: 'img',
+    },
+    status: 'started',
+    warnings: [],
+    containerProviderConnectionCreation: true,
+    detectionChecks: [],
+    containerConnections: [],
+    installationSupport: false,
+    internalId: '0',
+    vmConnections: [
+      {
+        connectionType: 'vm',
+        name: 'vm 1',
+        status: 'started',
+        lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
         canEdit: false,
         canDelete: false,
       },
@@ -267,10 +338,11 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
   const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
 
   addConnectionToRestartingQueue({
-    loggerHandlerKey: (): void => {},
+    loggerHandlerKey: Symbol('test-key'),
   } as unknown as IConnectionRestart);
 
-  providerInfo.vmConnections[0].status = 'started';
+  // transition to 'stopped' triggers the start phase of the restart
+  providerInfo.vmConnections[0].status = 'stopped';
   providerInfos.set([providerInfo]);
   expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
 });
