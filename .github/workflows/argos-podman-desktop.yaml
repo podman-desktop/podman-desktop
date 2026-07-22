@@ -58,11 +58,8 @@ jobs:
       # Lets Argos link the build to its pull request
       pull-requests: read
     runs-on: ubuntu-24.04
-    # disable when running in a fork of this repo, or on a PR opened from a fork:
-    # OIDC tokens aren't issued in either case, so Argos auth would fail
-    if: >-
-      github.event.repository.fork == false &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
