@@ -1,0 +1,48 @@
+/**********************************************************************
+ * Copyright (C) 2026 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
+
+import { handleConfirmationDialog } from '/@/utility/operations';
+
+import { DetailsPage } from './details-page';
+import { SecretsPage } from './secrets-page';
+
+export class SecretDetailsPage extends DetailsPage {
+  readonly deleteButton: Locator;
+
+  static readonly SUMMARY_TAB = 'Summary';
+  static readonly INSPECT_TAB = 'Inspect';
+
+  constructor(page: Page, name: string) {
+    super(page, name);
+    this.deleteButton = this.controlActions.getByRole('button', {
+      name: 'Delete Secret',
+    });
+  }
+
+  async deleteSecret(): Promise<SecretsPage> {
+    return test.step('Delete secret from details page', async () => {
+      await playExpect(this.deleteButton).toBeEnabled();
+      await this.deleteButton.click();
+      await handleConfirmationDialog(this.page, 'Delete Secret?', true, 'Delete');
+      return new SecretsPage(this.page);
+    });
+  }
+}

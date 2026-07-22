@@ -25,6 +25,7 @@ import { ImagesPage } from '/@/model/pages/images-page';
 import { KubernetesBar } from '/@/model/pages/kubernetes-bar';
 import { NetworksPage } from '/@/model/pages/networks-page';
 import { PodsPage } from '/@/model/pages/pods-page';
+import { SecretsPage } from '/@/model/pages/secrets-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { VolumesPage } from '/@/model/pages/volumes-page';
 
@@ -40,6 +41,7 @@ export class NavigationBar {
   readonly extensionsLink: Locator;
   readonly kubernetesLink: Locator;
   readonly networksLink: Locator;
+  readonly secretsLink: Locator;
   readonly backButton: Locator;
   readonly forwardButton: Locator;
 
@@ -63,6 +65,9 @@ export class NavigationBar {
     });
     this.networksLink = this.navigationLocator.getByRole('link', {
       name: 'Networks',
+    });
+    this.secretsLink = this.navigationLocator.getByRole('link', {
+      name: 'Secrets',
     });
     this.backButton = this.page.getByRole('button', { name: 'Back (hold for history)' });
     this.forwardButton = this.page.getByRole('button', { name: 'Forward (hold for history)' });
@@ -143,6 +148,14 @@ export class NavigationBar {
       await playExpect(this.networksLink).toBeVisible({ timeout: 10_000 });
       await this.networksLink.click({ force: true });
       return new NetworksPage(this.page);
+    });
+  }
+
+  async openSecrets(): Promise<SecretsPage> {
+    return test.step('Open Secrets page', async () => {
+      await playExpect(this.secretsLink).toBeVisible({ timeout: 10_000 });
+      await this.secretsLink.click({ force: true });
+      return new SecretsPage(this.page);
     });
   }
 
