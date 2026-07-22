@@ -47,7 +47,7 @@ overrides:
   ajv@^8: ^8.18.0
   electron-builder-squirrel-windows: ^26.8.2
   svelte>devalue: ^5.6.4
-  protobufjs: ^7.6.4
+  protobufjs: ^7.6.5
   follow-redirects: ^1.16.0
   uuid: ^14.0.0
   ip-address: '>=10.1.1'
