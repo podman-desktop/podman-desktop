@@ -71,7 +71,7 @@ onDestroy(async () => {
         <img
           src={notesInfo.image}
           onerror={onImageError}
-          class="h-full max-w-[20%] object-cover rounded-l-md"
+          class="h-full max-w-[20%] object-cover"
           alt={`Podman Desktop ${currentVersion} release image`} />
       {/if}
       <div class="flex flex-col flex-1 h-full p-5">
