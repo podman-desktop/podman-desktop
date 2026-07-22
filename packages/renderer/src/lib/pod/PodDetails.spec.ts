@@ -70,7 +70,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   // remove myPod from the store when we call 'removePod'
   // it will then refresh the store and update PodsDetails page
   vi.mocked(window.removePod).mockImplementation(async () => {
-    podsInfos.update(pods => pods.filter(pod => pod.Id !== myPod.Id));
+    podsInfos.update(pods => pods.filter(pod => pod.id !== myPod.Id));
   });
 
   // defines a fake lastPage so we can check where we will be redirected

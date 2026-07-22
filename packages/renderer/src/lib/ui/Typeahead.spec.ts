@@ -415,11 +415,11 @@ test('should include heading based on given order and searchFunctions order', as
   });
 });
 
-test('list opens on focus', async () => {
+test('list opens on focus without triggering search again', async () => {
   let searchResult: TypeaheadItem[] = [];
-  const searchFunction = async (): Promise<void> => {
+  const searchFunction = vi.fn(async (): Promise<void> => {
     searchResult = ['text1', 'text2', 'text3', 'text4'].map(value => ({ value: value }));
-  };
+  });
 
   const { rerender } = render(Typeahead, {
     onInputChange: searchFunction,
@@ -429,17 +429,67 @@ test('list opens on focus', async () => {
 
   const input = screen.getByRole('textbox');
   await userEvent.click(input);
+  await userEvent.keyboard('text');
 
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
+
+  const callCountAfterTyping = searchFunction.mock.calls.length;
+
+  // click away and then select the input with tab to focus it
+  await userEvent.click(document.body);
+  await userEvent.tab();
 
   await waitFor(() => {
     const list = screen.getByRole('row');
     const items = within(list).getAllByRole('button');
     expect(items.length).toBe(4);
     expect(items[0].textContent).toBe('text1');
-    expect(items[1].textContent).toBe('text2');
-    expect(items[2].textContent).toBe('text3');
-    expect(items[3].textContent).toBe('text4');
+  });
+
+  expect(searchFunction.mock.calls.length).toBe(callCountAfterTyping);
+});
+
+test('highlightIndex resets when reopening list via focus', async () => {
+  let searchResult: TypeaheadItem[] = [];
+  const searchFunction = async (s: string): Promise<void> => {
+    searchResult = s ? [{ value: s + '01' }, { value: s + '02' }, { value: s + '03' }] : [];
+  };
+  const { rerender } = render(Typeahead, {
+    onInputChange: searchFunction,
+    resultItems: searchResult,
+    delay: 10,
+  });
+
+  const input = screen.getByRole('textbox');
+  await userEvent.type(input, 'term');
+  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
+  await rerender({ resultItems: searchResult });
+
+  await waitFor(() => {
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    expect(items.length).toBe(3);
+  });
+
+  // navigate down to select an item
+  await userEvent.keyboard('[ArrowDown]');
+  await userEvent.keyboard('[ArrowDown]');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 1);
+  });
+
+  // close by clicking away, then reopen by focusing
+  await userEvent.click(document.body);
+  await waitFor(() => assertIsListVisible(false));
+
+  await userEvent.tab();
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, -1);
   });
 });
