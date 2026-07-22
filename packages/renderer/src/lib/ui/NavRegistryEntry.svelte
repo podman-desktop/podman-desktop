@@ -1,6 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { TinroRouteMeta } from 'tinro';
 
@@ -20,7 +21,7 @@ let { entry, meta = $bindable(), expanded = false }: NavRegistryEntryProps = $pr
 {#if !entry.hidden}
   <NavItem href={entry.link} counter={entry.counter} tooltip={entry.tooltip} ariaLabel={entry.name} bind:meta={meta} {expanded}>
     <div class="flex items-center w-full">
-      <div class="flex-shrink-0 flex items-center justify-center w-6">
+      <div class="flex-shrink-0 flex items-center justify-center w-6 relative">
         {#if entry.icon === undefined}
           {entry.name}
         {:else if entry.icon.faIcon}
@@ -31,11 +32,29 @@ let { entry, meta = $bindable(), expanded = false }: NavRegistryEntryProps = $pr
         {:else if entry.icon.iconImage && typeof entry.icon.iconImage === 'string'}
           <img src={entry.icon.iconImage} width="22" height="22" alt={entry.name} />
         {/if}
+        {#if entry.pinned && !expanded}
+          <div
+            class="absolute top-0 right-[-9px] flex items-center justify-center text-[color:var(--pd-global-nav-icon-selected-highlight)]"
+            title="Pinned to top"
+            aria-label={`${entry.name} is pinned to top`}>
+            <Icon icon={faThumbtack} size="xs" />
+          </div>
+        {/if}
       </div>
-      {#if expanded && entry.icon}
-        <div class="text-sm truncate ml-3 flex-1 min-w-0" aria-label={`${entry.name} title`}>
-          {entry.name}
-        </div>
+      {#if expanded}
+        {#if entry.icon}
+          <div class="text-sm truncate ml-3 flex-1 min-w-0" aria-label={`${entry.name} title`}>
+            {entry.name}
+          </div>
+        {/if}
+        {#if entry.pinned}
+          <div
+            class="flex-shrink-0 flex items-center justify-center w-4 ml-1 text-[color:var(--pd-global-nav-icon-selected-highlight)]"
+            title="Pinned to top"
+            aria-label={`${entry.name} is pinned to top`}>
+            <Icon icon={faThumbtack} size="xs" />
+          </div>
+        {/if}
       {/if}
     </div>
   </NavItem>

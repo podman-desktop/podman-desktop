@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,4 +116,70 @@ test('Expect entry to not have title when collapsed', async () => {
 
   const content = screen.queryByLabelText('Item1 title');
   expect(content).not.toBeInTheDocument();
+});
+
+test('Expect pin icon next to the title when entry is pinned and expanded', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    pinned: true,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: true });
+
+  const title = screen.queryByLabelText('Item1 title');
+  expect(title).toBeInTheDocument();
+
+  const pinIndicator = screen.queryByLabelText('Item1 is pinned to top');
+  expect(pinIndicator).toBeInTheDocument();
+});
+
+test('Expect pin badge on the icon when entry is pinned and collapsed', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    pinned: true,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: false });
+
+  const pinIndicator = screen.queryByLabelText('Item1 is pinned to top');
+  expect(pinIndicator).toBeInTheDocument();
+});
+
+test('Expect no pin indicator when entry is not pinned', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    pinned: false,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: true });
+
+  const pinIndicator = screen.queryByLabelText('Item1 is pinned to top');
+  expect(pinIndicator).not.toBeInTheDocument();
 });

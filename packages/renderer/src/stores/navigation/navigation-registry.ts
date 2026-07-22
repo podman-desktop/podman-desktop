@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import type { GoToInfo } from '@podman-desktop/core-api';
+import type { GoToInfo, NavigationItemState } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -32,6 +32,7 @@ import { createNavigationKubernetesGroup } from './navigation-registry-kubernete
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 import { createNavigationSecretEntry } from './navigation-registry-secret.svelte';
+import { createNavigationSettingsEntries } from './navigation-registry-settings.svelte';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
 
 export interface NavigationRegistryEntry {
@@ -49,11 +50,7 @@ export interface NavigationRegistryEntry {
   enabled?: boolean;
   items?: NavigationRegistryEntry[];
   hidden?: boolean;
-}
-
-interface DisplayItem {
-  name: string;
-  visible: boolean;
+  pinned?: boolean;
 }
 
 const windowEvents: string[] = [];
@@ -62,6 +59,7 @@ const windowListeners = ['extensions-already-started', 'system-ready'];
 export const navigationRegistry: Writable<NavigationRegistryEntry[]> = writable([]);
 
 let hiddenItems: string[] = [];
+let pinnedItems: string[] = [];
 
 let values: NavigationRegistryEntry[] = [];
 let initialized = false;
@@ -75,24 +73,31 @@ const init = (): void => {
   values.push(createNavigationExtensionEntry());
   values.push(createNavigationExtensionGroup());
   handleKubernetesGroup();
+  values.push(...createNavigationSettingsEntries());
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
-function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[]): void {
+export function collecItem(
+  navigationRegistryEntry: NavigationRegistryEntry,
+  items: NavigationItemState[],
+  groupName?: string,
+): void {
   if (navigationRegistryEntry.items && navigationRegistryEntry.type === 'group') {
-    navigationRegistryEntry.items.forEach(item => {
-      collecItem(item, items);
-    });
+    navigationRegistryEntry.items.forEach(item => collecItem(item, items, groupName));
+  } else if (navigationRegistryEntry.items && navigationRegistryEntry.type === 'submenu') {
+    navigationRegistryEntry.items.forEach(item => collecItem(item, items, navigationRegistryEntry.name));
   }
 
   // add only if it does not exist
-  if (items.find(i => i.name === navigationRegistryEntry.name)) {
+  if (items.find(i => i.link === navigationRegistryEntry.link)) {
     return;
   }
 
   items.push({
-    name: navigationRegistryEntry.name,
+    name: groupName ? `${groupName} > ${navigationRegistryEntry.name}` : navigationRegistryEntry.name,
+    link: navigationRegistryEntry.link,
     visible: navigationRegistryEntry.hidden ? false : true,
+    pinned: navigationRegistryEntry.pinned ? true : false,
   });
 }
 
@@ -124,8 +129,22 @@ export const fetchNavigationRegistries = async (): Promise<void> => {
   await navigationRegistryEventStoreInfo.fetch();
 };
 
+function pinSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void {
+  navigationRegistryEntry.pinned =
+    (pinnedItems?.includes(navigationRegistryEntry.name) ?? false) ||
+    (pinnedItems?.includes(navigationRegistryEntry.link) ?? false);
+
+  if (navigationRegistryEntry.items) {
+    navigationRegistryEntry.items.forEach(item => {
+      pinSingleItem(item);
+    });
+  }
+}
+
 function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void {
-  if (hiddenItems?.includes(navigationRegistryEntry.name)) {
+  if (navigationRegistryEntry.name.includes(' > ')) {
+    navigationRegistryEntry.hidden = !navigationRegistryEntry.pinned;
+  } else if (hiddenItems?.includes(navigationRegistryEntry.name)) {
     navigationRegistryEntry.hidden = true;
   } else {
     navigationRegistryEntry.hidden = false;
@@ -140,13 +159,14 @@ function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void 
 }
 
 async function hideItems(): Promise<void> {
-  // for each item, set the hidden property to true
+  // for each item, set the hidden/pinned properties
   values.forEach(item => {
+    pinSingleItem(item);
     hideSingleItem(item);
   });
 
   // send to the main side the list of all items, items being displayed or hidden
-  const navItems: DisplayItem[] = [];
+  const navItems: NavigationItemState[] = [];
   values.forEach(item => {
     collecItem(item, navItems);
   });
@@ -156,7 +176,7 @@ async function hideItems(): Promise<void> {
   navigationRegistry.set(values);
 }
 
-// update the items by looking at the disabled items each time we update the configuration properties
+// update the items by looking at the disabled/pinned items each time we update the configuration properties
 configurationProperties.subscribe(() => {
   if (window.getConfigurationValue) {
     window
@@ -168,6 +188,16 @@ configurationProperties.subscribe(() => {
       })
       .then(() => hideItems())
       .catch((err: unknown) => console.error('Error getting configuration value navbar.disabledItems', err));
+
+    window
+      .getConfigurationValue<string[]>('navbar.pinnedItems')
+      ?.then(value => {
+        if (value) {
+          pinnedItems = value;
+        }
+      })
+      .then(() => hideItems())
+      .catch((err: unknown) => console.error('Error getting configuration value navbar.pinnedItems', err));
 
     handleKubernetesGroup();
   }

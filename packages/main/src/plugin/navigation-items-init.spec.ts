@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,11 +40,18 @@ test('should register a configuration', async () => {
   expect(configurationNode?.id).toBe('preferences.navBar');
   expect(configurationNode?.title).toBe('User Confirmation');
   expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(1);
+  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(2);
   expect(configurationNode?.properties?.['navbar.disabledItems']).toBeDefined();
   expect(configurationNode?.properties?.['navbar.disabledItems']?.description).toBe(
     'Items being disabled in the navigation bar',
   );
   expect(configurationNode?.properties?.['navbar.disabledItems']?.type).toStrictEqual(['boolean']);
   expect(configurationNode?.properties?.['navbar.disabledItems']?.default).toStrictEqual([]);
+
+  expect(configurationNode?.properties?.['navbar.pinnedItems']).toBeDefined();
+  expect(configurationNode?.properties?.['navbar.pinnedItems']?.description).toBe(
+    'Items being pinned to the top of the navigation bar',
+  );
+  expect(configurationNode?.properties?.['navbar.pinnedItems']?.type).toStrictEqual(['boolean']);
+  expect(configurationNode?.properties?.['navbar.pinnedItems']?.default).toStrictEqual([]);
 });
