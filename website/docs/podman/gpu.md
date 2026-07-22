@@ -129,7 +129,7 @@ You might need to restart your Podman machine.
 
 #### Procedure
 
-**Important to note** that using the "Metal" GPU on macOS utilizes specialized software to achieve this. Specifically a **virtualized GPU** from within the Podman Machine that provides translation support from [Vulkan](https://www.vulkan.org/) and [MoltenVK](https://github.com/KhronosGroup/MoltenVK) calls to MSL (Metal Shading Language), Apples GPU.
+**Important to note** that using the "Metal" GPU on macOS utilizes specialized software to achieve this. Specifically a **virtualized GPU** from within the Podman Machine that provides translation support from [Vulkan](https://www.vulkan.org/) and [MoltenVK](https://github.com/KhronosGroup/MoltenVK) calls to MSL (Metal Shading Language), Apple's GPU.
 
 1. Create a Podman Machine that uses `libkrun`:
 

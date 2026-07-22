@@ -3,7 +3,7 @@ sidebar_position: 117
 title: Uninstallation
 description: How to uninstall Podman Desktop on Windows, macOS, and Linux.
 tags: [podman-desktop, uninstall]
-keywords: [podman desktop, containers, podman, unistall-on-windows, unistall-on-macOS, uninstall-on-linux]
+keywords: [podman desktop, containers, podman, uninstall-on-windows, uninstall-on-macOS, uninstall-on-linux]
 ---
 
 import Tabs from '@theme/Tabs';

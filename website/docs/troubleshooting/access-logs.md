@@ -3,7 +3,7 @@ sidebar_position: 10
 title: Access logs
 description: Access Podman Desktop logs to troubleshoot
 keywords: [podman desktop, podman, access logs, troubleshoot]
-tags: [acessing-podman-desktop-logs, troubleshooting-podman-desktop]
+tags: [accessing-podman-desktop-logs, troubleshooting-podman-desktop]
 ---
 
 # Access Podman Desktop logs

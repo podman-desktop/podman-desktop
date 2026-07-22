@@ -27,7 +27,7 @@ In a restricted environment you might face the following challenges:
 
 - The Podman Machine connects directly to the external network.
 
-  However, a restricted environment might block all traffic no going to a proxy.
+  However, a restricted environment might block all traffic not going to a proxy.
 
   Consider configuring Podman Desktop and your Podman Machine to route the traffic through a proxy.
 
@@ -119,7 +119,7 @@ However, it does not contain additional utilities, such as Compose or Kind.
 The Linux _AMD64 binary (tar.gz)_ has all artifacts required to install Podman Desktop. It does not require Internet access to download resources during installation.
 However, it does not contain additional utilities, such as Podman CLI, Compose, or Kind.
 
-1. The Podman Destkop archive for restricted environments does not contain Podman CLI.
+1. The Podman Desktop archive for restricted environments does not contain Podman CLI.
 
    To install Podman, go to [the Podman website](https://podman.io/), and follow the installation instructions.
 
