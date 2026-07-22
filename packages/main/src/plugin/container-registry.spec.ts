@@ -6287,7 +6287,7 @@ test('resolve Podman image shortname to FQN', async () => {
   expect(imagesNames[0]).toBe('shortname');
 });
 
-test('resolve Dokcer image shortname to FQN', async () => {
+test('resolve Docker image shortname to FQN', async () => {
   const getMatchingContainerProviderMock = vi.spyOn(containerRegistry, 'getMatchingContainerProvider');
   const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 

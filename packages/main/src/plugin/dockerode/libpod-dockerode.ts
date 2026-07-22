@@ -842,7 +842,7 @@ export class LibpodDockerode {
         },
         headers: headers,
         // We require all=true to always be present in the URL in order for the manifest to be pushed correctly.
-        // If you do not provide it, it will return a "uknown manifest blob" error as it's trying to push a manifest blob with no images.
+        // If you do not provide it, it will return a "unknown manifest blob" error as it's trying to push a manifest blob with no images.
         options: {
           all: 'true',
         },

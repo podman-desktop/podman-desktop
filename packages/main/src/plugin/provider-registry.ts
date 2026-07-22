@@ -181,7 +181,7 @@ export class ProviderRegistry {
 
     // Every 2 seconds, we will check:
     // * The status of the providers
-    // * Any new warnings or informations for each provider
+    // * Any new warnings or information for each provider
     setInterval(() => {
       for (const [providerKey] of this.providers) {
         // Get the provider and its lifecycle

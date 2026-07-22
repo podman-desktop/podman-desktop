@@ -504,7 +504,7 @@ export class ContainerProviderRegistry {
     try {
       const engine = this.internalProviders.get(engineId);
       if (engine?.libpodApi) {
-        // we cannot use the /secrets (compact) api to retreive secret with podman
+        // we cannot use the /secrets (compact) api to retrieve secret with podman
         // endpoint is malformed
         // https://github.com/containers/podman/issues/27548
         await engine.libpodApi.removeSecret(secretId);
@@ -2735,7 +2735,7 @@ export class ContainerProviderRegistry {
       const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
       await kubePlay.init();
 
-      // if we have no context let's just use the the yaml
+      // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
         return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
       }
