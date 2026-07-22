@@ -7337,6 +7337,8 @@ describe('updateImages', () => {
       cancellable: true,
       cancellationTokenSourceId: expect.any(Number),
     });
+    const cancellationTokenSourceId = createTaskMock.mock.calls[0]?.[0]?.cancellationTokenSourceId as number;
+    expect(cancellationTokenRegistry.hasCancellationTokenSource(cancellationTokenSourceId)).toBe(false);
     expect(task.name).toBe('Update nginx:latest: Up to date');
     expect(task.status).toBe('success');
   });
@@ -7388,6 +7390,10 @@ describe('updateImages', () => {
     expect(result!.status).toBe(mockStatus.status);
     expect(pullMock).not.toHaveBeenCalled();
     expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith(
+      'updateImage',
+      expect.objectContaining({ outcome: mockStatus.status === 'skipped' ? 'skipped' : 'up-to-date' }),
+    );
   });
 
   test('checks update status with repository digests when available', async () => {
@@ -7486,7 +7492,11 @@ describe('updateImages', () => {
     expect(telemetryTrackMock).toHaveBeenCalledTimes(2);
     expect(telemetryTrackMock).toHaveBeenCalledWith(
       'updateImage',
-      expect.objectContaining({ imageName: expect.any(String) }),
+      expect.objectContaining({ imageName: expect.any(String), outcome: 'updated' }),
+    );
+    expect(telemetryTrackMock).toHaveBeenCalledWith(
+      'updateImage',
+      expect.objectContaining({ imageName: expect.any(String), outcome: 'error', error: 'Registry unavailable' }),
     );
   });
 });

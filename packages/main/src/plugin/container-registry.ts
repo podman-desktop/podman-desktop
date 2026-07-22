@@ -1424,17 +1424,14 @@ export class ContainerProviderRegistry {
 
   private completeUpdateImagesTask(task: Task, results: ImageUpdateResult[]): void {
     if (results.length === 1) {
-      const result = results[0];
-      if (!result) {
-        task.status = 'success';
-        return;
-      }
-      task.name = `Update ${result.imageRef}: ${result.message}`;
-      if (result.status === 'error') {
-        task.error = result.message;
-        task.status = 'failure';
-      } else {
-        task.status = 'success';
+      for (const result of results) {
+        task.name = `Update ${result.imageRef}: ${result.message}`;
+        if (result.status === 'error') {
+          task.error = result.message;
+          task.status = 'failure';
+        } else {
+          task.status = 'success';
+        }
       }
       return;
     }
@@ -1490,8 +1487,13 @@ export class ContainerProviderRegistry {
             const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
             const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
 
-            if (status.status === 'skipped' || status.status === 'error' || !status.updateAvailable) {
-              telemetryOptions = { skipped: true, reason: status.status };
+            if (status.status === 'error') {
+              telemetryOptions = { outcome: 'error', error: status.message };
+              return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+            }
+
+            if (status.status === 'skipped' || !status.updateAvailable) {
+              telemetryOptions = { outcome: status.status === 'skipped' ? 'skipped' : 'up-to-date' };
               return { imageRef: info.image, updated: false, status: status.status, message: status.message };
             }
 
@@ -1509,9 +1511,10 @@ export class ContainerProviderRegistry {
             );
             await promise;
 
+            telemetryOptions = { outcome: 'updated' };
             return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
           } catch (error: unknown) {
-            telemetryOptions = { error: error };
+            telemetryOptions = { outcome: 'error', error: error };
             const message = error instanceof Error ? error.message : String(error);
             return { imageRef: info.image, updated: false, status: 'error', message };
           } finally {
@@ -1537,6 +1540,7 @@ export class ContainerProviderRegistry {
       throw error;
     } finally {
       cancellationListener.dispose();
+      this.cancellationTokenRegistry.removeCancellationTokenSource(cancellationTokenSourceId);
     }
   }
 
