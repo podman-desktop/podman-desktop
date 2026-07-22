@@ -1482,7 +1482,7 @@ export class ContainerProviderRegistry {
     const cancellationListener = cancellationTokenSource.token.onCancellationRequested(() => abortController.abort());
 
     try {
-      const settledResults = await Promise.allSettled(
+      const results = await Promise.all(
         images.map(async (info): Promise<ImageUpdateResult> => {
           let telemetryOptions: Record<string, unknown> = {};
           try {
@@ -1512,7 +1512,8 @@ export class ContainerProviderRegistry {
             return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
           } catch (error: unknown) {
             telemetryOptions = { error: error };
-            throw error;
+            const message = error instanceof Error ? error.message : String(error);
+            return { imageRef: info.image, updated: false, status: 'error', message };
           } finally {
             this.telemetryService.track('updateImage', {
               imageName: this.getImageHash(info.image),
@@ -1521,13 +1522,6 @@ export class ContainerProviderRegistry {
           }
         }),
       );
-      const results = settledResults.map((result, index): ImageUpdateResult => {
-        if (result.status === 'fulfilled') {
-          return result.value;
-        }
-        const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
-        return { imageRef: images[index]!.image, updated: false, status: 'error', message };
-      });
       if (cancellationTokenSource.token.isCancellationRequested) {
         task.status = 'canceled';
       } else {
