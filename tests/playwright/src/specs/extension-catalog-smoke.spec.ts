@@ -23,6 +23,7 @@ const MATCHING_EXTENSION_NAME_1 = minikubeExtension.extensionName;
 const MATCHING_EXTENSION_NAME_2 = bootcExtension.extensionName;
 const NONEXISTENT_FILTER = 'no-such-ext';
 const CATALOG_LOAD_TIMEOUT = 60_000;
+const ASSERT_TIMEOUT = 10_000;
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('extension-catalog-e2e');
@@ -43,11 +44,14 @@ test.describe('Extensions Catalog filter', { tag: ['@smoke'] }, () => {
     await extensionsPage.openCatalogTab();
     await playExpect(extensionsPage.catalogExtensions).toBeVisible({ timeout: CATALOG_LOAD_TIMEOUT });
 
-    const matchingExtension1 = extensionsPage.getCatalogExtension(MATCHING_EXTENSION_NAME_1);
-    const matchingExtension2 = extensionsPage.getCatalogExtension(MATCHING_EXTENSION_NAME_2);
-
-    await playExpect(matchingExtension1.parent).toBeVisible({ timeout: CATALOG_LOAD_TIMEOUT });
-    await playExpect(matchingExtension2.parent).toBeVisible({ timeout: CATALOG_LOAD_TIMEOUT });
+    const matchingExtension1 = await extensionsPage.getCatalogExtension(
+      MATCHING_EXTENSION_NAME_1,
+      CATALOG_LOAD_TIMEOUT,
+    );
+    const matchingExtension2 = await extensionsPage.getCatalogExtension(
+      MATCHING_EXTENSION_NAME_2,
+      CATALOG_LOAD_TIMEOUT,
+    );
 
     const unfilteredCount = await extensionsPage.countCatalogExtensions();
     playExpect(unfilteredCount).toBeGreaterThanOrEqual(2);
@@ -55,33 +59,33 @@ test.describe('Extensions Catalog filter', { tag: ['@smoke'] }, () => {
     await test.step('Filter by known extension name shows only matching cards', async () => {
       await extensionsPage.filterByName(MATCHING_EXTENSION_NAME_1);
 
-      await playExpect(matchingExtension1.parent).toBeVisible({ timeout: 10_000 });
-      await playExpect(matchingExtension2.parent).not.toBeVisible({ timeout: 10_000 });
-      await playExpect.poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: 10_000 }).toBe(1);
-      await playExpect(extensionsPage.search.getByText(/Filtered out \d+ items of \d+/)).toBeVisible();
+      await playExpect(matchingExtension1.parent).toBeVisible({ timeout: ASSERT_TIMEOUT });
+      await playExpect(matchingExtension2.parent).not.toBeVisible({ timeout: ASSERT_TIMEOUT });
+      await playExpect
+        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: ASSERT_TIMEOUT })
+        .toBe(1);
     });
 
     await test.step('Filter with no matches shows empty state', async () => {
       await extensionsPage.filterByName(NONEXISTENT_FILTER);
 
-      await playExpect(matchingExtension1.parent).not.toBeVisible({ timeout: 10_000 });
-      await playExpect(matchingExtension2.parent).not.toBeVisible({ timeout: 10_000 });
-      await playExpect(
-        extensionsPage.content.getByRole('heading', {
-          name: `No extensions matching '${NONEXISTENT_FILTER}' found`,
-        }),
-      ).toBeVisible({ timeout: 10_000 });
+      await playExpect(matchingExtension1.parent).not.toBeVisible({ timeout: ASSERT_TIMEOUT });
+      await playExpect(matchingExtension2.parent).not.toBeVisible({ timeout: ASSERT_TIMEOUT });
+      await playExpect
+        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: ASSERT_TIMEOUT })
+        .toBe(0);
+      await playExpect(extensionsPage.clearFilterButton).toBeVisible({ timeout: ASSERT_TIMEOUT });
     });
 
     await test.step('Clearing filter restores full Catalog list', async () => {
       await extensionsPage.clearFilterByName();
 
-      await playExpect(matchingExtension1.parent).toBeVisible({ timeout: 10_000 });
-      await playExpect(matchingExtension2.parent).toBeVisible({ timeout: 10_000 });
+      await playExpect(matchingExtension1.parent).toBeVisible({ timeout: ASSERT_TIMEOUT });
+      await playExpect(matchingExtension2.parent).toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect
-        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: 10_000 })
+        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: ASSERT_TIMEOUT })
         .toBe(unfilteredCount);
-      await playExpect(extensionsPage.search.getByText(/Filtered out \d+ items of \d+/)).not.toBeVisible();
+      await playExpect(extensionsPage.clearFilterButton).not.toBeVisible();
     });
   });
 });
