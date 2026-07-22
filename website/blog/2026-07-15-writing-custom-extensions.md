@@ -9,7 +9,7 @@ hide_table_of_contents: false
 
 Extensions let you add custom features to Podman Desktop -- new commands, status bar indicators, tray menus, webview dashboards, configuration panels, providers, onboarding workflows, and more. In this post we walk through building a real extension from scratch, covering the most important APIs along the way.
 
-The content is based on the [DevConf.CZ 2026 workshop](https://pretalx.devconf.info/devconf-cz-2026/talk/WQULVZ/) _"Podman Desktop -- Creating extensions to simplify container workflows"_. The companion repository provides 14 progressive branches, each introducing one API concept with a TODO placeholder you fill in yourself.
+The content is based on the [DevConf.CZ 2026 workshop](https://pretalx.devconf.info/devconf-cz-2026/talk/WQULVZ/) _"Podman Desktop -- Creating extensions to simplify container workflows"_. The companion repository provides 14 progressive branches, each introducing one API concept with a numbered placeholder comment you fill in yourself.
 
 <!--truncate-->
 
@@ -65,44 +65,67 @@ The extension can use [`@podman-desktop/ui-svelte`](https://www.npmjs.com/packag
 
 ### Loading the extension in Podman Desktop for development
 
-1. Open **Settings > Preferences** and enable **Development Mode**.
-   1. For some of the steps enabling **Status Bar** and **Toast** in **Tasks** category is required.
-2. Navigate to **Extensions > Local Extensions**.
-3. Click **Add a local folder...** and select the `packages/backend` folder.
-4. The extension appears in the **Installed** tab and a **Chaos Lab** entry shows up in the navigation bar.
+1. Open **Settings > Preferences** and enable **Development Mode**, **Status Bar** and **Toast**.
 
 <video autoPlay loop muted playsInline width="100%">
   <source src={require('./img/writing-custom-extensions/workshopPrep.webm').default} type="video/webm" />
 </video>
 
-> **_NOTE:_** After each rebuild (`npm run build`) you need to disable and re-enable the extension. You can use `npm run watch` in the extension to automatically build it, together with `pnpm watch --extension-folder` in cloned Podman Desktop for automatic reloading of the extension.
+2. Navigate to **Extensions > Local Extensions**.
+3. Click **Add a local folder...** and select the `packages/backend` folder.
+4. The extension appears in the **Installed** tab and a **Chaos Lab** entry shows up in the navigation bar.
+
+> **_IMPORTANT:_** After each rebuild (`npm run build`) you need to disable and re-enable the extension in Podman Desktop, or you can use `npm run watch` in the extension to automatically build it, you still need to re-enable the extension though.
+
+<video autoPlay loop muted playsInline width="100%">
+  <source src={require('./img/writing-custom-extensions/workshopReloadOfExtension.webm').default} type="video/webm" />
+</video>
+
+> **_NOTE:_** If you clone the Podman Desktop repository and you run it using `pnpm watch --extension-folder ../relative_path_to_the_extension/packages/backend`, the extension will be updated automatically.
+
+<video autoPlay loop muted playsInline width="100%">
+  <source src={require('./img/writing-custom-extensions/workshopAutomaticReloadOfExtension.webm').default} type="video/webm" />
+</video>
 
 ### How the workshop branches work
 
-Each branch (`workshop/01-progress-task` through `workshop/14-cli-tool`) contains a numbered TODO comment in the source code. Your task is to replace the placeholder with real code. The next branch always contains the solution for the previous step, and the `dev_conf` branch has everything completed.
+Each branch (`workshop/01-progress-task` through `workshop/14-cli-tool`) contains a numbered placeholder comment in the source code. Your task is to replace the placeholder with real code. The next branch always contains the solution for the previous step, and the `dev_conf` branch has everything completed.
 
 ```
-workshop/01-progress-task   →  TODO #1  (withProgress)
-workshop/02-status-bar      →  TODO #2  (createStatusBarItem)
-workshop/03-status-bar-dynamic → TODO #3 (dynamic status bar)
+workshop/01-progress-task   →  #1  (withProgress)
+workshop/02-status-bar      →  #2  (createStatusBarItem)
+workshop/03-status-bar-dynamic → #3 (dynamic status bar)
 ...
-workshop/14-cli-tool        →  TODO #14 (createCliTool)
-dev_conf                    →  all TODOs completed
+workshop/14-cli-tool        →  #14 (createCliTool)
+dev_conf                    →  all placeholders completed
 ```
 
 ## Before each step you should have some kind of container 'attack' running, e.g. resource limiting.
 
+<video autoPlay loop muted playsInline width="100%">
+  <source src={require('./img/writing-custom-extensions/workshopStartChaos.webm').default} type="video/webm" />
+</video>
+
 ## Step 1 -- Progress tasks
 
-**Branch:** `workshop/01-progress-task` | **File:** `chaos-api-impl.ts` | **Docs:** [Progress tasks](/docs/extensions/developing/progress-tasks)
+**Branch:** `workshop/01-progress-task` | **File:** `packages/backend/src/chaos/chaos-api-impl.ts` | **Docs:** [Progress tasks](/docs/extensions/developing/progress-tasks)
 
 The `withProgress` API shows a task in the Podman Desktop task widget with a title, message, and progress bar.
 
-The TODO placeholder wraps a bare call to `this.engine.stopAll()`:
+In `packages/backend/src/chaos/chaos-api-impl.ts`, the placeholder comment above the call to `this.engine.stopAll()` describes what to implement:
 
 ```typescript
 async stopAllChaos(): Promise<void> {
-  // TODO #1: Wrap with extensionApi.window.withProgress()
+  // -------------------------------------------------------------------------
+  // #1: Show a progress task while stopping all chaos
+  // Wrap the call to this.engine.stopAll() inside extensionApi.window.withProgress():
+  //   - location: extensionApi.ProgressLocation.TASK_WIDGET
+  //   - title: 'Stop All Chaos'
+  // Inside the callback, use progress.report({ message }) to show status,
+  // then call this.engine.stopAll(), then report completion with increment: 100.
+  // Bonus: use increment (0-100) in progress.report() to show intermediate progress steps.
+  // Hint: extensionApi.window.withProgress({ location, title }, async (progress) => { ... })
+  // -------------------------------------------------------------------------
   await this.engine.stopAll();
 }
 ```
@@ -115,6 +138,9 @@ async stopAllChaos(): Promise<void> {
     { location: extensionApi.ProgressLocation.TASK_WIDGET, title: 'Stop All Chaos' },
     async progress => {
       progress.report({ increment: 0, message: 'Stopping all chaos operations...' });
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      progress.report({ increment: 50, message: 'Hacking NASA in meantime...' });
+      await new Promise(resolve => setTimeout(resolve, 1500));
       await this.engine.stopAll();
       progress.report({ increment: 100, message: 'All chaos operations stopped' });
     },
@@ -132,11 +158,11 @@ async stopAllChaos(): Promise<void> {
 
 ## Steps 2--3 -- Status bar
 
-**Branch:** `workshop/02-status-bar`, `workshop/03-status-bar-dynamic` | **File:** `extension.ts` | **Docs:** [Status bar](/docs/extensions/developing/status-bar)
+**Branch:** `workshop/02-status-bar`, `workshop/03-status-bar-dynamic` | **File:** `packages/backend/src/extension.ts` | **Docs:** [Status bar](/docs/extensions/developing/status-bar)
 
 ### Creating a static status bar item
 
-`createStatusBarItem()` adds a clickable item to the bottom bar. Set its `.text`, `.command`, and call `.show()`:
+In `packages/backend/src/extension.ts`, `createStatusBarItem()` adds a clickable item to the bottom bar. Set its `.text`, `.command`, and call `.show()`:
 
 ```typescript
 const chaosStatusBar = extensionApi.window.createStatusBarItem();
@@ -150,7 +176,7 @@ extensionContext.subscriptions.push(chaosStatusBar);
 
 ### Dynamically updating the text
 
-Use `setInterval` to poll `chaosEngine.getState()` and reflect the number of active attacks:
+Still in `packages/backend/src/extension.ts`, use `setInterval` to poll `chaosEngine.getState()` and reflect the number of active attacks:
 
 ```typescript
 statusBarUpdateInterval = setInterval(() => {
@@ -189,11 +215,13 @@ Dynamic updates reflecting active attacks:
 
 ## Steps 4--5 -- Commands
 
-**Branch:** `workshop/04-command-stop-all`, `workshop/05-command-open-dashboard` | **File:** `extension.ts` | **Docs:** [Commands](/docs/extensions/developing/commands)
+**Branch:** `workshop/04-command-stop-all`, `workshop/05-command-open-dashboard` | **File:** `packages/backend/src/extension.ts` | **Docs:** [Commands](/docs/extensions/developing/commands)
 
 Commands are registered with `extensionApi.commands.registerCommand(id, callback)`. The `id` must match entries in `package.json` under `contributes.commands`.
 
 ### "Stop All Chaos" command
+
+Registered in `packages/backend/src/extension.ts`:
 
 ```typescript
 const stopAllCommand = extensionApi.commands.registerCommand('chaos-lab.stopAll', async () => {
@@ -207,6 +235,8 @@ extensionContext.subscriptions.push(stopAllCommand);
 
 ### "Open Dashboard" command
 
+Also in `packages/backend/src/extension.ts`:
+
 ```typescript
 const openChaosCommand = extensionApi.commands.registerCommand('chaos-lab.openChaos', () => {
   panel.reveal();
@@ -214,12 +244,15 @@ const openChaosCommand = extensionApi.commands.registerCommand('chaos-lab.openCh
 extensionContext.subscriptions.push(openChaosCommand);
 ```
 
-Make sure to also declare the command in `package.json`:
+Make sure to also declare the command in `packages/backend/package.json`:
 
 ```json
 {
   "contributes": {
-    "commands": [{ "command": "chaos-lab.openChaos", "title": "Chaos Lab: Open Dashboard" }]
+    "commands": [
+      { "command": "chaos-lab.stopAll", "title": "Chaos Lab: Stop All Chaos" },
+      { "command": "chaos-lab.openChaos", "title": "Chaos Lab: Open Dashboard" }
+    ]
   }
 }
 ```
@@ -240,9 +273,9 @@ Make sure to also declare the command in `package.json`:
 
 ## Step 6 -- Webview messaging
 
-**Branch:** `workshop/06-command-view-container` | **File:** `extension.ts` | **Docs:** [Webview messaging](/docs/extensions/developing/webview-messaging)
+**Branch:** `workshop/06-command-view-container` | **File:** `packages/backend/src/extension.ts` | **Docs:** [Webview messaging](/docs/extensions/developing/webview-messaging)
 
-Extensions communicate with their webview via `postMessage`. This command receives a container object from a context menu, opens the dashboard, and tells the frontend to navigate to that container's detail page:
+In `packages/backend/src/extension.ts`, extensions communicate with their webview via `postMessage`. This command receives a container object from a context menu, opens the dashboard, and tells the frontend to navigate to that container's detail page:
 
 ```typescript
 const viewContainerCommand = extensionApi.commands.registerCommand(
@@ -262,7 +295,7 @@ extensionContext.subscriptions.push(viewContainerCommand);
 
 The short delay gives the webview time to become visible before receiving the message. On the frontend side, a message listener in Svelte picks up `{ type: 'navigate' }` and routes accordingly.
 
-The context menu entry is declared in `package.json`:
+The context menu entry is declared in `packages/backend/package.json`:
 
 ```json
 {
@@ -282,9 +315,9 @@ The context menu entry is declared in `package.json`:
 
 ## Step 7 -- Tray menu
 
-**Branch:** `workshop/07-tray-menu` | **File:** `extension.ts` | **Docs:** [Tray menu](/docs/extensions/developing/tray-menu)
+**Branch:** `workshop/07-tray-menu` | **File:** `packages/backend/src/extension.ts` | **Docs:** [Tray menu](/docs/extensions/developing/tray-menu)
 
-Register a submenu in the system tray that groups related commands:
+In `packages/backend/src/extension.ts`, register a submenu in the system tray that groups related commands:
 
 ```typescript
 const trayItem = extensionApi.tray.registerMenuItem({
@@ -309,11 +342,13 @@ Each submenu item's `id` must match a registered command. When the user clicks a
 
 ## Steps 8--9 -- Configuration
 
-**Branch:** `workshop/08-config-change-listener`, `workshop/09-config-read-values` | **File:** `settings-manager.ts` | **Docs:** [Configuration](/docs/extensions/developing/config)
+**Branch:** `workshop/08-config-change-listener`, `workshop/09-config-read-values` | **File:** `packages/backend/src/settings-manager.ts` | **Docs:** [Configuration](/docs/extensions/developing/config)
 
 Configuration properties are declared in `package.json` under `contributes.configuration`. The extension reads them at startup and reacts to changes.
 
 ### Declaring configuration in package.json
+
+Add this under `contributes.configuration` in `packages/backend/package.json`:
 
 ```json
 {
@@ -324,7 +359,7 @@ Configuration properties are declared in `package.json` under `contributes.confi
         "chaos-lab.chaosSafeContainers": {
           "type": "string",
           "default": "",
-          "description": "Comma-separated container name patterns protected from chaos (supports * wildcards)."
+          "description": "Comma-separated container name patterns that should never be targeted by chaos or isolation (supports * wildcards). Example: 'postgres*,redis-prod'."
         },
         "chaos-lab.showStatusBarChaos": {
           "type": "boolean",
@@ -338,6 +373,8 @@ Configuration properties are declared in `package.json` under `contributes.confi
 ```
 
 ### Listening for changes
+
+In `packages/backend/src/settings-manager.ts`:
 
 ```typescript
 load(): void {
@@ -355,6 +392,8 @@ load(): void {
 ```
 
 ### Reading configuration values
+
+Still in `packages/backend/src/settings-manager.ts`:
 
 ```typescript
 private readConfig(): void {
@@ -380,11 +419,13 @@ private readConfig(): void {
 
 ## Steps 10--11 -- Provider and connection factory
 
-**Branch:** `workshop/10-create-provider`, `workshop/11-connection-factory` | **File:** `chaos-provider.ts`
+**Branch:** `workshop/10-create-provider`, `workshop/11-connection-factory` | **File:** `packages/backend/src/chaos-provider.ts`
 
 Providers appear in the Podman Desktop **Resources** page and can manage connections (machines, engines).
 
 ### Creating the provider
+
+In `packages/backend/src/chaos-provider.ts`:
 
 ```typescript
 providerInstance = extensionApi.provider.createProvider({
@@ -403,7 +444,7 @@ extensionContext.subscriptions.push(providerInstance);
 
 ### Setting up the connection factory
 
-The connection factory lets users create new "machines" from the Resources page:
+Still in `packages/backend/src/chaos-provider.ts`, the connection factory lets users create new "machines" from the Resources page:
 
 ```typescript
 providerInstance.setContainerProviderConnectionFactory({
@@ -420,7 +461,7 @@ providerInstance.setContainerProviderConnectionFactory({
     const diskGb = Math.round(diskBytes / (1024 * 1024 * 1024));
     const config: MachineConfig = { cpus, memoryMb, diskGb };
 
-    logger?.log(`Creating Chaos machine '${machineName}'...`);
+    logger?.log(`Creating Chaos machine '${machineName}' (${cpus} CPUs, ${memoryMb} MB RAM, ${diskGb} GB disk)...`);
     registerMachineConnection(machineName, config);
     providerInstance?.updateStatus('ready');
     logger?.log(`Chaos machine '${machineName}' created and running`);
@@ -444,20 +485,24 @@ Creating a Chaos Machine via the connection factory:
 
 ## Step 12 -- CI/CD workflows
 
-**Branch:** `workshop/12-ci-workflows` | **Files:** `.github/workflows/`
+**Branch:** `workshop/12-ci-workflows` | **Files:** `Containerfile`, `.github/workflows/pr-check.yaml`, `.github/workflows/build-next.yaml`
 
 ### Packaging as an OCI image
 
-The `Containerfile` uses a multistage build: the first stage installs and builds, the second copies only the built artifacts into a `scratch` image:
+The repository-root `Containerfile` uses a multistage build: the first stage installs and builds, the second copies only the built artifacts into a `scratch` image:
 
 ```dockerfile
 FROM node:24-slim AS builder
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
 COPY . /app
 WORKDIR /app
 RUN npm install --frozen-lockfile
 RUN npm run build
 
 FROM scratch
+
 COPY --from=builder /app/packages/backend/dist/ /extension/dist
 COPY --from=builder /app/packages/backend/package.json /extension/
 COPY --from=builder /app/packages/backend/media/ /extension/media
@@ -467,6 +512,7 @@ COPY --from=builder /app/README.md /extension/
 
 LABEL org.opencontainers.image.title="Podman Desktop Chaos Lab Extension" \
   org.opencontainers.image.description="Containers durability harness tool" \
+  org.opencontainers.image.vendor="DevConf Podman Desktop / Extension demo" \
   io.podman-desktop.api.version=">= 1.22.0"
 ```
 
@@ -474,7 +520,7 @@ The `io.podman-desktop.api.version` label tells Podman Desktop which API version
 
 ### PR check workflow
 
-A GitHub Actions workflow runs lint, format, typecheck, tests, and builds the extension image on every pull request:
+The `.github/workflows/pr-check.yaml` workflow runs lint, format, typecheck, tests, and builds the extension image on every pull request:
 
 ```yaml
 name: pr-check
@@ -510,21 +556,24 @@ jobs:
 
 ### Nightly build
 
-Push the extension image to `ghcr.io` on every merge to `main`, tagged with both `nightly` and the commit SHA:
+The `.github/workflows/build-next.yaml` workflow pushes the extension image to `ghcr.io` on every merge to `main` or `dev_conf`, tagged with both `nightly` and the commit SHA:
 
 ```yaml
 name: Build and Push
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'dev_conf']
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login --username ${{ github.repository_owner }} --password-stdin ghcr.io
-      - run: |
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login --username ${{ github.repository_owner }} --password-stdin ghcr.io
+      - name: Publish Image
+        run: |
           IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-chaos-lab
           podman build -t ${IMAGE_NAME}:nightly .
           podman push ${IMAGE_NAME}:nightly
@@ -536,11 +585,13 @@ jobs:
 
 ## Step 13 -- Onboarding
 
-**Branch:** `workshop/13-onboarding` | **File:** `chaos-provider.ts` + `package.json` | **Docs:** [Onboarding workflow](/docs/extensions/developing/onboarding-workflow)
+**Branch:** `workshop/13-onboarding` | **File:** `packages/backend/src/chaos-provider.ts` + `packages/backend/package.json` | **Docs:** [Onboarding workflow](/docs/extensions/developing/onboarding-workflow)
 
-Onboarding workflows guide first-time users through setup. The UI is declared in `package.json` and Podman Desktop renders it automatically -- your code just sets context values.
+Onboarding workflows guide first-time users through setup. The UI is declared in `package.json` and Podman Desktop renders it automatically -- your code just sets context values. This flow has five steps: checking for an existing provider, a welcome/info screen, creating a Chaos Machine, handling creation failures, and a success screen.
 
 ### Declarative onboarding in package.json
+
+In `packages/backend/package.json`:
 
 ```json
 {
@@ -557,11 +608,40 @@ Onboarding workflows guide first-time users through setup. The UI is declared in
           "completionEvents": ["onCommand:chaos-lab.onboarding.checkProvider"]
         },
         {
+          "id": "welcomeView",
+          "label": "Setup",
+          "title": "Chaos Lab Setup",
+          "when": "!onboardingContext:chaosProviderReady",
+          "content": [
+            [{ "value": "Chaos Lab needs a Chaos Machine to run chaos experiments against your containers." }],
+            [
+              {
+                "value": "The next step will create a Chaos Machine using the provider's connection factory. You can customize CPU, memory, and disk settings.",
+                "highlight": true
+              }
+            ]
+          ]
+        },
+        {
           "id": "createMachineView",
           "label": "Create Machine",
           "title": "Create a Chaos Machine",
           "when": "!onboardingContext:chaosProviderReady",
-          "component": "createContainerProviderConnection"
+          "component": "createContainerProviderConnection",
+          "completionEvents": ["onboardingContext:chaosProviderReady"]
+        },
+        {
+          "id": "createMachineFailure",
+          "title": "Failed creating Chaos Machine",
+          "when": "onboardingContext:chaosMachineCreationFailed",
+          "state": "failed",
+          "content": [
+            [
+              {
+                "value": "Failed to create the Chaos Machine. :button[Retry setup]{command=chaos-lab.onboarding.checkProvider}"
+              }
+            ]
+          ]
         },
         {
           "id": "setupSuccess",
@@ -571,7 +651,7 @@ Onboarding workflows guide first-time users through setup. The UI is declared in
           "content": [
             [
               {
-                "value": "#### Chaos Lab is ready!\n:button[Open Dashboard]{command=chaos-lab.openChaos}",
+                "value": "#### Chaos Lab is ready!\nYour Chaos Machine has been created. Open the **Chaos Lab Dashboard** to start running chaos experiments.\n\n:button[Open Dashboard]{command=chaos-lab.openChaos}",
                 "highlight": true
               }
             ]
@@ -585,6 +665,8 @@ Onboarding workflows guide first-time users through setup. The UI is declared in
 
 ### Setting context values from code
 
+In `packages/backend/src/chaos-provider.ts`:
+
 ```typescript
 const checkProviderDisposable = extensionApi.commands.registerCommand(
   'chaos-lab.onboarding.checkProvider',
@@ -596,12 +678,13 @@ const checkProviderDisposable = extensionApi.commands.registerCommand(
 extensionContext.subscriptions.push(checkProviderDisposable);
 ```
 
-In the connection factory `create` callback, set the context on success or failure:
+In the connection factory `create` callback (`packages/backend/src/chaos-provider.ts`), set the context on success or failure:
 
 ```typescript
 try {
   registerMachineConnection(machineName, config);
   providerInstance?.updateStatus('ready');
+  logger?.log(`Chaos machine '${machineName}' created and running`);
   extensionApi.context.setValue('chaosProviderReady', true, 'onboarding');
 } catch (err) {
   extensionApi.context.setValue('chaosMachineCreationFailed', true, 'onboarding');
@@ -611,6 +694,19 @@ try {
 
 The third argument `'onboarding'` scopes the value so the onboarding UI's `when` clauses can react to it.
 
+### Resetting onboarding for repeated testing
+
+While iterating on this step you'll likely complete the onboarding once and then want to see it again. Two different things can need resetting:
+
+- **The Chaos Lab onboarding itself** is gated purely by the `chaosProviderReady` / `chaosMachineCreationFailed` context values above, which live in memory rather than on disk. Delete the Chaos Machine from the Resources page so `checkProviderCommand` sees `machines.size === 0` again, or use Podman Desktop's built-in **Reset onboarding** action (Settings > Extensions > Chaos Lab).
+- **Podman Desktop's own general "Welcome" screen** (the first-run splash, unrelated to this extension) is tracked separately, via a `"welcome.version"` entry in your local `settings.json`. Remove that entry to see it again:
+
+```json
+"welcome.version": "initial"
+```
+
+By default `settings.json` lives at `~/.local/share/containers/podman-desktop/configuration/settings.json` (macOS, Windows, and most Linux installs); on newer Linux installs following the XDG Base Directory spec without a pre-existing legacy config, it's instead at `~/.config/containers/podman-desktop/settings.json`. See [CONTRIBUTING.md](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md) for details.
+
 <video autoPlay loop muted playsInline width="100%">
   <source src={require('./img/writing-custom-extensions/workshop13.webm').default} type="video/webm" />
 </video>
@@ -619,9 +715,9 @@ The third argument `'onboarding'` scopes the value so the onboarding UI's `when`
 
 ## Step 14 -- CLI tool
 
-**Branch:** `workshop/14-cli-tool` | **File:** `extension.ts` | **Docs:** [CLI tools](/docs/extensions/developing/cli-tools)
+**Branch:** `workshop/14-cli-tool` | **File:** `packages/backend/src/extension.ts` | **Docs:** [CLI tools](/docs/extensions/developing/cli-tools)
 
-Register a CLI tool so it appears in the Podman Desktop CLI tools settings:
+In `packages/backend/src/extension.ts`, register a CLI tool so it appears in the Podman Desktop CLI tools settings:
 
 ```typescript
 const chaosCli = extensionApi.cli.createCliTool({
