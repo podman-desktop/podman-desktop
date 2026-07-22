@@ -2,7 +2,7 @@
 
 ## Overview
 
-Downstream forks can point the auto-updater at any HTTPS server by setting `update.url` in `product.json`. 
+Downstream forks can point the auto-updater at any HTTPS server by setting `update.url` in `product.json`.
 When empty (default), the existing GitHub Releases behavior is preserved.
 
 ```json
@@ -23,7 +23,6 @@ Test the full update flow locally using nginx in a Podman container. Build 2 ver
 
 #### Step 1: Clean assets directory
 
-
 For testing locally remove old `.pkg` files and `.zst` machine images in `extensions/podman/packages/extension/assets/` before building. These inflate the ZIP from ~200MB to 1.5GB+, causing Squirrel.Mac to crash (it buffers the entire download in memory).
 
 ```bash
@@ -32,7 +31,7 @@ rm extensions/podman/packages/extension/assets/*
 
 #### Step 2: Create a self-signed code signing certificate
 
-Squirrel.Mac (how it downloads) requires both the running app and the update to share the same code signing identity. 
+Squirrel.Mac (how it downloads) requires both the running app and the update to share the same code signing identity.
 Ad-hoc signatures (`--sign -`) produce a unique identity per signing, so you need to generate a named certificate.
 
 ```bash
@@ -102,7 +101,7 @@ CSC_NAME="Podman Desktop Test" pnpm compile:current
 
 #### Step 5: Re-sign, repackage, and host the update
 
-electron-builder signs the main executable, but the Electron Framework inside the bundle may retains a different Team ID. You must re-sign with `--deep`, repackage the ZIP, and update the checksum.
+electron-builder signs the main executable, but the Electron Framework inside the bundle may retain a different Team ID. You must re-sign with `--deep`, repackage the ZIP, and update the checksum.
 
 ```bash
 # Re-sign with --deep
@@ -121,7 +120,7 @@ NEW_SIZE=$(stat -f%z /tmp/update-repack/podman-desktop-99.0.0-arm64.zip)
 echo "sha512: $NEW_SHA512"
 echo "size: $NEW_SIZE"
 
-# Copy to to a server directory (we will use ~/update-server dir, or use whatever you'd like)
+# Copy to a server directory (we will use ~/update-server dir, or use whatever you'd like)
 mkdir -p ~/update-server
 cp dist/latest-mac.yml ~/update-server/
 cp /tmp/update-repack/podman-desktop-99.0.0-arm64.zip ~/update-server/
