@@ -83,6 +83,7 @@ interface Host {
   idMappings: IdMappings;
   kernel: string;
   logDriver: string;
+  memAvailable?: number;
   memFree: number;
   memTotal: number;
   networkBackend: string;

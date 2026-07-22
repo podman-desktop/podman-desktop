@@ -53,7 +53,7 @@ import * as util from '/@/util.js';
 
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { LibPod } from './dockerode/libpod-dockerode.js';
+import type { Info, LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import type { EnvfileParser } from './env-file-parser.js';
 import type { ProviderRegistry } from './provider-registry.js';
@@ -2557,6 +2557,83 @@ test('updateNetwork', async () => {
   await containerRegistry.updateNetwork('podman1', 'network1', ['1.1.1.1'], []);
 
   expect(libPodApi.updateNetwork).toHaveBeenCalledWith('network1', ['1.1.1.1'], []);
+});
+
+describe('info', () => {
+  function mockPodmanInfo(host: Partial<Info['host']>): LibPod {
+    return {
+      podmanInfo: vi.fn().mockResolvedValue({
+        host: {
+          cpus: 4,
+          cpuUtilization: { idlePercent: 90 },
+          memTotal: 1000,
+          memFree: 100,
+          ...host,
+        },
+        store: {
+          graphRootAllocated: 2000,
+          graphRootUsed: 500,
+        },
+      } as unknown as Info),
+    } as unknown as LibPod;
+  }
+
+  test('memAvailable present and valid computes memoryUsed from memAvailable', async () => {
+    const libPodApi = mockPodmanInfo({ memAvailable: 400 });
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(600);
+  });
+
+  test('memAvailable absent falls back to memTotal - memFree (older Podman)', async () => {
+    const libPodApi = mockPodmanInfo({});
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(900);
+  });
+
+  test('memAvailable equal to -1 (non-Linux sentinel) falls back to memTotal - memFree', async () => {
+    const libPodApi = mockPodmanInfo({ memAvailable: -1 });
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(900);
+  });
 });
 
 describe('createVolume', () => {
