@@ -168,8 +168,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))
       eslint-plugin-sonarjs:
-        specifier: ^4.1.0
-        version: 4.1.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))
+        specifier: ^4.2.0
+        version: 4.2.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))
       eslint-plugin-unicorn:
         specifier: ^72.0.0
         version: 72.0.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))
@@ -7441,8 +7441,8 @@ packages:
     peerDependencies:
       eslint: '>=5.0.0'
 
-  eslint-plugin-sonarjs@4.1.0:
-    resolution: {integrity: sha512-rh+FlVz0yfd2RNIb6WqSkuGh0addX/Qi5scwQ5FphXDFrM6fZKcxP1+attJ78yUKcyYfiu6MTaISPpAFPzqRJw==}
+  eslint-plugin-sonarjs@4.2.0:
+    resolution: {integrity: sha512-bqADfuNtTL7VK6RU29eoiFTtaaBKIpVPuX3bOl+rBpWSBa0zIBVZlqZNZQjfP6s4iXkAJokv5IsD8OsACkwApg==}
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0 || ^10.0.0
 
@@ -20383,7 +20383,7 @@ snapshots:
     dependencies:
       eslint: 10.7.0(jiti@2.7.0)(supports-color@8.1.1)
 
-  eslint-plugin-sonarjs@4.1.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1)):
+  eslint-plugin-sonarjs@4.2.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
       '@eslint-community/regexpp': 4.12.2
       builtin-modules: 3.3.0
