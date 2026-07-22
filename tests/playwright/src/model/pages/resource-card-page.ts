@@ -35,6 +35,6 @@ export abstract class ResourceCardPage extends BasePage {
     this.providerSetup = this.card.getByRole('region', { name: 'Provider Setup', exact: true });
     this.providerConnections = this.card.getByRole('region', { name: 'Provider Connections', exact: true });
     this.markdownContent = this.providerConnections.getByLabel('markdown-content');
-    this.setupButton = this.providerSetup.getByRole('button', { name: 'Setup' });
+    this.setupButton = this.providerSetup.getByRole('button', { name: 'Set up' });
   }
 }

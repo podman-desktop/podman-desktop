@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderInfo } from '@podman-desktop/core-api';
-import { Button, Link } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
@@ -10,8 +10,6 @@ import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogE
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
-
-const kubernetesExternalDocs = 'https://podman-desktop.io/docs/kubernetes';
 
 async function createNew(provider: ProviderInfo): Promise<void> {
   await window.telemetryTrack('kubernetes.nocontext.createNew', {
@@ -88,9 +86,5 @@ async function ondetails(extensionId: string): Promise<void> {
       category="Kubernetes"
       keywords={['provider']}
       showInstalled={false} />
-
-    <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
-     Want to learn more about Kubernetes on Podman Desktop? <Link on:click={(): Promise<void> => window.openExternal(kubernetesExternalDocs)}>Check out our documentation.</Link>
-    </div>
   </div>
 </div>

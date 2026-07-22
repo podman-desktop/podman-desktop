@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import type { KubernetesObject } from '@kubernetes/client-node';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -46,7 +45,7 @@ vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
 beforeAll(() => {
   Object.defineProperty(window, 'events', { value: eventsMock });
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
-  Object.defineProperty(window, 'sendNavigationItems', { value: vi.fn() });
+  Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
@@ -119,30 +118,78 @@ test('Test contributions', () => {
     meta,
     exitSettingsCallback: () => {},
   });
+
+  const navigationBar = screen.getByRole('navigation', { name: 'AppNavigation' });
+  expect(navigationBar).toBeInTheDocument();
 });
 
-test('NAV_BAR_LAYOUT updates on configuration change', async () => {
-  const NAV_BAR_LAYOUT = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationAppearance}`;
+test('Navigation bar shows title when expanded', async () => {
   const meta = {
     url: '/',
   } as unknown as TinroRouteMeta;
 
-  // init navigation registry
   await fetchNavigationRegistries();
 
   render(AppNavigation, {
     meta,
     exitSettingsCallback: () => {},
   });
-  await tick();
 
-  callbacks.get(NAV_BAR_LAYOUT)?.({ detail: { key: NAV_BAR_LAYOUT, value: AppearanceSettings.IconAndTitle } });
-  await tick();
-  expect(screen.getByLabelText('Dashboard title')).toBeInTheDocument();
-  expect(screen.getByRole('navigation')).toHaveClass('min-w-fit');
+  // Default width is 160px (expanded) — title should be in the DOM
+  const dashboardTitle = screen.getByLabelText('Dashboard title');
+  await vi.waitFor(() => expect(dashboardTitle).toHaveTextContent('Dashboard'));
+});
 
-  callbacks.get(NAV_BAR_LAYOUT)?.({ detail: { key: NAV_BAR_LAYOUT, value: AppearanceSettings.Icon } });
-  await tick();
-  expect(screen.queryByLabelText('Dashboard title')).not.toBeInTheDocument();
-  expect(screen.getByRole('navigation')).toHaveClass('min-w-leftnavbar');
+test('Navigation bar width updates on configuration change', async () => {
+  const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  await fetchNavigationRegistries();
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  // Default width is 160px (expanded) — titles visible
+  await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
+
+  // Simulate width change to expanded (200px) — title still visible
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 200 } });
+  await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
+
+  // Simulate width change to collapsed (below threshold of 70)
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 60 } });
+  await vi.waitFor(() => expect(screen.queryByLabelText('Dashboard title')).not.toBeInTheDocument());
+});
+
+test('Expanded threshold controls text visibility', async () => {
+  const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  await fetchNavigationRegistries();
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  // Default is 160px (expanded)
+  await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
+
+  // Shrink to 80px — still above threshold (70), should stay expanded
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 80 } });
+  await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
+
+  // Shrink below 70px — should collapse (text removed from DOM)
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 60 } });
+  await vi.waitFor(() => expect(screen.queryByLabelText('Dashboard title')).not.toBeInTheDocument());
+
+  // Grow above threshold — should expand again
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 135 } });
+  await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 });

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
+import type { ImageInfo, OpenDialogOptions } from '@podman-desktop/api';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -8,6 +8,7 @@ import type {
   HostConfigPortBinding,
   ImageInspectInfo,
   NetworkInspectInfo,
+  SecretInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } from '@podman-desktop/ui-svelte';
@@ -16,6 +17,9 @@ import { router } from 'tinro';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { ImageUtils } from '/@/lib/image/image-utils';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
+import type { PortInfo, RunOptions } from '/@/lib/image/run/run-options';
 import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
 import { array2String } from '/@/lib/string/string.js';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
@@ -24,90 +28,98 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
-import { runImageInfo } from '/@/stores/run-image-store';
+import { imagesInfos } from '/@/stores/images';
+import { secretsInfo } from '/@/stores/secrets';
 
-interface PortInfo {
-  port: string;
-  error: string;
+interface Props {
+  imageID: string;
+  engineId: string;
+  base64RepoTag: string;
 }
+
+let { imageID, engineId, base64RepoTag }: Props = $props();
+
+const imageUtils = new ImageUtils();
+
+let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
+let image: ImageInfoUI | undefined = $derived(
+  imageInfo ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos) : undefined,
+);
+
+let options: RunOptions = $state({
+  basic: {
+    containerName: '',
+    entrypoint: '',
+    command: '',
+    volumeMounts: [{ source: '', target: '' }],
+    environmentVariables: [{ key: '', value: '' }],
+    environmentFiles: [''],
+    hostContainerPortMappings: [],
+    containerPortMapping: [],
+    secretMappings: [],
+  },
+  networking: {
+    hostname: undefined,
+    dnsServers: [''],
+    extraHosts: [{ host: '', ip: '' }],
+    networkingMode: 'bridge',
+    networkingModeUserNetwork: '',
+    networkingModeUserContainer: '',
+  },
+  advanced: {
+    useTty: true,
+    useInteractive: true,
+    runUser: undefined,
+    autoRemove: false,
+    restartPolicyName: '',
+    restartPolicyMaxRetryCount: 1,
+    devices: [{ host: '', container: '', read: false, write: false, mknod: false }],
+  },
+  security: {
+    privileged: false,
+    readOnly: false,
+    securityOpts: [''],
+    capAdds: [''],
+    capDrops: [''],
+    userNamespace: undefined,
+  },
+});
 
 let imageInspectInfo: ImageInspectInfo;
 
-let containerName = $state('');
-let containerNameError = $state('');
+let secrets: Array<SecretInfo> = $derived($secretsInfo.filter(secret => secret.engineId === imageInspectInfo.engineId));
 
-let command = $state('');
+let containerNameError: string | undefined = $derived.by(() => {
+  // ok, now check if we already have a matching container: same name and same engine ID
+  const containerAlreadyExists = $containersInfos.find(
+    container =>
+      container.engineId === imageInspectInfo.engineId &&
+      container.Names.some(iteratingContainerName => iteratingContainerName === `/${options.basic.containerName}`),
+  );
+  if (containerAlreadyExists) {
+    return `The name ${options.basic.containerName} already exists. Please choose another name or leave blank to generate a name.`;
+  } else {
+    return undefined;
+  }
+});
 
-let entrypoint = $state('');
-
-let containerPortMapping = $state<PortInfo[]>([]);
 let exposedPorts = $state<string[]>([]);
 let createError = $state<string>();
-let restartPolicyName = $state('');
-let restartPolicyMaxRetryCount = $state(1);
 let onPortInputTimeout: NodeJS.Timeout;
 
-// initialize with empty array
-let environmentVariables = $state<{ key: string; value: string }[]>([{ key: '', value: '' }]);
-let environmentFiles = $state<string[]>(['']);
-let volumeMounts = $state<{ source: string; target: string }[]>([{ source: '', target: '' }]);
-let hostContainerPortMappings = $state<{ hostPort: PortInfo; containerPort: string }[]>([]);
-let devices = $state<{ host: string; container: string; read: boolean; write: boolean; mknod: boolean }[]>([
-  { host: '', container: '', read: false, write: false, mknod: false },
-]);
+let invalidPorts = $derived.by(() => {
+  const invalidHostPorts = options.basic.hostContainerPortMappings.filter(pair => pair.hostPort.error);
+  const invalidContainerPortMapping = options.basic.containerPortMapping?.filter(port => port.error) ?? [];
+  return invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
+});
+let invalidFields = $derived(!!containerNameError || invalidPorts);
 
-let invalidName = $state(false);
-let invalidPorts = $state(false);
-let invalidFields = $derived(invalidName || invalidPorts);
-
-// auto remove the container on exit
-let autoRemove = $state(false);
-
-// privileged moade
-let privileged = $state(false);
-
-// read-only moade
-let readOnly = $state(false);
-
-// security options
-let securityOpts = $state<string[]>(['']);
-
-// Kernel capabilities
-let capAdds = $state<string[]>(['']);
-let capDrops = $state<string[]>(['']);
-
-// user namespace
-let userNamespace = $state<string>();
-
-// hostname;
-let hostname = $state<string>();
-
-// dns servers
-let dnsServers = $state<string[]>(['']);
-
-// extra hosts
-let extraHosts: { host: string; ip: string }[] = $state([{ host: '', ip: '' }]);
-
-// networking mode
-let networkingMode = $state('bridge');
-// user defined network if user choose a pre-defined network
-let networkingModeUserNetwork = $state('');
-// container defined network if user choose a pre-defined container
-let networkingModeUserContainer = $state('');
-
-// tty
-let useTty = $state(true);
-let useInteractive = $state(true);
-
-let runUser = $state<string>();
 let dataReady = $state(false);
 
 let imageDisplayName = $state('');
 
 let engineNetworks = $state<NetworkInspectInfo[]>([]);
 let engineContainers = $state<ContainerInfoUI[]>([]);
-
-const image = $runImageInfo;
 
 onMount(async () => {
   if (!image) {
@@ -116,30 +128,27 @@ onMount(async () => {
     return;
   }
 
-  containerPortMapping = [];
-
   imageInspectInfo = await window.getImageInspect(image.engineId, image.id);
   exposedPorts = Array.from(Object.keys(imageInspectInfo?.Config?.ExposedPorts ?? {}));
 
-  command = array2String(imageInspectInfo.Config?.Cmd ?? []);
+  options.basic.command = array2String(imageInspectInfo.Config?.Cmd ?? []);
 
   if (imageInspectInfo.Config?.Entrypoint) {
     if (typeof imageInspectInfo.Config.Entrypoint === 'string') {
-      entrypoint = imageInspectInfo.Config.Entrypoint;
+      options.basic.entrypoint = imageInspectInfo.Config.Entrypoint;
     } else {
-      entrypoint = array2String(imageInspectInfo.Config.Entrypoint);
+      options.basic.entrypoint = array2String(imageInspectInfo.Config.Entrypoint);
     }
   } else {
-    entrypoint = '';
+    options.basic.entrypoint = '';
   }
 
-  // auto-assign ports from available free port
-  containerPortMapping = new Array<PortInfo>(exposedPorts.length);
+  options.basic.containerPortMapping = new Array<PortInfo>(exposedPorts.length);
   await Promise.all(
     exposedPorts.map(async (port, index) => {
       const localPorts = await getPortsInfo(port);
       if (localPorts) {
-        containerPortMapping[index] = { port: localPorts, error: '' };
+        options.basic.containerPortMapping[index] = { port: localPorts, error: '' };
       }
     }),
   );
@@ -159,10 +168,10 @@ onMount(async () => {
     // try to match the bridge network
     const bridgeNetwork = engineNetworks.find(network => network.Name === 'bridge');
     if (bridgeNetwork) {
-      networkingModeUserNetwork = bridgeNetwork.Id;
+      options.networking.networkingModeUserNetwork = bridgeNetwork.Id;
     } else {
       // fallback to the first network
-      networkingModeUserNetwork = engineNetworks[0].Id;
+      options.networking.networkingModeUserNetwork = engineNetworks[0].Id;
     }
   }
 
@@ -179,13 +188,13 @@ onMount(async () => {
     // sort from newest to oldest
     const runningContainers = engineContainers
       .filter(container => container.state === 'RUNNING')
-      .sort((a, b) => b.created - a.created);
+      .toSorted((a, b) => b.created - a.created);
     if (runningContainers.length > 0) {
       // use the first running container
-      networkingModeUserContainer = runningContainers[0].id;
+      options.networking.networkingModeUserContainer = runningContainers[0].id;
     } else {
       // fallback to the first container
-      networkingModeUserContainer = engineContainers[0].id;
+      options.networking.networkingModeUserContainer = engineContainers[0].id;
     }
   }
 });
@@ -245,6 +254,8 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
 }
 
 async function startContainer(): Promise<void> {
+  if (!image) return;
+
   createError = undefined;
   // create ExposedPorts objects
   const ExposedPorts: { [key: string]: object } = {};
@@ -252,17 +263,17 @@ async function startContainer(): Promise<void> {
   const PortBindings: HostConfigPortBinding = {};
   try {
     exposedPorts.forEach((port, index) => {
-      if (port.includes('-') || containerPortMapping[index]?.port.includes('-')) {
-        addPortsFromRange(ExposedPorts, PortBindings, port, containerPortMapping[index].port);
+      if (port.includes('-') || options.basic.containerPortMapping[index]?.port.includes('-')) {
+        addPortsFromRange(ExposedPorts, PortBindings, port, options.basic.containerPortMapping[index].port);
       } else {
-        if (containerPortMapping[index]?.port) {
-          PortBindings[port] = [{ HostPort: containerPortMapping[index].port }];
+        if (options.basic.containerPortMapping[index]?.port) {
+          PortBindings[port] = [{ HostPort: options.basic.containerPortMapping[index].port }];
         }
         ExposedPorts[port] = {};
       }
     });
 
-    hostContainerPortMappings
+    options.basic.hostContainerPortMappings
       .filter(pair => pair.hostPort.port && pair.containerPort)
       .forEach(pair => {
         if (pair.containerPort.includes('-') || pair.hostPort.port.includes('-')) {
@@ -278,42 +289,44 @@ async function startContainer(): Promise<void> {
     return;
   }
 
-  const Env = environmentVariables
+  const Env = options.basic.environmentVariables
     // filter variables withouts keys
     .filter(env => env.key)
     // no value, use empty string
     .map(env => `${env.key}=${env.value ?? ''}`);
 
   // filter empty files
-  const EnvFiles = environmentFiles.filter(env => env);
+  const EnvFiles = options.basic.environmentFiles.filter(env => env);
 
   const Image = image.tag ? `${image.name}:${image.tag}` : image.id;
 
   const RestartPolicy: { Name: string; MaximumRetryCount?: number } = {
-    Name: restartPolicyName,
+    Name: options.advanced.restartPolicyName,
   };
 
   // only set MaximumRetryCount if policy is 'on-failure'
-  if (restartPolicyName === 'on-failure') {
-    RestartPolicy.MaximumRetryCount = restartPolicyMaxRetryCount;
+  if (options.advanced.restartPolicyName === 'on-failure') {
+    RestartPolicy.MaximumRetryCount = options.advanced.restartPolicyMaxRetryCount;
   }
 
   // need both source and target to be set
-  const Binds = volumeMounts
+  const Binds = options.basic.volumeMounts
     .filter(volume => volume.source && volume.target)
     .map(volume => `${volume.source}:${volume.target}`);
 
-  const SecurityOpt = securityOpts.filter(opt => opt);
+  const SecurityOpt = options.security.securityOpts.filter(opt => opt);
 
-  const CapAdd = capAdds.filter(cap => cap);
-  const CapDrop = capDrops.filter(cap => cap);
+  const CapAdd = options.security.capAdds.filter(cap => cap);
+  const CapDrop = options.security.capDrops.filter(cap => cap);
 
-  const ExtraHosts = extraHosts.filter(host => host.host && host.ip).map(host => `${host.host}:${host.ip}`);
+  const ExtraHosts = options.networking.extraHosts
+    .filter(host => host.host && host.ip)
+    .map(host => `${host.host}:${host.ip}`);
 
-  const Privileged = privileged;
+  const Privileged = options.security.privileged;
 
   let NetworkMode;
-  switch (networkingMode) {
+  switch (options.networking.networkingMode) {
     case 'bridge':
       NetworkMode = 'bridge';
       break;
@@ -324,20 +337,20 @@ async function startContainer(): Promise<void> {
       NetworkMode = 'none';
       break;
     case 'choice-network':
-      NetworkMode = networkingModeUserNetwork;
+      NetworkMode = options.networking.networkingModeUserNetwork;
       break;
     case 'choice-container':
-      NetworkMode = `container:${networkingModeUserContainer}`;
+      NetworkMode = `container:${options.networking.networkingModeUserContainer}`;
       break;
     default:
       NetworkMode = 'bridge';
   }
 
-  const ReadonlyRootfs = readOnly;
-  const Tty = useTty;
-  const OpenStdin = useInteractive;
+  const ReadonlyRootfs = options.security.readOnly;
+  const Tty = options.advanced.useTty;
+  const OpenStdin = options.advanced.useInteractive;
 
-  let Devices: DeviceMapping[] | undefined = devices
+  let Devices: DeviceMapping[] | undefined = options.advanced.devices
     .filter(d => d.host)
     .map(d => ({
       PathOnHost: d.host,
@@ -351,7 +364,7 @@ async function startContainer(): Promise<void> {
 
   const HostConfig: HostConfig = {
     Binds,
-    AutoRemove: autoRemove,
+    AutoRemove: options.advanced.autoRemove,
     RestartPolicy,
     PortBindings,
     SecurityOpt,
@@ -363,7 +376,7 @@ async function startContainer(): Promise<void> {
     Devices,
   };
 
-  const Dns = dnsServers.filter(dns => dns);
+  const Dns = options.networking.dnsServers.filter(dns => dns);
   if (Dns.length > 0) {
     HostConfig.Dns = Dns;
   }
@@ -372,37 +385,46 @@ async function startContainer(): Promise<void> {
     HostConfig.ExtraHosts = ExtraHosts;
   }
 
-  if (userNamespace) {
-    HostConfig.UsernsMode = userNamespace;
+  if (options.security.userNamespace) {
+    HostConfig.UsernsMode = options.security.userNamespace;
   }
 
-  const options: ContainerCreateOptions = {
+  const createOptions: ContainerCreateOptions = {
     Image,
     Env,
     EnvFiles,
-    name: containerName,
+    name: options.basic.containerName,
     HostConfig,
     ExposedPorts,
     Tty,
     OpenStdin,
+    Secrets: options.basic.secretMappings
+      .filter(({ type }) => type === 'mount')
+      .map(({ name, target }) => ({
+        Source: name,
+        Target: target,
+      })),
+    SecretEnv: Object.fromEntries(
+      options.basic.secretMappings.filter(({ type }) => type === 'env').map(({ name, target }) => [target, name]),
+    ),
   };
-  if (command.trim().length > 0) {
-    options.Cmd = splitSpacesHandlingDoubleQuotes(command);
+  if (options.basic.command.trim().length > 0) {
+    createOptions.Cmd = splitSpacesHandlingDoubleQuotes(options.basic.command);
   }
-  if (entrypoint.trim().length > 0) {
-    options.Entrypoint = splitSpacesHandlingDoubleQuotes(entrypoint);
-  }
-
-  if (runUser) {
-    options.User = runUser;
+  if (options.basic.entrypoint.trim().length > 0) {
+    createOptions.Entrypoint = splitSpacesHandlingDoubleQuotes(options.basic.entrypoint);
   }
 
-  if (hostname) {
-    options.Hostname = hostname;
+  if (options.advanced.runUser) {
+    createOptions.User = options.advanced.runUser;
+  }
+
+  if (options.networking.hostname) {
+    createOptions.Hostname = options.networking.hostname;
   }
 
   try {
-    const data = await window.createAndStartContainer(imageInspectInfo.engineId, options);
+    const data = await window.createAndStartContainer(imageInspectInfo.engineId, createOptions);
 
     // redirect to containers if no tty, else redirect to the container details
     if (Tty && OpenStdin) {
@@ -488,24 +510,24 @@ function getStartEndRange(range: string):
 }
 
 function addEnvVariable(): void {
-  environmentVariables = [...environmentVariables, { key: '', value: '' }];
+  options.basic.environmentVariables = [...options.basic.environmentVariables, { key: '', value: '' }];
 }
 
 function deleteEnvVariable(index: number): void {
-  environmentVariables = environmentVariables.filter((_, i) => i !== index);
+  options.basic.environmentVariables = options.basic.environmentVariables.filter((_, i) => i !== index);
 }
 
 function addEnvFile(): void {
-  environmentFiles = [...environmentFiles, ''];
+  options.basic.environmentFiles = [...options.basic.environmentFiles, ''];
 }
 
 function deleteEnvFile(index: number): void {
-  environmentFiles = environmentFiles.filter((_, i) => i !== index);
+  options.basic.environmentFiles = options.basic.environmentFiles.filter((_, i) => i !== index);
 }
 
 function addHostContainerPorts(): void {
-  hostContainerPortMappings = [
-    ...hostContainerPortMappings,
+  options.basic.hostContainerPortMappings = [
+    ...options.basic.hostContainerPortMappings,
     {
       hostPort: {
         port: '',
@@ -517,99 +539,76 @@ function addHostContainerPorts(): void {
 }
 
 async function deleteHostContainerPorts(index: number): Promise<void> {
-  hostContainerPortMappings = hostContainerPortMappings.filter((_, i) => i !== index);
-  await assertAllPortAreValid();
+  options.basic.hostContainerPortMappings = options.basic.hostContainerPortMappings.filter((_, i) => i !== index);
 }
 
 function addVolumeMount(): void {
-  volumeMounts = [...volumeMounts, { source: '', target: '' }];
+  options.basic.volumeMounts = [...options.basic.volumeMounts, { source: '', target: '' }];
 }
 
 function deleteVolumeMount(index: number): void {
-  volumeMounts = volumeMounts.filter((_, i) => i !== index);
+  options.basic.volumeMounts = options.basic.volumeMounts.filter((_, i) => i !== index);
 }
 
 function deleteSecurityOpt(index: number): void {
-  securityOpts = securityOpts.filter((_, i) => i !== index);
+  options.security.securityOpts = options.security.securityOpts.filter((_, i) => i !== index);
 }
 
 function addSecurityOpt(): void {
-  securityOpts = [...securityOpts, ''];
+  options.security.securityOpts = [...options.security.securityOpts, ''];
 }
 
 function addCapAdd(): void {
-  capAdds = [...capAdds, ''];
+  options.security.capAdds = [...options.security.capAdds, ''];
 }
 function addCapDrop(): void {
-  capDrops = [...capDrops, ''];
+  options.security.capDrops = [...options.security.capDrops, ''];
 }
 
 function deleteCapAdd(index: number): void {
-  capAdds = capAdds.filter((_, i) => i !== index);
+  options.security.capAdds = options.security.capAdds.filter((_, i) => i !== index);
 }
 
 function deleteCappDrop(index: number): void {
-  capDrops = capDrops.filter((_, i) => i !== index);
+  options.security.capDrops = options.security.capDrops.filter((_, i) => i !== index);
 }
 
 function addDnsServer(): void {
-  dnsServers = [...dnsServers, ''];
+  options.networking.dnsServers = [...options.networking.dnsServers, ''];
 }
 
 function deleteDnsServer(index: number): void {
-  dnsServers = dnsServers.filter((_, i) => i !== index);
+  options.networking.dnsServers = options.networking.dnsServers.filter((_, i) => i !== index);
 }
 
 function addExtraHost(): void {
-  extraHosts = [...extraHosts, { host: '', ip: '' }];
+  options.networking.extraHosts = [...options.networking.extraHosts, { host: '', ip: '' }];
 }
 
 function deleteExtraHost(index: number): void {
-  extraHosts = extraHosts.filter((_, i) => i !== index);
+  options.networking.extraHosts = options.networking.extraHosts.filter((_, i) => i !== index);
 }
 
 function addDevice(): void {
-  devices = [...devices, { host: '', container: '', read: false, write: false, mknod: false }];
+  options.advanced.devices = [
+    ...options.advanced.devices,
+    { host: '', container: '', read: false, write: false, mknod: false },
+  ];
 }
 
 function deleteDevice(index: number): void {
-  devices = devices.filter((_, i) => i !== index);
-}
-
-// called when user change the container's name
-function checkContainerName(event: Event): void {
-  const containerValue = event.target instanceof Input ? event.target.value : '';
-
-  // ok, now check if we already have a matching container: same name and same engine ID
-  const containerAlreadyExists = $containersInfos.find(
-    container =>
-      container.engineId === imageInspectInfo.engineId &&
-      container.Names.some(iteratingContainerName => iteratingContainerName === `/${containerValue}`),
-  );
-  if (containerAlreadyExists) {
-    containerNameError = `The name ${containerValue} already exists. Please choose another name or leave blank to generate a name.`;
-    invalidName = true;
-  } else {
-    containerNameError = '';
-    invalidName = false;
-  }
+  options.advanced.devices = options.advanced.devices.filter((_, i) => i !== index);
 }
 
 function onContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, containerPortMapping[index], () => {
-    containerPortMapping = containerPortMapping;
-    assertAllPortAreValid().catch((err: unknown) => console.error('Error checking all ports valid', err));
-  });
+  onPortInput(event, options.basic.containerPortMapping[index]);
 }
 
 function onHostContainerPortMappingInput(event: Event, index: number): void {
-  onPortInput(event, hostContainerPortMappings[index].hostPort, () => {
-    hostContainerPortMappings = hostContainerPortMappings;
-    assertAllPortAreValid().catch((err: unknown) => console.error('Error checking all ports valid', err));
-  });
+  onPortInput(event, options.basic.hostContainerPortMappings[index].hostPort);
 }
 
-function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): void {
+function onPortInput(event: Event, portInfo: PortInfo): void {
   // clear the timeout so if there was an old call to areAllPortsFree pending is deleted. We will create a new one soon
   clearTimeout(onPortInputTimeout);
   const target = event.currentTarget as HTMLInputElement;
@@ -620,21 +619,29 @@ function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): vo
       .isFreePort(_value)
       .then(_ => {
         portInfo.error = '';
-        updateUI();
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
           portInfo.error = (error as { message: string }).message;
         }
-        updateUI();
       });
   }, 500);
 }
 
-async function assertAllPortAreValid(): Promise<void> {
-  const invalidHostPorts = hostContainerPortMappings.filter(pair => pair.hostPort.error);
-  const invalidContainerPortMapping = containerPortMapping?.filter(port => port.error) ?? [];
-  invalidPorts = invalidHostPorts.length > 0 || invalidContainerPortMapping.length > 0;
+function addSecretMapping(): void {
+  if (secrets.length === 0) {
+    return;
+  }
+
+  options.basic.secretMappings.push({
+    name: secrets[0].Name,
+    target: '',
+    type: 'mount',
+  });
+}
+
+function removeSecretMapping(index: number): void {
+  options.basic.secretMappings.splice(index, 1);
 }
 
 const volumeDialogOptions: OpenDialogOptions = {
@@ -649,13 +656,13 @@ const envDialogOptions: OpenDialogOptions = {
 </script>
 
 <Route path="/*">
-  {#if dataReady}
+  {#if dataReady && image}
     <EngineFormPage title="Create a container from image {imageDisplayName}:{image.tag}">
-      {#snippet icon()}
-        <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-      {/snippet}
-      {#snippet content()}
-      <div class="space-y-2">
+    {#snippet icon()}
+      <i class="fas fa-play fa-2x" aria-hidden="true"></i>
+    {/snippet}
+    {#snippet content()}
+    <div class="space-y-2">
         <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
           <Tab title="Basic" selected={isTabSelected($router.path, 'basic')} url={getTabUrl($router.path, 'basic')} />
           <Tab
@@ -671,15 +678,14 @@ const envDialogOptions: OpenDialogOptions = {
             selected={isTabSelected($router.path, 'security')}
             url={getTabUrl($router.path, 'security')} />
         </div>
-        <div>
+        <div class="pt-4">
           <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <label
                 for="modalContainerName"
                 class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
               <Input
-                on:input={checkContainerName}
-                bind:value={containerName}
+                bind:value={options.basic.containerName}
                 name="modalContainerName"
                 id="modalContainerName"
                 placeholder="Leave blank to generate a name"
@@ -689,15 +695,15 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalEntrypoint"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Entrypoint:</label>
-              <Input bind:value={entrypoint} name="modalEntrypoint" id="modalEntrypoint" aria-label="Entrypoint" />
+              <Input bind:value={options.basic.entrypoint} name="modalEntrypoint" id="modalEntrypoint" aria-label="Entrypoint" />
               <label
                 for="modalCommand"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Command:</label>
-              <Input bind:value={command} name="modalCommand" id="modalCommand" aria-label="Command" />
+              <Input bind:value={options.basic.command} name="modalCommand" id="modalCommand" aria-label="Command" />
               <label for="volumes" class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Volumes:</label>
               <!-- Display the list of volumes -->
-              {#each volumeMounts as volumeMount, index (index)}
+              {#each options.basic.volumeMounts as volumeMount, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="volumeMount.{index}"
@@ -708,13 +714,13 @@ const envDialogOptions: OpenDialogOptions = {
                   <Input bind:value={volumeMount.target} placeholder="Path inside the container" class="ml-2" />
                   <Button
                     type="link"
-                    hidden={index === volumeMounts.length - 1}
+                    hidden={index === options.basic.volumeMounts.length - 1}
                     aria-label="Delete volume mount at index {index}"
                     on:click={(): void => deleteVolumeMount(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < volumeMounts.length - 1}
+                    hidden={index < options.basic.volumeMounts.length - 1}
                     aria-label="Add volume mount after index {index}"
                     on:click={addVolumeMount}
                     icon={faPlusCircle} />
@@ -732,12 +738,12 @@ const envDialogOptions: OpenDialogOptions = {
                     class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
                     >Local port for {port}:</span>
                   <Input
-                    bind:value={containerPortMapping[index].port}
+                    bind:value={options.basic.containerPortMapping[index].port}
                     on:input={(event): void => onContainerPortMappingInput(event, index)}
                     placeholder="Enter value for port {port}"
-                    error={containerPortMapping[index].error}
+                    error={options.basic.containerPortMapping[index].error}
                     class="ml-2 w-full"
-                    title={containerPortMapping[index].error} />
+                    title={options.basic.containerPortMapping[index].error} />
                 </div>
               {/each}
 
@@ -749,7 +755,7 @@ const envDialogOptions: OpenDialogOptions = {
                 Add custom port mapping
               </Button>
               <!-- Display the list of existing hostContainerPortMappings -->
-              {#each hostContainerPortMappings as hostContainerPortMapping, index (index)}
+              {#each options.basic.hostContainerPortMappings as hostContainerPortMapping, index (index)}
                 <div class="flex flex-row justify-center w-full py-1">
                   <Input
                     bind:value={hostContainerPortMapping.hostPort.port}
@@ -771,7 +777,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Environment variables:</label>
               <!-- Display the list of existing environment variables -->
-              {#each environmentVariables as environmentVariable, index (index)}
+              {#each options.basic.environmentVariables as environmentVariable, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={environmentVariable.key} placeholder="Name" class="w-full" />
 
@@ -781,13 +787,13 @@ const envDialogOptions: OpenDialogOptions = {
                     class="ml-2" />
                   <Button
                     type="link"
-                    hidden={index === environmentVariables.length - 1}
+                    hidden={index === options.basic.environmentVariables.length - 1}
                     aria-label="Delete environment variable at index {index}"
                     on:click={(): void => deleteEnvVariable(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < environmentVariables.length - 1}
+                    hidden={index < options.basic.environmentVariables.length - 1}
                     aria-label="Add environment variable after index {index}"
                     on:click={addEnvVariable}
                     icon={faPlusCircle} />
@@ -799,38 +805,83 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Environment files:</label>
               <!-- Display the list of existing environment files -->
-              {#each environmentFiles as _, index (index)}
+              {#each options.basic.environmentFiles as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="filePath.{index}"
                     placeholder="Environment file containing KEY=VALUE items"
-                    bind:value={environmentFiles[index]}
+                    bind:value={options.basic.environmentFiles[index]}
                     options={envDialogOptions}
                     aria-label="environmentFile.{index}" />
                   <Button
                     type="link"
-                    hidden={index === environmentFiles.length - 1}
+                    hidden={index === options.basic.environmentFiles.length - 1}
                     aria-label="Delete env file at index {index}"
                     on:click={(): void => deleteEnvFile(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < environmentFiles.length - 1}
+                    hidden={index < options.basic.environmentFiles.length - 1}
                     aria-label="Add env file after index {index}"
                     on:click={addEnvFile}
                     icon={faPlusCircle} />
                 </div>
               {/each}
+
+              {#if imageInspectInfo?.engineType === 'podman'}
+                <label
+                  for="secrets"
+                  class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                >Secrets:</label>
+                {#each options.basic.secretMappings as _, index (index)}
+                  <div class="flex gap-x-2 flex-row justify-center items-center w-full py-1">
+                    <Dropdown class="w-full" name="type" bind:value={options.basic.secretMappings[index].name}>
+                      {#each secrets as secret (secret.Id)}
+                        <option value={secret.Name}>{secret.Name}</option>
+                      {/each}
+                    </Dropdown>
+
+                    <Dropdown class="w-fit" name="type" bind:value={options.basic.secretMappings[index].type}>
+                      <option value="mount">Mount</option>
+                      <option value="env">Env</option>
+                    </Dropdown>
+
+                    <div class="w-full">
+                      <Input
+                        bind:value={options.basic.secretMappings[index].target}
+                        placeholder={options.basic.secretMappings[index].type === 'mount' ? 'Path inside the container' : 'Name of the environment variable'} />
+                    </div>
+
+                    <div class="w-fit">
+                      <Button
+                        type="link"
+                        aria-label="Remove secret"
+                        onclick={removeSecretMapping.bind(undefined, index)}
+                        icon={faMinusCircle} />
+                    </div>
+                  </div>
+                {/each}
+
+                <Button
+                  onclick={addSecretMapping}
+                  icon={faPlusCircle}
+                  disabled={secrets.length === 0}
+                  type="link"
+                  title={secrets.length === 0 ? 'No secrets available' : ''}
+                  aria-label="Add secret mapping">
+                  Add secret mapping
+                </Button>
+              {/if}
             </div>
           </Route>
           <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <!-- Use tty -->
               <label for="containerTty" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Use TTY:</label>
               <div class="flex flex-col text-[var(--pd-content-card-text)] text-sm ml-2">
-                <Checkbox bind:checked={useTty} title="Attach a pseudo terminal">Attach a pseudo terminal</Checkbox>
-                <Checkbox bind:checked={useInteractive} title="Use interactive">
+                <Checkbox bind:checked={options.advanced.useTty} title="Attach a pseudo terminal">Attach a pseudo terminal</Checkbox>
+                <Checkbox bind:checked={options.advanced.useInteractive} title="Use interactive">
                   Interactive: Keep STDIN open even if not attached
                 </Checkbox>
               </div>
@@ -842,7 +893,7 @@ const envDialogOptions: OpenDialogOptions = {
                 >Specify user to run container as:</label>
               <div class="flex flex-row justify-center items-center w-full">
                 <Input
-                  bind:value={runUser}
+                  bind:value={options.advanced.runUser}
                   placeholder="If you specify a username, user must exist in /etc/passwd file (use user id instead)"
                   class="ml-2" />
               </div>
@@ -852,7 +903,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="containerAutoRemove"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Auto removal of container:</label>
-              <Checkbox class="text-[var(--pd-content-card-text)] text-sm ml-2" bind:checked={autoRemove}>
+              <Checkbox class="text-[var(--pd-content-card-text)] text-sm ml-2" bind:checked={options.advanced.autoRemove}>
                 Automatically remove the container when the process exits
               </Checkbox>
 
@@ -865,7 +916,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="p-0 flex flex-row justify-start items-center align-middle w-full text-[var(--pd-content-card-text)]">
                 <span class="text-sm w-28 inline-block align-middle whitespace-nowrap">Policy name:</span>
 
-                <Dropdown class="w-full" name="restartPolicyName" bind:value={restartPolicyName}>
+                <Dropdown class="w-full" name="restartPolicyName" bind:value={options.advanced.restartPolicyName}>
                   <option value="">No restart</option>
                   <option value="no">Do not restart automatically</option>
                   <option value="always">Always restart</option>
@@ -875,7 +926,7 @@ const envDialogOptions: OpenDialogOptions = {
               </div>
 
               <div
-                class="flex flex-row justify-center items-center w-full py-1 {restartPolicyName === 'on-failure'
+                class="flex flex-row justify-center items-center w-full py-1 {options.advanced.restartPolicyName === 'on-failure'
                   ? 'opacity-100'
                   : 'opacity-20'}">
                 <span
@@ -883,10 +934,10 @@ const envDialogOptions: OpenDialogOptions = {
                   title="Number of times to retry before giving up.">Retries:</span>
                 <NumberInput
                   minimum={0}
-                  bind:value={restartPolicyMaxRetryCount}
+                  bind:value={options.advanced.restartPolicyMaxRetryCount}
                   type="integer"
                   class="w-24 p-2"
-                  disabled={restartPolicyName !== 'on-failure'} />
+                  disabled={options.advanced.restartPolicyName !== 'on-failure'} />
               </div>
 
               <!-- devices -->
@@ -894,7 +945,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalDevices"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Devices:</label>
               <!-- Display the list of existing devices -->
-              {#each devices as device, index (index)}
+              {#each options.advanced.devices as device, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input
                     bind:value={device.host}
@@ -913,13 +964,13 @@ const envDialogOptions: OpenDialogOptions = {
                   </div>
                   <Button
                     type="link"
-                    hidden={index === devices.length - 1}
+                    hidden={index === options.advanced.devices.length - 1}
                     aria-label="Delete device at index {index}"
                     on:click={(): void => deleteDevice(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < devices.length - 1}
+                    hidden={index < options.advanced.devices.length - 1}
                     aria-label="Add device after index {index}"
                     on:click={addDevice}
                     icon={faPlusCircle} />
@@ -929,12 +980,12 @@ const envDialogOptions: OpenDialogOptions = {
           </Route>
 
           <Route path="/security" breadcrumb="Security" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <!-- Privileged-->
               <label
                 for="containerPrivileged"
                 class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Privileged:</label>
-              <Checkbox bind:checked={privileged} class="text-[var(--pd-content-card-text)] text-sm mx-2">
+              <Checkbox bind:checked={options.security.privileged} class="text-[var(--pd-content-card-text)] text-sm mx-2">
                 Turn off security<i class="pl-1 fas fa-exclamation-triangle"></i>
               </Checkbox>
 
@@ -942,7 +993,7 @@ const envDialogOptions: OpenDialogOptions = {
               <label
                 for="containerReadOnly"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Read only:</label>
-              <Checkbox bind:checked={readOnly} class="text-[var(--pd-content-card-text)] text-sm mx-2">
+              <Checkbox bind:checked={options.security.readOnly} class="text-[var(--pd-content-card-text)] text-sm mx-2">
                 Make containers root filesystem read-only
               </Checkbox>
 
@@ -951,22 +1002,22 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Security options (security-opt):</label>
               <!-- Display the list of existing security options -->
-              {#each securityOpts as _, index (index)}
+              {#each options.security.securityOpts as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input
-                    bind:value={securityOpts[index]}
+                    bind:value={options.security.securityOpts[index]}
                     placeholder="Enter a security option (Ex. seccomp=/path/to/profile.json)"
                     class="ml-2" />
 
                   <Button
                     type="link"
-                    hidden={index === securityOpts.length - 1}
+                    hidden={index === options.security.securityOpts.length - 1}
                     aria-label="Delete security option at index {index}"
                     on:click={(): void => deleteSecurityOpt(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < securityOpts.length - 1}
+                    hidden={index < options.security.securityOpts.length - 1}
                     aria-label="Add security option after index {index}"
                     on:click={addSecurityOpt}
                     icon={faPlusCircle} />
@@ -983,17 +1034,17 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Add to the container (CapAdd):</label>
               <!-- Display the list of existing capAdd -->
-              {#each capAdds as _, index (index)}
+              {#each options.security.capAdds as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={capAdds[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
+                  <Input bind:value={options.security.capAdds[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
 
                   <Button
                     type="link"
-                    hidden={index === capAdds.length - 1}
+                    hidden={index === options.security.capAdds.length - 1}
                     on:click={(): void => deleteCapAdd(index)}
                     icon={faMinusCircle}
                     aria-label="Remove capability" />
-                  <Button type="link" hidden={index < capAdds.length - 1} on:click={addCapAdd} icon={faPlusCircle} aria-label="Add capability" />
+                  <Button type="link" hidden={index < options.security.capAdds.length - 1} on:click={addCapAdd} icon={faPlusCircle} aria-label="Add capability" />
                 </div>
               {/each}
               <label
@@ -1001,17 +1052,17 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Drop from the container (CapDrop):</label>
               <!-- Display the list of existing capDrop -->
-              {#each capDrops as _, index (index)}
+              {#each options.security.capDrops as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={capDrops[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
+                  <Input bind:value={options.security.capDrops[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
 
                   <Button
                     type="link"
-                    hidden={index === capDrops.length - 1}
+                    hidden={index === options.security.capDrops.length - 1}
                     on:click={(): void => deleteCappDrop(index)}
                     icon={faMinusCircle}
                     aria-label="Remove capability" />
-                  <Button type="link" hidden={index < capDrops.length - 1} on:click={addCapDrop} icon={faPlusCircle} aria-label="Add capability" />
+                  <Button type="link" hidden={index < options.security.capDrops.length - 1} on:click={addCapDrop} icon={faPlusCircle} aria-label="Add capability" />
                 </div>
               {/each}
 
@@ -1021,20 +1072,20 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Specify user namespace to use:</label>
               <div class="flex flex-row justify-center items-center w-full">
-                <Input bind:value={userNamespace} placeholder="Enter a user namespace" class="ml-2 w-full" />
+                <Input bind:value={options.security.userNamespace} placeholder="Enter a user namespace" class="ml-2 w-full" />
               </div>
             </div>
           </Route>
 
           <Route path="/networking" breadcrumb="Networking" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <!-- hostname-->
               <label
                 for="containerHostname"
                 class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Defines container hostname:</label>
               <div class="flex flex-row justify-center items-center w-full">
-                <Input bind:value={hostname} placeholder="Must be a valid RFC 1123 hostname" class="ml-2" />
+                <Input bind:value={options.networking.hostname} placeholder="Must be a valid RFC 1123 hostname" class="ml-2" />
               </div>
 
               <!-- DNS -->
@@ -1043,19 +1094,19 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Custom DNS server(s):</label>
 
-              {#each dnsServers as _, index (index)}
+              {#each options.networking.dnsServers as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={dnsServers[index]} placeholder="IP Address" class="ml-2" />
+                  <Input bind:value={options.networking.dnsServers[index]} placeholder="IP Address" class="ml-2" />
 
                   <Button
                     type="link"
-                    hidden={index === dnsServers.length - 1}
+                    hidden={index === options.networking.dnsServers.length - 1}
                     aria-label="Delete DNS server at index {index}"
                     on:click={(): void => deleteDnsServer(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < dnsServers.length - 1}
+                    hidden={index < options.networking.dnsServers.length - 1}
                     aria-label="Add DNS server after index {index}"
                     on:click={addDnsServer}
                     icon={faPlusCircle} />
@@ -1067,20 +1118,20 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Add extra hosts (appends to /etc/hosts file):</label>
               <!-- Display the list of extra hosts -->
-              {#each extraHosts as extraHost, index (index)}
+              {#each options.networking.extraHosts as extraHost, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={extraHost.host} placeholder="Hostname" class="ml-2" />
 
                   <Input bind:value={extraHost.ip} placeholder="IP Address" class="ml-2" />
                   <Button
                     type="link"
-                    hidden={index === extraHosts.length - 1}
+                    hidden={index === options.networking.extraHosts.length - 1}
                     aria-label="Delete extra host at index {index}"
                     on:click={(): void => deleteExtraHost(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
-                    hidden={index < extraHosts.length - 1}
+                    hidden={index < options.networking.extraHosts.length - 1}
                     aria-label="Add extra host after index {index}"
                     on:click={addExtraHost}
                     icon={faPlusCircle} />
@@ -1096,7 +1147,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="p-0 flex flex-row justify-start items-center align-middle w-full text-[var(--pd-content-card-text)]">
                 <span class="text-sm w-28 inline-block align-middle whitespace-nowrap">Mode:</span>
 
-                <Dropdown class="w-full" name="providerChoice" bind:value={networkingMode}>
+                <Dropdown class="w-full" name="providerChoice" bind:value={options.networking.networkingMode}>
                   <option value="bridge">Creates a network stack on the default bridge (default)</option>
                   <option value="none">No networking</option>
                   <option value="host">Use the host networking stack</option>
@@ -1106,16 +1157,16 @@ const envDialogOptions: OpenDialogOptions = {
                 </Dropdown>
               </div>
 
-              {#if networkingMode === 'choice-network'}
+              {#if options.networking.networkingMode === 'choice-network'}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <span
                     class="text-sm w-28 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
                     >Network:</span>
                   <Dropdown
                     class="w-full"
-                    disabled={networkingMode !== 'choice-network'}
+                    disabled={options.networking.networkingMode !== 'choice-network'}
                     name="networkingModeUserNetwork"
-                    bind:value={networkingModeUserNetwork}>
+                    bind:value={options.networking.networkingModeUserNetwork}>
                     {#each engineNetworks as network (network.Id)}
                       <option value={network.Id}
                         >{network.Name} (used by {Object.keys(network.Containers ?? {}).length} containers)</option>
@@ -1123,16 +1174,16 @@ const envDialogOptions: OpenDialogOptions = {
                   </Dropdown>
                 </div>
               {/if}
-              {#if networkingMode === 'choice-container'}
+              {#if options.networking.networkingMode === 'choice-container'}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <span
                     class="text-sm w-28 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
                     >Container:</span>
                   <Dropdown
                     class="w-full"
-                    disabled={networkingMode !== 'choice-container'}
+                    disabled={options.networking.networkingMode !== 'choice-container'}
                     name="networkingModeUserContainer"
-                    bind:value={networkingModeUserContainer}>
+                    bind:value={options.networking.networkingModeUserContainer}>
                     {#each engineContainers as container (container.id)}
                       <option value={container.id}>{container.name} ({container.shortId})</option>
                     {/each}
@@ -1143,22 +1194,30 @@ const envDialogOptions: OpenDialogOptions = {
           </Route>
         </div>
 
-        <div class="pt-2 border-[var(--pd-content-divider)] border-t-2"></div>
-        <Button
-          on:click={startContainer}
-          class="w-full"
-          icon={faPlay}
-          aria-label="Start Container"
-          disabled={invalidFields}>
-          Start Container
-        </Button>
+      <div class="pt-4 pb-2">
+        <div class="flex items-center justify-end gap-3">
+          <Button
+            type="link"
+            on:click={(): void => router.goto('/images/')}
+            aria-label="Cancel">
+            Cancel
+          </Button>
+          <Button
+            on:click={startContainer}
+            icon={faPlay}
+            aria-label="Start Container"
+            disabled={invalidFields}>
+            Start Container
+          </Button>
+        </div>
         <div aria-label="createError">
           {#if createError}
             <ErrorMessage class="py-2 text-sm" error={createError} />
           {/if}
         </div>
       </div>
-      {/snippet}
+    </div>
+    {/snippet}
     </EngineFormPage>
   {/if}
 </Route>

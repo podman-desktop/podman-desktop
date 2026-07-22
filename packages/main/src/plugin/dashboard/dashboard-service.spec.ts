@@ -143,7 +143,7 @@ test('should register a configuration', () => {
   expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]).toBeDefined();
   expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.type).toBe('boolean');
   expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.hidden).toBe(true);
-  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.default).toBe(false);
+  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.default).toBe(true);
   expect(
     configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]?.experimental?.githubDiscussionLink,
   ).toBe('https://github.com/podman-desktop/podman-desktop/discussions/16055');

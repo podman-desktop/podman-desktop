@@ -84,7 +84,7 @@ onDestroy(async () => {
         {#if notesInfo?.summary}
           <div
             class="text-[var(--pd-content-card-text)] truncate text-ellipsis overflow-hidden whitespace-pre-line line-clamp-6">
-            <Markdown markdown={notesInfo?.summary}></Markdown>
+            <Markdown markdown={notesInfo?.summary}/>
           </div>
         {/if}
         <div class="flex flex-row justify-end items-center gap-3 mt-2">

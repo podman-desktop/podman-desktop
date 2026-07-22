@@ -21,7 +21,7 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { inject, injectable, optional } from 'inversify';
-import { compare } from 'semver';
+import { compare, major } from 'semver';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import {
@@ -184,15 +184,15 @@ export class PodmanInstall {
 
   // return true if data have been cleaned or if user skip it
   // return false if user cancel
-  protected async wipeAllDataBeforeUpdatingToV5(
+  protected async wipeAllDataBeforeMajorUpdate(
     installedPodman: InstalledPodman,
     updateInfo: UpdateCheck,
   ): Promise<boolean> {
-    // if (v4 --> v5)
+    // major update, prompt user to wipe all data
     if (
-      installedPodman.version.startsWith('4.') &&
-      updateInfo.bundledVersion?.startsWith('5.') &&
-      this.providerCleanup
+      updateInfo.bundledVersion &&
+      this.providerCleanup &&
+      major(updateInfo.bundledVersion) > major(installedPodman.version)
     ) {
       // prompt if user wants to wipe all data
       const answer = await extensionApi.window.showInformationMessage(
@@ -253,8 +253,8 @@ export class PodmanInstall {
         return;
       }
 
-      // podman v4 -> v5 migration: ask to wipe all data before doing the update
-      const wipeAllDataCompleted = await this.wipeAllDataBeforeUpdatingToV5(
+      // podman major update (first digit change ), prompt user to wipe all data before doing the update
+      const wipeAllDataCompleted = await this.wipeAllDataBeforeMajorUpdate(
         { version: updateInfo.installedVersion },
         updateInfo,
       );
@@ -267,7 +267,7 @@ export class PodmanInstall {
       }
 
       // Podman github link with information that 5.3.1 cant update to 5.4.X
-      // https://github.com/containers/podman/pull/25135
+      // https://github.com/podman-container-tools/podman/pull/25135
       // Podman Desktop link with proposed solution
       // https://github.com/podman-desktop/podman-desktop/issues/11720
       if (!updateInfo.bundledVersion) return;
@@ -285,7 +285,7 @@ export class PodmanInstall {
 
         if (result === 'Yes') {
           const url = extensionApi.Uri.parse(
-            'https://github.com/containers/podman/blob/main/docs/tutorials/podman-for-windows.md',
+            'https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/podman-for-windows.md',
           );
           await extensionApi.env.openExternal(url);
         }

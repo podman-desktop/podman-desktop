@@ -18,7 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInspectInfo } from '@podman-desktop/core-api';
+import type { ImageInfo } from '@podman-desktop/api';
+import type { ImageInspectInfo, SecretInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -26,11 +27,18 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import RunImage from '/@/lib/image/RunImage.svelte';
-import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
-import { runImageInfo } from '/@/stores/run-image-store';
+import { imagesInfos } from '/@/stores/images';
+import { secretsInfo } from '/@/stores/secrets';
 
 const originalConsoleDebug = console.debug;
+
+const MY_IMAGE = {
+  engineId: 'podman',
+  engineType: 'podman',
+  Id: 'sha256:5555',
+  Size: 0,
+} as unknown as ImageInfo;
 
 // fake the window.events object
 beforeAll(() => {
@@ -49,38 +57,27 @@ beforeAll(() => {
 beforeEach(() => {
   console.error = vi.fn();
   vi.clearAllMocks();
+  secretsInfo.set([]);
+  router.goto('/basic');
 });
 
 afterEach(() => {
   console.error = originalConsoleDebug;
+  vi.useRealTimers();
 });
 
 async function waitRender(): Promise<void> {
-  render(RunImage);
+  render(RunImage, {
+    engineId: MY_IMAGE.engineId,
+    imageID: MY_IMAGE.Id,
+    base64RepoTag: btoa('<none>'),
+  });
   await tick();
   await tick();
 }
 
 async function createRunImage(entrypoint?: string | string[], cmd?: string[]): Promise<void> {
-  runImageInfo.set({
-    age: '',
-    base64RepoTag: '',
-    createdAt: 0,
-    engineId: '',
-    engineName: '',
-    size: 0,
-    humanSize: '',
-    id: '',
-    arch: '',
-    status: 'UNUSED',
-    name: '',
-    selected: false,
-    shortId: '',
-    tag: '',
-    icon: ImageIcon,
-    badges: [],
-    digest: 'sha256:1234567890',
-  });
+  imagesInfos.set([MY_IMAGE]);
   const imageInfo: ImageInspectInfo = {
     Architecture: '',
     Author: '',
@@ -141,6 +138,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     VirtualSize: 0,
     engineId: 'engineid',
     engineName: 'engineName',
+    engineType: 'podman',
   };
   (window.getImageInspect as Mock).mockResolvedValue(imageInfo);
   await waitRender();
@@ -325,7 +323,6 @@ describe('RunImage', () => {
 
   test('Expect to see an error if the container/host ranges have different size', async () => {
     (window.isFreePort as Mock).mockResolvedValue(true);
-    router.goto('/basic');
 
     await createRunImage(undefined, ['command1', 'command2']);
 
@@ -460,6 +457,38 @@ describe('RunImage', () => {
     );
   });
 
+  test('Expect error to be visible if isFreePort is not free', async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+    });
+
+    vi.mocked(window.isFreePort).mockRejectedValue(new Error('Port 8080 is already in use.'));
+    router.goto('/basic');
+
+    await createRunImage(undefined, ['command1', 'command2']);
+
+    const customMappingButton = screen.getByRole('button', { name: 'Add custom port mapping' });
+    await fireEvent.click(customMappingButton);
+
+    const hostInput = screen.getByLabelText('host port');
+    await userEvent.click(hostInput);
+    await userEvent.clear(hostInput);
+    await userEvent.keyboard('8080');
+
+    const containerInput = screen.getByLabelText('container port');
+    await userEvent.click(containerInput);
+    await userEvent.clear(containerInput);
+    await userEvent.keyboard('8080');
+
+    // wait for debounce
+    await vi.advanceTimersByTimeAsync(800);
+
+    const error = await vi.waitFor(() => {
+      return screen.getByText('Port 8080 is already in use.');
+    });
+    expect(error).toBeInTheDocument();
+  });
+
   test('Expect "start container" button to be disabled when port is not free', async () => {
     (window.isFreePort as Mock).mockRejectedValue(new Error('Error Message'));
     router.goto('/basic');
@@ -489,6 +518,121 @@ describe('RunImage', () => {
     const button = screen.getByRole('button', { name: 'Start Container' });
     await tick();
     expect((button as HTMLButtonElement).disabled).toBeTruthy();
+  });
+
+  test('Expect "Add secret mapping" button to be disabled when no secrets available', async () => {
+    secretsInfo.set([]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    expect(addButton).toBeDisabled();
+  });
+
+  test('Expect "Add secret mapping" button to be enabled when secrets are available', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'my-secret' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    expect(addButton).toBeEnabled();
+  });
+
+  test('Expect mount secret mapping to be sent to API as Secrets', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'my-secret' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    await fireEvent.click(addButton);
+
+    const targetInputs = screen.getAllByPlaceholderText('Path inside the container');
+    const targetInput = targetInputs[targetInputs.length - 1]!;
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, '/run/secrets/my-secret');
+
+    const button = screen.getByRole('button', { name: 'Start Container' });
+    await fireEvent.click(button);
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        Secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
+        SecretEnv: {},
+      }),
+    );
+  });
+
+  test('Expect env secret mapping to be sent to API as SecretEnv', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'foo-data' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    await fireEvent.click(addButton);
+
+    // change type to env via keyboard navigation
+    const typeDropdown = screen.getByRole('button', { name: 'Mount' });
+    typeDropdown.focus();
+    await userEvent.keyboard('[ArrowDown]');
+    await userEvent.keyboard('[ArrowDown]');
+    await userEvent.keyboard('[Enter]');
+
+    const targetInput = screen.getByPlaceholderText('Name of the environment variable');
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, 'FOO_SECRET');
+
+    const button = screen.getByRole('button', { name: 'Start Container' });
+    await fireEvent.click(button);
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        Secrets: [],
+        SecretEnv: { FOO_SECRET: 'foo-data' },
+      }),
+    );
+  });
+
+  test('Expect secret mapping to be removed when clicking remove button', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'my-secret' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    await fireEvent.click(addButton);
+
+    const removeButton = screen.getByRole('button', { name: 'Remove secret' });
+    await fireEvent.click(removeButton);
+
+    const button = screen.getByRole('button', { name: 'Start Container' });
+    await fireEvent.click(button);
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        Secrets: [],
+        SecretEnv: {},
+      }),
+    );
   });
 
   test('Expect able to play with devices', async () => {

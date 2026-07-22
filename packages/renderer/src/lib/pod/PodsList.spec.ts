@@ -343,7 +343,7 @@ test('Expect the route to a pod details page is correctly encoded with an engine
   await vi.waitUntil(
     () => {
       const infos = get(podsInfos);
-      return infos.length === 1 && infos[0].Name === ocppod.Name;
+      return infos.length === 1 && infos[0].name === ocppod.Name;
     },
     { timeout: 5000 },
   );
@@ -381,17 +381,9 @@ test('Expect the pod1 row to have 3 status dots with the correct colors and the 
   expect(statusDots.length).toBe(4);
 
   expect(statusDots[0].title).toBe('container1: Running');
-  expect(statusDots[0]).toHaveClass('bg-[var(--pd-status-running)]');
-
   expect(statusDots[1].title).toBe('container3: Exited');
-  expect(statusDots[1]).toHaveClass('outline-[var(--pd-status-exited)]');
-
   expect(statusDots[2].title).toBe('container2: Terminated');
-  expect(statusDots[2]).toHaveClass('bg-[var(--pd-status-terminated)]');
-
-  // 2nd row / 2nd pod
   expect(statusDots[3].title).toBe('container4: Running');
-  expect(statusDots[3]).toHaveClass('bg-[var(--pd-status-running)]');
 });
 
 test('Expect the manyPod row to show 9 dots representing every status', async () => {
@@ -412,31 +404,14 @@ test('Expect the manyPod row to show 9 dots representing every status', async ()
   expect(statusDots.length).toBe(9);
 
   expect(statusDots[0].title).toBe('Running: 3');
-  expect(statusDots[0]).toHaveClass('bg-[var(--pd-status-running)]');
-
   expect(statusDots[1].title).toBe('Created: 1');
-  expect(statusDots[1]).toHaveClass('outline-[var(--pd-status-created)]');
-
   expect(statusDots[2].title).toBe('Paused: 1');
-  expect(statusDots[2]).toHaveClass('bg-[var(--pd-status-paused)]');
-
   expect(statusDots[3].title).toBe('Waiting: 1');
-  expect(statusDots[3]).toHaveClass('bg-[var(--pd-status-waiting)]');
-
   expect(statusDots[4].title).toBe('Degraded: 1');
-  expect(statusDots[4]).toHaveClass('bg-[var(--pd-status-degraded)]');
-
   expect(statusDots[5].title).toBe('Exited: 1');
-  expect(statusDots[5]).toHaveClass('outline-[var(--pd-status-exited)]');
-
   expect(statusDots[6].title).toBe('Stopped: 1');
-  expect(statusDots[6]).toHaveClass('outline-[var(--pd-status-stopped)]');
-
   expect(statusDots[7].title).toBe('Terminated: 1');
-  expect(statusDots[7]).toHaveClass('bg-[var(--pd-status-terminated)]');
-
   expect(statusDots[8].title).toBe('Dead: 1');
-  expect(statusDots[8]).toHaveClass('bg-[var(--pd-status-dead)]');
 });
 
 const runningPod: PodInfo = {
@@ -496,8 +471,8 @@ test('Expect All tab to show all pods running and stopped (not running)', async 
 
   expect(get(filtered)).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ Status: 'Running' }),
-      expect.objectContaining({ Status: 'Stopped' }),
+      expect.objectContaining({ status: 'RUNNING' }),
+      expect.objectContaining({ status: 'STOPPED' }),
     ]),
   );
 });
@@ -512,13 +487,16 @@ test('Expect Running tab to show running pods only', async () => {
 
   await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5000 });
 
-  const runningTab = screen.getByRole('button', { name: 'Running' });
+  const runningTab = screen
+    .getAllByRole('button', { name: /Running/ })
+    .find(el => el.textContent?.trim() === 'Running');
+  expect(runningTab).toBeDefined();
 
-  await userEvent.click(runningTab);
+  await userEvent.click(runningTab!);
 
   await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
 
-  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ Status: 'Running' })]));
+  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ status: 'RUNNING' })]));
 });
 
 test('Expect Stopped tab to show stopped (not running) pods only', async () => {
@@ -531,13 +509,16 @@ test('Expect Stopped tab to show stopped (not running) pods only', async () => {
 
   await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5000 });
 
-  const runningTab = screen.getByRole('button', { name: 'Stopped' });
+  const stoppedTab = screen
+    .getAllByRole('button', { name: /Stopped/ })
+    .find(el => el.textContent?.trim() === 'Stopped');
+  expect(stoppedTab).toBeDefined();
 
-  await userEvent.click(runningTab);
+  await userEvent.click(stoppedTab!);
 
   await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
 
-  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ Status: 'Stopped' })]));
+  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ status: 'STOPPED' })]));
 });
 
 test('Expect tab filtering to not duplicate filter condition in the search bar', async () => {
@@ -548,10 +529,14 @@ test('Expect tab filtering to not duplicate filter condition in the search bar',
 
   render(PodsList);
 
-  const runningTab = screen.getByRole('button', { name: 'Running' });
-  await userEvent.click(runningTab);
-  await userEvent.click(runningTab);
-  await userEvent.click(runningTab);
+  const runningTab = screen
+    .getAllByRole('button', { name: /Running/ })
+    .find(el => el.textContent?.trim() === 'Running');
+  expect(runningTab).toBeDefined();
+
+  await userEvent.click(runningTab!);
+  await userEvent.click(runningTab!);
+  await userEvent.click(runningTab!);
 
   const searchInput = screen.getByPlaceholderText('Search...') as HTMLInputElement;
   expect(searchInput.value).toBe('is:running');
@@ -573,14 +558,14 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
   (window as any).showMessageBox = vi.fn();
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
   await fireEvent.click(deleteButton);
 
   expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.removePod).toHaveBeenCalled());

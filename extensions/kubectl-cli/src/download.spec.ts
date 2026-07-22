@@ -102,9 +102,7 @@ test('expect getLatestVersionAsset to return the latest release from a list of r
 });
 
 test('pick the 6th option option in the quickpickmenu and expect it to return the github release information', async () => {
-  grabLatestsReleasesMetadataMock.mockImplementation(() => {
-    return releases;
-  });
+  grabLatestsReleasesMetadataMock.mockReturnValue(releases);
   const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick');
 
   showQuickPickMock.mockResolvedValue({
@@ -126,9 +124,7 @@ test('test download of kubectl passes and that mkdir and executable mocks are ca
   const downloadReleaseAssetMock = vi.spyOn(kubectlGitHubReleasesMock, 'downloadReleaseAsset');
 
   // Mock that the storage path does not exist
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   // Mock the mkdir to return "success"
   mkdirMock.mockResolvedValue(undefined);

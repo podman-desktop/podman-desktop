@@ -53,6 +53,7 @@ export function createNavigationExtensionEntry(): NavigationRegistryEntry {
     tooltip: 'Extensions',
     type: 'entry',
     counter: 0,
+    destinations: [],
   };
 }
 
@@ -177,6 +178,7 @@ function buildExtensionNavigationItems(
       extensionId,
       tooltip: isNew ? buildExtensionNewNavigationTooltip(contrib.name) : contrib.name,
       counter: 0,
+      destinations: [],
     });
   });
 
@@ -201,6 +203,7 @@ function buildExtensionNavigationItems(
       type: 'entry',
       extensionId,
       counter: 0,
+      destinations: [],
     });
   });
 
@@ -246,6 +249,7 @@ function buildExtensionNavigationItems(
         type: 'entry',
         extensionId: entry.extensionId,
         counter: 0,
+        destinations: [],
       });
     }
   }
@@ -261,6 +265,7 @@ function createNavigationExtensionGroupShell(): NavigationRegistryEntry {
     tooltip: 'Extensions',
     type: 'group',
     counter: 0,
+    destinations: [],
     get items(): NavigationRegistryEntry[] {
       return extensionNavigationState.items;
     },

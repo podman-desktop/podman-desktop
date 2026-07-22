@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,76 @@ import type {
   Event,
 } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AuthenticationImpl } from './authentication.js';
+import {
+  ALLOW_ACCESS_ALLOW,
+  ALLOW_ACCESS_DENY,
+  AuthenticationImpl,
+  SIGN_IN_ALLOW,
+  SIGN_IN_CANCEL,
+  SIGN_OUT_CANCEL,
+  SIGN_OUT_CONFIRM,
+} from './authentication.js';
 import { Emitter as EventEmitter } from './events/emitter.js';
 import type { MessageBox } from './message-box.js';
+
+function createAuthenticationConfigMock(
+  initialTrustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {},
+): { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> } {
+  let trustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {
+    ...initialTrustedExtensions,
+  };
+  return {
+    get: vi.fn().mockImplementation((key: string) => {
+      if (key === 'trustedExtensions') {
+        return trustedExtensions;
+      }
+      return undefined;
+    }),
+    update: vi.fn().mockImplementation((key: string, value: unknown) => {
+      if (key === 'trustedExtensions') {
+        trustedExtensions = value as Record<string, { id: string; name: string; allowed?: boolean }[]>;
+      }
+      return Promise.resolve();
+    }),
+  };
+}
+
+function createMockConfigurationRegistry(
+  trustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {},
+): IConfigurationRegistry {
+  const config = createAuthenticationConfigMock(trustedExtensions);
+  return {
+    registerConfigurations: vi.fn(),
+    getConfiguration: vi.fn().mockReturnValue(config),
+  } as unknown as IConfigurationRegistry;
+}
+
+function createMockConfigurationRegistryWithConfig(
+  trustedExtensions: Record<string, { id: string; name: string; allowed?: boolean }[]> = {},
+): {
+  registry: IConfigurationRegistry;
+  config: ReturnType<typeof createAuthenticationConfigMock>;
+} {
+  const config = createAuthenticationConfigMock(trustedExtensions);
+  const registry = {
+    registerConfigurations: vi.fn(),
+    getConfiguration: vi.fn().mockReturnValue(config),
+  } as unknown as IConfigurationRegistry;
+  return { registry, config };
+}
+
+function createAuthenticationImpl(
+  api: ApiSenderType,
+  mb: MessageBox,
+  configurationRegistry: IConfigurationRegistry = createMockConfigurationRegistry(),
+): AuthenticationImpl {
+  const impl = new AuthenticationImpl(api, mb, configurationRegistry);
+  impl.init();
+  return impl;
+}
 
 function randomNumber(n = 5): number {
   // eslint-disable-next-line sonarjs/pseudo-random
@@ -74,13 +139,13 @@ const apiSender: ApiSenderType = {
 };
 
 const messageBox: MessageBox = {
-  showMessageBox: () => Promise.resolve({ response: 1 }),
+  showMessageBox: () => Promise.resolve({ response: SIGN_IN_ALLOW }),
 } as unknown as MessageBox;
 
 let authModule: AuthenticationImpl;
 
 beforeEach(function () {
-  authModule = new AuthenticationImpl(apiSender, messageBox);
+  authModule = createAuthenticationImpl(apiSender, messageBox);
 });
 
 afterEach(() => {
@@ -132,10 +197,10 @@ test('Authentication does not create new auth request when silent is true and se
   const mb = {
     showMessageBox: vi
       .fn()
-      .mockResolvedValueOnce({ response: 1 }) // "Sign In?" dialog: Allow (index 1)
-      .mockResolvedValueOnce({ response: 0 }), // "Allow Access" dialog: Allow (index 0)
+      .mockResolvedValueOnce({ response: SIGN_IN_ALLOW })
+      .mockResolvedValueOnce({ response: ALLOW_ACCESS_ALLOW }),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
   const session1 = await authentication.getSession(
@@ -160,9 +225,9 @@ test('Authentication does not create new auth request when silent is true and se
 
 test('Authentication does not create session if user has not allowed it', async () => {
   const mb = {
-    showMessageBox: () => Promise.resolve({ response: 0 }),
+    showMessageBox: () => Promise.resolve({ response: SIGN_IN_CANCEL }),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
   const session1 = await authentication.getSession(
@@ -261,7 +326,7 @@ test('Authentication removes session request when session requested programmatic
 });
 
 test('getAuthenticationProvidersInfo', async () => {
-  const authentication = new AuthenticationImpl(apiSender, messageBox);
+  const authentication = createAuthenticationImpl(apiSender, messageBox);
 
   const providerMock = {
     onDidChangeSessions: vi.fn(),
@@ -287,13 +352,11 @@ test('getAuthenticationProvidersInfo', async () => {
 });
 
 test('authentication provider send event to update settings page', async () => {
-  const authentication = new AuthenticationImpl(apiSender, messageBox);
+  const authentication = createAuthenticationImpl(apiSender, messageBox);
 
   const providerMock = {
-    onDidChangeSessions: vi.fn().mockImplementation(() => {
-      return {
-        dispose: vi.fn(),
-      };
+    onDidChangeSessions: vi.fn().mockReturnValue({
+      dispose: vi.fn(),
     }),
     getSessions: vi.fn().mockResolvedValue([]),
     createSession: vi.fn(),
@@ -313,11 +376,11 @@ test('authentication shows confirmation request when signing out from a session'
   const mb = {
     showMessageBox: vi.fn(),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
 
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: SIGN_IN_ALLOW });
 
   const session1 = await authentication.getSession(
     { id: 'ext1', label: 'Ext 1' },
@@ -327,7 +390,7 @@ test('authentication shows confirmation request when signing out from a session'
   );
 
   vi.mocked(mb.showMessageBox).mockReset();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: SIGN_OUT_CANCEL });
 
   await authentication.signOut('company.auth-provider', session1!.id);
 
@@ -339,8 +402,8 @@ test('authentication shows confirmation request when signing out from a session'
 
   vi.mocked(mb.showMessageBox).mockReset();
   vi.mocked(mb.showMessageBox)
-    .mockResolvedValueOnce({ response: 0 }) // "Allow Access" dialog: Allow (index 0) for ext2
-    .mockResolvedValueOnce({ response: 1 }); // "Sign Out?" dialog: Sign Out (index 1)
+    .mockResolvedValueOnce({ response: ALLOW_ACCESS_ALLOW })
+    .mockResolvedValueOnce({ response: SIGN_OUT_CONFIRM });
 
   await authentication.getSession({ id: 'ext2', label: 'Ext 2' }, 'company.auth-provider', ['scope1', 'scope2'], {
     createIfNone: true,
@@ -356,25 +419,17 @@ test('authentication shows confirmation request when signing out from a session'
   );
 });
 
-test('readAllowedExtensions returns empty array when no allowances exist', () => {
-  expect(authModule.readAllowedExtensions('provider1', 'account1')).toEqual([]);
-});
-
 test('updateAllowedExtension adds new extension allowance', () => {
   authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
 
-  const allowances = authModule.readAllowedExtensions('provider1', 'account1');
-  expect(allowances).toHaveLength(1);
-  expect(allowances[0]).toEqual({ id: 'ext1', name: 'Extension 1', allowed: true });
+  expect(authModule.isAccessAllowed('provider1', 'account1', 'ext1')).toBe(true);
 });
 
 test('updateAllowedExtension updates existing extension allowance', () => {
   authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
   authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', false);
 
-  const allowances = authModule.readAllowedExtensions('provider1', 'account1');
-  expect(allowances).toHaveLength(1);
-  expect(allowances[0]).toEqual({ id: 'ext1', name: 'Extension 1', allowed: false });
+  expect(authModule.isAccessAllowed('provider1', 'account1', 'ext1')).toBe(false);
 });
 
 test('updateAllowedExtension sends authentication-provider-update event', () => {
@@ -464,9 +519,9 @@ test('getSession returns session when extension access is allowed', async () => 
 
 test('getSession prompts for allowance when accessing session without prior decision', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // "Sign In?" dialog: Allow (index 1)
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
 
@@ -482,7 +537,7 @@ test('getSession prompts for allowance when accessing session without prior deci
 
   // Reset mock to track only the next call
   vi.mocked(mb.showMessageBox).mockClear();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // "Allow Access" dialog: Allow (index 0)
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
 
   // ext2 tries to access the session - should prompt for allowance
   const sessionForExt2 = await authentication.getSession(
@@ -508,11 +563,11 @@ test('getSession prompts for allowance when accessing session without prior deci
   expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext2')).toBe(true);
 });
 
-test('getSession denies access when user clicks Deny on allowance prompt but does not store denial', async () => {
+test('getSession denies access when user clicks Deny on allowance prompt without persisting denial', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // "Sign In?" dialog: Allow (index 1)
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
 
@@ -528,7 +583,7 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
 
   // Reset mock - user will click "Deny" this time
   vi.mocked(mb.showMessageBox).mockClear();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 }); // User clicks "Deny"
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_DENY });
 
   // ext2 tries to access the session - user denies
   const sessionForExt2 = await authentication.getSession(
@@ -546,9 +601,9 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
 
 test('getSession auto-allows creating extension to reuse its own session in silent mode', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
 
@@ -586,9 +641,9 @@ test('getSession auto-allows creating extension to reuse its own session in sile
 
 test('getSession returns undefined in silent mode when no allowance decision exists', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    showMessageBox: vi.fn().mockResolvedValue({ response: SIGN_IN_ALLOW }),
   } as unknown as MessageBox;
-  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authentication = createAuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
 
@@ -618,4 +673,285 @@ test('getSession returns undefined in silent mode when no allowance decision exi
 
   // Session should not be returned in silent mode without prior allowance
   expect(sessionForExt2).toBeUndefined();
+});
+
+describe('trusted extensions', () => {
+  test('saves trusted extensions after user grants access from getSession allowance dialog', async () => {
+    const mb = {
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
+    } as unknown as MessageBox;
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, mb, registry);
+    const authProvider = new AuthenticationProviderSingleAccount();
+    authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+    const session = await authentication.getSession(
+      { id: 'ext1', label: 'Ext 1' },
+      'company.auth-provider',
+      ['scope1', 'scope2'],
+      { createIfNone: true },
+    );
+    expect(session).toBeDefined();
+
+    vi.mocked(mb.showMessageBox).mockClear();
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
+
+    await authentication.getSession({ id: 'ext2', label: 'Extension 2' }, 'company.auth-provider', [
+      'scope1',
+      'scope2',
+    ]);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalled());
+    const allowanceKey = `company.auth-provider:${session!.account.id}`;
+    expect(config.update).toHaveBeenLastCalledWith(
+      'trustedExtensions',
+      expect.objectContaining({
+        [allowanceKey]: expect.arrayContaining([
+          expect.objectContaining({ id: 'ext1', name: 'Ext 1', allowed: true }),
+          expect.objectContaining({ id: 'ext2', name: 'Extension 2', allowed: true }),
+        ]),
+      }),
+    );
+  });
+
+  test('serializes trustedExtensions as a record keyed by providerId:accountId after mixed provider updates', async () => {
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, messageBox, registry);
+
+    authentication.updateAllowedExtension('prov-a', 'account-a', 'ext-grant', 'Grant', true);
+    authentication.updateAllowedExtension('prov-b', 'account-b', 'ext-deny', 'Deny', false);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalled());
+
+    expect(config.update).toHaveBeenLastCalledWith('trustedExtensions', {
+      'prov-a:account-a': [{ id: 'ext-grant', name: 'Grant', allowed: true }],
+      'prov-b:account-b': [{ id: 'ext-deny', name: 'Deny', allowed: false }],
+    });
+  });
+
+  test('persists map from updateAllowedExtension via config.update', async () => {
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, messageBox, registry);
+
+    authentication.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
+
+    await vi.waitFor(() =>
+      expect(config.update).toHaveBeenCalledWith('trustedExtensions', {
+        'provider1:account1': [{ id: 'ext1', name: 'Extension 1', allowed: true }],
+      }),
+    );
+  });
+
+  test('each config update reflects cumulative allowances when updateAllowedExtension is invoked repeatedly', async () => {
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, messageBox, registry);
+
+    authentication.updateAllowedExtension('p1', 'a1', 'e1', 'E1', true);
+    authentication.updateAllowedExtension('p1', 'a1', 'e2', 'E2', true);
+    authentication.updateAllowedExtension('p1', 'a1', 'e3', 'E3', false);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalledTimes(3));
+
+    expect(config.update).toHaveBeenLastCalledWith('trustedExtensions', {
+      'p1:a1': [
+        { id: 'e1', name: 'E1', allowed: true },
+        { id: 'e2', name: 'E2', allowed: true },
+        { id: 'e3', name: 'E3', allowed: false },
+      ],
+    });
+  });
+
+  test('loads trustedExtensions from configuration before isAccessAllowed without persisting again', () => {
+    const persisted = {
+      'oauth.test:uid-1': [{ id: 'ext-z', name: 'Ext Z', allowed: true }],
+    };
+    const { registry, config } = createMockConfigurationRegistryWithConfig(persisted);
+    const authentication = createAuthenticationImpl(apiSender, messageBox, registry);
+
+    expect(authentication.isAccessAllowed('oauth.test', 'uid-1', 'ext-z')).toBe(true);
+    expect(authentication.isAccessAllowed('oauth.test', 'uid-1', 'other')).toBeUndefined();
+    expect(config.update).not.toHaveBeenCalled();
+  });
+
+  test('allows multiple extensions for the same provider/account (both reflected in persisted trustedExtensions)', async () => {
+    const mb = {
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
+    } as unknown as MessageBox;
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, mb, registry);
+    const authProvider = new AuthenticationProviderSingleAccount();
+    authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+    const session = await authentication.getSession(
+      { id: 'ext-a', label: 'Extension A' },
+      'company.auth-provider',
+      ['scope1', 'scope2'],
+      { createIfNone: true },
+    );
+    expect(session).toBeDefined();
+
+    vi.mocked(mb.showMessageBox).mockClear();
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
+
+    await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
+      'scope1',
+      'scope2',
+    ]);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalled());
+
+    await Promise.resolve(); // flush microtasks for async saves
+
+    const allowanceKey = `company.auth-provider:${session!.account.id}`;
+    expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext-a')).toBe(true);
+    expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext-b')).toBe(true);
+
+    const lastPayload = vi.mocked(config.update).mock.calls.at(-1)?.[1] as Record<
+      string,
+      { id: string; name: string; allowed?: boolean }[]
+    >;
+    expect(lastPayload?.[allowanceKey]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'ext-a', name: 'Extension A', allowed: true }),
+        expect.objectContaining({ id: 'ext-b', name: 'Extension B', allowed: true }),
+      ]),
+    );
+    expect(lastPayload?.[allowanceKey]).toHaveLength(2);
+  });
+
+  test('config.update trustedExtensions includes every allowed extension entry for provider:account when multiple grants exist', async () => {
+    const mb = {
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
+    } as unknown as MessageBox;
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, mb, registry);
+    const authProvider = new AuthenticationProviderSingleAccount();
+    authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+    const session = await authentication.getSession(
+      { id: 'ext-a', label: 'Extension A' },
+      'company.auth-provider',
+      ['scope1', 'scope2'],
+      { createIfNone: true },
+    );
+    expect(session).toBeDefined();
+
+    vi.mocked(mb.showMessageBox).mockClear();
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
+
+    await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
+      'scope1',
+      'scope2',
+    ]);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalled());
+    await Promise.resolve();
+
+    const allowanceKey = `company.auth-provider:${session!.account.id}`;
+    const expectedRow = [
+      { id: 'ext-a', name: 'Extension A', allowed: true },
+      { id: 'ext-b', name: 'Extension B', allowed: true },
+    ];
+
+    expect(vi.mocked(config.update).mock.calls.at(-1)).toEqual([
+      'trustedExtensions',
+      {
+        [allowanceKey]: expectedRow,
+      },
+    ]);
+  });
+
+  test('revoking one extension does not remove another trusted extension for same provider/account', async () => {
+    const mb = {
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
+    } as unknown as MessageBox;
+    const { registry, config } = createMockConfigurationRegistryWithConfig();
+    const authentication = createAuthenticationImpl(apiSender, mb, registry);
+    const authProvider = new AuthenticationProviderSingleAccount();
+    authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+    const session = await authentication.getSession(
+      { id: 'ext-a', label: 'Extension A' },
+      'company.auth-provider',
+      ['scope1', 'scope2'],
+      { createIfNone: true },
+    );
+    expect(session).toBeDefined();
+
+    vi.mocked(mb.showMessageBox).mockClear();
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
+
+    await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
+      'scope1',
+      'scope2',
+    ]);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalled());
+    vi.mocked(config.update).mockClear();
+
+    authentication.updateAllowedExtension('company.auth-provider', session!.account.id, 'ext-a', 'Extension A', false);
+
+    await vi.waitFor(() => expect(config.update).toHaveBeenCalled());
+    await Promise.resolve();
+
+    expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext-a')).toBe(false);
+    expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext-b')).toBe(true);
+
+    const allowanceKey = `company.auth-provider:${session!.account.id}`;
+    expect(config.update).toHaveBeenCalledWith(
+      'trustedExtensions',
+      expect.objectContaining({
+        [allowanceKey]: [
+          { id: 'ext-a', name: 'Extension A', allowed: false },
+          { id: 'ext-b', name: 'Extension B', allowed: true },
+        ],
+      }),
+    );
+  });
+
+  test('shows allowance dialog for a third extension when two others already have access', async () => {
+    const mb = {
+      showMessageBox: vi.fn().mockResolvedValueOnce({ response: SIGN_IN_ALLOW }),
+    } as unknown as MessageBox;
+    const authentication = createAuthenticationImpl(apiSender, mb);
+    const authProvider = new AuthenticationProviderSingleAccount();
+    authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+    const sessionA = await authentication.getSession(
+      { id: 'ext-a', label: 'Extension A' },
+      'company.auth-provider',
+      ['scope1', 'scope2'],
+      { createIfNone: true },
+    );
+
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
+
+    await authentication.getSession({ id: 'ext-b', label: 'Extension B' }, 'company.auth-provider', [
+      'scope1',
+      'scope2',
+    ]);
+
+    vi.mocked(mb.showMessageBox).mockClear();
+
+    vi.mocked(mb.showMessageBox).mockResolvedValue({ response: ALLOW_ACCESS_ALLOW });
+
+    await authentication.getSession({ id: 'ext-c', label: 'Extension C' }, 'company.auth-provider', [
+      'scope1',
+      'scope2',
+    ]);
+
+    expect(mb.showMessageBox).toHaveBeenCalledTimes(1);
+    expect(mb.showMessageBox).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Allow Access',
+        message: expect.stringContaining('Extension C'),
+        buttons: ['Allow', 'Deny'],
+      }),
+    );
+
+    await Promise.resolve(); // flush microtasks
+
+    const accountId = sessionA!.account.id;
+    expect(authentication.isAccessAllowed('company.auth-provider', accountId, 'ext-c')).toBe(true);
+  });
 });

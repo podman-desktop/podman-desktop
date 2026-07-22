@@ -50,6 +50,14 @@ test('getBase64Image - return base64 image', () => {
   expect(result).toBe('data:image/png;base64,aW1hZ2U=');
 });
 
+test('getBase64Image - return base64 image with svg mime type', () => {
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.spyOn(fs, 'readFileSync').mockReturnValue('<svg></svg>');
+
+  const result = getBase64Image('icon.svg');
+  expect(result).toBe('data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=');
+});
+
 describe('requireNonUndefined', () => {
   test('should return the value if it is defined', () => {
     const value = 'test';

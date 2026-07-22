@@ -123,7 +123,8 @@ test('Linux/Mac only', async ({ navigationBar }) => {
 ### 5. Test Tags
 
 ```typescript
-test.describe.serial('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
+test.describe('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
+  test.describe.configure({ mode: 'serial' });
   // tests
 });
 ```
@@ -140,6 +141,7 @@ test.describe.serial('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
 - `@managed-configuration` - Managed configuration tests
 - `@podman-remote` - Remote podman tests
 - `@ui-stress` - Non functional UI stress tests
+- `@experimental` - Experimental features tests
 
 ### 6. File Naming Convention
 
@@ -266,7 +268,9 @@ test.afterAll(async ({ runner, navigationBar }) => {
   }
 });
 
-test.describe.serial('Volume operations', { tag: ['@smoke'] }, () => {
+test.describe('Volume operations', { tag: ['@smoke'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+
   test('Create and verify volume', async ({ navigationBar }) => {
     const volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible();

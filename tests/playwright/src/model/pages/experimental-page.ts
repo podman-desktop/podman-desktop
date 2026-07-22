@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ export class ExperimentalPage extends SettingsPage {
   readonly enableAllExperimentalFeaturesCheckbox: Locator;
   readonly enableAllExperimentalFeaturesButton: Locator;
   readonly statusBarProvidersCheckbox: Locator;
+  readonly enhancedDashboardCheckbox: Locator;
 
   constructor(page: Page) {
     super(page, 'Experimental');
@@ -35,6 +36,9 @@ export class ExperimentalPage extends SettingsPage {
       .and(this.content.locator('#input-experimental-enable-all'));
     this.enableAllExperimentalFeaturesButton = this.enableAllExperimentalFeaturesCheckbox.locator('..');
     this.statusBarProvidersCheckbox = this.content.getByRole('checkbox', { name: 'Show providers in the status bar' });
+    this.enhancedDashboardCheckbox = this.content.getByRole('checkbox', {
+      name: 'Enhanced dashboard with more features and improved user experience',
+    });
   }
 
   public async enableAllExperimentalFeatures(): Promise<void> {

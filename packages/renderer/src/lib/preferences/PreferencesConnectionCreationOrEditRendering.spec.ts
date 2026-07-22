@@ -350,25 +350,25 @@ describe.each([
     const callback = vi.fn();
     let auditSpy = vi.spyOn(window as any, 'auditConnectionParameters');
     if (!connectionInfo) {
-      auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockImplementationOnce(() => ({ records: [] }));
+      auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockReturnValueOnce({ records: [] });
     }
     auditSpy
-      .mockImplementationOnce(() => ({
+      .mockReturnValueOnce({
         records: [
           {
             type: 'error',
             record: 'error message',
           },
         ],
-      }))
-      .mockImplementationOnce(() => ({
+      })
+      .mockReturnValueOnce({
         records: [
           {
             type: 'info',
             record: 'info message',
           },
         ],
-      }));
+      });
     // eslint-disable-next-line @typescript-eslint/await-thenable
     render(PreferencesConnectionCreationOrEditRendering, {
       properties: [

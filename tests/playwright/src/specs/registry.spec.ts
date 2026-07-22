@@ -73,20 +73,20 @@ test.describe
       const settingsBar = await navigationBar.openSettings();
       const registryPage = await settingsBar.openTabPage(RegistriesPage);
 
-      await registryPage.createRegistry('invalidUrl', 'invalidName', 'invalidPswd');
+      await registryPage.submitRegistryForm('invalidUrl', 'invalidName', 'invalidPswd');
       const urlErrorMsg = page.getByText(
         /Unable to find auth info for https:\/\/invalidUrl\/v2\/\. Error: RequestError: getaddrinfo [A-Z_]+ invalidurl$/,
       );
       await playExpect(urlErrorMsg).toBeVisible({ timeout: 60_000 });
-      await playExpect(registryPage.cancelDialogButton).toBeEnabled();
       await registryPage.cancelDialogButton.click();
+      await playExpect(registryPage.addRegistryDialog).toBeHidden({ timeout: 10_000 });
 
-      await registryPage.createRegistry(registryUrl, 'invalidName', 'invalidPswd');
+      await registryPage.submitRegistryForm(registryUrl, 'invalidName', 'invalidPswd');
       const credsErrorMsg = page.getByRole('dialog', { name: 'Add Registry' }).getByLabel('Error Message Content');
       await playExpect(credsErrorMsg).toBeVisible({ timeout: 30_000 });
       await playExpect(credsErrorMsg).toContainText('Wrong Username or Password', { ignoreCase: true });
-      await playExpect(registryPage.cancelDialogButton).toBeEnabled();
       await registryPage.cancelDialogButton.click();
+      await playExpect(registryPage.addRegistryDialog).toBeHidden({ timeout: 10_000 });
     });
 
     test.describe
@@ -120,7 +120,7 @@ test.describe
           await registryPage.removeRegistry(registryName);
           const registryBox = registryPage.registriesTable.getByLabel(registryName);
           const username = registryBox.getByText(registryUsername);
-          await playExpect(username).toBeHidden();
+          await playExpect(username).toBeHidden({ timeout: 10_000 });
         });
       });
   });

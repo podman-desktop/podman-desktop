@@ -360,7 +360,7 @@ test('Expect tooltip text shows info when input is less than minimum', async () 
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await userEvent.hover(tooltipTrigger);
 
-  const tooltip = await screen.findByLabelText('tooltip');
+  const tooltip = await screen.findByRole('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toBe('The value cannot be less than 1');
 });
@@ -385,7 +385,7 @@ test('Expect tooltip text shows info when input is higher than maximum', async (
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await userEvent.hover(tooltipTrigger);
 
-  const tooltip = await screen.findByLabelText('tooltip');
+  const tooltip = await screen.findByRole('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toBe('The value cannot be greater than 34');
 });

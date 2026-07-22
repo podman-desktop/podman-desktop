@@ -19,15 +19,10 @@
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { CatalogExtension, CatalogFetchableExtension } from '@podman-desktop/core-api/extension-catalog';
-import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
-import got from 'got';
-import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import { inject, injectable } from 'inversify';
 import { coerce, satisfies } from 'semver';
 
-import { Certificates } from '/@/plugin/certificates.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
-import { Proxy } from '/@/plugin/proxy.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
@@ -38,16 +33,13 @@ import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
 @injectable()
 export class ExtensionsCatalog {
   public static readonly DEFAULT_EXTENSIONS_URL = product.catalog.default;
+  static readonly FETCH_TIMEOUT = 10_000;
 
   private lastFetchTime = 0;
   private cachedCatalog: InternalCatalogJSON | undefined;
   static readonly CACHE_TIMEOUT = 1000 * 60 * 60 * 4; // 4 hours
 
   constructor(
-    @inject(Certificates)
-    private certificates: Certificates,
-    @inject(Proxy)
-    private proxy: Proxy,
     @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
     @inject(ApiSenderType)
@@ -95,19 +87,19 @@ export class ExtensionsCatalog {
       .getConfiguration(ExtensionsCatalogSettings.SectionName)
       .get<string>(ExtensionsCatalogSettings.registryUrl, ExtensionsCatalog.DEFAULT_EXTENSIONS_URL);
 
-    // try to fetch a file online
-    // use also the proxy if defined
-    // current time
     const startTime = performance.now();
     try {
-      const response = await got.get(catalogUrl, this.getHttpOptions());
-      this.cachedCatalog = JSON.parse(response.body) as InternalCatalogJSON;
+      const response = await fetch(catalogUrl, {
+        signal: AbortSignal.timeout(ExtensionsCatalog.FETCH_TIMEOUT),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${String(response.status)}: ${response.statusText}`);
+      }
+      this.cachedCatalog = (await response.json()) as InternalCatalogJSON;
       const endTime = performance.now();
       console.log(`Fetched ${catalogUrl} in ${endTime - startTime}ms`);
       this.apiSender.send('refresh-catalog');
     } catch (requestErr: unknown) {
-      // unable to fetch the extensions
-      // extract only the error message
       if (typeof requestErr === 'object' && requestErr && 'message' in requestErr && requestErr.message) {
         throw new Error(`Unable to fetch the available extensions: ${String(requestErr.message)}`);
       } else {
@@ -200,70 +192,6 @@ export class ExtensionsCatalog {
     }
 
     return fetchableExtensions;
-  }
-
-  getHttpOptions(): OptionsOfTextResponseBody {
-    const httpsOptions: HttpsOptions = {};
-    const options: OptionsOfTextResponseBody = {
-      https: httpsOptions,
-      retry: { limit: 0 },
-      // specify short timeout
-      timeout: {
-        lookup: 2000,
-        connect: 2000,
-        secureConnect: 2000,
-        socket: 2000,
-        send: 10000,
-        response: 1000,
-      },
-    };
-
-    if (options.https) {
-      options.https.certificateAuthority = this.certificates.getAllCertificates();
-    }
-
-    if (this.proxy.isEnabled()) {
-      // use proxy when performing got request
-      const proxy = this.proxy.proxy;
-      const httpProxyUrl = proxy?.httpProxy;
-      const httpsProxyUrl = proxy?.httpsProxy;
-
-      if (httpProxyUrl) {
-        options.agent ??= {};
-        try {
-          options.agent.http = new HttpProxyAgent({
-            keepAlive: true,
-            keepAliveMsecs: 1000,
-            maxSockets: 256,
-            maxFreeSockets: 256,
-            scheduling: 'lifo',
-            proxy: httpProxyUrl,
-          });
-        } catch (error) {
-          throw new Error(`Failed to create https proxy agent from ${httpProxyUrl}: ${error}`);
-        }
-      }
-      if (httpsProxyUrl) {
-        options.agent ??= {};
-        try {
-          options.agent.https = new HttpsProxyAgent({
-            keepAlive: true,
-            keepAliveMsecs: 1000,
-            maxSockets: 256,
-            maxFreeSockets: 256,
-            scheduling: 'lifo',
-            proxy: httpsProxyUrl,
-            ca: this.certificates.getAllCertificates(),
-            proxyRequestOptions: {
-              ca: this.certificates.getAllCertificates(),
-            },
-          });
-        } catch (error) {
-          throw new Error(`Failed to create https proxy agent from ${httpsProxyUrl}: ${error}`);
-        }
-      }
-    }
-    return options;
   }
 }
 

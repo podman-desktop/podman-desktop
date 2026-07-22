@@ -17,7 +17,7 @@ import type { ListOrganizerItem } from '../layouts/ListOrganizer';
 import ListOrganizer from '../layouts/ListOrganizer.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
-import { tablePersistence } from './table-persistence-store.svelte';
+import { collapsedStateMap, tablePersistence } from './table-persistence-store.svelte';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +25,7 @@ export let columns: Column<T, any>[];
 export let row: Row<T>;
 export let data: T[];
 export let defaultSortColumn: string | undefined = undefined;
-export let collapsed: string[] = [];
+export let collapsed: string[] = collapsedStateMap.get(kind) ?? [];
 /**
  * To better distinct individual row, you can provide a dedicated key method
  *
@@ -144,8 +144,8 @@ function pinActionsColumnLast<C extends { id?: string; title?: string }>(items: 
 function getOrderedColumns(): ListOrganizerItem[] {
   const ordered =
     columnOrdering.size === 0
-      ? [...columnItems].sort((a, b) => a.originalOrder - b.originalOrder)
-      : [...columnItems].sort((a, b) => {
+      ? columnItems.toSorted((a, b) => a.originalOrder - b.originalOrder)
+      : columnItems.toSorted((a, b) => {
           const aOrder = columnOrdering.get(a.id) ?? a.originalOrder;
           const bOrder = columnOrdering.get(b.id) ?? b.originalOrder;
           return aOrder - bOrder;
@@ -172,8 +172,8 @@ $: visibleColumns = ((): Column<T, any>[] => {
   // Get ordered columns inline to ensure reactivity
   const orderedColumns =
     columnOrdering.size === 0
-      ? [...columnItems].sort((a, b) => a.originalOrder - b.originalOrder)
-      : [...columnItems].sort((a, b) => {
+      ? columnItems.toSorted((a, b) => a.originalOrder - b.originalOrder)
+      : columnItems.toSorted((a, b) => {
           const aOrder = columnOrdering.get(a.id) ?? a.originalOrder;
           const bOrder = columnOrdering.get(b.id) ?? b.originalOrder;
           return aOrder - bOrder;
@@ -283,8 +283,7 @@ function sortImpl(): void {
     comparator = (a, b): number => -comparatorTemp(a, b);
   }
 
-  // eslint-disable-next-line etc/no-assign-mutated-array
-  data = data.sort(comparator);
+  data = data.toSorted(comparator);
 }
 
 onMount(async () => {
@@ -346,6 +345,7 @@ function toggleChildren(name: string | undefined): void {
   }
   // trigger Svelte update
   collapsed = collapsed;
+  collapsedStateMap.set(kind, [...collapsed]);
 }
 
 // Handle column order changes from ListOrganizer

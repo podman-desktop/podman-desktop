@@ -807,7 +807,6 @@ export class ImageRegistry {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   findBestManifest(manifests: any[], wantedArch: string, wantedOs: string): any | undefined {
-    // eslint-disable-next-line etc/no-commented-out-code
     // manifestsMap [os] [arch] = manifest
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const manifestsMap = new Map<string, Map<string, any>>();

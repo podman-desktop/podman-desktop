@@ -45,22 +45,21 @@ test('error: expect installBinaryToSystem to fail with a non existing binary', a
     value: 'linux',
   });
 
-  vi.mocked(extensionApi.process.exec).mockImplementation(
-    () =>
-      new Promise<extensionApi.RunResult>((_, reject) => {
-        const error: extensionApi.RunError = {
-          name: '',
-          message: 'Command failed',
-          exitCode: 1603,
-          command: 'command',
-          stdout: 'stdout',
-          stderr: 'stderr',
-          cancelled: false,
-          killed: false,
-        };
+  vi.mocked(extensionApi.process.exec).mockReturnValue(
+    new Promise<extensionApi.RunResult>((_, reject) => {
+      const error: extensionApi.RunError = {
+        name: '',
+        message: 'Command failed',
+        exitCode: 1603,
+        command: 'command',
+        stdout: 'stdout',
+        stderr: 'stderr',
+        cancelled: false,
+        killed: false,
+      };
 
-        reject(error);
-      }),
+      reject(error);
+    }),
   );
 
   // Expect await installBinaryToSystem to throw an error
@@ -74,9 +73,7 @@ test('success: installBinaryToSystem on mac with /usr/local/bin already created'
   });
 
   // Mock existsSync to be true since within the function it's doing: !fs.existsSync(localBinDir)
-  vi.mocked(fs.existsSync).mockImplementation(() => {
-    return true;
-  });
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   // Run installBinaryToSystem which will trigger the spyOn mock
   await installBinaryToSystem('test', 'tmpBinary');
@@ -95,9 +92,7 @@ test('success: installBinaryToSystem on linux with /usr/local/bin NOT created ye
   });
 
   // Mock existsSync to be false since within the function it's doing: !fs.existsSync(localBinDir)
-  vi.mocked(fs.existsSync).mockImplementation(() => {
-    return false;
-  });
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   // Run installBinaryToSystem which will trigger the spyOn mock
   await installBinaryToSystem('test', 'tmpBinary');
@@ -122,9 +117,7 @@ test('success: installBinaryToSystem to show warning if binary path not in PATH'
   process.env.PATH = '';
 
   // Mock existsSync to be false since within the function it's doing: !fs.existsSync(localBinDir)
-  vi.mocked(fs.existsSync).mockImplementation(() => {
-    return false;
-  });
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   // Run installBinaryToSystem which will trigger the spyOn mock
   await installBinaryToSystem('test', 'tmpBinary');

@@ -38,12 +38,12 @@ In foldable details, you can find alternative steps for least common contexts:
 
    With `podman-remote` you also enable the remote mode by default.
 
-   Check for the latest release which includes the `podman-remote` binary from the [Podman releases page](https://github.com/containers/podman/releases/latest).
+   Check for the latest release which includes the `podman-remote` binary from the [Podman releases page](https://github.com/podman-container-tools/podman/releases/latest).
 
    Download and unpack the binary:
 
    ```shell-session
-   $ wget https://github.com/containers/podman/releases/download/v4.9.1/podman-remote-static-linux_amd64.tar.gz
+   $ wget https://github.com/podman-container-tools/podman/releases/download/v4.9.1/podman-remote-static-linux_amd64.tar.gz
    $ sudo tar -C /usr/local -xzf podman-remote-static-linux_amd64.tar.gz
    ```
 

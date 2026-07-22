@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,4 +79,11 @@ export enum ImageState {
 export enum TaskState {
   Canceled = 'canceled',
   Success = 'success',
+}
+
+export enum SystemOverviewState {
+  Stopped = 'Some systems are stopped',
+  Operational = 'All systems operational',
+  Starting = 'Starting up...',
+  Error = 'Error detected',
 }

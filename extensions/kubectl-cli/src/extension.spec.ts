@@ -320,18 +320,16 @@ describe('postActivate', () => {
         }),
     );
     const deferredCliUpdate: Promise<CliToolSelectUpdate> = new Promise<CliToolSelectUpdate>(resolve => {
-      vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-        return {
-          registerUpdate: (listener: CliToolSelectUpdate) => {
-            resolve(listener);
-            return {
-              dispose: vi.fn(),
-            };
-          },
-          registerInstaller: vi.fn(),
-          updateVersion: vi.fn(),
-        } as unknown as extensionApi.CliTool;
-      });
+      vi.mocked(extensionApi.cli.createCliTool).mockReturnValue({
+        registerUpdate: (listener: CliToolSelectUpdate) => {
+          resolve(listener);
+          return {
+            dispose: vi.fn(),
+          };
+        },
+        registerInstaller: vi.fn(),
+        updateVersion: vi.fn(),
+      } as unknown as extensionApi.CliTool);
     });
 
     await KubectlExtension.activate(extensionContext);
@@ -433,18 +431,16 @@ describe('postActivate', () => {
       },
     ]);
     const deferredCliUpdate: Promise<CliToolSelectUpdate> = new Promise<CliToolSelectUpdate>(resolve => {
-      vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-        return {
-          registerUpdate: (listener: CliToolSelectUpdate) => {
-            resolve(listener);
-            return {
-              dispose: vi.fn(),
-            };
-          },
-          registerInstaller: vi.fn(),
-          updateVersion: vi.fn(),
-        } as unknown as extensionApi.CliTool;
-      });
+      vi.mocked(extensionApi.cli.createCliTool).mockReturnValue({
+        registerUpdate: (listener: CliToolSelectUpdate) => {
+          resolve(listener);
+          return {
+            dispose: vi.fn(),
+          };
+        },
+        registerInstaller: vi.fn(),
+        updateVersion: vi.fn(),
+      } as unknown as extensionApi.CliTool);
     });
 
     await KubectlExtension.activate(extensionContext);
@@ -496,9 +492,7 @@ describe('postActivate', () => {
       registerUpdate: vi.fn(),
     } as unknown as extensionApi.CliTool;
 
-    vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-      return cliToolMock;
-    });
+    vi.mocked(extensionApi.cli.createCliTool).mockReturnValue(cliToolMock);
 
     await KubectlExtension.activate(extensionContext);
 
@@ -545,18 +539,16 @@ describe('postActivate', () => {
     ]);
     const deferredCliUpdate: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
-        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-          return {
-            registerUpdate: vi.fn(),
-            registerInstaller: (listener: extensionApi.CliToolInstaller) => {
-              resolve(listener);
-              return {
-                dispose: vi.fn(),
-              };
-            },
-            updateVersion: vi.fn(),
-          } as unknown as extensionApi.CliTool;
-        });
+        vi.mocked(extensionApi.cli.createCliTool).mockReturnValue({
+          registerUpdate: vi.fn(),
+          registerInstaller: (listener: extensionApi.CliToolInstaller) => {
+            resolve(listener);
+            return {
+              dispose: vi.fn(),
+            };
+          },
+          updateVersion: vi.fn(),
+        } as unknown as extensionApi.CliTool);
       },
     );
 
@@ -620,18 +612,16 @@ describe('postActivate', () => {
     vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue(releasesMetadata);
     const deferredCliUpdate: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
-        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-          return {
-            registerUpdate: vi.fn(),
-            registerInstaller: (listener: extensionApi.CliToolInstaller) => {
-              resolve(listener);
-              return {
-                dispose: vi.fn(),
-              };
-            },
-            updateVersion: vi.fn(),
-          } as unknown as extensionApi.CliTool;
-        });
+        vi.mocked(extensionApi.cli.createCliTool).mockReturnValue({
+          registerUpdate: vi.fn(),
+          registerInstaller: (listener: extensionApi.CliToolInstaller) => {
+            resolve(listener);
+            return {
+              dispose: vi.fn(),
+            };
+          },
+          updateVersion: vi.fn(),
+        } as unknown as extensionApi.CliTool);
       },
     );
     vi.spyOn(KubectlDownload.prototype, 'promptUserForVersion').mockResolvedValue(releasesMetadata[0]);
@@ -686,18 +676,16 @@ describe('postActivate', () => {
     ]);
     const deferredCliInstall: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
-        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-          return {
-            registerUpdate: vi.fn(),
-            registerInstaller: (listener: extensionApi.CliToolInstaller) => {
-              resolve(listener);
-              return {
-                dispose: vi.fn(),
-              };
-            },
-            updateVersion: vi.fn(),
-          } as unknown as extensionApi.CliTool;
-        });
+        vi.mocked(extensionApi.cli.createCliTool).mockReturnValue({
+          registerUpdate: vi.fn(),
+          registerInstaller: (listener: extensionApi.CliToolInstaller) => {
+            resolve(listener);
+            return {
+              dispose: vi.fn(),
+            };
+          },
+          updateVersion: vi.fn(),
+        } as unknown as extensionApi.CliTool);
       },
     );
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -746,18 +734,16 @@ describe('postActivate', () => {
     ]);
     const deferredCliInstall: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
-        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
-          return {
-            registerUpdate: vi.fn(),
-            registerInstaller: (listener: extensionApi.CliToolInstaller) => {
-              resolve(listener);
-              return {
-                dispose: vi.fn(),
-              };
-            },
-            updateVersion: vi.fn(),
-          } as unknown as extensionApi.CliTool;
-        });
+        vi.mocked(extensionApi.cli.createCliTool).mockReturnValue({
+          registerUpdate: vi.fn(),
+          registerInstaller: (listener: extensionApi.CliToolInstaller) => {
+            resolve(listener);
+            return {
+              dispose: vi.fn(),
+            };
+          },
+          updateVersion: vi.fn(),
+        } as unknown as extensionApi.CliTool);
       },
     );
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);

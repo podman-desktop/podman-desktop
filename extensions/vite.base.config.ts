@@ -26,17 +26,21 @@ const WORKSPACE_ROOT = join(__dirname, '..');
 export default defineConfig({
   mode: process.env.MODE,
   envDir: process.cwd(),
+  resolve: {
+    mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
+  },
   build: {
     sourcemap: 'inline',
     target: 'esnext',
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE === 'production' ? 'esbuild' : false,
+    minify: process.env.MODE === 'production',
     lib: {
       entry: 'src/extension.ts',
       formats: ['cjs'],
     },
     rollupOptions: {
+      platform: 'node',
       external: ['@podman-desktop/api', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].js',
@@ -49,9 +53,9 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    globalSetup: [join(WORKSPACE_ROOT, '__mocks__', 'vitest-generate-api-global-setup.ts')],
+    globalSetup: [join(WORKSPACE_ROOT, 'packages', 'api-mocks-vitest', 'src', 'vitest-generate-api-global-setup.ts')],
     alias: {
-      '@podman-desktop/api': join(WORKSPACE_ROOT, '__mocks__/@podman-desktop/api.js'),
+      '@podman-desktop/api': join(WORKSPACE_ROOT, 'packages', 'api-mocks-vitest', 'src', '@podman-desktop', 'api.js'),
     },
   },
 });

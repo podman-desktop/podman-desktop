@@ -25,6 +25,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Providers from '/@/lib/statusbar/Providers.svelte';
 import StatusBar from '/@/lib/statusbar/StatusBar.svelte';
+import { isHighContrast } from '/@/stores/appearance';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { statusBarEntries } from '/@/stores/statusbar';
 import { tasksInfo } from '/@/stores/tasks';
@@ -44,6 +45,7 @@ beforeEach(() => {
 
   // reset stores
   statusBarEntries.set([]);
+  isHighContrast.set(false);
   tasksInfo.set([
     {
       name: 'Dummy Task',
@@ -97,6 +99,24 @@ test('providers should be visible when isExperimentalConfigurationEnabled is tru
   await vi.waitFor(() => {
     expect(Providers).toHaveBeenCalled();
   });
+});
+
+test('statusbar has data-pd-force-theme set to dark in non-hc mode', async () => {
+  isHighContrast.set(false);
+
+  const { getByRole } = render(StatusBar);
+
+  const statusBar = getByRole('contentinfo');
+  expect(statusBar).toHaveAttribute('data-pd-force-theme', 'dark');
+});
+
+test('statusbar has data-pd-force-theme set to hc-dark in high-contrast mode', async () => {
+  isHighContrast.set(true);
+
+  const { getByRole } = render(StatusBar);
+
+  const statusBar = getByRole('contentinfo');
+  expect(statusBar).toHaveAttribute('data-pd-force-theme', 'hc-dark');
 });
 
 describe('providers', () => {

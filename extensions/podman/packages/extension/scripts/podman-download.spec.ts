@@ -306,17 +306,19 @@ describe('DownloadAndCheckSha', () => {
       name: 'vFakeVersion',
       assets: [
         {
-          url: 'https://api.github.com/repos/containers/podman/releases/assets/456',
+          url: 'https://api.github.com/repos/podman-container-tools/podman/releases/assets/456',
           id: 456,
           name: 'podman-fake-binary',
-          browser_download_url: 'https://github.com/containers/podman/releases/download/vFakeVersion/podman-binary',
+          browser_download_url:
+            'https://github.com/podman-container-tools/podman/releases/download/vFakeVersion/podman-binary',
         },
 
         {
-          url: 'https://api.github.com/repos/containers/podman/releases/assets/789',
+          url: 'https://api.github.com/repos/podman-container-tools/podman/releases/assets/789',
           id: 789,
           name: 'shasums',
-          browser_download_url: 'https://github.com/containers/podman/releases/download/vFakeVersion/shasums',
+          browser_download_url:
+            'https://github.com/podman-container-tools/podman/releases/download/vFakeVersion/shasums',
         },
       ],
     };
@@ -324,12 +326,12 @@ describe('DownloadAndCheckSha', () => {
     const podmanBinaryContent = 'fake-binary-content';
 
     const handlers = [
-      http.get('https://api.github.com/repos/containers/podman/releases/tags/vFakeVersion', () =>
+      http.get('https://api.github.com/repos/podman-container-tools/podman/releases/tags/vFakeVersion', () =>
         HttpResponse.json(response),
       ),
 
       http.get(
-        'https://api.github.com/repos/containers/podman/releases/assets/789',
+        'https://api.github.com/repos/podman-container-tools/podman/releases/assets/789',
         () =>
           new HttpResponse(shasumContent, {
             status: 200,
@@ -343,7 +345,7 @@ describe('DownloadAndCheckSha', () => {
 
       // podman-binary content
       http.get(
-        'https://api.github.com/repos/containers/podman/releases/assets/456',
+        'https://api.github.com/repos/podman-container-tools/podman/releases/assets/456',
         () =>
           new HttpResponse(podmanBinaryContent, {
             status: 200,

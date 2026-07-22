@@ -21,7 +21,7 @@
 import { get } from 'svelte/store';
 import { beforeEach, expect, test } from 'vitest';
 
-import { setup, tooltipHidden } from './tooltip-store';
+import { resetTooltipHideCount, setup, tooltipHidden } from './tooltip-store';
 
 const callbacks = new Map<string, any>();
 const eventEmitter = {
@@ -31,6 +31,8 @@ const eventEmitter = {
 };
 
 beforeEach(() => {
+  callbacks.clear();
+  resetTooltipHideCount();
   (window as any).addEventListener = eventEmitter.receive;
 });
 
@@ -53,4 +55,38 @@ test('tooltipHidden starts as false, then true on tooltip-hide and false on tool
   callback();
 
   expect(get(tooltipHidden)).toBeFalsy();
+});
+
+test('tooltipHidden handles multiple nested dropdowns correctly', async () => {
+  setup();
+
+  expect(get(tooltipHidden)).toBeFalsy();
+
+  // Open first dropdown
+  const hideCallback = callbacks.get('tooltip-hide');
+  const showCallback = callbacks.get('tooltip-show');
+
+  hideCallback(); // First dropdown opens
+  expect(get(tooltipHidden)).toBeTruthy();
+
+  hideCallback(); // Second dropdown opens while first is open
+  expect(get(tooltipHidden)).toBeTruthy();
+
+  showCallback(); // First dropdown closes
+  expect(get(tooltipHidden)).toBeTruthy(); // Should still be hidden because second is open
+
+  showCallback(); // Second dropdown closes
+  expect(get(tooltipHidden)).toBeFalsy(); // Now tooltips should show
+});
+
+test('tooltipHidden counter never goes below zero', async () => {
+  setup();
+
+  const showCallback = callbacks.get('tooltip-show');
+
+  showCallback(); // Call show without any hide
+  expect(get(tooltipHidden)).toBeFalsy(); // Should remain false, not go negative
+
+  showCallback(); // Call show again
+  expect(get(tooltipHidden)).toBeFalsy(); // Still false
 });

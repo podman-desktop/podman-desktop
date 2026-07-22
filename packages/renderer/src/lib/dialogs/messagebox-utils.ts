@@ -44,7 +44,7 @@ export function withConfirmation(func: (err?: unknown) => unknown, action: strin
       type: isDelete ? 'danger' : 'question',
     })
     .then(result => {
-      if (result?.response === 0) {
+      if (result?.response === activationButton) {
         func();
       }
     })

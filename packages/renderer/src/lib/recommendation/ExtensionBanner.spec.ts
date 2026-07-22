@@ -145,7 +145,7 @@ describe('backgrounds', () => {
 });
 
 test('opening messageBox and hiding banner', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Hide' });
 
   render(ExtensionBanner, {
     banner: gradientBackground,
@@ -174,7 +174,7 @@ test('opening messageBox and hiding banner', async () => {
 });
 
 test('opening messageBox and keeping banner', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Keep' });
 
   render(ExtensionBanner, {
     banner: gradientBackground,

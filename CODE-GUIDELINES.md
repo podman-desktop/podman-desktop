@@ -19,6 +19,32 @@ import { WinPlatform } from './win-platform';
 import type { WSL2Check } from '../checks/windows/wsl2-check';
 ```
 
+### Array sorting (`toSorted` vs `sort`)
+
+Prefer `toSorted()` over `sort()` when deriving a sorted view from an existing array.
+This includes cases where the sorted value is assigned later in the function.
+
+🚫 **Avoid this pattern:**
+
+```ts
+let providers = getProviders();
+
+providers.sort((a, b) => a.name.localeCompare(b.name));
+
+// ... some logic
+
+const sortedProviders = providers;
+```
+
+✅ **Use this instead:**
+
+```ts
+let providers = getProviders();
+const sortedProviders = providers.toSorted((a, b) => a.name.localeCompare(b.name));
+```
+
+Use `sort()` only when you explicitly need in-place mutation semantics.
+
 ### Svelte
 
 On templates of Svelte components, avoid using inline code and arrow functions. Instead, call a function defined in the script part of the component.

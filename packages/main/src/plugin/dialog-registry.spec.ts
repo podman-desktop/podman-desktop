@@ -40,15 +40,6 @@ vi.mock(import('/@/util.js'), () => {
     isMac: vi.fn().mockReturnValue(false),
   };
 });
-vi.mock(import('electron'), async () => {
-  return {
-    dialog: {
-      showOpenDialog: vi.fn(),
-      showSaveDialog: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
-
 class TestDialogRegistry extends DialogRegistry {}
 
 let dialogRegistry: TestDialogRegistry;

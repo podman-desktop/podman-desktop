@@ -16,7 +16,7 @@ const faRegularIconStatus: string[] = ['ready', 'started', 'stopped', 'error', '
   {#if status === 'starting' || status === 'stopping'}
     <Spinner size="12px" label="Connection Status Icon" class={className} />
   {:else}
-    <div aria-label="Connection Status Icon" class="max-h-3 {className}"
+    <div aria-label="Connection Status Icon" class="fa-w-[12px] {className}"
       class:fa-regular={faRegularIconStatus.includes(status)}
       class:fa={status === 'not-installed'}
       class:fa-circle-check={status === 'ready' || status === 'started'}

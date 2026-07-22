@@ -61,7 +61,7 @@ describe('shouldUseXDGDirectories', () => {
       vi.mocked(isLinux).mockReturnValue(true);
 
       const existSyncSpy = vi.mocked(existsSync);
-      existSyncSpy.mockImplementation(() => false);
+      existSyncSpy.mockReturnValue(false);
 
       // biome-ignore lint/complexity/useLiteralKeys: <PODMAN_DESKTOP_HOME_DIR comes from an index signature>
       process.env['PODMAN_DESKTOP_HOME_DIR'] = '/custom/path';
@@ -73,7 +73,7 @@ describe('shouldUseXDGDirectories', () => {
       vi.mocked(isLinux).mockReturnValue(true);
 
       const existSyncSpy = vi.mocked(existsSync);
-      existSyncSpy.mockImplementation(() => true);
+      existSyncSpy.mockReturnValue(true);
 
       expect(strategy.shouldUseXDGDirectories()).toBe(false);
     });

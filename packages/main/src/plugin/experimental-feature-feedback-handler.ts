@@ -224,13 +224,10 @@ export class ExperimentalFeatureFeedbackHandler {
         .then(async response => {
           if (response) {
             const telemetryOptions = { option: 'Share Feedback on GitHub' };
-            // Share Feedback on GitHub was selected
-            if (response.response === 1) {
+            if (response.response === 'Share Feedback on GitHub') {
               await shell.openExternal(featureGitHubLink);
               this.setTimestamp(key, undefined);
-            }
-            // Option from Dropdown was selected
-            else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
+            } else if (response.response === 'Remind me later' && typeof response.dropdownIndex === 'number') {
               telemetryOptions.option = options[response.dropdownIndex] ?? 'Unknown option';
               switch (options[response.dropdownIndex]) {
                 case 'Remind me tomorrow':

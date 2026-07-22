@@ -83,6 +83,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -100,7 +101,6 @@ import type {
   OnboardingStatus,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -112,6 +112,9 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
@@ -152,7 +155,7 @@ import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
-import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
+import { IPCHandle, IPCMainOn, MainWindowDeferred } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -171,7 +174,8 @@ import { TrayMenu } from '/@/tray-menu.js';
 import { createHash, isMac } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
-import { MainWindowDeferred } from './api.js';
+// eslint-disable-next-line no-restricted-imports
+import rootPackage from '../../../../package.json' with { type: 'json' };
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
@@ -277,7 +281,7 @@ export class PluginSystem {
   private uiReady = false;
 
   // true if the application is quitting
-  private isQuitting = false;
+  protected isQuitting = false;
 
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;
@@ -470,12 +474,10 @@ export class PluginSystem {
         cancelId: 2,
       });
 
-      if (result.response === 0) {
-        // open externally the URL
+      if (result.response === 'Open') {
         await shell.openExternal(url);
         return true;
-      } else if (result.response === 1) {
-        // copy to clipboard
+      } else if (result.response === 'Copy Link') {
         clipboard.writeText(url);
       }
       return false;
@@ -876,6 +878,31 @@ export class PluginSystem {
       return containerProviderRegistry.listContainers();
     });
 
+    this.ipcHandle('container-provider-registry:listSecrets', async (): Promise<Array<SecretInfo>> => {
+      return containerProviderRegistry.listSecrets();
+    });
+
+    this.ipcHandle(
+      'container-provider-registry:removeSecret',
+      async (_listener, engineId: string, secretId: string): Promise<void> => {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:inspectSecret',
+      async (_listener, engineId: string, secretId: string): Promise<SecretInfo> => {
+        return containerProviderRegistry.inspectSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:createSecret',
+      async (_listener, options: SecretCreateOptions): Promise<SecretCreateResult> => {
+        return containerProviderRegistry.createSecret(options);
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:listSimpleContainersByLabel',
       async (_listener, label: string, key: string): Promise<SimpleContainerInfo[]> => {
@@ -888,8 +915,8 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'container-provider-registry:listImages',
-      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
-        return containerProviderRegistry.podmanListImages(options);
+      async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.listImages(options);
       },
     );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
@@ -1011,6 +1038,12 @@ export class PluginSystem {
       'container-provider-registry:startPod',
       async (_listener, engine: string, podId: string): Promise<void> => {
         return containerProviderRegistry.startPod(engine, podId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:unpausePod',
+      async (_listener, engine: string, podId: string): Promise<void> => {
+        return containerProviderRegistry.unpausePod(engine, podId);
       },
     );
     this.ipcHandle(
@@ -1145,6 +1178,12 @@ export class PluginSystem {
       'container-provider-registry:startContainer',
       async (_listener, engine: string, containerId: string): Promise<void> => {
         return containerProviderRegistry.startContainer(engine, containerId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:unpauseContainer',
+      async (_listener, engine: string, containerId: string): Promise<void> => {
+        return containerProviderRegistry.unpauseContainer(engine, containerId);
       },
     );
     this.ipcHandle(
@@ -1766,6 +1805,10 @@ export class PluginSystem {
 
     this.ipcHandle('app:getTitleBarText', async (_listener): Promise<string> => {
       return product.name;
+    });
+
+    this.ipcHandle('app:getAppRepository', async (_listener): Promise<string | undefined> => {
+      return rootPackage.repository;
     });
 
     this.ipcHandle('provider-registry:getProviderInfos', async (): Promise<ProviderInfo[]> => {
@@ -3381,6 +3424,13 @@ export class PluginSystem {
       'extension-development-folders:removeDevelopmentFolder',
       async (_listener: unknown, path: string): Promise<void> => {
         return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development:getExtensionDevelopmentDocsLink',
+      async (_listener): Promise<string | undefined> => {
+        return product.extensions.developmentDocumentation;
       },
     );
 

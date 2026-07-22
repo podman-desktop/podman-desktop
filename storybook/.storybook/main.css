@@ -25,6 +25,10 @@ body.hc-dark {
   color: #fff;
 }
 
+@utility fa-w-* {
+  --fa-width: --value([length], [percentage]);
+}
+
 /* Docs page story preview containers */
 body.light .docs-story {
   background-color: #f6f6f6;

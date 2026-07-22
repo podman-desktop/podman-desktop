@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faArrowCircleDown, faBan, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
-import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
@@ -16,8 +16,8 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
+import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
-import { runImageInfo } from '/@/stores/run-image-store';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
@@ -230,8 +230,14 @@ async function gotoImageDetails(): Promise<void> {
 async function gotoImageRun(): Promise<void> {
   const image = await getFirstPulledImageInfo();
   if (image) {
-    runImageInfo.set(image);
-    router.goto('/images/run/basic');
+    handleNavigation({
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: image.id,
+        engineId: image.engineId,
+        tag: image.tag ? `${image.name}:${image.tag}` : image.name,
+      },
+    });
   }
 }
 async function cancelPullImage(): Promise<void> {
@@ -422,7 +428,7 @@ async function searchFunction(value: string): Promise<void> {
 </script>
 
 <EngineFormPage
-  title="Pull image from a registry"
+  title="Pull an image from a registry"
   inProgress={pullInProgress}
   showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
@@ -496,7 +502,7 @@ async function searchFunction(value: string): Promise<void> {
     <footer>
       <div class="w-full flex flex-col justify-end">
         {#if !pullFinished}
-          <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
+          <div class="space-x-2 flex flex-nowrap justify-end text-[var(--pd-content-text)]">
             <Button
               icon={faArrowCircleDown}
               disabled={imageNameIsInvalid || pullInProgress}
@@ -509,9 +515,9 @@ async function searchFunction(value: string): Promise<void> {
             {/if}
           </div>
         {:else}
-        <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
-          <Button type='secondary' on:click={pullImageFinished}>Close</Button>
-          <Button type='link' on:click={gotoImageDetails}>View details</Button>
+        <div class="space-x-2 flex flex-nowrap justify-end text-[var(--pd-content-text)]">
+          <Button type='link' on:click={pullImageFinished}>Close</Button>
+          <Button type='secondary' on:click={gotoImageDetails}>View details</Button>
           <Button type='primary' on:click={gotoImageRun}>Run</Button>
         </div>
         {/if}

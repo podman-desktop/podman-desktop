@@ -33,6 +33,7 @@ import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
   PODMAN_DOCKER_COMPAT_ENABLE_KEY,
+  PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
   PODMAN_MACHINE_EDIT_CPU,
@@ -759,15 +760,33 @@ export async function registerProviderFor(
 
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
-      await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
+      try {
+        await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
     stop: async (context, logger): Promise<void> => {
-      await stopMachine(provider, machineInfo, context, logger);
+      try {
+        await stopMachine(provider, machineInfo, context, logger);
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
     delete: async (logger): Promise<void> => {
-      await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
-        logger,
-      });
+      try {
+        await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
+          logger,
+        });
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
   };
   // support edit only on MacOS and Windows with limited editing capabilities for HyperV and WSL machines
@@ -807,6 +826,10 @@ export async function registerProviderFor(
           if (isRootful !== undefined) {
             telemetryLogger.logUsage('podman.machine.edit.rootful', { isRootful });
           }
+          containerProviderConnection.error = undefined;
+        } catch (err) {
+          containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+          throw err;
         } finally {
           if (state === 'started') {
             await lifecycle.start?.(context, logger);
@@ -1320,6 +1343,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionApi.context.setValue(START_NOW_MACHINE_INIT_SUPPORTED_KEY, isStartNowAtMachineInitSupported(version));
     extensionApi.context.setValue(USER_MODE_NETWORKING_SUPPORTED_KEY, isUserModeNetworkingSupported(version));
     extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, isLibkrunSupported(version));
+    extensionApi.context.setValue(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, isPodman6OrLater(version));
     isMovedPodmanSocket = isPodmanSocketLocationMoved(version);
   }
 
@@ -1693,7 +1717,7 @@ export async function start(
   extensionContext.subscriptions.push(syncCertsCommand);
 
   // register the registries
-  const registrySetup = new RegistrySetup();
+  const registrySetup = new RegistrySetup(podmanConfiguration.registryConfiguration);
   await registrySetup.setup();
 
   await calcPodmanMachineSetting();
@@ -1914,6 +1938,10 @@ export function setWSLEnabled(enabled: boolean): void {
 
 export function isPodman5OrLater(podmanVersion: string): boolean {
   return compare(podmanVersion, '5.0.0') >= 0;
+}
+
+export function isPodman6OrLater(podmanVersion: string): boolean {
+  return compare(podmanVersion, '6.0.0') >= 0;
 }
 
 export function sendTelemetryRecords(

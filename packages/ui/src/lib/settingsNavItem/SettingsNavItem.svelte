@@ -37,11 +37,14 @@ function click(): void {
 }
 </script>
 
-<a class="no-underline" href={href} aria-label={title} onclick={click}>
+<a class="no-underline block w-full" href={href} aria-label={title} title={title} onclick={click}>
   <div
-    class="flex w-full pr-1 py-2 justify-between items-center cursor-pointer border-l-[4px]"
+    data-settings-nav-row
+    class="flex box-border w-full py-2 items-center cursor-pointer border-l-[4px]"
     class:pl-3={!child}
     class:pl-[34px]={child}
+    class:pr-3={!child}
+    class:pr-2={child}
     class:leading-none={child}
     class:text-md={!child}
     class:font-medium={!child}
@@ -53,25 +56,30 @@ function click(): void {
     class:hover:text-[color:var(--pd-secondary-nav-text-hover)]={!selected}
     class:hover:bg-[var(--pd-secondary-nav-text-hover-bg)]={!selected}
     class:hover:border-[var(--pd-secondary-nav-text-hover-bg)]={!selected}>
-    <span
-      class="group-hover:block flex flex-row gap-x-2 items-center"
-      class:capitalize={!child}>
+    <span class="flex flex-row gap-x-2 items-center min-w-0 grow" class:capitalize={!child} class:items-start={child}>
       {#if icon}
+        <span class="w-4 shrink-0 flex justify-center">
           <Icon icon={icon}/>
+        </span>
       {/if}
-      <span>{title}</span>
+      <span
+        data-settings-nav-title
+        class="block"
+        class:truncate={!child}
+        class:whitespace-normal={child}
+        class:break-words={child}>{title}</span>
       {#if iconRight && iconRightAlign === 'inline'}
         <Icon icon={iconRight}/>
       {/if}
     </span>
-    {#if section}
-      <div class="px-2 text-[color:var(--pd-secondary-nav-expander)] pointer-events-none">
-        <ChevronExpander expanded={expanded} />
-      </div>
-    {:else if iconRight && iconRightAlign === 'end'}
-      <div class="px-2 flex items-center">
+    <div class="w-3 shrink-0 flex items-center justify-end">
+      {#if section}
+        <span class="text-[color:var(--pd-secondary-nav-expander)] pointer-events-none">
+          <ChevronExpander expanded={expanded} />
+        </span>
+      {:else if iconRight && iconRightAlign === 'end'}
         <Icon icon={iconRight}/>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
 </a>

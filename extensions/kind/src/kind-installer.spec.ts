@@ -20,7 +20,6 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { Octokit } from '@octokit/rest';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -39,17 +38,15 @@ vi.mock(import('node:os'), async () => {
 });
 vi.mock(import('node:fs'));
 
-const listReleasesMock = vi.fn();
-const listReleaseAssetsMock = vi.fn();
-const getReleaseAssetMock = vi.fn();
-
-const octokitMock: Octokit = {
+const mockOctokit = {
   repos: {
-    listReleases: listReleasesMock,
-    listReleaseAssets: listReleaseAssetsMock,
-    getReleaseAsset: getReleaseAssetMock,
+    listReleases: vi.fn(),
+    listReleaseAssets: vi.fn(),
+    getReleaseAsset: vi.fn(),
   },
-} as unknown as Octokit;
+};
+
+const mockOctokitFactory = vi.fn();
 
 const telemetryLogUsageMock = vi.fn();
 const telemetryLogErrorMock = vi.fn();
@@ -58,13 +55,22 @@ const telemetryLoggerMock = {
   logError: telemetryLogErrorMock,
 } as unknown as extensionApi.TelemetryLogger;
 
-beforeEach(() => {
-  installer = new KindInstaller('.', telemetryLoggerMock, octokitMock);
+beforeEach(async () => {
   vi.resetAllMocks();
+  mockOctokitFactory.mockResolvedValue(mockOctokit);
+  installer = new KindInstaller('.', telemetryLoggerMock, mockOctokitFactory);
 
   (extensionApi.env.isLinux as unknown as boolean) = false;
   (extensionApi.env.isWindows as unknown as boolean) = false;
   (extensionApi.env.isMac as unknown as boolean) = false;
+});
+
+test('Auth token is passed to Octokit factory', async () => {
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: [] });
+
+  await installer.grabLatestsReleasesMetadata();
+
+  expect(mockOctokitFactory).toHaveBeenCalled();
 });
 
 test.skip('expect installBinaryToSystem to succesfully pass with a binary', async () => {
@@ -94,9 +100,7 @@ describe('grabLatestsReleasesMetadata', () => {
     const resultREST = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
     const releases = await installer.grabLatestsReleasesMetadata();
     expect(releases).toBeDefined();
     expect(releases.length).toBe(5);
@@ -112,9 +116,7 @@ describe('promptUserForVersion', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
     const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick').mockResolvedValue(resultREST[0]);
     const release = await installer.promptUserForVersion();
 
@@ -132,9 +134,7 @@ describe('promptUserForVersion', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
     vi.spyOn(extensionApi.window, 'showQuickPick').mockResolvedValue(undefined);
     await expect(() => installer.promptUserForVersion()).rejects.toThrowError('No version selected');
   });
@@ -145,14 +145,12 @@ describe('getReleaseAssetId', () => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
 
-    // mock the result of listReleaseAssetsMock REST API
+    // mock the result of mockOctokit.repos.listReleaseAssets REST API
     const resultREST = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-assets.json'), 'utf8'),
     );
 
-    listReleaseAssetsMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleaseAssets.mockResolvedValue({ data: resultREST });
   });
 
   test('macOS x86_64', async () => {
@@ -217,14 +215,12 @@ describe('install', () => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
 
-    // mock the result of listReleaseAssetsMock REST API
+    // mock the result of mockOctokit.repos.listReleaseAssets REST API
     const resultREST = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-assets.json'), 'utf8'),
     );
 
-    listReleaseAssetsMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleaseAssets.mockResolvedValue({ data: resultREST });
   });
   test('should download file on win system', async () => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -234,9 +230,7 @@ describe('install', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
     vi.mocked(os.platform).mockReturnValue('win32');
     vi.mocked(os.arch).mockReturnValue('x64');
 
@@ -257,9 +251,7 @@ describe('install', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
     vi.mocked(os.platform).mockReturnValue('darwin');
     vi.mocked(os.arch).mockReturnValue('x64');
     vi.mocked(fs.existsSync).mockReturnValue(true);
@@ -273,14 +265,10 @@ describe('install', () => {
 
 describe('downloadReleaseAsset', () => {
   test('should download the file if parent folder does exist', async () => {
-    getReleaseAssetMock.mockImplementation(() => {
-      return { data: 'foo' };
-    });
+    mockOctokit.repos.getReleaseAsset.mockResolvedValue({ data: 'foo' });
 
     // mock fs
-    const existSyncSpy = vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-      return true;
-    });
+    const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     const writeFileSpy = vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
@@ -295,9 +283,7 @@ describe('downloadReleaseAsset', () => {
   });
 
   test('should download the file if parent folder does not exist', async () => {
-    getReleaseAssetMock.mockImplementation(() => {
-      return { data: 'foo' };
-    });
+    mockOctokit.repos.getReleaseAsset.mockResolvedValue({ data: 'foo' });
 
     // mock fs
     const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);

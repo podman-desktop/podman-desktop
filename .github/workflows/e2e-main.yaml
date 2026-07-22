@@ -17,6 +17,11 @@
 
 name: e2e-tests-main
 
+run-name: >-
+  ${{ inputs.release_tag
+      && format('e2e-tests-main [{0}]', inputs.release_tag)
+      || github.workflow }}
+
 on:
   push:
     branches: [main]
@@ -75,6 +80,11 @@ on:
         - 'false'
         default: 'true'
         required: false
+      release_tag:
+        description: 'Tag to identify this run for report-portal'
+        type: string
+        default: ''
+        required: false
 
 permissions:
   contents: read
@@ -92,13 +102,13 @@ jobs:
       matrix:
         installation: [source-build, flatpak-build]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'push'
 
       - name: Set the default env. variables
@@ -127,14 +137,24 @@ jobs:
           echo "Docker images after cleanup:"
           docker image ls
 
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - name: Setup insecure test registry
+        run: |
+          chmod +x tests/playwright/scripts/setup-insecure-registry.sh
+          tests/playwright/scripts/setup-insecure-registry.sh start
+          echo "Insecure registry started on localhost:5443"
+          # Install self-signed cert into Ubuntu system trust store
+          sudo cp /tmp/pd-test-registry/registry.crt /usr/local/share/ca-certificates/pd-test-registry.crt
+          sudo update-ca-certificates
+          echo "Self-signed cert installed into system trust store"
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Execute pnpm
@@ -156,6 +176,9 @@ jobs:
           SKIP_KIND_INSTALL: 'true'
           KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
           ELECTRON_ENABLE_INSPECT: true
+          INSECURE_REGISTRY_URL: 'localhost:5443'
+          INSECURE_REGISTRY_USERNAME: 'testuser'
+          INSECURE_REGISTRY_PASSWORD: 'testpassword123'
         run: |
           echo "Compiling the Podman Desktop in production mode"
           pnpm compile:current --linux dir
@@ -173,6 +196,9 @@ jobs:
           SKIP_KIND_INSTALL: 'true'
           KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
           ELECTRON_ENABLE_INSPECT: true
+          INSECURE_REGISTRY_URL: 'localhost:5443'
+          INSECURE_REGISTRY_USERNAME: 'testuser'
+          INSECURE_REGISTRY_PASSWORD: 'testpassword123'
         run: |
           echo "Building Podman Desktop flatpak bundle"
           pnpm compile:current --linux flatpak
@@ -184,7 +210,7 @@ jobs:
           pnpm ${{ env.NPM_TARGET }}
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
+        uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -201,6 +227,13 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
+
+      - name: Cleanup insecure test registry
+        if: always()
+        run: |
+          tests/playwright/scripts/setup-insecure-registry.sh cleanup || true
+          sudo rm -f /usr/local/share/ca-certificates/pd-test-registry.crt
+          sudo update-ca-certificates || true
 
   win-update-e2e-test:
     name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
@@ -230,27 +263,30 @@ jobs:
           echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $env:GITHUB_ENV
           echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $env:GITHUB_ENV
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'push'
 
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Execute pnpm
         run: pnpm install
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: node tests/playwright/scripts/version-util.cjs ./package.json --update
@@ -301,7 +337,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
+        uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -342,27 +378,30 @@ jobs:
           echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $GITHUB_ENV
           echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $GITHUB_ENV
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'push'
 
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Execute pnpm
         run: pnpm install
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
@@ -412,7 +451,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
+        uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true

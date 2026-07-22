@@ -317,7 +317,7 @@ test('waitForAContainerConnection delayed twice', async () => {
 
 describe('findComposeBinary', () => {
   test('Check findComposeBinary on Windows', async () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+    vi.spyOn(util, 'isWindows').mockReturnValue(true);
 
     // mock exec
     vi.spyOn(exec, 'exec').mockResolvedValue({} as RunResult);
@@ -328,7 +328,7 @@ describe('findComposeBinary', () => {
   });
 
   test('Check findComposeBinary not exists on Windows', async () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+    vi.spyOn(util, 'isWindows').mockReturnValue(true);
 
     // mock exec
     vi.spyOn(exec, 'exec').mockRejectedValue(new Error('not found'));
@@ -340,8 +340,8 @@ describe('findComposeBinary', () => {
   });
 
   test('Check findComposeBinary on macOS', async () => {
-    vi.spyOn(util, 'isMac').mockImplementation(() => true);
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isMac').mockReturnValue(true);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
 
     // mock existsSync as returning false first time and true second time
     vi.spyOn(fs, 'existsSync').mockReturnValueOnce(false).mockReturnValueOnce(true);
@@ -356,9 +356,9 @@ describe('findComposeBinary', () => {
   });
 
   test('Check findComposeBinary on Linux', async () => {
-    vi.spyOn(util, 'isUnixLike').mockImplementation(() => true);
-    vi.spyOn(util, 'isMac').mockImplementation(() => false);
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+    vi.spyOn(util, 'isUnixLike').mockReturnValue(true);
+    vi.spyOn(util, 'isMac').mockReturnValue(false);
+    vi.spyOn(util, 'isWindows').mockReturnValue(false);
 
     // mock existsSync as returning true
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -609,7 +609,7 @@ test('execComposeCommand on a non-Windows OS', async () => {
   // mock exec
   vi.spyOn(exec, 'exec').mockResolvedValue({} as RunResult);
 
-  vi.spyOn(util, 'isWindows').mockImplementation(() => false);
+  vi.spyOn(util, 'isWindows').mockReturnValue(false);
 
   // call
   await contributionManager.execComposeCommand('/fake/directory', ['arg1', 'arg2']);
@@ -640,7 +640,7 @@ test('execComposeCommand on a Windows OS', async () => {
   // mock exec
   vi.spyOn(exec, 'exec').mockResolvedValue({} as RunResult);
 
-  vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+  vi.spyOn(util, 'isWindows').mockReturnValue(true);
 
   // call
   await contributionManager.execComposeCommand('/fake/directory', ['arg1', 'arg2']);

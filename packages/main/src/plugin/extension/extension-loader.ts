@@ -281,6 +281,8 @@ export class ExtensionLoader implements IAsyncDisposable {
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
+      repository: extension.manifest.repository,
+      homepage: extension.manifest.homepage,
     }));
   }
 
@@ -1236,6 +1238,26 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const containerProviderRegistry = this.containerProviderRegistry;
     const containerEngine: typeof containerDesktopAPI.containerEngine = {
+      createSecret(
+        name: string,
+        data: string,
+        options?: containerDesktopAPI.SecretCreateOptions,
+      ): Promise<containerDesktopAPI.SecretCreateResult> {
+        return containerProviderRegistry.createSecret({
+          name,
+          data,
+          ...options,
+        });
+      },
+      inspectSecret(engineId: string, id: string): Promise<containerDesktopAPI.SecretInspectInfo> {
+        return containerProviderRegistry.inspectSecret(engineId, id);
+      },
+      listSecrets(): Promise<containerDesktopAPI.SecretInfo[]> {
+        return containerProviderRegistry.listSecrets();
+      },
+      removeSecret(engineId: string, secretId: string): Promise<void> {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
       listContainers(): Promise<containerDesktopAPI.ContainerInfo[]> {
         return containerProviderRegistry.listSimpleContainers();
       },
@@ -1292,7 +1314,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         );
       },
       listImages(options?: containerDesktopAPI.ListImagesOptions): Promise<containerDesktopAPI.ImageInfo[]> {
-        return containerProviderRegistry.podmanListImages(options);
+        return containerProviderRegistry.listImages(options);
       },
       saveImage(engineId: string, id: string, filename: string, token?: containerDesktopAPI.CancellationToken) {
         return containerProviderRegistry.saveImage(engineId, id, filename, token);
@@ -1597,6 +1619,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       },
       navigateToImage: async (id: string, engineId: string, tag: string): Promise<void> => {
         await this.navigationManager.navigateToImage(id, engineId, tag);
+      },
+      navigateToImageRun: async (id: string, engineId: string, tag: string): Promise<void> => {
+        await this.navigationManager.navigateToImageRun(id, engineId, tag);
       },
       navigateToVolumes: async (): Promise<void> => {
         await this.navigationManager.navigateToVolumes();

@@ -15,5 +15,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+coverage:
+  ignore:
+    - "storybook/**"
+
 comment:
   require_changes: true  # Only post a comment if coverage changes
+

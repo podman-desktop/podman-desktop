@@ -157,3 +157,21 @@ test('port link shows tooltip with full URL and external link icon', async () =>
   const tooltipTrigger = portLink.closest('[data-testid="tooltip-trigger"]');
   expect(tooltipTrigger).toBeInTheDocument();
 });
+
+test('renders duplicate public ports on different host IPs without key collision', async () => {
+  const containerWithDuplicatedPublicPorts: ContainerInfoUI = {
+    ...fakeStandaloneContainer,
+    ports: [
+      { IP: '127.0.0.1', PrivatePort: 53, PublicPort: 53, Type: 'udp' },
+      { IP: '127.0.0.1', PrivatePort: 53, PublicPort: 53, Type: 'tcp' },
+      { IP: '203.0.113.10', PrivatePort: 53, PublicPort: 53, Type: 'udp' },
+      { IP: '203.0.113.10', PrivatePort: 53, PublicPort: 53, Type: 'tcp' },
+    ],
+    portsAsString: '53',
+    hasPublicPort: true,
+  };
+
+  const { getAllByText } = render(ContainerDetailsSummary, { container: containerWithDuplicatedPublicPorts });
+
+  expect(getAllByText('53')).toHaveLength(4);
+});

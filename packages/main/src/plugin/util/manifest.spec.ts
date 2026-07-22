@@ -28,6 +28,7 @@ describe('guessIsManifest function', () => {
       Labels: {},
       engineId: 'engine1',
       engineName: 'podman',
+      engineType: 'podman',
       ParentId: '',
       RepoTags: ['manifestTag'],
       RepoDigests: ['manifestDigest'],
@@ -48,6 +49,7 @@ describe('guessIsManifest function', () => {
       Labels: {},
       engineId: 'engine2',
       engineName: 'podman',
+      engineType: 'podman',
       ParentId: '',
       RepoTags: ['largeImageTag'],
       RepoDigests: ['largeImageDigest'],
@@ -68,6 +70,7 @@ describe('guessIsManifest function', () => {
       Labels: { key: 'value' },
       engineId: 'engine3',
       engineName: 'podman',
+      engineType: 'podman',
       ParentId: '',
       RepoTags: ['labeledImageTag'],
       RepoDigests: ['labeledImageDigest'],
@@ -88,6 +91,7 @@ describe('guessIsManifest function', () => {
       Labels: {},
       engineId: 'engine4',
       engineName: 'podman',
+      engineType: 'podman',
       ParentId: '',
       RepoTags: [],
       RepoDigests: ['noTagImageDigest'],
@@ -108,6 +112,7 @@ describe('guessIsManifest function', () => {
       Labels: {},
       engineId: 'engine5',
       engineName: 'podman',
+      engineType: 'podman',
       ParentId: '',
       RepoTags: ['noDigestImageTag'],
       RepoDigests: [],
@@ -128,6 +133,7 @@ describe('guessIsManifest function', () => {
       Labels: {},
       engineId: 'engine5', // Assuming 'engineId' and 'engineName' are part of your ImageInfo but not relevant here
       engineName: 'podman',
+      engineType: 'podman',
       ParentId: '',
       RepoTags: ['testdomain.io/library/hello:latest'],
       RepoDigests: [
@@ -169,6 +175,7 @@ describe('guessIsManifest function', () => {
       History: ['localhost/testm123:latest', 'localhost/foobar123:latest'],
       engineId: 'engine1',
       engineName: 'podman',
+      engineType: 'podman',
       Digest: 'sha256:0b4f2606b1ac40f4aca2e5ec467b1f5a943bd3f8aa0f618830716c20e9783629',
     };
 
@@ -183,6 +190,7 @@ test('expect to fail even if engine name does not equal podman', () => {
     Labels: {},
     engineId: 'engine1',
     engineName: 'podman',
+    engineType: 'podman',
     ParentId: '',
     RepoTags: ['manifestTag'],
     RepoDigests: ['manifestDigest'],

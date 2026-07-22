@@ -48,7 +48,7 @@ $: onboardingProviders = $onboardingList
       containerEngine: hasContainerConnection,
     };
   })
-  .sort((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
+  .toSorted((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
 
 onMount(async () => {
   const ver = await welcomeUtils.getVersion();

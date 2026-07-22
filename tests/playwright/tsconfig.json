@@ -3,7 +3,7 @@
     "module": "esnext",
     "target": "esnext",
     "sourceMap": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "declaration": true,
     "outDir": "dist",
     "rootDirs": ["src", "../../playwright.config.ts"],
@@ -15,9 +15,8 @@
 
     "types": ["node"],
 
-    "baseUrl": ".",
     "paths": {
-      "/@/*": ["src/*"]
+      "/@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "../types/**/*.d.ts", "../../playwright.config.ts", "scripts/*"],

@@ -89,7 +89,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration,
     });
 
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     expect(setupButton).toBeInTheDocument();
 
     const createButton = screen.queryByText(/Create new/i);
@@ -115,7 +115,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration,
     });
 
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     expect(setupButton).toBeInTheDocument();
   });
 
@@ -138,7 +138,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     await userEvent.click(setupButton);
 
     expect(router.goto).toHaveBeenCalledWith('/preferences/onboarding/podman-extension');
@@ -163,7 +163,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration,
     });
 
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     await userEvent.click(setupButton);
 
     expect(router.goto).toHaveBeenCalledWith('/preferences/default/preferences.podman-extension');
@@ -325,7 +325,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     expect(setupButton).toBeInTheDocument();
   });
 
@@ -347,7 +347,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration,
     });
 
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     expect(setupButton).toBeInTheDocument();
   });
 
@@ -475,7 +475,7 @@ describe('ProviderActionButtons', () => {
     expect(createButton).toBeInTheDocument();
 
     // Should show Setup button
-    const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
+    const setupButton = screen.getByRole('button', { name: `Set up ${provider.name}` });
     expect(setupButton).toBeInTheDocument();
 
     // Should show Update button
@@ -522,7 +522,7 @@ describe('ProviderActionButtons', () => {
     });
 
     // Should not show onboarding Setup button (because globalContext is undefined)
-    const setupButtons = screen.queryAllByRole('button', { name: `Setup ${provider.name}` });
+    const setupButtons = screen.queryAllByRole('button', { name: `Set up ${provider.name}` });
     // Should either not exist or be in regular mode (not onboarding mode)
     // In this case, the component should show regular buttons mode
     expect(setupButtons.length).toBeLessThanOrEqual(1);

@@ -27,13 +27,22 @@ const windowEvents = ['color-updated', 'extension-stopped', 'extensions-started'
 const windowListeners = ['appearance-changed', 'extensions-already-started', 'system-ready'];
 
 export const colorsInfos: Writable<ColorInfo[]> = writable([]);
+export const darkContextColorsInfos: Writable<ColorInfo[]> = writable([]);
+export const hcDarkContextColorsInfos: Writable<ColorInfo[]> = writable([]);
 
 const appearanceUtil: AppearanceUtil = new AppearanceUtil();
 
 // use helper here as window methods are initialized after the store in tests
 const listColors = async (): Promise<ColorInfo[]> => {
   const themeName = await appearanceUtil.getTheme();
-  return window.listColors(themeName);
+  const [current, dark, hcDark] = await Promise.all([
+    window.listColors(themeName),
+    window.listColors('dark'),
+    window.listColors('hc-dark'),
+  ]);
+  darkContextColorsInfos.set(dark);
+  hcDarkContextColorsInfos.set(hcDark);
+  return current;
 };
 
 export const colorsEventStore = new EventStore<ColorInfo[]>(

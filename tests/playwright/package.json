@@ -19,14 +19,15 @@
     "build": "vite build",
     "package": "npm run build && npm link && npm pack",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "publish:next": "pnpm publish --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
+    "publish:next": "pnpm publish --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\"",
+    "argos-ci:upload": "npx @argos-ci/cli upload --build-name podman-desktop-e2e ./output/screenshots"
   },
   "devDependencies": {
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.1",
     "@types/node": "^24",
-    "electron": "42.3.0",
-    "typescript": "^5.9.3",
-    "unplugin-dts": "1.0.1",
-    "vitest": "^4.1.7"
+    "electron": "43.1.1",
+    "typescript": "^6.0.3",
+    "unplugin-dts": "1.0.3",
+    "vitest": "^4.1.10"
   }
 }

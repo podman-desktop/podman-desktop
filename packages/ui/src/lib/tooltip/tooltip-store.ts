@@ -16,20 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type Writable, writable } from 'svelte/store';
+import { derived, type Readable, writable } from 'svelte/store';
 
+// Internal counter tracking how many dropdowns/menus are currently open
+const tooltipHideCount = writable(0);
+
+// Public derived store - true when tooltips should be hidden (count > 0)
 export const tooltipHidden = setup();
 
-export function setup(): Writable<boolean> {
-  const store = writable(false);
+export function setup(): Readable<boolean> {
+  const derived$ = derived(tooltipHideCount, $count => $count > 0);
 
   window.addEventListener('tooltip-show', () => {
-    tooltipHidden.set(false);
+    tooltipHideCount.update(count => Math.max(0, count - 1));
   });
 
   window.addEventListener('tooltip-hide', () => {
-    tooltipHidden.set(true);
+    tooltipHideCount.update(count => count + 1);
   });
 
-  return store;
+  return derived$;
+}
+
+// Export for testing purposes only
+export function resetTooltipHideCount(): void {
+  tooltipHideCount.set(0);
 }

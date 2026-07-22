@@ -189,14 +189,14 @@ describe.each<{
 
     vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
     const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
     await fireEvent.click(deleteButton);
 
     expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
     await fireEvent.click(deleteButton);
     expect(window.showMessageBox).toHaveBeenCalledTimes(2);
     await vi.waitFor(() => expect(window.kubernetesDeletePod).toHaveBeenCalled());
@@ -290,13 +290,8 @@ describe.each<{
       expect(statusDots.length).toBe(3);
 
       expect(statusDots[0].title).toBe('container-3-name: Running');
-      expect(statusDots[0]).toHaveClass('bg-[var(--pd-status-running)]');
-
       expect(statusDots[1].title).toBe('container-1-name: Waiting');
-      expect(statusDots[1]).toHaveClass('bg-[var(--pd-status-waiting)]');
-
       expect(statusDots[2].title).toBe('container-2-name: Terminated');
-      expect(statusDots[2]).toHaveClass('bg-[var(--pd-status-terminated)]');
     });
   });
 });

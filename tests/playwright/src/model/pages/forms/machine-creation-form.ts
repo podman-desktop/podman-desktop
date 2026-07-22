@@ -37,7 +37,7 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineCPUs: Locator;
   readonly podmanMachineMemory: Locator;
   readonly podmanMachineDiskSize: Locator;
-  readonly rootPriviledgesCheckbox: Locator;
+  readonly rootPrivilegesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
   readonly providerTypeDropdown: DropdownComponent;
   readonly startNowCheckbox: Locator;
@@ -58,7 +58,7 @@ export class MachineCreationForm extends BasePage {
     this.podmanMachineCPUs = this.podmanMachineConfiguration.getByRole('slider', { name: 'CPU(s)' });
     this.podmanMachineMemory = this.podmanMachineConfiguration.getByRole('slider', { name: 'Memory' });
     this.podmanMachineDiskSize = this.podmanMachineConfiguration.getByRole('slider', { name: 'Disk size' });
-    this.rootPriviledgesCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
+    this.rootPrivilegesCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'Machine with root privileges',
     });
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
@@ -94,7 +94,7 @@ export class MachineCreationForm extends BasePage {
       await this.podmanMachineName.fill(machineName);
       await playExpect(this.podmanMachineName).toHaveValue(machineName);
 
-      await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
+      await this.ensureCheckboxState(isRootful, this.rootPrivilegesCheckbox);
       if (!!isWindows && getVirtualizationProvider() === PodmanVirtualizationProviders.WSL) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
       }

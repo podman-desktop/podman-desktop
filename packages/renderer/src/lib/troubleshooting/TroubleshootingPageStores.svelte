@@ -16,8 +16,7 @@ let allEventsUnsubscriber: Unsubscriber;
 onMount(() => {
   allEventsUnsubscriber = allEventStoresInfo.subscribe(value => {
     // sort the store
-    value.sort((a, b) => a.name.localeCompare(b.name));
-    allEventstores = value;
+    allEventstores = value.toSorted((a, b) => a.name.localeCompare(b.name));
   });
 });
 

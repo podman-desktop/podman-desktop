@@ -118,6 +118,10 @@ class TestColorRegistry extends ColorRegistry {
   override initActionButton(): void {
     super.initActionButton();
   }
+
+  override initInvertContent(): void {
+    super.initInvertContent();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -747,12 +751,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[8]?.[0]).toStrictEqual('label-quaternary-bg');
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(tailwindColorPalette.amber[100]);
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(tailwindColorPalette.amber[800]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(tailwindColorPalette.yellow[100]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(tailwindColorPalette.yellow[800]);
 
     expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(tailwindColorPalette.amber[900]);
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(tailwindColorPalette.amber[400]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(tailwindColorPalette.yellow[900]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(tailwindColorPalette.yellow[400]);
   });
 });
 
@@ -1318,6 +1322,55 @@ describe('initStatusColors', () => {
   test('registers exactly 5 color definitions for status backgrounds', () => {
     expect(vi.mocked(colorRegistry.registerColorDefinition)).toHaveBeenCalledTimes(5);
   });
+
+  test.each([
+    'status-running',
+    'status-terminated',
+    'status-waiting',
+    'status-starting',
+    'status-stopped',
+    'status-exited',
+    'status-not-running',
+    'status-paused',
+    'status-degraded',
+    'status-created',
+    'status-dead',
+    'status-unknown',
+    'status-connected',
+    'status-disconnected',
+    'status-updated',
+    'status-ready',
+  ])('registers %s with all four theme values', (id: string) => {
+    const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === id);
+    expect(call, `${id} should be registered`).toBeDefined();
+    const definition = call?.[1];
+    expect(definition?.dark, `${id} should have dark value`).toBeDefined();
+    expect(definition?.light, `${id} should have light value`).toBeDefined();
+    expect(definition?.hcDark, `${id} should have hcDark value`).toBeDefined();
+    expect(definition?.hcLight, `${id} should have hcLight value`).toBeDefined();
+  });
+
+  test('registers status-paused with gray/charcoal values matching stopped status', () => {
+    const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === 'status-paused');
+    expect(call).toBeDefined();
+    const definition = call?.[1];
+    expect(definition?.dark).toBe(tailwindColorPalette.gray[500]);
+    expect(definition?.light).toBe(tailwindColorPalette.charcoal[300]);
+    expect(definition?.hcDark).toBe(tailwindColorPalette.white);
+    expect(definition?.hcLight).toBe(tailwindColorPalette.black);
+  });
+
+  test('registers status-contrast with dark and light values', () => {
+    const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === 'status-contrast');
+    expect(call).toBeDefined();
+    const definition = call?.[1];
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toBeDefined();
+  });
+
+  test('registers exactly 17 solid status colors', () => {
+    expect(vi.mocked(colorRegistry.registerColor)).toHaveBeenCalledTimes(17);
+  });
 });
 
 describe('registerColorDefinition', () => {
@@ -1585,9 +1638,9 @@ describe('initToast', () => {
   test('registers toast-success-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-success-bg', {
       dark: tailwindColorPalette.green[600],
-      light: tailwindColorPalette.green[700],
+      light: tailwindColorPalette.green[500],
       hcDark: tailwindColorPalette.green[400],
-      hcLight: tailwindColorPalette.green[800],
+      hcLight: tailwindColorPalette.green[600],
     });
   });
 
@@ -1602,19 +1655,19 @@ describe('initToast', () => {
 
   test('registers toast-success-bar-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-success-bar-bg', {
-      dark: tailwindColorPalette.green[800],
-      light: tailwindColorPalette.green[900],
-      hcDark: tailwindColorPalette.green[700],
-      hcLight: tailwindColorPalette.green[900],
+      dark: tailwindColorPalette.green[500],
+      light: tailwindColorPalette.green[400],
+      hcDark: tailwindColorPalette.black,
+      hcLight: tailwindColorPalette.white,
     });
   });
 
   test('registers toast-error-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-error-bg', {
-      dark: tailwindColorPalette.red[600],
-      light: tailwindColorPalette.red[700],
+      dark: tailwindColorPalette.red[700],
+      light: tailwindColorPalette.red[600],
       hcDark: tailwindColorPalette.red[400],
-      hcLight: tailwindColorPalette.red[900],
+      hcLight: tailwindColorPalette.red[800],
     });
   });
 
@@ -1629,43 +1682,43 @@ describe('initToast', () => {
 
   test('registers toast-error-bar-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-error-bar-bg', {
-      dark: tailwindColorPalette.red[800],
-      light: tailwindColorPalette.red[900],
-      hcDark: tailwindColorPalette.red[800],
-      hcLight: tailwindColorPalette.red[950],
-    });
-  });
-
-  test('registers toast-warning-bg', () => {
-    expect(spyOnRegisterColor).toBeCalledWith('toast-warning-bg', {
-      dark: tailwindColorPalette.amber[400],
-      light: tailwindColorPalette.amber[500],
-      hcDark: tailwindColorPalette.amber[300],
-      hcLight: tailwindColorPalette.amber[800],
-    });
-  });
-
-  test('registers toast-warning-color', () => {
-    expect(spyOnRegisterColor).toBeCalledWith('toast-warning-color', {
-      dark: tailwindColorPalette.charcoal[900],
-      light: tailwindColorPalette.charcoal[900],
+      dark: tailwindColorPalette.red[500],
+      light: tailwindColorPalette.red[400],
       hcDark: tailwindColorPalette.black,
       hcLight: tailwindColorPalette.white,
     });
   });
 
+  test('registers toast-warning-bg', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('toast-warning-bg', {
+      dark: tailwindColorPalette.yellow[500],
+      light: tailwindColorPalette.yellow[500],
+      hcDark: tailwindColorPalette.yellow[400],
+      hcLight: tailwindColorPalette.yellow[500],
+    });
+  });
+
+  test('registers toast-warning-color', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('toast-warning-color', {
+      dark: tailwindColorPalette.black,
+      light: tailwindColorPalette.black,
+      hcDark: tailwindColorPalette.black,
+      hcLight: tailwindColorPalette.black,
+    });
+  });
+
   test('registers toast-warning-bar-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-warning-bar-bg', {
-      dark: tailwindColorPalette.amber[700],
-      light: tailwindColorPalette.amber[800],
-      hcDark: tailwindColorPalette.amber[800],
-      hcLight: tailwindColorPalette.amber[950],
+      dark: tailwindColorPalette.yellow[600],
+      light: tailwindColorPalette.yellow[600],
+      hcDark: tailwindColorPalette.black,
+      hcLight: tailwindColorPalette.black,
     });
   });
 
   test('registers toast-info-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-info-bg', {
-      dark: tailwindColorPalette.accent1[400],
+      dark: tailwindColorPalette.accent1[600],
       light: tailwindColorPalette.accent1[500],
       hcDark: tailwindColorPalette.accent1[300],
       hcLight: tailwindColorPalette.accent1[800],
@@ -1683,10 +1736,10 @@ describe('initToast', () => {
 
   test('registers toast-info-bar-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-info-bar-bg', {
-      dark: tailwindColorPalette.accent1[700],
-      light: tailwindColorPalette.accent1[800],
-      hcDark: tailwindColorPalette.accent1[800],
-      hcLight: tailwindColorPalette.accent1[950],
+      dark: tailwindColorPalette.accent1[400],
+      light: tailwindColorPalette.accent1[300],
+      hcDark: tailwindColorPalette.black,
+      hcLight: tailwindColorPalette.white,
     });
   });
 });
@@ -1773,5 +1826,44 @@ describe('initActionButton', () => {
       hcDark: tailwindColorPalette.accent1[500],
       hcLight: tailwindColorPalette.accent1[700],
     });
+  });
+});
+
+describe('initInvertContent', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+  let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+    spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
+    spyOnRegisterColorDefinition.mockReturnValue(undefined);
+    colorRegistry.initInvertContent();
+  });
+
+  test('registers invert-content-table-row-stripe with alpha transparency', () => {
+    const stripeCall = spyOnRegisterColorDefinition.mock.calls.find(
+      call => call?.[0]?.id === 'invert-content-table-row-stripe',
+    );
+    expect(stripeCall).toBeDefined();
+
+    const definition = stripeCall?.[0];
+    expect(definition?.id).toBe('invert-content-table-row-stripe');
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toBeDefined();
+    expect(definition?.hcDark).toBeDefined();
+    expect(definition?.hcLight).toBeDefined();
+
+    // verify 4% opacity applied across all themes
+    expect(definition?.dark).toContain('0.04');
+    expect(definition?.light).toContain('0.04');
+    expect(definition?.hcDark).toContain('0.04');
+    expect(definition?.hcLight).toContain('0.04');
+  });
+
+  test('registers solid invert-content colors via registerColor', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('invert-content-bg', expect.any(Object));
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('invert-content-divider', expect.any(Object));
   });
 });

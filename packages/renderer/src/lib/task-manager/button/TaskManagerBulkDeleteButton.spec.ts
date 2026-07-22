@@ -70,7 +70,7 @@ beforeEach(() => {
 
 test('Expect bulk button is bringing confirmation but not deleting anything', async () => {
   // return No for the confirmation
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   render(TaskManagerBulkDeleteButton, { title, bulkOperationTitle });
   // expect the button is there
@@ -92,7 +92,7 @@ test('Expect bulk button is bringing confirmation but not deleting anything', as
 
 test('Expect delete is called after confirming', async () => {
   // return Yes for the confirmation
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   render(TaskManagerBulkDeleteButton, { title, bulkOperationTitle });
   // expect the button is there

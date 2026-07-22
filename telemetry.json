@@ -11,6 +11,10 @@
     {
       "event": "checkIfSocketDisguisedFailed",
       "frequency": "dailyPerInstance"
+    },
+    {
+      "event": "shellInContainer.error",
+      "frequency": "dailyPerInstance"
     }
   ]
 }

@@ -51,7 +51,7 @@ beforeEach(() => {
   };
 
   vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-  vi.spyOn(fs, 'mkdirSync').mockImplementation(() => '');
+  vi.spyOn(fs, 'mkdirSync').mockReturnValue('');
 });
 
 afterEach(() => {

@@ -31,17 +31,18 @@ afterEach(() => {
 });
 
 const LINK_TEXT = 'link-text';
-const MESSAGE = `No connections yet [${LINK_TEXT}](link-url)`;
+const MESSAGE_TEXT = 'No connections yet';
+const MESSAGE_MARKDOWN = `${MESSAGE_TEXT} [${LINK_TEXT}](link-url)`;
 
 test('Message is not visible when component is hidden ', () => {
-  render(PreferencesConnectionsEmptyRendering, { message: MESSAGE, hidden: true });
-  const noProvidersText = screen.queryByText(MESSAGE);
+  render(PreferencesConnectionsEmptyRendering, { message: MESSAGE_MARKDOWN, hidden: true });
+  const noProvidersText = screen.queryByText(MESSAGE_MARKDOWN);
   expect(noProvidersText).not.toBeInTheDocument();
 });
 
 test('Message is visible when component is not hidden', async () => {
-  render(PreferencesConnectionsEmptyRendering, { message: MESSAGE, hidden: false });
-  const noProvidersText = screen.getByText(MESSAGE);
+  render(PreferencesConnectionsEmptyRendering, { message: MESSAGE_MARKDOWN, hidden: false });
+  const noProvidersText = screen.getByText(MESSAGE_TEXT);
   expect(noProvidersText).toBeInTheDocument();
   const link = screen.getByText(LINK_TEXT);
   expect(link).toBeInTheDocument();

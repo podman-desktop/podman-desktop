@@ -203,7 +203,7 @@ And the rust program `src/main.rs`:
    ~~~~~~~  ~| =(Y_)=-  |
   ~~~~    ~~~|   U      |~~
 
-Project:   https://github.com/containers/podman
+Project:   https://github.com/podman-container-tools/podman
 Website:   https://podman.io
 Documents: https://docs.podman.io
 Twitter:   @Podman_io
@@ -312,7 +312,7 @@ WARNING: image platform (wasi/wasm/v8) does not match the expected platform (lin
    ~~~~~~~  ~| =(Y_)=-  |
   ~~~~    ~~~|   U      |~~
 
-Project:   https://github.com/containers/podman
+Project:   https://github.com/podman-container-tools/podman
 Website:   https://podman.io
 Documents: https://docs.podman.io
 Twitter:   @Podman_io

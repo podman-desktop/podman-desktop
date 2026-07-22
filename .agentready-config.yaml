@@ -1,0 +1,11 @@
+# AgentReady configuration for Podman Desktop
+# See https://github.com/ambient-code/agentready for documentation
+
+excluded_attributes:
+  # Podman Desktop is an Electron desktop app communicating via IPC,
+  # not a REST/GraphQL API service. API documentation is provided via
+  # TypeScript declaration files (extension-api.d.ts) and TypeDoc.
+  - openapi_specs
+  # Monorepo false positive: source code lives in packages/*, not a
+  # root src/ directory. This is standard for pnpm workspace monorepos.
+  - standard_layout

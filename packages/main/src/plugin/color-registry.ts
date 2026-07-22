@@ -50,6 +50,7 @@ const {
   slate,
   stone,
   white,
+  yellow,
   transparent,
 } = tailwindColorPalette;
 
@@ -670,6 +671,15 @@ export class ColorRegistry {
       hcDark: white,
       hcLight: black,
     });
+
+    this.registerColorDefinition(
+      this.color(`${invCt}table-row-stripe`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.04))
+        .withDark(colorPaletteHelper(white).withAlpha(0.04))
+        .withHcLight(colorPaletteHelper(black).withAlpha(0.04))
+        .withHcDark(colorPaletteHelper(white).withAlpha(0.04))
+        .build(),
+    );
   }
 
   protected initContent(): void {
@@ -1306,6 +1316,15 @@ export class ColorRegistry {
       hcDark: white,
       hcLight: black,
     });
+
+    this.registerColorDefinition(
+      this.color(`${modal}shadow`)
+        .withDark(colorPaletteHelper(black).withAlpha(0.3))
+        .withLight(colorPaletteHelper(black).withAlpha(0.3))
+        .withHcDark(colorPaletteHelper(black).withAlpha(0.3))
+        .withHcLight(colorPaletteHelper(black).withAlpha(0.3))
+        .build(),
+    );
   }
 
   // links
@@ -1865,13 +1884,13 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${label}quaternary-bg`, {
-      dark: amber[800],
-      light: amber[100],
+      dark: yellow[800],
+      light: yellow[100],
     });
 
     this.registerColor(`${label}quaternary-text`, {
-      dark: amber[400],
-      light: amber[900],
+      dark: yellow[400],
+      light: yellow[900],
     });
   }
 
@@ -1880,92 +1899,123 @@ export class ColorRegistry {
 
     // Podman & Kubernetes
     this.registerColor(`${status}running`, {
-      dark: green[350],
-      light: green[550],
+      dark: green[400],
+      light: green[500],
+      hcDark: green[400],
+      hcLight: green[500],
     });
 
     // Kubernetes only
     this.registerColor(`${status}terminated`, {
-      dark: red[550],
-      light: red[950],
+      dark: red[500],
+      light: red[600],
+      hcDark: red[500],
+      hcLight: red[700],
     });
 
     this.registerColor(`${status}waiting`, {
-      dark: amber[600],
-      light: amber[600],
+      dark: amber[500],
+      light: amber[700],
+      hcDark: amber[600],
+      hcLight: amber[700],
     });
 
     // Podman only
     this.registerColor(`${status}starting`, {
-      dark: green[350],
-      light: green[550],
+      dark: green[400],
+      light: green[500],
+      hcDark: green[400],
+      hcLight: green[500],
     });
 
     // Stopped & Exited are the same color / same thing in the eyes of statuses
     this.registerColor(`${status}stopped`, {
-      dark: gray[900],
-      light: charcoal[200],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${status}exited`, {
-      dark: gray[900],
-      light: charcoal[200],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${status}not-running`, {
-      dark: gray[700],
-      light: gray[900],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
-    // "Warning"
     this.registerColor(`${status}paused`, {
-      dark: amber[600],
-      light: amber[600],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${status}degraded`, {
-      dark: amber[700],
+      dark: amber[500],
       light: amber[700],
+      hcDark: amber[600],
+      hcLight: amber[700],
     });
 
     // Others
     this.registerColor(`${status}created`, {
-      dark: green[250],
-      light: green[250],
+      dark: sky[400],
+      light: sky[500],
+      hcDark: sky[500],
+      hcLight: sky[600],
     });
 
     this.registerColor(`${status}dead`, {
-      dark: red[550],
-      light: red[950],
+      dark: red[500],
+      light: red[600],
+      hcDark: red[500],
+      hcLight: red[700],
     });
 
     // If we don't know the status, use gray
     this.registerColor(`${status}unknown`, {
-      dark: gray[100],
-      light: gray[400],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     // Connections / login
     this.registerColor(`${status}connected`, {
-      dark: green[450],
-      light: green[550],
+      dark: green[400],
+      light: green[500],
+      hcDark: green[400],
+      hcLight: green[500],
     });
 
     this.registerColor(`${status}disconnected`, {
       dark: gray[500],
-      light: gray[800],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     // Scaled / updated, use blue as it's a 'neutral' color
     // to indicate that it's informative but not a problem
     this.registerColor(`${status}updated`, {
-      dark: sky[500],
+      dark: sky[400],
       light: sky[500],
+      hcDark: sky[500],
+      hcLight: sky[600],
     });
 
     this.registerColor(`${status}ready`, {
-      dark: gray[900],
-      light: gray[100],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColorDefinition(
@@ -2063,8 +2113,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${state}warning`, {
-      dark: amber[500],
-      light: amber[600],
+      dark: yellow[500],
+      light: yellow[700],
     });
 
     this.registerColor(`${state}error`, {
@@ -2159,8 +2209,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${terminal}ansiYellow`, {
-      dark: amber[500],
-      light: amber[500],
+      dark: yellow[500],
+      light: yellow[500],
     });
 
     this.registerColor(`${terminal}ansiBlue`, {
@@ -2199,8 +2249,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${terminal}ansiBrightYellow`, {
-      dark: amber[600],
-      light: amber[600],
+      dark: yellow[600],
+      light: yellow[600],
     });
 
     this.registerColor(`${terminal}ansiBrightBlue`, {
@@ -2355,9 +2405,9 @@ export class ColorRegistry {
 
     this.registerColor(`${toast}success-bg`, {
       dark: green[600],
-      light: green[700],
+      light: green[500],
       hcDark: green[400],
-      hcLight: green[800],
+      hcLight: green[600],
     });
 
     this.registerColor(`${toast}success-color`, {
@@ -2368,17 +2418,17 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${toast}success-bar-bg`, {
-      dark: green[800],
-      light: green[900],
-      hcDark: green[700],
-      hcLight: green[900],
+      dark: green[500],
+      light: green[400],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor(`${toast}error-bg`, {
-      dark: red[600],
-      light: red[700],
+      dark: red[700],
+      light: red[600],
       hcDark: red[400],
-      hcLight: red[900],
+      hcLight: red[800],
     });
 
     this.registerColor(`${toast}error-color`, {
@@ -2389,35 +2439,35 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${toast}error-bar-bg`, {
-      dark: red[800],
-      light: red[900],
-      hcDark: red[800],
-      hcLight: red[950],
-    });
-
-    this.registerColor(`${toast}warning-bg`, {
-      dark: amber[400],
-      light: amber[500],
-      hcDark: amber[300],
-      hcLight: amber[800],
-    });
-
-    this.registerColor(`${toast}warning-color`, {
-      dark: charcoal[900],
-      light: charcoal[900],
+      dark: red[500],
+      light: red[400],
       hcDark: black,
       hcLight: white,
     });
 
+    this.registerColor(`${toast}warning-bg`, {
+      dark: yellow[500],
+      light: yellow[500],
+      hcDark: yellow[400],
+      hcLight: yellow[500],
+    });
+
+    this.registerColor(`${toast}warning-color`, {
+      dark: black,
+      light: black,
+      hcDark: black,
+      hcLight: black,
+    });
+
     this.registerColor(`${toast}warning-bar-bg`, {
-      dark: amber[700],
-      light: amber[800],
-      hcDark: amber[800],
-      hcLight: amber[950],
+      dark: yellow[600],
+      light: yellow[600],
+      hcDark: black,
+      hcLight: black,
     });
 
     this.registerColor(`${toast}info-bg`, {
-      dark: accent1[400],
+      dark: accent1[600],
       light: accent1[500],
       hcDark: accent1[300],
       hcLight: accent1[800],
@@ -2431,10 +2481,10 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${toast}info-bar-bg`, {
-      dark: accent1[700],
-      light: accent1[800],
-      hcDark: accent1[800],
-      hcLight: accent1[950],
+      dark: accent1[400],
+      light: accent1[300],
+      hcDark: black,
+      hcLight: white,
     });
   }
 

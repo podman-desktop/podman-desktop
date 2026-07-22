@@ -80,7 +80,7 @@ function updateSearchValue(event: any): void {
       {#if matchingRecords.size === 0}
         <div>No Settings Found</div>
       {:else}
-        {#each [...matchingRecords.keys()].sort((a, b) => a.localeCompare(b)) as configSection, index (index)}
+        {#each [...matchingRecords.keys()].toSorted((a, b) => a.localeCompare(b)) as configSection, index (index)}
           {@const records = matchingRecords.get(configSection)}
           {#if records}
             <div>

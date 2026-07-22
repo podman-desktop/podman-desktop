@@ -254,7 +254,9 @@ const config = {
   mac: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
-    entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
+    notarize: true,
+    entitlements: './buildResources/entitlements.mac.plist',
+    entitlementsInherit: './buildResources/entitlements.mac.plist',
     x64ArchFiles: 'Contents/Resources/app.asar.unpacked/**/*.node',
     target: {
       target: 'default',
@@ -286,10 +288,16 @@ const config = {
     schemes: [product.urlProtocol],
     role: 'Editor',
   },
-  publish: {
-    provider: 'github',
-    timeout: 10000,
-  },
+  publish: product.update?.url
+    ? {
+        provider: 'generic',
+        url: product.update.url,
+        timeout: 10000,
+      }
+    : {
+        provider: 'github',
+        timeout: 10000,
+      },
   /*extraMetadata: {
     version: process.env.VITE_APP_VERSION,
   },*/
@@ -299,7 +307,8 @@ const config = {
 if (process.env.AIRGAP_DOWNLOAD) {
   config.publish = {
     publishAutoUpdate: false,
-    provider: 'github',
+    provider: product.update?.url ? 'generic' : 'github',
+    ...(product.update?.url ? { url: product.update.url } : {}),
   };
 }
 

@@ -116,7 +116,7 @@ describe('Check storage path', async () => {
 
   test('found', async () => {
     const existSyncSpy = vi.mocked(fs.existsSync);
-    existSyncSpy.mockImplementation(() => true);
+    existSyncSpy.mockReturnValue(true);
 
     const result = await detect.getStoragePath();
     expect(result).toBe(path.resolve('/', 'storage-path', 'bin', 'docker-compose'));

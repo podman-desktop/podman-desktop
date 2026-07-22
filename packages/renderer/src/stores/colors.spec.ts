@@ -25,7 +25,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
-import { colorsEventStore, colorsInfos } from './colors';
+import { colorsEventStore, colorsInfos, darkContextColorsInfos, hcDarkContextColorsInfos } from './colors';
 
 const callbacks = new Map<string, any>();
 const eventEmitter = {
@@ -36,7 +36,7 @@ const eventEmitter = {
 
 vi.mock(import('/@/lib/appearance/appearance-util'));
 
-const listColorsMock: Mock<() => Promise<ColorInfo[]>> = vi.fn();
+const listColorsMock: Mock<(theme: string) => Promise<ColorInfo[]>> = vi.fn();
 
 Object.defineProperty(global, 'window', {
   value: {
@@ -56,15 +56,18 @@ beforeEach(() => {
 });
 
 test('grab colors', async () => {
-  // initial view
-  listColorsMock.mockResolvedValue([
-    {
-      id: 'color1',
-      value: '#123',
-      cssVar: '--pd-color1',
-    },
-    { id: 'color2', value: '#456', cssVar: '--pd-color2' },
-  ]);
+  listColorsMock.mockImplementation((theme: string) => {
+    if (theme === 'dark') {
+      return Promise.resolve([{ id: 'color-dark', value: '#dark01', cssVar: '--pd-color-dark' }]);
+    }
+    if (theme === 'hc-dark') {
+      return Promise.resolve([{ id: 'color-hcdark', value: '#hcd01', cssVar: '--pd-color-hcdark' }]);
+    }
+    return Promise.resolve([
+      { id: 'color1', value: '#123', cssVar: '--pd-color1' },
+      { id: 'color2', value: '#456', cssVar: '--pd-color2' },
+    ]);
+  });
   colorsEventStore.setup();
 
   const callback = callbacks.get('extensions-already-started');
@@ -77,15 +80,27 @@ test('grab colors', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 
-  // now get list
+  // now get the current-theme list
   const colors = get(colorsInfos);
   expect(colors.length).toBe(2);
-
-  // check colors values
   expect(colors[0].id).toBe('color1');
   expect(colors[0].value).toBe('#123');
   expect(colors[0].cssVar).toBe('--pd-color1');
   expect(colors[1].id).toBe('color2');
   expect(colors[1].value).toBe('#456');
   expect(colors[1].cssVar).toBe('--pd-color2');
+
+  // dark context store should be populated with dark-theme values
+  const darkColors = get(darkContextColorsInfos);
+  expect(darkColors.length).toBe(1);
+  expect(darkColors[0].id).toBe('color-dark');
+  expect(darkColors[0].value).toBe('#dark01');
+  expect(darkColors[0].cssVar).toBe('--pd-color-dark');
+
+  // hc-dark context store should be populated with hc-dark-theme values
+  const hcDarkColors = get(hcDarkContextColorsInfos);
+  expect(hcDarkColors.length).toBe(1);
+  expect(hcDarkColors[0].id).toBe('color-hcdark');
+  expect(hcDarkColors[0].value).toBe('#hcd01');
+  expect(hcDarkColors[0].cssVar).toBe('--pd-color-hcdark');
 });

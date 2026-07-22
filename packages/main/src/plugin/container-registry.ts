@@ -51,9 +51,11 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   ProviderContainerConnectionInfo,
   PullEvent,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
@@ -215,6 +217,12 @@ export class ContainerProviderRegistry {
       } else if (status === 'start' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been started
         this.apiSender.send('container-started-event', id);
+      } else if (status === 'pause' && jsonEvent?.Type === 'container') {
+        // need to notify that a container has been paused
+        this.apiSender.send('container-paused-event', id);
+      } else if (status === 'unpause' && jsonEvent?.Type === 'container') {
+        // need to notify that a container has been unpaused
+        this.apiSender.send('container-unpaused-event', id);
       } else if (status === 'destroy' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been destroyed
         this.apiSender.send('container-stopped-event', id);
@@ -228,6 +236,8 @@ export class ContainerProviderRegistry {
         this.apiSender.send('volume-event');
       } else if (jsonEvent?.Type === 'network') {
         this.apiSender.send('network-event');
+      } else if (jsonEvent?.Type === 'secret') {
+        this.apiSender.send('secret-event');
       } else if (status === 'remove' && jsonEvent?.Type === 'container') {
         this.apiSender.send('container-removed-event', id);
       } else if (status === 'pull' && jsonEvent?.Type === 'image') {
@@ -436,6 +446,120 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async createSecret(options: SecretCreateOptions): Promise<SecretCreateResult> {
+    if (!options.provider) throw new Error('cannot create secret without selected provider');
+
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const provider = this.getMatchingContainerProvider(options.provider);
+      if (!provider.api) throw new Error(`provider ${provider.name} has no api`);
+      const { id } = await provider.api.createSecret({
+        // The data need to be encoded in base64 url safe
+        // ref https://docs.podman.io/en/latest/_static/api.html?version=latest#tag/secrets-(compat)/operation/SecretCreate
+        Data: Buffer.from(options.data).toString('base64'),
+        Name: options.name,
+        Labels: options.labels,
+      });
+      return {
+        id,
+        engineId: provider.id,
+      };
+    } catch (error: unknown) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('createSecret', telemetryOptions);
+    }
+  }
+
+  async inspectSecret(engineId: string, secretId: string): Promise<SecretInfo> {
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const engine = this.internalProviders.get(engineId);
+      if (!engine?.api) {
+        throw new Error(`internal providers with engineId ${engineId} has no api`);
+      }
+      const secret = await engine.api.getSecret(secretId).inspect();
+
+      return {
+        engineName: engine.name,
+        engineId: engine.id,
+        engineType: engine.connection.type,
+        Name: secret.Spec?.Name ?? secret.ID,
+        Id: secret.ID,
+        CreatedAt: secret.CreatedAt,
+        UpdatedAt: secret.UpdatedAt,
+        Labels: secret.Spec?.Labels,
+      };
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('inspectSecret', telemetryOptions);
+    }
+  }
+
+  async removeSecret(engineId: string, secretId: string): Promise<void> {
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const engine = this.internalProviders.get(engineId);
+      if (engine?.libpodApi) {
+        // we cannot use the /secrets (compact) api to retreive secret with podman
+        // endpoint is malformed
+        // https://github.com/containers/podman/issues/27548
+        await engine.libpodApi.removeSecret(secretId);
+      } else if (engine?.api) {
+        await engine.api.getSecret(secretId).remove();
+      } else {
+        throw new Error(`internal providers with engineId ${engineId} has no api`);
+      }
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('removeSecret', telemetryOptions);
+    }
+  }
+
+  async listSecrets(): Promise<Array<SecretInfo>> {
+    const telemetryOptions: Record<string, unknown> = {};
+    const providers: Array<InternalContainerProvider> = Array.from(this.internalProviders.values());
+
+    try {
+      const all: SecretInfo[][] = await Promise.all(
+        Array.from(providers).map(async provider => {
+          try {
+            if (!provider.api) {
+              return [];
+            }
+            const secrets = await provider.api.listSecrets();
+            return secrets.map(secret => ({
+              engineName: provider.name,
+              engineId: provider.id,
+              engineType: provider.connection.type,
+              Name: secret.Spec?.Name ?? secret.ID,
+              Id: secret.ID,
+              CreatedAt: secret.CreatedAt,
+              UpdatedAt: secret.UpdatedAt,
+              Labels: secret.Spec?.Labels,
+            }));
+          } catch (error) {
+            this.notifyConsole(`error in engine ${provider.name} ${error}`);
+            return [];
+          }
+        }),
+      );
+      const secrets = all.flat();
+      telemetryOptions['total'] = secrets.length;
+      return secrets;
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('listSecrets', telemetryOptions);
+    }
+  }
+
   // do not use inspect information
   async listSimpleContainers(abortController?: AbortController): Promise<SimpleContainerInfo[]> {
     let telemetryOptions = {};
@@ -631,48 +755,9 @@ export class ContainerProviderRegistry {
     return flattenedContainers;
   }
 
-  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
-    let telemetryOptions = {};
-
-    let providers: InternalContainerProvider[];
-    if (options?.provider === undefined) {
-      providers = Array.from(this.internalProviders.values());
-    } else {
-      providers = [this.getMatchingContainerProvider(options?.provider)];
-    }
-
-    const images = await Promise.all(
-      Array.from(providers).map(async provider => {
-        try {
-          if (!provider.api) {
-            return [];
-          }
-          const images = await provider.api.listImages({ all: false });
-          return images.map(image => {
-            const imageInfo: ImageInfo = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              Digest: `sha256:${image.Id}`,
-            };
-            return imageInfo;
-          });
-        } catch (error) {
-          this.notifyConsole(`error in engine ${provider.name} ${error}`);
-          telemetryOptions = { error: error };
-          return [];
-        }
-      }),
-    );
-    const flattenedImages = images.flat();
-    this.telemetryService.track('listImages', { total: flattenedImages.length, ...telemetryOptions });
-
-    return flattenedImages;
-  }
-
-  // Podman list images will prefer to use libpod API of the provider
+  // list images will prefer to use libpod API of the provider if podman
   // before falling back to using the regular API
-  async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
     // Get timeout from configuration
     const timeoutSeconds = this.configurationRegistry
       .getConfiguration(ContainerRegistrySettings.SectionName)
@@ -699,6 +784,7 @@ export class ContainerProviderRegistry {
           // Create list options with explicit defaults
           const listOptions = {
             all: options?.all ?? false,
+            digests: true,
             filters: options?.filters,
           };
 
@@ -731,6 +817,7 @@ export class ContainerProviderRegistry {
                 ...image,
                 engineName: provider.name,
                 engineId: provider.id,
+                engineType: provider.connection.type,
                 isManifest,
                 Id: image.Digest ? `sha256:${image.Id}` : image.Id,
                 Digest: image.Digest ?? `sha256:${image.Id}`,
@@ -764,12 +851,12 @@ export class ContainerProviderRegistry {
 
   async pruneImages(engineId: string, all: boolean): Promise<void> {
     // We have to use two different API calls for pruning images, because the Podman API does not respect the 'dangling' filter
-    // and instead uses 'all' and 'external'. See: https://github.com/containers/podman/issues/11576
+    // and instead uses 'all' and 'external'. See: https://github.com/podman-container-tools/podman/issues/11576
     // so for Dockerode we'll have to call pruneImages with the 'dangling' filter, and for Podman we'll have to call pruneImages
 
     // PODMAN:
     // Have to use podman API directly for pruning images
-    // TODO: Remove this once the Podman API respects the 'dangling' filter: https://github.com/containers/podman/issues/17614
+    // TODO: Remove this once the Podman API respects the 'dangling' filter: https://github.com/podman-container-tools/podman/issues/17614
     let telemetryOptions = {};
     try {
       const provider = this.internalProviders.get(engineId);
@@ -1288,12 +1375,8 @@ export class ContainerProviderRegistry {
         platform,
         abortSignal: abortController?.signal,
       });
-      let resolve: () => void;
-      let reject: (err: Error) => void;
-      const promise = new Promise<void>((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
+
+      const { resolve, reject, promise } = Promise.withResolvers<void>();
 
       const onFinished = (err: Error | null): void => {
         if (err) {
@@ -1387,6 +1470,18 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async unpauseContainer(engineId: string, id: string, abortController?: AbortController): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingContainer(engineId, id).unpause({ abortSignal: abortController?.signal });
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpauseContainer', telemetryOptions);
+    }
+  }
+
   async generatePodmanKube(engineId: string, names: string[]): Promise<string> {
     let telemetryOptions = {};
     try {
@@ -1408,6 +1503,18 @@ export class ContainerProviderRegistry {
       throw error;
     } finally {
       this.telemetryService.track('startPod', telemetryOptions);
+    }
+  }
+
+  async unpausePod(engineId: string, podId: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingPodmanEngineLibPod(engineId).unpausePod(podId);
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpausePod', telemetryOptions);
     }
   }
 
@@ -1584,7 +1691,7 @@ export class ContainerProviderRegistry {
   }
 
   /**
-   * @see https://github.com/containers/podman/issues/23337#issuecomment-2238704510
+   * @see https://github.com/podman-container-tools/podman/issues/23337#issuecomment-2238704510
    * @param containerToReplicate
    * @param updatedEnv
    * @private
@@ -2099,7 +2206,7 @@ export class ContainerProviderRegistry {
     let telemetryOptions = {};
     try {
       let container: Dockerode.Container;
-      let forceLibPod = false;
+      let forceLibPod = (options.Secrets?.length ?? 0) > 0 || Object.entries(options.SecretEnv ?? {}).length > 0;
 
       // the device option requesting an nvidia gpu on linux only works
       // if the LibPod API is used. Check if such a device is requested
@@ -2288,6 +2395,8 @@ export class ContainerProviderRegistry {
       hostadd: options.HostConfig?.ExtraHosts,
       userns: options.HostConfig?.UsernsMode,
       devices: updatedDevices,
+      secrets: options.Secrets,
+      secret_env: options.SecretEnv,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);
@@ -2374,6 +2483,7 @@ export class ContainerProviderRegistry {
       return {
         engineName: provider.name,
         engineId: provider.id,
+        engineType: provider.connection.type,
         ...imageInspect,
       };
     } catch (error) {
@@ -2860,9 +2970,12 @@ export class ContainerProviderRegistry {
   }
 
   async imageExist(id: string, engineId: string, tag: string): Promise<boolean> {
-    const images = await this.listImages();
-    const imageInfo = images.find(c => c.Id === id && c.engineId === engineId);
-    return imageInfo?.RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    try {
+      const { RepoTags } = await this.getImageInspect(engineId, id);
+      return RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    } catch (_: unknown) {
+      return false;
+    }
   }
 
   async volumeExist(name: string, engineId: string): Promise<boolean> {

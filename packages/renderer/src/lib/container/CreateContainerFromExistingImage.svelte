@@ -1,10 +1,11 @@
 <script lang="ts">
 import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import type {
-  ImageInfo,
-  ImageSearchOptions,
-  ProviderContainerConnectionInfo,
-  PullEvent,
+import {
+  type ImageInfo,
+  type ImageSearchOptions,
+  NavigationPage,
+  type ProviderContainerConnectionInfo,
+  type PullEvent,
 } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
@@ -22,9 +23,9 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
+import { handleNavigation } from '/@/navigation';
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
-import { runImageInfo } from '/@/stores/run-image-store';
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
@@ -44,6 +45,7 @@ let values: TypeaheadItem[] = $state([]);
 
 let imageToPull: string = $state('');
 let sortResults: ((a: string, b: string) => number) | undefined = $state();
+let searchRequestId = 0;
 
 let providerConnections = $derived(
   $providerInfos
@@ -187,10 +189,10 @@ function validateImageName(image: string): void {
 
 // allTags is defined if last search was a query to search tags of an image
 let allTags: string[] | undefined = undefined;
-async function searchImages(value: string): Promise<string[]> {
+async function searchImages(value: string): Promise<{ images: string[]; tags: string[] | undefined }> {
   if (value.includes(':')) {
     if (allTags !== undefined) {
-      return allTags.filter(i => i.startsWith(value));
+      return { images: allTags.filter(i => i.startsWith(value)), tags: allTags };
     }
     const parts = value.split(':');
     const originalImage = parts[0];
@@ -199,12 +201,11 @@ async function searchImages(value: string): Promise<string[]> {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
     const tags = await window.listImageTagsInRegistry({ image });
-    allTags = tags.map(t => `${originalImage}:${t}`);
-    return allTags.filter(i => i.startsWith(value));
+    const computedTags = tags.map(t => `${originalImage}:${t}`);
+    return { images: computedTags.filter(i => i.startsWith(value)), tags: computedTags };
   }
-  allTags = undefined;
   if (value === undefined || value.trim() === '') {
-    return [];
+    return { images: [], tags: undefined };
   }
   const options: ImageSearchOptions = {
     query: '',
@@ -217,12 +218,11 @@ async function searchImages(value: string): Promise<string[]> {
     options.registry = registry;
     options.query = rest.join('/');
   }
-  let result: string[];
   const searchResult = await window.searchImageInRegistry(options);
-  result = searchResult.map(r => {
+  const result = searchResult.map(r => {
     return [options.registry, r.name].join('/');
   });
-  return result;
+  return { images: result, tags: undefined };
 }
 
 async function searchLocalImages(value: string): Promise<string[]> {
@@ -235,8 +235,7 @@ async function searchLocalImages(value: string): Promise<string[]> {
     }
     return [];
   });
-  matchingLocalImages = localImagesNames.flat().filter(image => image !== '' && image.includes(value));
-  return matchingLocalImages;
+  return localImagesNames.flat().filter(image => image !== '' && image.includes(value));
 }
 
 let latestTagMessage: string | undefined = $state();
@@ -298,8 +297,14 @@ async function buildContainerFromImage(): Promise<void> {
   if (localImages.length > 0) {
     const chosenImage = imageUtils.getImagesInfoUI(localImages[0], []);
     if (chosenImage.length > 0) {
-      runImageInfo.set(chosenImage[0]);
-      router.goto('/images/run/basic');
+      handleNavigation({
+        page: NavigationPage.IMAGE_RUN,
+        parameters: {
+          id: chosenImage[0].id,
+          engineId: chosenImage[0].engineId,
+          tag: chosenImage[0].tag ? `${chosenImage[0].name}:${chosenImage[0].tag}` : chosenImage[0].name,
+        },
+      });
     }
   }
 }
@@ -308,9 +313,16 @@ async function searchFunction(value: string): Promise<void> {
   // do not search for images if no connection is selected
   if (!selectedProviderConnection) return;
 
+  const requestId = ++searchRequestId;
   value = value.trim();
   const localImagesValues = await searchLocalImages(value);
-  const remoteImagesValues = await searchImages(value);
+  const remoteSearchResult = await searchImages(value);
+
+  if (requestId !== searchRequestId) return;
+
+  matchingLocalImages = localImagesValues;
+  allTags = remoteSearchResult.tags;
+
   sortResults = (a: string, b: string): number => {
     const dockerIoValue = `docker.io/${value}`;
     const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
@@ -325,8 +337,8 @@ async function searchFunction(value: string): Promise<void> {
   };
 
   values = [
-    ...localImagesValues.map(value => ({ value: value, group: 'Local Images' })),
-    ...remoteImagesValues.map(value => ({ value: value, group: 'Registry Images' })),
+    ...localImagesValues.map(v => ({ value: v, group: 'Local Images' })),
+    ...remoteSearchResult.images.map(v => ({ value: v, group: 'Registry Images' })),
   ];
 }
 
@@ -352,6 +364,11 @@ function onContainerConnectionChange(): void {
   matchingLocalImages = [];
   imageToPull = '';
 }
+
+// trigger search on mount to populate the typeahead with local images
+onMount(() => {
+  searchFunction('').catch(() => {});
+});
 </script>
 
 <EngineFormPage title="Select an image">

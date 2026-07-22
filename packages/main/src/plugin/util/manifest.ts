@@ -25,7 +25,7 @@ const GUESSED_MANIFEST_SIZE = 50 * KB;
 // This is because there is no clear way to now what a manifest
 // is in the Dockerode API / Podman API (yet). This is a workaround
 // until we have a better way to determine if an image is a manifest
-// See issue: https://github.com/containers/podman/issues/22184
+// See issue: https://github.com/podman-container-tools/podman/issues/22184
 //
 // We will "safely" determine if an image is a manifest by checking:
 // - VirtualSize is under 1MB, as the manifest is usually very small and only contains text

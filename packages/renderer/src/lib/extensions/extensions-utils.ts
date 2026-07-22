@@ -235,6 +235,9 @@ export class ExtensionsUtils {
 
     const fetchable = fetchLink.length > 0;
 
+    const repository = matchingInstalledExtension?.repository;
+    const homepage = matchingInstalledExtension?.homepage;
+
     const matchingExtension: ExtensionDetailsUI = {
       id: resolvedExtensionId,
       displayName,
@@ -256,6 +259,8 @@ export class ExtensionsUtils {
       fetchLink,
       fetchVersion,
       error,
+      repository,
+      homepage,
     };
     return matchingExtension;
   }

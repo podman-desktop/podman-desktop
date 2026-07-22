@@ -2519,6 +2519,7 @@ declare module '@podman-desktop/api' {
   export interface ImageInfo {
     engineId: string;
     engineName: string;
+    engineType: 'podman' | 'docker';
     Id: string;
     ParentId: string;
     RepoTags: string[] | undefined;
@@ -2544,6 +2545,7 @@ declare module '@podman-desktop/api' {
   export interface ImageInspectInfo {
     engineId: string;
     engineName: string;
+    engineType: 'podman' | 'docker';
     Id: string;
     RepoTags: string[];
     RepoDigests: string[];
@@ -2713,6 +2715,30 @@ declare module '@podman-desktop/api' {
     Names: string;
     Status: string;
   }
+
+  interface SecretCreateOptions {
+    labels?: Record<string, string>;
+    // Set the provider to use, if not we will try select the first one available (sorted in favor of Podman).
+    provider?: ContainerProviderConnection;
+  }
+
+  interface SecretCreateResult {
+    id: string;
+    engineId: string;
+  }
+
+  interface SecretInfo {
+    engineId: string;
+    engineName: string;
+    engineType: 'podman' | 'docker';
+    Id: string;
+    Name: string;
+    CreatedAt?: string; // datetime
+    UpdatedAt?: string; // datetime
+    Labels?: Record<string, string>;
+  }
+
+  type SecretInspectInfo = SecretInfo;
 
   interface PodInfo {
     engineId: string;
@@ -3908,6 +3934,7 @@ declare module '@podman-desktop/api' {
   export interface VolumeInfo {
     engineId: string;
     engineName: string;
+    engineType: 'podman' | 'docker';
     CreatedAt: string;
     containersUsage: { id: string; names: string[] }[];
     Name: string;
@@ -4209,6 +4236,16 @@ declare module '@podman-desktop/api' {
     export function inspectManifest(engineId: string, id: string): Promise<ManifestInspectInfo>;
     export function pushManifest(options: ManifestPushOptions): Promise<void>;
     export function removeManifest(engineId: string, id: string): Promise<void>;
+
+    // Secret related methods
+    export function listSecrets(): Promise<SecretInfo[]>;
+    export function removeSecret(engineId: string, secretId: string): Promise<void>;
+    export function inspectSecret(engineId: string, id: string): Promise<SecretInspectInfo>;
+    export function createSecret(
+      name: string,
+      data: string,
+      options?: SecretCreateOptions,
+    ): Promise<SecretCreateResult>;
   }
 
   /**
@@ -5067,6 +5104,22 @@ declare module '@podman-desktop/api' {
     // Navigate to a specific image referenced by id, engineId and tag
     export function navigateToImage(id: string, engineId: string, tag: string): Promise<void>;
 
+    /**
+     * Navigate to the Image Run referenced by id, engineId and tag
+     *
+     * @example
+     * ```ts
+     * import { navigation, containerEngine } from '@podman-desktop/api';
+     *
+     * const images = await containerEngine.listImages();
+     * const helloWorld = images.find(image => image.RepoTags?.find(tag => tag === 'quay.io/podman/hello:latest'));
+     *
+     * if(helloWorld) {
+     *   await navigation.navigateToImageRun(helloWorld.Id, helloWorld.engineId, helloWorld.RepoTags?.[0] ?? '<none>');
+     * }
+     * ```
+     */
+    export function navigateToImageRun(id: string, engineId: string, tag: string): Promise<void>;
     // Navigate to the Volumes page
     export function navigateToVolumes(): Promise<void>;
     // Navigate to a specific volume

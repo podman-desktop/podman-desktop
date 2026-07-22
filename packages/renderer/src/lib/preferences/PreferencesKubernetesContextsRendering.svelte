@@ -99,7 +99,7 @@ async function handleDeleteContext(contextName: string): Promise<void> {
         'You will delete the current context. If you delete it, you will need to switch to another context. Continue?',
       buttons: ['Delete', 'Cancel'],
     });
-    if (result.response !== 0) {
+    if (result.response !== 'Delete') {
       return;
     }
   }
@@ -220,7 +220,7 @@ async function connect(contextName: string): Promise<void> {
 </script>
 
 <SettingsPage title="Kubernetes Contexts">
-  <div class="h-full" role="table" aria-label="Contexts">
+  <div role="table" aria-label="Contexts">
     <!-- Use KubernetesIcon in the future / not EngineIcon -->
     <EmptyScreen
       aria-label="No Resource Panel"
@@ -363,7 +363,7 @@ async function connect(contextName: string): Promise<void> {
                     {/if}
                     {#if context.isBeingChecked}
                       <div class="ml-1"><Spinner size="12px"></Spinner></div>
-                    {/if}                    
+                    {/if}
                   </div>
                   {#if !$kubernetesContextsState.get(context.name)}
                     <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>

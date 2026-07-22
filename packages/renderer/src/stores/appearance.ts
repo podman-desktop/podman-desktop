@@ -22,6 +22,7 @@ import { type Writable, writable } from 'svelte/store';
 import { configurationProperties } from './configurationProperties';
 
 export const isDark: Writable<boolean> = writable(false);
+export const isHighContrast: Writable<boolean> = writable(false);
 
 configurationProperties.subscribe(() => {
   if (window?.getConfigurationValue) {
@@ -29,7 +30,7 @@ configurationProperties.subscribe(() => {
       ?.getConfigurationValue<string>(AppearanceSettings.SectionName + '.' + AppearanceSettings.Appearance)
       ?.then(value => {
         if (value) {
-          updateIsDark(value);
+          updateAppearance(value);
         }
       })
       ?.catch((err: unknown) =>
@@ -41,13 +42,21 @@ configurationProperties.subscribe(() => {
   }
 });
 
-function updateIsDark(appearance: string): void {
+function updateAppearance(appearance: string): void {
   if (appearance === AppearanceSettings.SystemEnumValue) {
-    // need to read the system default theme using the window.matchMedia
     isDark.set(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  } else if (appearance === AppearanceSettings.LightEnumValue || appearance === AppearanceSettings.LightHCEnumValue) {
+    isHighContrast.set(false);
+  } else if (appearance === AppearanceSettings.LightEnumValue) {
     isDark.set(false);
-  } else if (appearance === AppearanceSettings.DarkEnumValue || appearance === AppearanceSettings.DarkHCEnumValue) {
+    isHighContrast.set(false);
+  } else if (appearance === AppearanceSettings.LightHCEnumValue) {
+    isDark.set(false);
+    isHighContrast.set(true);
+  } else if (appearance === AppearanceSettings.DarkEnumValue) {
     isDark.set(true);
+    isHighContrast.set(false);
+  } else if (appearance === AppearanceSettings.DarkHCEnumValue) {
+    isDark.set(true);
+    isHighContrast.set(true);
   }
 }

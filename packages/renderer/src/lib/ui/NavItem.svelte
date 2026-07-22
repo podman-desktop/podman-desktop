@@ -1,32 +1,39 @@
 <script lang="ts">
-/* eslint-disable import/no-duplicates */
-// https://github.com/import-js/eslint-plugin-import/issues/1479
 import { Tooltip } from '@podman-desktop/ui-svelte';
+import type { Snippet } from 'svelte';
 import { getContext, onDestroy, onMount } from 'svelte';
 import type { MouseEventHandler } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-/* eslint-disable import/no-duplicates */
 
-export let href: string;
-export let tooltip: string;
-export let ariaLabel: string | undefined = undefined;
-export let meta: TinroRouteMeta;
-export let onClick: MouseEventHandler<HTMLAnchorElement> | undefined = undefined;
-export let counter: number | undefined = undefined;
+interface Props {
+  href: string;
+  tooltip: string;
+  ariaLabel?: string;
+  meta: TinroRouteMeta;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
+  counter?: number;
+  expanded?: boolean;
+  children?: Snippet;
+}
 
-let inSection: boolean = false;
-let uri: string;
-$: uri = encodeURI(href);
-let selected: boolean;
-$: selected = meta.url === uri || (uri !== '/' && meta.url.startsWith(uri));
+let { href, tooltip, ariaLabel, meta = $bindable(), onClick, counter, expanded = false, children }: Props = $props();
 
 const navItems: Writable<number> = getContext('nav-items');
+const inSection = $navItems !== undefined;
+let uri = $derived(encodeURI(href));
+let selected = $derived(meta.url === uri || (uri !== '/' && meta.url.startsWith(uri)));
 
-$: tooltipText = counter ? `${tooltip} (${counter})` : tooltip;
+let tooltipText = $derived(counter ? `${tooltip} (${counter})` : tooltip);
+
+function handleClick(e: MouseEvent & { currentTarget: EventTarget & HTMLAnchorElement }): void {
+  if (onClick) {
+    e.preventDefault();
+    onClick(e);
+  }
+}
 
 onMount(() => {
-  inSection = $navItems !== undefined;
   navItems?.update(i => i + 1);
 });
 onDestroy(() => {
@@ -39,23 +46,21 @@ onDestroy(() => {
   class=""
   data-nav-link={uri}
   aria-label={ariaLabel ?? tooltip}
-  on:click|preventDefault={onClick}>
+  onclick={handleClick}>
   <div
-    class="flex py-2 justify-center items-center cursor-pointer min-h-9"
-    class:border-x-[4px]={!inSection}
-    class:px-2={inSection}
+    class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
+    class:border-l-[4px]={!inSection}
     class:border-[var(--pd-global-nav-bg)]={!inSection}
     class:text-[color:var(--pd-global-nav-icon)]={!selected || !inSection}
     class:text-[color:var(--pd-global-nav-icon-selected)]={selected && inSection}
     class:border-l-[var(--pd-global-nav-icon-selected-highlight)]={selected && !inSection}
     class:bg-[var(--pd-global-nav-icon-selected-bg)]={selected && !inSection}
-    class:border-r-[var(--pd-global-nav-icon-selected-bg)]={selected && !inSection}
     class:border-l-[var(--pd-global-nav-bg)]={!selected && !inSection}
     class:hover:text-[color:var(--pd-global-nav-icon-hover)]={!selected || inSection}
     class:hover:bg-[var(--pd-global-nav-icon-hover-bg)]={!selected || inSection}
-    class:hover:border-[var(--pd-global-nav-icon-hover-bg)]={!selected && !inSection}>
-    <Tooltip right tip={tooltipText} class="flex flex-col items-center">
-      <slot />
+    class:hover:border-l-[var(--pd-global-nav-icon-hover-bg)]={!selected && !inSection}>
+    <Tooltip right tip={expanded ? undefined : tooltipText} class="flex items-center w-full min-w-0" containerClass="relative w-full min-w-0">
+      {@render children?.()}
     </Tooltip>
   </div>
 </a>

@@ -227,26 +227,23 @@ test('Ensuring a progress task is created when calling kind.image.move command',
 
   const createProviderMock = vi.fn();
   podmanDesktopApi.provider.createProvider = createProviderMock;
-  createProviderMock.mockImplementation(() => ({
+  createProviderMock.mockReturnValue({
     setKubernetesProviderConnectionFactory: vi.fn(),
     onDidUpdateVersion: vi.fn(),
     updateVersion: vi.fn(),
     updateWarnings: vi.fn(),
-  }));
+  });
 
   const listContainersMock = vi.fn();
   podmanDesktopApi.containerEngine.listContainers = listContainersMock;
   listContainersMock.mockResolvedValue([]);
 
-  const withProgressMock = vi
-    .fn()
-    .mockImplementation(() =>
-      extension.moveImage({ report: vi.fn() }, { id: 'id', image: 'hello:world', engineId: '1' }),
-    );
-  podmanDesktopApi.window.withProgress = withProgressMock;
-
-  const contextSetValueMock = vi.fn();
-  podmanDesktopApi.context.setValue = contextSetValueMock;
+  vi.mocked(podmanDesktopApi.window.withProgress).mockImplementation((_, fn) =>
+    fn({ report: vi.fn() }, {
+      isCancellationRequested: false,
+      onCancellationRequested: vi.fn(),
+    } as podmanDesktopApi.CancellationToken),
+  );
 
   vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
     path: 'kind',
@@ -261,10 +258,10 @@ test('Ensuring a progress task is created when calling kind.image.move command',
   // simulate a call to the command
   await commandRegistry['kind.image.move']({ id: 'id', image: 'hello:world', engineId: '1' });
 
-  expect(withProgressMock).toHaveBeenCalled();
-  expect(contextSetValueMock).toBeCalledTimes(2);
-  expect(contextSetValueMock).toHaveBeenNthCalledWith(1, 'imagesPushInProgressToKind', ['id']);
-  expect(contextSetValueMock).toHaveBeenNthCalledWith(2, 'imagesPushInProgressToKind', []);
+  expect(podmanDesktopApi.window.withProgress).toHaveBeenCalled();
+  expect(podmanDesktopApi.context.setValue).toBeCalledTimes(2);
+  expect(podmanDesktopApi.context.setValue).toHaveBeenNthCalledWith(1, 'imagesPushInProgressToKind', ['id']);
+  expect(podmanDesktopApi.context.setValue).toHaveBeenNthCalledWith(2, 'imagesPushInProgressToKind', []);
 });
 
 const mockV1Release = {

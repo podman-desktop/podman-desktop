@@ -8,7 +8,6 @@
     "preserveValueImports": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"]
     },

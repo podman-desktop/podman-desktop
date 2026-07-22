@@ -19,6 +19,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
+  globalSetup: './tests/playwright/src/globalSetup/playwright-global-setup.ts',
   outputDir: 'tests/playwright/output/',
   workers: 1,
   timeout: 90_000,

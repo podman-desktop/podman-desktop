@@ -19,34 +19,41 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Octokit } from '@octokit/rest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ComposeGitHubReleases } from './compose-github-releases';
 
 vi.mock(import('node:fs'));
 
-let composeGitHubReleases: ComposeGitHubReleases;
-
-const listReleaseAssetsMock = vi.fn();
-const listReleasesMock = vi.fn();
-const getReleaseAssetMock = vi.fn();
-const octokitMock: Octokit = {
+const mockOctokit = {
   repos: {
-    listReleases: listReleasesMock,
-    listReleaseAssets: listReleaseAssetsMock,
-    getReleaseAsset: getReleaseAssetMock,
+    listReleases: vi.fn(),
+    getReleaseAsset: vi.fn(),
   },
   paginate: vi.fn(),
-} as unknown as Octokit;
+};
+
+const mockOctokitFactory = vi.fn();
+
+let composeGitHubReleases: ComposeGitHubReleases;
 
 beforeEach(() => {
-  composeGitHubReleases = new ComposeGitHubReleases(octokitMock);
+  vi.resetAllMocks();
+  mockOctokitFactory.mockResolvedValue(mockOctokit);
+  composeGitHubReleases = new ComposeGitHubReleases(mockOctokitFactory);
 });
 
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+});
+
+test('Auth token is passed to Octokit factory', async () => {
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: [] });
+
+  await composeGitHubReleases.grabLatestsReleasesMetadata();
+
+  expect(mockOctokitFactory).toHaveBeenCalled();
 });
 
 test('expect grab 5 releases', async () => {
@@ -57,9 +64,8 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/compose-github-release-all.json'), 'utf8'),
   );
-  listReleasesMock.mockImplementation(() => {
-    return { data: resultREST };
-  });
+
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
 
   const result = await composeGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();
@@ -90,80 +96,68 @@ describe.each([
     linux_x86: 228416660,
     linux_arm: 228416575,
   },
-])('Grab asset id for a given release id', async ({
-  resource,
-  id,
-  macOS_x86,
-  macOS_arm,
-  win_x86,
-  win_arm,
-  linux_x86,
-  linux_arm,
-}) => {
-  beforeEach(async () => {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
+])(
+  'Grab asset id for a given release id',
+  async ({ resource, id, macOS_x86, macOS_arm, win_x86, win_arm, linux_x86, linux_arm }) => {
+    beforeEach(async () => {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+      const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
 
-    // mock the result of listReleaseAssetsMock REST API
-    const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
+      // mock the result of listReleaseAssetsMock REST API
+      const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
 
-    vi.mocked(octokitMock.paginate).mockImplementation(() => {
-      return resultREST;
+      mockOctokit.paginate.mockResolvedValue(resultREST);
     });
-  });
 
-  test('macOS x86_64', async () => {
-    const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'x64');
-    expect(result).toBeDefined();
-    expect(result).toBe(macOS_x86);
-  });
+    test('macOS x86_64', async () => {
+      const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'x64');
+      expect(result).toBeDefined();
+      expect(result).toBe(macOS_x86);
+    });
 
-  test('macOS arm64', async () => {
-    const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'arm64');
-    expect(result).toBeDefined();
-    expect(result).toBe(macOS_arm);
-  });
+    test('macOS arm64', async () => {
+      const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'arm64');
+      expect(result).toBeDefined();
+      expect(result).toBe(macOS_arm);
+    });
 
-  test('windows x86_64', async () => {
-    const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'x64');
-    expect(result).toBeDefined();
-    expect(result).toBe(win_x86);
-  });
+    test('windows x86_64', async () => {
+      const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'x64');
+      expect(result).toBeDefined();
+      expect(result).toBe(win_x86);
+    });
 
-  test('windows arm64', async () => {
-    const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'arm64');
-    expect(result).toBeDefined();
-    expect(result).toBe(win_arm);
-  });
+    test('windows arm64', async () => {
+      const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'arm64');
+      expect(result).toBeDefined();
+      expect(result).toBe(win_arm);
+    });
 
-  test('linux x86_64', async () => {
-    const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'x64');
-    expect(result).toBeDefined();
-    expect(result).toBe(linux_x86);
-  });
+    test('linux x86_64', async () => {
+      const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'x64');
+      expect(result).toBeDefined();
+      expect(result).toBe(linux_x86);
+    });
 
-  test('linux arm64', async () => {
-    const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'arm64');
-    expect(result).toBeDefined();
-    expect(result).toBe(linux_arm);
-  });
+    test('linux arm64', async () => {
+      const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'arm64');
+      expect(result).toBeDefined();
+      expect(result).toBe(linux_arm);
+    });
 
-  test('invalid', async () => {
-    await expect(composeGitHubReleases.getReleaseAssetId(id, 'invalid', 'invalid')).rejects.toThrow(
-      'No asset found for',
-    );
-  });
-});
+    test('invalid', async () => {
+      await expect(composeGitHubReleases.getReleaseAssetId(id, 'invalid', 'invalid')).rejects.toThrow(
+        'No asset found for',
+      );
+    });
+  },
+);
 
 test('should download the file if parent folder does exist', async () => {
-  getReleaseAssetMock.mockImplementation(() => {
-    return { data: 'foo' };
-  });
+  mockOctokit.repos.getReleaseAsset.mockResolvedValue({ data: 'foo' });
 
   // mock fs
-  const existSyncSpy = vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   const writeFileSpy = vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
@@ -178,9 +172,7 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  getReleaseAssetMock.mockImplementation(() => {
-    return { data: 'foo' };
-  });
+  mockOctokit.repos.getReleaseAsset.mockResolvedValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);
