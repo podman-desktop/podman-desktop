@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
-import podmanJSON from '/@/podman.json';
+import podmanJSON from '/@/podman.json' with { type: 'json' };
 
 type PlatformKey = keyof typeof podmanJSON.platform;
 type ArchKey<P extends PlatformKey> = keyof (typeof podmanJSON.platform)[P]['arch'];
