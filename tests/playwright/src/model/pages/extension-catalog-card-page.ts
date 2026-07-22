@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,11 @@ export class ExtensionCatalogCardPage extends BasePage {
   readonly downloadButton: Locator;
   readonly alreadyInstalledText: Locator;
 
-  constructor(page: Page, extensionName: string) {
+  constructor(page: Page, extensionName: string, container?: Locator) {
     super(page);
     this.extensionName = extensionName;
-    this.parent = this.page.getByRole('group', { name: this.extensionName });
+    const root = container ?? this.page;
+    this.parent = root.getByRole('group', { name: this.extensionName });
     this.detailsButton = this.parent.getByRole('button', {
       name: 'More details',
     });
