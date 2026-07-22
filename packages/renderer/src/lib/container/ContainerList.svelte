@@ -216,28 +216,31 @@ async function stopSelectedContainers(): Promise<void> {
     });
     containerGroups = [...containerGroups];
 
-    const results = await Promise.allSettled([
-      ...podGroupsToStop.map(podGroup => window.stopPod(podGroup.engineId, podGroup.id)),
-      ...containersToStop.map(container => window.stopContainer(container.engineId, container.id)),
+    const podStopPromises = podGroupsToStop.map(podGroup => window.stopPod(podGroup.engineId, podGroup.id));
+    const containerStopPromises = containersToStop.map(async container => {
+      try {
+        await window.stopContainer(container.engineId, container.id);
+      } catch (reason) {
+        console.error('error while stopping container', reason);
+        container.actionError = String(reason);
+        container.state = 'ERROR';
+      } finally {
+        container.actionInProgress = false;
+        containerGroups = [...containerGroups];
+      }
+    });
+
+    const [podResults] = await Promise.all([
+      Promise.allSettled(podStopPromises),
+      Promise.allSettled(containerStopPromises),
     ]);
 
-    results.slice(0, podGroupsToStop.length).forEach(result => {
+    podResults.forEach((result, index) => {
       if (result.status === 'rejected') {
         console.error('error while stopping pod', result.reason);
+        podGroupsToStop[index].status = 'RUNNING';
       }
     });
-    results.slice(podGroupsToStop.length).forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.error('error while stopping container', result.reason);
-        containersToStop[index].actionError = String(result.reason);
-        containersToStop[index].state = 'ERROR';
-      }
-    });
-  } finally {
-    containersToStop.forEach(container => (container.actionInProgress = false));
-    containerGroups = [...containerGroups];
-    bulkStopInProgress = false;
-  }
 }
 
 function createPodFromContainers(): void {
