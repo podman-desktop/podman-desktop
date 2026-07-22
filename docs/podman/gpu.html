@@ -14,8 +14,8 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.d9bae3b0.css">
-<script src="/assets/js/runtime~main.cab5c8bf.js" defer="defer"></script>
-<script src="/assets/js/main.120f9652.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.946c1829.js" defer="defer"></script>
+<script src="/assets/js/main.601d6766.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -43,7 +43,7 @@
 <li class=""><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-yum-or-dnf" target="_blank" rel="noopener noreferrer" class="">NVIDIA Container Toolkit Installation</a></li>
 </ul></div><div role="tabpanel" class="tabItem_wHwb markdown" hidden=""><h4 class="anchor anchorTargetStickyNavbar_tleR" id="prerequisites-1">Prerequisites<a href="#prerequisites-1" class="hash-link" aria-label="Direct link to Prerequisites" title="Direct link to Prerequisites" translate="no">​</a></h4><ul>
 <li class="">Mac with Apple silicon (M1 or later)</li>
-</ul><h4 class="anchor anchorTargetStickyNavbar_tleR" id="procedure-1">Procedure<a href="#procedure-1" class="hash-link" aria-label="Direct link to Procedure" title="Direct link to Procedure" translate="no">​</a></h4><p><strong>Important to note</strong> that using the &quot;Metal&quot; GPU on macOS utilizes specialized software to achieve this. Specifically a <strong>virtualized GPU</strong> from within the Podman Machine that provides translation support from <a href="https://www.vulkan.org/" target="_blank" rel="noopener noreferrer" class="">Vulkan</a> and <a href="https://github.com/KhronosGroup/MoltenVK" target="_blank" rel="noopener noreferrer" class="">MoltenVK</a> calls to MSL (Metal Shading Language), Apples GPU.</p><ol>
+</ul><h4 class="anchor anchorTargetStickyNavbar_tleR" id="procedure-1">Procedure<a href="#procedure-1" class="hash-link" aria-label="Direct link to Procedure" title="Direct link to Procedure" translate="no">​</a></h4><p><strong>Important to note</strong> that using the &quot;Metal&quot; GPU on macOS utilizes specialized software to achieve this. Specifically a <strong>virtualized GPU</strong> from within the Podman Machine that provides translation support from <a href="https://www.vulkan.org/" target="_blank" rel="noopener noreferrer" class="">Vulkan</a> and <a href="https://github.com/KhronosGroup/MoltenVK" target="_blank" rel="noopener noreferrer" class="">MoltenVK</a> calls to MSL (Metal Shading Language), Apple&#x27;s GPU.</p><ol>
 <li class="">Create a Podman Machine that uses <code>libkrun</code>:</li>
 </ol><p><img decoding="async" loading="lazy" alt="libkrun" src="/assets/images/libkrun-c0337f5410b62c5206b00b9e25a47518.png" width="1406" height="1150" class="img_SS3x"></p><h4 class="anchor anchorTargetStickyNavbar_tleR" id="verification-1">Verification<a href="#verification-1" class="hash-link" aria-label="Direct link to Verification" title="Direct link to Verification" translate="no">​</a></h4><p>Using the GPU functionality requires a specialized Containerfile containing a <a href="https://copr.fedorainfracloud.org/coprs/slp/mesa-krunkit/" target="_blank" rel="noopener noreferrer" class="">patched MESA driver</a>.</p><ol>
 <li class="">Create the following Containerfile:</li>
