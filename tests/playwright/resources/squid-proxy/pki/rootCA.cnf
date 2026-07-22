@@ -1,0 +1,21 @@
+# default section for "req" command options
+[req]
+distinguished_name = rootca_dn
+prompt = no
+
+[rootca_dn]
+# Minimum of 4 bytes are needed for common name
+commonName = squid CA
+
+# ISO2 country code only
+countryName = FR
+
+# City is required
+localityName = Paris
+
+[v3_ca]
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+basicConstraints = critical, CA:TRUE, pathlen:3
+keyUsage = critical, cRLSign, keyCertSign
+nsCertType = sslCA, emailCA
