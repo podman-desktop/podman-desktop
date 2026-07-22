@@ -33,7 +33,7 @@ describe('getBundledPodmanVersion', () => {
   });
 
   test('should throw for unknown platform', () => {
-    expect(() => getBundledPodmanVersion('linux', 'x64')).toThrow('No bundled podman for platform linux');
+    expect(() => getBundledPodmanVersion('freebsd', 'x64')).toThrow('No bundled podman for platform freebsd');
   });
 
   test('should throw for unknown arch', () => {
