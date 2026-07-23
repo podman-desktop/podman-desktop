@@ -65,6 +65,7 @@ overrides:
   webpack-dev-server: '>=5.2.5'
   '@babel/core': '>=7.29.6 <8.0.0'
   websocket-driver: '>=0.7.5'
+  svgo: '>=3.3.4 <4.0.0'
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
