@@ -104,9 +104,9 @@ function close(): void {
           class="w-full" />
       </div>
 
-      <div class="w-full flex flex-row space-x-4">
-        <Button type="secondary" class="w-full" onclick={close}>Cancel</Button>
-        <Button disabled={!valid || loading} inProgress={loading} class="w-full" onclick={createSecret}>Create</Button>
+      <div class="flex items-center justify-end gap-3">
+        <Button type="secondary" onclick={close}>Cancel</Button>
+        <Button disabled={!valid || loading} inProgress={loading} onclick={createSecret}>Create</Button>
       </div>
 
       {#if createError}

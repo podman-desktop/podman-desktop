@@ -113,13 +113,12 @@ function end(): void {
       <input type="hidden" aria-label="Provider Choice" readonly value={selectedIndex} />
     {/if}
 
-    <div class="w-full flex flex-row space-x-4">
+    <div class="flex items-center justify-end gap-3">
       {#if !createVolumeFinished && selectedProvider}
         {@const connection = selectedProvider}
         <Button
           onclick={(): Promise<void> => createVolume(connection)}
           disabled={createVolumeInProgress || invalidName}
-          class="w-full"
           inProgress={createVolumeInProgress}
           icon={faPlusCircle}>
           Create
@@ -127,7 +126,7 @@ function end(): void {
       {/if}
 
       {#if createVolumeFinished}
-        <Button onclick={end} class="w-full">Done</Button>
+        <Button onclick={end}>Done</Button>
       {/if}
     </div>
 

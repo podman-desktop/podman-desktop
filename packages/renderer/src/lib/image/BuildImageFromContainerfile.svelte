@@ -442,13 +442,13 @@ let hasInvalidFields = $derived(
         <Checkbox bind:checked={validateRegistries} title='validate registries'>Validate registries before building</Checkbox>
       </div>
 
-      <div class="w-full flex flex-row space-x-4">
+      <div class="flex items-center justify-end gap-3">
         {#if !buildImageInfo.buildRunning}
-          <Button on:click={buildContainerImage} disabled={hasInvalidFields} class="w-full" icon={faCube}>Build</Button>
+          <Button on:click={buildContainerImage} disabled={hasInvalidFields} icon={faCube}>Build</Button>
         {/if}
 
         {#if buildImageInfo.buildFinished}
-          <Button on:click={cleanupBuild} class="w-full">Done</Button>
+          <Button on:click={cleanupBuild}>Done</Button>
         {/if}
       </div>
 
@@ -457,9 +457,9 @@ let hasInvalidFields = $derived(
         imageName={buildImageInfo.buildParentImageName} />
 
       <TerminalWindow on:init={onInit} bind:terminal={buildImageInfo.logsTerminal} />
-      <div class="w-full">
+      <div class="flex items-center justify-end">
         {#if buildImageInfo.buildRunning}
-          <Button on:click={abortBuild} class="w-full">Cancel</Button>
+          <Button on:click={abortBuild}>Cancel</Button>
         {/if}
       </div>
     </div>

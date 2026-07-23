@@ -201,8 +201,8 @@ function validate(event: any): void {
       {/if}
     </div>
 
-    <div class="pt-2">
-      <Button on:click={updateProxySettings} class="w-full" title="Update" icon={faPen}>Update</Button>
+    <div class="flex items-center justify-end pt-2">
+      <Button on:click={updateProxySettings} title="Update" icon={faPen}>Update</Button>
     </div>
   </div>
 </SettingsPage>

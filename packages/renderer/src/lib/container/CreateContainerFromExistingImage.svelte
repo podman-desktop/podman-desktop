@@ -438,19 +438,18 @@ onMount(() => {
 
     <footer>
       <div class="w-full flex flex-col justify-end gap-3 my-3">
-        <div class="flex flex-row">
-          <Button type="secondary" class="mr-3 w-full" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
+        <div class="flex items-center justify-end gap-3">
+          <Button type="secondary" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
           {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
             <Button
               icon={faArrowCircleDown}
-              class="w-full"
               disabled={imageNameIsInvalid}
               on:click={pullImageAndRun}
               inProgress={pullInProgress}>
               Pull Image and Run
             </Button>
           {:else}
-            <Button icon={faCircleCheck} class="w-full" disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
+            <Button icon={faCircleCheck} disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
         </div>
         {#if pullError}
