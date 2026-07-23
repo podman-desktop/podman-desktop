@@ -1177,11 +1177,11 @@ importers:
         specifier: ^0.41.1
         version: 0.41.1(supports-color@8.1.1)
       markdownlint-cli2:
-        specifier: ^0.23.0
-        version: 0.23.0(supports-color@8.1.1)
+        specifier: ^0.23.1
+        version: 0.23.1(supports-color@8.1.1)
       markdownlint-cli2-formatter-summarize:
         specifier: ^0.0.8
-        version: 0.0.8(markdownlint-cli2@0.23.0(supports-color@8.1.1))
+        version: 0.0.8(markdownlint-cli2@0.23.1(supports-color@8.1.1))
       msw:
         specifier: ^2.15.0
         version: 2.15.0(@types/node@26.1.1)(typescript@6.0.3)
@@ -7997,8 +7997,8 @@ packages:
     resolution: {integrity: sha512-Y1zNGV+pzQdh7H39l9zgB4PJqjRNqydvdYCDG4HFXM4XuvSaQQlEc91IU1yALL8gUTDomgBAfz3XJdmUS+oo0w==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  globby@16.2.0:
-    resolution: {integrity: sha512-QrJia2qDf5BB/V6HYlDTs0I0lBahyjLzpGQg3KT7FnCdTonAyPy2RtY802m2k4ALx6Dp752f82WsOczEVr3l6Q==}
+  globby@16.2.1:
+    resolution: {integrity: sha512-JmsqJalahxxgW8V2ecSQ2G7UjPlI9cpKdrkG9KoNiXhd/YslXOTEB0cViENWUznuovIuNT+FkMbraDGjr4FCUg==}
     engines: {node: '>=20'}
 
   globrex@0.1.2:
@@ -8761,10 +8761,6 @@ packages:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
-  js-yaml@5.2.0:
-    resolution: {integrity: sha512-YeLUMlvR4Ou1B119LIaM0r65JvbOBooJDc9yEu0dClb/uSC5P4FrLU8OCCz/HXWvtPoIrR0dRzABTjo1sTN9Bw==}
-    hasBin: true
-
   js-yaml@5.2.1:
     resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
     hasBin: true
@@ -9168,14 +9164,10 @@ packages:
     peerDependencies:
       markdownlint-cli2: '>=0.0.4'
 
-  markdownlint-cli2@0.23.0:
-    resolution: {integrity: sha512-1nmgQmU/ZTMRVwYCDs7i1HI3zfBISnT2NNRv+9V01oOLZbAtqL+a7tldpPhBWBVBten3FqhMCGV6EUh9McqutQ==}
+  markdownlint-cli2@0.23.1:
+    resolution: {integrity: sha512-20JPI5W+HpV1OA+pUM712wgvL4GzYNUvbmhLU8KlEYJ1kCDx4soZ4/Xqd+WkLrPTOKMAn8SfO3zYFrK8GLlwQg==}
     engines: {node: '>=22'}
     hasBin: true
-
-  markdownlint@0.41.0:
-    resolution: {integrity: sha512-xMUI3ChBuRuxuLF4ENvCZyS8z/+Jly1coUcZwErKLIB3sDj7ojpaTBa1e9YVPhSN4jGEIjYGQCldbTJS/hqS+A==}
-    engines: {node: '>=22'}
 
   markdownlint@0.41.1:
     resolution: {integrity: sha512-qHKeU2E1bdyNAT077go2FVTNXvYcktN5IHtF6XyeD1l0PClxzSp2tUApAV14ORI8DGX4H9bNKZEzelZp4qn8IA==}
@@ -21090,7 +21082,7 @@ snapshots:
       merge2: 1.4.1
       slash: 4.0.0
 
-  globby@16.2.0:
+  globby@16.2.1:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
       fast-glob: 3.3.3
@@ -21915,10 +21907,6 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js-yaml@5.2.0:
-    dependencies:
-      argparse: 2.0.1
-
   js-yaml@5.2.1:
     dependencies:
       argparse: 2.0.1
@@ -22272,39 +22260,25 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  markdownlint-cli2-formatter-default@0.0.6(markdownlint-cli2@0.23.0(supports-color@8.1.1)):
+  markdownlint-cli2-formatter-default@0.0.6(markdownlint-cli2@0.23.1(supports-color@8.1.1)):
     dependencies:
-      markdownlint-cli2: 0.23.0(supports-color@8.1.1)
+      markdownlint-cli2: 0.23.1(supports-color@8.1.1)
 
-  markdownlint-cli2-formatter-summarize@0.0.8(markdownlint-cli2@0.23.0(supports-color@8.1.1)):
+  markdownlint-cli2-formatter-summarize@0.0.8(markdownlint-cli2@0.23.1(supports-color@8.1.1)):
     dependencies:
-      markdownlint-cli2: 0.23.0(supports-color@8.1.1)
+      markdownlint-cli2: 0.23.1(supports-color@8.1.1)
 
-  markdownlint-cli2@0.23.0(supports-color@8.1.1):
+  markdownlint-cli2@0.23.1(supports-color@8.1.1):
     dependencies:
-      globby: 16.2.0
-      js-yaml: 5.2.0
+      globby: 16.2.1
+      js-yaml: 5.2.1
       jsonc-parser: 3.3.1
       jsonpointer: 5.0.1
       markdown-it: 14.3.0
-      markdownlint: 0.41.0(supports-color@8.1.1)
-      markdownlint-cli2-formatter-default: 0.0.6(markdownlint-cli2@0.23.0(supports-color@8.1.1))
+      markdownlint: 0.41.1(supports-color@8.1.1)
+      markdownlint-cli2-formatter-default: 0.0.6(markdownlint-cli2@0.23.1(supports-color@8.1.1))
       micromatch: 4.0.8
       smol-toml: 1.7.0
-    transitivePeerDependencies:
-      - supports-color
-
-  markdownlint@0.41.0(supports-color@8.1.1):
-    dependencies:
-      micromark: 4.0.2(supports-color@8.1.1)
-      micromark-core-commonmark: 2.0.3
-      micromark-extension-directive: 4.0.0
-      micromark-extension-gfm-autolink-literal: 2.1.0
-      micromark-extension-gfm-footnote: 2.1.0
-      micromark-extension-gfm-table: 2.1.1
-      micromark-extension-math: 3.1.0
-      micromark-util-types: 2.0.2
-      string-width: 8.2.1
     transitivePeerDependencies:
       - supports-color
 
