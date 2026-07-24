@@ -23,7 +23,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { Registry } from '@podman-desktop/api';
+import type { Registry, RegistrySuggestedProvider } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
@@ -1557,5 +1557,154 @@ describe('checkImageUpdateStatus', () => {
     expect(result.status).toBe('normal');
     expect(result.updateAvailable).toBe(false);
     expect(result.message).toContain('local');
+  });
+});
+
+describe('suggestRegistry / unsuggestRegistry / getSuggestedRegistries', () => {
+  test('should add a registry and return it from getSuggestedRegistries', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]).toEqual(registry);
+  });
+
+  test('should send registry-update event when suggesting a registry', () => {
+    const sendSpy = vi.spyOn(apiSender, 'send');
+    const registry: RegistrySuggestedProvider = { name: 'Quay', url: 'quay.io' };
+
+    imageRegistry.suggestRegistry(registry);
+
+    expect(sendSpy).toHaveBeenCalledWith('registry-update', registry);
+  });
+
+  test('should return a Disposable that removes the registry when disposed', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+
+    const disposable = imageRegistry.suggestRegistry(registry);
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(1);
+
+    disposable.dispose();
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(0);
+  });
+
+  test('should ignore duplicate registries with same name and url', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+
+    imageRegistry.suggestRegistry(registry);
+    imageRegistry.suggestRegistry(registry);
+
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(1);
+  });
+
+  test('should return noop Disposable for duplicate registry', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+
+    imageRegistry.suggestRegistry(registry);
+    const disposable = imageRegistry.suggestRegistry(registry);
+
+    disposable.dispose();
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(1);
+  });
+
+  test('should allow registries with same url but different names', () => {
+    const registry1: RegistrySuggestedProvider = { name: 'Provider A', url: 'registry.io' };
+    const registry2: RegistrySuggestedProvider = { name: 'Provider B', url: 'registry.io' };
+
+    imageRegistry.suggestRegistry(registry1);
+    imageRegistry.suggestRegistry(registry2);
+
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(2);
+  });
+
+  test('should remove a specific registry via unsuggestRegistry', () => {
+    const registry1: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+    const registry2: RegistrySuggestedProvider = { name: 'Quay', url: 'quay.io' };
+
+    imageRegistry.suggestRegistry(registry1);
+    imageRegistry.suggestRegistry(registry2);
+
+    imageRegistry.unsuggestRegistry(registry1);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]?.name).toBe('Quay');
+  });
+
+  test('should send registry-update event when unsuggestRegistry is called', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+    imageRegistry.suggestRegistry(registry);
+
+    const sendSpy = vi.spyOn(apiSender, 'send');
+    imageRegistry.unsuggestRegistry(registry);
+
+    expect(sendSpy).toHaveBeenCalledWith('registry-update', registry);
+  });
+
+  test('unsuggestRegistry should be a no-op for non-existing registry', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+
+    imageRegistry.unsuggestRegistry(registry);
+
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(0);
+  });
+
+  test('should return a copy from getSuggestedRegistries, not the internal array', () => {
+    const registry: RegistrySuggestedProvider = { name: 'Docker Hub', url: 'docker.io' };
+    imageRegistry.suggestRegistry(registry);
+
+    const result = imageRegistry.getSuggestedRegistries();
+    result.push({ name: 'Extra', url: 'extra.io' });
+
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(1);
+  });
+
+  test('should preserve additionalConfigHandlers when suggesting a registry', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [{ label: 'Red Hat SSO', commandId: 'redhat.auth.sso' }],
+    };
+
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]?.additionalConfigHandlers).toHaveLength(1);
+    expect(suggested[0]?.additionalConfigHandlers?.[0]?.label).toBe('Red Hat SSO');
+    expect(suggested[0]?.additionalConfigHandlers?.[0]?.commandId).toBe('redhat.auth.sso');
+  });
+
+  test('should preserve multiple additionalConfigHandlers', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [
+        { label: 'Red Hat SSO', commandId: 'redhat.auth.sso' },
+        { label: 'Registry Authorizer', commandId: 'redhat.auth.authorizer' },
+      ],
+    };
+
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested[0]?.additionalConfigHandlers).toHaveLength(2);
+    expect(suggested[0]?.additionalConfigHandlers?.[1]?.label).toBe('Registry Authorizer');
+    expect(suggested[0]?.additionalConfigHandlers?.[1]?.commandId).toBe('redhat.auth.authorizer');
+  });
+
+  test('should preserve icon in suggested registry', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'Docker Hub',
+      url: 'docker.io',
+      icon: 'base64encodedicon',
+    };
+
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested[0]?.icon).toBe('base64encodedicon');
   });
 });

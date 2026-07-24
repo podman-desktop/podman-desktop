@@ -1175,6 +1175,17 @@ declare module '@podman-desktop/api' {
     export const onDidStateChange: Event<boolean>;
   }
 
+  /**
+   * An additional configuration handler that extensions can contribute
+   * for a suggested registry (e.g. "Red Hat SSO", "Registry Authorizer").
+   */
+  export interface RegistrySuggestedProviderConfigHandler {
+    /** Display name shown in the dropdown (e.g. "Red Hat SSO") */
+    label: string;
+    /** The command to execute when the user selects this configuration handler */
+    commandId: string;
+  }
+
   // An interface for "Default" registries that include the name, URL as well as an icon
   // This allows an extension to "suggest" a registry to the user that you may
   // login via a username & password.
@@ -1184,6 +1195,13 @@ declare module '@podman-desktop/api' {
 
     // Optional base64 PNG image (for transparency / non vector icons)
     icon?: string | { light: string; dark: string };
+
+    /**
+     * Optional additional configuration handlers beyond username/password.
+     * When provided, the Registries settings page shows a dropdown
+     * instead of the regular "Configure" button.
+     */
+    additionalConfigHandlers?: RegistrySuggestedProviderConfigHandler[];
   }
 
   export interface Registry extends RegistryCreateOptions {

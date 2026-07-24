@@ -3,8 +3,8 @@ import { faPlusCircle, faTrash, faUser, faUserPen } from '@fortawesome/free-soli
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { Button, Dropdown, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { onMount, tick } from 'svelte';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
@@ -173,6 +173,50 @@ function clearSavedCredentials(): void {
   newRegistryRequest.secret = '';
 }
 
+const CONFIG_HANDLER_DEFAULT = 'username-password';
+
+let configDropdownOpen: Record<string, boolean> = $state({});
+
+function buildDropdownOptions(
+  registry: containerDesktopAPI.RegistrySuggestedProvider,
+): { value: string; label: string }[] {
+  const options = [{ value: CONFIG_HANDLER_DEFAULT, label: 'Username and password' }];
+  for (const handler of registry.additionalConfigHandlers ?? []) {
+    options.push({ value: handler.commandId, label: handler.label });
+  }
+  return options;
+}
+
+function closeAllConfigDropdowns(): void {
+  configDropdownOpen = {};
+}
+
+async function toggleConfigDropdown(registryUrl: string): Promise<void> {
+  const wasOpen = configDropdownOpen[registryUrl];
+  closeAllConfigDropdowns();
+  if (!wasOpen) {
+    configDropdownOpen = { [registryUrl]: true };
+    await tick();
+    const dropdown = document.querySelector<HTMLElement>(`[data-config-dropdown="${registryUrl}"] button`);
+    dropdown?.focus();
+  }
+}
+
+function handleConfigSelection(
+  i: number,
+  registry: containerDesktopAPI.RegistrySuggestedProvider,
+  value: string,
+): void {
+  configDropdownOpen = { ...configDropdownOpen, [registry.url]: false };
+  if (value === CONFIG_HANDLER_DEFAULT) {
+    setNewSuggestedRegistryFormVisible(i, registry);
+  } else {
+    window.executeCommand(value).catch((error: unknown) => {
+      console.error(`Failed to execute config handler command "${value}" for ${registry.url}`, error);
+    });
+  }
+}
+
 async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<void> {
   loggingIn = true;
   clearErrorResponse(registry.serverUrl);
@@ -242,6 +286,12 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
   setPasswordForRegistryVisible(registry, false);
 }
 </script>
+
+<svelte:window
+  onclick={closeAllConfigDropdowns}
+  onkeydown={(e: KeyboardEvent): void => {
+    if (e.key === 'Escape') closeAllConfigDropdowns();
+  }} />
 
 <SettingsPage title="Registries">
   {#snippet actions()}
@@ -453,6 +503,18 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 
               {#if listedSuggestedRegistries[i]}
                 <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
+              {:else if registry.additionalConfigHandlers?.length}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="relative" data-config-dropdown={registry.url} onclick={(e: MouseEvent): void => e.stopPropagation()}>
+                  <Button onclick={(): Promise<void> => toggleConfigDropdown(registry.url)}>Configure…</Button>
+                  <Dropdown
+                    triggerless
+                    opened={configDropdownOpen[registry.url] ?? false}
+                    options={buildDropdownOptions(registry)}
+                    onChange={(value): void => handleConfigSelection(i, registry, value)}
+                    class="absolute top-full right-0 z-10 mt-1 min-w-[200px]" />
+                </div>
               {:else}
                 <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
               {/if}
