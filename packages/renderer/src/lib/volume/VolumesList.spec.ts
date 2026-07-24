@@ -27,25 +27,21 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos, volumesEventStore } from '/@/stores/volumes';
 
 import VolumesList from './VolumesList.svelte';
 
-// fake the window.events object
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(async () => {
   vi.resetAllMocks();
   volumeListInfos.set([]);
+
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);

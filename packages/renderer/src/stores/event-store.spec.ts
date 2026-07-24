@@ -21,27 +21,18 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { EventStore, type EventStoreInfo, fineGrainedEvents } from './event-store';
 
-// first, path window object
-const callbacks = new Map<string, (arg?: unknown) => Promise<void>>();
-const eventEmitter = {
-  receive: (message: string, callback: (arg?: unknown) => Promise<void>): void => {
-    callbacks.set(message, callback);
-  },
-};
-
-Object.defineProperty(global, 'window', {
-  value: {
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
+const callbacks = new Map<string, (arg?: unknown) => Promise<void> | void>();
 
 beforeEach(() => {
   callbacks.clear();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
+  });
+  vi.spyOn(window, 'addEventListener').mockImplementation((event, callback) => {
+    callbacks.set(event, callback as (arg?: unknown) => void);
+  });
 });
 
 interface MyCustomTypeInfo {

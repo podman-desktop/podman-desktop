@@ -56,12 +56,10 @@ beforeEach(() => {
       ],
     } as ProviderInfo,
   ]);
-  // fake the window.events object
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(

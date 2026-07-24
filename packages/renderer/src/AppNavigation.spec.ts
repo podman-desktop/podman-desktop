@@ -33,8 +33,6 @@ import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
 import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
 
-const eventsMock = vi.fn();
-
 const callbacks = new Map<string, (arg: unknown) => void>();
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
@@ -43,7 +41,6 @@ vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
 
 // fake the window object
 beforeAll(() => {
-  Object.defineProperty(window, 'events', { value: eventsMock });
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {

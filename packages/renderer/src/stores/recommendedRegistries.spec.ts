@@ -16,12 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   fetchRecommendedRegistries,
@@ -29,33 +26,19 @@ import {
   recommendedRegistriesEventStore,
 } from './recommendedRegistries';
 
-// first, patch window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const getRecommendedRegistriesMock: Mock<() => Promise<RecommendedRegistry[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    getRecommendedRegistries: getRecommendedRegistriesMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('recommendedRegistries should be updated in case of an extension is stopped', async () => {
-  getRecommendedRegistriesMock.mockResolvedValue([
+  vi.mocked(window.getRecommendedRegistries).mockResolvedValue([
     {
       extensionId: 'my.extensionId',
       name: 'Hello',
@@ -65,10 +48,8 @@ test('recommendedRegistries should be updated in case of an extension is stopped
   ]);
   recommendedRegistriesEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch recommended registries
   await fetchRecommendedRegistries();
@@ -79,17 +60,17 @@ test('recommendedRegistries should be updated in case of an extension is stopped
   expect(registries[0].extensionId).toEqual('my.extensionId');
 
   // ok now mock the getRecommendedRegistries function to return an empty list
-  getRecommendedRegistriesMock.mockResolvedValue([]);
+  vi.mocked(window.getRecommendedRegistries).mockResolvedValue([]);
 
   // call 'container-removed-event' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
+  assert(extensionStoppedCallback);
   await extensionStoppedCallback();
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  expect(getRecommendedRegistriesMock).toHaveBeenCalled();
+  expect(vi.mocked(window.getRecommendedRegistries)).toHaveBeenCalled();
 
   // check if the registries are updated
   const registries2 = get(recommendedRegistries);
@@ -97,7 +78,7 @@ test('recommendedRegistries should be updated in case of an extension is stopped
 });
 
 test('recommendedRegistries should be updated in case configuration changed is called with expected key', async () => {
-  getRecommendedRegistriesMock.mockResolvedValue([
+  vi.mocked(window.getRecommendedRegistries).mockResolvedValue([
     {
       extensionId: 'my.extensionId',
       name: 'Hello',
@@ -107,10 +88,8 @@ test('recommendedRegistries should be updated in case configuration changed is c
   ]);
   recommendedRegistriesEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch recommended registries
   await fetchRecommendedRegistries();
@@ -121,21 +100,21 @@ test('recommendedRegistries should be updated in case configuration changed is c
   expect(registries[0].extensionId).toEqual('my.extensionId');
 
   // ok now mock the getRecommendedRegistries function to return an empty list
-  getRecommendedRegistriesMock.mockResolvedValue([]);
-  getRecommendedRegistriesMock.mockClear();
+  vi.mocked(window.getRecommendedRegistries).mockResolvedValue([]);
+  vi.mocked(window.getRecommendedRegistries).mockClear();
   // call 'container-removed-event' event
   const configurationChangedCallback = callbacks.get('configuration-changed');
-  expect(configurationChangedCallback).toBeDefined();
+  assert(configurationChangedCallback);
   await configurationChangedCallback({ key: 'extensions.ignoreRecommendations' });
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  expect(getRecommendedRegistriesMock).toHaveBeenCalled();
+  expect(vi.mocked(window.getRecommendedRegistries)).toHaveBeenCalled();
 });
 
 test('recommendedRegistries should not be updated in case configuration changed is called with unexpected key', async () => {
-  getRecommendedRegistriesMock.mockResolvedValue([
+  vi.mocked(window.getRecommendedRegistries).mockResolvedValue([
     {
       extensionId: 'my.extensionId',
       name: 'Hello',
@@ -145,10 +124,8 @@ test('recommendedRegistries should not be updated in case configuration changed 
   ]);
   recommendedRegistriesEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch recommended registries
   await fetchRecommendedRegistries();
@@ -159,15 +136,15 @@ test('recommendedRegistries should not be updated in case configuration changed 
   expect(registries[0].extensionId).toEqual('my.extensionId');
 
   // ok now mock the getRecommendedRegistries function to return an empty list
-  getRecommendedRegistriesMock.mockResolvedValue([]);
-  getRecommendedRegistriesMock.mockClear();
+  vi.mocked(window.getRecommendedRegistries).mockResolvedValue([]);
+  vi.mocked(window.getRecommendedRegistries).mockClear();
   // call 'container-removed-event' event
   const configurationChangedCallback = callbacks.get('configuration-changed');
-  expect(configurationChangedCallback).toBeDefined();
+  assert(configurationChangedCallback);
   await configurationChangedCallback({ key: 'extensions.otherKey' });
 
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  expect(getRecommendedRegistriesMock).not.toHaveBeenCalled();
+  expect(vi.mocked(window.getRecommendedRegistries)).not.toHaveBeenCalled();
 });

@@ -23,11 +23,10 @@ import { disconnectUI, eventCollect, reconnectUI, startBuild } from './build-ima
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('check start build', async () => {

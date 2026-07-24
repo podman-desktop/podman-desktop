@@ -115,9 +115,6 @@ vi.mock(import('tinro'));
 const getOsPlatformMock = vi.fn().mockResolvedValue('linux');
 
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: vi.fn(),
-  };
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'telemetryPage', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'getOsPlatform', { value: getOsPlatformMock });

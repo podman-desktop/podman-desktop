@@ -31,8 +31,6 @@ import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navi
 
 import CommandPalette from './CommandPalette.svelte';
 
-const receiveFunctionMock = vi.fn();
-
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
 
 vi.mock(import('tinro'));
@@ -43,10 +41,6 @@ const mockContainerInfo = {
 } as unknown as ContainerInfo;
 
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: receiveFunctionMock,
-  };
-
   vi.mocked(window.executeCommand).mockResolvedValue(undefined);
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
   vi.mocked(window.getOsPlatform).mockResolvedValue('linux');

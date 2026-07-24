@@ -16,43 +16,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { NotificationCard } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchNotifications, notificationEventStore, notificationQueue } from './notifications';
 
-// first, patch window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listNotificationsMock: Mock<() => Promise<NotificationCard[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listNotifications: listNotificationsMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('notifications should be updated in case of an extension is stopped', async () => {
   // initial view
-  listNotificationsMock.mockResolvedValue([
+  vi.mocked(window.listNotifications).mockResolvedValue([
     {
       id: 0,
       extensionId: 'extension',
@@ -63,10 +46,8 @@ test('notifications should be updated in case of an extension is stopped', async
   ]);
   notificationEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch notifiations
   await fetchNotifications();
@@ -77,11 +58,11 @@ test('notifications should be updated in case of an extension is stopped', async
   expect(notificationQueue1[0].id).toEqual(0);
 
   // ok now mock the listNotifications function to return an empty list
-  listNotificationsMock.mockResolvedValue([]);
+  vi.mocked(window.listNotifications).mockResolvedValue([]);
 
   // call 'notifications-updated' event
   const extensionStoppedCallback = callbacks.get('notifications-updated');
-  expect(extensionStoppedCallback).toBeDefined();
+  assert(extensionStoppedCallback);
   await extensionStoppedCallback();
 
   // wait a little

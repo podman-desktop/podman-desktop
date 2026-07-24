@@ -39,6 +39,18 @@ global.window.matchMedia = query => ({
   dispatchEvent: vi.fn(),
 });
 
+// Mock window.events (ApiSenderType) once globally instead of in every spec file.
+// Tests needing custom behavior can call vi.mocked(window.events.receive).mockImplementation(...)
+// or redefine window.events entirely if they need to intercept `send` as well.
+Object.defineProperty(window, 'events', {
+  value: {
+    send: vi.fn(),
+    receive: vi.fn(),
+  },
+  configurable: true,
+  writable: true,
+});
+
 // read the given path and extract the method names from the Window interface
 function extractWindowMethods(filePath) {
   // Read the content of the .d.ts file

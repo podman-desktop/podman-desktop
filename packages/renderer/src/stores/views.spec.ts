@@ -16,43 +16,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchViews, viewsContributions, viewsEventStore } from './views';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listViewsMock: Mock<() => Promise<ViewInfoUI[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listViewsContributions: listViewsMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('views should be updated in case of an extension is stopped', async () => {
   // initial view
-  listViewsMock.mockResolvedValue([
+  vi.mocked(window.listViewsContributions).mockResolvedValue([
     {
       extensionId: 'extension',
       viewId: 'view',
@@ -62,10 +45,8 @@ test('views should be updated in case of an extension is stopped', async () => {
   ]);
   viewsEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch volumes
   await fetchViews();
@@ -76,11 +57,11 @@ test('views should be updated in case of an extension is stopped', async () => {
   expect(views[0].extensionId).toEqual('extension');
 
   // ok now mock the listVolumes function to return an empty list
-  listViewsMock.mockResolvedValue([]);
+  vi.mocked(window.listViewsContributions).mockResolvedValue([]);
 
   // call 'container-removed-event' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
+  assert(extensionStoppedCallback);
   await extensionStoppedCallback();
 
   // wait a little

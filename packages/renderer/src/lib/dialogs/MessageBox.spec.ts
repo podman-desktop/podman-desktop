@@ -20,19 +20,10 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import MessageBox from './MessageBox.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
-
-const receiveFunctionMock = vi.fn();
-
-// mock some methods of the window object
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: receiveFunctionMock,
-  };
-});
 
 describe('MessageBox', () => {
   test('Expect that title, message, and buttons are displayed', async () => {
@@ -47,11 +38,14 @@ describe('MessageBox', () => {
       buttons: ['Dismiss', 'Not OK'],
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -78,11 +72,14 @@ describe('MessageBox', () => {
       message: 'My message',
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -101,11 +98,14 @@ describe('MessageBox', () => {
       message: 'My message',
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -122,11 +122,14 @@ describe('MessageBox', () => {
       message: 'My message',
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -160,11 +163,14 @@ describe('MessageBox', () => {
     };
 
     let eventCallback: ((options: MessageBoxOptions) => void) | undefined;
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        eventCallback = callback;
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          eventCallback = callback;
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -201,11 +207,14 @@ describe('MessageBox', () => {
       buttons: ['Delete', 'Cancel'],
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -228,11 +237,14 @@ describe('MessageBox', () => {
       defaultId: 1,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -252,11 +264,14 @@ describe('MessageBox', () => {
       buttons: ['Cancel', 'Proceed'],
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -277,11 +292,14 @@ describe('MessageBox', () => {
       defaultId: 1,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -295,11 +313,14 @@ describe('MessageBox', () => {
     { id: 706, title: 'Question', message: 'Message', type: 'question' as const },
   ])('Expect $type icon to render', async messageBoxOptions => {
     let eventCallback: ((options: MessageBoxOptions) => void) | undefined;
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        eventCallback = callback;
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          eventCallback = callback;
+        }
+        return { dispose: vi.fn() };
+      },
+    );
     render(MessageBox, {});
 
     await vi.waitFor(() => eventCallback !== undefined);
@@ -321,11 +342,14 @@ describe('MessageBox', () => {
       buttons: [{ type: 'dropdownButton', heading: 'More', buttons: ['A', 'B'] }],
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 
@@ -343,11 +367,14 @@ describe('MessageBox', () => {
       buttons: [{ type: 'iconButton', label: 'Run', icon: 'fas fa-play' }],
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
-      if (message === 'showMessageBox:open') {
-        callback(messageBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(MessageBox, {});
 

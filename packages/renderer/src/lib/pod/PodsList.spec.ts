@@ -235,7 +235,6 @@ const ocppod: PodInfo = {
   kind: 'podman',
 };
 
-// fake the window.events object
 beforeAll(() => {
   vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
   vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
@@ -250,11 +249,10 @@ beforeAll(() => {
   (window as any).getConfigurationValue = vi.fn();
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
-  (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   (window as any).getContributedMenus = getContributedMenusMock;
   getContributedMenusMock.mockResolvedValue([]);

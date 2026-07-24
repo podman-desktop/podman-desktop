@@ -24,7 +24,7 @@ import { fireEvent, render, type RenderResult, within } from '@testing-library/s
 import userEvent from '@testing-library/user-event';
 import type { Component, ComponentProps } from 'svelte';
 import { get } from 'svelte/store';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -47,10 +47,6 @@ const KUBERNETES_CONNECTION_PROVIDER = {
   status: 'ready',
   images: {},
 } as unknown as ProviderInfo;
-
-beforeAll(() => {
-  Object.defineProperty(window, 'events', { value: { receive: vi.fn() } });
-});
 
 beforeEach(() => {
   vi.resetAllMocks();

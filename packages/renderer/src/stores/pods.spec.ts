@@ -16,38 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { PodInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { podsEventStore, podsInfos } from './pods';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listPodsMock: Mock<() => Promise<PodInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listPods: listPodsMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test.each([
@@ -64,16 +47,16 @@ test.each([
   podsEventStore.setupWithDebounce(10, 10);
 
   // empty list
-  listPodsMock.mockResolvedValue([]);
+  vi.mocked(window.listPods).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('extensions-already-started')();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // clear mock calls
-  listPodsMock.mockClear();
+  vi.mocked(window.listPods).mockClear();
 
   // now, setup at least one container
-  listPodsMock.mockResolvedValue([
+  vi.mocked(window.listPods).mockResolvedValue([
     {
       Id: 'id123',
     } as unknown as PodInfo,
@@ -81,11 +64,11 @@ test.each([
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
+  assert(callback);
   await callback();
 
   // wait listContainersMock is called
-  while (listPodsMock.mock.calls.length === 0) {
+  while (vi.mocked(window.listPods).mock.calls.length === 0) {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 

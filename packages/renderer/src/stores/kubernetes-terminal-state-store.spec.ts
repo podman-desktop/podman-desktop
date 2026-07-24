@@ -18,27 +18,24 @@
 
 import { render, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import KubernetesTerminal from '/@/lib/kube/pods/terminal/KubernetesTerminal.svelte';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
 
-const kubernetesExecMock = vi.fn();
-
-beforeAll(() => {
+beforeEach(() => {
+  vi.resetAllMocks();
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
       return 1000;
     }
     return undefined;
   });
-  Object.defineProperty(window, 'kubernetesExec', { value: kubernetesExecMock });
-  Object.defineProperty(window, 'kubernetesExecResize', { value: vi.fn() });
 });
 
 test('Test should check saved terminal state after destroying terminal window', async () => {
   const sendCallbackId = 1;
-  kubernetesExecMock.mockImplementation(
+  vi.mocked(window.kubernetesExec).mockImplementation(
     (
       _podName: string,
       _containerName: string,
@@ -46,12 +43,12 @@ test('Test should check saved terminal state after destroying terminal window', 
       _onStdErr: (data: Buffer) => void,
       _onClose: () => void,
     ) => {
-      return sendCallbackId;
+      return Promise.resolve(sendCallbackId);
     },
   );
 
   const renderObject = render(KubernetesTerminal, { podName: 'podName', containerName: 'containerName' });
-  await waitFor(() => expect(kubernetesExecMock).toHaveBeenCalled());
+  await waitFor(() => expect(window.kubernetesExec).toHaveBeenCalled());
 
   const terminals = get(terminalStates);
   expect(terminals.size).toBe(0);

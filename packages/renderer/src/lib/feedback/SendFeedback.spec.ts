@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
@@ -30,16 +30,12 @@ vi.mock(import('./feedbackForms/GitHubIssueFeedback.svelte'));
 
 vi.mock(import('./feedbackForms/DirectFeedback.svelte'));
 
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
   vi.mocked(window.getGitHubFeedbackLinks).mockResolvedValue({
     bug: '/bug/link',
     feature: '/feature/link',

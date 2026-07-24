@@ -26,12 +26,10 @@ import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
 beforeAll(() => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  // fake the window.events object
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect configured provider shows update button', async () => {

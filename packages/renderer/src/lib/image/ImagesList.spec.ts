@@ -36,7 +36,6 @@ import { viewsContributions } from '/@/stores/views';
 
 import ImagesList from './ImagesList.svelte';
 
-// fake the window.events object
 beforeEach(() => {
   providerInfos.set([]);
   imagesInfos.set([]);
@@ -47,11 +46,10 @@ beforeEach(() => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
 
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(customProperties: object): Promise<void> {
