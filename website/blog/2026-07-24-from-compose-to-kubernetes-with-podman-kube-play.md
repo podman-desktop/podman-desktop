@@ -19,4 +19,4 @@ In the tutorial, you will:
 
 Read the full tutorial:
 
-- [Compose to Kubernetes with Podman Kube Play](/docs/compose/compose-to-kubernetes-with-podman-kube-play)
+- [Compose to Kubernetes with Podman Kube Play](/tutorial/compose-to-kubernetes-with-podman-kube-play)

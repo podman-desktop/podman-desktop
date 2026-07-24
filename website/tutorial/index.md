@@ -43,4 +43,5 @@ Before going through each tutorial, familiarize yourself with the key UI compone
 - [Running an AI application](/tutorial/running-an-ai-application)
 - [Creating an extension](/tutorial/creating-an-extension)
 - [Getting started with Compose](/tutorial/getting-started-with-compose)
+- [Compose to Kubernetes with Podman Kube Play](/tutorial/compose-to-kubernetes-with-podman-kube-play)
 - [Testcontainers with Podman](/tutorial/testcontainers-with-podman)

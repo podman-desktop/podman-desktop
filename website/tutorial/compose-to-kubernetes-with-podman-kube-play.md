@@ -1,9 +1,9 @@
 ---
+sidebar_position: 9
 title: Compose to Kubernetes with Podman Kube Play
 description: Convert an existing Compose application to Kubernetes YAML with kompose and validate it locally with podman kube play.
-sidebar_position: 4
 keywords: [compose, kubernetes, podman, kompose]
-tags: [compose, kubernetes, migrating]
+tags: [podman-desktop, tutorial, compose, kubernetes, migrating]
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -48,8 +48,8 @@ $ podman compose -f compose.yaml up -d --build
 <ThemedImage
 alt="Step 1 podman compose terminal output"
 sources={{
-    light: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-compose-output.png').default,
-    dark: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-compose-output.png').default,
+    light: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-compose-output.png').default,
+    dark: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-compose-output.png').default,
   }}
 />
 
@@ -60,16 +60,16 @@ Open the guestbook UI:
 <ThemedImage
 alt="Step 1 in Podman Desktop: containers list"
 sources={{
-    light: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-podman-desktop-light.png').default,
-    dark: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-podman-desktop-dark.png').default,
+    light: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-podman-desktop-light.png').default,
+    dark: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-podman-desktop-dark.png').default,
   }}
 />
 
 <ThemedImage
 alt="Step 1 guestbook app"
 sources={{
-    light: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-grocery-app.png').default,
-    dark: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-grocery-app.png').default,
+    light: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-grocery-app.png').default,
+    dark: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-1-grocery-app.png').default,
   }}
 />
 
@@ -94,8 +94,8 @@ This is expected for this sample. `redis-replica` is internal-only, so it does n
 <ThemedImage
 alt="Step 2 generated Kubernetes YAML"
 sources={{
-    light: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-2-generated-yaml.png').default,
-    dark: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-2-generated-yaml.png').default,
+    light: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-2-generated-yaml.png').default,
+    dark: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-2-generated-yaml.png').default,
   }}
 />
 
@@ -126,8 +126,8 @@ Verify the app:
 <ThemedImage
 alt="Step 3 containers after kube play"
 sources={{
-    light: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-light.png').default,
-    dark: require('../../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-dark.png').default,
+    light: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-light.png').default,
+    dark: require('../blog/img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-dark.png').default,
   }}
 />
 
