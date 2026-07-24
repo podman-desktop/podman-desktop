@@ -17,19 +17,38 @@
  ***********************************************************************/
 
 import { rm } from 'node:fs/promises';
+import * as net from 'node:net';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 
 import { Client, Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
+import type { Mock } from 'vitest';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
-beforeEach(() => {
+type NodeNet = typeof net;
+
+vi.mock(import('node:net'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    createServer: vi.fn((...args: unknown[]) =>
+      (actual.createServer as (...createServerArgs: unknown[]) => net.Server)(...args),
+    ) as unknown as typeof actual.createServer,
+  };
+});
+
+beforeEach(async () => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+  const actualNet = await vi.importActual<NodeNet>('node:net');
+  mockedCreateServer().mockImplementation((...args: unknown[]) =>
+    (actualNet.createServer as (...createServerArgs: unknown[]) => net.Server)(...args),
+  );
 });
 
 afterEach(() => {
@@ -40,6 +59,10 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
   isListening(): boolean {
     return super.isListening();
   }
+}
+
+function mockedCreateServer(): Mock {
+  return net.createServer as unknown as Mock;
 }
 
 let dummyKey: string;
@@ -148,4 +171,197 @@ test('disconnect should clear pending reconnect timeout', () => {
 
   vi.advanceTimersByTime(30000);
   expect(connectSpy).toHaveBeenCalledTimes(1);
+});
+
+test('should expose ssh connection errors', () => {
+  vi.useFakeTimers();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  const capturedClient: { value?: Client } = {};
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client): Client {
+    capturedClient.value = this;
+    return this;
+  });
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+
+  podmanRemoteSshTunnel.connect();
+  capturedClient.value?.emit('error', new Error('connection refused'));
+
+  expect(podmanRemoteSshTunnel.status()).toBe('unknown');
+  expect(podmanRemoteSshTunnel.error).toBe('connection refused');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
+test('should expose unexpected ssh end and close errors while reconnecting', () => {
+  vi.useFakeTimers();
+  const capturedClients: Client[] = [];
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client): Client {
+    capturedClients.push(this);
+    return this;
+  });
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+
+  podmanRemoteSshTunnel.connect();
+  capturedClients[0].emit('end');
+
+  expect(podmanRemoteSshTunnel.status()).toBe('stopped');
+  expect(podmanRemoteSshTunnel.error).toBe('SSH connection ended unexpectedly');
+
+  vi.advanceTimersByTime(30000);
+  capturedClients[1].emit('close');
+
+  expect(podmanRemoteSshTunnel.status()).toBe('stopped');
+  expect(podmanRemoteSshTunnel.error).toBe('SSH connection closed unexpectedly');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
+test('should clear error when ssh connection becomes ready', async () => {
+  vi.useFakeTimers();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  mockedCreateServer().mockReturnValue({
+    listen: vi.fn((_path, callback) => {
+      callback();
+    }),
+    on: vi.fn(),
+    close: vi.fn(),
+  } as unknown as net.Server);
+
+  const capturedClient: { value?: Client } = {};
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client): Client {
+    capturedClient.value = this;
+    return this;
+  });
+
+  const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+
+  podmanRemoteSshTunnel.connect();
+  capturedClient.value?.emit('error', new Error('connection refused'));
+  capturedClient.value?.emit('ready');
+
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.isListening()).toBeTruthy());
+  expect(podmanRemoteSshTunnel.status()).toBe('started');
+  expect(podmanRemoteSshTunnel.error).toBeUndefined();
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
+test('should expose remote socket errors', async () => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  let localConnectionHandler: ((localSocket: net.Socket) => void) | undefined;
+  mockedCreateServer().mockImplementation(
+    (optionsOrHandler?: net.ServerOpts | ((socket: net.Socket) => void), handler?: (socket: net.Socket) => void) => {
+      localConnectionHandler = typeof optionsOrHandler === 'function' ? optionsOrHandler : handler;
+      return {
+        listen: vi.fn((_path, callback) => {
+          callback();
+        }),
+        on: vi.fn(),
+        close: vi.fn(),
+      } as unknown as net.Server;
+    },
+  );
+
+  const localSocket = new PassThrough() as unknown as net.Socket;
+  const remoteSocket = new PassThrough();
+  const capturedClient: { value?: Client } = {};
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client): Client {
+    capturedClient.value = this;
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'openssh_forwardOutStreamLocal').mockImplementation((_path, callback) => {
+    callback(undefined, remoteSocket as never);
+    return undefined as never;
+  });
+
+  const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+
+  podmanRemoteSshTunnel.connect();
+  capturedClient.value?.emit('ready');
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.isListening()).toBeTruthy());
+
+  localConnectionHandler?.(localSocket);
+  await vi.waitFor(() => expect(Client.prototype.openssh_forwardOutStreamLocal).toHaveBeenCalled());
+
+  remoteSocket.emit('error', { message: 'remote socket failed' });
+
+  expect(podmanRemoteSshTunnel.error).toBe('remote socket failed');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
+test('should expose errors when remote forwarding fails', async () => {
+  let localConnectionHandler: ((localSocket: net.Socket) => void) | undefined;
+  mockedCreateServer().mockImplementation(
+    (optionsOrHandler?: net.ServerOpts | ((socket: net.Socket) => void), handler?: (socket: net.Socket) => void) => {
+      localConnectionHandler = typeof optionsOrHandler === 'function' ? optionsOrHandler : handler;
+      return {
+        listen: vi.fn((_path, callback) => {
+          callback();
+        }),
+        on: vi.fn(),
+        close: vi.fn(),
+      } as unknown as net.Server;
+    },
+  );
+
+  const localSocket = new PassThrough() as unknown as net.Socket;
+  const capturedClient: { value?: Client } = {};
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client): Client {
+    capturedClient.value = this;
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'openssh_forwardOutStreamLocal').mockImplementation((_path, callback) => {
+    callback(new Error('forward failed'), undefined as never);
+    return undefined as never;
+  });
+
+  const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+
+  podmanRemoteSshTunnel.connect();
+  capturedClient.value?.emit('ready');
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.isListening()).toBeTruthy());
+
+  localConnectionHandler?.(localSocket);
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.error).toBe('forward failed'));
+
+  podmanRemoteSshTunnel.disconnect();
 });

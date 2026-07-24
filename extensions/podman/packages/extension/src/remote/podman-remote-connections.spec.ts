@@ -19,7 +19,7 @@
 import * as fs from 'node:fs';
 
 import * as extensionApi from '@podman-desktop/api';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteConnections } from './podman-remote-connections';
 import type { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
@@ -32,6 +32,11 @@ const provider = {} as extensionApi.Provider;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.useRealTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 class TestPodmanRemoteConnections extends PodmanRemoteConnections {
   createTunnel(
@@ -147,4 +152,94 @@ test('should check connections if configuration is enabled and a system connecti
   // no connection should be created
   expect(spyCreateTunnel).not.toHaveBeenCalled();
   expect(spyRefreshRemoteConnections).toHaveBeenCalled();
+});
+
+test('should register remote connection with tunnel error', async () => {
+  vi.useFakeTimers();
+  const subscriptions: extensionApi.Disposable[] = [];
+  const testProvider = {
+    registerContainerProviderConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as extensionApi.Provider;
+  const podmanRemoteConnections = new TestPodmanRemoteConnections(
+    { subscriptions } as unknown as extensionApi.ExtensionContext,
+    testProvider,
+  );
+  const sshTunnel = {
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    status: vi.fn(() => 'unknown'),
+    get error(): string {
+      return 'connection refused';
+    },
+  } as unknown as PodmanRemoteSshTunnel;
+
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => undefined,
+  } as unknown as extensionApi.Configuration);
+  vi.spyOn(fs, 'readFileSync').mockReturnValue('file');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'ssh://dummy@127.0.0.1:1234/run/podman/podman.sock',
+        Identity: '/tmp/fakepath',
+        Name: 'RemoteSystemConnection1',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+  vi.spyOn(podmanRemoteConnections, 'createTunnel').mockReturnValue(sshTunnel);
+
+  const refresh = podmanRemoteConnections.refreshRemoteConnections();
+  await vi.advanceTimersByTimeAsync(1000);
+  await refresh;
+
+  expect(testProvider.registerContainerProviderConnection).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: 'RemoteSystemConnection1',
+      error: 'connection refused',
+    }),
+  );
+  expect(subscriptions).toHaveLength(1);
+});
+
+test('should use default ssh port when remote connection URI has no port', async () => {
+  const testProvider = {
+    registerContainerProviderConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as extensionApi.Provider;
+  const podmanRemoteConnections = new TestPodmanRemoteConnections(
+    { subscriptions: [] } as unknown as extensionApi.ExtensionContext,
+    testProvider,
+  );
+  const sshTunnel = {
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    status: vi.fn(() => 'started'),
+  } as unknown as PodmanRemoteSshTunnel;
+
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => undefined,
+  } as unknown as extensionApi.Configuration);
+  vi.spyOn(fs, 'readFileSync').mockReturnValue('file');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'ssh://dummy@127.0.0.1/run/podman/podman.sock',
+        Identity: '/tmp/fakepath',
+        Name: 'RemoteSystemConnection1',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+  const createTunnelSpy = vi.spyOn(podmanRemoteConnections, 'createTunnel').mockReturnValue(sshTunnel);
+
+  await podmanRemoteConnections.refreshRemoteConnections();
+
+  expect(createTunnelSpy).toHaveBeenCalledWith(
+    '127.0.0.1',
+    22,
+    'dummy',
+    'file',
+    '/run/podman/podman.sock',
+    expect.any(String),
+  );
 });
