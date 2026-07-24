@@ -49,6 +49,13 @@ permissions:
 jobs:
   website:
     name: website
+    permissions:
+      # Required to check out the repository and read its metadata
+      contents: read
+      # Required for Argos to authenticate via OIDC
+      id-token: write
+      # Lets Argos link the build to its pull request
+      pull-requests: read
     runs-on: ubuntu-22.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
@@ -82,4 +89,4 @@ jobs:
         working-directory: website-argos
         run: pnpm upload
         env:
-          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
