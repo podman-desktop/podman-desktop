@@ -40,6 +40,8 @@ import type {
   ImageInspectInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   LibPodPodInfo,
   ListImagesOptions,
   ManifestCreateOptions,
@@ -85,8 +87,11 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { isWindows } from '/@/util.js';
 
+import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
@@ -143,6 +148,10 @@ export class ContainerProviderRegistry {
     private imageRegistry: ImageRegistry,
     @inject(Telemetry)
     private telemetryService: Telemetry,
+    @inject(TaskManager)
+    private taskManager: TaskManager,
+    @inject(CancellationTokenRegistry)
+    private cancellationTokenRegistry: CancellationTokenRegistry,
   ) {
     const libPodDockerode = new LibpodDockerode();
     libPodDockerode.enhancePrototypeWithLibPod();
@@ -1411,6 +1420,128 @@ export class ContainerProviderRegistry {
 
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
+  }
+
+  private completeUpdateImagesTask(task: Task, results: ImageUpdateResult[]): void {
+    if (results.length === 1) {
+      for (const result of results) {
+        task.name = `Update ${result.imageRef}: ${result.message}`;
+        if (result.status === 'error') {
+          task.error = result.message;
+          task.status = 'failure';
+        } else {
+          task.status = 'success';
+        }
+      }
+      return;
+    }
+
+    const updatedCount = results.filter(result => result.updated).length;
+    const upToDateCount = results.filter(result => result.status === 'normal' && !result.updated).length;
+    const skippedCount = results.filter(result => result.status === 'skipped').length;
+    const failedResults = results.filter(result => result.status === 'error');
+    const parts = [
+      this.formatUpdateImagesTaskPart(updatedCount, 'updated'),
+      this.formatUpdateImagesTaskPart(upToDateCount, 'already up to date'),
+      this.formatUpdateImagesTaskPart(skippedCount, 'skipped'),
+      this.formatUpdateImagesTaskPart(failedResults.length, 'failed'),
+    ].filter(part => part.length > 0);
+
+    if (parts.length > 0) {
+      task.name = `Image update results: ${parts.join(', ')}`;
+    }
+    if (failedResults.length > 0) {
+      task.error = failedResults.map(result => `${result.imageRef}: ${result.message}`).join('\n');
+      task.status = 'failure';
+    } else {
+      task.status = 'success';
+    }
+  }
+
+  private formatUpdateImagesTaskPart(count: number, label: string): string {
+    return count > 0 ? `${count} ${label}` : '';
+  }
+
+  async updateImages(images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> {
+    const cancellationTokenSourceId = this.cancellationTokenRegistry.createCancellationTokenSource();
+    const cancellationTokenSource =
+      this.cancellationTokenRegistry.getCancellationTokenSource(cancellationTokenSourceId);
+    if (!cancellationTokenSource) {
+      throw new Error('Failed to create CancellationTokenSource');
+    }
+
+    const task = this.taskManager.createTask({
+      title: `Updating image${images.length === 1 ? '' : 's'}`,
+      cancellable: true,
+      cancellationTokenSourceId,
+    });
+    const abortController = new AbortController();
+    const cancellationListener = cancellationTokenSource.token.onCancellationRequested(() => abortController.abort());
+
+    try {
+      const results = await Promise.all(
+        images.map(async (info): Promise<ImageUpdateResult> => {
+          let telemetryOptions: Record<string, unknown> = {};
+          try {
+            const matchingEngine = this.getMatchingEngine(info.engineId);
+            const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
+            const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
+
+            if (status.status === 'error') {
+              telemetryOptions = { outcome: 'error', error: status.message };
+              return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+            }
+
+            if (status.status === 'skipped' || !status.updateAvailable) {
+              telemetryOptions = { outcome: status.status === 'skipped' ? 'skipped' : 'up-to-date' };
+              return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+            }
+
+            const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+            const pullStream = await matchingEngine.pull(info.image, {
+              authconfig,
+              abortSignal: abortController.signal,
+            });
+
+            const { resolve, reject, promise } = Promise.withResolvers<void>();
+            matchingEngine.modem.followProgress(
+              pullStream,
+              (err: Error | null) => (err ? reject(err) : resolve()),
+              () => {},
+            );
+            await promise;
+
+            telemetryOptions = { outcome: 'updated' };
+            return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
+          } catch (error: unknown) {
+            telemetryOptions = { outcome: 'error', error: error };
+            const message = error instanceof Error ? error.message : String(error);
+            return { imageRef: info.image, updated: false, status: 'error', message };
+          } finally {
+            this.telemetryService.track('updateImage', {
+              imageName: this.getImageHash(info.image),
+              ...telemetryOptions,
+            });
+          }
+        }),
+      );
+      if (cancellationTokenSource.token.isCancellationRequested) {
+        task.status = 'canceled';
+      } else {
+        this.completeUpdateImagesTask(task, results);
+      }
+      return results;
+    } catch (error: unknown) {
+      if (cancellationTokenSource.token.isCancellationRequested) {
+        task.status = 'canceled';
+      } else {
+        task.error = String(error);
+      }
+      throw error;
+    } finally {
+      cancellationListener.dispose();
+      this.cancellationTokenRegistry.removeCancellationTokenSource(cancellationTokenSourceId);
+    }
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
