@@ -19,6 +19,7 @@ import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
+import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 
 interface Props {
@@ -41,6 +42,29 @@ const expandedThreshold = 70;
 let navWidth = $state(160);
 let expanded = $derived(navWidth > expandedThreshold);
 let isDragging = $state(false);
+
+function flattenNavigationEntries(entries: NavigationRegistryEntry[]): NavigationRegistryEntry[] {
+  const flat: NavigationRegistryEntry[] = [];
+  for (const entry of entries) {
+    if (entry.items && entry.type === 'group') {
+      flat.push(...entry.items);
+    } else if (entry.type === 'submenu') {
+      flat.push(entry);
+      for (const child of entry.items ?? []) {
+        if (child.pinned) {
+          flat.push({ ...child, name: `${entry.name} > ${child.name}`, tooltip: `${entry.name} > ${child.tooltip}` });
+        }
+      }
+    } else {
+      flat.push(entry);
+    }
+  }
+  return flat.map(entry => ({ ...entry }));
+}
+
+let flatNavigationEntries = $derived(flattenNavigationEntries($navigationRegistry));
+let pinnedEntries = $derived(flatNavigationEntries.filter(entry => entry.pinned));
+let regularEntries = $derived(flatNavigationEntries.filter(entry => !entry.pinned));
 
 $effect(() => {
   document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
@@ -228,15 +252,13 @@ function onDidChangeConfigurationCallback(e: Event): void {
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
       onpointerdown={onScrollRegionPointerDown}>
-      {#each $navigationRegistry as navigationRegistryItem, index (index)}
-        {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-          <!-- This is a group, list all items from the entry -->
-          {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
-          {/each}
-        {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
-        {/if}
+      {#if pinnedEntries.length > 0}
+        {#each pinnedEntries as entry (entry.link)}
+          <NavRegistryEntry {entry} bind:meta={meta} {expanded} />
+        {/each}
+      {/if}
+      {#each regularEntries as entry (entry.link)}
+        <NavRegistryEntry {entry} bind:meta={meta} {expanded} />
       {/each}
     </div>
     {#if scrollThumbVisible}

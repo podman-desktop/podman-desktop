@@ -1,7 +1,9 @@
 <script lang="ts">
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons';
 import { DockerCompatibilitySettings } from '@podman-desktop/core-api';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
@@ -10,6 +12,7 @@ import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
 
 import { configurationProperties } from './stores/configurationProperties';
+import { navigationRegistry } from './stores/navigation/navigation-registry';
 import { onDidChangeRegisteredFeatures, registeredFeatures } from './stores/registered-features';
 
 interface Props {
@@ -24,6 +27,10 @@ let sectionExpanded: { [key: string]: boolean } = $state({});
 let experimentalSection: boolean = $state(false);
 
 let settingsNavigationItems: SettingsNavItemConfig[] = $state(settingsNavigationEntries);
+
+function isEntryPinned(href: string): boolean {
+  return $navigationRegistry.some(entry => entry.link === href && entry.pinned);
+}
 
 let navigationElement: HTMLElement | undefined = $state();
 let navigationWidthPx: number | undefined = $state();
@@ -280,26 +287,46 @@ onMount(() => {
   <div class="h-full overflow-y-auto" style="margin-bottom:auto">
     {#each settingsNavigationItems as navItem, index (index)}
       {#if navItem.visible}
-        <SettingsNavItem 
-          title={navItem.title} 
-          href={navItem.href} 
-          icon={navItem.icon}
-          onClick={scheduleNavigationWidthUpdate}
-          selected={meta.url === navItem.href} 
-        />
+        <div class="relative">
+          <SettingsNavItem 
+            title={navItem.title} 
+            href={navItem.href} 
+            icon={navItem.icon}
+            onClick={scheduleNavigationWidthUpdate}
+            selected={meta.url === navItem.href} 
+          />
+          {#if isEntryPinned(navItem.href)}
+            <div
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-[color:var(--pd-global-nav-icon-selected-highlight)]"
+              title="Pinned to top"
+              aria-label={`${navItem.title} is pinned to top`}>
+              <Icon icon={faThumbtack} size="xs" />
+            </div>
+          {/if}
+        </div>
       {/if}
     {/each}
 
     <!-- Default configuration properties start -->
     {#each configProperties as [configSection, configItems] (configSection)}
-      <SettingsNavItem
-        title={configSection}
-        href="/preferences/default/{configSection}"
-        icon={PreferencesIcon}
-        section={configItems.length > 0}
-        selected={meta.url === `/preferences/default/${configSection}`}
-        onClick={scheduleNavigationWidthUpdate}
-        bind:expanded={sectionExpanded[configSection]} />
+      <div class="relative">
+        <SettingsNavItem
+          title={configSection}
+          href="/preferences/default/{configSection}"
+          icon={PreferencesIcon}
+          section={configItems.length > 0}
+          selected={meta.url === `/preferences/default/${configSection}`}
+          onClick={scheduleNavigationWidthUpdate}
+          bind:expanded={sectionExpanded[configSection]} />
+        {#if isEntryPinned(`/preferences/default/${configSection}`)}
+          <div
+            class="absolute right-6 top-1/2 -translate-y-1/2 text-[color:var(--pd-global-nav-icon-selected-highlight)]"
+            title="Pinned to top"
+            aria-label={`${configSection} is pinned to top`}>
+            <Icon icon={faThumbtack} size="xs" />
+          </div>
+        {/if}
+      </div>
       {#if sectionExpanded[configSection]}
         {#each sortItems(configItems) as configItem (configItem.id)}
           <SettingsNavItem
@@ -313,14 +340,24 @@ onMount(() => {
     {/each}
     <!-- Default configuration properties end -->
     <div class="mx-3 my-2 border-t border-(--pd-global-nav-bg-border)"></div>
-    <SettingsNavItem
-      icon='fas fa-crosshairs'
-      iconRight={ShortcutArrowIcon}
-      iconRightAlign="end"
-      title="Troubleshooting"
-      href="/troubleshooting/repair-connections"
-      onClick={scheduleNavigationWidthUpdate}
-      selected={meta.url === '/troubleshooting/repair-connections'}
-    />
+    <div class="relative">
+      <SettingsNavItem
+        icon='fas fa-crosshairs'
+        iconRight={ShortcutArrowIcon}
+        iconRightAlign="end"
+        title="Troubleshooting"
+        href="/troubleshooting/repair-connections"
+        onClick={scheduleNavigationWidthUpdate}
+        selected={meta.url === '/troubleshooting/repair-connections'}
+      />
+      {#if isEntryPinned('/troubleshooting/repair-connections')}
+        <div
+          class="absolute right-6 top-1/2 -translate-y-1/2 text-[color:var(--pd-global-nav-icon-selected-highlight)]"
+          title="Pinned to top"
+          aria-label="Troubleshooting is pinned to top">
+          <Icon icon={faThumbtack} size="xs" />
+        </div>
+      {/if}
+    </div>
   </div>
 </nav>

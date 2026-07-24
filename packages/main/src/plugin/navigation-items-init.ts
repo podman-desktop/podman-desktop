@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,12 @@ export class NavigationItemsInit {
       properties: {
         ['navbar.disabledItems']: {
           description: 'Items being disabled in the navigation bar',
+          type: ['boolean'],
+          default: [],
+          hidden: true,
+        },
+        ['navbar.pinnedItems']: {
+          description: 'Items being pinned to the top of the navigation bar',
           type: ['boolean'],
           default: [],
           hidden: true,

@@ -1,5 +1,7 @@
 <script lang="ts">
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { TinroRouteMeta } from 'tinro';
 
 import { lastSubmenuPages } from './stores/breadcrumb';
@@ -30,8 +32,18 @@ if (!pages[title]) {
   </div>
   <div class="h-full overflow-y-auto" style="margin-bottom:auto">
     {#each items ?? [] as item, index (index)}
-      <SettingsNavItem title={item.tooltip} href={item.link} selected={meta.url.startsWith(item.link)} onClick={(): string => pages[title] = item.link}
-      ></SettingsNavItem>
+      <div class="relative">
+        <SettingsNavItem title={item.tooltip} href={item.link} selected={meta.url.startsWith(item.link)} onClick={(): string => pages[title] = item.link}
+        ></SettingsNavItem>
+        {#if item.pinned}
+          <div
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-[color:var(--pd-global-nav-icon-selected-highlight)]"
+            title="Pinned to top"
+            aria-label={`${item.name} is pinned to top`}>
+            <Icon icon={faThumbtack} size="xs" />
+          </div>
+        {/if}
+      </div>
     {/each}
   </div>
 </nav>
