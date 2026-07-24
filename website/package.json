@@ -25,7 +25,7 @@
     "@docusaurus/core": "^3.10.0",
     "@docusaurus/plugin-client-redirects": "^3.10.0",
     "@docusaurus/preset-classic": "^3.10.0",
-    "@docusaurus/theme-common": "^3.10.0",
+    "@docusaurus/theme-common": "^3.10.2",
     "@docusaurus/theme-mermaid": "^3.10.0",
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
     "@fortawesome/free-brands-svg-icons": "^7.3.1",
@@ -42,9 +42,9 @@
     "react-player": "^3.4.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.10.0",
-    "@docusaurus/tsconfig": "^3.10.0",
-    "@docusaurus/types": "^3.10.0",
+    "@docusaurus/module-type-aliases": "^3.10.2",
+    "@docusaurus/tsconfig": "^3.10.2",
+    "@docusaurus/types": "^3.10.2",
     "@octokit/rest": "^22.0.1",
     "@tailwindcss/postcss": "^4.3.2",
     "markdownlint": "^0.41.1",
