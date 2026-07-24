@@ -17,3 +17,4 @@ Access the following pages to troubleshoot your issues:
 - [Troubleshooting Podman on Linux](/docs/troubleshooting/troubleshooting-podman-on-linux)
 - [Troubleshooting OpenShift Local](/docs/troubleshooting/troubleshooting-openshift-local)
 - [Troubleshooting extension-related issues](/docs/troubleshooting/troubleshooting-extension-issues)
+- [Testing a Flatpak from a release](/docs/troubleshooting/troubleshooting-flatpak)
