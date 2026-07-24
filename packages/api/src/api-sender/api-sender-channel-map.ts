@@ -20,6 +20,7 @@ import type { IConfigurationChangeEvent } from '/@/configuration/models.js';
 import type { ContributionInfo } from '/@/contribution-info.js';
 import type { CheckingState, ContextGeneralState } from '/@/kubernetes-contexts-states.js';
 import type { ForwardConfig } from '/@/kubernetes-port-forward-model.js';
+import type { NavigationHistoryPushInfo } from '/@/navigation-history-info.js';
 import type { PinOption } from '/@/status-bar/pin-option.js';
 import type { SystemOverviewStatusInfo } from '/@/system-overview-info.js';
 import type { NotificationTaskInfo, TaskInfo } from '/@/taskInfo.js';
@@ -109,6 +110,7 @@ export interface ApiSenderChannelMap {
   navigate: unknown;
   'navigation-go-back': never;
   'navigation-go-forward': never;
+  'navigation-history-push': NavigationHistoryPushInfo;
   'network-event': never;
   'notifications-updated': never;
   onDidChangeConfiguration: unknown;

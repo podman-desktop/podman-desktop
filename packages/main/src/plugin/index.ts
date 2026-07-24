@@ -3269,6 +3269,13 @@ export class PluginSystem {
       },
     );
 
+    this.ipcHandle(
+      'navigation:navigateToHistoryEntry',
+      async (_listener, extensionId: string, entryId: string): Promise<void> => {
+        navigationManager.navigateToHistoryEntry(extensionId, entryId);
+      },
+    );
+
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();
     });

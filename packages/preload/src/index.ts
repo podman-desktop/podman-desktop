@@ -284,6 +284,13 @@ export function initExposure(): void {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);
   });
 
+  contextBridge.exposeInMainWorld(
+    'navigateToExtensionHistoryEntry',
+    async (extensionId: string, entryId: string): Promise<void> => {
+      return ipcRenderer.invoke('navigation:navigateToHistoryEntry', extensionId, entryId);
+    },
+  );
+
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
   });
