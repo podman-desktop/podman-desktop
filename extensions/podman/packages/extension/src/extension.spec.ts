@@ -68,6 +68,7 @@ import {
 import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
+import type { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import { RosettaProvisioner } from './utils/rosetta';
@@ -262,6 +263,7 @@ beforeEach(async () => {
   extension.initTelemetryLogger();
   extension.initExtensionNotification();
   extension.resetShouldNotifySetup();
+  extension.initPodmanRemoteConnections(undefined as unknown as PodmanRemoteConnections);
 
   // mock PodmanInstall class methods
   vi.mocked(PODMAN_INSTALL_MOCK.checkForUpdate).mockResolvedValue({
@@ -3951,6 +3953,94 @@ describe('Check notify podman setup', () => {
     await extension.doMonitorProvider(provider);
     expect(extensionApi.window.showNotification).toHaveBeenCalledTimes(2);
     expect(extensionApi.window.showNotification).toHaveBeenLastCalledWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('do not show setup podman notification if remote connections exist and machine list is empty', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(true),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(extensionApi.window.showNotification).not.toBeCalled();
+  });
+
+  test('show setup podman notification if no remote connections and machine list is empty', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(false),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(extensionApi.window.showNotification).toBeCalledWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('set provider status to ready when remote connections exist but no local machines', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(true),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(provider.updateStatus).toBeCalledWith('ready');
+  });
+
+  test('do not show setup notification on error if remote connections exist', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.spyOn(extensionApi.process, 'exec').mockRejectedValue({
+      name: 'name',
+      message: 'description',
+      stderr: 'error',
+    });
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(true),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('description');
+    expect(extensionApi.window.showNotification).not.toBeCalled();
+    expect(extensionApi.context.setValue).toBeCalledWith('podmanRemoteConnectionExists', true, 'onboarding');
   });
 });
 

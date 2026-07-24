@@ -137,6 +137,7 @@ let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
 
 let extensionNotifications: ExtensionNotifications;
+let podmanRemoteConnections: PodmanRemoteConnections | undefined;
 
 export function isIncompatibleMachineOutput(output: string | undefined): boolean {
   // apple HV v4 to v5 machine config error
@@ -164,6 +165,9 @@ async function doUpdateMachines(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
 ): Promise<void> {
+  const hasRemoteConnections = podmanRemoteConnections?.hasConnections() ?? false;
+  extensionApi.context.setValue('podmanRemoteConnectionExists', hasRemoteConnections, 'onboarding');
+
   // init machines available
   let machineListOutput: MachineJSONListOutput;
   try {
@@ -177,7 +181,9 @@ async function doUpdateMachines(
     }
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    extensionNotifications.notifySetupPodmanNotLinux();
+    if (!hasRemoteConnections) {
+      extensionNotifications.notifySetupPodmanNotLinux();
+    }
     throw error;
   }
 
@@ -195,17 +201,18 @@ async function doUpdateMachines(
   }
 
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine || machines.length === 0) {
+  // but skip if remote connections exist and no cleanup is needed
+  if (shouldCleanMachine || (machines.length === 0 && !hasRemoteConnections)) {
     // push setup notification
     extensionNotifications.notifySetupPodmanNotLinux();
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-  // if there is at least one machine which does not need to be cleaned and the OS is not Linux
-  // podman is correctly setup so if there is an old notification asking the user to take action
-  // we dispose it as not needed anymore
-  if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
+  // if there is at least one machine (or remote connection) which does not need to be cleaned
+  // and the OS is not Linux, podman is correctly setup so if there is an old notification
+  // asking the user to take action we dispose it as not needed anymore
+  if (!shouldCleanMachine && (machines.length > 0 || hasRemoteConnections) && !extensionApi.env.isLinux) {
     extensionNotifications.disposeNotification();
   }
 
@@ -338,10 +345,12 @@ async function doUpdateMachines(
   // if we are on Linux, ignore this as podman machine is OPTIONAL and the provider status in Linux is based upon
   // the native podman installation / not machine.
   if (!extensionApi.env.isLinux) {
-    if (machines.length === 0) {
+    if (machines.length === 0 && !hasRemoteConnections) {
       if (provider.status !== 'configuring') {
         provider.updateStatus('installed');
       }
+    } else if (machines.length === 0 && hasRemoteConnections) {
+      provider.updateStatus('ready');
     } else {
       /*
        * The machine can have 3 states, based on `Starting` and `Running` fields:
@@ -1123,6 +1132,10 @@ export function initExtensionNotification(): void {
   extensionNotifications = new ExtensionNotifications(telemetryLogger);
 }
 
+export function initPodmanRemoteConnections(remoteConnections: PodmanRemoteConnections): void {
+  podmanRemoteConnections = remoteConnections;
+}
+
 const currentUpdatesDisposables: extensionApi.Disposable[] = [];
 export async function initCheckAndRegisterUpdate(
   provider: extensionApi.Provider,
@@ -1639,6 +1652,11 @@ export async function start(
     });
   }
 
+  // Initialize remote connections before machine monitoring so hasConnections()
+  // is populated before the first updateMachines() call
+  podmanRemoteConnections = new PodmanRemoteConnections(extensionContext, provider);
+  await podmanRemoteConnections.start();
+
   // Podman Machine support is on macOS, Windows and Linux
   // Despite Linux having native container support, Podman Machine is still supported on Linux
   // so let's monitor for the machines
@@ -1769,9 +1787,6 @@ export async function start(
   await registrySetup.setup();
 
   await calcPodmanMachineSetting();
-
-  const podmanRemoteConnections = new PodmanRemoteConnections(extensionContext, provider);
-  podmanRemoteConnections.start();
 }
 
 export async function connectionAuditor(items: extensionApi.AuditRequestItems): Promise<extensionApi.AuditResult> {
