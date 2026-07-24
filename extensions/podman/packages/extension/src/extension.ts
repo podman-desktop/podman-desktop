@@ -1869,24 +1869,37 @@ async function stopAutoStartedMachine(): Promise<void> {
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const installedPodman = await podmanBinary.getBinaryInfo();
 
+  let hypervEnabled = false;
+  wslEnabled = await winPlatform.isWSLEnabled();
+  if (await winPlatform.isHyperVEnabled()) {
+    hypervEnabled = true;
+  }
+  updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
+
+  // For Podman >= 6.0, machine list returns all machines across all providers by default,
+  // so a single call without specifying a provider is sufficient.
+  if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {
+    const machineListOutput = await getJSONMachineListByProvider();
+    return {
+      list: JSON.parse(machineListOutput.stdout) as MachineJSON[],
+      error: machineListOutput.stderr,
+    };
+  }
+
+  // For Podman < 6.0, iterate per provider to collect all machines.
   const containerMachineProviders: (string | undefined)[] = [];
   // if libkrun is supported we want to show both applehv and libkrun machines
   if (installedPodman && isLibkrunSupported(installedPodman.version)) {
     containerMachineProviders.push(...['applehv', 'libkrun']);
   }
 
-  let hypervEnabled = false;
-  wslEnabled = await winPlatform.isWSLEnabled();
   if (wslEnabled) {
     containerMachineProviders.push('wsl');
   }
 
-  if (await winPlatform.isHyperVEnabled()) {
-    hypervEnabled = true;
+  if (hypervEnabled) {
     containerMachineProviders.push('hyperv');
   }
-  // update context "wsl-hyperv enabled" value
-  updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
 
   if (containerMachineProviders.length === 0) {
     // in all other cases we set undefined so that it executes normally by using the default container provider
@@ -1990,6 +2003,11 @@ export function isPodman5OrLater(podmanVersion: string): boolean {
 
 export function isPodman6OrLater(podmanVersion: string): boolean {
   return compare(podmanVersion, '6.0.0') >= 0;
+}
+
+// Checks if `podman machine list` returns all machines across all providers without specifying one.
+export function isMachineListAllProvidersSupported(podmanVersion: string): boolean {
+  return isPodman6OrLater(podmanVersion);
 }
 
 export function sendTelemetryRecords(
