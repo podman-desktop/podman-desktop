@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderContainerConnection } from '@podman-desktop/api';
+import type { NavigationHistoryEntry, ProviderContainerConnection } from '@podman-desktop/api';
 import type { OnboardingInfo, WebviewInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -27,6 +27,8 @@ import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js'
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
+import { Uri } from '/@/plugin/types/uri.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 
 import { NavigationManager } from './navigation-manager.js';
@@ -359,5 +361,114 @@ describe('register navigation commands', () => {
       expect.objectContaining({ command: 'navigation.goBack', title: 'Go Back', category: 'Navigation' }),
       expect.objectContaining({ command: 'navigation.goForward', title: 'Go Forward', category: 'Navigation' }),
     );
+  });
+});
+
+describe('pushHistoryEntry', () => {
+  test('sends the navigation-history-push payload with no icon', () => {
+    navigationManager.pushHistoryEntry('my.extension', {
+      id: 'entry-1',
+      label: 'Entry 1',
+    });
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigation-history-push', {
+      extensionId: 'my.extension',
+      id: 'entry-1',
+      label: 'Entry 1',
+      icon: undefined,
+    });
+  });
+
+  test('serializes a plain Uri iconPath to its fsPath', () => {
+    const entry: NavigationHistoryEntry = {
+      id: 'entry-1',
+      label: 'Entry 1',
+      iconPath: Uri.file('/icons/entry.png'),
+    };
+
+    navigationManager.pushHistoryEntry('my.extension', entry);
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigation-history-push', {
+      extensionId: 'my.extension',
+      id: 'entry-1',
+      label: 'Entry 1',
+      icon: '/icons/entry.png',
+    });
+  });
+
+  test('serializes a light/dark iconPath to their fsPaths', () => {
+    const entry: NavigationHistoryEntry = {
+      id: 'entry-1',
+      label: 'Entry 1',
+      iconPath: {
+        light: Uri.file('/icons/entry-light.png'),
+        dark: Uri.file('/icons/entry-dark.png'),
+      },
+    };
+
+    navigationManager.pushHistoryEntry('my.extension', entry);
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigation-history-push', {
+      extensionId: 'my.extension',
+      id: 'entry-1',
+      label: 'Entry 1',
+      icon: {
+        light: '/icons/entry-light.png',
+        dark: '/icons/entry-dark.png',
+      },
+    });
+  });
+});
+
+describe('onDidNavigateToHistoryEntry / navigateToHistoryEntry', () => {
+  test('a registered listener is called with the entry id when the extension navigates back to it', () => {
+    const listener = vi.fn();
+    navigationManager.onDidNavigateToHistoryEntry('extensionA', listener);
+
+    navigationManager.navigateToHistoryEntry('extensionA', 'entry-1');
+
+    expect(listener).toHaveBeenCalledWith('entry-1');
+  });
+
+  test('two extensions with the same entry id do not cross-fire', () => {
+    const listenerA = vi.fn();
+    const listenerB = vi.fn();
+    navigationManager.onDidNavigateToHistoryEntry('extensionA', listenerA);
+    navigationManager.onDidNavigateToHistoryEntry('extensionB', listenerB);
+
+    navigationManager.navigateToHistoryEntry('extensionA', 'entry-1');
+
+    expect(listenerA).toHaveBeenCalledWith('entry-1');
+    expect(listenerB).not.toHaveBeenCalled();
+  });
+
+  test('is a safe no-op when no listener is registered for the extension', () => {
+    expect(() => navigationManager.navigateToHistoryEntry('unknown.extension', 'entry-1')).not.toThrow();
+  });
+});
+
+describe('dispose', () => {
+  test('clears the history emitters so previously registered listeners no longer fire', () => {
+    const listener = vi.fn();
+    navigationManager.onDidNavigateToHistoryEntry('extensionA', listener);
+
+    navigationManager.dispose();
+
+    navigationManager.navigateToHistoryEntry('extensionA', 'entry-1');
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  test('disposes the disposables registered during init', () => {
+    const commandDisposeFn = vi.fn();
+    vi.mocked(commandRegistry.registerCommand).mockReturnValue(Disposable.create(commandDisposeFn));
+    const paletteDisposeFn = vi.fn();
+    vi.mocked(commandRegistry.registerCommandPalette).mockReturnValue(Disposable.create(paletteDisposeFn));
+
+    navigationManager.init();
+    navigationManager.dispose();
+
+    expect(commandDisposeFn).toHaveBeenCalled();
+    expect(paletteDisposeFn).toHaveBeenCalled();
   });
 });

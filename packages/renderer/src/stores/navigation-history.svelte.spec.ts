@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NavigationHistoryPushInfo } from '@podman-desktop/core-api';
 import { writable } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -30,6 +31,17 @@ import {
   goToHistoryIndex,
   navigationHistory,
 } from '/@/stores/navigation-history.svelte';
+
+// The store registers a `window.events.receive('navigation-history-push', ...)` listener at
+// module-load time, so `window.events` must be patched before the module is first imported.
+const { eventsReceiveMock } = vi.hoisted(() => {
+  const eventsReceiveMock = vi.fn();
+  Object.defineProperty(window, 'events', {
+    value: { receive: eventsReceiveMock },
+    configurable: true,
+  });
+  return { eventsReceiveMock };
+});
 
 let routerSubscribeCallback = vi.hoisted(() => {
   return vi.fn() as unknown as (navigation: TinroRoute) => void;
@@ -93,15 +105,23 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
   };
 });
 
+// Captured once: the listener the store registered via `window.events.receive('navigation-history-push', ...)`
+let navigationHistoryPushCallback: (entry: NavigationHistoryPushInfo) => void;
+
 beforeAll(() => {
   expect(router.subscribe).toHaveBeenCalledExactlyOnceWith(expect.any(Function));
   routerSubscribeCallback = vi.mocked(router.subscribe).mock.calls[0][0];
+
+  const pushCall = eventsReceiveMock.mock.calls.find(call => call[0] === 'navigation-history-push');
+  expect(pushCall).toBeDefined();
+  navigationHistoryPushCallback = pushCall?.[1] as (entry: NavigationHistoryPushInfo) => void;
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
+  vi.mocked(window.navigateToExtensionHistoryEntry).mockResolvedValue(undefined);
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
 
   vi.mocked(navigationRegistry).set([
@@ -132,7 +152,7 @@ describe('goBack', () => {
   });
 
   test('should not navigate when at first entry', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
 
     goBack();
@@ -142,7 +162,7 @@ describe('goBack', () => {
   });
 
   test('should navigate to previous entry', () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
     goBack();
@@ -166,7 +186,7 @@ describe('goForward', () => {
   });
 
   test('should not navigate when at last entry', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
 
     goForward();
@@ -176,7 +196,7 @@ describe('goForward', () => {
   });
 
   test('should navigate to next entry', () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 0;
 
     goForward();
@@ -199,7 +219,7 @@ describe('kubernetes dashboard submenu', () => {
     routerSubscribeCallback({ url: '/kubernetes/dashboard' } as TinroRoute);
 
     // Stack should contain / and /kubernetes/dashboard, but NOT /kubernetes
-    expect(navigationHistory.stack).toEqual(['/', '/kubernetes/dashboard']);
+    expect(navigationHistory.stack).toEqual([{ url: '/' }, { url: '/kubernetes/dashboard' }]);
     expect(navigationHistory.index).toBe(1);
   });
 
@@ -212,7 +232,7 @@ describe('kubernetes dashboard submenu', () => {
     routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
 
     // Stack should contain both / and /kubernetes
-    expect(navigationHistory.stack).toEqual(['/', '/kubernetes']);
+    expect(navigationHistory.stack).toEqual([{ url: '/' }, { url: '/kubernetes' }]);
     expect(navigationHistory.index).toBe(1);
   });
 });
@@ -224,8 +244,26 @@ describe('router navigation events', () => {
     routerSubscribeCallback({ url: '/index.html' } as TinroRoute);
     routerSubscribeCallback({ url: '/' } as TinroRoute);
 
-    expect(navigationHistory.stack).not.toContain('/index.html');
-    expect(navigationHistory.stack).toContain('/');
+    expect(navigationHistory.stack).not.toContainEqual({ url: '/index.html' });
+    expect(navigationHistory.stack).toContainEqual({ url: '/' });
+    expect(navigationHistory.index).toBe(0);
+  });
+
+  test('should not store /webviews/ URLs in the history stack', () => {
+    // Extensions with their own history providers push their own entries via
+    // navigation.pushHistoryEntry; the router-level /webviews/ URL change should be ignored.
+    routerSubscribeCallback({ url: '/' } as TinroRoute);
+    routerSubscribeCallback({ url: '/webviews/my-webview-id' } as TinroRoute);
+
+    expect(navigationHistory.stack).toEqual([{ url: '/' }]);
+    expect(navigationHistory.index).toBe(0);
+  });
+
+  test('should not store /contribs/ URLs in the history stack', () => {
+    routerSubscribeCallback({ url: '/' } as TinroRoute);
+    routerSubscribeCallback({ url: '/contribs/my-contrib/' } as TinroRoute);
+
+    expect(navigationHistory.stack).toEqual([{ url: '/' }]);
     expect(navigationHistory.index).toBe(0);
   });
 });
@@ -236,7 +274,7 @@ describe('goToHistoryIndex', () => {
   });
 
   test('should not navigate to invalid negative index', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
     goToHistoryIndex(-1);
 
@@ -244,7 +282,7 @@ describe('goToHistoryIndex', () => {
   });
 
   test('should not navigate to index beyond stack', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
 
     goToHistoryIndex(5);
@@ -253,7 +291,7 @@ describe('goToHistoryIndex', () => {
   });
 
   test('should not navigate to current index', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
 
     goToHistoryIndex(0);
@@ -262,13 +300,27 @@ describe('goToHistoryIndex', () => {
   });
 
   test('should navigate to valid index', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
     navigationHistory.index = 2;
 
     goToHistoryIndex(0);
 
     expect(navigationHistory.index).toBe(0);
     expect(router.goto).toHaveBeenCalledWith('/containers');
+  });
+
+  test('should call window.navigateToExtensionHistoryEntry instead of router.goto for an extension-sourced entry', () => {
+    // Uses a dedicated extensionId (not reused elsewhere) so this test doesn't leave the
+    // module-level `extensionsNavigatingHistory` guard "dirty" for unrelated tests below.
+    const extensionEntry: NavigationHistoryPushInfo = { extensionId: 'ext.goto-test', id: 'model-1', label: 'Model 1' };
+    navigationHistory.stack = [{ url: '/__extension__/ext.goto-test/model-1', extensionEntry }, { url: '/containers' }];
+    navigationHistory.index = 1;
+
+    goToHistoryIndex(0);
+
+    expect(navigationHistory.index).toBe(0);
+    expect(window.navigateToExtensionHistoryEntry).toHaveBeenCalledWith('ext.goto-test', 'model-1');
+    expect(router.goto).not.toHaveBeenCalled();
   });
 });
 
@@ -279,7 +331,7 @@ describe('getBackEntries', () => {
   });
 
   test('should return empty array when at first entry', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
 
     const entries = getBackEntries();
@@ -287,7 +339,7 @@ describe('getBackEntries', () => {
   });
 
   test('should return previous entries in reverse order with computed names', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
     navigationHistory.index = 2;
 
     const entries = getBackEntries();
@@ -306,7 +358,7 @@ describe('getForwardEntries', () => {
   });
 
   test('should return empty array when at last entry', () => {
-    navigationHistory.stack = ['/containers'];
+    navigationHistory.stack = [{ url: '/containers' }];
     navigationHistory.index = 0;
 
     const entries = getForwardEntries();
@@ -314,7 +366,7 @@ describe('getForwardEntries', () => {
   });
 
   test('should return forward entries in order with computed names', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
     navigationHistory.index = 0;
 
     const entries = getForwardEntries();
@@ -329,7 +381,11 @@ describe('getForwardEntries', () => {
 describe('submenu navigation', () => {
   test('should show submenu parent > resource type breadcrumb', () => {
     // Simulate navigation: Dashboard -> Kubernetes Pods list -> Specific pod
-    navigationHistory.stack = ['/', '/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/summary'];
+    navigationHistory.stack = [
+      { url: '/' },
+      { url: '/kubernetes/pods' },
+      { url: '/kubernetes/pods/nginx-pod/default/summary' },
+    ];
     navigationHistory.index = 2;
 
     const backEntries = getBackEntries();
@@ -349,9 +405,9 @@ describe('submenu navigation', () => {
   test('should preserve special characters in submenu breadcrumbs', () => {
     // Test ConfigMaps & Secrets with special character '&'
     navigationHistory.stack = [
-      '/',
-      '/kubernetes/configmapsSecrets',
-      '/kubernetes/configmapsSecrets/my-config/default/summary',
+      { url: '/' },
+      { url: '/kubernetes/configmapsSecrets' },
+      { url: '/kubernetes/configmapsSecrets/my-config/default/summary' },
     ];
     navigationHistory.index = 2;
 
@@ -368,8 +424,8 @@ describe('submenu navigation', () => {
   test('should show full breadcrumb for detail pages including tab', () => {
     // Test detail page shows: parent > resource type > resource name > tab
     navigationHistory.stack = [
-      '/kubernetes/configmapsSecrets/my-config/default/summary',
-      '/kubernetes/configmapsSecrets',
+      { url: '/kubernetes/configmapsSecrets/my-config/default/summary' },
+      { url: '/kubernetes/configmapsSecrets' },
     ];
     navigationHistory.index = 1;
 
@@ -383,26 +439,30 @@ describe('tab navigation for detail pages', () => {
   test('should add new entry for each tab change', () => {
     // Start by navigating to containers list
     routerSubscribeCallback({ url: '/containers' } as TinroRoute);
-    expect(navigationHistory.stack).toEqual(['/containers']);
+    expect(navigationHistory.stack).toEqual([{ url: '/containers' }]);
     expect(navigationHistory.index).toBe(0);
 
     // Navigate to container detail page summary tab (should add new entry)
     routerSubscribeCallback({ url: '/containers/abc123/summary' } as TinroRoute);
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
+    expect(navigationHistory.stack).toEqual([{ url: '/containers' }, { url: '/containers/abc123/summary' }]);
     expect(navigationHistory.index).toBe(1);
 
     // Switch to logs tab (should ADD a new entry)
     routerSubscribeCallback({ url: '/containers/abc123/logs' } as TinroRoute);
 
     // Stack should now have 3 entries (each tab is a separate history entry)
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary', '/containers/abc123/logs']);
+    expect(navigationHistory.stack).toEqual([
+      { url: '/containers' },
+      { url: '/containers/abc123/summary' },
+      { url: '/containers/abc123/logs' },
+    ]);
     expect(navigationHistory.stack.length).toBe(3);
     expect(navigationHistory.index).toBe(2);
   });
 
   test('should show tab name in display for different tabs', () => {
     // Set up stack with different tabs
-    navigationHistory.stack = ['/containers', '/containers/abc123/inspect'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/containers/abc123/inspect' }];
     navigationHistory.index = 0;
 
     const entries = getForwardEntries();
@@ -415,12 +475,109 @@ describe('tab navigation for detail pages', () => {
 
   test('should show resource name with tab for submenu resources', () => {
     // Kubernetes pod with tab navigation
-    navigationHistory.stack = ['/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/logs'];
+    navigationHistory.stack = [{ url: '/kubernetes/pods' }, { url: '/kubernetes/pods/nginx-pod/default/logs' }];
     navigationHistory.index = 0;
 
     const entries = getForwardEntries();
 
     expect(entries.length).toBe(1);
     expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod > Logs');
+  });
+});
+
+describe('navigation-history-push event', () => {
+  test('appends a new stack entry sourced from the extension and moves the index to it', () => {
+    const pushInfo: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-1', label: 'Model 1' };
+
+    navigationHistoryPushCallback(pushInfo);
+
+    expect(navigationHistory.stack).toEqual([{ url: '/__extension__/ext.a/model-1', extensionEntry: pushInfo }]);
+    expect(navigationHistory.index).toBe(0);
+  });
+
+  test('appends on top of existing router-based history', () => {
+    navigationHistory.stack = [{ url: '/containers' }];
+    navigationHistory.index = 0;
+
+    const pushInfo: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-1', label: 'Model 1' };
+    navigationHistoryPushCallback(pushInfo);
+
+    expect(navigationHistory.stack).toEqual([
+      { url: '/containers' },
+      { url: '/__extension__/ext.a/model-1', extensionEntry: pushInfo },
+    ]);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('does not create a duplicate entry when the same extensionId+id is pushed twice in a row', () => {
+    const pushInfo: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-1', label: 'Model 1' };
+
+    navigationHistoryPushCallback(pushInfo);
+    navigationHistoryPushCallback(pushInfo);
+
+    expect(navigationHistory.stack).toEqual([{ url: '/__extension__/ext.a/model-1', extensionEntry: pushInfo }]);
+    expect(navigationHistory.index).toBe(0);
+  });
+
+  test('still pushes a new entry when only the id differs from the current top entry', () => {
+    const first: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-1', label: 'Model 1' };
+    const second: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-2', label: 'Model 2' };
+
+    navigationHistoryPushCallback(first);
+    navigationHistoryPushCallback(second);
+
+    expect(navigationHistory.stack).toEqual([
+      { url: '/__extension__/ext.a/model-1', extensionEntry: first },
+      { url: '/__extension__/ext.a/model-2', extensionEntry: second },
+    ]);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('truncates forward history when a push happens after navigating back', () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
+    // Simulate having navigated back to '/containers' (forward history: '/images', '/pods')
+    navigationHistory.index = 0;
+
+    const pushInfo: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-1', label: 'Model 1' };
+    navigationHistoryPushCallback(pushInfo);
+
+    expect(navigationHistory.stack).toEqual([
+      { url: '/containers' },
+      { url: '/__extension__/ext.a/model-1', extensionEntry: pushInfo },
+    ]);
+    expect(navigationHistory.index).toBe(1);
+    expect(getForwardEntries()).toEqual([]);
+  });
+});
+
+describe('extensionsNavigatingHistory guard', () => {
+  test('suppresses the first push from an extension right after navigating back/forward to one of its entries, then processes the next one normally', () => {
+    const originalEntry: NavigationHistoryPushInfo = { extensionId: 'ext.guard', id: 'entry-1', label: 'Entry 1' };
+    navigationHistory.stack = [
+      { url: '/__extension__/ext.guard/entry-1', extensionEntry: originalEntry },
+      { url: '/containers' },
+    ];
+    navigationHistory.index = 1;
+
+    // Simulate the user clicking "back" to the extension's history entry
+    goToHistoryIndex(0);
+    expect(navigationHistory.index).toBe(0);
+    expect(window.navigateToExtensionHistoryEntry).toHaveBeenCalledWith('ext.guard', 'entry-1');
+
+    // The webview re-mounts and replays its initial route as a "push" - this is stale and must be ignored
+    navigationHistoryPushCallback({ extensionId: 'ext.guard', id: 'entry-1', label: 'Entry 1' });
+
+    expect(navigationHistory.stack).toHaveLength(2);
+    expect(navigationHistory.index).toBe(0);
+
+    // A subsequent, genuine push from the same extension is processed normally (guard only suppresses once)
+    const nextEntry: NavigationHistoryPushInfo = { extensionId: 'ext.guard', id: 'entry-2', label: 'Entry 2' };
+    navigationHistoryPushCallback(nextEntry);
+
+    expect(navigationHistory.stack).toEqual([
+      { url: '/__extension__/ext.guard/entry-1', extensionEntry: originalEntry },
+      { url: '/__extension__/ext.guard/entry-2', extensionEntry: nextEntry },
+    ]);
+    expect(navigationHistory.index).toBe(1);
   });
 });
