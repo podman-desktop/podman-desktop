@@ -30,7 +30,7 @@
   "devDependencies": {
     "adm-zip": "^0.6.0",
     "mkdirp": "^3.0.1",
-    "vite": "^8.1.4",
+    "vite": "^8.1.5",
     "vitest": "^4.1.10"
   }
 }

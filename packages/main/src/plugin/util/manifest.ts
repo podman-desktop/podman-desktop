@@ -43,7 +43,7 @@ export function guessIsManifest(image: ImageInfo, connectionType: string): boole
   // if it is a manifest or not.
   // ex. podman image tag testmanifest testmanifest123
 
-  // This is a "hacky" way to do it, but we can check to see if the image has been renamed by anaylzing the digests
+  // This is a "hacky" way to do it, but we can check to see if the image has been renamed by analyzing the digests
   // as they will be pointed
 
   // Create a map to count occurrences of each digest

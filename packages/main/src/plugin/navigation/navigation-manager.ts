@@ -259,6 +259,19 @@ export class NavigationManager {
     });
   }
 
+  async navigateToImageRun(id: string, engineId: string, tag: string): Promise<void> {
+    await this.assertImageExist(id, engineId, tag);
+
+    this.navigateTo({
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: id,
+        engineId: engineId,
+        tag: tag,
+      },
+    });
+  }
+
   async assertVolumeExist(id: string, engineId: string): Promise<void> {
     if (!(await this.containerRegistry.volumeExist(id, engineId)))
       throw new Error(`Volume with id ${id} and engine id ${engineId} cannot be found.`);

@@ -51,7 +51,6 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   ProviderContainerConnectionInfo,
   PullEvent,
   SecretCreateOptions,
@@ -505,7 +504,7 @@ export class ContainerProviderRegistry {
     try {
       const engine = this.internalProviders.get(engineId);
       if (engine?.libpodApi) {
-        // we cannot use the /secrets (compact) api to retreive secret with podman
+        // we cannot use the /secrets (compact) api to retrieve secret with podman
         // endpoint is malformed
         // https://github.com/containers/podman/issues/27548
         await engine.libpodApi.removeSecret(secretId);
@@ -756,49 +755,9 @@ export class ContainerProviderRegistry {
     return flattenedContainers;
   }
 
-  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
-    let telemetryOptions = {};
-
-    let providers: InternalContainerProvider[];
-    if (options?.provider === undefined) {
-      providers = Array.from(this.internalProviders.values());
-    } else {
-      providers = [this.getMatchingContainerProvider(options?.provider)];
-    }
-
-    const images = await Promise.all(
-      Array.from(providers).map(async provider => {
-        try {
-          if (!provider.api) {
-            return [];
-          }
-          const images = await provider.api.listImages({ all: false, digests: true });
-          return images.map(image => {
-            const imageInfo: ImageInfo = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              engineType: provider.connection.type,
-              Digest: `sha256:${image.Id}`,
-            };
-            return imageInfo;
-          });
-        } catch (error) {
-          this.notifyConsole(`error in engine ${provider.name} ${error}`);
-          telemetryOptions = { error: error };
-          return [];
-        }
-      }),
-    );
-    const flattenedImages = images.flat();
-    this.telemetryService.track('listImages', { total: flattenedImages.length, ...telemetryOptions });
-
-    return flattenedImages;
-  }
-
-  // Podman list images will prefer to use libpod API of the provider
+  // list images will prefer to use libpod API of the provider if podman
   // before falling back to using the regular API
-  async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
     // Get timeout from configuration
     const timeoutSeconds = this.configurationRegistry
       .getConfiguration(ContainerRegistrySettings.SectionName)
@@ -1416,12 +1375,8 @@ export class ContainerProviderRegistry {
         platform,
         abortSignal: abortController?.signal,
       });
-      let resolve: () => void;
-      let reject: (err: Error) => void;
-      const promise = new Promise<void>((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
+
+      const { resolve, reject, promise } = Promise.withResolvers<void>();
 
       const onFinished = (err: Error | null): void => {
         if (err) {
@@ -2251,7 +2206,7 @@ export class ContainerProviderRegistry {
     let telemetryOptions = {};
     try {
       let container: Dockerode.Container;
-      let forceLibPod = false;
+      let forceLibPod = (options.Secrets?.length ?? 0) > 0 || Object.entries(options.SecretEnv ?? {}).length > 0;
 
       // the device option requesting an nvidia gpu on linux only works
       // if the LibPod API is used. Check if such a device is requested
@@ -2440,6 +2395,8 @@ export class ContainerProviderRegistry {
       hostadd: options.HostConfig?.ExtraHosts,
       userns: options.HostConfig?.UsernsMode,
       devices: updatedDevices,
+      secrets: options.Secrets,
+      secret_env: options.SecretEnv,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);
@@ -2780,7 +2737,7 @@ export class ContainerProviderRegistry {
       const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
       await kubePlay.init();
 
-      // if we have no context let's just use the the yaml
+      // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
         return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
       }
@@ -3013,9 +2970,12 @@ export class ContainerProviderRegistry {
   }
 
   async imageExist(id: string, engineId: string, tag: string): Promise<boolean> {
-    const images = await this.listImages();
-    const imageInfo = images.find(c => c.Id === id && c.engineId === engineId);
-    return imageInfo?.RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    try {
+      const { RepoTags } = await this.getImageInspect(engineId, id);
+      return RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    } catch (_: unknown) {
+      return false;
+    }
   }
 
   async volumeExist(name: string, engineId: string): Promise<boolean> {

@@ -1737,6 +1737,24 @@ describe('Navigation', async () => {
     // Valid we listed the contains properly each time
     expect(imageExistSpy).toHaveBeenCalledOnce();
   });
+  test('navigateToImageRun', async () => {
+    vi.mocked(containerProviderRegistry.imageExist).mockResolvedValue(true);
+
+    const api = createApi();
+
+    // Spy send method
+    const sendMock = vi.spyOn(apiSender, 'send');
+
+    await api.navigation.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+    expect(sendMock).toBeCalledWith('navigate', {
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: 'sha256:55',
+        engineId: 'podman.Podman',
+        tag: 'localhost/squid:latest',
+      },
+    });
+  });
   test('navigateToVolumes', async () => {
     const api = createApi();
 
@@ -2415,7 +2433,7 @@ describe('containerEngine', async () => {
   });
 
   test('listImages without option ', async () => {
-    vi.mocked(containerProviderRegistry.podmanListImages).mockResolvedValue([]);
+    vi.mocked(containerProviderRegistry.listImages).mockResolvedValue([]);
 
     const api = createApi();
 
@@ -2423,11 +2441,11 @@ describe('containerEngine', async () => {
 
     const images = await api.containerEngine.listImages();
     expect(images.length).toBe(0);
-    expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith(undefined);
+    expect(containerProviderRegistry.listImages).toHaveBeenCalledWith(undefined);
   });
 
   test('listImages with provider option', async () => {
-    vi.mocked(containerProviderRegistry.podmanListImages).mockResolvedValue([]);
+    vi.mocked(containerProviderRegistry.listImages).mockResolvedValue([]);
     const api = createApi();
 
     expect(api).toBeDefined();
@@ -2436,7 +2454,7 @@ describe('containerEngine', async () => {
       provider: CONTAINER_PROVIDER_MOCK,
     });
     expect(images.length).toBe(0);
-    expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith({
+    expect(containerProviderRegistry.listImages).toHaveBeenCalledWith({
       provider: CONTAINER_PROVIDER_MOCK,
     });
   });

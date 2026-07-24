@@ -8,7 +8,7 @@ tags: [pushing-an-image, Lima, Minikube, Kind]
 
 # Pushing an image to a cluster
 
-You can push an image to a Kubernetes cluster, such as Kind, MiniKube, or Lima. After building the image with your container engine, you can test it in your Kubernetes cluster and verify the created pod.
+You can push an image to a Kubernetes cluster, such as Kind, Minikube, or Lima. After building the image with your container engine, you can test it in your Kubernetes cluster and verify the created pod.
 
 See the procedural details in the following sections:
 

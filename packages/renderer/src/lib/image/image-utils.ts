@@ -92,8 +92,6 @@ export class ImageUtils {
     return Buffer.from(name, 'binary').toString('base64');
   }
 
-  // is that this image is used by a container or not
-  // search if there is a container matching this image
   getInUse(imageInfo: ImageInfo, repositoryTag?: string, containersInfo?: ContainerInfo[]): boolean {
     if (!containersInfo) {
       return false;
@@ -104,7 +102,13 @@ export class ImageUtils {
         return false;
       }
       if (repositoryTag) {
-        return container.Image === repositoryTag;
+        if (container.Image === repositoryTag) {
+          return true;
+        }
+        // The container's original tag no longer exists on the image (e.g. image was retagged).
+        // All remaining tags should be considered in-use since the underlying image data is referenced.
+        const repoTags = imageInfo.RepoTags ?? [];
+        return !repoTags.includes(container.Image);
       }
       return (imageInfo.RepoTags ?? []).length === 0;
     });

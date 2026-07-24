@@ -104,7 +104,7 @@ Older versions of WSL might cause networking issues, such as the `Get-NetTCPConn
 
 On a Windows 10 LTSC version, running the `wsl --install --no-distribution` command does not work, and the Podman Desktop setup does not run smoothly.
 
-You must install a specific Windows Subsystem for Linux (WSL) distribution to make the Podman Desktop setup run smoothly. After setting up Podman Desktop, you can unintsall the WSL distribution.
+You must install a specific Windows Subsystem for Linux (WSL) distribution to make the Podman Desktop setup run smoothly. After setting up Podman Desktop, you can uninstall the WSL distribution.
 
 #### Solution: Enable Podman Desktop setup to run smoothly
 

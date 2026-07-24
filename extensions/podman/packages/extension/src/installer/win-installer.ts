@@ -33,7 +33,7 @@ import { inject, injectable } from 'inversify';
 
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { WinPlatform } from '/@/platforms/win-platform';
-import podman5Json from '/@/podman5.json';
+import { getBundledFileName } from '/@/utils/podman-bundled';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { getAssetsFolder } from '/@/utils/util';
 
@@ -73,10 +73,7 @@ export class WinInstaller extends BaseInstaller {
   install(): Promise<boolean> {
     return window.withProgress({ location: ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
-      const fileName =
-        arch() === 'arm64'
-          ? podman5Json.platform.win32.arch.arm64.fileName
-          : podman5Json.platform.win32.arch.x64.fileName;
+      const fileName = getBundledFileName('win32', arch() === 'arm64' ? 'arm64' : 'x64');
       const setupPath = path.resolve(getAssetsFolder(), fileName);
       try {
         if (fs.existsSync(setupPath)) {

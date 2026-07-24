@@ -28,7 +28,7 @@ import type {
   ContainerCreateOptions,
   ContainerInspectInfo,
   HostConfig,
-  ImageInfo,
+  ImageInspectInfo,
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -4735,6 +4735,93 @@ describe('createContainerLibPod', () => {
     await containerRegistry.createContainer('podman1', options);
     expect(createPodmanContainerMock).toBeCalledWith(expectedOptions);
   });
+
+  test('expect createContainer to use compat api for non-podman options', async () => {
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const dockerAPI = {
+      createContainer: vi.fn(),
+    } as unknown as Dockerode;
+    const libpodAPI = {
+      createPodmanContainer: vi.fn(),
+    } as unknown as LibPod;
+
+    vi.mocked(dockerAPI.createContainer).mockResolvedValue({
+      start: () => {},
+      inspect: () => {},
+    } as unknown as Dockerode.Container);
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: libpodAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    await containerRegistry.createContainer('podman1', {
+      Image: 'image',
+      name: 'name',
+    });
+
+    expect(dockerAPI.createContainer).toHaveBeenCalledExactlyOnceWith({
+      Image: 'image',
+      name: 'name',
+    });
+    expect(libpodAPI.createPodmanContainer).not.toHaveBeenCalled();
+  });
+
+  test('check that secrets and secret_env are passed to createPodmanContainer', async () => {
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const dockerAPI = {
+      createContainer: vi.fn(),
+      getContainer: vi.fn(),
+    } as unknown as Dockerode;
+    const libpodAPI = {
+      createPodmanContainer: vi.fn(),
+    } as unknown as LibPod;
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: libpodAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    vi.mocked(dockerAPI.getContainer).mockResolvedValue({
+      start: vi.fn(),
+    } as unknown as Dockerode.Container);
+
+    vi.mocked(libpodAPI.createPodmanContainer).mockResolvedValue({
+      Id: 'id',
+      Warnings: [],
+    });
+
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const options: ContainerCreateOptions = {
+      Image: 'image',
+      name: 'name',
+      Secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
+      SecretEnv: { FOO_DATA: 'foo-data' },
+    };
+
+    await containerRegistry.createContainer('podman1', options);
+
+    expect(dockerAPI.createContainer).not.toHaveBeenCalled();
+    expect(libpodAPI.createPodmanContainer).toBeCalledWith(
+      expect.objectContaining({
+        secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
+        secret_env: { FOO_DATA: 'foo-data' },
+      }),
+    );
+  });
 });
 
 describe('getContainerCreateMountOptionFromBind', () => {
@@ -4844,58 +4931,7 @@ describe('getContainerCreateMountOptionFromBind', () => {
   });
 });
 
-describe('listImages', () => {
-  test('list images without arguments', async () => {
-    const result = await containerRegistry.listImages();
-    expect(result.length).toBe(0);
-
-    expect(vi.spyOn(containerRegistry, 'getMatchingContainerProvider')).not.toHaveBeenCalled();
-  });
-
-  test('list images on a specific provider', async () => {
-    const getMatchingContainerProviderMock = vi.spyOn(containerRegistry, 'getMatchingContainerProvider');
-    const internalContainerProvider = {
-      name: 'dummyName',
-      id: 'dummyId',
-      connection: {
-        type: 'podman',
-      },
-      api: {
-        listImages: vi.fn(),
-      },
-    } as unknown as InternalContainerProvider;
-    getMatchingContainerProviderMock.mockReturnValue(internalContainerProvider);
-
-    const api = internalContainerProvider.api;
-    if (api === undefined) throw new Error('api should not be undefined');
-    vi.spyOn(api, 'listImages').mockResolvedValue([
-      {
-        Id: 'dummyImageId',
-      } as unknown as ImageInfo,
-    ]);
-
-    // List images
-    const result = await containerRegistry.listImages({
-      provider: {
-        id: 'dummyProviderId',
-      } as unknown as podmanDesktopAPI.ContainerProviderConnection,
-    });
-
-    expect(getMatchingContainerProviderMock).toHaveBeenCalled();
-    expect(api.listImages).toHaveBeenCalled();
-
-    expect(result.length).toBe(1);
-    expect(result[0]).toStrictEqual({
-      Id: 'dummyImageId',
-      engineId: 'dummyId',
-      engineName: 'dummyName',
-      engineType: 'podman',
-      Digest: 'sha256:dummyImageId',
-    });
-  });
-});
-
-test('list images with podmanListImages correctly', async () => {
+test('list images with listImages correctly', async () => {
   const imagesList = [
     {
       Id: 'dummyImageId',
@@ -4918,7 +4954,7 @@ test('list images with podmanListImages correctly', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -4952,7 +4988,7 @@ test('expect images with podmanListImages to also include History as well as eng
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -4986,7 +5022,7 @@ test('expect images with podmanListImages to also include Digest as engineId and
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -5021,7 +5057,7 @@ test('If image does not have Digest in list images, expect the Digest to be sha2
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
 
   // ensure the field are correct
   expect(images).toBeDefined();
@@ -5063,7 +5099,7 @@ test('expect to fall back to compat api images if podman provider does not have 
     // purposely NOT have libpodApi
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
@@ -5087,7 +5123,7 @@ test('pass options to compat api when using podmanListImages', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  await containerRegistry.podmanListImages({ all: true, filters: '{"dangling":["false"]}' });
+  await containerRegistry.listImages({ all: true, filters: '{"dangling":["false"]}' });
 
   expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
     all: true,
@@ -5106,7 +5142,7 @@ test('expect a blank array if there is no api or libpod API when doing podmanLis
     // purposely NOT have api or libpodApi
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(0);
@@ -5122,7 +5158,7 @@ test('expect to get get zero images if podman provider has neither libpod API no
     // purposely NOT have libpod API or compat api
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(0);
@@ -5174,7 +5210,7 @@ test('expect podmanListImages to return images from working providers even if on
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
 
   // Should return images from working provider despite the error
   expect(images).toBeDefined();
@@ -5789,7 +5825,7 @@ test('manifest is listed as true with podmanListImages correctly', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
   // ensure the field are correct
   expect(images).toBeDefined();
   expect(images).toHaveLength(4);
@@ -5854,7 +5890,7 @@ test('if configuration setting is disabled for using libpodApi, it should fall b
     },
   } as unknown as InternalContainerProvider);
 
-  const images = await containerRegistry.podmanListImages();
+  const images = await containerRegistry.listImages();
 
   // ensure the field are correct
   expect(images).toBeDefined();
@@ -6338,7 +6374,7 @@ test('resolve Podman image shortname to FQN', async () => {
   expect(imagesNames[0]).toBe('shortname');
 });
 
-test('resolve Dokcer image shortname to FQN', async () => {
+test('resolve Docker image shortname to FQN', async () => {
   const getMatchingContainerProviderMock = vi.spyOn(containerRegistry, 'getMatchingContainerProvider');
   const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 
@@ -7259,5 +7295,70 @@ describe('inspectSecret', () => {
       CreatedAt: '2024-01-01T00:00:00Z',
       UpdatedAt: '2024-01-02T00:00:00Z',
     });
+  });
+});
+
+describe('getImageInspect', () => {
+  test('should throw if no matching engine', async () => {
+    await expect(containerRegistry.getImageInspect('nonexistent', 'secret1')).rejects.toThrow(
+      'no engine matching this container',
+    );
+  });
+
+  test('should use the getImage & inspect', async () => {
+    // setup
+    const imageMock: Dockerode.Image = {
+      inspect: vi.fn(),
+    } as unknown as Dockerode.Image;
+    const imageInspectMock: Dockerode.ImageInspectInfo = {} as unknown as Dockerode.ImageInspectInfo;
+
+    const internalContainerProvider: InternalContainerProvider & { api: Dockerode } = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        getImage: vi.fn(),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+    vi.mocked(internalContainerProvider.api.getImage).mockReturnValue(imageMock);
+    vi.mocked(imageMock.inspect).mockResolvedValue(imageInspectMock);
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+
+    // get the inspect
+    const image = await containerRegistry.getImageInspect('podman1', 'bar');
+    expect(image).toEqual(expect.objectContaining(imageInspectMock));
+    expect(image.engineType).toBe(internalContainerProvider.connection.type);
+
+    expect(internalContainerProvider.api.getImage).toHaveBeenCalledExactlyOnceWith('bar');
+    expect(imageMock.inspect).toHaveBeenCalledOnce();
+  });
+});
+
+describe('imageExist', () => {
+  test('should use ContainerRegistry#getImageInspect', async () => {
+    // mock error on getImageInspect
+    vi.spyOn(containerRegistry, 'getImageInspect').mockRejectedValue(new Error('does not exists'));
+
+    const exists = await containerRegistry.imageExist('foo', 'bar', 'fi');
+    expect(exists).toBeFalsy();
+  });
+
+  test('should match tag in RepoTags', async () => {
+    const imageInspectMock: ImageInspectInfo = {
+      RepoTags: ['localhost/foo:latest'],
+    } as unknown as ImageInspectInfo;
+
+    vi.spyOn(containerRegistry, 'getImageInspect').mockResolvedValue(imageInspectMock);
+
+    const exists = await containerRegistry.imageExist('foo', 'bar', 'localhost/foo:latest');
+    expect(exists).toBeTruthy();
   });
 });

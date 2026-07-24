@@ -145,7 +145,7 @@ test('error: When pressing the Play button, expect us to show the errors to the 
   await userEvent.click(playButton);
 
   // Since we error out with the mocked kubePlay function (see very top of tests)
-  // Expect the following error to be in in the document.
+  // Expect the following error to be in the document.
   const error = screen.getByText('The following pods were created but failed to start: error 1, error 2');
   expect(error).toBeInTheDocument();
 });

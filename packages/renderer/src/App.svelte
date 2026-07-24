@@ -280,7 +280,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/" breadcrumb="Networks" navigationHint="root">
             <NetworksList />
           </Route>
-          <Route path="/create/*" breadcrumb="Create Network">
+          <Route path="/create/*" breadcrumb="Create a network">
             <CreateNetwork />
           </Route>
           <Route path="/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
@@ -333,7 +333,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/" breadcrumb="Secrets" navigationHint="root">
             <SecretsList />
           </Route>
-          <Route path="/create" breadcrumb="Create a Secret">
+          <Route path="/create" breadcrumb="Create a secret">
             <SecretCreate />
           </Route>
           <Route path="/:engineId/:secretId/*" breadcrumb="Secret Details" let:meta navigationHint="details">

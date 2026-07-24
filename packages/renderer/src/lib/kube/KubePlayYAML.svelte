@@ -308,23 +308,21 @@ function toggle(choice: 'podman' | 'custom'): void {
       </div>
 
       {#if !runFinished}
-        {#if !runStarted}
-          <Button
-            on:click={playKubeFile}
-            disabled={hasInvalidFields || runStarted}
-            class="w-full"
-            inProgress={runStarted}
-            icon={KubePlayIcon}>
-            {userChoice === 'custom' ? 'Play custom YAML' : 'Play'}
-          </Button>
-        {:else}
-          <Button
-            onclick={cancel}
-            title="Cancel"
-            class="w-full">
-            Cancel
-          </Button>
-        {/if}
+        <div class="flex items-center justify-end">
+          {#if !runStarted}
+            <Button
+              on:click={playKubeFile}
+              disabled={hasInvalidFields || runStarted}
+              inProgress={runStarted}
+              icon={KubePlayIcon}>
+              {userChoice === 'custom' ? 'Play custom YAML' : 'Play'}
+            </Button>
+          {:else}
+            <Button onclick={cancel} title="Cancel">
+              Cancel
+            </Button>
+          {/if}
+        </div>
       {/if}
       {#if runStarted}
         <div class="text-[var(--pd-content-card-text)] text-sm">
@@ -360,7 +358,9 @@ function toggle(choice: 'podman' | 'custom'): void {
       {/if}
 
       {#if runFinished}
-        <Button onclick={goBackToPodsPage} class="w-full">Done</Button>
+        <div class="flex items-center justify-end">
+          <Button onclick={goBackToPodsPage}>Done</Button>
+        </div>
       {/if}
     </div>
     {/snippet}

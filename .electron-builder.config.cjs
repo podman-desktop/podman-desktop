@@ -128,14 +128,14 @@ const config = {
       to: 'product.json',
     });
 
-    // universal build, add both pkg files
-    // this is hack to avoid issue https://github.com/electron/universal/issues/36
+    // universal build: include both arch-specific pkg files
     if (
       context.appOutDir.endsWith('mac-universal-x64-temp') ||
       context.appOutDir.endsWith('mac-universal-arm64-temp')
     ) {
       context.packager.config.extraResources = DEFAULT_ASSETS;
-      context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-macos-universal*.pkg`);
+      context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-macos-aarch64-*.pkg`);
+      context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-macos-amd64-*.pkg`);
       return;
     }
 

@@ -18,39 +18,52 @@
 
 import { setupServer, type SetupServer } from 'msw/node';
 import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
-import { DownloadAndCheck, Podman5DownloadMachineOS, PodmanDownload, ShaCheck } from './podman-download';
-import * as podman5JSON from '../src/podman5.json';
+import {
+  DownloadAndCheck,
+  type MachineOSDownloaderEntry,
+  Podman5DownloadMachineOS,
+  PodmanDownload,
+  ShaCheck,
+} from './podman-download';
+import * as podmanJSON from '../src/podman.json';
 import { Readable, Writable } from 'node:stream';
 import { WritableStream } from 'stream/web';
 import { http, HttpResponse } from 'msw';
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { Octokit } from 'octokit';
 
-const mockedPodman5 = {
-  version: '5.0.0',
+const mockedPodmanConfig = {
+  versions: {
+    v5: {
+      version: '5.0.0',
+      tagVersion: 'v5.0.0',
+      releaseNotes: {
+        href: 'https://github.com/podman-container-tools/podman/releases/tag/v5.0.0',
+      },
+    },
+  },
   platform: {
     win32: {
-      version: 'v5.0.0',
       arch: {
         x64: {
+          versionRef: 'v5',
           fileName: 'podman-installer-windows-amd64.msi',
         },
         arm64: {
+          versionRef: 'v5',
           fileName: 'podman-installer-windows-arm64.msi',
         },
       },
     },
     darwin: {
-      version: 'v5.0.0',
       arch: {
         x64: {
+          versionRef: 'v5',
           fileName: 'podman-installer-macos-amd64-v5.0.0.pkg',
         },
         arm64: {
+          versionRef: 'v5',
           fileName: 'podman-installer-macos-aarch64-v5.0.0.pkg',
-        },
-        universal: {
-          fileName: 'podman-installer-macos-universal-v5.0.0.pkg',
         },
       },
     },
@@ -58,8 +71,8 @@ const mockedPodman5 = {
 };
 
 class TestPodmanDownload extends PodmanDownload {
-  public getPodman5DownloadMachineOS(): Podman5DownloadMachineOS {
-    return super.getPodman5DownloadMachineOS();
+  public getMachineOSDownloaders(): MachineOSDownloaderEntry[] {
+    return super.getMachineOSDownloaders();
   }
 
   public getArtifactsToDownload(): {
@@ -107,44 +120,47 @@ describe('macOS platform', () => {
   });
 
   test('PodmanDownload with real json', async () => {
-    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    const podmanDownload = new TestPodmanDownload(podmanJSON, true);
 
     // mock downloadAndCheckSha
     const downloadCheck = podmanDownload.getDownloadAndCheck();
     const downloadAndCheckShaSpy = vi.spyOn(downloadCheck, 'downloadAndCheckSha');
     downloadAndCheckShaSpy.mockResolvedValue();
 
-    // mock podman5DownloadMachineOS
-    const podman5DownloadMachineOS = podmanDownload.getPodman5DownloadMachineOS();
-    const podman5DownloadMachineOSSpy = vi.spyOn(podman5DownloadMachineOS, 'download');
-    podman5DownloadMachineOSSpy.mockResolvedValue();
+    // mock all machineOS downloaders
+    const machineOSDownloaders = podmanDownload.getMachineOSDownloaders();
+    const downloadSpies = machineOSDownloaders.map(entry => vi.spyOn(entry.downloader, 'download').mockResolvedValue());
 
     // add env file
     process.env.AIRGAP_DOWNLOAD = 'yes';
 
     await podmanDownload.downloadBinaries();
 
-    // check called 2 times
-    expect(downloadAndCheckShaSpy).toHaveBeenCalledTimes(3);
+    // check called 2 times (one for each arch)
+    expect(downloadAndCheckShaSpy).toHaveBeenCalledTimes(2);
 
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining('v5.'),
+      expect.stringContaining(`v${podmanJSON.versions.v5.version}`),
       expect.stringContaining('podman-installer-macos-amd64'),
       'podman-installer-macos-amd64.pkg',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining('v5.'),
+      expect.stringContaining(`v${podmanJSON.versions.v6.version}`),
       expect.stringContaining('podman-installer-macos-aarch64'),
       'podman-installer-macos-arm64.pkg',
     );
 
-    // check airgap download
-    expect(podman5DownloadMachineOSSpy).toHaveBeenCalled();
+    // check airgap downloads: each downloader should have been called
+    for (const spy of downloadSpies) {
+      expect(spy).toHaveBeenCalled();
+    }
+    // Two downloaders for darwin: one for x64 (v5), one for arm64 (v6)
+    expect(machineOSDownloaders).toHaveLength(2);
   });
 
   test('PodmanDownload with mocked json', async () => {
-    const podmanDownload = new TestPodmanDownload(mockedPodman5, false);
+    const podmanDownload = new TestPodmanDownload(mockedPodmanConfig, false);
 
     // mock downloadAndCheckSha
     const downloadCheck = podmanDownload.getDownloadAndCheck();
@@ -153,8 +169,8 @@ describe('macOS platform', () => {
 
     await podmanDownload.downloadBinaries();
 
-    // check called 3 (one for each arch + universal) times
-    expect(downloadAndCheckShaSpy).toHaveBeenCalledTimes(3);
+    // check called 2 times (one for each arch)
+    expect(downloadAndCheckShaSpy).toHaveBeenCalledTimes(2);
 
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
@@ -169,16 +185,10 @@ describe('macOS platform', () => {
       'podman-installer-macos-aarch64-v5.0.0.pkg',
       'podman-installer-macos-arm64.pkg',
     );
-    expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
-      3,
-      'v5.0.0',
-      'podman-installer-macos-universal-v5.0.0.pkg',
-      'podman-installer-macos-universal.pkg',
-    );
   });
 
   test('PodmanDownload artifacts do not contain whitespace character', async () => {
-    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    const podmanDownload = new TestPodmanDownload(podmanJSON, true);
     // check called with the correct parameters
     const artifactsToDownload = podmanDownload.getArtifactsToDownload();
     artifactsToDownload.forEach(artifact => {
@@ -208,17 +218,16 @@ describe('windows platform', () => {
   });
 
   test('PodmanDownload with real data', async () => {
-    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    const podmanDownload = new TestPodmanDownload(podmanJSON, true);
 
     // mock downloadAndCheckSha
     const downloadCheck = podmanDownload.getDownloadAndCheck();
     const downloadAndCheckShaSpy = vi.spyOn(downloadCheck, 'downloadAndCheckSha');
     downloadAndCheckShaSpy.mockResolvedValue();
 
-    // mock podman5DownloadMachineOS
-    const podman5DownloadMachineOS = podmanDownload.getPodman5DownloadMachineOS();
-    const podman5DownloadMachineOSSpy = vi.spyOn(podman5DownloadMachineOS, 'download');
-    podman5DownloadMachineOSSpy.mockResolvedValue();
+    // mock all machineOS downloaders
+    const machineOSDownloaders = podmanDownload.getMachineOSDownloaders();
+    const downloadSpies = machineOSDownloaders.map(entry => vi.spyOn(entry.downloader, 'download').mockResolvedValue());
 
     // add env file
     process.env.AIRGAP_DOWNLOAD = 'yes';
@@ -230,28 +239,34 @@ describe('windows platform', () => {
 
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining(`v${podman5JSON.version}`),
+      expect.stringContaining(`v${podmanJSON.versions.v6.version}`),
       expect.stringContaining('podman-installer-windows-amd64.msi'),
       'podman-installer-windows-amd64.msi',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining(`v${podman5JSON.version}`),
+      expect.stringContaining(`v${podmanJSON.versions.v6.version}`),
       expect.stringContaining('podman-installer-windows-arm64.msi'),
       'podman-installer-windows-arm64.msi',
     );
+
+    // check airgap downloads
+    for (const spy of downloadSpies) {
+      expect(spy).toHaveBeenCalled();
+    }
+    // Windows: both arches use v6, so one downloader
+    expect(machineOSDownloaders).toHaveLength(1);
   });
 
   test('PodmanDownload with mocked json', async () => {
-    const podmanDownload = new TestPodmanDownload(mockedPodman5, true);
+    const podmanDownload = new TestPodmanDownload(mockedPodmanConfig, true);
 
     // mock downloadAndCheckSha
     const downloadCheck = podmanDownload.getDownloadAndCheck();
     const downloadAndCheckShaSpy = vi.spyOn(downloadCheck, 'downloadAndCheckSha');
     downloadAndCheckShaSpy.mockResolvedValue();
 
-    const podman5DownloadMachineOS = podmanDownload.getPodman5DownloadMachineOS();
-    const podman5DownloadMachineOSSpy = vi.spyOn(podman5DownloadMachineOS, 'download');
-    podman5DownloadMachineOSSpy.mockResolvedValue();
+    const machineOSDownloaders = podmanDownload.getMachineOSDownloaders();
+    const downloadSpies = machineOSDownloaders.map(entry => vi.spyOn(entry.downloader, 'download').mockResolvedValue());
 
     await podmanDownload.downloadBinaries();
 
@@ -275,11 +290,13 @@ describe('windows platform', () => {
     );
 
     // check no airgap download
-    expect(podman5DownloadMachineOSSpy).not.toHaveBeenCalled();
+    for (const spy of downloadSpies) {
+      expect(spy).not.toHaveBeenCalled();
+    }
   });
 
   test('PodmanDownload artifacts do not contain whitespace character', async () => {
-    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    const podmanDownload = new TestPodmanDownload(podmanJSON, true);
     // check called with the correct parameters
     const artifactsToDownload = podmanDownload.getArtifactsToDownload();
     artifactsToDownload.forEach(artifact => {

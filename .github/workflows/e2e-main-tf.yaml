@@ -16,6 +16,11 @@
 
 name: PD E2E Testing Farm
 
+run-name: >-
+  ${{ inputs.release_tag
+      && format('PD E2E Testing Farm [{0}]', inputs.release_tag)
+      || github.workflow }}
+
 on:
   schedule:
     - cron:  '0 0 * * *'
@@ -31,6 +36,16 @@ on:
         description: 'TMT plan target to run (e.g. smoke, e2e, kubernetes, all)'
         type: string
         default: 'e2e'
+      branch:
+        default: 'main'
+        description: 'Podman Desktop repo branch'
+        type: string
+        required: false
+      release_tag:
+        description: 'Tag to identify this run for report-portal'
+        type: string
+        default: ''
+        required: false
 
 permissions:
   contents: read
@@ -63,6 +78,7 @@ jobs:
         uses: sclorg/testing-farm-as-github-action@230555baceb860aa468d216f1822974836b965d1
         with:
           api_key: ${{ secrets.TF_TOKEN }}
+          git_ref: ${{ github.event.inputs.branch || github.ref_name }}
           create_github_summary: "false"
           compose: ${{ matrix.fedora-version }}
           tmt_plan_filter: 'name:/tests/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}'

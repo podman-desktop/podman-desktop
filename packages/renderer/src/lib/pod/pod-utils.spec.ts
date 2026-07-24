@@ -22,6 +22,7 @@ import type { PodInfo } from '@podman-desktop/core-api';
 import { expect, test } from 'vitest';
 
 import { ensureRestrictedSecurityContext, PodUtils } from '/@/lib/pod/pod-utils';
+import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 
 function verifyPodSecurityContext(containers: any[], type = 'RuntimeDefault'): void {
   containers.forEach(container => {
@@ -91,21 +92,21 @@ test('Expect return a valid name for a new pod', () => {
 
 test('Expect return a valid name for a new pod if there is a pod with the same name', () => {
   const podUtils = new PodUtils();
-  const newPodName = podUtils.calculateNewPodName([{ Name: 'my-pod' } as PodInfo]);
+  const newPodName = podUtils.calculateNewPodName([{ name: 'my-pod' } as PodInfoUI]);
 
   expect(newPodName).toBe('my-pod-1');
 });
 
 test('Expect return a valid name for a new pod if there is a pods with different names', () => {
   const podUtils = new PodUtils();
-  const newPodName = podUtils.calculateNewPodName([{ Name: 'my-super-pod' } as PodInfo]);
+  const newPodName = podUtils.calculateNewPodName([{ name: 'my-super-pod' } as PodInfoUI]);
 
   expect(newPodName).toBe('my-pod');
 });
 
 test('Expect return a valid name for a new pod if there are pods with the same name', () => {
   const podUtils = new PodUtils();
-  const newPodName = podUtils.calculateNewPodName([{ Name: 'my-pod' } as PodInfo, { Name: 'my-pod-1' } as PodInfo]);
+  const newPodName = podUtils.calculateNewPodName([{ name: 'my-pod' } as PodInfoUI, { name: 'my-pod-1' } as PodInfoUI]);
 
   expect(newPodName).toBe('my-pod-2');
 });

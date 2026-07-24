@@ -617,6 +617,7 @@ declare module '@podman-desktop/api' {
 
   export interface CheckResult {
     successful: boolean;
+    severity?: 'error' | 'warning';
     description?: string;
     docLinksDescription?: string;
     docLinks?: CheckResultLink[];
@@ -2340,7 +2341,7 @@ declare module '@podman-desktop/api' {
      * export async function activate(extensionContext: api.ExtensionContext): Promise<void> {
      *   const statusBarItem = api.window.createStatusBarItem();
      *   statusBarItem.text = 'Information';
-     *   statusBarItem.tooltip = 'A problem occured';
+     *   statusBarItem.tooltip = 'A problem occurred';
      *   statusBarItem.command = 'extension-name.my-command';
      *   statusBarItem.iconClass = 'fa fa-exclamation-triangle';
      *   extensionContext.subscriptions.push(
@@ -5104,6 +5105,22 @@ declare module '@podman-desktop/api' {
     // Navigate to a specific image referenced by id, engineId and tag
     export function navigateToImage(id: string, engineId: string, tag: string): Promise<void>;
 
+    /**
+     * Navigate to the Image Run referenced by id, engineId and tag
+     *
+     * @example
+     * ```ts
+     * import { navigation, containerEngine } from '@podman-desktop/api';
+     *
+     * const images = await containerEngine.listImages();
+     * const helloWorld = images.find(image => image.RepoTags?.find(tag => tag === 'quay.io/podman/hello:latest'));
+     *
+     * if(helloWorld) {
+     *   await navigation.navigateToImageRun(helloWorld.Id, helloWorld.engineId, helloWorld.RepoTags?.[0] ?? '<none>');
+     * }
+     * ```
+     */
+    export function navigateToImageRun(id: string, engineId: string, tag: string): Promise<void>;
     // Navigate to the Volumes page
     export function navigateToVolumes(): Promise<void>;
     // Navigate to a specific volume

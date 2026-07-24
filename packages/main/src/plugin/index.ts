@@ -83,6 +83,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -100,7 +101,6 @@ import type {
   OnboardingStatus,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -915,8 +915,8 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'container-provider-registry:listImages',
-      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
-        return containerProviderRegistry.podmanListImages(options);
+      async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.listImages(options);
       },
     );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {

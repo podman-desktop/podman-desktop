@@ -85,6 +85,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -104,7 +105,6 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -311,7 +311,7 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('listImages', async (options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+  contextBridge.exposeInMainWorld('listImages', async (options?: ListImagesOptions): Promise<ImageInfo[]> => {
     return ipcInvoke('container-provider-registry:listImages', options);
   });
 

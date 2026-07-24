@@ -164,7 +164,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         downloaded = true;
       } finally {
         // Make sure we log the telemetry even if we encounter an error
-        // If we have downloaded the binary, we can log it as being succcessfully downloaded
+        // If we have downloaded the binary, we can log it as being successfully downloaded
         telemetryLogger?.logUsage('kubectl.onboarding.downloadCommand', {
           successful: downloaded,
           version: kubectlVersionMetadata?.tag,
@@ -177,7 +177,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const onboardingPromptUserForVersionCommand = extensionApi.commands.registerCommand(
     'kubectl.onboarding.promptUserForVersion',
     async () => {
-      // Prompt the user for the verison
+      // Prompt the user for the version
       const kubectlRelease = await kubectlDownload.promptUserForVersion();
 
       // Update the context value that this is the version we are downloading

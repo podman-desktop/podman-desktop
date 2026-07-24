@@ -16,8 +16,76 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
-import * as podman5JSON from '/@/podman5.json';
+import podmanJSON from '/@/podman.json' with { type: 'json' };
 
-export function getBundledPodmanVersion(): string {
-  return podman5JSON.version;
+type PlatformKey = keyof typeof podmanJSON.platform;
+type ArchKey<P extends PlatformKey> = keyof (typeof podmanJSON.platform)[P]['arch'];
+
+function getArchEntry(os: string, architecture: string): { versionRef: string; fileName: string } {
+  const platformEntry = podmanJSON.platform[os as PlatformKey];
+  if (!platformEntry) {
+    throw new Error(`No bundled podman for platform ${os}`);
+  }
+  const archEntry = platformEntry.arch[architecture as ArchKey<typeof os & PlatformKey>];
+  if (!archEntry) {
+    throw new Error(`No bundled podman for ${os}/${architecture}`);
+  }
+  return archEntry as { versionRef: string; fileName: string };
+}
+
+export function getBundledPodmanVersion(os: string = process.platform, architecture: string = process.arch): string {
+  const platformEntry = podmanJSON.platform[os as PlatformKey];
+  if (!platformEntry) {
+    // On platforms where we don't ship a bundled installer (e.g. linux), callers still use this
+    // for messaging/version comparisons. Fall back to the newest known bundled version.
+    if (os === process.platform) {
+      const fallback = podmanJSON.versions.v6 ?? Object.values(podmanJSON.versions)[0];
+      if (!fallback) {
+        throw new Error('No bundled podman versions configured');
+      }
+      return fallback.version;
+    }
+    throw new Error(`No bundled podman for platform ${os}`);
+  }
+
+  const archEntry = getArchEntry(os, architecture);
+  const versionGroup = podmanJSON.versions[archEntry.versionRef as keyof typeof podmanJSON.versions];
+  if (!versionGroup) {
+    throw new Error(`Unknown versionRef "${archEntry.versionRef}" for ${os}/${architecture}`);
+  }
+  return versionGroup.version;
+}
+
+export function getBundledReleaseNotesHref(os: string = process.platform, architecture: string = process.arch): string {
+  const platformEntry = podmanJSON.platform[os as PlatformKey];
+  if (!platformEntry) {
+    if (os === process.platform) {
+      const fallback = podmanJSON.versions.v6 ?? Object.values(podmanJSON.versions)[0];
+      if (!fallback) {
+        throw new Error('No bundled podman versions configured');
+      }
+      return fallback.releaseNotes.href;
+    }
+    throw new Error(`No bundled podman for platform ${os}`);
+  }
+
+  const archEntry = getArchEntry(os, architecture);
+  const versionGroup = podmanJSON.versions[archEntry.versionRef as keyof typeof podmanJSON.versions];
+  if (!versionGroup) {
+    throw new Error(`Unknown versionRef "${archEntry.versionRef}" for ${os}/${architecture}`);
+  }
+  return versionGroup.releaseNotes.href;
+}
+
+export function getBundledFileName(os: string = process.platform, architecture: string = process.arch): string {
+  return getArchEntry(os, architecture).fileName;
+}
+
+export function getBundledTagVersion(os: string = process.platform, architecture: string = process.arch): string {
+  const archEntry = getArchEntry(os, architecture);
+  const versionGroup = podmanJSON.versions[archEntry.versionRef as keyof typeof podmanJSON.versions];
+  if (!versionGroup) {
+    throw new Error(`Unknown versionRef "${archEntry.versionRef}" for ${os}/${architecture}`);
+  }
+  return versionGroup.tagVersion;
 }

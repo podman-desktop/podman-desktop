@@ -22,9 +22,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as extensionObj from '/@/extension';
-import { releaseNotes } from '/@/podman5.json';
 import type { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
-import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getBundledPodmanVersion, getBundledReleaseNotesHref } from '/@/utils/podman-bundled';
 import type { PodmanInfo } from '/@/utils/podman-info';
 import * as utils from '/@/utils/util';
 
@@ -143,8 +142,8 @@ class TestPodmanInstall extends PodmanInstall {
     return super.stopPodmanMachinesIfAnyBeforeUpdating();
   }
 
-  async wipeAllDataBeforeUpdatingToV5(installed: InstalledPodman, updateCheck: UpdateCheck): Promise<boolean> {
-    return super.wipeAllDataBeforeUpdatingToV5(installed, updateCheck);
+  async wipeAllDataBeforeMajorUpdate(installed: InstalledPodman, updateCheck: UpdateCheck): Promise<boolean> {
+    return super.wipeAllDataBeforeMajorUpdate(installed, updateCheck);
   }
 
   getInstaller(): Installer | undefined {
@@ -200,7 +199,7 @@ describe('update checks', () => {
     expect(utils.execPodman).toHaveBeenCalledWith(['machine', 'stop', 'test']);
   });
 
-  test('wipeAllDataBeforeUpdatingToV5 with podman 4.9 -> 5.0', async () => {
+  test('wipeAllDataBeforeMajorUpdate with podman 4.9 -> 5.0', async () => {
     // fake actions
     const action1Exectute = vi.fn();
     const action1 = {
@@ -213,7 +212,7 @@ describe('update checks', () => {
     // mock user response
     vi.spyOn(extensionApi.window, 'showInformationMessage').mockResolvedValue('Yes');
 
-    await podmanInstall.wipeAllDataBeforeUpdatingToV5(
+    await podmanInstall.wipeAllDataBeforeMajorUpdate(
       {
         version: '4.9.3',
       } as unknown as InstalledPodman,
@@ -232,8 +231,58 @@ describe('update checks', () => {
     expect(action1Exectute).toHaveBeenCalled();
   });
 
-  test('wipeAllDataBeforeUpdatingToV5 no action with podman 4.9.1 -> 4.9.2', async () => {
-    await podmanInstall.wipeAllDataBeforeUpdatingToV5(
+  test('wipeAllDataBeforeMajorUpdate with podman 5.8 -> 6.0', async () => {
+    const action1Execute = vi.fn();
+    const action1 = {
+      name: 'test',
+      execute: action1Execute,
+    };
+
+    vi.mocked(PROVIDER_CLEANUP_MOCK.getActions).mockResolvedValue([action1]);
+
+    vi.spyOn(extensionApi.window, 'showInformationMessage').mockResolvedValue('Yes');
+
+    await podmanInstall.wipeAllDataBeforeMajorUpdate(
+      {
+        version: '5.8.5',
+      } as unknown as InstalledPodman,
+      {
+        bundledVersion: '6.0.1',
+      } as unknown as UpdateCheck,
+    );
+
+    expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
+    expect(PROVIDER_CLEANUP_MOCK.getActions).toHaveBeenCalled();
+    expect(action1Execute).toHaveBeenCalled();
+  });
+
+  test('wipeAllDataBeforeMajorUpdate with podman 4.9 -> 6.0', async () => {
+    const action1Execute = vi.fn();
+    const action1 = {
+      name: 'test',
+      execute: action1Execute,
+    };
+
+    vi.mocked(PROVIDER_CLEANUP_MOCK.getActions).mockResolvedValue([action1]);
+
+    vi.spyOn(extensionApi.window, 'showInformationMessage').mockResolvedValue('Yes');
+
+    await podmanInstall.wipeAllDataBeforeMajorUpdate(
+      {
+        version: '4.9.3',
+      } as unknown as InstalledPodman,
+      {
+        bundledVersion: '6.0.1',
+      } as unknown as UpdateCheck,
+    );
+
+    expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
+    expect(PROVIDER_CLEANUP_MOCK.getActions).toHaveBeenCalled();
+    expect(action1Execute).toHaveBeenCalled();
+  });
+
+  test('wipeAllDataBeforeMajorUpdate no action with podman 4.9.1 -> 4.9.2', async () => {
+    await podmanInstall.wipeAllDataBeforeMajorUpdate(
       {
         version: '4.9.1',
       } as unknown as InstalledPodman,
@@ -333,7 +382,7 @@ describe('performUpdate', () => {
     // all podman machine are stopped
     vi.spyOn(podmanInstall, 'stopPodmanMachinesIfAnyBeforeUpdating').mockResolvedValue(true);
     // return true if data have been cleaned or if user skip it
-    vi.spyOn(podmanInstall, 'wipeAllDataBeforeUpdatingToV5').mockResolvedValue(true);
+    vi.spyOn(podmanInstall, 'wipeAllDataBeforeMajorUpdate').mockResolvedValue(true);
 
     // mock checkForUpdate
     vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
@@ -362,7 +411,7 @@ describe('performUpdate', () => {
     // all podman machine are stopped
     vi.spyOn(podmanInstall, 'stopPodmanMachinesIfAnyBeforeUpdating').mockResolvedValue(true);
     // return true if data have been cleaned or if user skip it
-    vi.spyOn(podmanInstall, 'wipeAllDataBeforeUpdatingToV5').mockResolvedValue(true);
+    vi.spyOn(podmanInstall, 'wipeAllDataBeforeMajorUpdate').mockResolvedValue(true);
 
     // mock checkForUpdate
     vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
@@ -373,7 +422,7 @@ describe('performUpdate', () => {
 
     await podmanInstall.performUpdate(providerMock, undefined);
 
-    expect(extensionApi.Uri.parse).toHaveBeenCalledWith(releaseNotes.href);
+    expect(extensionApi.Uri.parse).toHaveBeenCalledWith(getBundledReleaseNotesHref());
     expect(extensionApi.env.openExternal).toHaveBeenCalled();
   });
 
@@ -383,7 +432,7 @@ describe('performUpdate', () => {
     // all podman machine are stopped
     vi.spyOn(podmanInstall, 'stopPodmanMachinesIfAnyBeforeUpdating').mockResolvedValue(true);
     // return true if data have been cleaned or if user skip it
-    vi.spyOn(podmanInstall, 'wipeAllDataBeforeUpdatingToV5').mockResolvedValue(true);
+    vi.spyOn(podmanInstall, 'wipeAllDataBeforeMajorUpdate').mockResolvedValue(true);
 
     // mock initialized
     podmanInstall['podmanInfo'] = {} as unknown as PodmanInfo;

@@ -17,7 +17,7 @@ interface Props {
 
 let { searchTerm = $bindable('') }: Props = $props();
 
-// display or not the tasks manager (defaut is false)
+// display or not the tasks manager (default is false)
 let showTaskManager = $state(false);
 
 // to filter

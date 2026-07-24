@@ -169,7 +169,7 @@ describe('Check for MutationObserver', () => {
     MutationObserver.prototype.disconnect = mutationObserverDisconnect;
   });
 
-  test('Expect disconected MutationObserver after onDestroy', async () => {
+  test('Expect disconnected MutationObserver after onDestroy', async () => {
     const subtitle = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit';
     const page = render(Page, {
       title: '',

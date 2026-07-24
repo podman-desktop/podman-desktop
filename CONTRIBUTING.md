@@ -418,7 +418,7 @@ If you're unsure where to add code (renderer, UI, extensions, plugins) see the b
 - `packages/preload`: Electron code that runs before the page gets rendered. Typically has access to APIs and used to setup communication processes between the main and renderer code.
 - `packages/preload-docker-extension`: Electron preload code specific to the Docker Desktop extension.
 - `packages/renderer`: Electron code that runs in the renderer process. The renderer runs separate to the main process and is responsible for typically rendering the main pages of Podman Desktop. Typically, this is where you find the `.svelte` code that renders the main Podman Desktop UI.
-- `scripts`: Scripts Podman Desktop requires such as `pnpm watch` functionality and updating Electron vendorered modules.
+- `scripts`: Scripts Podman Desktop requires such as `pnpm watch` functionality and updating Electron vendored modules.
 - `tests`: Contains e2e tests for Podman Desktop.
 - `types`: Additional types required for TypeScript.
 - `website`: The documentation as well as [Podman Desktop website](https://podman-desktop.io) developed in [Docusaurus](https://docusaurus.io).
@@ -442,9 +442,9 @@ Example:
 
 1. Choose what UI component you want to add: Ex. I want to add a new primary button.
 2. Look under `initColors()` and pick `this.initButton()` and scroll down to `protected initButton()`.
-3. Pick a color. I want to use the the "primary" button. So I will pick: `${button}primary-bg`.
+3. Pick a color. I want to use the "primary" button. So I will pick: `${button}primary-bg`.
 4. Scroll up and note the `const` below `protected initButton()` which is `const button = 'button-';`
-5. The color can be referenced with `[var(--pd-button-primary-bg)]`. The `[var(--pd-` portion will always be consistent when refering to a color variable.
+5. The color can be referenced with `[var(--pd-button-primary-bg)]`. The `[var(--pd-` portion will always be consistent when referring to a color variable.
 6. For example:
 
 ```ts

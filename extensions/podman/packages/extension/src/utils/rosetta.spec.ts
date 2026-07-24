@@ -136,14 +136,19 @@ describe('needsRosettaEnableFile', () => {
     ['macOS Tahoe, Podman 5.6.0, Rosetta enabled', true, 'arm64', TAHOE, '5.6.0', true, 'applehv', true],
     ['macOS Tahoe, Podman 5.6.1, Rosetta enabled', true, 'arm64', TAHOE, '5.6.1', true, 'applehv', true],
     ['macOS Tahoe, Podman 6.0.0, Rosetta enabled', true, 'arm64', TAHOE, '6.0.0', true, 'applehv', true],
-  ] as const)('%s → %s', async (_desc, isMac, architecture, darwinRelease, podmanVersion, rosettaEnabled, vmType, expected) => {
-    vi.mocked(envAPI).isMac = isMac;
-    vi.mocked(arch).mockReturnValue(architecture);
-    vi.mocked(release).mockReturnValue(darwinRelease);
-    vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(rosettaEnabled);
+  ] as const)(
+    '%s → %s',
+    async (_desc, isMac, architecture, darwinRelease, podmanVersion, rosettaEnabled, vmType, expected) => {
+      vi.mocked(envAPI).isMac = isMac;
+      vi.mocked(arch).mockReturnValue(architecture);
+      vi.mocked(release).mockReturnValue(darwinRelease);
+      vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(rosettaEnabled);
 
-    expect(await rosettaProvisioner.needsRosettaEnableFile(podmanConfiguration, podmanVersion, vmType)).toBe(expected);
-  });
+      expect(await rosettaProvisioner.needsRosettaEnableFile(podmanConfiguration, podmanVersion, vmType)).toBe(
+        expected,
+      );
+    },
+  );
 });
 
 describe('enableRosettaInMachine', () => {

@@ -21,10 +21,12 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { inject, injectable, optional } from 'inversify';
-import { compare } from 'semver';
+import { compare, major } from 'semver';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import {
+  PODMAN_EDIT_IMPORT_NATIVE_CA,
+  PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
   ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
@@ -34,15 +36,15 @@ import {
   calcPodmanMachineSetting,
   getJSONMachineList,
   isLibkrunSupported,
+  isPodman6OrLater,
   isRootfulMachineInitSupported,
   isStartNowAtMachineInitSupported,
   isUserModeNetworkingSupported,
 } from '/@/extension';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
-import * as podman5JSON from '/@/podman5.json';
 import { MachineJSON } from '/@/types';
 import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
-import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getBundledPodmanVersion, getBundledReleaseNotesHref } from '/@/utils/podman-bundled';
 import type { PodmanInfo } from '/@/utils/podman-info';
 import { PodmanInfoImpl } from '/@/utils/podman-info';
 import { execPodman } from '/@/utils/util';
@@ -109,6 +111,10 @@ export class PodmanInstall {
         extensionApi.context.setValue(
           PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
           isLibkrunSupported(newInstalledPodman.version),
+        );
+        extensionApi.context.setValue(
+          PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
+          isPodman6OrLater(newInstalledPodman.version),
         );
         await calcPodmanMachineSetting();
       }
@@ -184,15 +190,15 @@ export class PodmanInstall {
 
   // return true if data have been cleaned or if user skip it
   // return false if user cancel
-  protected async wipeAllDataBeforeUpdatingToV5(
+  protected async wipeAllDataBeforeMajorUpdate(
     installedPodman: InstalledPodman,
     updateInfo: UpdateCheck,
   ): Promise<boolean> {
-    // if (v4 --> v5)
+    // major update, prompt user to wipe all data
     if (
-      installedPodman.version.startsWith('4.') &&
-      updateInfo.bundledVersion?.startsWith('5.') &&
-      this.providerCleanup
+      updateInfo.bundledVersion &&
+      this.providerCleanup &&
+      major(updateInfo.bundledVersion) > major(installedPodman.version)
     ) {
       // prompt if user wants to wipe all data
       const answer = await extensionApi.window.showInformationMessage(
@@ -253,8 +259,8 @@ export class PodmanInstall {
         return;
       }
 
-      // podman v4 -> v5 migration: ask to wipe all data before doing the update
-      const wipeAllDataCompleted = await this.wipeAllDataBeforeUpdatingToV5(
+      // podman major update (first digit change ), prompt user to wipe all data before doing the update
+      const wipeAllDataCompleted = await this.wipeAllDataBeforeMajorUpdate(
         { version: updateInfo.installedVersion },
         updateInfo,
       );
@@ -319,10 +325,15 @@ export class PodmanInstall {
             PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
             isLibkrunSupported(updateInfo.bundledVersion),
           );
+          extensionApi.context.setValue(
+            PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
+            isPodman6OrLater(updateInfo.bundledVersion),
+          );
+          extensionApi.context.setValue(PODMAN_EDIT_IMPORT_NATIVE_CA, isPodman6OrLater(updateInfo.bundledVersion));
         } else if (answer === 'Ignore') {
           this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
         } else if (answer === 'Open release notes') {
-          await extensionApi.env.openExternal(extensionApi.Uri.parse(podman5JSON.releaseNotes.href));
+          await extensionApi.env.openExternal(extensionApi.Uri.parse(getBundledReleaseNotesHref()));
         }
       }
     }

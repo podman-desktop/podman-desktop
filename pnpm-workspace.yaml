@@ -27,7 +27,7 @@ overrides:
   node-forge: ^1.4.0
   config-file-ts>glob: ^10.5.0
   compression>on-headers: ^1.1.0
-  js-yaml@<5: ^4.2.0
+  js-yaml@<5: ^4.3.0
   tmp-promise>tmp: ^0.2.7
   tar: ^7.5.3
   cheerio>undici: ^7.18.2
@@ -47,7 +47,7 @@ overrides:
   ajv@^8: ^8.18.0
   electron-builder-squirrel-windows: ^26.8.2
   svelte>devalue: ^5.6.4
-  protobufjs: ^7.6.4
+  protobufjs: ^7.6.5
   follow-redirects: ^1.16.0
   uuid: ^14.0.0
   ip-address: '>=10.1.1'
@@ -55,7 +55,7 @@ overrides:
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.15.0'
   ws@^8: '>=8.20.1'
-  concurrently>shell-quote: '>=1.8.4'
+  concurrently>shell-quote: '>=1.8.5'
   dockerode>@grpc/grpc-js: '>=1.14.4'
   form-data: '>=4.0.6'
   '@docusaurus/utils@3>gray-matter': npm:@11ty/gray-matter@^2.1.0
@@ -65,6 +65,7 @@ overrides:
   webpack-dev-server: '>=5.2.5'
   '@babel/core': '>=7.29.6 <8.0.0'
   websocket-driver: '>=0.7.5'
+  svgo: '>=3.3.4 <4.0.0'
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true

@@ -12,7 +12,7 @@ import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
 export let podName: string;
 export let containerName: string;
 
-// On load, we collect the the original pod and container name,
+// On load, we collect the original pod and container name,
 // and we will use these to correctly save the terminal state when the component is destroyed.
 // Due to the way Svelte works, we need to store the original pod and container name in a separate / safe manner so that
 // the original values are not written over when the component is re-rendered.

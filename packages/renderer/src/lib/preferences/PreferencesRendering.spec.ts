@@ -78,7 +78,7 @@ test('Expect to see one record when filtering with boolean keyword', async () =>
 });
 
 test('Expect to see one record when filtering with unknown keyword', async () => {
-  render(PreferencesRendering, { properties: records, key: 'key', searchValue: 'unknwon' });
+  render(PreferencesRendering, { properties: records, key: 'key', searchValue: 'unknown' });
   const noSettingsDiv = screen.getAllByText('No Settings Found');
   expect(noSettingsDiv.length > 0).toBe(true);
   expect(noSettingsDiv[0].parentElement).toHaveClass('text-[var(--pd-content-header)]');

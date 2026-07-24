@@ -147,7 +147,7 @@ export class Certificates {
       spawnArgs.push(key);
     }
 
-    // call the spawn command (as we've lot ot output)
+    // call the spawn command (as we've lot of output)
     const spawnResult = await spawnWithPromise(command, spawnArgs);
     if (spawnResult.error) {
       console.log('error while executing command', command, spawnArgs, spawnResult.error);
