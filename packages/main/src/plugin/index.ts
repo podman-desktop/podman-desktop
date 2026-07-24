@@ -20,6 +20,8 @@
  * @module preload
  */
 import { EventEmitter } from 'node:events';
+// (delete-me) cold-start trace — write to file since Playwright consumes both stdout and stderr
+import { appendFileSync } from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -263,6 +265,18 @@ import { WelcomeInit } from './welcome/welcome-init.js';
 const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
   path: string,
 ) => Promise<{ free: number }>;
+const T0 = Date.now();
+const traceFile = process.env['PD_COLD_TRACE_FILE'];
+const trace = (msg: string): void => {
+  const line = `[TRACE] +${Date.now() - T0}ms ${msg}\n`;
+  if (traceFile)
+    try {
+      appendFileSync(traceFile, line);
+    } catch (_e) {
+      /* ignore */
+    }
+  process.stderr.write(line);
+};
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
@@ -498,6 +512,7 @@ export class PluginSystem {
 
   // initialize extension loader mechanism
   async initExtensions(configurationRegistryEmitter: Emitter<ConfigurationRegistry>): Promise<ExtensionLoader> {
+    trace('initExtensions() start');
     const notifications: NotificationCardOptions[] = [];
 
     this.isReady = false;
@@ -509,9 +524,11 @@ export class PluginSystem {
     this.ipcHandle('extension-system:isExtensionsStarted', async (): Promise<boolean> => {
       return this.isExtensionsStarted;
     });
+    trace('IPC handlers registered');
 
     // redirect main process logs to the extension loader
     this.redirectLogging();
+    trace('redirectLogging() done');
 
     // init api sender
     const apiSender = this.getApiSender(this.getWebContentsSender());
@@ -531,17 +548,21 @@ export class PluginSystem {
     container.bind<SafeStorageRegistry>(SafeStorageRegistry).toSelf().inSingletonScope();
 
     const safeStorageRegistry = container.get<SafeStorageRegistry>(SafeStorageRegistry);
+    trace('safeStorageRegistry.init() start');
     notifications.push(...(await safeStorageRegistry.init()));
+    trace('safeStorageRegistry.init() done');
 
     container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
+    trace('initConfigurationRegistry() start');
     const configurationRegistry = await this.initConfigurationRegistry(
       container,
       notifications,
       configurationRegistryEmitter,
     );
+    trace('initConfigurationRegistry() done');
 
     container.bind<ColorRegistry>(ColorRegistry).to(InjectableColorRegistry).inSingletonScope();
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
@@ -549,18 +570,24 @@ export class PluginSystem {
 
     container.bind<Certificates>(Certificates).toSelf().inSingletonScope();
     const certificates = container.get<Certificates>(Certificates);
+    trace('certificates.init() start');
     await certificates.init();
+    trace('certificates.init() done');
 
     container.bind<Proxy>(Proxy).toSelf().inSingletonScope();
     const proxy = container.get<Proxy>(Proxy);
+    trace('proxy.init() start');
     await proxy.init();
+    trace('proxy.init() done');
 
     const exec = new Exec(proxy);
     container.bind<Exec>(Exec).toConstantValue(exec);
 
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
+    trace('telemetry.init() start');
     await telemetry.init();
+    trace('telemetry.init() done');
 
     container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
     const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
@@ -595,7 +622,9 @@ export class PluginSystem {
 
     container.bind<KubernetesClient>(KubernetesClient).toSelf().inSingletonScope();
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
+    trace('kubernetesClient.init() start');
     await kubernetesClient.init();
+    trace('kubernetesClient.init() done');
 
     container.bind<CloseBehavior>(CloseBehavior).toSelf().inSingletonScope();
     const closeBehaviorConfiguration = container.get<CloseBehavior>(CloseBehavior);
@@ -805,7 +834,9 @@ export class PluginSystem {
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
     this.extensionLoader = container.get<ExtensionLoader>(ExtensionLoader);
+    trace('extensionLoader.init() start');
     await this.extensionLoader.init();
+    trace('extensionLoader.init() done');
 
     container.bind<FeedbackHandler>(FeedbackHandler).toSelf().inSingletonScope();
 
@@ -3474,12 +3505,15 @@ export class PluginSystem {
 
     await contributionManager.init();
 
+    trace('markAsReady()');
     this.markAsReady();
 
     apiSender.send('starting-extensions', `${this.isReady}`);
     console.log('System ready. Loading extensions...');
+    trace('extensionLoader.start() begin');
     try {
       await this.extensionLoader.start();
+      trace('extensionLoader.start() done');
       console.log('PluginSystem: initialization done.');
     } finally {
       apiSender.send('extensions-started');

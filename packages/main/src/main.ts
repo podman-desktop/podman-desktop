@@ -15,6 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+// (delete-me) cold-start trace — write to file since Playwright consumes both stdout and stderr
+import { appendFileSync } from 'node:fs';
+
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
@@ -26,6 +29,20 @@ import { isLinux, isMac, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';
+
+const T0 = Date.now();
+const traceFile = process.env['PD_COLD_TRACE_FILE'];
+const trace = (msg: string): void => {
+  const line = `[TRACE] +${Date.now() - T0}ms ${msg}\n`;
+  if (traceFile)
+    try {
+      appendFileSync(traceFile, line);
+    } catch (_e) {
+      /* ignore */
+    }
+  process.stderr.write(line);
+};
+trace('main.ts module loaded');
 
 export type AdditionalData = {
   argv: string[];
@@ -54,11 +71,13 @@ export class Main implements IDisposable {
   readonly #plugins: Array<AppPlugin>;
 
   constructor(app: ElectronApp) {
+    trace('Main constructor start');
     this.app = app;
     this.app.name = product.name;
     this.mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
     this.#plugins = [new DefaultProtocolClient(this.app), new WindowPlugin(this.app, this.mainWindowDeferred.resolve)];
+    trace('Main constructor done');
   }
 
   main(args: string[]): void {
@@ -76,10 +95,12 @@ export class Main implements IDisposable {
   }
 
   protected init(additionalData: AdditionalData): void {
+    trace('init() start');
     /**
      * Prevent multiple instances
      */
     const isSingleInstance = this.app.requestSingleInstanceLock(additionalData);
+    trace('requestSingleInstanceLock done');
     if (!isSingleInstance) {
       console.warn(`An instance of ${product.name} is already running. Stopping`);
       this.app.quit();
@@ -91,11 +112,13 @@ export class Main implements IDisposable {
      */
     const security = new SecurityRestrictions(this.app);
     security.init();
+    trace('SecurityRestrictions.init done');
 
     /**
      * Disable Hardware Acceleration for more power-save
      */
     this.app.disableHardwareAcceleration();
+    trace('disableHardwareAcceleration done');
 
     /**
      *  @see https://www.electronjs.org/docs/latest/api/app#appsetappusermodelidid-windows
@@ -123,7 +146,9 @@ export class Main implements IDisposable {
     /**
      * Register {@link Main#whenReady} for ready event
      */
+    trace('registering app.whenReady()');
     this.app.whenReady().then(this.whenReady.bind(this)).catch(console.error);
+    trace('init() done');
   }
 
   /**
@@ -134,7 +159,10 @@ export class Main implements IDisposable {
    * @return {Promise<Array<void>>}
    */
   protected async whenReady(): Promise<Array<void>> {
-    return Promise.all(this.#plugins.map(plugin => plugin.onReady()));
+    trace('whenReady() fired — calling plugin.onReady()');
+    const result = await Promise.all(this.#plugins.map(plugin => plugin.onReady()));
+    trace('whenReady() plugins done');
+    return result;
   }
 
   /**
