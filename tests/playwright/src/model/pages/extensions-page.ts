@@ -94,7 +94,6 @@ export class ExtensionsPage extends MainPage {
 
   public async getCatalogExtension(extensionName: string, timeout = 10_000): Promise<ExtensionCatalogCardPage> {
     return test.step(`Get catalog extension: ${extensionName}`, async () => {
-      await this.openCatalogTab();
       const extensionCard = new ExtensionCatalogCardPage(this.page, extensionName, this.catalogExtensions);
       await playExpect(extensionCard.parent).toBeVisible({ timeout });
       return extensionCard;
