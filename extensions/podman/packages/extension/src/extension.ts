@@ -1957,6 +1957,11 @@ export function isPodman6OrLater(podmanVersion: string): boolean {
   return compare(podmanVersion, '6.0.0') >= 0;
 }
 
+// Checks if `podman machine list` returns all machines across all providers without specifying one.
+export function isMachineListAllProvidersSupported(podmanVersion: string): boolean {
+  return isPodman6OrLater(podmanVersion);
+}
+
 export function sendTelemetryRecords(
   eventName: string,
   telemetryRecords: Record<string, unknown>,
