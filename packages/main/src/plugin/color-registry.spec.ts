@@ -499,6 +499,118 @@ describe('isDarkTheme', () => {
   });
 });
 
+describe('isHighContrastTheme', () => {
+  beforeEach(() => {
+    const fakeExtension = {
+      id: 'foo.bar',
+    } as unknown as AnalyzedExtension;
+
+    colorRegistry.initColors();
+
+    colorRegistry.registerExtensionThemes(fakeExtension, [
+      {
+        id: 'hc-dark-custom',
+        name: 'HC Dark Custom',
+        parent: 'hc-dark',
+        colors: { titlebarBg: '#000' },
+      },
+      {
+        id: 'hc-light-custom',
+        name: 'HC Light Custom',
+        parent: 'hc-light',
+        colors: { titlebarBg: '#fff' },
+      },
+      {
+        id: 'dark-custom',
+        name: 'Dark Custom',
+        parent: 'dark',
+        colors: { titlebarBg: '#111' },
+      },
+    ]);
+  });
+
+  test('light is not high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('light')).toBeFalsy();
+  });
+
+  test('dark is not high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('dark')).toBeFalsy();
+  });
+
+  test('hc-light is high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('hc-light')).toBeTruthy();
+  });
+
+  test('hc-dark is high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('hc-dark')).toBeTruthy();
+  });
+
+  test('custom with parent hc-dark is high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('hc-dark-custom')).toBeTruthy();
+  });
+
+  test('custom with parent hc-light is high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('hc-light-custom')).toBeTruthy();
+  });
+
+  test('custom with parent dark is not high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('dark-custom')).toBeFalsy();
+  });
+
+  test('unknown theme is not high contrast', () => {
+    expect(colorRegistry.isHighContrastTheme('unknown-theme')).toBeFalsy();
+  });
+});
+
+describe('getThemeInfo', () => {
+  beforeEach(() => {
+    const fakeExtension = {
+      id: 'foo.bar',
+    } as unknown as AnalyzedExtension;
+
+    colorRegistry.initColors();
+
+    colorRegistry.registerExtensionThemes(fakeExtension, [
+      {
+        id: 'dark-theme1',
+        name: 'Dark Theme 1',
+        parent: 'dark',
+        colors: { titlebarBg: '#111' },
+      },
+      {
+        id: 'hc-dark-theme1',
+        name: 'HC Dark Theme 1',
+        parent: 'hc-dark',
+        colors: { titlebarBg: '#000' },
+      },
+    ]);
+  });
+
+  test('light returns isDark false and isHighContrast false', () => {
+    expect(colorRegistry.getThemeInfo('light')).toStrictEqual({ isDark: false, isHighContrast: false });
+  });
+
+  test('dark returns isDark true and isHighContrast false', () => {
+    expect(colorRegistry.getThemeInfo('dark')).toStrictEqual({ isDark: true, isHighContrast: false });
+  });
+
+  test('hc-light returns isDark false and isHighContrast true', () => {
+    expect(colorRegistry.getThemeInfo('hc-light')).toStrictEqual({ isDark: false, isHighContrast: true });
+  });
+
+  test('hc-dark returns isDark true and isHighContrast true', () => {
+    expect(colorRegistry.getThemeInfo('hc-dark')).toStrictEqual({ isDark: true, isHighContrast: true });
+  });
+
+  test('custom dark theme returns isDark true and isHighContrast false', () => {
+    expect(colorRegistry.getThemeInfo('dark-theme1')).toStrictEqual({ isDark: true, isHighContrast: false });
+  });
+
+  test('custom hc-dark theme returns isDark true and isHighContrast true', () => {
+    expect(colorRegistry.getThemeInfo('hc-dark-theme1')).toStrictEqual({ isDark: true, isHighContrast: true });
+  });
+});
+
 describe('registerExtensionThemes', () => {
   const fakeExtension = {
     id: 'foo.bar',

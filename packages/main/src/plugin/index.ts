@@ -118,6 +118,7 @@ import type {
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
+  ThemeInfo,
   V1Route,
   ViewInfoUI,
   VolumeCreateOptions,
@@ -3188,8 +3189,8 @@ export class PluginSystem {
       return colorRegistry.listColors(themeId);
     });
 
-    this.ipcHandle('colorRegistry:isDarkTheme', async (_listener, themeId: string): Promise<boolean> => {
-      return colorRegistry.isDarkTheme(themeId);
+    this.ipcHandle('colorRegistry:getThemeInfo', async (_listener, themeId: string): Promise<ThemeInfo> => {
+      return colorRegistry.getThemeInfo(themeId);
     });
 
     this.ipcHandle('viewRegistry:listViewsContributions', async (_listener): Promise<ViewInfoUI[]> => {
