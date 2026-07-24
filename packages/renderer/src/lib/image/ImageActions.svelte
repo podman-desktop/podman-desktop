@@ -1,5 +1,13 @@
 <script lang="ts">
-import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUp,
+  faDownload,
+  faEdit,
+  faLayerGroup,
+  faPlay,
+  faSync,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { createEventDispatcher, onMount } from 'svelte';
@@ -108,6 +116,42 @@ function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
+
+async function updateImage(): Promise<void> {
+  if (!isUpdateCandidate(image)) {
+    return;
+  }
+
+  const previousStatus = image.status;
+  image.status = 'UPDATING';
+  dispatch('update', image);
+
+  try {
+    const results = await imageUtils.updateImages([image]);
+    const result = results[0];
+    if (result && !result.updated) {
+      console.info(`${image.name}:${image.tag}: ${result.message}`);
+    }
+    image.status = previousStatus;
+  } catch (error) {
+    image.status = previousStatus;
+    await onError(`Error while updating image: ${String(error)}`);
+  } finally {
+    image.selected = false;
+    dispatch('update', image);
+  }
+}
+
+function confirmUpdateImage(): void {
+  withConfirmation(updateImage, `update image ${image.name}:${image.tag} to latest build`, {
+    title: 'Update Image?',
+    buttonLabel: 'Update',
+  });
+}
+
+function isUpdateCandidate(imageInfo: ImageInfoUI): boolean {
+  return imageInfo.name !== '<none>' && imageInfo.status === 'UNUSED' && Boolean(imageInfo.digest);
+}
 </script>
 
 <ListItemButtonIcon title="Run Image" onClick={runImage} detailed={detailed} icon={faPlay} />
@@ -154,6 +198,15 @@ function saveImage(): void {
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />
+
+  <ListItemButtonIcon
+    title="Update Image"
+    tooltip="Update image to the latest build"
+    onClick={confirmUpdateImage}
+    menu={dropdownMenu}
+    detailed={detailed}
+    icon={faSync}
+    enabled={isUpdateCandidate(image)} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions

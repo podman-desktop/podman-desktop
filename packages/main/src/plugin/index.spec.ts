@@ -1144,6 +1144,32 @@ describe('checkImageUpdateStatus handler', () => {
   });
 });
 
+describe('updateImages handler', () => {
+  test('should delegate image updates to the container provider registry', async () => {
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: Array<{ engineId: string; image: string; tag: string; digest: string }>,
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images = [
+      { engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' },
+      { engineId: 'podman', image: 'redis:7', tag: '7', digest: 'sha256:def456' },
+    ];
+    const expectedResults = [
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
+      { imageRef: 'redis:7', updated: false, status: 'normal', message: 'Already up to date' },
+    ] as const;
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([...expectedResults]);
+
+    const result = await handle(undefined, images);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images);
+    expect(result.result).toEqual(expectedResults);
+  });
+});
+
 describe('container-provider-registry:playKube', () => {
   type PlayKubeHandler = (
     _listener: undefined,

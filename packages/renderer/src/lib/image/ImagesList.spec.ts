@@ -37,6 +37,7 @@ import { viewsContributions } from '/@/stores/views';
 import ImagesList from './ImagesList.svelte';
 
 beforeEach(() => {
+  vi.clearAllMocks();
   providerInfos.set([]);
   imagesInfos.set([]);
   viewsContributions.set([]);
@@ -55,6 +56,32 @@ beforeEach(() => {
 async function waitRender(customProperties: object): Promise<void> {
   render(ImagesList, { ...customProperties });
   await tick();
+}
+
+async function renderWithImages(imageList: ImageInfo[]): Promise<void> {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+  vi.mocked(window.listImages).mockResolvedValue(imageList);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await vi.waitUntil(() => get(imagesInfos).length > 0);
+  await vi.waitUntil(() => get(providerInfos).length > 0);
+
+  await waitRender({});
 }
 
 test('Expect no container engines being displayed', async () => {
@@ -510,6 +537,178 @@ test('expect redirect to saveImage page when at least one image is selected and 
   await fireEvent.click(saveImages);
 
   expect(goToMock).toBeCalledWith('/images/save');
+});
+
+test('Expect Update images button appears when images are selected', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      Digest: 'sha256:digest',
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await vi.waitUntil(() => get(imagesInfos).length > 0);
+  await vi.waitUntil(() => get(providerInfos).length > 0);
+
+  await waitRender({});
+
+  const toggleAll = screen.getByTitle('Toggle all');
+  await fireEvent.click(toggleAll);
+
+  const updateButton = screen.getByRole('button', { name: 'Update images' });
+  expect(updateButton).toBeInTheDocument();
+});
+
+test('Expect Update images confirmation to count only selected update candidates', async () => {
+  await renderWithImages([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      Digest: 'sha256:digest',
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+    {
+      Id: 'sha256:456456456456456',
+      Created: 1,
+      Size: 1234,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+    {
+      Id: 'sha256:789789789789789',
+      RepoTags: ['alpine:latest'],
+      Created: 2,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  await fireEvent.click(screen.getByTitle('Toggle all'));
+
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Update' });
+  vi.mocked(window.updateImages).mockResolvedValue([
+    { imageRef: 'fedora:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
+  ]);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Update images' }));
+
+  await waitFor(() => expect(window.showMessageBox).toHaveBeenCalledOnce());
+  expect(window.showMessageBox).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Are you sure you want to update 1 image?',
+    }),
+  );
+});
+
+test('Expect Update images button not to be actionable while selected images are deleting', async () => {
+  await renderWithImages([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      Digest: 'sha256:digest',
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  await fireEvent.click(screen.getByRole('checkbox', { name: 'Toggle image' }));
+
+  let resolveDelete: () => void = () => {};
+  vi.mocked(window.deleteImage).mockReturnValue(
+    new Promise<void>(resolve => {
+      resolveDelete = resolve;
+    }),
+  );
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete 1 selected items' }));
+
+  await waitFor(() => {
+    const updateButton = screen.queryByRole('button', { name: 'Update images' });
+    if (updateButton) {
+      expect(updateButton).toBeDisabled();
+    } else {
+      expect(updateButton).not.toBeInTheDocument();
+    }
+  });
+
+  resolveDelete();
+});
+
+test('Expect Delete images button not to be actionable while selected images are updating', async () => {
+  await renderWithImages([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      Digest: 'sha256:digest',
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  await fireEvent.click(screen.getByRole('checkbox', { name: 'Toggle image' }));
+
+  let resolveUpdate: (results: Awaited<ReturnType<typeof window.updateImages>>) => void = () => {};
+  vi.mocked(window.updateImages).mockReturnValue(
+    new Promise(resolve => {
+      resolveUpdate = resolve;
+    }),
+  );
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Update images' }));
+  await waitFor(() => expect(window.updateImages).toHaveBeenCalledOnce());
+
+  await waitFor(() => {
+    const deleteButton = screen.queryByTitle('Delete 1 selected items');
+    if (deleteButton) {
+      expect(deleteButton).toBeDisabled();
+    } else {
+      expect(deleteButton).not.toBeInTheDocument();
+    }
+  });
+
+  resolveUpdate([
+    { imageRef: 'fedora:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
+  ]);
 });
 
 test('Expect load images button redirects to images load page', async () => {

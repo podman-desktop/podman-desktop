@@ -80,6 +80,9 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(ImageUtils.prototype.deleteImage).mockRejectedValue(new Error('Cannot delete image in test'));
+  vi.mocked(ImageUtils.prototype.updateImages).mockResolvedValue([
+    { imageRef: 'dummy:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
+  ]);
 });
 
 test('Expect error dialog with correct message when image deletion fails', async () => {
@@ -316,4 +319,59 @@ describe('run', () => {
       });
     });
   });
+});
+
+test.each([
+  { name: '<none>', status: 'UNUSED' as const, tag: '', digest: 'sha256:digest', expectEnabled: false },
+  { name: 'image-name', status: 'USED' as const, tag: '1.0', digest: 'sha256:digest', expectEnabled: false },
+  { name: 'image-name', status: 'UNUSED' as const, tag: '1.0', digest: undefined, expectEnabled: false },
+  { name: 'image-name', status: 'UNUSED' as const, tag: '1.0', digest: 'sha256:digest', expectEnabled: true },
+])('Expect Update Image button enabled=$expectEnabled for name=$name status=$status', async ({
+  name,
+  status,
+  tag,
+  digest,
+  expectEnabled,
+}) => {
+  getContributedMenusMock.mockResolvedValue([]);
+
+  render(ImageActions, {
+    onPushImage: vi.fn(),
+    onRenameImage: vi.fn(),
+    image: { name, status, tag, digest } as ImageInfoUI,
+  });
+
+  const button = screen.getByTitle('Update Image');
+  if (expectEnabled) {
+    expect(button).toBeEnabled();
+  } else {
+    expect(button).toBeDisabled();
+  }
+});
+
+test('Expect Update Image action to bail out when image status changes before confirmation callback', async () => {
+  getContributedMenusMock.mockResolvedValue([]);
+
+  const image: ImageInfoUI = {
+    name: 'image-name',
+    status: 'UNUSED',
+    tag: '1.0',
+    digest: 'sha256:digest',
+  } as ImageInfoUI;
+
+  vi.mocked(withConfirmation).mockImplementation(callback => {
+    image.status = 'DELETING';
+    callback();
+  });
+
+  render(ImageActions, {
+    onPushImage: vi.fn(),
+    onRenameImage: vi.fn(),
+    image,
+  });
+
+  await fireEvent.click(screen.getByTitle('Update Image'));
+
+  expect(ImageUtils.prototype.updateImages).not.toHaveBeenCalled();
+  expect(image.status).toBe('DELETING');
 });

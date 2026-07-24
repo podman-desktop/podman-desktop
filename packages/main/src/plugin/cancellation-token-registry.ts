@@ -48,4 +48,9 @@ export class CancellationTokenRegistry {
   hasCancellationTokenSource(id: number): boolean {
     return this.callbacksCancellableToken.has(id);
   }
+
+  removeCancellationTokenSource(id: number): void {
+    this.callbacksCancellableToken.get(id)?.dispose();
+    this.callbacksCancellableToken.delete(id);
+  }
 }
