@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2299,6 +2299,77 @@ describe('runPreflightChecks', () => {
       successful: false,
       description: 'error',
     });
+    expect(run).toBeFalsy();
+  });
+  test('return true when check fails with warning severity', async () => {
+    providerRegistry.registerUpdate(
+      {
+        internalId: 'id',
+      } as unknown as ProviderImpl,
+      {
+        version: 'next',
+        preflightChecks: (): InstallCheck[] =>
+          [
+            {
+              title: 'check-1',
+              execute: (): CheckResult => {
+                return {
+                  successful: false,
+                  severity: 'warning',
+                  description: 'WSL not enabled',
+                } as CheckResult;
+              },
+            },
+          ] as unknown as InstallCheck[],
+        update: async () => {},
+      },
+    );
+    const callback: PreflightChecksCallback = {
+      startCheck: (_status: CheckStatus) => {},
+      endCheck: (_status: CheckStatus) => {},
+    };
+    const startCheckMock = vi.spyOn(callback, 'startCheck');
+    const endCheckMock = vi.spyOn(callback, 'endCheck');
+    const run = await providerRegistry.runPreflightChecks('id', callback, true);
+
+    expect(startCheckMock).toHaveBeenNthCalledWith(1, {
+      name: 'check-1',
+    });
+    expect(endCheckMock).toHaveBeenNthCalledWith(1, {
+      name: 'check-1',
+      successful: false,
+      severity: 'warning',
+      description: 'WSL not enabled',
+    });
+    expect(run).toBeTruthy();
+  });
+  test('return false when check fails without severity (backward compat)', async () => {
+    providerRegistry.registerUpdate(
+      {
+        internalId: 'id',
+      } as unknown as ProviderImpl,
+      {
+        version: 'next',
+        preflightChecks: (): InstallCheck[] =>
+          [
+            {
+              title: 'check-1',
+              execute: (): CheckResult => {
+                return {
+                  successful: false,
+                  description: 'hard failure',
+                } as CheckResult;
+              },
+            },
+          ] as unknown as InstallCheck[],
+        update: async () => {},
+      },
+    );
+    const callback: PreflightChecksCallback = {
+      startCheck: (_status: CheckStatus) => {},
+      endCheck: (_status: CheckStatus) => {},
+    };
+    const run = await providerRegistry.runPreflightChecks('id', callback, true);
     expect(run).toBeFalsy();
   });
 });
