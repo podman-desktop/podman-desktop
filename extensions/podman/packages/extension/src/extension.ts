@@ -1699,6 +1699,7 @@ export async function start(
       const checks = podmanInstall.getInstallChecks() ?? [];
       const result = [];
       let successful = true;
+      let hasBlockingFailure = false;
       for (const check of checks) {
         try {
           const checkResult = await check.execute();
@@ -1714,6 +1715,9 @@ export async function start(
 
           if (!checkResult.successful) {
             successful = false;
+            if (checkResult.severity !== 'warning') {
+              hasBlockingFailure = true;
+            }
           }
         } catch (err) {
           result.push({
@@ -1723,6 +1727,7 @@ export async function start(
               err instanceof Error ? err.message : typeof err === 'object' ? err?.toString() : 'unknown error',
           });
           successful = false;
+          hasBlockingFailure = true;
         }
       }
 
@@ -1744,7 +1749,11 @@ export async function start(
         }
       }
 
-      extensionApi.context.setValue('requirementsStatus', successful ? 'ok' : 'failed', 'onboarding');
+      extensionApi.context.setValue(
+        'requirementsStatus',
+        successful ? 'ok' : hasBlockingFailure ? 'failed' : 'warnings',
+        'onboarding',
+      );
       extensionApi.context.setValue('warningsMarkdown', warnings, 'onboarding');
       telemetryLogger?.logUsage('podman.onboarding.checkRequirementsCommand', telemetryRecords);
     },
