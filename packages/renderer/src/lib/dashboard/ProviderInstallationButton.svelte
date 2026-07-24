@@ -16,8 +16,19 @@ let checksStatus = $state<CheckStatus[]>([]);
 
 let preflightChecksFailed = $state(false);
 
-async function performInstallation(provider: ProviderInfo): Promise<void> {
+let hasWarnings = $state(false);
+
+async function performInstallation(): Promise<void> {
   installInProgress = true;
+
+  if (hasWarnings) {
+    await window.installProvider(provider.internalId);
+    onPreflightChecks([]);
+    hasWarnings = false;
+    installInProgress = false;
+    return;
+  }
+
   checksStatus = [];
   let checkSuccess = false;
   let currentCheck: CheckStatus;
@@ -41,9 +52,12 @@ async function performInstallation(provider: ProviderInfo): Promise<void> {
     console.error(err);
   }
   if (checkSuccess) {
-    await window.installProvider(provider.internalId);
-    // reset checks
-    onPreflightChecks([]);
+    if (checksStatus.some(c => c.successful === false && c.severity === 'warning')) {
+      hasWarnings = true;
+    } else {
+      await window.installProvider(provider.internalId);
+      onPreflightChecks([]);
+    }
   } else {
     preflightChecksFailed = true;
   }
@@ -57,7 +71,7 @@ async function performInstallation(provider: ProviderInfo): Promise<void> {
     inProgress={installInProgress}
     disabled={preflightChecksFailed}
     icon={faRocket}
-    on:click={(): Promise<void> => performInstallation(provider)}>
-    Install
+    onclick={performInstallation}>
+    {hasWarnings ? 'Proceed with installation' : 'Install'}
   </Button>
 {/if}
