@@ -2910,14 +2910,16 @@ export class ContainerProviderRegistry {
     }
     if (provider.libpodApi) {
       const podmanInfo = await provider.libpodApi.podmanInfo();
+      const { memTotal, memFree, memAvailable } = podmanInfo.host;
+      const memoryUsed = memAvailable !== undefined && memAvailable >= 0 ? memTotal - memAvailable : memTotal - memFree;
       return {
         engineId: provider.id,
         engineName: provider.name,
         engineType: provider.connection.type,
         cpus: podmanInfo.host.cpus,
         cpuIdle: podmanInfo.host.cpuUtilization.idlePercent,
-        memory: podmanInfo.host.memTotal,
-        memoryUsed: podmanInfo.host.memTotal - podmanInfo.host.memFree,
+        memory: memTotal,
+        memoryUsed,
         diskSize: podmanInfo.store.graphRootAllocated,
         diskUsed: podmanInfo.store.graphRootUsed,
       };
