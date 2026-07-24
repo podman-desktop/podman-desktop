@@ -3,15 +3,18 @@ import { faRocket } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+  onPreflightChecks: (status: CheckStatus[]) => void;
+}
 
-export let onPreflightChecks: (status: CheckStatus[]) => void;
+let { provider, onPreflightChecks }: Props = $props();
 
-let installInProgress = false;
+let installInProgress = $state(false);
 
-let checksStatus: CheckStatus[] = [];
+let checksStatus = $state<CheckStatus[]>([]);
 
-let preflightChecksFailed = false;
+let preflightChecksFailed = $state(false);
 
 async function performInstallation(provider: ProviderInfo): Promise<void> {
   installInProgress = true;
