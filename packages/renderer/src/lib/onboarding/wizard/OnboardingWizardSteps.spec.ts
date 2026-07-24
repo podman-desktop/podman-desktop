@@ -56,6 +56,16 @@ describe('OnboardingWizardSteps', () => {
     expect(screen.getByText('✓')).toBeInTheDocument();
   });
 
+  test('completed marker uses the slider accent color, not the button color', () => {
+    render(OnboardingWizardSteps, {
+      steps: [{ label: 'Install podman', status: 'completed' }],
+    });
+
+    const marker = screen.getByText('✓');
+    expect(marker).toHaveClass('bg-(--pd-input-toggle-on-bg)');
+    expect(marker).toHaveClass('text-(--pd-onboarding-step-completed-text)');
+  });
+
   test('applies active emphasis and non-active opacity', () => {
     render(OnboardingWizardSteps, {
       steps: [
@@ -65,6 +75,7 @@ describe('OnboardingWizardSteps', () => {
       ],
     });
 
+    expect(screen.getByText('Install podman').parentElement).not.toHaveClass('opacity-70');
     expect(screen.getByText('Create machine').parentElement).toHaveClass('font-semibold');
     expect(screen.getByText('Install CLI tools').parentElement).toHaveClass('opacity-70');
     expect(screen.getByText('Create machine').closest('li')).toHaveAttribute('aria-current', 'step');

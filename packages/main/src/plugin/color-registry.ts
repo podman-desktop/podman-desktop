@@ -1047,14 +1047,14 @@ export class ColorRegistry {
     this.registerColor(`${sNav}on-bg`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: accent1[600],
+      hcDark: accent1[400],
       hcLight: accent1[700],
     });
 
     this.registerColor(`${sNav}on-focused-bg`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: accent1[600],
+      hcDark: accent1[400],
       hcLight: accent1[700],
     });
 
@@ -2099,6 +2099,13 @@ export class ColorRegistry {
     this.registerColor(`${onboarding}inactive-dot-border`, {
       dark: gray[700],
       light: gray[700],
+    });
+
+    this.registerColor(`${onboarding}step-completed-text`, {
+      light: white,
+      dark: black,
+      hcLight: white,
+      hcDark: black,
     });
   }
 

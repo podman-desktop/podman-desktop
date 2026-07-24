@@ -15,19 +15,15 @@ let { steps = ONBOARDING_WIZARD_DEFAULT_STEPS, class: className = '', markerStyl
     <li
       aria-current={step.status === 'active' ? 'step' : undefined}
       class={`flex items-center gap-3 text-(--pd-content-header) ${
-        markerStyle === 'numbered'
-          ? step.status === 'upcoming'
-            ? 'opacity-70'
-            : step.status === 'active'
-              ? 'font-semibold'
-              : ''
+        step.status === 'upcoming'
+          ? 'opacity-70'
           : step.status === 'active'
             ? 'font-semibold'
-            : 'opacity-70'
+            : ''
       }`}>
       {#if step.status === 'completed'}
         <span
-          class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-(--pd-button-primary-bg) text-xs font-semibold text-(--pd-button-primary-text)">
+          class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-(--pd-input-toggle-on-bg) text-xs font-semibold text-(--pd-onboarding-step-completed-text)">
           ✓
         </span>
         <span class="whitespace-nowrap">{step.label}</span>
