@@ -305,6 +305,16 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     expect(logger).toHaveBeenCalledWith('key1', 'log', data);
   });
 
+  test('triggerStartupFeedbackDialogs', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+
+    const triggerStartupFeedbackDialogsExposure = getInMainWorld('triggerStartupFeedbackDialogs');
+
+    await triggerStartupFeedbackDialogsExposure();
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith('feedback:triggerStartupDialogs');
+  });
+
   test('logger passed to deleteProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
     const deleteProviderConnectionLifecycleExposure = getInMainWorld('deleteProviderConnectionLifecycle');

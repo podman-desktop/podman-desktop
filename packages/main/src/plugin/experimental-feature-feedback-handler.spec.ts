@@ -167,18 +167,17 @@ describe('init', () => {
     expect(setReminderSpy).not.toBeCalled();
   });
 
-  test('should load existing configurations and show dialog', async () => {
+  test('should load existing configurations without showing dialog', async () => {
     const conf = { remindAt: 123456, disabled: false };
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    const showFeedbackDialogSpy = vi.spyOn(feedbackForm, 'showFeedbackDialog').mockResolvedValue(undefined);
     await feedbackForm.init();
 
     expect(setReminderSpy).not.toHaveBeenCalled();
 
     expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual(conf);
-    expect(showFeedbackDialogSpy).toBeCalled();
+    expect(messageBox.showMessageBox).not.toHaveBeenCalled();
   });
 
   test(`should skip disabled features with 'false' value`, async () => {
@@ -196,6 +195,30 @@ describe('init', () => {
     expect(setSpy).not.toHaveBeenCalled();
     expect(saveSpy).not.toHaveBeenCalled();
     expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toBe(undefined);
+  });
+
+  test('should load features with past remindAt and show dialog when showFeedbackDialog is called separately', async () => {
+    vi.useFakeTimers();
+    const MOCK_NOW = new Date('2026-05-01T12:00:00.000Z');
+    vi.setSystemTime(MOCK_NOW);
+
+    const pastTimestamp = new Date('2025-12-28T00:00:00.000Z').getTime();
+    const conf = { remindAt: pastTimestamp, disabled: false };
+    configurationGetMock.mockReturnValue(conf);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 1 });
+
+    // init() should only populate the map, not show dialog
+    await feedbackForm.init();
+    expect(messageBox.showMessageBox).not.toHaveBeenCalled();
+    expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual(conf);
+
+    // showFeedbackDialog() called separately should show the dialog
+    await feedbackForm.showFeedbackDialog();
+    expect(messageBox.showMessageBox).toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
 

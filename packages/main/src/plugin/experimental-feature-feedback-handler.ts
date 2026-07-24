@@ -123,8 +123,6 @@ export class ExperimentalFeatureFeedbackHandler {
         this.setReminder(configurationKey);
       }
     }
-    // When are all features set, show dialog
-    await this.showFeedbackDialog();
   }
 
   /**
@@ -175,7 +173,7 @@ export class ExperimentalFeatureFeedbackHandler {
   /**
    * Goes through each enabled experimental feature and shows dialog if current timestamp is greater than stored value
    */
-  protected async showFeedbackDialog(): Promise<void> {
+  async showFeedbackDialog(): Promise<void> {
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
     const feedbackEnabled = this.#configurationRegistry.getConfiguration('feedback').get<boolean>('dialog', true);
     if (!feedbackEnabled) {
