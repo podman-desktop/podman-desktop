@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ export class BuildImagePage extends BasePage {
   readonly archLessOptionsButton: Locator;
   readonly terminalContent: Locator;
   readonly targetDropdownButton: Locator;
+  readonly registryValidationCheckbox: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -66,6 +67,7 @@ export class BuildImagePage extends BasePage {
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
     this.terminalContent = page.locator('.xterm-rows');
     this.targetDropdownButton = page.getByRole('button', { name: 'target' });
+    this.registryValidationCheckbox = page.getByRole('checkbox', { name: 'validate registries' });
   }
 
   async buildImage(
@@ -173,6 +175,20 @@ export class BuildImagePage extends BasePage {
     } else {
       await playExpect(this.archLessOptionsButton).toBeEnabled();
     }
+  }
+
+  async toggleRegistryValidation(enabled: boolean): Promise<void> {
+    return test.step(`${enabled ? 'Enable' : 'Disable'} registry validation`, async () => {
+      await playExpect(this.registryValidationCheckbox).toBeVisible();
+      // Wait for the form to hydrate and settle into the opposite state before clicking
+      await playExpect
+        .poll(async () => await this.registryValidationCheckbox.isChecked(), { timeout: 10_000 })
+        .not.toBe(enabled);
+      await this.registryValidationCheckbox.click();
+      await playExpect
+        .poll(async () => await this.registryValidationCheckbox.isChecked(), { timeout: 10_000 })
+        .toBe(enabled);
+    });
   }
 
   private async fillBuildImageForm(
