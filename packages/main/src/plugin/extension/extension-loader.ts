@@ -1683,6 +1683,12 @@ export class ExtensionLoader implements IAsyncDisposable {
 
         return disposable;
       },
+      pushHistoryEntry: (entry: containerDesktopAPI.NavigationHistoryEntry): void => {
+        this.navigationManager.pushHistoryEntry(extensionInfo.id, entry);
+      },
+      onDidNavigateToHistoryEntry: (listener, thisArg, disposables) => {
+        return this.navigationManager.onDidNavigateToHistoryEntry(extensionInfo.id, listener, thisArg, disposables);
+      },
     };
 
     const net: typeof containerDesktopAPI.net = {

@@ -2020,6 +2020,46 @@ describe('Navigation', async () => {
   });
 });
 
+describe('navigation history', () => {
+  test('pushHistoryEntry delegates to navigationManager with the calling extension id', () => {
+    const api = createApi();
+
+    const pushHistoryEntrySpy = vi.spyOn(navigationManager, 'pushHistoryEntry');
+
+    const entry = { id: 'model-1', label: 'Model 1' };
+    api.navigation.pushHistoryEntry(entry);
+
+    expect(pushHistoryEntrySpy).toHaveBeenCalledWith('publisher.extension-name', entry);
+  });
+
+  test('onDidNavigateToHistoryEntry delegates to navigationManager with the calling extension id', () => {
+    const api = createApi();
+
+    const onDidNavigateToHistoryEntrySpy = vi.spyOn(navigationManager, 'onDidNavigateToHistoryEntry');
+
+    const listener = vi.fn();
+    api.navigation.onDidNavigateToHistoryEntry(listener);
+
+    expect(onDidNavigateToHistoryEntrySpy).toHaveBeenCalledWith(
+      'publisher.extension-name',
+      listener,
+      undefined,
+      undefined,
+    );
+  });
+
+  test('onDidNavigateToHistoryEntry fires the listener when the extension navigates back to its own entry', () => {
+    const api = createApi();
+
+    const listener = vi.fn();
+    api.navigation.onDidNavigateToHistoryEntry(listener);
+
+    navigationManager.navigateToHistoryEntry('publisher.extension-name', 'model-1');
+
+    expect(listener).toHaveBeenCalledWith('model-1');
+  });
+});
+
 test('check listWebviews', async () => {
   const api = createApi();
 

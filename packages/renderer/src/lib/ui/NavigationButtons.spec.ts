@@ -66,7 +66,7 @@ describe('button states', () => {
   });
 
   test('back button should be enabled when can go back', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
     const { findByTitle } = render(NavigationButtons);
@@ -78,7 +78,7 @@ describe('button states', () => {
   });
 
   test('forward button should be enabled when can go forward', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 0;
 
     const { findByTitle } = render(NavigationButtons);
@@ -92,7 +92,7 @@ describe('button states', () => {
 
 describe('click navigation', () => {
   test('clicking back button should call goBack', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
     const { findByTitle } = render(NavigationButtons);
@@ -105,7 +105,7 @@ describe('click navigation', () => {
   });
 
   test('clicking forward button should call goForward', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 0;
 
     const { findByTitle } = render(NavigationButtons);
@@ -228,7 +228,7 @@ describe('keyboard navigation - macOS', () => {
 
 describe('trackpad swipe navigation', () => {
   test('swipe right (negative deltaX) should trigger goBack', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
     render(NavigationButtons);
@@ -241,7 +241,7 @@ describe('trackpad swipe navigation', () => {
   });
 
   test('swipe left (positive deltaX) should trigger goForward', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 0;
 
     render(NavigationButtons);
@@ -254,7 +254,7 @@ describe('trackpad swipe navigation', () => {
   });
 
   test('horizontal wheel handled by nested content should not trigger history navigation', async () => {
-    navigationHistory.stack = ['/dashboard', '/containers'];
+    navigationHistory.stack = [{ url: '/dashboard' }, { url: '/containers' }];
     navigationHistory.index = 1;
 
     render(NavigationButtons);
@@ -298,7 +298,7 @@ describe('trackpad swipe navigation', () => {
 
 describe('long press dropdown', () => {
   test('long press on back button should show dropdown', async () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
     navigationHistory.index = 2;
 
     vi.mocked(getBackEntries).mockReturnValue([
@@ -323,8 +323,32 @@ describe('long press dropdown', () => {
     });
   });
 
+  test('long press on back button should show dropdown with extension-sourced entries', async () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/__extension__/my.extension/model-1' }];
+    navigationHistory.index = 1;
+
+    vi.mocked(getBackEntries).mockReturnValue([
+      { index: 0, name: 'My Extension > Model 1', icon: { iconImage: 'data:image/png;base64,abc' } },
+    ]);
+
+    const { findByTitle } = render(NavigationButtons);
+
+    await vi.waitFor(async () => {
+      const backButton = await findByTitle('Back (hold for history)');
+
+      // Start long press
+      await fireEvent.mouseDown(backButton, { button: 0 });
+
+      // Advance timer past long press delay (500ms)
+      vi.advanceTimersByTime(600);
+
+      // Dropdown should show the extension-sourced entry's label
+      expect(await findByTitle('My Extension > Model 1')).toBeInTheDocument();
+    });
+  });
+
   test('long press on forward button should show dropdown', async () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
     navigationHistory.index = 0;
 
     vi.mocked(getForwardEntries).mockReturnValue([
@@ -350,7 +374,7 @@ describe('long press dropdown', () => {
   });
 
   test('short click should not show dropdown', async () => {
-    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
     vi.mocked(getBackEntries).mockReturnValue([{ index: 0, name: 'Containers' }]);
@@ -373,7 +397,7 @@ describe('long press dropdown', () => {
 
 describe('dropdown item selection', () => {
   test('clicking dropdown item should navigate to that index', async () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }, { url: '/pods' }];
     navigationHistory.index = 2;
 
     vi.mocked(getBackEntries).mockReturnValue([

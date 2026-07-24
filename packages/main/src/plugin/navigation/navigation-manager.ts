@@ -16,8 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
-import type { NavigationRequest } from '@podman-desktop/core-api';
+import type {
+  NavigateToExtensionsCatalogOptions,
+  NavigationHistoryEntry,
+  ProviderContainerConnection,
+} from '@podman-desktop/api';
+import type { DisposableGroup, NavigationHistoryPushInfo, NavigationRequest } from '@podman-desktop/core-api';
 import { IDisposable, NavigationPage } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
@@ -25,9 +29,11 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
+import { Uri } from '/@/plugin/types/uri.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 
 export interface NavigationRoute {
@@ -38,6 +44,7 @@ export interface NavigationRoute {
 @injectable()
 export class NavigationManager {
   #registry: Map<string, NavigationRoute>;
+  #historyEmitters = new Map<string, Emitter<string>>();
   #disposables: IDisposable[] = [];
 
   constructor(
@@ -98,6 +105,8 @@ export class NavigationManager {
   @preDestroy()
   dispose(): void {
     this.#disposables.forEach(disposable => disposable.dispose());
+    this.#historyEmitters.forEach(emitter => emitter.dispose());
+    this.#historyEmitters.clear();
   }
 
   navigateTo<T extends NavigationPage>(navigateRequest: NavigationRequest<T>): void {
@@ -130,6 +139,58 @@ export class NavigationManager {
     }
 
     return this.commandRegistry.executeCommand(route.commandId, ...args);
+  }
+
+  pushHistoryEntry(extensionId: string, entry: NavigationHistoryEntry): void {
+    let icon: NavigationHistoryPushInfo['icon'];
+    if (entry.iconPath instanceof Uri) {
+      icon = entry.iconPath.fsPath;
+    } else if (entry.iconPath && 'light' in entry.iconPath) {
+      icon = {
+        light: entry.iconPath.light.fsPath,
+        dark: entry.iconPath.dark.fsPath,
+      };
+    }
+
+    console.log(`[navigation-history] extension ${extensionId} pushed history entry ${entry.id} (${entry.label})`);
+
+    this.apiSender.send('navigation-history-push', {
+      extensionId,
+      id: entry.id,
+      label: entry.label,
+      icon,
+    });
+  }
+
+  onDidNavigateToHistoryEntry(
+    extensionId: string,
+    listener: (e: string) => unknown,
+    thisArgs?: unknown,
+    disposables?: DisposableGroup,
+  ): IDisposable {
+    return this.getOrCreateHistoryEmitter(extensionId).event(listener, thisArgs, disposables);
+  }
+
+  navigateToHistoryEntry(extensionId: string, entryId: string): void {
+    const emitter = this.#historyEmitters.get(extensionId);
+    if (!emitter) {
+      console.warn(
+        `[navigation-history] navigated to history entry ${entryId} for extension ${extensionId} but no listener is registered`,
+      );
+      return;
+    }
+
+    console.log(`[navigation-history] navigated to history entry ${entryId} for extension ${extensionId}`);
+    emitter.fire(entryId);
+  }
+
+  private getOrCreateHistoryEmitter(extensionId: string): Emitter<string> {
+    let emitter = this.#historyEmitters.get(extensionId);
+    if (!emitter) {
+      emitter = new Emitter<string>();
+      this.#historyEmitters.set(extensionId, emitter);
+    }
+    return emitter;
   }
 
   async navigateToProviderTask(internalProviderId: string, taskId?: number): Promise<void> {
