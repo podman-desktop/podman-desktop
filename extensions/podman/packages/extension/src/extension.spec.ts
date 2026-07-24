@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 - 2025 Red Hat, Inc.
+ * Copyright (C) 2023 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -514,7 +514,6 @@ describe.each([
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct values with user mode networking %s', async ({ version, image }) => {
-    vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
       version,
     });
@@ -526,6 +525,7 @@ describe.each([
         'podman.factory.machine.memory': '1048000000',
         'podman.factory.machine.diskSize': '250000000000',
         'podman.factory.machine.user-mode-networking': true,
+        'podman.factory.machine.provider': provider,
       },
       podmanConfiguration,
     );
@@ -558,8 +558,6 @@ describe.each([
   ])(
     'verify create command called with now flag if start machine after creation is enabled %s',
     async ({ version, image }) => {
-      vi.mocked(extensionApi.env).isMac = true;
-
       vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
         version,
       });
@@ -571,6 +569,7 @@ describe.each([
           'podman.factory.machine.memory': '1048000000',
           'podman.factory.machine.diskSize': '250000000000',
           'podman.factory.machine.now': true,
+          'podman.factory.machine.provider': provider,
         },
         podmanConfiguration,
       );
@@ -791,6 +790,74 @@ describe.each([
       podmanCli.getPodmanCli(),
       expect.arrayContaining(['--import-native-ca']),
       expect.any(Object),
+    );
+  });
+});
+
+describe('createMachine on windows without an explicit provider', () => {
+  let originalProvider: string | undefined;
+
+  beforeEach(() => {
+    originalProvider = process.env.CONTAINERS_MACHINE_PROVIDER;
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+  });
+
+  afterEach(() => {
+    process.env.CONTAINERS_MACHINE_PROVIDER = originalProvider;
+  });
+
+  test('defaults to wsl when CONTAINERS_MACHINE_PROVIDER is not set', async () => {
+    delete process.env.CONTAINERS_MACHINE_PROVIDER;
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--image', 'path']),
+      {
+        logger: undefined,
+        token: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: 'wsl',
+        },
+      },
+    );
+  });
+
+  test('uses CONTAINERS_MACHINE_PROVIDER when set', async () => {
+    process.env.CONTAINERS_MACHINE_PROVIDER = 'hyperv';
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--image', 'path']),
+      {
+        logger: undefined,
+        token: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: 'hyperv',
+        },
+      },
     );
   });
 });

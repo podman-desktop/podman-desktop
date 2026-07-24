@@ -4,16 +4,6 @@ import { Link, Spinner } from '@podman-desktop/ui-svelte';
 
 export let preflightChecks: CheckStatus[] = [];
 
-function getStatusIcon(preCheck: CheckStatus): string {
-  if (preCheck.successful) {
-    return '✅';
-  }
-  if (preCheck.severity === 'warning') {
-    return '⚠️';
-  }
-  return '❌';
-}
-
 async function openLink(url: string): Promise<void> {
   await window.openExternal(url);
 }
@@ -29,7 +19,7 @@ async function openLink(url: string): Promise<void> {
               <Spinner size="1em" />
             </div>
           {:else}
-            {getStatusIcon(preCheck)}
+            {preCheck.successful ? '✅' : '❌'}
           {/if}
           <div aria-label="precheck-title" class="ml-2">{preCheck.name}</div>
         </div>
