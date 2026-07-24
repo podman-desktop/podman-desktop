@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,39 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { join } from 'node:path';
-import { mergeConfig } from 'vite';
-import baseConfig from '../../../vite.base.config';
+import { defineConfig } from 'vitest/config';
 
-export default mergeConfig(baseConfig, {
-  root: __dirname,
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  mode: process.env.MODE,
+  root: PACKAGE_ROOT,
   resolve: {
     alias: {
-      '/@/': join(__dirname, 'src') + '/',
+      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+    },
+  },
+  base: '',
+  server: {
+    fs: {
+      strict: true,
     },
   },
   build: {
-    rollupOptions: {
-      external: ['ssh2', '@podman-desktop/podman-extension-api'],
-      output: {
-        entryFileNames: '[name].cjs',
-      },
-    },
+    sourcemap: true,
+    outDir: 'dist',
+    assetsDir: '.',
+
+    emptyOutDir: true,
+    reportCompressedSize: false,
   },
   test: {
-    include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    passWithNoTests: true,
   },
 });

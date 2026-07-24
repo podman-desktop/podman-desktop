@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["**/vitest.config.ts", "**/vite.config.ts", "**/vite.base.config.ts"],
+  "exclude": ["node_modules", "**/dist/**", "**/builtin/**"]
+}

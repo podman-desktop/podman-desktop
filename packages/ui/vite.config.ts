@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,50 +16,53 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { join } from 'path';
-import { builtinModules } from 'module';
-import dts from 'unplugin-dts/vite';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const PACKAGE_ROOT = __dirname;
-const PACKAGE_NAME = '@podman-desktop/tests-playwright';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import tailwindcss from '@tailwindcss/vite';
+import { svelteTesting } from '@testing-library/svelte/vite';
+import { defineConfig } from 'vitest/config';
 
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+// https://vitejs.dev/config/
+export default defineConfig({
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
-  envDir: process.cwd(),
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [
-    dts({
-      insertTypesEntry: true,
-    }),
-  ],
-  build: {
-    sourcemap: true,
-    target: 'esnext',
-    outDir: 'dist',
-    assetsDir: '.',
-    lib: {
-      entry: 'src/index.ts',
-      formats: ['es'],
-      name: PACKAGE_NAME,
-    },
-    // emptyOutDir: true,
-    reportCompressedSize: false,
-    rollupOptions: {
-      external: ['electron', '@playwright/test', ...builtinModules.flatMap(p => [p, `node:${p}`])],
-      output: {
-        entryFileNames: '[name].js',
+  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js' }), svelteTesting()],
+  test: {
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    globals: true,
+    environment: 'jsdom',
+    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
+    server: {
+      deps: {
+        inline: ['moment'],
       },
     },
   },
-};
+  base: '',
+  server: {
+    fs: {
+      strict: true,
+    },
+  },
+  build: {
+    sourcemap: true,
+    outDir: 'dist',
+    assetsDir: '.',
+    lib: {
+      entry: 'src/lib/index.ts',
+      formats: ['es'],
+    },
 
-export default config;
+    emptyOutDir: true,
+    reportCompressedSize: false,
+  },
+});

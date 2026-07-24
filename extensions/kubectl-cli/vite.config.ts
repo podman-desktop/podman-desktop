@@ -16,9 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { mergeConfig } from 'vite';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { mergeConfig, type UserConfig } from 'vite';
+
+import { node } from '../../.electron-vendors.cache.json';
 import baseConfig from '../vite.base.config';
 
-export default mergeConfig(baseConfig, {
-  root: __dirname,
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+export default mergeConfig(baseConfig as UserConfig, {
+  root: PACKAGE_ROOT,
+  build: {
+    target: `node${node}`,
+  },
 });

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,18 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { mergeConfig } from 'vite';
-import baseConfig from '../vite.base.config';
+import { defineConfig } from 'vitest/config';
 
-export default mergeConfig(baseConfig, {
-  root: __dirname,
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  root: PACKAGE_ROOT,
+  test: {
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    passWithNoTests: true,
+  },
 });

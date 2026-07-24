@@ -16,9 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { mergeConfig } from 'vite';
-import baseConfig from '../vite.base.config';
+import { defineConfig } from 'vitest/config';
 
-export default mergeConfig(baseConfig, {
-  root: __dirname,
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+  },
 });

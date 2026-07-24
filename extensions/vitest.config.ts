@@ -15,10 +15,16 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
 
-import { mergeConfig } from 'vite';
-import baseConfig from '../vite.base.config';
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
 
-export default mergeConfig(baseConfig, {
-  root: __dirname,
+export default defineConfig({
+  root: PACKAGE_ROOT,
+  test: {
+    globals: true,
+    include: ['*.{test,spec}.ts'],
+  },
 });

@@ -16,17 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { svelteTesting } from '@testing-library/svelte/vite';
-import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
-import tailwindcss from '@tailwindcss/vite';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-let filename = fileURLToPath(import.meta.url);
-const PACKAGE_ROOT = path.dirname(filename);
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import tailwindcss from '@tailwindcss/vite';
+import { svelteTesting } from '@testing-library/svelte/vite';
+import { defineConfig } from 'vitest/config';
+
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -43,19 +41,19 @@ export default defineConfig({
     svelteTesting(),
     {
       name: 'inject-meta',
-      transformIndexHtml(html) {
+      transformIndexHtml(html): string {
         if (process.env.MODE !== 'production') {
           return html;
         }
 
         const csp = [
-          "default-src 'self'",
-          "script-src 'self'",
-          "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' https: data: blob:",
-          "font-src 'self' data:",
-          "connect-src 'self'",
-          "object-src 'none'",
+          `default-src 'self'`,
+          `script-src 'self'`,
+          `style-src 'self' 'unsafe-inline'`,
+          `img-src 'self' https: data: blob:`,
+          `font-src 'self' data:`,
+          `connect-src 'self'`,
+          `object-src 'none'`,
         ].join('; ');
 
         const meta = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
@@ -82,13 +80,10 @@ export default defineConfig({
     ],
     server: {
       deps: {
-        inline: ['@fortawesome/fontawesome-free/css/all.min.css'],
+        inline: ['@fortawesome/fontawesome-free/css/all.min.css', 'moment'],
       },
     },
-    deps: {
-      inline: ['moment'],
-    },
-    setupFiles: ['./vite.tests.setup.js'],
+    setupFiles: ['./vite.tests.setup.ts'],
   },
   base: '',
   server: {

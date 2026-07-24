@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { builtinModules } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { defineConfig } from 'vitest/config';
+
 import { chrome } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
-import { builtinModules } from 'module';
 
-const PACKAGE_ROOT = __dirname;
-const PACKAGE_NAME = 'preload-docker-extension';
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
 
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
+export default defineConfig({
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
@@ -36,14 +35,6 @@ const config = {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  /*plugins: [
-     commonjs({
-       dynamicRequireTargets: [
-         // include using a glob pattern (either a string or an array of strings)
-         'node_modules/ssh2/lib/protocol/crypto/poly1305.js',
-       ]
-       }),
-   ],*/
   build: {
     sourcemap: 'inline',
     target: `chrome${chrome}`,
@@ -55,7 +46,6 @@ const config = {
       formats: ['cjs'],
     },
     rollupOptions: {
-      platform: 'node',
       external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].cjs',
@@ -68,6 +58,4 @@ const config = {
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
-};
-
-export default config;
+});
