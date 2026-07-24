@@ -51,7 +51,7 @@ overrides:
   follow-redirects: ^1.16.0
   uuid: ^14.0.0
   ip-address: '>=10.1.1'
-  fast-uri: '>=3.1.1'
+  fast-uri: '>=4.1.1'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.15.0'
   ws@^8: '>=8.20.1'
