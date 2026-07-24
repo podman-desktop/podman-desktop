@@ -104,6 +104,37 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
     });
   });
 
+  test('Detect Podman machine created from CLI in System Overview', async ({ page, navigationBar }) => {
+    test.setTimeout(620_000);
+
+    await setEnhancedDashboardFeature(page, navigationBar, true);
+    let dashboardPage = await waitForDashboardState(navigationBar, true);
+    await dashboardPage.expandSystemOverview(true);
+
+    await createPodmanMachineFromCLI();
+
+    await test.step('Open dashboard and wait for CLI-created Podman machine', async () => {
+      dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, {
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      });
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      });
+      await playExpect(dashboardPage.statusButton).toBeEnabled();
+      await dashboardPage.statusButton.click();
+      const resourcesPage = new ResourcesPage(page);
+      await playExpect
+        .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: TIMEOUT_STANDARD })
+        .toBeTruthy();
+      const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
+      await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: TIMEOUT_SHORT });
+    });
+
+    await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
+  });
+
   test('Create Podman machine from Dashboard', async ({ page, navigationBar }) => {
     test.setTimeout(TIMEOUT_CREATE_MACHINE_TEST);
 
