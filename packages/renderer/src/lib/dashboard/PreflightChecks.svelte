@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faCheck, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faCircleExclamation, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus } from '@podman-desktop/core-api';
 import { Link, Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
@@ -26,6 +26,8 @@ async function openLink(url: string): Promise<void> {
             </div>
           {:else if preCheck.successful}
             <Icon class="text-(--pd-state-success)" icon={faCheck} />
+          {:else if preCheck.severity === 'warning'}
+            <Icon class="text-(--pd-state-warning)" icon={faTriangleExclamation} />
           {:else}
             <Icon class="text-(--pd-state-error)" icon={faCircleExclamation} />
           {/if}
