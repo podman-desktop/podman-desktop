@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,31 +20,26 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { ExtensionCardPage } from './extension-card-page';
+import { ExtensionCatalogCardPage } from './extension-catalog-card-page';
 import type { ExtensionDetailsPage } from './extension-details-page';
+import { MainPage } from './main-page';
 
-export class ExtensionsPage {
-  readonly page: Page;
-  readonly heading: Locator;
-  readonly header: Locator;
-  readonly content: Locator;
-  readonly additionalActions: Locator;
+export class ExtensionsPage extends MainPage {
+  readonly catalogExtensions: Locator;
   readonly installedTab: Locator;
   readonly catalogTab: Locator;
   readonly localExtensionsTab: Locator;
   readonly installExtensionFromOCIImageButton: Locator;
+  readonly clearFilterButton: Locator;
 
   constructor(page: Page) {
-    this.page = page;
-    this.header = page.getByRole('region', { name: 'header' });
-    this.content = page.getByRole('region', { name: 'content' });
-    this.heading = this.header.getByRole('heading', { name: 'extensions' });
-    this.additionalActions = this.header.getByRole('group', {
-      name: 'additionalActions',
-    });
+    super(page, 'extensions');
+    this.catalogExtensions = this.content.getByRole('region', { name: 'Catalog Extensions' });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
     this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
     this.localExtensionsTab = this.page.getByRole('button', { name: 'Local Extensions' });
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
+    this.clearFilterButton = this.content.getByRole('button', { name: 'Clear filter' });
   }
 
   public async installExtensionFromOCIImage(extension: string, timeout = 100_000): Promise<ExtensionsPage> {
@@ -91,7 +86,28 @@ export class ExtensionsPage {
   }
 
   public async openCatalogTab(): Promise<void> {
-    await this.catalogTab.click();
+    return test.step('Open Catalog tab', async () => {
+      await playExpect(this.catalogTab).toBeVisible({ timeout: 10_000 });
+      await this.catalogTab.click();
+    });
+  }
+
+  public async getCatalogExtension(extensionName: string, timeout = 10_000): Promise<ExtensionCatalogCardPage> {
+    return test.step(`Get catalog extension: ${extensionName}`, async () => {
+      const extensionCard = new ExtensionCatalogCardPage(this.page, extensionName, this.catalogExtensions);
+      await playExpect(extensionCard.parent).toBeVisible({ timeout });
+      return extensionCard;
+    });
+  }
+
+  public async countCatalogExtensions(): Promise<number> {
+    return test.step('Count catalog extension cards', async () => {
+      // Catalog cards are role=group entries that expose a details action
+      return await this.catalogExtensions
+        .getByRole('group')
+        .filter({ has: this.page.getByRole('button', { name: /details/i }) })
+        .count();
+    });
   }
 
   public async openExtensionDetails(name: string, label: string, heading: string): Promise<ExtensionDetailsPage> {
