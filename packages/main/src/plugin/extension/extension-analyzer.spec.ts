@@ -62,6 +62,7 @@ describe('analyze extension and main', () => {
     const extension = await extensionAnalyzer.analyzeExtension({
       extensionPath: path.resolve('/', 'fake', 'path'),
       removable: false,
+      bundled: false,
     });
 
     expect(extension).toBeDefined();
@@ -95,6 +96,7 @@ describe('analyze extension and main', () => {
     const extension = await extensionAnalyzer.analyzeExtension({
       extensionPath: path.resolve('/', 'linked', 'path'),
       removable: false,
+      bundled: false,
     });
 
     expect(extension).toBeDefined();
@@ -125,6 +127,7 @@ describe('analyze extension and main', () => {
     const extension = await extensionAnalyzer.analyzeExtension({
       extensionPath: '/fake/path',
       removable: false,
+      bundled: false,
     });
 
     expect(extension).toBeDefined();
@@ -155,6 +158,7 @@ describe('analyze extension and main', () => {
     const extension = await extensionAnalyzer.analyzeExtension({
       extensionPath: '/fake/path',
       removable: false,
+      bundled: false,
       devMode: true,
     });
 
