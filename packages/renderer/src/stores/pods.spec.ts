@@ -23,7 +23,7 @@ import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import { podsEventStore, podsInfos } from './pods';
+import { clearPodActionInProgress, podsEventStore, podsInfos, setPodActionError, setPodStatus } from './pods';
 
 // first, path window object
 const callbacks = new Map<string, any>();
@@ -93,4 +93,55 @@ test.each([
   const podListResult = get(podsInfos);
   expect(podListResult.length).toBe(1);
   expect(podListResult[0].id).toEqual('id123');
+});
+
+test('setPodStatus updates the status and sets actionInProgress', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' },
+  ] as any);
+
+  setPodStatus('engine1', 'pod1', 'STARTING');
+
+  const result = get(podsInfos);
+  expect(result[0].status).toBe('STARTING');
+  expect(result[0].actionInProgress).toBe(true);
+  expect(result[0].actionError).toBe('');
+});
+
+test('clearPodActionInProgress clears the actionInProgress flag', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' },
+  ] as any);
+
+  clearPodActionInProgress('engine1', 'pod1');
+
+  const result = get(podsInfos);
+  expect(result[0].actionInProgress).toBe(false);
+  expect(result[0].status).toBe('STARTING');
+});
+
+test('setPodActionError sets the error and status to ERROR', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' },
+  ] as any);
+
+  setPodActionError('engine1', 'pod1', 'something went wrong');
+
+  const result = get(podsInfos);
+  expect(result[0].actionError).toBe('something went wrong');
+  expect(result[0].status).toBe('ERROR');
+  expect(result[0].actionInProgress).toBe(false);
+});
+
+test('setPodStatus does not affect other pods', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' },
+    { id: 'pod2', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' },
+  ] as any);
+
+  setPodStatus('engine1', 'pod1', 'STOPPING');
+
+  const result = get(podsInfos);
+  expect(result[0].status).toBe('STOPPING');
+  expect(result[1].status).toBe('RUNNING');
 });

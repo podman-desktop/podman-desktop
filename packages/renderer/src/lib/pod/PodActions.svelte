@@ -11,7 +11,7 @@ import {
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher, onMount } from 'svelte';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
@@ -19,25 +19,17 @@ import { ContainerUtils } from '/@/lib/container/container-utils';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { clearPodActionInProgress, setPodActionError, setPodStatus } from '/@/stores/pods';
 
 import type { PodInfoUI } from './PodInfoUI';
 
-const dispatch = createEventDispatcher<{ update: PodInfoUI }>();
 interface Props {
   pod: PodInfoUI;
   dropdownMenu?: boolean;
   detailed?: boolean;
-  onUpdate?: (update: PodInfoUI) => void;
 }
 
-let {
-  pod = $bindable(),
-  dropdownMenu = false,
-  detailed = false,
-  onUpdate = (update): void => {
-    dispatch('update', update);
-  },
-}: Props = $props();
+let { pod, dropdownMenu = false, detailed = false }: Props = $props();
 
 let contributions = $state<Menu[]>([]);
 onMount(async () => {
@@ -68,23 +60,16 @@ onMount(async () => {
   });
 });
 
-function inProgress(inProgress: boolean, state?: string): void {
-  pod.actionInProgress = inProgress;
-  // reset error when starting task
-  if (inProgress) {
-    pod.actionError = '';
-  }
+function inProgress(isStarting: boolean, state?: string): void {
   if (state) {
-    pod.status = state;
+    setPodStatus(pod.engineId, pod.id, state);
+  } else if (!isStarting) {
+    clearPodActionInProgress(pod.engineId, pod.id);
   }
-
-  onUpdate(pod);
 }
 
 function handleError(errorMessage: string): void {
-  pod.actionError = errorMessage;
-  pod.status = 'ERROR';
-  onUpdate(pod);
+  setPodActionError(pod.engineId, pod.id, errorMessage);
 }
 
 async function startPod(): Promise<void> {

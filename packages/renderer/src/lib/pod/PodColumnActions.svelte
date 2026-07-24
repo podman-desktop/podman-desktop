@@ -16,6 +16,6 @@ export let object: PodInfoUI;
     {/if}
   </div>
   <div class="text-right w-full">
-    <PodActions pod={object} dropdownMenu={true} on:update />
+    <PodActions pod={object} dropdownMenu={true} />
   </div>
 </div>
