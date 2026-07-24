@@ -22,41 +22,36 @@ import type { ContainerInfo, Port } from '@podman-desktop/api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { setPodStatus } from '/@/stores/pods';
+
 import PodActions from './PodActions.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 
-class Pod {
-  #status: string;
-  #actionError: string;
-  constructor(
-    public id: string,
-    public containers: { Id: string; Status?: string }[],
-    initialStatus: string,
-    public kind: string,
-    actionError: string,
-  ) {
-    this.#status = initialStatus;
-    this.#actionError = actionError;
-  }
-  set acitonError(error: string) {
-    this.#actionError = error;
-  }
-  get acitonError(): string {
-    return this.#actionError;
-  }
-  set status(status: string) {
-    this.#status = status;
-  }
-  get status(): string {
-    return this.#status;
-  }
-}
+vi.mock(import('/@/stores/pods'), async importOriginal => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    setPodStatus: vi.fn(),
+    clearPodActionInProgress: vi.fn(),
+    setPodActionError: vi.fn(),
+  };
+});
 
-const podmanPod: PodInfoUI = new Pod('pod', [{ Id: 'pod' }], 'RUNNING', 'podman', '') as unknown as PodInfoUI;
+const podmanPod: PodInfoUI = {
+  id: 'pod',
+  shortId: 'pod',
+  name: 'my-pod',
+  engineId: 'engine1',
+  engineName: 'podman',
+  status: 'RUNNING',
+  age: '1 day',
+  created: '2025-01-01',
+  selected: false,
+  containers: [{ Id: 'pod', Names: 'container1', Status: 'running' }],
+};
 
 const listContainersMock = vi.fn();
 const getContributedMenusMock = vi.fn();
-const updateMock = vi.fn();
 const openExternalSpy = vi.fn();
 
 class ResizeObserver {
@@ -87,72 +82,63 @@ beforeEach(() => {
   getContributedMenusMock.mockResolvedValue([]);
 });
 
-test('Expect no error and status starting pod', async () => {
+test('Expect setPodStatus called with STARTING when starting pod', async () => {
   listContainersMock.mockResolvedValue([]);
 
-  render(PodActions, { pod: podmanPod, onUpdate: updateMock });
+  render(PodActions, { pod: podmanPod });
 
   // click on start button
   const startButton = screen.getByRole('button', { name: 'Start Pod' });
   await fireEvent.click(startButton);
 
-  expect(podmanPod.status).toEqual('STARTING');
-  expect(podmanPod.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(setPodStatus).toHaveBeenCalledWith('engine1', 'pod', 'STARTING');
 });
 
-test('Expect no error and status starting for unpausing pod', async () => {
+test('Expect unpausePod called when pod has paused containers', async () => {
   listContainersMock.mockResolvedValue([]);
 
   // set status to paused
   podmanPod.containers[0].Status = 'paused';
-  render(PodActions, { pod: podmanPod, onUpdate: updateMock });
 
+  render(PodActions, { pod: podmanPod });
   // click on start button
   const startButton = screen.getByRole('button', { name: 'Start Pod' });
   await fireEvent.click(startButton);
 
-  expect(podmanPod.status).toEqual('STARTING');
-  expect(podmanPod.actionError).toEqual('');
-  expect(window.unpausePod).toHaveBeenCalledWith(podmanPod.engineId, podmanPod.id);
+  expect(setPodStatus).toHaveBeenCalledWith('engine1', 'pod', 'STARTING');
+  expect(window.unpausePod).toHaveBeenCalledWith('engine1', 'pod');
   expect(window.startPod).not.toHaveBeenCalled();
-  expect(updateMock).toHaveBeenCalled();
 });
 
-test('Expect no error and status stopping pod', async () => {
+test('Expect setPodStatus called with STOPPING when stopping pod', async () => {
   listContainersMock.mockResolvedValue([]);
 
-  render(PodActions, { pod: podmanPod, onUpdate: updateMock });
+  render(PodActions, { pod: podmanPod });
 
-  // click on stop button
   const stopButton = screen.getByRole('button', { name: 'Stop Pod' });
   await fireEvent.click(stopButton);
 
-  expect(podmanPod.status).toEqual('STOPPING');
-  expect(podmanPod.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(setPodStatus).toHaveBeenCalledWith('engine1', 'pod', 'STOPPING');
 });
 
-test('Expect no error and status restarting pod', async () => {
+test('Expect setPodStatus called with RESTARTING when restarting pod', async () => {
   listContainersMock.mockResolvedValue([]);
 
-  render(PodActions, { pod: podmanPod, onUpdate: updateMock });
+  render(PodActions, { pod: podmanPod });
 
   // click on restart button
   const restartButton = screen.getByRole('button', { name: 'Restart Pod' });
   await fireEvent.click(restartButton);
 
-  expect(podmanPod.status).toEqual('RESTARTING');
-  expect(podmanPod.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(setPodStatus).toHaveBeenCalledWith('engine1', 'pod', 'RESTARTING');
 });
 
-test('Expect no error and status deleting pod', async () => {
+test('Expect setPodStatus called with DELETING when deleting pod', async () => {
   // Mock the showMessageBox to return 'Delete' (confirmed)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   listContainersMock.mockResolvedValue([]);
 
-  render(PodActions, { pod: podmanPod, onUpdate: updateMock });
+  render(PodActions, { pod: podmanPod });
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Pod' });
   await fireEvent.click(deleteButton);
@@ -161,9 +147,5 @@ test('Expect no error and status deleting pod', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   // Wait for confirmation modal to disappear after clicking on delete
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-
-  expect(podmanPod.status).toEqual('DELETING');
-  expect(podmanPod.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(setPodStatus).toHaveBeenCalledWith('engine1', 'pod', 'DELETING');
 });

@@ -24,6 +24,5 @@ export let object: ContainerGroupInfoUI;
         Status: container.state,
       })),
     }}
-    dropdownMenu={true}
-    on:update />
+    dropdownMenu={true} />
 {/if}
