@@ -6,8 +6,10 @@ import { onDestroy, onMount } from 'svelte';
 import { derived, get, type Readable, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import { ContextKeyExpr } from '/@/lib/context/contextKey';
-import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
+import {
+  resolveExtensionOnboardingStatus,
+  resolveOnboardingRouteExtensionId,
+} from '/@/lib/extensions/extension-onboarding-utils';
 import { isDefaultScope, isPropertyValidInContext } from '/@/lib/preferences/Util';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { configurationProperties } from '/@/stores/configurationProperties';
@@ -42,21 +44,8 @@ onMount(() => {
         .filter(property => isPropertyValidInContext(property.when, globalContext)).length > 0;
   });
 
-  onboardingEnabledReadable = derived([onboardingList, context], ([$onboardingList, $context]) => {
-    if (extension.type === 'dd') {
-      return false;
-    }
-
-    const matchingOnBoarding = $onboardingList.findLast(o => o.extension === extension.id && o.enablement);
-
-    if (!matchingOnBoarding) {
-      return false;
-    } else {
-      const enablement = normalizeOnboardingWhenClause(matchingOnBoarding.enablement, extension.id);
-      const whenDeserialized = ContextKeyExpr.deserialize(enablement);
-      const isEnabled = whenDeserialized?.evaluate($context);
-      return !!isEnabled;
-    }
+  onboardingEnabledReadable = derived([onboardingList, context], () => {
+    return resolveExtensionOnboardingStatus(extension).enabled;
   });
 
   onboardingEnabledUnsubscribe = onboardingEnabledReadable.subscribe(value => {
@@ -70,7 +59,7 @@ onDestroy(() => {
 });
 
 function handleOnboarding(): void {
-  router.goto(`/preferences/onboarding/${extension.id}`);
+  router.goto(`/preferences/onboarding/${resolveOnboardingRouteExtensionId(extension.id)}`);
 }
 
 function handleProperties(): void {

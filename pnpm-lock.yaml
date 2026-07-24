@@ -751,6 +751,9 @@ importers:
 
   packages/renderer:
     dependencies:
+      '@floating-ui/dom':
+        specifier: ^1.7.6
+        version: 1.8.0
       '@podman-desktop/core-api':
         specifier: workspace:*
         version: link:../api

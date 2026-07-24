@@ -44,6 +44,7 @@ onDestroy(() => {
 <a
   href={onClick ? '#top' : uri}
   class=""
+  data-nav-link={uri}
   aria-label={ariaLabel ?? tooltip}
   onclick={handleClick}>
   <div

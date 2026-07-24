@@ -26,6 +26,7 @@ const windowEvents = [
   'extension-stopped',
   'extensions-started',
   'extension-started',
+  'extension-removed',
   'webview-create',
   'webview-update',
   'webview-delete',

@@ -25,6 +25,10 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import InstalledExtensionCardLeftLifecycleDelete from './InstalledExtensionCardLeftLifecycleDelete.svelte';
 
+vi.mock(import('./extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: vi.fn().mockReturnValue(false),
+}));
+
 beforeAll(() => {
   Object.defineProperty(window, 'ddExtensionDelete', { value: vi.fn() });
   Object.defineProperty(window, 'removeExtension', { value: vi.fn() });
@@ -92,10 +96,10 @@ test('Expect to delete pd Extension', async () => {
   expect(vi.mocked(window.removeExtension)).toHaveBeenCalledWith('idExtension');
 });
 
-test('Expect unable to delete pd Extension if not removable', async () => {
+test('Expect unable to delete built-in pd extension', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',
-    id: 'idExtension',
+    id: 'podman-desktop.compose',
     name: 'fooName',
     description: 'my description',
     displayName: '',

@@ -22,10 +22,9 @@ function openExtensionDetails(): void {
   class="rounded-lg border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] hover:border-[var(--pd-content-card-border-selected)] min-h-32 max-h-32"
   role="group"
   aria-label={catalogExtensionUI.displayName}>
-  <!-- if featured need to display a top banner -->
-
   {#if catalogExtensionUI.isFeatured}
-    <div class="bg-[var(--pd-badge-purple)] text-[var(--pd-card-header-text)] rounded-t-md px-2 text-sm min-h-6 flex flex-row items-center">
+    <div
+      class="bg-[var(--pd-badge-purple)] text-[var(--pd-card-header-text)] rounded-t-md px-2 text-sm min-h-6 flex flex-row items-center">
       Featured
     </div>
   {/if}
@@ -54,9 +53,10 @@ function openExtensionDetails(): void {
       </div>
 
       {#if catalogExtensionUI.isInstalled}
-        <div class="flex flex-1 text-[var(--pd-invert-content-info-icon)] p-1 justify-items-end flex-row place-content-end items-center">
+        <div
+          class="flex flex-1 text-[var(--pd-invert-content-info-icon)] p-1 justify-items-end flex-row place-content-end items-center">
           <Icon class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
-          <div class="uppercase text-sm cursor-default">Already installed</div>
+          <div class="uppercase text-sm cursor-default">Installed</div>
         </div>
       {:else if catalogExtensionUI.fetchable}
         <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">

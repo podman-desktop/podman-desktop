@@ -11,6 +11,7 @@ import type { TinroRouteMeta } from 'tinro';
 import AuthActions from './lib/authentication/AuthActions.svelte';
 import { CommandRegistry } from './lib/CommandRegistry';
 import NewContentOnDashboardBadge from './lib/dashboard/NewContentOnDashboardBadge.svelte';
+import ExtensionNewNavPointer from './lib/extensions/ExtensionNewNavPointer.svelte';
 import AccountIcon from './lib/images/AccountIcon.svelte';
 import DashboardIcon from './lib/images/DashboardIcon.svelte';
 import SettingsIcon from './lib/images/SettingsIcon.svelte';
@@ -19,7 +20,14 @@ import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
-import { navigationRegistry } from './stores/navigation/navigation-registry';
+import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
+import { fetchNavigationRegistries, navigationRegistry } from './stores/navigation/navigation-registry';
+import {
+  extensionNavigationGroupRevision,
+  extensionNavigationState,
+  refreshExtensionNavigationItems,
+} from './stores/navigation/navigation-registry-extension.svelte';
+import { fetchWebviews } from './stores/webviews';
 
 interface Props {
   exitSettingsCallback: () => void;
@@ -41,6 +49,17 @@ const expandedThreshold = 70;
 let navWidth = $state(160);
 let expanded = $derived(navWidth > expandedThreshold);
 let isDragging = $state(false);
+
+// Track extension webview/contrib nav item updates (e.g. after installing AI Lab).
+const extensionNavItemsRevision = $derived(extensionNavigationGroupRevision.value);
+
+function isExtensionNavigationGroup(entry: NavigationRegistryEntry): boolean {
+  return entry.type === 'group' && entry.name === 'Extensions' && entry.link === '/extensions';
+}
+
+function isExtensionsNavEntry(entry: NavigationRegistryEntry): boolean {
+  return entry.type === 'entry' && entry.name === 'Extensions' && entry.link === '/extensions';
+}
 
 $effect(() => {
   document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
@@ -153,6 +172,27 @@ function persistWidth(): void {
 let scrollRegionCleanup: (() => void) | undefined;
 
 onMount(async () => {
+  fetchNavigationRegistries().catch((error: unknown) => {
+    console.error('Unable to fetch navigation registries', error);
+  });
+  fetchWebviews().catch((error: unknown) => {
+    console.error('Unable to fetch webviews', error);
+  });
+
+  if (window.events) {
+    for (const eventName of ['extension-started', 'webview-create', 'webview-update'] as const) {
+      window.events.receive(eventName, () => {
+        fetchWebviews()
+          .then(() => {
+            refreshExtensionNavigationItems();
+          })
+          .catch((error: unknown) => {
+            console.error('Unable to fetch webviews after extension event', error);
+          });
+      });
+    }
+  }
+
   const commandRegistry = new CommandRegistry();
   commandRegistry.init();
   navWidth = (await window.getConfigurationValue<number>(NAV_BAR_WIDTH_KEY)) ?? maxWidth;
@@ -228,16 +268,24 @@ function onDidChangeConfigurationCallback(e: Event): void {
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
       onpointerdown={onScrollRegionPointerDown}>
-      {#each $navigationRegistry as navigationRegistryItem, index (index)}
-        {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-          <!-- This is a group, list all items from the entry -->
-          {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
-          {/each}
-        {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
-        {/if}
-      {/each}
+      {#key extensionNavItemsRevision}
+        {#each $navigationRegistry as navigationRegistryItem (navigationRegistryItem.link + ':' + navigationRegistryItem.type)}
+          {#if isExtensionNavigationGroup(navigationRegistryItem)}
+            <!-- Extension webview/contrib items render below the Extensions nav entry -->
+          {:else if isExtensionsNavEntry(navigationRegistryItem)}
+            <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
+            {#each extensionNavigationState.items as item (item.link)}
+              <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
+            {/each}
+          {:else if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
+            {#each navigationRegistryItem.items as item (item.link)}
+              <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
+            {/each}
+          {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
+            <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
+          {/if}
+        {/each}
+      {/key}
     </div>
     {#if scrollThumbVisible}
       <div
@@ -260,21 +308,24 @@ function onDidChangeConfigurationCallback(e: Event): void {
     class="flex-shrink-0 w-full border-t border-[var(--pd-global-nav-bg-border)]"
     aria-hidden="true"></div>
 
-    <div bind:this={outsideWindow}>
-      <NavItem href="/accounts" tooltip="Accounts" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)} {expanded}>
-          <div class="flex items-center w-full">
-            <div class="flex-shrink-0 flex items-center justify-center w-6">
-              <AccountIcon size={iconSize} />
-            </div>
-            {#if expanded}
-              <span class="text-sm truncate ml-3" aria-label="Accounts title">
-                Accounts
-              </span>
-            {/if}
-          </div>
-        <AuthActions bind:this={authActions} outsideWindow={outsideWindow} />
-      </NavItem>
-    </div>
+  <div bind:this={outsideWindow}>
+    <NavItem
+      href="/accounts"
+      tooltip="Accounts"
+      bind:meta={meta}
+      onClick={(event): void => authActions?.onButtonClick(event)}
+      {expanded}>
+      <div class="flex items-center w-full">
+        <div class="flex-shrink-0 flex items-center justify-center w-6">
+          <AccountIcon size={iconSize} />
+        </div>
+        {#if expanded}
+          <span class="text-sm truncate ml-3" aria-label="Accounts title">Accounts</span>
+        {/if}
+      </div>
+      <AuthActions bind:this={authActions} outsideWindow={outsideWindow} />
+    </NavItem>
+  </div>
 
   <NavItem href="/preferences" tooltip="Settings" bind:meta={meta} onClick={handleClick} {expanded}>
     <div class="flex items-center w-full">
@@ -282,9 +333,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
         <SettingsIcon size={iconSize} />
       </div>
       {#if expanded}
-        <span class="text-sm truncate ml-3" aria-label="Settings title">
-          Settings
-        </span>
+        <span class="text-sm truncate ml-3" aria-label="Settings title">Settings</span>
       {/if}
     </div>
   </NavItem>
@@ -303,3 +352,4 @@ function onDidChangeConfigurationCallback(e: Event): void {
     onpointerdown={onResizeHandlePointerDown}
     ondblclick={onResizeHandleDblClick}></div>
 </nav>
+<ExtensionNewNavPointer />

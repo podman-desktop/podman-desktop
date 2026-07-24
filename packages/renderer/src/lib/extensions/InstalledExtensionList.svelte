@@ -1,17 +1,165 @@
 <script lang="ts">
-import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+import { FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 
+import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
+import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
+
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import ChangeVersionModal from './ChangeVersionModal.svelte';
+import { newBadgeRevision, refreshNewBadges } from './extension-catalog-settings.svelte';
+import { ensurePrototypeManualUpdateSettings } from './extension-prototype-use-cases';
+import { EXTENSION_VERSION_UI_CHANGE_EVENT, withDisplayInstalledVersion } from './extension-version-update.svelte';
+import { ExtensionsUtils } from './extensions-utils';
+import type { InstalledExtensionTableRow } from './installed-extension-table-row';
+import { installedTableSortState, orderInstalledTableRows } from './installed-extension-table-sort.svelte';
+import { installedListFilters } from './installed-list-filters.svelte';
 import InstalledExtensionCard from './InstalledExtensionCard.svelte';
+import InstalledExtensionFilters from './InstalledExtensionFilters.svelte';
+import InstalledExtensionTable from './InstalledExtensionTable.svelte';
+import InstalledExtensionUpdateAllBar from './InstalledExtensionUpdateAllBar.svelte';
 
 interface Props {
   extensionInfos?: CombinedExtensionInfoUI[];
+  allExtensionInfos?: CombinedExtensionInfoUI[];
+  searchTerm?: string;
+  showFilteredEmpty?: boolean;
+  suggestionScope?: boolean;
+  onResetFilter?: () => void;
 }
 
-let { extensionInfos = [] }: Props = $props();
+let {
+  extensionInfos = [],
+  allExtensionInfos = [],
+  searchTerm = $bindable(''),
+  showFilteredEmpty = false,
+  suggestionScope = true,
+  onResetFilter = (): void => {},
+}: Props = $props();
+
+const extensionsUtils = new ExtensionsUtils();
+let changeVersionExtension: CatalogExtensionInfoUI | undefined = $state(undefined);
+let changeVersionPreferredVersion: string | undefined = $state(undefined);
+let uiRevision = $state(0);
+
+const filterCatalogExtensions: CatalogExtensionInfoUI[] = $derived.by(() => {
+  $catalogExtensionInfos;
+  $featuredExtensionInfos;
+  return (allExtensionInfos.length > 0 ? allExtensionInfos : extensionInfos).map(extension =>
+    extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos),
+  );
+});
+
+onMount(() => {
+  if (suggestionScope) {
+    refreshNewBadges();
+  }
+  const handler = (): void => {
+    uiRevision += 1;
+  };
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  return (): void => {
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  };
+});
+
+$effect(() => {
+  if (!suggestionScope) {
+    return;
+  }
+
+  const catalogExtensions = extensionInfos.map(extension =>
+    extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos),
+  );
+  ensurePrototypeManualUpdateSettings(extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions));
+});
+
+const tableRows: InstalledExtensionTableRow[] = $derived.by(() => {
+  uiRevision;
+  installedTableSortState.value;
+  newBadgeRevision.value;
+  const catalogExtensions = extensionInfos.map(extension =>
+    extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos),
+  );
+  const catalogWithDemo = suggestionScope
+    ? extensionsUtils.ensurePrototypeUpdateDemo(catalogExtensions)
+    : catalogExtensions;
+  const catalogById = new Map<string, CatalogExtensionInfoUI>();
+  for (const catalog of catalogWithDemo) {
+    catalogById.set(catalog.id, catalog);
+    if (catalog.installedExtension) {
+      catalogById.set(catalog.installedExtension.id, catalog);
+    }
+  }
+
+  const rows = extensionInfos.map(extension => {
+    const catalogExtension =
+      catalogById.get(extension.id) ??
+      extensionsUtils.buildCatalogInfoForInstalled(extension, $catalogExtensionInfos, $featuredExtensionInfos);
+
+    return {
+      name: catalogExtension.displayName,
+      extension,
+      catalogExtension: suggestionScope ? withDisplayInstalledVersion(catalogExtension) : catalogExtension,
+    };
+  });
+
+  return suggestionScope ? orderInstalledTableRows(rows) : rows;
+});
+
+function openChangeVersion(extension: CatalogExtensionInfoUI, preferredVersion?: string): void {
+  changeVersionExtension = extension;
+  changeVersionPreferredVersion = preferredVersion;
+}
+
+function closeChangeVersion(): void {
+  changeVersionExtension = undefined;
+  changeVersionPreferredVersion = undefined;
+}
+
+const extensionsWithUpdate = $derived(tableRows.map(row => row.catalogExtension).filter(ext => ext.hasUpdate));
+const showUpgradeAllBar = $derived(
+  suggestionScope && installedListFilters.value.hasUpdate === true && extensionsWithUpdate.length > 1,
+);
 </script>
 
-<div class="grow px-5 py-3">
-  {#each extensionInfos as extension (extension.id)}
-    <InstalledExtensionCard extension={extension} />
-  {/each}
-</div>
+{#if suggestionScope}
+  <div class="flex grow flex-col py-3">
+    <div class="sticky top-0 z-20 bg-[var(--pd-content-bg)] px-5 pb-4 pt-1">
+      <InstalledExtensionFilters
+        catalogExtensions={filterCatalogExtensions}
+        updateCount={extensionsWithUpdate.length}
+        bind:searchTerm />
+      {#if showUpgradeAllBar}
+        <div class="pt-3">
+          <InstalledExtensionUpdateAllBar extensionsWithUpdate={extensionsWithUpdate} />
+        </div>
+      {/if}
+    </div>
+
+    <div class="grow px-5">
+      {#if showFilteredEmpty}
+        <div class="flex min-h-[40vh] flex-1 items-center justify-center">
+          <FilteredEmptyScreen icon={ExtensionIcon} kind="extensions" bind:searchTerm {onResetFilter} />
+        </div>
+      {:else}
+        <InstalledExtensionTable rows={tableRows} onChangeVersion={openChangeVersion} />
+      {/if}
+    </div>
+  </div>
+
+  {#if changeVersionExtension}
+    <ChangeVersionModal
+      extension={changeVersionExtension}
+      preferredVersion={changeVersionPreferredVersion}
+      closeCallback={closeChangeVersion} />
+  {/if}
+{:else}
+  <div class="grow px-5 py-3">
+    {#each extensionInfos as extension (extension.id)}
+      <InstalledExtensionCard extension={extension} />
+    {/each}
+  </div>
+{/if}

@@ -45,7 +45,7 @@ test('Expect green text and icon when extension is starting', async () => {
   expect(icon).toHaveClass('bg-[var(--pd-status-starting)]');
   expect(label).toBeInTheDocument();
   expect(label).toHaveClass('text-[var(--pd-status-starting)]');
-  expect(label).toHaveTextContent('ACTIVATING');
+  expect(label).toHaveTextContent('ENABLING');
 });
 
 test('Expect green text and icon when extension is stopped', async () => {
@@ -64,9 +64,9 @@ test('Expect green text and icon when extension is stopping', async () => {
   const icon = screen.getByLabelText(extensionStatusIcon);
   const label = screen.getByLabelText(extensionStatusLabel);
   expect(icon).toBeInTheDocument();
-  expect(icon).toHaveClass('bg-[var(--pd-status-terminated)]');
+  expect(icon).toHaveClass('bg-[var(--pd-status-stopped)]');
   expect(label).toBeInTheDocument();
-  expect(label).toHaveClass('text-[var(--pd-status-terminated)]');
+  expect(label).toHaveClass('text-[var(--pd-status-stopped)]');
   expect(label).toHaveTextContent('DISABLING');
 });
 test('Expect green text and icon when extension is unknown', async () => {

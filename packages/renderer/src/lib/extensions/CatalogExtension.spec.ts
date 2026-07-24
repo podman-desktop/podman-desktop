@@ -25,7 +25,6 @@ import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtension from './CatalogExtension.svelte';
 
-// mock the router
 vi.mock(import('tinro'));
 
 beforeAll(() => {
@@ -36,86 +35,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('Expect to have more details working', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'myId',
-    displayName: 'This is the display name',
-    isFeatured: false,
-    fetchable: false,
-    fetchLink: '',
-    fetchVersion: '',
-    publisherDisplayName: 'Foo publisher',
-    isInstalled: false,
-    shortDescription: 'my description',
-    categories: [],
-    keywords: [],
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  // get div using aria-label 'This is the display name'
-  const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
-
-  expect(extensionWidget).toBeInTheDocument();
-
-  // check publisher display name is inside
-  const publisher = screen.getByText('Foo publisher');
-  expect(publisher).toBeInTheDocument();
-
-  // get more details button
-  const detailsButton = screen.getByRole('button', { name: 'This is the display name details' });
-  expect(detailsButton).toBeInTheDocument();
-
-  // click the button
-  await fireEvent.click(detailsButton);
-
-  // expect the router to be called
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/');
-});
-
-test('Expect to see featured and fetch button', async () => {
-  const catalogExtensionUI: CatalogExtensionInfoUI = {
-    id: 'myId',
-    displayName: 'This is the display name',
-    isFeatured: true,
-    fetchable: true,
-    fetchLink: 'myLink',
-    fetchVersion: '',
-    publisherDisplayName: 'Foo publisher',
-    isInstalled: false,
-    shortDescription: 'my description',
-    categories: [],
-    keywords: [],
-  };
-
-  render(CatalogExtension, { catalogExtensionUI });
-
-  // get div using aria-label 'This is the display name'
-  const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
-
-  expect(extensionWidget).toBeInTheDocument();
-
-  // check featured is inside
-  const featured = screen.getByText('Featured');
-  expect(featured).toBeInTheDocument();
-
-  // get install button
-  const installButton = screen.getByRole('button', { name: 'Install myId Extension' });
-  expect(installButton).toBeInTheDocument();
-
-  // click the button
-  await fireEvent.click(installButton);
-
-  // expect the router to be called
-  expect(vi.mocked(window.extensionInstallFromImage)).toHaveBeenCalledWith(
-    'myLink',
-    expect.any(Function),
-    expect.any(Function),
-    'myId',
-  );
-});
-
-test('Expect to have version of installed one', async () => {
+test('Expect production catalog card hover border class', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'myId',
     displayName: 'This is the display name',
@@ -123,21 +43,97 @@ test('Expect to have version of installed one', async () => {
     fetchable: false,
     fetchLink: '',
     fetchVersion: '1.0.0',
-    installedVersion: '2.0.0',
+    publisherDisplayName: 'Foo publisher',
+    isInstalled: false,
+    shortDescription: 'my description',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
+  expect(extensionWidget).toHaveClass('hover:border-[var(--pd-content-card-border-selected)]');
+});
+
+test('Expect production catalog card shows More details without actions menu', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'myId',
+    displayName: 'This is the display name',
+    isFeatured: false,
+    fetchable: false,
+    fetchLink: '',
+    fetchVersion: '1.0.0',
+    publisherDisplayName: 'Foo publisher',
+    isInstalled: false,
+    shortDescription: 'my description',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  expect(screen.getByRole('button', { name: 'This is the display name details' })).toBeInTheDocument();
+  expect(screen.getByText('More details')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /actions$/i })).not.toBeInTheDocument();
+});
+
+test('Expect More details opens extension details route', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'myId',
+    displayName: 'This is the display name',
+    isFeatured: false,
+    fetchable: false,
+    fetchLink: '',
+    fetchVersion: '1.0.0',
+    publisherDisplayName: 'Foo publisher',
+    isInstalled: false,
+    shortDescription: 'my description',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'This is the display name details' }));
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/');
+});
+
+test('Expect installed production catalog card shows Installed', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'myId',
+    displayName: 'Installed extension',
+    isFeatured: false,
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: '2.0.0',
+    installedVersion: '1.0.0',
     publisherDisplayName: 'Foo publisher',
     isInstalled: true,
     shortDescription: 'my description',
     categories: [],
     keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
   };
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  // check catalog version is displayed
-  const catalogVersion = screen.getByText('v1.0.0');
-  expect(catalogVersion).toBeInTheDocument();
-
-  // check if installed version is displayed
-  const installedVersion = screen.getByText('(installed: v2.0.0)');
-  expect(installedVersion).toBeInTheDocument();
+  expect(screen.getByText('Installed')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Install myId Extension' })).not.toBeInTheDocument();
 });

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ test('Expect basic styling', async () => {
   const title = screen.getByText("No object matching 'test' found");
   expect(title).toBeInTheDocument();
   expect(title).toHaveClass('text-xl');
+  expect(screen.getByText('Not what you expected? Double-check your spelling.')).toBeInTheDocument();
+  expect(screen.getByText('Just want to view all object?')).toBeInTheDocument();
 });
 
 test('Expect long search term to not display', async () => {
@@ -40,6 +42,14 @@ test('Expect long search term to not display', async () => {
   const title = screen.getByText('No object matching filter found');
   expect(title).toBeInTheDocument();
   expect(title).toHaveClass('text-xl');
+});
+
+test('Expect checkbox-only filter empty state to omit spelling hint', async () => {
+  render(FilteredEmptyScreen, { icon: '', kind: 'extensions', searchTerm: '' });
+
+  expect(screen.getByText('No extensions matching filter found')).toBeInTheDocument();
+  expect(screen.queryByText('Not what you expected? Double-check your spelling.')).not.toBeInTheDocument();
+  expect(screen.getByText('Just want to view all extensions?')).toBeInTheDocument();
 });
 
 test('Expect button to fire event and clear search term', async () => {
@@ -55,7 +65,7 @@ test('Expect button to fire event and clear search term', async () => {
 
   // confirm search term has changed
   expect(resetMock).toHaveBeenCalledOnce();
-  // eslint-disable-next-line quotes
-  const title = screen.getByText("No object matching '' found");
+  const title = screen.getByText('No object matching filter found');
   expect(title).toBeInTheDocument();
+  expect(screen.queryByText('Not what you expected? Double-check your spelling.')).not.toBeInTheDocument();
 });

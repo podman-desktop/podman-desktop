@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,16 +23,26 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { clearPrototypeDefaultCustomLocalHiddenRows } from '/@/lib/extensions/extension-custom-local-defaults';
+import { clearPrototypeRemovedExtensions } from '/@/lib/extensions/extension-prototype-use-cases';
+import { areExtensionsImprovementsSuggested } from '/@/lib/extensions/extensions-prototype-scope';
 import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
 import { extensionInfos } from '/@/stores/extensions';
 
 import DevelopmentExtensionList from './DevelopmentExtensionList.svelte';
+
+vi.mock(import('/@/lib/extensions/extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: vi.fn(() => false),
+}));
 
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();
   extensionDevelopmentFolders.set([]);
   extensionInfos.set([]);
+  clearPrototypeDefaultCustomLocalHiddenRows();
+  clearPrototypeRemovedExtensions();
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(false);
 });
 
 const devModeNotEnabledText = 'Enable Preferences > Extensions > Development Mode to test local extensions';
@@ -62,8 +72,10 @@ test('Expect no empty screen if dev mode is enabled but table is empty', async (
   // expect the text devModeNotEnabledText is not there
   await vi.waitFor(() => expect(screen.queryByText(devModeNotEnabledText)).not.toBeInTheDocument());
 
-  // expect No extension for now to be displayed
-  expect(screen.getByText('No extension for now')).toBeInTheDocument();
+  expect(screen.getByText('No local extensions tracked')).toBeInTheDocument();
+  expect(
+    screen.getByText('Add a folder on your machine to load and test an extension during development.'),
+  ).toBeInTheDocument();
 });
 
 test('expect addLocalFolderExtension is working', async () => {
@@ -126,4 +138,29 @@ test('expect list displayed if enabled', async () => {
 
   // wait the text "extension A" to be displayed
   await vi.waitFor(() => expect(screen.getByText('extension A')).toBeInTheDocument());
+});
+
+test('suggestion scope shows search when list is present', async () => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  extensionDevelopmentFolders.set([{ path: 'foo' }]);
+  extensionInfos.set([{ id: 'extensionid', name: 'extension A', path: 'foo', state: 'started' } as ExtensionInfo]);
+
+  render(DevelopmentExtensionList, { onInstallCustom: vi.fn() });
+
+  await vi.waitFor(() => expect(screen.getByText('extension A')).toBeInTheDocument());
+  expect(screen.getByRole('textbox', { name: 'search extensions' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Install custom' })).toBeInTheDocument();
+});
+
+test('suggestion scope seeds default custom and local example rows', async () => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+  render(DevelopmentExtensionList, { onInstallCustom: vi.fn() });
+
+  await vi.waitFor(() => expect(screen.getByText('Kubernetes Dashboard')).toBeInTheDocument());
+  expect(screen.getByText('Hello Local Extension')).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'search extensions' })).toBeInTheDocument();
+  expect(screen.queryByText('Custom and local extensions')).not.toBeInTheDocument();
 });

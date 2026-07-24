@@ -18,13 +18,45 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { router } from 'tinro';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { extensionInfos } from '/@/stores/extensions';
+
+import { prototypeRestoreExtension } from './extension-prototype-use-cases';
+import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
 
-const closeCallback = vi.fn();
+vi.mock(import('tinro'));
+
+vi.mock(import('./extensions-prototype-scope'), () => ({
+  areExtensionsImprovementsSuggested: vi.fn(() => false),
+}));
+
+vi.mock(import('./extension-prototype-use-cases'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    prototypeRestoreExtension: vi.fn(actual.prototypeRestoreExtension),
+  };
+});
+
+const { closeCallback, markNewlyInstalledMock, syncExtensionNavigationAfterInstallMock } = vi.hoisted(() => ({
+  closeCallback: vi.fn(),
+  markNewlyInstalledMock: vi.fn(),
+  syncExtensionNavigationAfterInstallMock: vi.fn(async () => true),
+}));
+
+vi.mock(import('./extension-catalog-settings.svelte'), () => ({
+  markNewlyInstalled: markNewlyInstalledMock,
+}));
+
+vi.mock(import('./extension-nav-pointer.svelte'), () => ({
+  syncExtensionNavigationAfterInstall: syncExtensionNavigationAfterInstallMock,
+}));
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });
@@ -32,52 +64,65 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  extensionInfos.set([]);
+  syncExtensionNavigationAfterInstallMock.mockResolvedValue(true);
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(false);
+  localStorage.clear();
 });
 
 test('expect invalid field', async () => {
   render(InstallManuallyExtensionModal, { closeCallback });
 
-  // enter the name quay.io/foobar
   const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
   expect(input).toBeInTheDocument();
 
   const button = screen.getByRole('button', { name: 'Install' });
   expect(button).toBeInTheDocument();
-
-  // disabled due to error
   expect(button).toBeDisabled();
 });
 
-test('expect able to download an extension', async () => {
+test('closes modal and routes to installed tab after successful install', async () => {
+  vi.mocked(window.extensionInstallFromImage).mockImplementation(async () => {
+    extensionInfos.set([{ id: 'podman-desktop.quadlet', name: 'Quadlet', path: '/tmp/quadlet' } as ExtensionInfo]);
+  });
+
   render(InstallManuallyExtensionModal, { closeCallback });
 
-  // enter the name quay.io/foobar
   const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
-  expect(input).toBeInTheDocument();
-  // now enter the text 'my-custom-image.io/foo'
-  await userEvent.type(input, 'my-custom-image.io/foo');
+  await userEvent.type(input, 'ghcr.io/podman-desktop/pd-extension-quadlet:latest');
 
-  // click on the button
-  const button = screen.getByRole('button', { name: 'Install' });
-  expect(button).toBeInTheDocument();
-
-  await userEvent.click(button);
+  await userEvent.click(screen.getByRole('button', { name: 'Install' }));
 
   expect(window.extensionInstallFromImage).toBeCalledWith(
-    'my-custom-image.io/foo',
+    'ghcr.io/podman-desktop/pd-extension-quadlet:latest',
     expect.anything(),
     expect.anything(),
   );
+  expect(syncExtensionNavigationAfterInstallMock).toHaveBeenCalledWith('podman-desktop.quadlet');
+  expect(markNewlyInstalledMock).toHaveBeenCalledWith('podman-desktop.quadlet');
+  expect(router.goto).toHaveBeenCalledWith('/extensions/');
+  expect(closeCallback).toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument();
+});
 
-  // expect button done is there now
-  const buttonDone = screen.getByRole('button', { name: 'Done' });
-  expect(buttonDone).toBeInTheDocument();
+test('suggestion scope routes to custom/local tab and remembers custom install', async () => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+  vi.mocked(window.extensionInstallFromImage).mockImplementation(async () => {
+    extensionInfos.set([{ id: 'podman-desktop.quadlet', name: 'Quadlet', path: '/tmp/quadlet' } as ExtensionInfo]);
+  });
 
-  // click on the button
-  await userEvent.click(buttonDone);
+  render(InstallManuallyExtensionModal, { closeCallback });
 
-  // expect close callback to be called
-  expect(closeCallback).toBeCalled();
+  const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
+  await userEvent.type(input, 'ghcr.io/podman-desktop/pd-extension-quadlet:latest');
+  await userEvent.click(screen.getByRole('button', { name: 'Install' }));
+
+  expect(prototypeRestoreExtension).toHaveBeenCalledWith('podman-desktop.quadlet');
+  expect(router.goto).toHaveBeenCalledWith('/extensions?screen=development');
+  const remembered = localStorage.getItem('podman-desktop-custom-installed-extensions') ?? '';
+  expect(remembered).toContain('podman-desktop.quadlet');
+  expect(remembered).toContain('pd-extension-quadlet');
+  expect(closeCallback).toHaveBeenCalled();
 });
 
 function mockExtensionInstallFromImage(): {
@@ -103,17 +148,10 @@ test('install button should always be disable when extensionInstallFromImage is 
 
   render(InstallManuallyExtensionModal, { closeCallback });
 
-  // enter the name quay.io/foobar
   const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
-  expect(input).toBeInTheDocument();
-  // now enter the text 'my-custom-image.io/foo'
   await userEvent.type(input, 'my-custom-image.io/foo');
 
-  // click on the button
   const installButton = screen.getByRole('button', { name: 'Install' });
-  expect(installButton).toBeInTheDocument();
-  expect(installButton).toBeEnabled();
-
   await userEvent.click(installButton);
 
   logCallback('Downloading sha256:random-sha256.tar - 100% - (521578/521578)');
@@ -123,7 +161,6 @@ test('install button should always be disable when extensionInstallFromImage is 
     expect(progressBar).toHaveStyle({ width: '100%' });
   });
 
-  // expect button done to be disabled
   expect(installButton).toBeDisabled();
 });
 
@@ -132,13 +169,9 @@ test('rejected installation should make the button visible', async () => {
 
   render(InstallManuallyExtensionModal, { closeCallback });
 
-  // enter the name quay.io/foobar
   const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
-  expect(input).toBeInTheDocument();
-  // now enter the text 'my-custom-image.io/foo'
   await userEvent.type(input, 'my-custom-image.io/foo');
 
-  // click on the button
   const installButton = screen.getByRole('button', { name: 'Install' });
   await userEvent.click(installButton);
 
@@ -158,17 +191,10 @@ test('progressbar should match latest log', async () => {
 
   render(InstallManuallyExtensionModal, { closeCallback });
 
-  // enter the name quay.io/foobar
   const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
-  expect(input).toBeInTheDocument();
-  // now enter the text 'my-custom-image.io/foo'
   await userEvent.type(input, 'my-custom-image.io/foo');
 
-  // click on the button
   const installButton = screen.getByRole('button', { name: 'Install' });
-  expect(installButton).toBeInTheDocument();
-  expect(installButton).toBeEnabled();
-
   await userEvent.click(installButton);
 
   const progressBar = screen.getByRole('progressbar', { name: 'Installation progress' });
@@ -183,44 +209,26 @@ test('progressbar should match latest log', async () => {
   }
 });
 
-test('install button should be enable while extensionInstallFromImage is resolved', async () => {
+test('closes modal after extensionInstallFromImage resolves', async () => {
   const { resolve, logCallback } = mockExtensionInstallFromImage();
 
   render(InstallManuallyExtensionModal, { closeCallback });
 
-  // enter the name quay.io/foobar
   const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
-  expect(input).toBeInTheDocument();
-  // now enter the text 'my-custom-image.io/foo'
   await userEvent.type(input, 'my-custom-image.io/foo');
 
-  // click on the button
   const installButton = screen.getByRole('button', { name: 'Install' });
-  expect(installButton).toBeInTheDocument();
-  expect(installButton).toBeEnabled();
-
   await userEvent.click(installButton);
 
-  // log 100%
   logCallback('Downloading sha256:random-sha256.tar - 100% - (521578/521578)');
-  const progressBar = screen.getByRole('progressbar', { name: 'Installation progress' });
-  await vi.waitFor(() => {
-    expect(progressBar).toHaveStyle({
-      width: `100%`,
-    });
-  });
-
-  // resolve extensionInstallFromImage
   resolve();
 
-  // done button should be visible after resolution
   await vi.waitFor(() => {
-    const doneButton = screen.getByRole('button', { name: 'Done' });
-    expect(doneButton).toBeInTheDocument();
+    expect(closeCallback).toHaveBeenCalled();
+    expect(router.goto).toHaveBeenCalledWith('/extensions/');
   });
 
-  // install button should not be visible after resolution
-  expect(screen.queryByRole('button', { name: 'Install' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument();
 });
 
 test('form should be in error even if log reached 100%', async () => {
@@ -234,30 +242,55 @@ test('form should be in error even if log reached 100%', async () => {
   const installButton = getByRole('button', { name: 'Install' });
   await userEvent.click(installButton);
 
-  // Simulate 100% log
   logCallback('Downloading sha256:random-sha256.tar - 100% - (521578/521578)');
   const progressBar = getByRole('progressbar', { name: 'Installation progress' });
   await vi.waitFor(() => {
     expect(progressBar).toHaveStyle({ width: '100%' });
   });
 
-  // Now simulate error callback
   errorCallback('Extension is already installed');
 
-  // Expect install button to be visible but disabled due to error
   await vi.waitFor(() => {
     expect(installButton).toBeVisible();
     expect(installButton).toBeDisabled();
   });
 
-  // Expect progress bar to be gone
   expect(queryByRole('progressbar')).not.toBeInTheDocument();
-
   getByText('Extension is already installed');
-
-  // Expect Done button not to be there
   expect(queryByRole('button', { name: 'Done' })).toBeNull();
-
-  // Expect input error
   expect(input).toHaveAttribute('aria-invalid', 'true');
+  expect(closeCallback).not.toHaveBeenCalled();
+});
+
+test('suggestion scope restores already-installed custom extension onto custom/local tab', async () => {
+  vi.mocked(areExtensionsImprovementsSuggested).mockReturnValue(true);
+  extensionInfos.set([
+    {
+      id: 'podman-desktop.kubernetes-dashboard',
+      name: 'kubernetes-dashboard',
+      path: '/tmp/kubernetes-dashboard',
+    } as ExtensionInfo,
+  ]);
+  const { logCallback, errorCallback, resolve } = mockExtensionInstallFromImage();
+
+  render(InstallManuallyExtensionModal, { closeCallback });
+
+  const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
+  await userEvent.type(input, 'ghcr.io/podman-desktop/podman-desktop-extension-kubernetes-dashboard');
+
+  await userEvent.click(screen.getByRole('button', { name: 'Install' }));
+
+  logCallback('Downloading sha256:random-sha256.tar - 100% - (521578/521578)');
+  errorCallback('Extension kubernetes-dashboard is already installed');
+  resolve();
+
+  await vi.waitFor(() => {
+    expect(closeCallback).toHaveBeenCalled();
+  });
+
+  expect(prototypeRestoreExtension).toHaveBeenCalledWith('podman-desktop.kubernetes-dashboard');
+  expect(router.goto).toHaveBeenCalledWith('/extensions?screen=development');
+  const remembered = localStorage.getItem('podman-desktop-custom-installed-extensions') ?? '';
+  expect(remembered).toContain('podman-desktop.kubernetes-dashboard');
+  expect(screen.queryByText(/already installed/i)).not.toBeInTheDocument();
 });

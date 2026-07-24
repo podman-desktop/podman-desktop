@@ -20,13 +20,17 @@ import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { combinedInstalledExtensions } from './all-installed-extensions';
+import { catalogExtensionInfos } from './catalog-extensions';
 import { contributions } from './contribs';
 import { extensionInfos } from './extensions';
+import { webviews } from './webviews';
 
 beforeEach(() => {
   vi.resetAllMocks();
   contributions.set([]);
   extensionInfos.set([]);
+  webviews.set([]);
+  catalogExtensionInfos.set([]);
 });
 
 test('combined extensions from DD', async () => {
@@ -175,4 +179,39 @@ test('combined extensions from all', async () => {
 
   expect(extension2?.type).toBe('dd');
   expect(extension2?.displayName).toBe('test2');
+});
+
+test('combined extensions include active webviews missing from extensionInfos', () => {
+  catalogExtensionInfos.set([
+    {
+      id: 'redhat.ai-lab',
+      displayName: 'Podman AI Lab',
+      extensionName: 'ai-lab',
+      publisherDisplayName: 'Red Hat',
+      categories: [],
+      keywords: [],
+      shortDescription: '',
+      unlisted: false,
+      versions: [],
+    },
+  ]);
+  webviews.set([
+    {
+      id: 'webview-ai-lab',
+      uuid: 'uuid-ai-lab',
+      viewType: 'studio',
+      sourcePath: '/tmp/ai-lab',
+      icon: 'icon.png',
+      name: 'AI Lab',
+      html: '',
+      extensionId: 'redhat.redhat-pack',
+      state: undefined,
+    },
+  ]);
+
+  const allExtensions = get(combinedInstalledExtensions);
+
+  expect(allExtensions).toHaveLength(1);
+  expect(allExtensions[0].id).toBe('redhat.ai-lab');
+  expect(allExtensions[0].displayName).toBe('AI Lab');
 });

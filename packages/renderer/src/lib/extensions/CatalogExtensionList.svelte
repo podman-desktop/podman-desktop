@@ -1,15 +1,57 @@
 <script lang="ts">
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
-import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
+import { Button, EmptyScreen, FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
+
+import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { catalogTableSortState, orderCatalogTableExtensions } from './catalog-extension-table-sort.svelte';
 import CatalogExtension from './CatalogExtension.svelte';
+import CatalogExtensionTable from './CatalogExtensionTable.svelte';
+import CatalogExtensionViewToolbar from './CatalogExtensionViewToolbar.svelte';
+import { getCatalogViewMode, refreshNewBadges } from './extension-catalog-settings.svelte';
+import SuggestionCatalogExtension from './SuggestionCatalogExtension.svelte';
 
-export let catalogExtensions: CatalogExtensionInfoUI[];
-export let title: string = 'Available extensions';
-export let showEmptyScreen: boolean = true;
-export let oninstall: (extensionId: string) => void = () => {};
-export let ondetails: (extensionId: string) => void = () => {};
+interface Props {
+  catalogExtensions: CatalogExtensionInfoUI[];
+  allCatalogExtensions?: CatalogExtensionInfoUI[];
+  title?: string;
+  showEmptyScreen?: boolean;
+  showFilteredEmpty?: boolean;
+  searchTerm?: string;
+  suggestionScope?: boolean;
+  onResetFilter?: () => void;
+  oninstall?: (extensionId: string) => void;
+  ondetails?: (extensionId: string) => void;
+}
+
+let {
+  catalogExtensions,
+  allCatalogExtensions = catalogExtensions,
+  title = '',
+  showEmptyScreen = true,
+  showFilteredEmpty = false,
+  searchTerm = $bindable(''),
+  suggestionScope = true,
+  onResetFilter = (): void => {},
+  oninstall = (): void => {},
+  ondetails = (): void => {},
+}: Props = $props();
+
+onMount(() => {
+  if (suggestionScope) {
+    refreshNewBadges();
+  }
+});
+
+const viewMode = $derived.by(() => getCatalogViewMode());
+const hasCatalogData = $derived(allCatalogExtensions.length > 0);
+const hasVisibleExtensions = $derived(catalogExtensions.length > 0);
+const tableCatalogExtensions = $derived.by(() => {
+  catalogTableSortState.value;
+  return orderCatalogTableExtensions(catalogExtensions);
+});
 
 async function fetchCatalog(): Promise<void> {
   try {
@@ -26,33 +68,80 @@ async function fetchCatalog(): Promise<void> {
 }
 </script>
 
-<div class="flex flex-col grow px-5 py-3">
-  {#if catalogExtensions.length > 0}
-    <div class="mb-4 flex flex-row">
-      <div class="flex items-center text-[var(--pd-content-header)]">{title}</div>
-      <div class="flex-1 text-right">
-        <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
-      </div>
-    </div>
-  {:else if showEmptyScreen}
-    <EmptyScreen
-      title="No extensions in the catalog"
-      message="No extensions from the catalog. It seems that the internet connection was not available to download the catalog."
-      icon={faPuzzlePiece}>
-      <div class="flex gap-2 justify-center">
-        <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
-      </div>
-    </EmptyScreen>
-  {/if}
+{#if suggestionScope}
+  <div class="flex grow flex-col py-3">
+    {#if title}
+      <div class="mb-3 px-5 text-[var(--pd-content-header)]">{title}</div>
+    {/if}
 
-  <div class="flex flex-col w-full">
-    <div
-      class="grid min-[920px]:grid-cols-2 min-[1180px]:grid-cols-3 gap-3"
-      role="region"
-      aria-label="Catalog Extensions">
-      {#each catalogExtensions as catalogExtension (catalogExtension.id)}
-        <CatalogExtension ondetails={ondetails} oninstall={oninstall} catalogExtensionUI={catalogExtension} />
-      {/each}
+    {#if hasCatalogData}
+      <div class="sticky top-0 z-20 bg-[var(--pd-content-bg)] px-5 pb-4 pt-1">
+        <CatalogExtensionViewToolbar catalogExtensions={allCatalogExtensions} bind:searchTerm />
+      </div>
+    {/if}
+
+    <div class="grow px-5">
+      {#if showFilteredEmpty}
+        <div class="flex min-h-[40vh] flex-1 items-center justify-center">
+          <FilteredEmptyScreen icon={ExtensionIcon} kind="extensions" bind:searchTerm {onResetFilter} />
+        </div>
+      {:else if hasVisibleExtensions}
+        {#if viewMode === 'grid'}
+          <div
+            class="grid min-[920px]:grid-cols-2 min-[1180px]:grid-cols-3 gap-3"
+            role="region"
+            aria-label="Catalog Extensions">
+            {#each catalogExtensions as catalogExtension (catalogExtension.id)}
+              <SuggestionCatalogExtension
+                ondetails={ondetails}
+                oninstall={oninstall}
+                catalogExtensionUI={catalogExtension} />
+            {/each}
+          </div>
+        {:else}
+          <CatalogExtensionTable
+            catalogExtensions={tableCatalogExtensions}
+            {oninstall}
+            onChangeVersion={(): void => {}} />
+        {/if}
+      {:else if showEmptyScreen}
+        <EmptyScreen
+          title="No extensions in the catalog"
+          message="No extensions from the catalog. It seems that the internet connection was not available to download the catalog."
+          icon={faPuzzlePiece} />
+      {/if}
     </div>
   </div>
-</div>
+{:else}
+  {@const currentTitle = title || 'Available extensions'}
+  <div class="flex flex-col grow px-5 py-3">
+    {#if catalogExtensions.length > 0}
+      <div class="mb-4 flex flex-row">
+        <div class="flex items-center text-[var(--pd-content-header)]">{currentTitle}</div>
+        <div class="flex-1 text-right">
+          <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
+        </div>
+      </div>
+    {:else if showEmptyScreen}
+      <EmptyScreen
+        title="No extensions in the catalog"
+        message="No extensions from the catalog. It seems that the internet connection was not available to download the catalog."
+        icon={faPuzzlePiece}>
+        <div class="flex gap-2 justify-center">
+          <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
+        </div>
+      </EmptyScreen>
+    {/if}
+
+    <div class="flex flex-col w-full">
+      <div
+        class="grid min-[920px]:grid-cols-2 min-[1180px]:grid-cols-3 gap-3"
+        role="region"
+        aria-label="Catalog Extensions">
+        {#each catalogExtensions as catalogExtension (catalogExtension.id)}
+          <CatalogExtension ondetails={ondetails} oninstall={oninstall} catalogExtensionUI={catalogExtension} />
+        {/each}
+      </div>
+    </div>
+  </div>
+{/if}

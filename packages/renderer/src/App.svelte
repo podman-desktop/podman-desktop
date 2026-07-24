@@ -4,9 +4,11 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import type { KubernetesNavigationRequest, NavigationRequest } from '@podman-desktop/core-api';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 
-import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
+import { parseExtensionDetailsRequest, parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
 import SecretCreate from '/@/lib/secrets/SecretCreate.svelte';
 import SecretDetails from '/@/lib/secrets/SecretDetails.svelte';
@@ -38,6 +40,7 @@ import QuickPickInput from './lib/dialogs/QuickPickInput.svelte';
 import DockerExtension from './lib/docker-extension/DockerExtension.svelte';
 import ExtensionDetails from './lib/extensions/ExtensionDetails.svelte';
 import ExtensionList from './lib/extensions/ExtensionList.svelte';
+import { initExtensionsPrototypeScope } from './lib/extensions/extensions-prototype-scope';
 import SendFeedback from './lib/feedback/SendFeedback.svelte';
 import HelpActions from './lib/help/HelpActions.svelte';
 import BuildImageFromContainerfile from './lib/image/BuildImageFromContainerfile.svelte';
@@ -90,6 +93,7 @@ import WelcomePage from './lib/welcome/WelcomePage.svelte';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import Route from './Route.svelte';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
+import { activePrototype } from './stores/prototype';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 router.mode.memory();
@@ -163,6 +167,14 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 
 // Initialize table persistence callbacks immediately
 tablePersistence.storage = new PodmanDesktopStoragePersist();
+
+initExtensionsPrototypeScope();
+
+onMount(() => {
+  if (!get(activePrototype)) {
+    initExtensionsPrototypeScope();
+  }
+});
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>
@@ -475,7 +487,8 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             />
           </Route>
           <Route path="/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
-            <ExtensionDetails extensionId={meta.params.id} />
+            {@const detailsRequest = parseExtensionDetailsRequest(meta)}
+            <ExtensionDetails extensionId={meta.params.id} returnScreen={detailsRequest.returnScreen} />
           </Route>
         </Route>
       </div>

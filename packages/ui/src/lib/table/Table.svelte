@@ -128,16 +128,29 @@ async function saveColumnConfiguration(): Promise<void> {
   }
 }
 
+/** Actions controls belong on the far right (before the settings spacer). */
+function pinActionsColumnLast<C extends { id?: string; title?: string }>(items: C[]): C[] {
+  const actionsIndex = items.findIndex(item => (item.id ?? item.title) === 'Actions');
+  if (actionsIndex < 0 || actionsIndex === items.length - 1) {
+    return items;
+  }
+  const next = [...items];
+  const [actions] = next.splice(actionsIndex, 1);
+  next.push(actions);
+  return next;
+}
+
 // Get ordered columns based on current ordering
 function getOrderedColumns(): ListOrganizerItem[] {
-  if (columnOrdering.size === 0) {
-    return columnItems.toSorted((a, b) => a.originalOrder - b.originalOrder);
-  }
-  return columnItems.toSorted((a, b) => {
-    const aOrder = columnOrdering.get(a.id) ?? a.originalOrder;
-    const bOrder = columnOrdering.get(b.id) ?? b.originalOrder;
-    return aOrder - bOrder;
-  });
+  const ordered =
+    columnOrdering.size === 0
+      ? columnItems.toSorted((a, b) => a.originalOrder - b.originalOrder)
+      : columnItems.toSorted((a, b) => {
+          const aOrder = columnOrdering.get(a.id) ?? a.originalOrder;
+          const bOrder = columnOrdering.get(b.id) ?? b.originalOrder;
+          return aOrder - bOrder;
+        });
+  return pinActionsColumnLast(ordered);
 }
 
 // Save configuration whenever columnItems or ordering changes (after initialization)
@@ -153,7 +166,7 @@ $: if (isInitialized && columnItems.length > 0) {
 $: visibleColumns = ((): Column<T, any>[] => {
   if (columnItems.length === 0) {
     // Fallback to all columns when not yet initialized
-    return columns;
+    return pinActionsColumnLast(columns);
   }
 
   // Get ordered columns inline to ensure reactivity
@@ -171,7 +184,7 @@ $: visibleColumns = ((): Column<T, any>[] => {
     .map(item => columns.find(col => col.title === item.id)!)
     .filter(Boolean);
 
-  return result;
+  return pinActionsColumnLast(result);
 })();
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
@@ -337,7 +350,13 @@ function toggleChildren(name: string | undefined): void {
 
 // Handle column order changes from ListOrganizer
 function handleColumnOrderChange(newOrdering: SvelteMap<string, number>): void {
-  columnOrdering = newOrdering;
+  const next = new SvelteMap(newOrdering);
+  // Keep Actions last even if the organizer temporarily places it elsewhere.
+  if (next.has('Actions')) {
+    const otherOrders = [...next.entries()].filter(([id]) => id !== 'Actions').map(([, order]) => order);
+    next.set('Actions', otherOrders.length > 0 ? Math.max(...otherOrders) + 1 : 0);
+  }
+  columnOrdering = next;
 }
 
 // Handle column toggle changes from ListOrganizer
@@ -377,7 +396,7 @@ async function resetColumns(): Promise<void> {
   <!-- Table header -->
   <div role="rowgroup" class="relative">
     <div
-      class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
+      class="grid grid-table gap-x-0.5 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
       role="row">
       <div class="whitespace-nowrap justify-self-start" role="columnheader"></div>
       {#if row.info.selectable}

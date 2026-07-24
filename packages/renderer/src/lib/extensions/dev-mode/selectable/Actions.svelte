@@ -1,8 +1,7 @@
 <script lang="ts">
 import type { SelectableExtensionDevelopmentFolderInfoUI } from '/@/lib/extensions/dev-mode/development-folder-info-ui';
 
-import ActionStart from './ActionStart.svelte';
-import ActionStop from './ActionStop.svelte';
+import ActionToggle from './ActionToggle.svelte';
 import ActionUntrack from './ActionUntrack.svelte';
 
 interface Props {
@@ -11,6 +10,7 @@ interface Props {
 const { extensionFolder }: Props = $props();
 </script>
 
-<ActionStart {extensionFolder} />
-<ActionStop {extensionFolder} />
-<ActionUntrack {extensionFolder} />
+<div class="flex items-center justify-end gap-0.5" onclick={(event): void => event.stopPropagation()} role="presentation">
+  <ActionToggle {extensionFolder} />
+  <ActionUntrack {extensionFolder} />
+</div>

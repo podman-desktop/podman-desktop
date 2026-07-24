@@ -59,11 +59,9 @@ test('Expect stop action being displayed if there is an extension started', asyn
   expect(window.stopExtension).toHaveBeenCalledWith(extensionFolderWithExtensionStopped.extension?.id);
 });
 
-test('Expect stop action being hidden if extension is stopped', async () => {
+test('Expect stop action being disabled if extension is stopped', async () => {
   render(ActionStop, { extensionFolder: extensionFolderWithExtensionStopped });
   const stopButton = screen.getByRole('button', { name: 'Stop the extension' });
   expect(stopButton).toBeInTheDocument();
-
-  // expect the button is hidden
-  expect(stopButton).toHaveClass('hidden');
+  expect(stopButton).toBeDisabled();
 });

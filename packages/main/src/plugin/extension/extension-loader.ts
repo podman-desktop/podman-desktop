@@ -47,6 +47,7 @@ import { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import { ensureExtensionPrerequisites } from '/@/plugin/extension/extension-prerequisites.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { IconRegistry } from '/@/plugin/icon-registry.js';
@@ -1820,6 +1821,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     };
     let exports: unknown;
     try {
+      await ensureExtensionPrerequisites(extension.id);
+
       if (typeof extensionMain?.['activate'] === 'function') {
         // maximum time to wait for the extension to activate by reading from configuration
         const delayInSeconds: number = this.configurationRegistry
@@ -1978,7 +1981,9 @@ export class ExtensionLoader implements IAsyncDisposable {
     if (extension) {
       await this.deactivateExtension(extensionId);
       // delete the path
-      if (extension.removable) {
+      // Extensions installed from catalog (in pluginsDirectory) are always removable
+      const isInPluginsDirectory = extension.path.startsWith(this.pluginsDirectory);
+      if (extension.removable || isInPluginsDirectory) {
         await fs.promises.rm(extension.path, { recursive: true, force: true });
       } else if (!extension.devMode) {
         throw new Error(`Extension ${extensionId} is not removable`);

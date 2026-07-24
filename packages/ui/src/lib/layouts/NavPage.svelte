@@ -53,6 +53,12 @@ let {
           {:else}&nbsp;{/if}
         </div>
       </div>
+    {:else if bottomAdditionalActions}
+      <div class="flex flex-row px-5 pb-2" role="group" aria-label="bottomAdditionalActions">
+        <div class="space-x-2 flex flex-row justify-start items-center w-full text-[var(--pd-content-text)]">
+          {@render bottomAdditionalActions()}
+        </div>
+      </div>
     {/if}
 
     {#if tabs}

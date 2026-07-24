@@ -98,8 +98,9 @@ test('Expect unable to stop if already stopped', async () => {
   render(InstalledExtensionCardLeftLifecycleStop, { extension });
 
   // get button with label 'Stop'
-  const button = screen.queryByRole('button', { name: 'Stop' });
-  expect(button).not.toBeInTheDocument();
+  const button = screen.getByRole('button', { name: 'Stop' });
+  expect(button).toBeInTheDocument();
+  expect(button).toBeDisabled();
 });
 
 test('Expect to stop pd Extension if starting', async () => {

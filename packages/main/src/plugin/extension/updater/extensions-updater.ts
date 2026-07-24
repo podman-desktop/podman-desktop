@@ -232,6 +232,7 @@ export class ExtensionsUpdater {
     } catch (err) {
       console.error(`Error while updating extension ${extensionId}:`, err);
       telemetryOptions.error = err;
+      throw err;
     } finally {
       this.telemetry.track(eventName, telemetryOptions);
     }

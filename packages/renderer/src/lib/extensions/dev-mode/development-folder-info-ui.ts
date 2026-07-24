@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,22 @@
 
 import type { ExtensionDevelopmentFolderInfo } from '@podman-desktop/core-api';
 
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+
+export type CustomLocalExtensionSource = 'folder' | 'custom';
+
 export interface SelectableExtensionDevelopmentFolderInfoUI extends ExtensionDevelopmentFolderInfo {
   selected: boolean;
   name: string;
+  /** Local tracked folder vs OCI custom install. */
+  source?: CustomLocalExtensionSource;
+  /** Suggestion-scope seeded example row (not a real track/install). */
+  prototypeDefault?: boolean;
   extension?: {
     id: string;
     name: string;
     state?: string;
   };
+  /** Full installed info when available (Status column + custom uninstall). */
+  installedExtension?: CombinedExtensionInfoUI;
 }

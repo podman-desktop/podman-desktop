@@ -59,11 +59,9 @@ test('Expect start action being displayed if there is an extension stopped', asy
   expect(window.startExtension).toHaveBeenCalledWith(extensionFolderWithExtensionStopped.extension?.id);
 });
 
-test('Expect start action being hidden if extension is started', async () => {
+test('Expect start action being disabled if extension is started', async () => {
   render(ActionStart, { extensionFolder: extensionFolderWithExtensionStarted });
-  const stopButton = screen.getByRole('button', { name: 'Start the extension' });
-  expect(stopButton).toBeInTheDocument();
-
-  // expect the button is hidden
-  expect(stopButton).toHaveClass('hidden');
+  const startButton = screen.getByRole('button', { name: 'Start the extension' });
+  expect(startButton).toBeInTheDocument();
+  expect(startButton).toBeDisabled();
 });

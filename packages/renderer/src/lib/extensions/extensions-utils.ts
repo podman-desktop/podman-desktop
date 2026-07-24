@@ -22,23 +22,133 @@ import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
+import { isBuiltInExtension, isBuiltInExtensionId, resolveExtensionVerificationStatus } from './extension-origin-utils';
+import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
+import {
+  applyPrototypeCatalogUseCaseOverlay,
+  applyPrototypeUseCaseOverlays,
+  bumpPrototypePatchVersion,
+  getPrototypeUpdateTargetVersion,
+  isPrototypeUpdateDemoExtension,
+  PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS,
+} from './extension-prototype-use-cases';
+import { withDisplayInstalledVersion } from './extension-version-update.svelte';
+import type { InstalledListFilters } from './installed-list-filters.svelte';
 
 export class ExtensionsUtils {
+  findMatchingInstalledExtension(
+    catalogExtension: Pick<CatalogExtension, 'id' | 'extensionName'>,
+    installedExtensions: CombinedExtensionInfoUI[],
+  ): CombinedExtensionInfoUI | undefined {
+    return installedExtensions.find(installedExtension => {
+      if (installedExtension.id === catalogExtension.id) {
+        return true;
+      }
+
+      if (installedExtension.name === catalogExtension.extensionName) {
+        return true;
+      }
+
+      if (installedExtension.id.endsWith(`.${catalogExtension.extensionName}`)) {
+        return true;
+      }
+
+      return catalogExtension.id.endsWith(`.${installedExtension.name}`);
+    });
+  }
+
+  findMatchingCatalogExtension(
+    installed: CombinedExtensionInfoUI,
+    catalogExtensions: CatalogExtension[],
+  ): CatalogExtension | undefined {
+    return catalogExtensions.find(
+      catalogExtension =>
+        catalogExtension.id === installed.id ||
+        catalogExtension.extensionName === installed.name ||
+        installed.id.endsWith(`.${catalogExtension.extensionName}`),
+    );
+  }
+
+  findInstalledExtensionById(
+    extensionId: string,
+    installedExtensions: CombinedExtensionInfoUI[],
+    catalogExtensions: CatalogExtension[] = [],
+  ): CombinedExtensionInfoUI | undefined {
+    const direct = installedExtensions.find(extension => extension.id === extensionId);
+    if (direct) {
+      return direct;
+    }
+
+    const loose = installedExtensions.find(
+      extension =>
+        extension.name === extensionId ||
+        extension.id.endsWith(`.${extensionId}`) ||
+        extensionId.endsWith(`.${extension.name}`),
+    );
+    if (loose) {
+      return loose;
+    }
+
+    const matchingCatalog = catalogExtensions.find(
+      catalogExtension =>
+        catalogExtension.id === extensionId ||
+        catalogExtension.extensionName === extensionId ||
+        catalogExtension.id.endsWith(`.${extensionId}`),
+    );
+    if (matchingCatalog) {
+      return this.findMatchingInstalledExtension(matchingCatalog, installedExtensions);
+    }
+
+    return undefined;
+  }
+
+  findCatalogExtensionById(extensionId: string, catalogExtensions: CatalogExtension[]): CatalogExtension | undefined {
+    return catalogExtensions.find(
+      catalogExtension =>
+        catalogExtension.id === extensionId ||
+        catalogExtension.extensionName === extensionId ||
+        catalogExtension.id.endsWith(`.${extensionId}`),
+    );
+  }
+
+  resolveInstalledExtensionsForUi(
+    installedExtensions: CombinedExtensionInfoUI[],
+    catalogExtensions: CatalogExtension[],
+    featuredExtensions: FeaturedExtension[],
+    options?: { applyPrototypeUpdateDemo?: boolean },
+  ): CombinedExtensionInfoUI[] {
+    const catalogList = this.extractCatalogExtensions(catalogExtensions, featuredExtensions, installedExtensions);
+    const enhancedCatalog = options?.applyPrototypeUpdateDemo
+      ? this.ensurePrototypeUpdateDemo(catalogList)
+      : catalogList;
+    return this.mergeWithCatalogInstalledExtensions(installedExtensions, enhancedCatalog);
+  }
+
   extractExtensionDetail(
     catalogExtensions: CatalogExtension[],
     installedExtensions: CombinedExtensionInfoUI[],
     extensionId: string,
   ): ExtensionDetailsUI | undefined {
-    const matchingInstalledExtension = installedExtensions.find(c => c.id === extensionId);
-    // is it in the catalog
-    const matchingCatalogExtension = catalogExtensions.find(c => c.id === extensionId);
+    const matchingInstalledExtension = this.findInstalledExtensionById(
+      extensionId,
+      installedExtensions,
+      catalogExtensions,
+    );
+    const matchingCatalogExtension =
+      this.findCatalogExtensionById(extensionId, catalogExtensions) ??
+      (matchingInstalledExtension
+        ? this.findMatchingCatalogExtension(matchingInstalledExtension, catalogExtensions)
+        : undefined);
 
     // not installed and not in the catalog, return undefined as it is not matching
     if (!matchingCatalogExtension && !matchingInstalledExtension) {
       return undefined;
     }
+
+    const resolvedExtensionId = matchingCatalogExtension?.id ?? matchingInstalledExtension?.id ?? extensionId;
 
     let displayName: string;
 
@@ -106,11 +216,10 @@ export class ExtensionsUtils {
       releaseDate = lastUpdated.toISOString().split('T')[0];
     }
 
-    let publisherDisplayName = matchingCatalogExtension?.publisherDisplayName ?? 'N/A';
-
-    if (matchingInstalledExtension && !matchingInstalledExtension.removable) {
-      publisherDisplayName = 'Pre-installed';
-    }
+    const publisherDisplayName = this.resolvePublisherDisplayName(
+      matchingInstalledExtension,
+      matchingCatalogExtension?.publisherDisplayName,
+    );
 
     const categories: string[] = matchingCatalogExtension?.categories ?? [];
     const matchingInstalledExtensionVersion = matchingInstalledExtension?.version
@@ -130,7 +239,7 @@ export class ExtensionsUtils {
     const homepage = matchingInstalledExtension?.homepage;
 
     const matchingExtension: ExtensionDetailsUI = {
-      id: extensionId,
+      id: resolvedExtensionId,
       displayName,
       description,
       type,
@@ -161,9 +270,9 @@ export class ExtensionsUtils {
     featuredExtensions: FeaturedExtension[],
     installedExtensions: CombinedExtensionInfoUI[],
   ): CatalogExtensionInfoUI[] {
-    // filter out unlisted extensions
+    // Filter out unlisted and built-in platform extensions (Installed tab only).
     const values: CatalogExtensionInfoUI[] = catalogExtensions
-      .filter(e => !e.unlisted)
+      .filter(e => !e.unlisted && !isBuiltInExtensionId(e.id))
       .map(catalogExtension => {
         // grab latest version
         const nonPreviewVersions = catalogExtension.versions.filter(v => !v.preview);
@@ -174,14 +283,29 @@ export class ExtensionsUtils {
 
         // grab icon
         const icon = latestVersion?.files.find(f => f.assetType === 'icon');
-        const installed = installedExtensions.find(installedExtension => installedExtension.id === catalogExtension.id);
+        const installed = this.findMatchingInstalledExtension(catalogExtension, installedExtensions);
         const isInstalled = !!installed;
         const isFeatured = featuredExtensions.some(featuredExtension => featuredExtension.id === catalogExtension.id);
 
         const shortDescription = catalogExtension.shortDescription;
-        const installedVersion = installed?.version;
+        const rawInstalledVersion = installed?.version;
+        const installedVersion =
+          rawInstalledVersion !== undefined && rawInstalledVersion !== '' ? rawInstalledVersion : fetchVersion;
         const categories = catalogExtension.categories;
         const keywords = catalogExtension.keywords;
+        const availableVersions = nonPreviewVersions.map(version => ({
+          version: version.version,
+          ociUri: version.ociUri,
+          preview: version.preview,
+          lastUpdated: version.lastUpdated,
+        }));
+        const hasUpdate = isInstalled && !!installedVersion && !!fetchVersion && installedVersion !== fetchVersion;
+        const { isSupportedByRedHat, isVerified } = resolveExtensionVerificationStatus(
+          publisherDisplayName,
+          categories,
+        );
+        const repositoryUrl = `https://github.com/podman-desktop/extensions/tree/main/extensions/${catalogExtension.extensionName}`;
+
         return {
           id: catalogExtension.id,
           displayName: catalogExtension.displayName,
@@ -196,6 +320,12 @@ export class ExtensionsUtils {
           shortDescription,
           categories,
           keywords,
+          availableVersions,
+          hasUpdate,
+          isVerified,
+          isSupportedByRedHat,
+          repositoryUrl,
+          installedExtension: installed,
         };
       });
 
@@ -212,23 +342,339 @@ export class ExtensionsUtils {
     return values;
   }
 
-  filterInstalledExtensions(extensions: CombinedExtensionInfoUI[], searchTerm: string): CombinedExtensionInfoUI[] {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  resolvePublisherDisplayName(installed?: CombinedExtensionInfoUI, catalogPublisher?: string): string {
+    if (catalogPublisher) {
+      return catalogPublisher;
+    }
+    if (installed?.publisher) {
+      if (installed.publisher.toLowerCase() === 'redhat') {
+        return 'Red Hat';
+      }
+      return installed.publisher;
+    }
+    return 'Unknown';
+  }
+
+  resolveCatalogMetadataForInstalled(
+    extension: CombinedExtensionInfoUI,
+    catalogById: ReadonlyMap<string, CatalogExtensionInfoUI>,
+  ): CatalogExtensionInfoUI | undefined {
+    const direct = catalogById.get(extension.id);
+    if (direct) {
+      return direct;
+    }
+
+    for (const catalogExtension of catalogById.values()) {
+      if (catalogExtension.installedExtension?.id === extension.id) {
+        return catalogExtension;
+      }
+      if (catalogExtension.id === extension.id || catalogExtension.id.endsWith(`.${extension.name}`)) {
+        return catalogExtension;
+      }
+    }
+
+    return undefined;
+  }
+
+  mergeWithCatalogInstalledExtensions(
+    installedExtensions: CombinedExtensionInfoUI[],
+    catalogExtensions: CatalogExtensionInfoUI[],
+  ): CombinedExtensionInfoUI[] {
+    const merged = new Map<string, CombinedExtensionInfoUI>(
+      installedExtensions.map(extension => [extension.id, extension]),
+    );
+
+    for (const catalogExtension of catalogExtensions) {
+      if (!catalogExtension.isInstalled || !catalogExtension.installedExtension) {
+        continue;
+      }
+
+      const installed = catalogExtension.installedExtension;
+      if (merged.has(installed.id)) {
+        continue;
+      }
+
+      const matching = this.findMatchingInstalledExtension(catalogExtension, Array.from(merged.values()));
+      if (!matching) {
+        merged.set(installed.id, installed);
+      }
+    }
+
+    const values = Array.from(merged.values());
+    values.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    return values;
+  }
+
+  /**
+   * Prototype helper (DTUX-2849): overlay display states on real installed extensions.
+   */
+  applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoUI[]): CombinedExtensionInfoUI[] {
+    return applyPrototypeUseCaseOverlays(extensions);
+  }
+
+  /** @deprecated Fake demo rows are no longer merged. Applies use-case overlays only. */
+  mergePrototypeInstalledDemos(extensions: CombinedExtensionInfoUI[]): CombinedExtensionInfoUI[] {
+    return this.applyPrototypeUseCaseOverlays(extensions);
+  }
+
+  /**
+   * Prototype helper (DTUX-2849): ensure two installed extensions show an update
+   * when no real version mismatch exists in catalog data.
+   * If an installed demo extension is not in the catalog yet, a synthetic entry is injected.
+   */
+  ensurePrototypeUpdateDemo(
+    extensions: CatalogExtensionInfoUI[],
+    installedExtensions: CombinedExtensionInfoUI[] = [],
+    catalogExtensions: CatalogExtension[] = [],
+    featuredExtensions: FeaturedExtension[] = [],
+  ): CatalogExtensionInfoUI[] {
+    // Inject synthetic catalog entries for non-built-in demo extensions missing from catalog.
+    // Built-ins stay on the Installed tab only and get update demos via installedCatalogById.
+    const injected: CatalogExtensionInfoUI[] = [];
+    for (const demoId of PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS) {
+      if (isBuiltInExtensionId(demoId) || extensions.some(e => e.id === demoId)) {
+        continue;
+      }
+      const installed = installedExtensions.find(e => e.id === demoId);
+      if (installed) {
+        injected.push(this.buildCatalogInfoForInstalled(installed, catalogExtensions, featuredExtensions));
+      }
+    }
+
+    let result = [...extensions, ...injected].map(extension => {
+      if (extension.isInstalled && isPrototypeUpdateDemoExtension(extension.id)) {
+        return applyPrototypeCatalogUseCaseOverlay(extension);
+      }
+      return extension;
+    });
+
+    const countUpdates = (list: CatalogExtensionInfoUI[]): number =>
+      list.filter(extension => extension.isInstalled && extension.hasUpdate).length;
+
+    if (countUpdates(result) >= 2) {
+      return result;
+    }
+
+    for (const demoId of PROTOTYPE_UPDATE_DEMO_EXTENSION_IDS) {
+      if (countUpdates(result) >= 2) {
+        break;
+      }
+
+      result = result.map(extension => {
+        if (extension.id !== demoId || !extension.isInstalled || extension.hasUpdate) {
+          return extension;
+        }
+        return this.withPrototypeUpdate(applyPrototypeCatalogUseCaseOverlay(extension));
+      });
+    }
+
+    if (countUpdates(result) >= 2) {
+      return result;
+    }
+
+    for (let index = 0; index < result.length && countUpdates(result) < 2; index++) {
+      const extension = result[index];
+      if (!extension.isInstalled || extension.hasUpdate || isPrototypeInstalledDemo(extension.id)) {
+        continue;
+      }
+      result[index] = this.withPrototypeUpdate(extension);
+    }
+
+    return result;
+  }
+
+  withPrototypeUpdate(extension: CatalogExtensionInfoUI): CatalogExtensionInfoUI {
+    const installedVersion = extension.installedVersion ?? extension.fetchVersion;
+    const fetchVersion =
+      extension.fetchVersion && extension.fetchVersion !== installedVersion
+        ? extension.fetchVersion
+        : isPrototypeUpdateDemoExtension(extension.id)
+          ? getPrototypeUpdateTargetVersion(extension.id, installedVersion ?? '')
+          : bumpPrototypePatchVersion(installedVersion ?? '');
+
+    const availableVersions = [...extension.availableVersions];
+    if (fetchVersion && !availableVersions.some(version => version.version === fetchVersion)) {
+      availableVersions.unshift({
+        version: fetchVersion,
+        ociUri: extension.fetchLink ?? '',
+        preview: false,
+      });
+    }
+
+    return {
+      ...extension,
+      hasUpdate: true,
+      installedVersion,
+      fetchVersion,
+      availableVersions,
+    };
+  }
+
+  buildCatalogInfoForInstalled(
+    installed: CombinedExtensionInfoUI,
+    catalogExtensions: CatalogExtension[],
+    featuredExtensions: FeaturedExtension[] = [],
+  ): CatalogExtensionInfoUI {
+    const matchingCatalog = this.findMatchingCatalogExtension(installed, catalogExtensions);
+    if (matchingCatalog) {
+      const [catalogInfo] = this.extractCatalogExtensions([matchingCatalog], featuredExtensions, [installed]);
+      return applyPrototypeCatalogUseCaseOverlay(catalogInfo);
+    }
+
+    const publisherDisplayName = this.resolvePublisherDisplayName(installed, matchingCatalog?.publisherDisplayName);
+    const { isSupportedByRedHat, isVerified } = resolveExtensionVerificationStatus(
+      publisherDisplayName,
+      matchingCatalog?.categories ?? [],
+    );
+    const isFeatured = featuredExtensions.some(
+      featuredExtension =>
+        featuredExtension.id === installed.id ||
+        featuredExtension.id.endsWith(`.${installed.name}`) ||
+        installed.id.endsWith(`.${featuredExtension.id.split('.').pop() ?? ''}`),
+    );
+
+    const baseInfo: CatalogExtensionInfoUI = {
+      id: installed.id,
+      displayName: installed.displayName?.trim() ? installed.displayName : installed.name,
+      isFeatured,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: installed.version ?? '',
+      iconHref: typeof installed.icon === 'string' ? installed.icon : undefined,
+      publisherDisplayName,
+      isInstalled: true,
+      installedVersion: installed.version,
+      shortDescription: installed.description,
+      categories: matchingCatalog?.categories ?? [],
+      keywords: matchingCatalog?.keywords ?? [],
+      availableVersions: installed.version ? [{ version: installed.version, ociUri: '', preview: false }] : [],
+      hasUpdate: false,
+      isVerified,
+      isSupportedByRedHat,
+      repositoryUrl: `https://github.com/podman-desktop/extensions/tree/main/extensions/${installed.id}`,
+      installedExtension: installed,
+    };
+
+    if (isPrototypeInstalledDemo(installed.id)) {
+      return baseInfo;
+    }
+
+    return applyPrototypeCatalogUseCaseOverlay(baseInfo);
+  }
+
+  buildCatalogExtensionInfoForId(
+    extensionId: string,
+    catalogExtensions: CatalogExtension[],
+    featuredExtensions: FeaturedExtension[],
+    installedExtensions: CombinedExtensionInfoUI[],
+  ): CatalogExtensionInfoUI | undefined {
+    const matchingCatalog = catalogExtensions.find(
+      catalogExtension =>
+        catalogExtension.id === extensionId ||
+        catalogExtension.extensionName === extensionId ||
+        catalogExtension.id.endsWith(`.${extensionId}`),
+    );
+    const installed = installedExtensions.find(
+      extension =>
+        extension.id === extensionId || extension.name === extensionId || extension.id.endsWith(`.${extensionId}`),
+    );
+
+    if (!matchingCatalog && !installed) {
+      return undefined;
+    }
+
+    let catalogInfo: CatalogExtensionInfoUI;
+    if (matchingCatalog) {
+      [catalogInfo] = this.extractCatalogExtensions([matchingCatalog], featuredExtensions, installedExtensions);
+    } else {
+      catalogInfo = this.buildCatalogInfoForInstalled(installed!, catalogExtensions, featuredExtensions);
+    }
+
+    return applyPrototypeCatalogUseCaseOverlay(catalogInfo);
+  }
+
+  filterInstalledExtensions(
+    extensions: CombinedExtensionInfoUI[],
+    searchTerm: string,
+    listFilters: InstalledListFilters = {},
+    catalogById: ReadonlyMap<string, CatalogExtensionInfoUI> = new Map(),
+  ): CombinedExtensionInfoUI[] {
+    const parsed = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS);
+    const searchTerms = parsed.terms.map(term => term.toLowerCase());
+    const categoryFilter = listFilters.category?.toLowerCase();
+
     return extensions.filter(extension => {
-      return `${extension.displayName} ${extension.description}`.toLowerCase().includes(lowerCaseSearchTerm);
+      const catalogExtension = this.resolveCatalogMetadataForInstalled(extension, catalogById);
+      const matchesSearch =
+        searchTerms.length === 0 ||
+        searchTerms.every(term =>
+          `${extension.displayName} ${extension.description} ${extension.name} ${extension.id}`
+            .toLowerCase()
+            .includes(term),
+        );
+
+      if (!matchesSearch) {
+        return false;
+      }
+
+      if (listFilters.verified === true) {
+        if (catalogExtension && !catalogExtension.isVerified) {
+          return false;
+        }
+      }
+
+      if (listFilters.hasUpdate === true) {
+        if (!catalogExtension || !extensionRequiresManualUpdate(withDisplayInstalledVersion(catalogExtension))) {
+          return false;
+        }
+      }
+
+      if (listFilters.featured === true) {
+        if (catalogExtension && !catalogExtension.isFeatured) {
+          return false;
+        }
+      }
+
+      if (listFilters.builtIn === true) {
+        if (!isBuiltInExtension(extension)) {
+          return false;
+        }
+      }
+
+      if (categoryFilter !== undefined) {
+        if (
+          catalogExtension &&
+          !catalogExtension.categories.some(category => category.toLowerCase() === categoryFilter)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
     });
   }
 
   static readonly CATALOG_FILTERS = ['category', 'keyword', 'is', 'not'] as const;
 
-  filterCatalogExtensions(extensions: CatalogExtensionInfoUI[], searchTerm: string): CatalogExtensionInfoUI[] {
+  filterCatalogExtensions(
+    extensions: CatalogExtensionInfoUI[],
+    searchTerm: string,
+    listFilters: CatalogListFilters = {},
+  ): CatalogExtensionInfoUI[] {
     const parsed = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS);
     const terms = parsed.terms;
     const categories = parsed.getFilter('category');
     const keywords = parsed.getFilter('keyword');
     const isValues = parsed.getFilter('is');
     const notValues = parsed.getFilter('not');
-    const installed = isValues.includes('installed') ? true : notValues.includes('installed') ? false : undefined;
+    const installedFromSearch = isValues.includes('installed')
+      ? true
+      : notValues.includes('installed')
+        ? false
+        : undefined;
+    const installed = listFilters.installed ?? installedFromSearch;
+    const categoryFilter = listFilters.category?.toLowerCase();
+
     return extensions.filter(extension => {
       return (
         (terms.length === 0 ||
@@ -239,7 +685,12 @@ export class ExtensionsUtils {
           categories.every(category => extension.categories.map(c => c.toLowerCase()).includes(category))) &&
         (keywords.length === 0 ||
           keywords.every(keyword => extension.keywords.map(k => k.toLowerCase()).includes(keyword))) &&
-        (installed === undefined || installed === extension.isInstalled)
+        (installed === undefined || installed === extension.isInstalled) &&
+        (listFilters.verified !== true || extension.isVerified) &&
+        (listFilters.hasUpdate !== true || extension.hasUpdate) &&
+        (listFilters.featured !== true || extension.isFeatured) &&
+        (categoryFilter === undefined ||
+          extension.categories.some(category => category.toLowerCase() === categoryFilter))
       );
     });
   }

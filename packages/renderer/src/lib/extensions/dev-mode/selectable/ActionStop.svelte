@@ -15,10 +15,15 @@ async function stopExtension(): Promise<void> {
   }
   await window.stopExtension(extensionFolder.extension.id);
 }
+const canStop = $derived(
+  !!extensionFolder.extension &&
+    (extensionFolder.extension.state === 'started' || extensionFolder.extension.state === 'starting'),
+);
 </script>
 
 <ListItemButtonIcon
   title="Stop the extension"
   onClick={stopExtension}
-  hidden={!extensionFolder.extension || extensionFolder.extension?.state === 'stopped'}
+  hidden={!extensionFolder.extension}
+  enabled={canStop}
   icon={faStop} />

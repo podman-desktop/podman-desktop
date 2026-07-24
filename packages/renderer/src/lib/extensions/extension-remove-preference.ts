@@ -1,0 +1,184 @@
+/**********************************************************************
+ * Copyright (C) 2026 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import { router } from 'tinro';
+
+import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { fetchWebviews } from '/@/stores/webviews';
+
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { clearNewBadge } from './extension-catalog-settings.svelte';
+import { isBuiltInExtension, isExtensionRemovableInUi } from './extension-origin-utils';
+import { prototypeRemoveExtension } from './extension-prototype-use-cases';
+import { resolveInstalledExtensionRuntimeId } from './extension-runtime-id';
+import { areExtensionsImprovementsSuggested } from './extensions-prototype-scope';
+
+export const EXTENSION_REMOVE_PREFERENCE_TITLE = 'Uninstall extension';
+export const PREFERENCES_MAIN_ROUTE = '/preferences';
+
+export interface RemoveExtensionOptions {
+  /** When set, navigate here after a successful removal (e.g. from extension preferences). */
+  redirectAfterRemove?: string;
+}
+
+export function buildExtensionPreferencesRoute(extensionId: string): string {
+  return `/preferences/default/preferences.${extensionId}`;
+}
+
+export function redirectToPreferencesMain(route: string = PREFERENCES_MAIN_ROUTE): void {
+  router.goto(route, true);
+}
+
+export function shouldShowExtensionRemovePreference(extension?: CatalogExtensionInfoUI): boolean {
+  return !!extension?.isInstalled && !extension.installedExtension?.devMode;
+}
+
+export function canRemoveExtensionFromPreferences(extension: CatalogExtensionInfoUI): boolean {
+  const installed = extension.installedExtension;
+  if (!installed) {
+    return false;
+  }
+
+  return isExtensionRemovableInUi(installed, extension.fetchable === true);
+}
+
+export function getExtensionRemoveBlockedReason(extension: CatalogExtensionInfoUI): string | undefined {
+  const installed = extension.installedExtension;
+  if (!installed) {
+    return 'Extension is not installed';
+  }
+
+  if (canRemoveExtensionFromPreferences(extension)) {
+    return undefined;
+  }
+
+  if (isBuiltInExtension(installed)) {
+    return 'Built-in extensions are integrated with Podman Desktop and cannot be uninstalled';
+  }
+
+  if (installed.devMode) {
+    return 'Untrack this extension in Local Extensions before uninstalling it';
+  }
+
+  if (!installed.removable && !extension.fetchable) {
+    return 'Built-in extension cannot be uninstalled';
+  }
+
+  if (!installed.removable) {
+    return 'Built-in extension cannot be uninstalled';
+  }
+
+  return 'This extension cannot be uninstalled';
+}
+
+/** Shorter copy for the actions menu detail row. */
+export function getExtensionRemoveBlockedReasonShort(extension: CatalogExtensionInfoUI): string | undefined {
+  const installed = extension.installedExtension;
+  if (!installed) {
+    return 'Extension is not installed';
+  }
+
+  if (canRemoveExtensionFromPreferences(extension)) {
+    return undefined;
+  }
+
+  if (isBuiltInExtension(installed)) {
+    return 'Built-in extension cannot be uninstalled';
+  }
+
+  if (installed.devMode) {
+    return 'Untrack in Local Extensions first';
+  }
+
+  if (!installed.removable && !extension.fetchable) {
+    return 'Built-in extension cannot be uninstalled';
+  }
+
+  if (!installed.removable) {
+    return 'Built-in extension cannot be uninstalled';
+  }
+
+  return 'Cannot be uninstalled';
+}
+
+export function getExtensionRemovePreferenceDetail(extension: CatalogExtensionInfoUI): string {
+  const blockedReason = getExtensionRemoveBlockedReason(extension);
+  if (blockedReason) {
+    return blockedReason;
+  }
+
+  return `Permanently uninstall ${extension.displayName} from Podman Desktop`;
+}
+
+export function matchesExtensionRemoveSearch(searchValue: string): boolean {
+  if (!searchValue) {
+    return true;
+  }
+
+  const lower = searchValue.toLowerCase();
+  return (
+    lower.includes('uninstall') ||
+    lower.includes('remove') ||
+    EXTENSION_REMOVE_PREFERENCE_TITLE.toLowerCase().includes(lower)
+  );
+}
+
+export function removeExtensionWithConfirmation(
+  extension: CatalogExtensionInfoUI,
+  options?: RemoveExtensionOptions,
+): void {
+  const installed = extension.installedExtension;
+  if (!installed || !canRemoveExtensionFromPreferences(extension)) {
+    return;
+  }
+
+  withConfirmation(
+    async () => {
+      if (areExtensionsImprovementsSuggested()) {
+        prototypeRemoveExtension(installed.id, [extension.id]);
+        clearNewBadge(extension.id);
+        if (options?.redirectAfterRemove) {
+          redirectToPreferencesMain(options.redirectAfterRemove);
+        }
+        return;
+      }
+
+      try {
+        if (installed.type === 'dd') {
+          await window.ddExtensionDelete(installed.id);
+        } else {
+          await window.removeExtension(resolveInstalledExtensionRuntimeId(installed));
+          await fetchWebviews();
+        }
+        clearNewBadge(extension.id);
+
+        if (options?.redirectAfterRemove) {
+          redirectToPreferencesMain(options.redirectAfterRemove);
+        }
+      } catch (error) {
+        await window.showMessageBox({
+          title: 'Uninstall failed',
+          message: error instanceof Error ? error.message : 'Unable to uninstall extension',
+          type: 'danger',
+        });
+      }
+    },
+    `uninstall ${extension.displayName}`,
+    { title: 'Uninstall extension?', variant: 'delete', buttonLabel: 'Uninstall' },
+  );
+}

@@ -104,8 +104,9 @@ test('Expect unable to start if already started', async () => {
   render(InstalledExtensionCardLeftLifecycleStart, { extension });
 
   // get button with label 'Delete Extension foo'
-  const button = screen.queryByRole('button', { name: 'Start' });
-  expect(button).not.toBeInTheDocument();
+  const button = screen.getByRole('button', { name: 'Start' });
+  expect(button).toBeInTheDocument();
+  expect(button).toBeDisabled();
 });
 
 test('Expect to start Extension if failed', async () => {

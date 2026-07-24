@@ -1,10 +1,13 @@
 <script lang="ts">
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { onMount } from 'svelte';
+import Fa from 'svelte-fa';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
 export let color: string | { light: string; dark: string } = 'bg-[var(--pd-badge-gray)]';
 export let label: string = '';
+export let icon: IconDefinition | undefined = undefined;
 
 let customStyle: string = '';
 let customClass: string = '';
@@ -24,6 +27,9 @@ onMount(async () => {
 });
 </script>
 
-<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none {customClass} {$$props.class}" style={customStyle} aria-label="badge-{label}">
+<div class="text-[var(--pd-badge-text)] text-xs px-1.5 py-1 rounded-sm select-none inline-flex items-center gap-1 leading-none {customClass} {$$props.class}" style={customStyle} aria-label="badge-{label}">
+  {#if icon}
+    <Fa {icon} size="xs" />
+  {/if}
   {label}
 </div>

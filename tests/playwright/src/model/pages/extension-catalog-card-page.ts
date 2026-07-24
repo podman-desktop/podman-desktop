@@ -37,7 +37,7 @@ export class ExtensionCatalogCardPage extends BasePage {
       name: 'More details',
     });
     this.downloadButton = this.parent.getByRole('button', { name: 'Install' });
-    this.alreadyInstalledText = this.parent.getByText('Already installed', {
+    this.alreadyInstalledText = this.parent.getByText('Installed', {
       exact: true,
     });
   }

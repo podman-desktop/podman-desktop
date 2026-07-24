@@ -24,6 +24,8 @@ export interface WebviewInfo {
   icon: string | { readonly light: string; readonly dark: string } | undefined;
   name: string;
   html: string;
+  /** Extension that registered this webview (used for post-install navigation hints). */
+  extensionId: string;
   // persistent state of the webview
   state: unknown;
 }

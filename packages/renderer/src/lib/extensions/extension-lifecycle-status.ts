@@ -1,0 +1,148 @@
+/**********************************************************************
+ * Copyright (C) 2026 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import type { ExtensionCompatibilityIssue } from './extension-compatibility';
+
+export interface ExtensionLifecyclePresentation {
+  statusDotStatus: string;
+  label: string;
+  textColorVar: string;
+}
+
+export function getExtensionCompatibilityPresentation(
+  issue: ExtensionCompatibilityIssue,
+): ExtensionLifecyclePresentation {
+  if (issue.type === 'incompatible-version') {
+    return {
+      statusDotStatus: 'degraded',
+      label: 'Incompatible',
+      textColorVar: 'var(--pd-state-warning)',
+    };
+  }
+
+  return {
+    statusDotStatus: 'degraded',
+    label: 'Missing dependency',
+    textColorVar: 'var(--pd-state-warning)',
+  };
+}
+
+export function getExtensionVersionUpdatePresentation(
+  direction: 'upgrade' | 'downgrade' = 'upgrade',
+): ExtensionLifecyclePresentation {
+  return {
+    statusDotStatus: 'stopped',
+    label: direction === 'downgrade' ? 'Downgrading...' : 'Upgrading...',
+    textColorVar: 'var(--pd-status-stopped)',
+  };
+}
+
+export function getExtensionLifecyclePresentation(
+  extensionState: string,
+  extensionType: 'dd' | 'pd',
+  _options?: { catalogInstalledPresence?: boolean },
+): ExtensionLifecyclePresentation {
+  // Started / DD extensions use a consistent "Installed" label everywhere
+  // (catalog, installed list, details). Disabled stays a separate lifecycle state.
+  const installedLabel = 'Installed';
+
+  if (extensionType === 'dd') {
+    return {
+      statusDotStatus: 'running',
+      label: installedLabel,
+      textColorVar: 'var(--pd-status-running)',
+    };
+  }
+
+  switch (extensionState) {
+    case 'started':
+      return {
+        statusDotStatus: 'running',
+        label: installedLabel,
+        textColorVar: 'var(--pd-status-running)',
+      };
+    case 'stopped':
+      return {
+        statusDotStatus: 'stopped',
+        label: 'Disabled',
+        textColorVar: 'var(--pd-status-stopped)',
+      };
+    case 'starting':
+      return {
+        statusDotStatus: 'starting',
+        label: 'Enabling',
+        textColorVar: 'var(--pd-status-starting)',
+      };
+    case 'stopping':
+      return {
+        statusDotStatus: 'transitioning',
+        label: 'Disabling',
+        textColorVar: 'var(--pd-status-stopped)',
+      };
+    case 'failed':
+      return {
+        statusDotStatus: 'terminated',
+        label: 'Failed',
+        textColorVar: 'var(--pd-status-terminated)',
+      };
+    default:
+      return {
+        statusDotStatus: 'unknown',
+        label: extensionState,
+        textColorVar: 'var(--pd-status-unknown)',
+      };
+  }
+}
+
+/**
+ * Lower rank = more severe / actionable. Ascending Status sort puts problems first.
+ * Compatibility warnings (incompatible / missing dependency) share the failed tier.
+ */
+export function getExtensionStatusSeverityRank(options: {
+  isInstalled: boolean;
+  state?: string;
+  type?: 'dd' | 'pd';
+  hasCompatibilityIssue?: boolean;
+}): number {
+  if (!options.isInstalled) {
+    return 60;
+  }
+
+  if (options.type === 'dd') {
+    return 40;
+  }
+
+  if (options.hasCompatibilityIssue) {
+    return 5;
+  }
+
+  switch (options.state) {
+    case 'failed':
+      return 0;
+    case 'stopped':
+      return 10;
+    case 'stopping':
+      return 20;
+    case 'starting':
+      return 30;
+    case 'started':
+      return 40;
+    default:
+      return 50;
+  }
+}

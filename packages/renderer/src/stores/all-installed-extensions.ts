@@ -20,8 +20,13 @@
 import type { ExtensionInfo } from '@podman-desktop/core-api';
 import { derived, type Readable } from 'svelte/store';
 
+import { toCatalogIdentities } from '/@/lib/extensions/extension-runtime-id';
+
+import { catalogExtensionInfos } from './catalog-extensions';
 import { contributions } from './contribs';
+import { mergeWebviewInstalledExtensions } from './extension-webview-installed';
 import { extensionInfos } from './extensions';
+import { webviews } from './webviews';
 
 export interface CombinedExtensionInfoUI extends ExtensionInfo {
   // type is either 'pd' for Podman Desktop or 'dd' for 'Docker Desktop'
@@ -29,8 +34,8 @@ export interface CombinedExtensionInfoUI extends ExtensionInfo {
 }
 
 export const combinedInstalledExtensions: Readable<CombinedExtensionInfoUI[]> = derived(
-  [contributions, extensionInfos],
-  ([$contributions, $extensionInfos]) => {
+  [contributions, extensionInfos, webviews, catalogExtensionInfos],
+  ([$contributions, $extensionInfos, $webviews, $catalogExtensionInfos]) => {
     // Combine PD and DD extensions being installed
 
     // add type to each extension
@@ -55,10 +60,11 @@ export const combinedInstalledExtensions: Readable<CombinedExtensionInfoUI[]> = 
       };
     });
 
-    const allExtensions = [...pdExtensions, ...ddExtensions];
-
-    // sort by display name
-    allExtensions.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    const allExtensions = mergeWebviewInstalledExtensions(
+      [...pdExtensions, ...ddExtensions],
+      $webviews,
+      toCatalogIdentities($catalogExtensionInfos),
+    );
     return allExtensions;
   },
 );

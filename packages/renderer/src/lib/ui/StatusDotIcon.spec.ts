@@ -79,3 +79,19 @@ test('Expect custom class to be applied', () => {
   const svg = screen.getByTestId('status-dot-icon');
   expect(svg).toHaveClass('my-custom-class');
 });
+
+test('starting status uses the clock icon', () => {
+  render(StatusDotIcon, { status: 'starting' });
+
+  const icon = screen.getByRole('img', { name: 'Starting' });
+  expect(icon).toBeInTheDocument();
+  expect(icon.querySelector('path')?.getAttribute('d')).toContain('2.766 2.766');
+});
+
+test('unknown status uses the question mark icon', () => {
+  render(StatusDotIcon, { status: 'unknown' });
+
+  const icon = screen.getByRole('img', { name: 'Unknown' });
+  expect(icon).toBeInTheDocument();
+  expect(icon.querySelector('path')?.getAttribute('d')).toContain('1.365.26');
+});
