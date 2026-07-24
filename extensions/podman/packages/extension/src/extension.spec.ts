@@ -1749,14 +1749,14 @@ test('ensure showNotification is not called during update', async () => {
   // run the updater (it will sleep for 500ms before returning and resetting the shouldNotifySetup flag
   // run the updateMachine which should not call the showNotification func because shouldNotifySetup is false
   updater?.update({} as extensionApi.Logger).catch(() => {});
-  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('error');
+  await extension.updateMachines(provider, podmanConfiguration);
 
   expect(showNotificationMock).not.toBeCalled();
 
   // wait 500ms so that the updater is complete and shouldNotifySetup reset. Call again the updateMachines func, this time the showNotification is called
   // as there is no update in progress
   await new Promise(resolve => setTimeout(resolve, 500));
-  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('error');
+  await extension.updateMachines(provider, podmanConfiguration);
 
   expect(showNotificationMock).toBeCalled();
 });
@@ -2353,7 +2353,7 @@ test('Even with getJSONMachineList erroring, do not show setup notification on L
     message: 'description',
     stderr: 'error',
   });
-  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('description');
+  await extension.updateMachines(provider, podmanConfiguration);
   expect(extensionApi.window.showNotification).not.toBeCalled();
 });
 
@@ -2379,7 +2379,7 @@ test('Should notify clean machine if getJSONMachineList is erroring due to an in
     message: 'description',
     stderr: 'cannot unmarshal string',
   });
-  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('description');
+  await extension.updateMachines(provider, podmanConfiguration);
   expect(extensionApi.window.showNotification).toBeCalled();
   expect(extensionApi.context.setValue).toBeCalledWith(CLEANUP_REQUIRED_MACHINE_KEY, true);
 });
@@ -3048,6 +3048,85 @@ test('isIncompatibleMachineOutput', () => {
 
   const applehvErrorResponse = extension.isIncompatibleMachineOutput('incompatible machine config');
   expect(applehvErrorResponse).toBeTruthy();
+});
+
+test('isWSLServiceError', () => {
+  expect(extension.isWSLServiceError(undefined)).toBeFalsy();
+  expect(extension.isWSLServiceError('')).toBeFalsy();
+  expect(extension.isWSLServiceError('unknown error')).toBeFalsy();
+  expect(extension.isWSLServiceError('Wsl/Service/E_UNEXPECTED')).toBeTruthy();
+  expect(extension.isWSLServiceError('exit status 0xffffffff')).toBeTruthy();
+  expect(extension.isWSLServiceError('WSL_E_DEFAULT_DISTRO_NOT_FOUND')).toBeTruthy();
+  expect(extension.isWSLServiceError('Error: Wsl/Service/CreateInstance')).toBeTruthy();
+});
+
+test('getJSONMachineList should handle per-provider failure and return partial results', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(WIN_PLATFORM_MOCK.isWSLEnabled).mockResolvedValue(true);
+  vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(false);
+  vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
+    return new Promise<extensionApi.RunResult>(resolve => {
+      if (command !== 'wsl' && args?.[0] === '--version') {
+        resolve({ stdout: 'podman version 5.1.1' } as extensionApi.RunResult);
+      }
+      if (command === 'wsl') {
+        resolve({
+          stdout:
+            'WSL version: 2.2.5.0\nKernel version: 5.15.90.1\nWSLg version: 1.0.51\nMSRDC version: 1.2.3770\nDirect3D version: 1.608.2-61064218\nDXCore version: 10.0.25131.1002-220531-1700.rs-onecore-base2-hyp\nWindows version: 10.0.22621.2134',
+          stderr: '',
+          command: 'command',
+        });
+      }
+      if (command === 'powershell.exe') {
+        resolve({ stdout: 'True', stderr: '', command: 'command' });
+      }
+    });
+  });
+  vi.spyOn(util, 'execPodman').mockRejectedValue({
+    message: 'WSL command failed',
+    stderr: 'Wsl/Service/E_UNEXPECTED',
+  });
+
+  const result = await extension.getJSONMachineList();
+  expect(result.list).toEqual([]);
+  expect(result.error).toContain('Wsl/Service/E_UNEXPECTED');
+});
+
+test('Should show WSL warning instead of setup notification when WSL service error occurs', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(extensionApi.env).isLinux = false;
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({ stdout: '[]', stderr: '' } as extensionApi.RunResult);
+  vi.spyOn(util, 'execPodman').mockRejectedValue({
+    message: 'WSL command failed',
+    stderr: 'Wsl/Service/E_UNEXPECTED',
+  });
+
+  await extension.updateMachines(provider, podmanConfiguration);
+  expect(extensionApi.window.showWarningMessage).toBeCalledWith(expect.stringContaining('wsl --shutdown'));
+});
+
+test('Should show WSL warning and not setup notification when getJSONMachineList throws with WSL error', async () => {
+  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockRejectedValue({
+    message: 'Wsl/Service/E_UNEXPECTED',
+    stderr: 'Wsl/Service/E_UNEXPECTED',
+  });
+
+  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow();
+  expect(extensionApi.window.showWarningMessage).toBeCalledWith(expect.stringContaining('wsl --shutdown'));
+  expect(extensionApi.window.showNotification).not.toBeCalled();
+});
+
+test('Should show setup notification when getJSONMachineList throws with non-WSL error', async () => {
+  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockRejectedValue({
+    message: 'some other error',
+    stderr: 'some other error',
+  });
+
+  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow();
+  expect(extensionApi.window.showNotification).toBeCalled();
+  expect(extensionApi.window.showWarningMessage).not.toBeCalled();
 });
 
 describe('calcPodmanMachineSetting', () => {
