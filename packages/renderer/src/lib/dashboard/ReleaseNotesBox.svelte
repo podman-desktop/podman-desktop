@@ -66,7 +66,7 @@ onDestroy(async () => {
 
 {#if showBanner}
   {#if notesAvailable}
-    <div class="flex bg-(--pd-content-card-bg) rounded-md flex-row flex-nowrap h-[200px] overflow-hidden">
+    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md gap-3 flex-row flex-nowrap h-[200px] items-center overflow-hidden">
       {#if notesInfo?.image && !imageError}
         <img
           src={notesInfo.image}
@@ -76,16 +76,15 @@ onDestroy(async () => {
       {/if}
       <div class="flex flex-col flex-1 h-full p-5">
         <div class="flex flex-row items-center justify-between">
-          <p class="text-(--pd-content-card-header-text) font-bold text-xl ml-2">
+          <p class="text-[var(--pd-content-card-header-text)] font-bold text-xl ml-2">
             {notesInfo?.title ?? ''}
           </p>
           <CloseButton onclick={onClose} />
         </div>
         {#if notesInfo?.summary}
-          <div class="flex-1 min-h-0 overflow-hidden">
-            <div class="text-(--pd-content-card-text) line-clamp-6">
-              <Markdown markdown={notesInfo?.summary}/>
-            </div>
+          <div
+            class="text-[var(--pd-content-card-text)] truncate text-ellipsis overflow-hidden whitespace-pre-line line-clamp-6">
+            <Markdown markdown={notesInfo?.summary}/>
           </div>
         {/if}
         <div class="flex flex-row justify-end items-center gap-3 mt-auto">
@@ -95,9 +94,9 @@ onDestroy(async () => {
       </div>
     </div>
   {:else if notesURL}
-    <div class="flex bg-(--pd-content-card-bg) rounded-md p-5 flex-col flex-nowrap h-auto items-center">
+    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md p-5 flex-col flex-nowrap h-auto items-center">
       <div class="flex flex-row items-center justify-between w-full">
-        <p class="text-(--pd-content-card-header-text) font-bold text-lg w-full items-center">
+        <p class="text-[var(--pd-content-card-header-text)] font-bold text-lg w-full items-center">
           Release notes are currently unavailable, please check again later
           {#if notesURL}
             or try this <Link on:click={openReleaseNotes}>link</Link>
