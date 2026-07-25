@@ -87,7 +87,7 @@ onDestroy(async () => {
             <Markdown markdown={notesInfo?.summary}/>
           </div>
         {/if}
-        <div class="flex flex-row justify-end items-center gap-3 mt-auto">
+        <div class="flex flex-row justify-end items-center gap-3 mt-2">
           <Link on:click={openReleaseNotes}>Learn more</Link>
           <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>Update</Button>
         </div>
