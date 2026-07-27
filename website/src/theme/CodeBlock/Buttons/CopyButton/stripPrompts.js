@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import CopyButton from '@theme-original/CodeBlock/CopyButton';
-import React from 'react';
+// Matches shell prompt prefixes ('$ ', '# ', '> ') at the start of each line
+const PROMPT_RE = /^(?:\$ |# |> )/gm;
 
-// Update the CopyButton to remove the '$ ' or '# ' from the code
-export default function CopyButtonWrapper(props) {
-  const updatedProps = { ...props };
-  if (
-    updatedProps?.code?.length > 2 &&
-    (updatedProps.code.substring(0, 2) === '$ ' ||
-      updatedProps.code.substring(0, 2) === '# ' ||
-      updatedProps.code.substring(0, 2) === '> ')
-  ) {
-    updatedProps.code = updatedProps.code.substring(2);
-  }
-  return (
-    <>
-      <CopyButton {...updatedProps} />
-    </>
-  );
+// Strips prompt prefixes so users copy only the actual commands
+export function stripPrompts(code) {
+  return code.replace(PROMPT_RE, '');
 }
