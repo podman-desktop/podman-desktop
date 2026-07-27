@@ -138,8 +138,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 43.1.1
-        version: 43.1.1(supports-color@8.1.1)
+        specifier: 43.2.0
+        version: 43.2.0(supports-color@8.1.1)
       electron-builder:
         specifier: 26.8.2
         version: 26.8.2(electron-builder-squirrel-windows@26.8.2)(supports-color@8.1.1)
@@ -583,8 +583,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(supports-color@8.1.1)
       electron:
-        specifier: 43.1.1
-        version: 43.1.1(supports-color@8.1.1)
+        specifier: 43.2.0
+        version: 43.2.0(supports-color@8.1.1)
       electron-context-menu:
         specifier: 4.1.2
         version: 4.1.2
@@ -713,8 +713,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 43.1.1
-        version: 43.1.1(supports-color@8.1.1)
+        specifier: 43.2.0
+        version: 43.2.0(supports-color@8.1.1)
     devDependencies:
       vitest:
         specifier: ^4.1.10
@@ -726,8 +726,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 43.1.1
-        version: 43.1.1(supports-color@8.1.1)
+        specifier: 43.2.0
+        version: 43.2.0(supports-color@8.1.1)
     devDependencies:
       '@docker/extension-api-client-types':
         specifier: 0.4.2
@@ -745,8 +745,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 43.1.1
-        version: 43.1.1(supports-color@8.1.1)
+        specifier: 43.2.0
+        version: 43.2.0(supports-color@8.1.1)
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))
@@ -1092,8 +1092,8 @@ importers:
         specifier: ^24
         version: 24.13.3
       electron:
-        specifier: 43.1.1
-        version: 43.1.1(supports-color@8.1.1)
+        specifier: 43.2.0
+        version: 43.2.0(supports-color@8.1.1)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -7229,8 +7229,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@43.1.1:
-    resolution: {integrity: sha512-I5c5vfuVvaXpWx3IZdwvXgxQW44+e7OP1wXGVQkogLeSFSkUZ6sLCcWV05AdEcs65AO5tAIJJwbp7ixw+LdarA==}
+  electron@43.2.0:
+    resolution: {integrity: sha512-80zvrgG7ZRXD+tD0IyLvrnN9n+veSxadMRsMaC9wKKP3iUbtC7rGM8+dVuCmOb0Rrwwv8ESW4awnUZh9Hbp1fA==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -20000,7 +20000,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@43.1.1(supports-color@8.1.1):
+  electron@43.2.0(supports-color@8.1.1):
     dependencies:
       '@electron-internal/extract-zip': 1.0.4
       '@electron/get': 5.0.0(supports-color@8.1.1)
