@@ -74,7 +74,7 @@ onDestroy(async () => {
           class="h-full max-w-[20%] object-cover"
           alt={`Podman Desktop ${currentVersion} release image`} />
       {/if}
-      <div class="flex flex-col flex-1 h-full p-5">
+      <div class="flex flex-col flex-1 h-100% self-start p-5">
         <div class="flex flex-row items-center justify-between">
           <p class="text-[var(--pd-content-card-header-text)] font-bold text-xl ml-2">
             {notesInfo?.title ?? ''}
