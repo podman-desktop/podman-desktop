@@ -293,10 +293,12 @@ const config = {
         provider: 'generic',
         url: product.update.url,
         timeout: 10000,
+        ...(product.update?.updateChannel ? { channel: product.update.url } : {}),
       }
     : {
         provider: 'github',
         timeout: 10000,
+        ...(product.update?.updateChannel ? { channel: product.update.url } : {}),
       },
   /*extraMetadata: {
     version: process.env.VITE_APP_VERSION,
@@ -309,6 +311,7 @@ if (process.env.AIRGAP_DOWNLOAD) {
     publishAutoUpdate: false,
     provider: product.update?.url ? 'generic' : 'github',
     ...(product.update?.url ? { url: product.update.url } : {}),
+    ...(product.update?.updateChannel ? { channel: product.update.url } : {}),
   };
 }
 
