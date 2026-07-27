@@ -34,7 +34,7 @@
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "autoprefixer": "^10.5.4",
     "cross-env": "10.1.0",
-    "eslint-plugin-storybook": "10.5.0",
+    "eslint-plugin-storybook": "10.5.4",
     "eslint-plugin-svelte": "^3.22.0",
     "postcss": "^8.5.22",
     "postcss-load-config": "^6.0.1",
