@@ -218,6 +218,60 @@ describe('showMessageBox + onDidSelectButton integration', () => {
   });
 });
 
+describe('button count warning', () => {
+  test('should warn when more than 3 buttons are provided', () => {
+    const apiSender = { send: vi.fn() } as unknown as ApiSenderType;
+    const messageBox = new MessageBox(apiSender);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    // fire-and-forget: the returned promise only resolves via onDidSelectButton, which
+    // this test doesn't call - the warning is emitted synchronously before that point
+    messageBox
+      .showMessageBox({
+        title: 'Too many buttons',
+        message: 'msg',
+        buttons: ['A', 'B', 'C', 'D'],
+      })
+      .catch(() => {});
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Too many buttons'));
+    warnSpy.mockRestore();
+  });
+
+  test('should not warn when 3 or fewer buttons are provided', () => {
+    const apiSender = { send: vi.fn() } as unknown as ApiSenderType;
+    const messageBox = new MessageBox(apiSender);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    messageBox
+      .showMessageBox({
+        title: 'Fine',
+        message: 'msg',
+        buttons: ['A', 'B', 'C'],
+      })
+      .catch(() => {});
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  test('should not warn when buttons are omitted', () => {
+    const apiSender = { send: vi.fn() } as unknown as ApiSenderType;
+    const messageBox = new MessageBox(apiSender);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    messageBox
+      .showMessageBox({
+        title: 'No buttons option',
+        message: 'msg',
+      })
+      .catch(() => {});
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+});
+
 describe('showDialog without mocking showMessageBox', () => {
   test('should return dropdown sub-button when dropdown is selected with dropdownIndex', async () => {
     const apiSender = { send: vi.fn() } as unknown as ApiSenderType;

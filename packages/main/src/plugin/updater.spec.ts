@@ -600,10 +600,11 @@ test('expect command update not to be called when configuration value on never',
 
 test('clicking on "Update Never" should set the configuration value to never', async () => {
   vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
-    response: `Don't show again`,
+    response: 'Later',
+    dropdownIndex: 1,
   });
 
-  let mListener: (() => Promise<void>) | undefined;
+  let mListener: ((context?: 'startup' | 'status-bar-entry') => Promise<void>) | undefined;
   vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
     (channel: string, listener: () => Promise<void>) => {
       if (channel === 'update') mListener = listener;
@@ -621,9 +622,38 @@ test('clicking on "Update Never" should set the configuration value to never', a
   ).init();
   expect(mListener).toBeDefined();
 
-  await mListener?.();
+  await mListener?.('startup');
 
   expect(configurationMock.update).toHaveBeenCalledWith('update.reminder', 'never');
+});
+
+test('clicking on "Later" then "Remind me tomorrow" should not set the configuration value', async () => {
+  vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
+    response: 'Later',
+    dropdownIndex: 0,
+  });
+
+  let mListener: ((context?: 'startup' | 'status-bar-entry') => Promise<void>) | undefined;
+  vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
+    (channel: string, listener: () => Promise<void>) => {
+      if (channel === 'update') mListener = listener;
+      return Disposable.noop();
+    },
+  );
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+  expect(mListener).toBeDefined();
+
+  await mListener?.('startup');
+
+  expect(configurationMock.update).not.toHaveBeenCalledWith('update.reminder', 'never');
 });
 
 describe('expect update command to depends on context', async () => {
@@ -680,8 +710,12 @@ describe('expect update command to depends on context', async () => {
     await mListener?.('startup');
 
     expect(messageBoxMock.showMessageBox).toHaveBeenCalledWith({
-      cancelId: 2,
-      buttons: ['Update now', `What's new`, 'Remind me later', `Don't show again`],
+      cancelId: undefined,
+      buttons: [
+        'Update now',
+        `What's new`,
+        { type: 'dropdownButton', heading: 'Later', buttons: ['Remind me tomorrow', `Don't show again`] },
+      ],
       message:
         'A new version v@debug-next of Podman Desktop is available. Do you want to update your current version v@debug?',
       title: 'Update Podman Desktop?',
@@ -703,6 +737,32 @@ describe('expect update command to depends on context', async () => {
       title: 'Update Podman Desktop?',
       type: 'info',
     });
+  });
+
+  test('startup context, clicking "Update now" should start the download', async () => {
+    const mListener = await getUpdateListener();
+
+    vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
+      response: 'Update now',
+    });
+
+    await mListener?.('startup');
+
+    expect(taskManagerMock.createTask).toHaveBeenCalled();
+    expect(autoUpdater.downloadUpdate).toHaveBeenCalled();
+  });
+
+  test(`startup context, clicking "What's new" should open release notes`, async () => {
+    const mListener = await getUpdateListener();
+
+    vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
+      response: `What's new`,
+    });
+    vi.mocked(shell.openExternal).mockResolvedValue();
+
+    await mListener?.('startup');
+
+    expect(shell.openExternal).toHaveBeenCalled();
   });
 });
 

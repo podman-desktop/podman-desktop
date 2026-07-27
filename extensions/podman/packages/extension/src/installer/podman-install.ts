@@ -297,13 +297,15 @@ export class PodmanInstall {
         }
       } else {
         const answer = await extensionApi.window.showInformationMessage(
-          `You have Podman ${updateInfo.installedVersion}.\nDo you want to update to ${updateInfo.bundledVersion}?`,
-          'Yes',
-          'No',
-          'Ignore',
-          'Open release notes',
+          `Podman ${updateInfo.bundledVersion} is available. Update now?`,
+          // Argument order is intentionally NOT the visual order: this API has no defaultId/cancelId,
+          // so MessageBox.svelte always treats the FIRST item as the primary (rightmost) button.
+          // Passing 'Update' first renders the buttons left-to-right as: Later, View Release Notes, Update.
+          'Update',
+          'Later',
+          'View Release Notes',
         );
-        if (answer === 'Yes') {
+        if (answer === 'Update') {
           await this.getInstaller()?.update();
           this.podmanInfo.podmanVersion = updateInfo.bundledVersion;
           provider.updateDetectionChecks(getDetectionChecks(installedPodman));
@@ -330,11 +332,10 @@ export class PodmanInstall {
             isPodman6OrLater(updateInfo.bundledVersion),
           );
           extensionApi.context.setValue(PODMAN_EDIT_IMPORT_NATIVE_CA, isPodman6OrLater(updateInfo.bundledVersion));
-        } else if (answer === 'Ignore') {
-          this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
-        } else if (answer === 'Open release notes') {
+        } else if (answer === 'View Release Notes') {
           await extensionApi.env.openExternal(extensionApi.Uri.parse(getBundledReleaseNotesHref()));
         }
+        // 'Later' / dismiss -> no-op
       }
     }
   }
