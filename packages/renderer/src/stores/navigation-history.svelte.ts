@@ -165,13 +165,13 @@ function extractResourceInfo(parts: string[]): { typeLabel: string; name?: strin
  * // => 'Containers'
  *
  * urlToDisplayName('/containers/abc123/logs')
- * // => 'Containers > abc123 > logs'
+ * // => 'Containers → abc123 → logs'
  *
  * urlToDisplayName('/kubernetes/pods', ['Kubernetes', 'Pods'])
- * // => 'Kubernetes > Pods'
+ * // => 'Kubernetes → Pods'
  *
  * urlToDisplayName('/kubernetes/pods/my-pod/default/logs', ['Kubernetes', 'Pods'])
- * // => 'Kubernetes > Pods > my-pod > logs'
+ * // => 'Kubernetes → Pods → my-pod → logs'
  */
 function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
   const { parts } = parseUrl(url);
@@ -203,10 +203,10 @@ function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
       breadcrumb.push(capitalize(tabSegment));
     }
 
-    return breadcrumb.join(' > ');
+    return breadcrumb.join(' → ');
   }
 
-  return registryBreadcrumb?.length ? registryBreadcrumb.join(' > ') : typeLabel;
+  return registryBreadcrumb?.length ? registryBreadcrumb.join(' → ') : typeLabel;
 }
 
 /**
@@ -281,7 +281,7 @@ function matchesRoute(url: string, routeHref: string): boolean {
  * // => { name: 'Containers', icon: { ... } }
  *
  * getEntryInfo('/containers/abc123/logs')
- * // => { name: 'Containers > abc123', icon: { ... } }
+ * // => { name: 'Containers → abc123', icon: { ... } }
  *
  * getEntryInfo('/preferences/default/resources')
  * // => { name: 'Resources', icon: { iconComponent: SettingsIcon } }
@@ -334,7 +334,7 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
  *   url: '/__extension__/my-extension/model-1',
  *   extensionEntry: { extensionId: 'my-extension', id: 'model-1', label: 'Model 1' },
  * })
- * // => { name: 'My Extension > Model 1', icon: { iconImage: '...' } }
+ * // => { name: 'My Extension → Model 1', icon: { iconImage: '...' } }
  */
 function getStackEntryInfo(stackEntry: HistoryStackEntry): { name: string; icon?: HistoryEntryIcon } {
   const { extensionEntry } = stackEntry;
@@ -343,9 +343,10 @@ function getStackEntryInfo(stackEntry: HistoryStackEntry): { name: string; icon?
   }
 
   const extension = get(extensionInfos).find(ext => ext.id === extensionEntry.extensionId);
+  const label = truncate(extensionEntry.label, 24);
 
   return {
-    name: extension ? `${extension.displayName} > ${extensionEntry.label}` : extensionEntry.label,
+    name: extension ? `${truncate(extension.displayName, 24)} → ${label}` : label,
     icon: extension?.icon ? { iconImage: extension.icon } : undefined,
   };
 }

@@ -328,7 +328,7 @@ describe('long press dropdown', () => {
     navigationHistory.index = 1;
 
     vi.mocked(getBackEntries).mockReturnValue([
-      { index: 0, name: 'My Extension > Model 1', icon: { iconImage: 'data:image/png;base64,abc' } },
+      { index: 0, name: 'My Extension → Model 1', icon: { iconImage: 'data:image/png;base64,abc' } },
     ]);
 
     const { findByTitle } = render(NavigationButtons);
@@ -343,7 +343,7 @@ describe('long press dropdown', () => {
       vi.advanceTimersByTime(600);
 
       // Dropdown should show the extension-sourced entry's label
-      expect(await findByTitle('My Extension > Model 1')).toBeInTheDocument();
+      expect(await findByTitle('My Extension → Model 1')).toBeInTheDocument();
     });
   });
 

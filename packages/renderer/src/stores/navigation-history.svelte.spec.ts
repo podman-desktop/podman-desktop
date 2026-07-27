@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigationHistoryPushInfo } from '@podman-desktop/core-api';
+import type { ExtensionInfo, NavigationHistoryPushInfo } from '@podman-desktop/core-api';
 import { writable } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { extensionInfos } from '/@/stores/extensions';
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import {
@@ -123,6 +124,7 @@ beforeEach(() => {
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
   vi.mocked(window.navigateToExtensionHistoryEntry).mockResolvedValue(undefined);
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
+  extensionInfos.set([]);
 
   vi.mocked(navigationRegistry).set([
     { type: 'root', link: '/', title: 'Dashboard' } as unknown as NavigationRegistryEntry,
@@ -379,7 +381,7 @@ describe('getForwardEntries', () => {
 });
 
 describe('submenu navigation', () => {
-  test('should show submenu parent > resource type breadcrumb', () => {
+  test('should show submenu parent → resource type breadcrumb', () => {
     // Simulate navigation: Dashboard -> Kubernetes Pods list -> Specific pod
     navigationHistory.stack = [
       { url: '/' },
@@ -393,7 +395,7 @@ describe('submenu navigation', () => {
     expect(backEntries.length).toBe(2);
     // getBackEntries returns in reverse order, so [0] is index 1, [1] is index 0
     // backEntries[0] = '/kubernetes/pods' - should show full breadcrumb from registry
-    expect(backEntries[0].name).toBe('Kubernetes > Pods');
+    expect(backEntries[0].name).toBe('Kubernetes → Pods');
     // backEntries[1] = '/' - should show Dashboard
     expect(backEntries[1].name).toBe('Dashboard');
 
@@ -416,13 +418,13 @@ describe('submenu navigation', () => {
     expect(backEntries.length).toBe(2);
     // backEntries[0] = '/kubernetes/configmapsSecrets' base route
     // Should show proper name from registry with '&' preserved
-    expect(backEntries[0].name).toBe('Kubernetes > ConfigMaps & Secrets');
+    expect(backEntries[0].name).toBe('Kubernetes → ConfigMaps & Secrets');
     // backEntries[1] = '/' Dashboard
     expect(backEntries[1].name).toBe('Dashboard');
   });
 
   test('should show full breadcrumb for detail pages including tab', () => {
-    // Test detail page shows: parent > resource type > resource name > tab
+    // Test detail page shows: parent → resource type → resource name → tab
     navigationHistory.stack = [
       { url: '/kubernetes/configmapsSecrets/my-config/default/summary' },
       { url: '/kubernetes/configmapsSecrets' },
@@ -431,7 +433,7 @@ describe('submenu navigation', () => {
 
     const entries = getBackEntries();
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets > my-config > Summary');
+    expect(entries[0].name).toBe('Kubernetes → ConfigMaps & Secrets → my-config → Summary');
   });
 });
 
@@ -468,7 +470,7 @@ describe('tab navigation for detail pages', () => {
     const entries = getForwardEntries();
 
     // Should show resource name WITH tab name
-    expect(entries).toEqual([{ index: 1, name: 'Containers > abc123 > Inspect', icon: {} }]);
+    expect(entries).toEqual([{ index: 1, name: 'Containers → abc123 → Inspect', icon: {} }]);
     // Tab name should appear in display
     expect(entries[0].name).toContain('Inspect');
   });
@@ -481,7 +483,7 @@ describe('tab navigation for detail pages', () => {
     const entries = getForwardEntries();
 
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod > Logs');
+    expect(entries[0].name).toBe('Kubernetes → Pods → nginx-pod → Logs');
   });
 });
 
@@ -579,5 +581,65 @@ describe('extensionsNavigatingHistory guard', () => {
       { url: '/__extension__/ext.guard/entry-2', extensionEntry: nextEntry },
     ]);
     expect(navigationHistory.index).toBe(1);
+  });
+});
+
+describe('extension history entry display names', () => {
+  afterEach(() => {
+    extensionInfos.set([]);
+  });
+
+  test('formats extension entries with an arrow separator between displayName and label', () => {
+    extensionInfos.set([{ id: 'ext.a', displayName: 'My Extension' } as ExtensionInfo]);
+    const pushInfo: NavigationHistoryPushInfo = { extensionId: 'ext.a', id: 'model-1', label: 'Model 1' };
+    navigationHistory.stack = [
+      { url: '/__extension__/ext.a/model-1', extensionEntry: pushInfo },
+      { url: '/containers' },
+    ];
+    navigationHistory.index = 1;
+
+    expect(getBackEntries()).toEqual([{ index: 0, name: 'My Extension → Model 1', icon: undefined }]);
+  });
+
+  test('truncates long displayName and label parts to 24 characters', () => {
+    extensionInfos.set([
+      {
+        id: 'ext.long',
+        displayName: 'A Very Long Extension Display Name That Exceeds Limit',
+      } as ExtensionInfo,
+    ]);
+    const pushInfo: NavigationHistoryPushInfo = {
+      extensionId: 'ext.long',
+      id: 'entry-1',
+      label: 'An Extremely Long History Entry Label For Testing',
+    };
+    navigationHistory.stack = [
+      { url: '/__extension__/ext.long/entry-1', extensionEntry: pushInfo },
+      { url: '/containers' },
+    ];
+    navigationHistory.index = 1;
+
+    expect(getBackEntries()).toEqual([
+      {
+        index: 0,
+        name: 'A Very Long Extension Di... → An Extremely Long Histor...',
+        icon: undefined,
+      },
+    ]);
+  });
+
+  test('falls back to truncated label when extension is not found', () => {
+    const pushInfo: NavigationHistoryPushInfo = {
+      extensionId: 'ext.missing',
+      id: 'entry-1',
+      label: 'An Extremely Long History Entry Label For Testing',
+    };
+    navigationHistory.stack = [
+      { url: '/__extension__/ext.missing/entry-1', extensionEntry: pushInfo },
+      { url: '/containers' },
+    ];
+    navigationHistory.index = 1;
+
+    expect(getBackEntries()).toEqual([{ index: 0, name: 'An Extremely Long Histor...', icon: undefined }]);
   });
 });
