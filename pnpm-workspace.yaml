@@ -68,6 +68,7 @@ overrides:
   svgo: '>=3.3.4 <4.0.0'
   body-parser: '>=2.3.0'
   builder-util-runtime: '>=9.7.0'
+  postcss: '>=8.5.18'
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
