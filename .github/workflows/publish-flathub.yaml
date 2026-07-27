@@ -89,8 +89,8 @@ jobs:
           # set the version of pnpm from this package.json file stored inside "packageManager": "pnpm@10.15.0+sha512.
           PODMAN_DESKTOP_PNPM_VERSION=$(jq -r '.packageManager' podman-desktop-package.json | cut -d '@' -f 2 | cut -d '+' -f 1)
           echo "Found pnpm version ${PODMAN_DESKTOP_PNPM_VERSION}"
-          export PNPM_AMD64_URL=https://github.com/pnpm/pnpm/releases/download/v${PODMAN_DESKTOP_PNPM_VERSION}/pnpm-linux-x64
-          export PNPM_ARM64_URL=https://github.com/pnpm/pnpm/releases/download/v${PODMAN_DESKTOP_PNPM_VERSION}/pnpm-linux-arm64
+          export PNPM_AMD64_URL=https://github.com/pnpm/pnpm/releases/download/v${PODMAN_DESKTOP_PNPM_VERSION}/pnpm-linux-x64.tar.gz
+          export PNPM_ARM64_URL=https://github.com/pnpm/pnpm/releases/download/v${PODMAN_DESKTOP_PNPM_VERSION}/pnpm-linux-arm64.tar.gz
           # download pnpm binary (arm64)
           wget ${PNPM_ARM64_URL} -qO pnpm-arm64.zip
           # compute shasum
@@ -138,6 +138,13 @@ jobs:
           yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-x64*")) += {"url":strenv(PNPM_AMD64_URL), "sha256":strenv(PNPM_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
           yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-arm64*")) += {"url":strenv(PNPM_ARM64_URL),"sha256":strenv(PNPM_ARM64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
 
+          # update pnpm source type from file to archive (pnpm now ships as .tar.gz)
+          yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-x64*")).type = "archive"' io.podman_desktop.PodmanDesktop.yml
+          yq -i 'del((.modules[].sources[] | select(.url == "*pnpm*linux-x64*")).dest-filename)' io.podman_desktop.PodmanDesktop.yml
+          yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-x64*")).strip-components = 0' io.podman_desktop.PodmanDesktop.yml
+          yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-arm64*")).type = "archive"' io.podman_desktop.PodmanDesktop.yml
+          yq -i 'del((.modules[].sources[] | select(.url == "*pnpm*linux-arm64*")).dest-filename)' io.podman_desktop.PodmanDesktop.yml
+          yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-arm64*")).strip-components = 0' io.podman_desktop.PodmanDesktop.yml
 
           # update the pnpm store url/sha256
           yq -i '(.modules[].sources[] | select(.url == "*store-cache-pnpm*amd64*")) += {"url":strenv(PNPM_STORE_CACHE_AMD64_URL), "sha256":strenv(PODMAN_DESKTOP_PNPM_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
