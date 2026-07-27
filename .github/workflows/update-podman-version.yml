@@ -28,22 +28,38 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Get current Podman version
-        id: get_current_version
+      - name: Get current Podman versions
+        id: get_current_versions
         run: |
-          CURRENT_VERSION=$(jq -r '.version' extensions/podman/packages/extension/src/podman5.json)
-          echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
+          FILE="extensions/podman/packages/extension/src/podman.json"
+          CURRENT_V5=$(jq -r '.versions.v5.version' "$FILE")
+          CURRENT_V6=$(jq -r '.versions.v6.version' "$FILE")
+          echo "Current v5: $CURRENT_V5"
+          echo "Current v6: $CURRENT_V6"
+          echo "CURRENT_V5=${CURRENT_V5}" >> $GITHUB_ENV
+          echo "CURRENT_V6=${CURRENT_V6}" >> $GITHUB_ENV
 
-      - name: Fetch latest Podman release
-        id: fetch_latest_podman_release
+      - name: Fetch latest Podman releases
+        id: fetch_latest_podman_releases
         run: |
-          LATEST_PODMAN_RELEASE=$(curl -sL https://api.github.com/repos/podman-container-tools/podman/releases/latest)
-          LATEST_VERSION=$(echo "$LATEST_PODMAN_RELEASE" | jq -r '.tag_name' | sed 's/^v//')
-          ASSETS=$(echo "$LATEST_PODMAN_RELEASE" | jq -r '.assets[].name' | tr '\n' ' ')
-          echo $LATEST_VERSION
-          echo $ASSETS
-          echo "LATEST_VERSION=${LATEST_VERSION}" >> $GITHUB_ENV
-          echo "$ASSETS" > assets.txt
+          RELEASES=$(curl -sL 'https://api.github.com/repos/podman-container-tools/podman/releases?per_page=50')
+
+          LATEST_V5_TAG=$(echo "$RELEASES" | jq -r '[.[] | select(.prerelease == false and .draft == false and (.tag_name | startswith("v5.")))][0].tag_name')
+          LATEST_V5=${LATEST_V5_TAG#v}
+
+          LATEST_V6_TAG=$(echo "$RELEASES" | jq -r '[.[] | select(.prerelease == false and .draft == false and (.tag_name | startswith("v6.")))][0].tag_name')
+          LATEST_V6=${LATEST_V6_TAG#v}
+
+          echo "Latest v5: $LATEST_V5 (tag: $LATEST_V5_TAG)"
+          echo "Latest v6: $LATEST_V6 (tag: $LATEST_V6_TAG)"
+
+          echo "$RELEASES" | jq -r --arg tag "$LATEST_V5_TAG" '[.[] | select(.tag_name == $tag)][0].assets[].name' > v5_assets.txt
+          echo "$RELEASES" | jq -r --arg tag "$LATEST_V6_TAG" '[.[] | select(.tag_name == $tag)][0].assets[].name' > v6_assets.txt
+
+          echo "LATEST_V5=${LATEST_V5}" >> $GITHUB_ENV
+          echo "LATEST_V6=${LATEST_V6}" >> $GITHUB_ENV
+          echo "LATEST_V5_TAG=${LATEST_V5_TAG}" >> $GITHUB_ENV
+          echo "LATEST_V6_TAG=${LATEST_V6_TAG}" >> $GITHUB_ENV
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -52,56 +68,115 @@ jobs:
       - name: Compare version numbers using semver
         id: compare_version_numbers
         run: |
+          UPDATE_V5="false"
+          UPDATE_V6="false"
 
-          echo "Current version: $CURRENT_VERSION"
-          echo "Latest version: $LATEST_VERSION"
+          echo "Current v5: $CURRENT_V5 -> Latest v5: $LATEST_V5"
+          echo "Current v6: $CURRENT_V6 -> Latest v6: $LATEST_V6"
 
-          if npx semver "$LATEST_VERSION" -r ">$CURRENT_VERSION"; then
-            echo "New version available: $LATEST_VERSION"
-            echo "NEW_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          if [ -n "$LATEST_V5" ] && [ "$LATEST_V5" != "null" ] && [ "$LATEST_V5" != "" ]; then
+            if npx semver "$LATEST_V5" -r ">$CURRENT_V5"; then
+              echo "New v5 version available: $LATEST_V5"
+              UPDATE_V5="true"
+            else
+              echo "v5 is up to date."
+            fi
           else
-            echo "No new version available."
-            echo "newVersion=none" >> $GITHUB_OUTPUT
+            echo "Warning: Could not determine latest v5 release."
+          fi
+
+          if [ -n "$LATEST_V6" ] && [ "$LATEST_V6" != "null" ] && [ "$LATEST_V6" != "" ]; then
+            if npx semver "$LATEST_V6" -r ">$CURRENT_V6"; then
+              echo "New v6 version available: $LATEST_V6"
+              UPDATE_V6="true"
+            else
+              echo "v6 is up to date."
+            fi
+          else
+            echo "Warning: Could not determine latest v6 release."
+          fi
+
+          if [ "$UPDATE_V5" = "false" ] && [ "$UPDATE_V6" = "false" ]; then
+            echo "No new versions available."
+            echo "needsUpdate=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-      - name: Check for required assets in Podman release
-        if: steps.compare_version_numbers.outputs.newVersion != 'none'
+          echo "UPDATE_V5=${UPDATE_V5}" >> $GITHUB_ENV
+          echo "UPDATE_V6=${UPDATE_V6}" >> $GITHUB_ENV
+          echo "needsUpdate=true" >> $GITHUB_OUTPUT
+
+      - name: Check for required assets in Podman releases
+        if: steps.compare_version_numbers.outputs.needsUpdate == 'true'
         id: check_assets
         run: |
-          REQUIRED_ASSETS=("podman-installer-windows-amd64.exe" "podman-installer-windows-arm64.exe" "podman-installer-macos-amd64.pkg" "podman-installer-macos-arm64.pkg" "podman-installer-macos-universal.pkg")
-          MISSING_ASSETS=()
-          echo "Assets found in release:"
-          cat assets.txt
+          MISSING=()
 
-          for ASSET in "${REQUIRED_ASSETS[@]}"; do
-            if ! grep -q "$ASSET" assets.txt; then
-              MISSING_ASSETS+=("$ASSET")
-            fi
-          done
-
-          if [ ${#MISSING_ASSETS[@]} -ne 0 ]; then
-            echo "Error: Missing assets:"
-            for asset in "${MISSING_ASSETS[@]}"; do
-              echo "  - $asset"
+          if [ "$UPDATE_V5" = "true" ]; then
+            echo "=== Checking v5 ($LATEST_V5) required assets ==="
+            V5_REQUIRED=("podman-installer-macos-amd64.pkg")
+            for ASSET in "${V5_REQUIRED[@]}"; do
+              if grep -q "$ASSET" v5_assets.txt; then
+                echo "  OK: $ASSET"
+              else
+                echo "  MISSING: $ASSET"
+                MISSING+=("v5: $ASSET")
+              fi
             done
-            exit 1
-          else
-            echo "All required assets are present."
           fi
 
-      - name: Update podman5.json
-        if: steps.compare_version_numbers.outputs.newVersion != 'none'
+          if [ "$UPDATE_V6" = "true" ]; then
+            echo "=== Checking v6 ($LATEST_V6) required assets ==="
+            V6_REQUIRED=("podman-installer-windows-amd64.msi" "podman-installer-windows-arm64.msi" "podman-installer-macos-arm64.pkg")
+            for ASSET in "${V6_REQUIRED[@]}"; do
+              if grep -q "$ASSET" v6_assets.txt; then
+                echo "  OK: $ASSET"
+              else
+                echo "  MISSING: $ASSET"
+                MISSING+=("v6: $ASSET")
+              fi
+            done
+          fi
+
+          if [ ${#MISSING[@]} -ne 0 ]; then
+            echo "Error: Missing required assets:"
+            for m in "${MISSING[@]}"; do
+              echo "  - $m"
+            done
+            exit 1
+          fi
+
+          echo "All required assets are present."
+
+      - name: Update podman.json
+        if: steps.compare_version_numbers.outputs.needsUpdate == 'true'
         run: |
           set -euo pipefail
 
-          FILE="extensions/podman/packages/extension/src/podman5.json"
+          FILE="extensions/podman/packages/extension/src/podman.json"
 
           echo "Validating JSON before modification..."
           jq empty "$FILE"
 
-          # Replace the version and filenames for assets
-          sed -i -E "s/$CURRENT_VERSION/$NEW_VERSION/g" "$FILE"
+          jq \
+            --arg new_v5 "$LATEST_V5" \
+            --arg new_v6 "$LATEST_V6" \
+            --arg update_v5 "$UPDATE_V5" \
+            --arg update_v6 "$UPDATE_V6" \
+            '
+            (if $update_v5 == "true" then
+              .versions.v5.version = $new_v5 |
+              .versions.v5.tagVersion = "v" + $new_v5 |
+              .versions.v5.releaseNotes.href = "https://github.com/podman-container-tools/podman/releases/tag/v" + $new_v5 |
+              .platform.darwin.arch.x64.fileName = "podman-installer-macos-amd64-v" + $new_v5 + ".pkg"
+            else . end) |
+            (if $update_v6 == "true" then
+              .versions.v6.version = $new_v6 |
+              .versions.v6.tagVersion = "v" + $new_v6 |
+              .versions.v6.releaseNotes.href = "https://github.com/podman-container-tools/podman/releases/tag/v" + $new_v6 |
+              .platform.darwin.arch.arm64.fileName = "podman-installer-macos-aarch64-v" + $new_v6 + ".pkg"
+            else . end)
+            ' "$FILE" > podman_updated.json && mv podman_updated.json "$FILE"
 
           echo "Validating JSON after modification..."
           jq empty "$FILE"
@@ -109,7 +184,7 @@ jobs:
           echo "Update complete and JSON is valid."
 
       - name: Create PR
-        if: steps.compare_version_numbers.outputs.newVersion != 'none'
+        if: steps.compare_version_numbers.outputs.needsUpdate == 'true'
         id: create_pr
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -120,24 +195,56 @@ jobs:
           git config --local user.name "${{ github.actor }}"
           git config --local user.email "${{ github.actor }}@users.noreply.github.com"
 
-          bumpedVersion="${NEW_VERSION}"
-          bumpedBranchName="update-podman-version-${bumpedVersion}"
-          echo "branch name: $bumpedBranchName"
+          UPDATES=""
+          if [ "$UPDATE_V5" = "true" ]; then
+            UPDATES="${UPDATES:+${UPDATES}-}v5-${LATEST_V5}"
+          fi
+          if [ "$UPDATE_V6" = "true" ]; then
+            UPDATES="${UPDATES:+${UPDATES}-}v6-${LATEST_V6}"
+          fi
+
+          bumpedBranchName="update-podman-version-${UPDATES}"
+          echo "Branch name: $bumpedBranchName"
 
           git checkout -b "$bumpedBranchName"
 
           echo "Adding the file to the commit"
-          git add extensions/podman/packages/extension/src/podman5.json
+          git add extensions/podman/packages/extension/src/podman.json
+
+          COMMIT_PARTS=""
+          if [ "$UPDATE_V5" = "true" ]; then
+            COMMIT_PARTS="${COMMIT_PARTS:+${COMMIT_PARTS} and }v5 to v${LATEST_V5}"
+          fi
+          if [ "$UPDATE_V6" = "true" ]; then
+            COMMIT_PARTS="${COMMIT_PARTS:+${COMMIT_PARTS} and }v6 to v${LATEST_V6}"
+          fi
 
           echo "Committing the file"
-          git commit --signoff -m "chore: Update Podman version to v${bumpedVersion}"
+          git commit --signoff -m "chore: Update Podman version ${COMMIT_PARTS}"
 
           git push origin "${bumpedBranchName}"
-          echo -e "Bump Podman version to ${bumpedVersion}\n\nVersion ${bumpedVersion} has been released.\n\nThis PR updates Podman to the latest version." > /tmp/pr-body
+
+          PR_BODY="Bump Podman version"$'\n\n'
+          if [ "$UPDATE_V5" = "true" ]; then
+            PR_BODY="${PR_BODY}**v5**: ${CURRENT_V5} -> ${LATEST_V5} ([release notes](https://github.com/podman-container-tools/podman/releases/tag/v${LATEST_V5}))"$'\n'
+          fi
+          if [ "$UPDATE_V6" = "true" ]; then
+            PR_BODY="${PR_BODY}**v6**: ${CURRENT_V6} -> ${LATEST_V6} ([release notes](https://github.com/podman-container-tools/podman/releases/tag/v${LATEST_V6}))"$'\n'
+          fi
+          PR_BODY="${PR_BODY}"$'\n'"This PR updates Podman to the latest version(s)."
+          echo "$PR_BODY" > /tmp/pr-body
+
+          PR_TITLE_PARTS=""
+          if [ "$UPDATE_V5" = "true" ]; then
+            PR_TITLE_PARTS="${PR_TITLE_PARTS:+${PR_TITLE_PARTS}, }v5 to ${LATEST_V5}"
+          fi
+          if [ "$UPDATE_V6" = "true" ]; then
+            PR_TITLE_PARTS="${PR_TITLE_PARTS:+${PR_TITLE_PARTS}, }v6 to ${LATEST_V6}"
+          fi
 
           echo "Creating pull request"
           pullRequestUrl=$(gh pr create \
-            --title "chore: Bump Podman version to ${bumpedVersion}" \
+            --title "chore: Bump Podman ${PR_TITLE_PARTS}" \
             --body-file /tmp/pr-body \
             --head "$bumpedBranchName" \
             --base "main")
