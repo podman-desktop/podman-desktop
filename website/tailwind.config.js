@@ -14,7 +14,6 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
-        mono: ['Red Hat Mono', ...defaultTheme.fontFamily.mono],
       },
       extend: {},
       keyframes: {
