@@ -16,17 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import CopyButton from '@theme-original/CodeBlock/CopyButton';
-import React from 'react';
-
-import { stripPrompts } from './stripPrompts.js';
-
-// Update the CopyButton to remove the '$ ' or '# ' from the code
-export default function CopyButtonWrapper(props) {
-  const updatedProps = { ...props, code: stripPrompts(props.code) };
-  return (
-    <>
-      <CopyButton {...updatedProps} />
-    </>
-  );
+// Strips a leading shell prompt prefix ('$ ', '# ', '> ') from code
+export function stripPrompts(code) {
+  if (
+    code?.length > 2 &&
+    (code.substring(0, 2) === '$ ' || code.substring(0, 2) === '# ' || code.substring(0, 2) === '> ')
+  ) {
+    return code.substring(2);
+  }
+  return code;
 }
