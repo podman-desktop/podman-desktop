@@ -7,13 +7,13 @@ tags: [podman-desktop, podman, macos, deprecation]
 hide_table_of_contents: false
 ---
 
-[Podman v6.0.0](https://github.com/podman-container-tools/podman/releases/tag/v6.0.0) has removed support for Intel-based Macs. Podman Desktop is adjusting how we bundle the engine so Apple silicon, Windows, and Linux users can move to Podman 6 without leaving Intel Mac users with a broken install experience. Here is what is changing, why, and what to do next.
+[Podman v6.0.0](https://github.com/podman-container-tools/podman/releases/tag/v6.0.0) has removed support for Intel-based Macs, and will no longer publish an installer. Podman Desktop is adjusting how we bundle the engine so Apple silicon, Windows, and Linux users can move to Podman 6 without leaving Intel Mac users with a broken install experience. Here is what is changing, why, and what to do next.
 
 <!--truncate-->
 
 ## Podman on macOS: A brief history
 
-Podman Desktop bundles Podman so developers can install a working container environment from a single download. On macOS, Podman runs inside a lightweight virtual machine, and Podman Desktop has shipped a universal installer supporting both Apple Silicon and Intel hardware. That made sense when Intel Macs were still common in the field. With Podman 6 now released, there is no longer support for Intel Macs, so we need a clear plan for the developers still on that hardware.
+Podman Desktop bundles Podman so developers can install a working container environment from a single download. On macOS, Podman runs inside a lightweight virtual machine, and Podman Desktop has shipped a universal installer supporting both Apple silicon and Intel hardware. That made sense when Intel Macs were still common in the field. With Podman 6 now released, there is neither support nor an installer for Intel Macs, so we need a clear plan for the developers still on that hardware.
 
 ## What's changing?
 
