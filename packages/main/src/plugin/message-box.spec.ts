@@ -18,7 +18,7 @@
 
 import type { DropdownType, IconButtonType } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { MessageBox } from './message-box.js';
 
@@ -219,6 +219,10 @@ describe('showMessageBox + onDidSelectButton integration', () => {
 });
 
 describe('button count warning', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   test('should warn when more than 3 buttons are provided', () => {
     const apiSender = { send: vi.fn() } as unknown as ApiSenderType;
     const messageBox = new MessageBox(apiSender);
@@ -235,7 +239,6 @@ describe('button count warning', () => {
       .catch(() => {});
 
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Too many buttons'));
-    warnSpy.mockRestore();
   });
 
   test('should not warn when 3 or fewer buttons are provided', () => {
@@ -252,7 +255,6 @@ describe('button count warning', () => {
       .catch(() => {});
 
     expect(warnSpy).not.toHaveBeenCalled();
-    warnSpy.mockRestore();
   });
 
   test('should not warn when buttons are omitted', () => {
@@ -268,7 +270,6 @@ describe('button count warning', () => {
       .catch(() => {});
 
     expect(warnSpy).not.toHaveBeenCalled();
-    warnSpy.mockRestore();
   });
 });
 
