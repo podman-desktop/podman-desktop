@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { autoUpdate, computePosition } from '@floating-ui/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { resetTooltipHideCount } from './tooltip-store';
@@ -49,7 +50,7 @@ describe('Tooltip', () => {
     vi.clearAllMocks();
   });
 
-  test('tooltip is hidden when tooltipHidden is true', async () => {
+  test('tooltip remains hidden after tooltipHidden resets until pointer re-enters', async () => {
     render(TooltipTestComponent, { tip: 'test 1' });
 
     const slot = screen.getByTestId('tooltip-trigger');
@@ -69,6 +70,9 @@ describe('Tooltip', () => {
 
     // Simulate dropdown closing (shows tooltips)
     window.dispatchEvent(new Event('tooltip-show'));
+    await tick();
+    expect(screen.queryByText('test 1')).not.toBeInTheDocument();
+
     await fireEvent.mouseEnter(slot);
 
     await waitFor(() => {
