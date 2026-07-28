@@ -293,12 +293,12 @@ const config = {
         provider: 'generic',
         url: product.update.url,
         timeout: 10000,
-        ...(product.update?.updateChannel ? { channel: product.update.url } : {}),
+        ...(product.update?.updateChannel ? { channel: product.update.updateChannel } : {}),
       }
     : {
         provider: 'github',
         timeout: 10000,
-        ...(product.update?.updateChannel ? { channel: product.update.url } : {}),
+        ...(product.update?.updateChannel ? { channel: product.update.updateChannel } : {}),
       },
   /*extraMetadata: {
     version: process.env.VITE_APP_VERSION,
