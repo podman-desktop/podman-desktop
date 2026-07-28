@@ -347,6 +347,27 @@ test('checkForUpdate should return installed version and update if the installed
   });
 });
 
+test('checkForUpdate should still report an update when a legacy ignoreVersionUpdate matches the bundled version', async () => {
+  vi.spyOn(podmanInstall, 'getInstaller').mockReturnValue({
+    requireUpdate: vi.fn().mockReturnValue(true),
+  } as unknown as Installer);
+  vi.spyOn(podmanInstall, 'getLastRunInfo').mockResolvedValue({
+    lastUpdateCheck: 0,
+    // legacy state from before the 'Ignore' button was removed (#15960) - there's no
+    // UI left to set or clear this, so checkForUpdate must not let it hide the prompt
+    ignoreVersionUpdate: getBundledPodmanVersion(),
+  });
+  const result = await podmanInstall.checkForUpdate({
+    version: '1.1',
+  });
+  expect(result).toStrictEqual({
+    installedVersion: '1.1',
+    hasUpdate: true,
+    bundledVersion: getBundledPodmanVersion(),
+  });
+  expect(podmanInstall['podmanInfo']?.ignoreVersionUpdate).toBeUndefined();
+});
+
 const providerMock: extensionApi.Provider = {} as unknown as extensionApi.Provider;
 
 describe('performUpdate', () => {

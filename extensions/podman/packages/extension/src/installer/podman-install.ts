@@ -137,11 +137,15 @@ export class PodmanInstall {
     }
     const installer = this.getInstaller();
     const bundledVersion = getBundledPodmanVersion();
-    if (
-      installedVersion &&
-      installer?.requireUpdate(installedVersion) &&
-      this.podmanInfo.ignoreVersionUpdate !== bundledVersion
-    ) {
+
+    // legacy: the 'Ignore' button was removed (#15960), so a previously persisted
+    // ignored version can no longer be set - clear it so it can't silently suppress
+    // the update prompt forever with no UI left to undo it
+    if (this.podmanInfo.ignoreVersionUpdate) {
+      this.podmanInfo.ignoreVersionUpdate = undefined;
+    }
+
+    if (installedVersion && installer?.requireUpdate(installedVersion)) {
       return { installedVersion, hasUpdate: true, bundledVersion };
     }
     return { installedVersion, hasUpdate: false, bundledVersion };
