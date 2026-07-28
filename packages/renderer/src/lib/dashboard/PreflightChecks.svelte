@@ -1,6 +1,8 @@
 <script lang="ts">
+import { faCheck, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus } from '@podman-desktop/core-api';
 import { Link, Spinner } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 interface Props {
   preflightChecks: CheckStatus[];
@@ -17,13 +19,15 @@ async function openLink(url: string): Promise<void> {
   <div class="flex flex-col w-full p-2 rounded-lg bg-[var(--pd-invert-content-card-bg)]">
     {#each preflightChecks as preCheck, index (index)}
       <div class="flex flex-col">
-        <div class="mb-4 flex flex-row">
+        <div class="mb-4 flex flex-row items-center">
           {#if preCheck.successful === undefined}
             <div class="mr-1">
               <Spinner size="1em" />
             </div>
+          {:else if preCheck.successful}
+            <Icon class="text-(--pd-state-success)" icon={faCheck} />
           {:else}
-            {preCheck.successful ? '✅' : '❌'}
+            <Icon class="text-(--pd-state-error)" icon={faCircleExclamation} />
           {/if}
           <div aria-label="precheck-title" class="ml-2">{preCheck.name}</div>
         </div>
