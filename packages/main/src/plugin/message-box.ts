@@ -40,6 +40,12 @@ export class MessageBox {
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   async showMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
+    if (options.buttons && options.buttons.length > 3) {
+      console.warn(
+        `[MessageBox] "${options.title}" has ${options.buttons.length} buttons; dialogs should have at most 3 (see podman-desktop/podman-desktop#15960).`,
+      );
+    }
+
     this.callbackId++;
 
     const deferred = Promise.withResolvers<MessageBoxReturnValue>();
