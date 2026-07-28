@@ -89,8 +89,8 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
   const secretKey = `${prefix}_SECRET`;
   console.debug(`Lookup environment variable ${usernameKey} & ${secretKey}`);
 
-  const usernameValue = process.env[usernameKey];
-  const secretValue = process.env[secretKey];
+  const usernameValue = process.env[usernameKey] ?? process.env['AUTH_REGISTRY_USER'];
+  const secretValue = process.env[secretKey] ?? process.env['AUTH_REGISTRY_SECRET'];
 
   // if both undefined => ignore
   if (!usernameValue && !secretValue) return undefined;
