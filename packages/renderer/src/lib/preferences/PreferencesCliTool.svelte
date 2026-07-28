@@ -165,7 +165,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
           {/if}
           <span
             id={cliTool.id}
-            class="my-auto ml-3 break-words font-semibold text-[var(--pd-invert-content-header-text)]"
+            class="my-auto ml-3 break-all font-semibold text-[var(--pd-invert-content-header-text)]"
             aria-label="cli-name">{cliTool.name}</span>
         </div>
         <div class="flex flex-row space-x-1 w-full">
