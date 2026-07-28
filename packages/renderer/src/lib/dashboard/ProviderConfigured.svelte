@@ -53,7 +53,7 @@ onMount(async () => {
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     {#if !runAtStart && !runInProgress}
       <p class="text-[var(--pd-content-text)] text-center w-2/3">
         To start working with containers, {provider.name}
@@ -86,10 +86,10 @@ onMount(async () => {
     {/if}
 
     <PreflightChecks preflightChecks={preflightChecks} />
-  </svelte:fragment>
-  <svelte:fragment slot="update">
+  {/snippet}
+  {#snippet update()}
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
       <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </ProviderCard>

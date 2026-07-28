@@ -138,7 +138,7 @@ async function onInstallationClick(): Promise<void> {
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     <p class="text-sm text-[var(--pd-content-text)] w-2/3 text-center" aria-label="Suggested Actions">
       To start working with containers, {provider.name} needs to be initialized.
     </p>
@@ -208,10 +208,10 @@ async function onInstallationClick(): Promise<void> {
     </div>
 
     <PreflightChecks preflightChecks={preflightChecks} />
-  </svelte:fragment>
-  <svelte:fragment slot="update">
+  {/snippet}
+  {#snippet update()}
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
       <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </ProviderCard>
