@@ -145,7 +145,7 @@ export function WindowsDownloads(): JSX.Element {
                 <div className="dark:bg-charcoal-800/50 bg-zinc-300/50 p-1 text-xl dark:text-purple-200 text-purple-600 flex flex-row">
                   <div className="w-72 truncate">
                     <FontAwesomeIcon size="xs" icon={faTerminal} className="mx-2 mt-3" />
-                    <code className="font-mono [font-variant-ligatures:none]">
+                    <code className="font-mono text-sm [font-variant-ligatures:none]">
                       winget install -e --id RedHat.Podman-Desktop
                     </code>
                   </div>
