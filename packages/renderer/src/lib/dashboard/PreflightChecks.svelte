@@ -2,7 +2,11 @@
 import type { CheckStatus } from '@podman-desktop/core-api';
 import { Link, Spinner } from '@podman-desktop/ui-svelte';
 
-export let preflightChecks: CheckStatus[] = [];
+interface Props {
+  preflightChecks: CheckStatus[];
+}
+
+let { preflightChecks }: Props = $props();
 
 async function openLink(url: string): Promise<void> {
   await window.openExternal(url);
