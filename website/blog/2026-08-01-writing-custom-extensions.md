@@ -226,7 +226,7 @@ Registered in `packages/backend/src/extension.ts`:
 ```typescript
 const stopAllCommand = extensionApi.commands.registerCommand('chaos-lab.stopAll', async () => {
   await chaosApiImpl.stopAllChaos();
-  extensionApi.window.showInformationMessage('All chaos operations have been stopped and rolled back.');
+  await extensionApi.window.showInformationMessage('All chaos operations have been stopped and rolled back.');
 });
 extensionContext.subscriptions.push(stopAllCommand);
 ```
@@ -263,7 +263,7 @@ Make sure to also declare the command in `packages/backend/package.json`:
   <source src={require('./img/writing-custom-extensions/workshop4.webm').default} type="video/webm" />
 </video>
 
-"Open Dashboard" command revealing the webview panel:
+"Open Dashboard" command revealing the extension's Chaos Lab tab:
 
 <video autoPlay loop muted playsInline width="100%">
   <source src={require('./img/writing-custom-extensions/workshop5.webm').default} type="video/webm" />
@@ -696,16 +696,23 @@ The third argument `'onboarding'` scopes the value so the onboarding UI's `when`
 
 ### Resetting onboarding for repeated testing
 
-While iterating on this step you'll likely complete the onboarding once and then want to see it again. Two different things can need resetting:
+While iterating on this step you'll likely complete the onboarding once and then want to see it again. In both cases below, first delete the Chaos Machine from the Resources page so `checkProviderCommand` sees `machines.size === 0` again -- the `chaosProviderReady` / `chaosMachineCreationFailed` context values above live in memory rather than on disk, so they need `machines.size === 0` to be re-evaluated. Then reset with either:
 
-- **The Chaos Lab onboarding itself** is gated purely by the `chaosProviderReady` / `chaosMachineCreationFailed` context values above, which live in memory rather than on disk. Delete the Chaos Machine from the Resources page so `checkProviderCommand` sees `machines.size === 0` again, or use Podman Desktop's built-in **Reset onboarding** action (Settings > Extensions > Chaos Lab).
-- **Podman Desktop's own general "Welcome" screen** (the first-run splash, unrelated to this extension) is tracked separately, via a `"welcome.version"` entry in your local `settings.json`. Remove that entry to see it again:
+1. Click the **Reset Onboarding** button inside the Chaos Lab extension -- the onboarding Setup button reappears immediately, no restart required.
+
+<video autoPlay loop muted playsInline width="100%">
+  <source src={require('./img/writing-custom-extensions/workshopOnboardingPrep.webm').default} type="video/webm" />
+</video>
+
+2. If you also want to reset Podman Desktop's own general "Welcome" screen (the first-run splash, unrelated to this extension, tracked via a `"welcome.version"` entry in your local `settings.json`): remove that entry, install the extension from the published GitHub image instead of a local folder (see [Packaging and distribution](#packaging-and-distribution) below), and restart Podman Desktop.
 
 ```json
 "welcome.version": "initial"
 ```
 
 By default `settings.json` lives at `~/.local/share/containers/podman-desktop/configuration/settings.json` (macOS, Windows, and most Linux installs); on newer Linux installs following the XDG Base Directory spec without a pre-existing legacy config, it's instead at `~/.config/containers/podman-desktop/settings.json`. See [CONTRIBUTING.md](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md) for details.
+
+> **_NOTE:_** if your extension is still loaded as a **local folder** (Extensions > Local Extensions > Add a local folder...), it will not survive this restart and you'll need to add it again -- installing from the published image avoids that.
 
 <video autoPlay loop muted playsInline width="100%">
   <source src={require('./img/writing-custom-extensions/workshop13.webm').default} type="video/webm" />
@@ -734,6 +741,8 @@ extensionContext.subscriptions.push(chaosCli);
 The chaos-cli registered in the CLI Tools settings:
 
 ![CLI Tools page showing chaos-cli](./img/writing-custom-extensions/workshop14.png)
+
+This step only registers the tool so it's visible on the CLI Tools page. If you want to further enhance the CLI tool settings see [CLI tools](/docs/extensions/developing/cli-tools) for how to wire up install and update actions.
 
 ---
 
@@ -772,7 +781,7 @@ Once an extension image is published to a registry, users can install it from **
 Just following along without modifying the code? Since the [companion repository](https://github.com/gastoner/extension-template-full) lives on GitHub, its `Build and Push` workflow builds and publishes the extension image to `ghcr.io` on every push to `main` and `dev_conf`, tagged with both `nightly` and the commit SHA -- so you can install a working build without touching your local clone at all:
 
 ```
-ghcr.io/gastoner/podman-desktop-extension-chaos-lab:dad9eaf759a4378f31f6e2d4527426101429e70e
+ghcr.io/gastoner/podman-desktop-extension-chaos-lab:72801bd25586393e1476489cad2475b8b5d510f0
 ```
 
 Use the SHA tag above to install that exact commit, or `ghcr.io/gastoner/podman-desktop-extension-chaos-lab:nightly` for the latest build.
@@ -793,7 +802,29 @@ Then use `quay.io/myusername/chaos-lab` as the image reference.
 
 ### Testing with a custom catalog
 
-To test catalog integration locally, create an `extensions.json` file based on the [official catalog](https://github.com/podman-desktop/podman-desktop/blob/main/extensions.json), add your extension entry, serve it with a local HTTP server, and point Podman Desktop to it:
+To test catalog integration locally, create an `extensions.json` file based on the [official catalog](https://github.com/podman-desktop/podman-desktop-catalog/blob/main/static/api/extensions.json), add your extension entry, serve it with a local HTTP server, and point Podman Desktop to it.
+
+Add an entry to the `extensions` array following the catalog schema:
+
+```json
+{
+  "publisher": { "publisherName": "your-namespace", "displayName": "Your Name" },
+  "extensionName": "chaos-lab",
+  "displayName": "Chaos Lab",
+  "shortDescription": "Chaos engineering toolkit for containers",
+  "categories": ["Other"],
+  "versions": [
+    {
+      "version": "0.1.0",
+      "preview": true,
+      "lastUpdated": "2026-07-15T00:00:00Z",
+      "ociUri": "ghcr.io/gastoner/podman-desktop-extension-chaos-lab:nightly"
+    }
+  ]
+}
+```
+
+Then serve the file with a local HTTP server:
 
 ```bash
 python -m http.server 8080
