@@ -311,7 +311,7 @@ if (process.env.AIRGAP_DOWNLOAD) {
     publishAutoUpdate: false,
     provider: product.update?.url ? 'generic' : 'github',
     ...(product.update?.url ? { url: product.update.url } : {}),
-    ...(product.update?.updateChannel ? { channel: product.update.url } : {}),
+    ...(product.update?.updateChannel ? { channel: product.update.updateChannel } : {}),
   };
 }
 
