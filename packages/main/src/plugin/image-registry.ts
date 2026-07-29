@@ -343,9 +343,11 @@ export class ImageRegistry {
     return undefined;
   }
 
-  getFetchOptions(insecure?: boolean): RequestInit {
-    if (!insecure) {
-      return {};
+  getOptions(options?: { insecure?: boolean; headers?: Record<string, string> }): RequestInit {
+    if (!options?.insecure) {
+      return {
+        headers: options?.headers,
+      };
     }
 
     const ca = this.certificates.getAllCertificates();
@@ -359,6 +361,7 @@ export class ImageRegistry {
             requestTls: { ca, rejectUnauthorized: false },
             proxyTls: { ca },
           }),
+          headers: options?.headers,
         } as RequestInit;
       }
     }
@@ -367,6 +370,7 @@ export class ImageRegistry {
       dispatcher: new Agent({
         connect: { ca, rejectUnauthorized: false },
       }),
+      headers: options?.headers,
     } as RequestInit;
   }
 
@@ -581,6 +585,13 @@ export class ImageRegistry {
     totalSize: number,
     logger: (event: { message: string; progress: number }) => void,
   ): Promise<void> {
+    const options = this.getOptions({
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // replace all special characters with _ in digest
     const digestWithoutSpecialChars = digest.replace(/[^a-zA-Z0-9]/g, '_');
 
     if (!fs.existsSync(destFolder)) {
@@ -590,6 +601,7 @@ export class ImageRegistry {
     const suffix = compressionType === 'gzip' ? '.tar' : '.zst';
     const tmpFileName = path.resolve(os.tmpdir(), `${digestWithoutSpecialChars}${suffix}`);
 
+    // ensure the folder exists
     const parentDir = path.dirname(tmpFileName);
     if (!fs.existsSync(parentDir)) {
       await fs.promises.mkdir(parentDir, { recursive: true });
@@ -597,29 +609,28 @@ export class ImageRegistry {
 
     const blobURL = `${imageData.registryURL}/${imageData.name}/blobs/${digest}`;
 
-    const response = await fetch(blobURL, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(blobURL, options);
 
     if (!response.ok || !response.body) {
       throw new Error(`Failed to fetch blob ${blobURL}: ${response.statusText}`);
     }
 
-    const reader = response.body.getReader();
     const fileStream = createWriteStream(tmpFileName);
     let transferred = 0;
 
     try {
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        transferred += value.byteLength;
-        const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
+      for await (const chunk of response.body) {
+        transferred += chunk.byteLength;
+
+        const downloaded = currentDownloaded + transferred;
+        const progress = Math.round((downloaded / totalSize) * 100);
+
         logger({
-          message: `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
-          progress: globalPercentage,
+          message: `Downloading ${digest}${suffix} - ${progress}% - (${downloaded}/${totalSize})`,
+          progress,
         });
-        fileStream.write(value);
+
+        fileStream.write(chunk);
       }
     } finally {
       fileStream.end();
@@ -627,6 +638,7 @@ export class ImageRegistry {
     }
 
     if (compressionType === 'zstd') {
+      //use fstd library to extract the file
       const content = await fs.promises.readFile(tmpFileName);
       const decompressed = fzstd.decompress(content);
       const unpackedFileName = tmpFileName.replace('.zst', '.tar');
@@ -635,6 +647,7 @@ export class ImageRegistry {
     } else {
       await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
     }
+    // remove the temporary file
     await fs.promises.rm(tmpFileName);
   }
 
@@ -928,7 +941,7 @@ export class ImageRegistry {
 
     let response: Response;
     try {
-      response = await fetch(registryUrl, this.getFetchOptions(insecure));
+      response = await fetch(registryUrl, this.getOptions({ insecure }));
     } catch (error) {
       throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${error}`);
     }
@@ -1032,12 +1045,15 @@ export class ImageRegistry {
   ): Promise<void> {
     const token = Buffer.from(`${username}:${password}`).toString('base64');
 
-    const response = await fetch(authUrl, {
-      ...this.getFetchOptions(insecure),
-      headers: {
-        Authorization: `Basic ${token}`,
-      },
-    });
+    const response = await fetch(
+      authUrl,
+      this.getOptions({
+        insecure,
+        headers: {
+          Authorization: `Basic ${token}`,
+        },
+      }),
+    );
 
     if (response.status === 401 || response.status === 403) {
       throw Error('Wrong Username or Password.');

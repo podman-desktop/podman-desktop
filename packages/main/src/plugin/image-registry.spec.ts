@@ -1267,15 +1267,15 @@ test('getToken without registry auth', async () => {
   expect(token).toBe('12345');
 });
 
-test('getFetchOptions returns dispatcher for insecure mode', () => {
+test('getOptions returns dispatcher for insecure mode', () => {
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
-  const options = imageRegistry.getFetchOptions(true);
+  const options = imageRegistry.getOptions({ insecure: true });
   expect((options as any).dispatcher).toBeDefined();
 });
 
-test('getFetchOptions returns empty for non-insecure mode', () => {
+test('getOptions returns empty for non-insecure mode', () => {
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
-  const options = imageRegistry.getFetchOptions();
+  const options = imageRegistry.getOptions();
   expect(options).toEqual({});
 });
 
@@ -1377,7 +1377,7 @@ test('listImageTags', async () => {
     authUrl: 'https://auth.example.com',
     scheme: 'bearer',
   });
-  vi.spyOn(imageRegistry, 'getFetchOptions').mockReturnValue({});
+  vi.spyOn(imageRegistry, 'getOptions').mockReturnValue({});
   vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('a.token');
   server = setupServer(
     http.get('https://registry.example.com/v2/a-name/tags/list', () => HttpResponse.json({ tags: ['1', '2', '3'] })),
