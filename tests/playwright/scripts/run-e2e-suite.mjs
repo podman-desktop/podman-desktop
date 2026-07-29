@@ -52,13 +52,16 @@ const playwrightArgs = ['playwright', 'test', ...files, ...extraArgs];
 
 const binDir = resolve(REPO_ROOT, 'node_modules/.bin');
 const env = { ...process.env };
-if (!env.PATH?.includes(binDir)) {
-  env.PATH = `${binDir}${delimiter}${env.PATH ?? ''}`;
+
+const pathKey = Object.keys(env).find(k => k.toUpperCase() === 'PATH') ?? 'PATH';
+if (!env[pathKey]?.includes(binDir)) {
+  env[pathKey] = `${binDir}${delimiter}${env[pathKey] ?? ''}`;
 }
 
 console.log(`Running: npx ${playwrightArgs.join(' ')}\n`);
 const result = spawnSync('xvfb-maybe', [...xvfbArgs, 'npx', ...playwrightArgs], {
   stdio: 'inherit',
+  shell: true,
   env,
 });
 
