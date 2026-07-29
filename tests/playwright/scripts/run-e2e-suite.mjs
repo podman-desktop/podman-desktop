@@ -37,7 +37,8 @@ if (!suite) {
   process.exit(1);
 }
 
-const matches = allSpecs.filter(f => f.includes(suite));
+const normalizedSuite = suite.toLowerCase();
+const matches = allSpecs.filter(f => f.toLowerCase().includes(normalizedSuite));
 
 if (matches.length === 0) {
   console.error(`No spec file matching "${suite}" found in ${SPECS_DIR_RELATIVE}/`);
