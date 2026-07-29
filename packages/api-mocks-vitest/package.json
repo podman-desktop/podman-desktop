@@ -39,7 +39,7 @@
     "mustache": "^4.2.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.23.1",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"
