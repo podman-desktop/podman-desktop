@@ -79,6 +79,8 @@ test.describe
       const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
       await playExpect(cliToolsPage.heading).toBeVisible();
 
+      await cliToolsPage.uninstallTool('Kind');
+
       const linesBefore = getSquidAccessLogLineCount(containerName);
       await cliToolsPage.installTool('Kind', 180_000);
 
