@@ -192,7 +192,7 @@ jobs:
 
       - name: Run E2E Update tests
         run: |
-          echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          echo "$env:PODMAN_DESKTOP_BINARY"
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
@@ -398,10 +398,15 @@ jobs:
           ELECTRON_ENABLE_INSPECT: true
         run: |
           pnpm compile:current --mac dmg
-          dmgPath=$(realpath $(find ./dist -name "*.dmg"))
+          dmgPath=$(find ./dist -maxdepth 1 -name "*.dmg" -print -quit)
+          if [ -z "$dmgPath" ]; then
+            echo "ERROR: no .dmg produced in ./dist"
+            exit 1
+          fi
+          dmgPath=$(realpath "$dmgPath")
           echo "DMG Path: $dmgPath"
           hdiutil attach "$dmgPath"
-          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
+          pdVolumePath=$(find /Volumes -name "*$PD_VERSION*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           appPath="/Applications/Podman Desktop.app"
@@ -428,7 +433,7 @@ jobs:
         env:
           UPDATE_PODMAN_DESKTOP: true
         run: |
-          echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          echo "$PODMAN_DESKTOP_BINARY"
           pnpm test:e2e:update:run
 
       - name: Stop local HTTP update server
