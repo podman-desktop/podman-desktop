@@ -71,8 +71,7 @@ test.describe
       const extensionCard = new ExtensionCatalogCardPage(page, bootcExtension.extensionName);
       await playExpect(extensionCard.parent).toBeVisible({ timeout: 30_000 });
 
-      const linesAfter = getSquidAccessLogLineCount(containerName);
-      playExpect(linesAfter).toBeGreaterThan(linesBefore);
+      await playExpect.poll(() => getSquidAccessLogLineCount(containerName)).toBeGreaterThan(linesBefore);
     });
 
     test('Kind CLI binary downloads through proxy', async ({ navigationBar }) => {
@@ -82,8 +81,8 @@ test.describe
 
       const linesBefore = getSquidAccessLogLineCount(containerName);
       await cliToolsPage.installTool('Kind', 180_000);
-      const linesAfter = getSquidAccessLogLineCount(containerName);
-      playExpect(linesAfter).toBeGreaterThan(linesBefore);
+
+      await playExpect.poll(() => getSquidAccessLogLineCount(containerName)).toBeGreaterThan(linesBefore);
     });
 
     test('Install extension from catalog through proxy', async ({ page, navigationBar }) => {
