@@ -127,3 +127,5 @@ Key patterns established:
 - Outline borders for definition
 - `prefers-reduced-motion` support
 - Tailwind v4 CSS variable shorthand syntax
+- When introducing new Tailwind custom-property utility classes, prefer shorthand forms like `text-(--pd-state-success)` over `text-[var(--pd-state-success)]`.
+- Do not rewrite unrelated existing `text-[var(--token)]` or similar classes in the same file unless the task explicitly includes that cleanup.
