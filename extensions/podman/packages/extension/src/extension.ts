@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1698,7 +1698,7 @@ export async function start(
     async () => {
       const checks = podmanInstall.getInstallChecks() ?? [];
       const result = [];
-      let successful = true;
+      let hasErrors = false;
       for (const check of checks) {
         try {
           const checkResult = await check.execute();
@@ -1706,14 +1706,15 @@ export async function start(
           result.push({
             name: check.title,
             successful: checkResult.successful,
+            severity: checkResult.severity,
             description: checkResult.description,
             docLinks: checkResult.docLinks,
             docLinksDescription: checkResult.docLinksDescription,
             fixCommand: checkResult.fixCommand,
           });
 
-          if (!checkResult.successful) {
-            successful = false;
+          if (!checkResult.successful && checkResult.severity !== 'warning') {
+            hasErrors = true;
           }
         } catch (err) {
           result.push({
@@ -1722,17 +1723,18 @@ export async function start(
             description:
               err instanceof Error ? err.message : typeof err === 'object' ? err?.toString() : 'unknown error',
           });
-          successful = false;
+          hasErrors = true;
         }
       }
 
       const warnings = [];
       const telemetryRecords: Record<string, unknown> = {};
-      telemetryRecords.successful = successful;
+      telemetryRecords.successful = !hasErrors;
 
       for (const res of result) {
+        const state = res.successful ? 'successful' : res.severity === 'warning' ? 'warning' : 'failed';
         const warning = {
-          state: res.successful ? 'successful' : 'failed',
+          state,
           description: res.description ?? res.name,
           docDescription: res.docLinksDescription,
           docLinks: res.docLinks,
@@ -1744,7 +1746,16 @@ export async function start(
         }
       }
 
-      extensionApi.context.setValue('requirementsStatus', successful ? 'ok' : 'failed', 'onboarding');
+      const hasWarnings = result.some(r => !r.successful && r.severity === 'warning');
+      let requirementsStatus: string;
+      if (hasErrors) {
+        requirementsStatus = 'failed';
+      } else if (hasWarnings) {
+        requirementsStatus = 'warnings';
+      } else {
+        requirementsStatus = 'ok';
+      }
+      extensionApi.context.setValue('requirementsStatus', requirementsStatus, 'onboarding');
       extensionApi.context.setValue('warningsMarkdown', warnings, 'onboarding');
       telemetryLogger?.logUsage('podman.onboarding.checkRequirementsCommand', telemetryRecords);
     },
@@ -2147,7 +2158,7 @@ export async function createMachine(
     telemetryRecords.provider = provider;
   } else {
     if (extensionApi.env.isWindows) {
-      provider = wslEnabled ? 'wsl' : 'hyperv';
+      provider = process.env.CONTAINERS_MACHINE_PROVIDER ?? 'wsl';
       telemetryRecords.provider = provider;
     } else if (extensionApi.env.isMac) {
       if (os.arch() === 'x64') {

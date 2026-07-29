@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import type * as extensionApi from '@podman-desktop/api';
 
 export interface FailureObject {
   description: string;
+  severity?: 'error' | 'warning';
   docLinksDescription?: string;
   docLinks?: extensionApi.CheckResultLink;
   fixCommand?: extensionApi.CheckResultFixCommand;
@@ -30,6 +31,9 @@ export abstract class BaseCheck implements extensionApi.InstallCheck {
 
   protected createFailureResult(failureObject: FailureObject): extensionApi.CheckResult {
     const result: extensionApi.CheckResult = { successful: false, description: failureObject.description };
+    if (failureObject.severity) {
+      result.severity = failureObject.severity;
+    }
     if (failureObject.docLinksDescription) {
       result.docLinksDescription = failureObject.docLinksDescription;
     }
@@ -97,5 +101,22 @@ export class OrCheck extends BaseCheck {
       successful: false,
       description: `${this.left.title}: ${leftResult.description}\n${this.right.title}: ${rightResult.description}`,
     };
+  }
+}
+
+export class WarningCheck extends BaseCheck {
+  title: string;
+
+  constructor(private delegate: BaseCheck) {
+    super();
+    this.title = delegate.title;
+  }
+
+  async execute(): Promise<extensionApi.CheckResult> {
+    const result = await this.delegate.execute();
+    if (!result.successful) {
+      result.severity = 'warning';
+    }
+    return result;
   }
 }

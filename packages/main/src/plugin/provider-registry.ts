@@ -481,12 +481,13 @@ export class ProviderRegistry {
         statusCallback.endCheck({
           name: check.title,
           successful: checkResult.successful,
+          severity: checkResult.severity,
           description: checkResult.description,
           docLinksDescription: checkResult.docLinksDescription,
           docLinks: checkResult.docLinks,
         });
 
-        if (!checkResult.successful) {
+        if (!checkResult.successful && checkResult.severity !== 'warning') {
           return false;
         }
       } catch (err) {

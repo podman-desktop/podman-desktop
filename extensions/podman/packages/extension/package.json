@@ -316,12 +316,32 @@
           ]
         },
         {
-          "id": "missingRequirementsView",
+          "id": "missingRequirementsWarningsView",
+          "title": "Some system requirements are missing",
+          "when": "onboardingContext:requirementsStatus == warnings && onboardingContext:podmanIsNotInstalled",
+          "content": [
+            [
+              {
+                "value": ":warnings[${onboardingContext:warningsMarkdown}]"
+              }
+            ],
+            [
+              {
+                "value": "When possible, we've provided information on how to address these requirements. You can proceed with the installation."
+              }
+            ],
+            [
+              {
+                "value": ":button[Check requirements again]{command=podman.onboarding.checkRequirementsCommand}"
+              }
+            ]
+          ]
+        },
+        {
+          "id": "missingRequirementsFailedView",
           "title": "Some system requirements are missing",
           "when": "onboardingContext:requirementsStatus == failed && onboardingContext:podmanIsNotInstalled",
-          "completionEvents": [
-            "onboardingContext:requirementsStatus == ok"
-          ],
+          "state": "failed",
           "content": [
             [
               {
