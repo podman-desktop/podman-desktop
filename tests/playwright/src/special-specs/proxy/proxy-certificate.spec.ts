@@ -74,15 +74,13 @@ test.describe
       await playExpect.poll(() => getSquidAccessLogLineCount(containerName)).toBeGreaterThan(linesBefore);
     });
 
-    test('Kind CLI binary downloads through proxy', async ({ navigationBar }) => {
+    test('Compose CLI binary downloads through proxy', async ({ navigationBar }) => {
       const settingsBar = await navigationBar.openSettings();
       const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
       await playExpect(cliToolsPage.heading).toBeVisible();
 
-      await cliToolsPage.uninstallTool('Kind');
-
       const linesBefore = getSquidAccessLogLineCount(containerName);
-      await cliToolsPage.installTool('Kind', 180_000);
+      await cliToolsPage.installTool('Compose', 180_000);
 
       await playExpect.poll(() => getSquidAccessLogLineCount(containerName)).toBeGreaterThan(linesBefore);
     });
