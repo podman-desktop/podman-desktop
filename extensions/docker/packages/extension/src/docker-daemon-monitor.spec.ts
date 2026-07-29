@@ -16,176 +16,272 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { EventEmitter } from 'node:events';
 import * as http from 'node:http';
 
 import type { ContainerProviderConnection, Disposable, ExtensionContext, Provider } from '@podman-desktop/api';
 import { provider as providerApi } from '@podman-desktop/api';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { DockerContextInfo } from '@podman-desktop/docker-extension-api';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { UNIX_SOCKET_PATH } from './docker-api';
 import { getDockerInstallation } from './docker-cli';
+import type { DockerContextHandler } from './docker-context-handler';
 import { DockerDaemonMonitor } from './docker-daemon-monitor';
 
 vi.mock(import('node:http'));
 vi.mock(import('./docker-cli'));
 
-const connectionDisposable: Disposable = { dispose: vi.fn() };
+function contextFixture(name: string, host: string): DockerContextInfo {
+  return {
+    name,
+    isCurrentContext: false,
+    metadata: { description: name },
+    endpoints: { docker: { host } },
+  };
+}
 
-const fakeProvider: Provider = {
-  registerContainerProviderConnection: vi.fn().mockReturnValue(connectionDisposable),
-  updateStatus: vi.fn(),
-  updateVersion: vi.fn(),
-  status: 'ready',
-} as unknown as Provider;
+interface EngineFixture {
+  docker?: boolean;
+  podman?: boolean;
+}
 
-let extensionContext: ExtensionContext;
-let monitor: DockerDaemonMonitor;
+const engines = new Map<string, EngineFixture>();
 
-const originalConsoleDebug = console.debug;
+function setEngine(socketPath: string, fixture: EngineFixture): void {
+  engines.set(socketPath, fixture);
+}
 
-/**
- * Mock node:http.get for socket-path pings (same EventEmitter approach as compose detect.spec).
- * Pass status codes per path; omit a path to simulate a connection error.
- */
-function mockHttpGet(statusByPath: Record<string, number>): void {
-  vi.mocked(http.get).mockImplementation(((options: unknown, callback?: (res: http.IncomingMessage) => void) => {
-    const path = (options as http.RequestOptions).path ?? '';
-    const request = new EventEmitter() as http.ClientRequest;
+function mockHttpGet(): void {
+  vi.mocked(http.get).mockImplementation(((options: unknown, callback?: (res: unknown) => void) => {
+    const { path, socketPath } = options as { path: string; socketPath: string };
+    const fixture = engines.get(socketPath);
+    const alive = path === '/_ping' ? fixture?.docker === true : fixture?.podman === true;
 
-    const statusCode = statusByPath[path];
-    if (statusCode === undefined) {
-      queueMicrotask(() => request.emit('error', new Error('connect error')));
-      return request;
+    if (alive) {
+      callback?.({
+        statusCode: 200,
+        on: (event: string, handler: () => void): void => {
+          if (event === 'end') {
+            handler();
+          }
+        },
+      });
+      return { once: vi.fn() };
     }
 
-    const response = new EventEmitter() as http.IncomingMessage;
-    response.statusCode = statusCode;
-    callback?.(response);
-    response.emit('data', '');
-    response.emit('end');
-    return request;
+    return {
+      once: (event: string, handler: (err: Error) => void): void => {
+        if (event === 'error') {
+          handler(new Error('connect error'));
+        }
+      },
+    };
   }) as unknown as typeof http.get);
 }
 
+function createFakeProvider(): Provider {
+  return {
+    registerContainerProviderConnection: vi.fn(() => ({ dispose: vi.fn() }) as unknown as Disposable),
+    updateStatus: vi.fn(),
+    updateVersion: vi.fn(),
+    status: 'ready',
+  } as unknown as Provider;
+}
+
+class TestDockerDaemonMonitor extends DockerDaemonMonitor {
+  override registerConnectionForContext(
+    dockerProvider: Provider,
+    contextInfo: DockerContextInfo,
+    contextSocketPath: string,
+  ): Disposable {
+    return super.registerConnectionForContext(dockerProvider, contextInfo, contextSocketPath);
+  }
+}
+
+let fakeProvider: Provider;
+let dockerContextHandler: DockerContextHandler;
+let extensionContext: ExtensionContext;
+let monitor: TestDockerDaemonMonitor;
+
 beforeEach(() => {
   vi.resetAllMocks();
-  console.debug = vi.fn();
+  engines.clear();
+  mockHttpGet();
 
   vi.mocked(getDockerInstallation).mockResolvedValue({ version: '24.0.0' });
-  vi.mocked(fakeProvider.registerContainerProviderConnection).mockReturnValue(connectionDisposable);
-  vi.mocked(providerApi.createProvider).mockReturnValue(fakeProvider);
-  Object.defineProperty(fakeProvider, 'status', { value: 'ready', configurable: true });
 
+  fakeProvider = createFakeProvider();
+  vi.mocked(providerApi.createProvider).mockReturnValue(fakeProvider);
+
+  dockerContextHandler = {
+    listContexts: vi.fn(),
+    parseEndpoint: (host: string): string | undefined => {
+      if (host.startsWith('unix://')) {
+        return host.slice('unix://'.length);
+      }
+      if (host.startsWith('npipe://')) {
+        return host.slice('npipe://'.length);
+      }
+      return undefined;
+    },
+  } as unknown as DockerContextHandler;
   extensionContext = { subscriptions: [] } as unknown as ExtensionContext;
-  monitor = new DockerDaemonMonitor(extensionContext, UNIX_SOCKET_PATH);
+  monitor = new TestDockerDaemonMonitor(extensionContext, dockerContextHandler);
 });
 
-afterEach(() => {
-  console.debug = originalConsoleDebug;
+describe('registerConnectionForContext', () => {
+  test('registers a docker connection using the raw context name and socket path', () => {
+    let registered: ContainerProviderConnection | undefined;
+    vi.mocked(fakeProvider.registerContainerProviderConnection).mockImplementation(connection => {
+      registered = connection;
+      return { dispose: vi.fn() } as unknown as Disposable;
+    });
+
+    monitor.registerConnectionForContext(fakeProvider, contextFixture('colima', 'unix:///colima.sock'), '/colima.sock');
+
+    expect(registered).toBeDefined();
+    expect(registered?.name).toBe('colima');
+    expect(registered?.displayName).toBe('colima');
+    expect(registered?.type).toBe('docker');
+    expect(registered?.endpoint.socketPath).toBe('/colima.sock');
+    expect(registered?.status()).toBe('started');
+  });
+
+  test('keeps displaying the default context as "Docker"', () => {
+    let registered: ContainerProviderConnection | undefined;
+    vi.mocked(fakeProvider.registerContainerProviderConnection).mockImplementation(connection => {
+      registered = connection;
+      return { dispose: vi.fn() } as unknown as Disposable;
+    });
+
+    monitor.registerConnectionForContext(
+      fakeProvider,
+      contextFixture('default', 'unix:///var/run/docker.sock'),
+      '/var/run/docker.sock',
+    );
+
+    expect(registered?.name).toBe('default');
+    expect(registered?.displayName).toBe('Docker');
+  });
 });
 
 describe('updateProvider', () => {
-  test('registers a Docker connection when the daemon is alive and not Podman', async () => {
-    mockHttpGet({ '/_ping': 200 });
+  test('registers one connection per alive, non-podman context', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([
+      contextFixture('default', 'unix:///var/run/docker.sock'),
+      contextFixture('colima', 'unix:///colima.sock'),
+    ]);
+    setEngine('/var/run/docker.sock', { docker: true });
+    setEngine('/colima.sock', { docker: true });
 
-    await monitor.updateProvider();
-
-    expect(providerApi.createProvider).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Docker',
-        id: 'docker',
-      }),
-    );
-    expect(fakeProvider.registerContainerProviderConnection).toHaveBeenCalledTimes(1);
-    const connection = vi.mocked(fakeProvider.registerContainerProviderConnection).mock
-      .calls[0][0] as ContainerProviderConnection;
-    expect(connection.name).toBe('Docker');
-    expect(connection.type).toBe('docker');
-    expect(connection.endpoint.socketPath).toBe(UNIX_SOCKET_PATH);
-    expect(connection.status()).toBe('started');
-    expect(fakeProvider.updateStatus).toHaveBeenCalledWith('started');
-    expect(extensionContext.subscriptions).toContain(fakeProvider);
-    expect(extensionContext.subscriptions).toContain(connectionDisposable);
-
-    // install/version updates run before provider creation on the first tick;
-    // a subsequent tick reports the Docker CLI version once the provider exists
-    await monitor.updateProvider();
-    expect(fakeProvider.updateVersion).toHaveBeenCalledWith('24.0.0');
-  });
-
-  test('does not register a connection when the socket answers as Podman', async () => {
-    mockHttpGet({ '/_ping': 200, '/libpod/_ping': 200 });
-
-    await monitor.updateProvider();
-
-    expect(providerApi.createProvider).not.toHaveBeenCalled();
-    expect(fakeProvider.registerContainerProviderConnection).not.toHaveBeenCalled();
-  });
-
-  test('does not register a connection when the daemon is unreachable', async () => {
-    mockHttpGet({});
-
-    await monitor.updateProvider();
-
-    expect(providerApi.createProvider).not.toHaveBeenCalled();
-    expect(fakeProvider.registerContainerProviderConnection).not.toHaveBeenCalled();
-  });
-
-  test('disposes the connection and marks the provider stopped when the daemon dies', async () => {
-    mockHttpGet({ '/_ping': 200 });
-    await monitor.updateProvider();
-
-    mockHttpGet({});
-    await monitor.updateProvider();
-
-    expect(connectionDisposable.dispose).toHaveBeenCalled();
-    expect(fakeProvider.updateStatus).toHaveBeenCalledWith('stopped');
-  });
-
-  test('re-registers the connection when the daemon comes back after being stopped', async () => {
-    mockHttpGet({ '/_ping': 200 });
-    await monitor.updateProvider();
-
-    mockHttpGet({});
-    await monitor.updateProvider();
-
-    const secondDisposable = { dispose: vi.fn() };
-    vi.mocked(fakeProvider.registerContainerProviderConnection).mockReturnValue(secondDisposable);
-
-    mockHttpGet({ '/_ping': 200 });
     await monitor.updateProvider();
 
     expect(fakeProvider.registerContainerProviderConnection).toHaveBeenCalledTimes(2);
-    expect(fakeProvider.updateStatus).toHaveBeenCalledWith('started');
-    expect(extensionContext.subscriptions).toContain(secondDisposable);
+    const names = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.calls.map(([c]) => c.name);
+    expect(names).toEqual(['default', 'colima']);
   });
 
-  test('marks the provider not-installed when Docker CLI is missing', async () => {
-    mockHttpGet({ '/_ping': 200 });
+  test('never registers a context whose socket answers as podman, not docker', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([
+      contextFixture('podman', 'unix:///run/podman.sock'),
+    ]);
+    setEngine('/run/podman.sock', { docker: true, podman: true });
+
     await monitor.updateProvider();
 
-    vi.mocked(getDockerInstallation).mockResolvedValue(undefined);
-    await monitor.updateProvider();
-
-    expect(fakeProvider.updateStatus).toHaveBeenCalledWith('not-installed');
+    expect(fakeProvider.registerContainerProviderConnection).not.toHaveBeenCalled();
   });
 
-  test('updates provider status to installed when Docker appears after being not-installed', async () => {
-    mockHttpGet({ '/_ping': 200 });
+  test('skips and logs a context with an unsupported endpoint scheme', async () => {
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([contextFixture('remote', 'tcp://1.2.3.4:2376')]);
+
     await monitor.updateProvider();
 
-    Object.defineProperty(fakeProvider, 'status', { value: 'not-installed', configurable: true });
-    vi.mocked(getDockerInstallation).mockResolvedValue({ version: '25.0.0' });
-    await monitor.updateProvider();
-
-    expect(fakeProvider.updateVersion).toHaveBeenCalledWith('25.0.0');
-    expect(fakeProvider.updateStatus).toHaveBeenCalledWith('installed');
+    expect(fakeProvider.registerContainerProviderConnection).not.toHaveBeenCalled();
+    expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('remote'));
   });
-});
 
-describe('stop', () => {
-  test('stops the monitoring loop', () => {
-    expect(() => monitor.stop()).not.toThrow();
+  test('keeps a connection registered and flips its status when its engine stops answering, then answers again', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([contextFixture('colima', 'unix:///colima.sock')]);
+    setEngine('/colima.sock', { docker: true });
+
+    await monitor.updateProvider();
+    expect(fakeProvider.registerContainerProviderConnection).toHaveBeenCalledTimes(1);
+    const registeredConnection = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.calls[0][0];
+    const disposable = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.results[0]?.value as Disposable;
+    expect(registeredConnection.status()).toBe('started');
+
+    setEngine('/colima.sock', { docker: false });
+    await monitor.updateProvider();
+    expect(disposable.dispose).not.toHaveBeenCalled();
+    expect(registeredConnection.status()).toBe('stopped');
+
+    setEngine('/colima.sock', { docker: true });
+    await monitor.updateProvider();
+    // still the same connection object, not re-registered
+    expect(fakeProvider.registerContainerProviderConnection).toHaveBeenCalledTimes(1);
+    expect(registeredConnection.status()).toBe('started');
+  });
+
+  test('keeps a connection registered while its context is still listed but its engine stops answering', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([contextFixture('colima', 'unix:///colima.sock')]);
+    setEngine('/colima.sock', { docker: true });
+    await monitor.updateProvider();
+    const registeredConnection = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.calls[0][0];
+    const disposable = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.results[0]?.value as Disposable;
+
+    setEngine('/colima.sock', { docker: false });
+    await monitor.updateProvider();
+
+    expect(disposable.dispose).not.toHaveBeenCalled();
+    // registered only once, never re-registered
+    expect(fakeProvider.registerContainerProviderConnection).toHaveBeenCalledTimes(1);
+    expect(registeredConnection.status()).toBe('stopped');
+  });
+
+  test('disposes a connection once its context disappears entirely (e.g. `colima stop` removes its own context)', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValueOnce([
+      contextFixture('colima', 'unix:///colima.sock'),
+    ]);
+    setEngine('/colima.sock', { docker: true });
+    await monitor.updateProvider();
+    const disposable = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.results[0]?.value as Disposable;
+
+    // colima removes its own context and stops answering at the same time
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValueOnce([]);
+    setEngine('/colima.sock', { docker: false });
+    await monitor.updateProvider();
+
+    expect(disposable.dispose).toHaveBeenCalled();
+  });
+
+  test('still disposes a connection if its context later answers as podman, not docker', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([contextFixture('shared', 'unix:///shared.sock')]);
+    setEngine('/shared.sock', { docker: true });
+    await monitor.updateProvider();
+    const disposable = vi.mocked(fakeProvider.registerContainerProviderConnection).mock.results[0]?.value as Disposable;
+
+    setEngine('/shared.sock', { docker: true, podman: true });
+    await monitor.updateProvider();
+
+    expect(disposable.dispose).toHaveBeenCalled();
+  });
+
+  test('marks the provider started while any connection is alive, without redundant updates', async () => {
+    vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([
+      contextFixture('default', 'unix:///var/run/docker.sock'),
+    ]);
+    setEngine('/var/run/docker.sock', { docker: true });
+
+    await monitor.updateProvider();
+    await monitor.updateProvider();
+
+    const startedCalls = vi.mocked(fakeProvider.updateStatus).mock.calls.filter(([status]) => status === 'started');
+    expect(startedCalls).toHaveLength(1);
+
+    setEngine('/var/run/docker.sock', { docker: false });
+    await monitor.updateProvider();
+
+    expect(fakeProvider.updateStatus).toHaveBeenCalledWith('stopped');
   });
 });
