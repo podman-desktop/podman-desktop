@@ -16,17 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import CopyButton from '@theme-original/CodeBlock/CopyButton';
+import { CodeBlockContextProvider, useCodeBlockContext } from '@docusaurus/theme-common/internal';
+import CopyButton from '@theme-original/CodeBlock/Buttons/CopyButton';
 import React from 'react';
 
 import { stripPrompts } from './stripPrompts.js';
 
 // Update the CopyButton to remove the '$ ' or '# ' from the code
 export default function CopyButtonWrapper(props) {
-  const updatedProps = { ...props, code: stripPrompts(props.code) };
+  const { metadata, wordWrap } = useCodeBlockContext();
+  const updatedMetadata = { ...metadata, code: stripPrompts(metadata.code) };
+
   return (
     <>
-      <CopyButton {...updatedProps} />
+      <CodeBlockContextProvider metadata={updatedMetadata} wordWrap={wordWrap}>
+        <CopyButton {...props} />
+      </CodeBlockContextProvider>
     </>
   );
 }
