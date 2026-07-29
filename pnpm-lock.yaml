@@ -1180,11 +1180,11 @@ importers:
         specifier: ^0.41.1
         version: 0.41.1(supports-color@8.1.1)
       markdownlint-cli2:
-        specifier: ^0.23.1
-        version: 0.23.1(supports-color@8.1.1)
+        specifier: ^0.23.2
+        version: 0.23.2(supports-color@8.1.1)
       markdownlint-cli2-formatter-summarize:
         specifier: ^0.0.8
-        version: 0.0.8(markdownlint-cli2@0.23.1(supports-color@8.1.1))
+        version: 0.0.8(markdownlint-cli2@0.23.2(supports-color@8.1.1))
       msw:
         specifier: ^2.15.0
         version: 2.15.0(@types/node@26.1.1)(typescript@6.0.3)
@@ -7937,8 +7937,8 @@ packages:
     resolution: {integrity: sha512-Y1zNGV+pzQdh7H39l9zgB4PJqjRNqydvdYCDG4HFXM4XuvSaQQlEc91IU1yALL8gUTDomgBAfz3XJdmUS+oo0w==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  globby@16.2.1:
-    resolution: {integrity: sha512-JmsqJalahxxgW8V2ecSQ2G7UjPlI9cpKdrkG9KoNiXhd/YslXOTEB0cViENWUznuovIuNT+FkMbraDGjr4FCUg==}
+  globby@16.2.2:
+    resolution: {integrity: sha512-NLvV9ubZ6NDsJaOpKPy3cQeJpKi9DcWiyCiFUpJPA0YihRqiE6RWaLUmgNNPr8MgPpLZjnBjSmou7uZBRJv9wA==}
     engines: {node: '>=20'}
 
   globrex@0.1.2:
@@ -8666,10 +8666,6 @@ packages:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
-  js-yaml@5.2.1:
-    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
-    hasBin: true
-
   js-yaml@5.2.2:
     resolution: {integrity: sha512-dayzUzKkJ1MkuUtZglSebU43utNXH0OWQByK9rKOOuYIO8M5TV1y+n8ALMdG0rdzBnfNkOmZEqrURepb0ejqBw==}
     hasBin: true
@@ -9062,8 +9058,8 @@ packages:
     peerDependencies:
       markdownlint-cli2: '>=0.0.4'
 
-  markdownlint-cli2@0.23.1:
-    resolution: {integrity: sha512-20JPI5W+HpV1OA+pUM712wgvL4GzYNUvbmhLU8KlEYJ1kCDx4soZ4/Xqd+WkLrPTOKMAn8SfO3zYFrK8GLlwQg==}
+  markdownlint-cli2@0.23.2:
+    resolution: {integrity: sha512-eUhcnkSpzURo/o4htSqc7LPDszgOOTknhU4eY/sPHvMCLxnTCYscv1gw1/js/idmaZPisv9ECVEIORcllqjTUw==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -9155,8 +9151,8 @@ packages:
   mdn-data@2.28.1:
     resolution: {integrity: sha512-U9w+PzSZ00Z5m9rZ5ARVFL5xOfuCHdKYi/1RRwDCJsboFgJDNT3zT6PIPD7mZQYaQLhsZM3GfDRgSMRHhSmVng==}
 
-  mdurl@2.0.0:
-    resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
+  mdurl@2.1.0:
+    resolution: {integrity: sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg==}
 
   media-chrome@4.14.0:
     resolution: {integrity: sha512-IEdFb4blyF15vLvQzLIn6USJBv7Kf2ne+TfLQKBYI5Z0f9VEBVZz5MKy4Uhi0iA9lStl2S9ENIujJRuJIa5OiA==}
@@ -20686,7 +20682,7 @@ snapshots:
       merge2: 1.4.1
       slash: 4.0.0
 
-  globby@16.2.1:
+  globby@16.2.2:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
       fast-glob: 3.3.3
@@ -21471,10 +21467,6 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js-yaml@5.2.1:
-    dependencies:
-      argparse: 2.0.1
-
   js-yaml@5.2.2:
     dependencies:
       argparse: 2.0.1
@@ -21799,29 +21791,29 @@ snapshots:
       argparse: 2.0.1
       entities: 4.5.0
       linkify-it: 5.0.2
-      mdurl: 2.0.0
+      mdurl: 2.1.0
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
   markdown-table@3.0.4: {}
 
-  markdownlint-cli2-formatter-default@0.0.6(markdownlint-cli2@0.23.1(supports-color@8.1.1)):
+  markdownlint-cli2-formatter-default@0.0.6(markdownlint-cli2@0.23.2(supports-color@8.1.1)):
     dependencies:
-      markdownlint-cli2: 0.23.1(supports-color@8.1.1)
+      markdownlint-cli2: 0.23.2(supports-color@8.1.1)
 
-  markdownlint-cli2-formatter-summarize@0.0.8(markdownlint-cli2@0.23.1(supports-color@8.1.1)):
+  markdownlint-cli2-formatter-summarize@0.0.8(markdownlint-cli2@0.23.2(supports-color@8.1.1)):
     dependencies:
-      markdownlint-cli2: 0.23.1(supports-color@8.1.1)
+      markdownlint-cli2: 0.23.2(supports-color@8.1.1)
 
-  markdownlint-cli2@0.23.1(supports-color@8.1.1):
+  markdownlint-cli2@0.23.2(supports-color@8.1.1):
     dependencies:
-      globby: 16.2.1
-      js-yaml: 5.2.1
+      globby: 16.2.2
+      js-yaml: 5.2.2
       jsonc-parser: 3.3.1
       jsonpointer: 5.0.1
       markdown-it: 14.3.0
       markdownlint: 0.41.1(supports-color@8.1.1)
-      markdownlint-cli2-formatter-default: 0.0.6(markdownlint-cli2@0.23.1(supports-color@8.1.1))
+      markdownlint-cli2-formatter-default: 0.0.6(markdownlint-cli2@0.23.2(supports-color@8.1.1))
       micromatch: 4.0.8
       smol-toml: 1.7.0
     transitivePeerDependencies:
@@ -22047,7 +22039,7 @@ snapshots:
 
   mdn-data@2.28.1: {}
 
-  mdurl@2.0.0: {}
+  mdurl@2.1.0: {}
 
   media-chrome@4.14.0(react@18.2.0):
     dependencies:
