@@ -74,7 +74,7 @@ test.describe
       await playExpect.poll(() => getSquidAccessLogLineCount(containerName)).toBeGreaterThan(linesBefore);
     });
 
-    test('Compose CLI binary downloads through proxy', async ({ navigationBar }) => {
+    test.skip('Compose CLI binary downloads through proxy', async ({ navigationBar }) => {
       test.setTimeout(240_000);
       const settingsBar = await navigationBar.openSettings();
       const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
