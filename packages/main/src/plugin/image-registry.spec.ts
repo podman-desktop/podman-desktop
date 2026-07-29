@@ -1267,18 +1267,16 @@ test('getToken without registry auth', async () => {
   expect(token).toBe('12345');
 });
 
-test('getOptions uses proxy settings', () => {
-  pxoxyIsEnabledMock.mockReturnValue(true);
-  proxyGetProxyMock.mockReturnValue({
-    httpProxy: 'http://192.168.1.1:3128',
-    httpsProxy: 'http://192.168.1.1:3128',
-    noProxy: '',
-  });
+test('getOptions returns dispatcher for insecure mode', () => {
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+  const options = imageRegistry.getOptions({ insecure: true });
+  expect((options as any).dispatcher).toBeDefined();
+});
+
+test('getOptions returns empty for non-insecure mode', () => {
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
   const options = imageRegistry.getOptions();
-  expect(options.agent).toBeDefined();
-  expect(options.agent?.http).toBeDefined();
-  expect(options.agent?.https).toBeDefined();
+  expect(options).toEqual({});
 });
 
 test('searchImages with proxy', async () => {
@@ -1300,7 +1298,7 @@ test('searchImages with proxy', async () => {
   server = setupServer(...handlers);
   server.listen({ onUnhandledRequest: 'error' });
 
-  await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('a proxy error');
+  await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('searching images');
 });
 
 test('searchImages without registry', async () => {
