@@ -42,13 +42,13 @@ There is no direct way to verify the mirror configuration from the UI. But, you 
 
 1. Start an interactive session with the default Podman machine:
 
-```sh
+```shell-session
 $ podman machine ssh <machine_name>
 ```
 
 2. Pull an invalid image from `docker.io`.
 
-```sh
+```shell-session
 $ podman pull docker.io/invalid
 ```
 

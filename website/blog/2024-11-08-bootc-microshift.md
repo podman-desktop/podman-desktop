@@ -61,7 +61,7 @@ We will be using the Containerfile from the [MicroShift image mode GitHub docume
 
 Copy the Containerfile from the above link to a new file which we will be building with Podman Desktop:
 
-```sh
+```shell-session
 $ curl https://raw.githubusercontent.com/openshift/microshift/main/docs/config/Containerfile.bootc-rhel9 -o Containerfile
 ```
 
@@ -121,19 +121,19 @@ When using Hyper-V, create a `.vhd` image with BootC:
 
 2. Install QEMU:
 
-```sh
+```shell-session
 $ brew install qemu
 ```
 
 3. Navigate to the directory containing your `disk.raw` file:
 
-```sh
+```shell-session
 $ cd ~/output
 ```
 
 4. Run the `qemu` command:
 
-```sh
+```shell-session
 $  qemu-system-aarch64 \
     -m 8G \
     -M virt \
@@ -152,7 +152,7 @@ $  qemu-system-aarch64 \
 
 With the above `qemu` command, a port has now been opened locally at :2222 to SSH forward to the bootable image. You can now access your virtual machine by doing the following:
 
-```sh
+```shell-session
 $ ssh redhat@localhost -p 2222
 ```
 
@@ -165,13 +165,13 @@ $ ssh redhat@localhost -p 2222
 
 3. Navigate to the directory containing your `disk.raw` file:
 
-```sh
+```shell-session
 $ cd ~/output
 ```
 
 4. Run the `qemu` command:
 
-```sh
+```shell-session
 $ qemu-system-x86_64 \
     -m 8G \
     -cpu Broadwell-v4 \
@@ -185,7 +185,7 @@ $ qemu-system-x86_64 \
 
 With the above `qemu` command, a port has now been opened locally at :2222 to SSH forward to the bootable image. You can now access your virtual machine by doing the following:
 
-```sh
+```shell-session
 $ ssh redhat@localhost -p 2222
 ```
 
@@ -206,25 +206,25 @@ Below we will copy the OpenShift secret you had previously downloaded to the vir
 
 2. Use `scp` to copy over to the virtual machine:
 
-```sh
+```shell-session
 $ scp -P 2222 pull-secret.txt redhat@localhost:~/
 ```
 
 3. SSH into the VM:
 
-```sh
+```shell-session
 $ ssh redhat@localhost -p 2222
 ```
 
 4. Move the secret to `/etc/crio/openshift-pull-secret`:
 
-```sh
+```shell-session
 $ sudo mv pull-secret.txt /etc/crio/openshift-pull-secret
 ```
 
 5. Restart the `microshift` service:
 
-```sh
+```shell-session
 $ sudo systemctl restart microshift
 ```
 
@@ -234,13 +234,13 @@ Below we will SSH into the virtual machine and confirm that MicroShift is deploy
 
 1. SSH into the VM:
 
-```sh
+```shell-session
 $ ssh redhat@localhost -p 2222
 ```
 
 2. Copy the generated `kubeconfig` file to `~/.kube/config`:
 
-```sh
+```shell-session
 $ mkdir -p ~/.kube
 $ sudo cp /var/lib/microshift/resources/kubeadmin/kubeconfig ~/.kube/config
 $ sudo chown redhat ~/.kube/config
@@ -248,7 +248,7 @@ $ sudo chown redhat ~/.kube/config
 
 3. Verify Pods are running by using `oc` or `kubectl`:
 
-```sh
+```shell-session
 $ kubectl get pods -A
 NAMESPACE                  NAME                                       READY   STATUS    RESTARTS   AGE
 kube-system                csi-snapshot-controller-856bb8b9bc-9n7lj   1/1     Running   1          3d23h
@@ -267,7 +267,7 @@ Alternatively, you can copy the MicroShift configuration file to your local mach
 
 1. On your local machine, create the `.kube` directory if it does not exist already:
 
-```sh
+```shell-session
 $ mkdir ~/.kube
 ```
 

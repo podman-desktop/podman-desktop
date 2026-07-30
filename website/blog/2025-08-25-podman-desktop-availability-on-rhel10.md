@@ -53,13 +53,13 @@ The installation and verification procedure includes:
 
 1. Open a terminal, and enable the RHEL extensions repository:
 
-   ```sh
+   ```shell-session
    $ sudo subscription-manager repos --enable rhel-10-for-$(arch)-extensions-rpms
    ```
 
 1. Enter your password when prompted.
 1. Install Podman Desktop:
-   ```sh
+   ```shell-session
    $ sudo dnf install podman-desktop
    ```
 1. Enter `y` to confirm the installed size.
