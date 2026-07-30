@@ -17,11 +17,11 @@
  ***********************************************************************/
 
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastSubmenuPages } from './stores/breadcrumb';
 import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
@@ -29,17 +29,23 @@ import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 vi.mock(import('@podman-desktop/ui-svelte'));
 
-test('SubmenuNavigation displays a title and builds SettingsNavItem components', async () => {
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
+test.each(['Kubernetes', 'Tools'])('qualifies submenu item labels with parent "%s"', parentName => {
   const SettingsNavItemMock = vi.mocked(SettingsNavItem);
   render(SubmenuNavigation, {
-    title: 'A title',
+    title: parentName,
     items: [
       {
-        tooltip: 'entry 1',
+        name: 'Nodes',
+        tooltip: 'Nodes',
         link: '/link1',
       } as unknown as NavigationRegistryEntry,
       {
-        tooltip: 'entry 2',
+        name: 'Pods',
+        tooltip: 'Pods',
         link: '/link2',
       } as unknown as NavigationRegistryEntry,
     ],
@@ -49,30 +55,38 @@ test('SubmenuNavigation displays a title and builds SettingsNavItem components',
     link: '/link',
   });
 
-  // title should be displayed
-  const title = screen.getByText('A title');
-  expect(title).toBeDefined();
-
   expect(SettingsNavItemMock).toHaveBeenCalledTimes(2);
   expect(SettingsNavItemMock).toHaveBeenNthCalledWith(1, expect.anything(), {
-    title: 'entry 1',
+    title: `${parentName} > Nodes`,
     href: '/link1',
     selected: true,
-    onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    onKeyDown: expect.any(Function),
   });
   expect(SettingsNavItemMock).toHaveBeenNthCalledWith(2, expect.anything(), {
-    title: 'entry 2',
+    title: `${parentName} > Pods`,
     href: '/link2',
     selected: false,
-    onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    onKeyDown: expect.any(Function),
   });
 });
 
-test('set up and update lastSubmenuPages store for each submenu', async () => {
+test('remembers the clicked destination for a submenu', async () => {
   lastSubmenuPages.set({});
   render(SubmenuNavigation, {
     title: 'page 1',
-    items: [],
+    items: [
+      {
+        name: 'entry 1',
+        tooltip: 'entry 1',
+        link: '/link1',
+        icon: {},
+        counter: 0,
+        destinations: [],
+        type: 'entry',
+      },
+    ],
     meta: {
       url: '/link1/subpath',
     } as TinroRouteMeta,
@@ -81,4 +95,6 @@ test('set up and update lastSubmenuPages store for each submenu', async () => {
   await tick();
 
   expect(get(lastSubmenuPages)['page 1']).toBe('/page1');
+  await fireEvent.click(screen.getByRole('listitem'));
+  expect(get(lastSubmenuPages)['page 1']).toBe('/link1');
 });

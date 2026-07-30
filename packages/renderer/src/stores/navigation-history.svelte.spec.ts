@@ -97,6 +97,24 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
             counter: 0,
             type: 'entry',
           },
+          {
+            name: 'Resources',
+            parentName: 'Settings',
+            icon: {},
+            link: '/preferences/resources',
+            tooltip: 'Resources',
+            counter: 0,
+            type: 'entry',
+          },
+          {
+            name: 'Logs',
+            parentName: 'Settings > Tools',
+            icon: {},
+            link: '/preferences/tools/logs',
+            tooltip: 'Logs',
+            counter: 0,
+            type: 'entry',
+          },
         ] as NavigationRegistryEntry[]);
         return vi.fn();
       }),
@@ -140,6 +158,15 @@ beforeEach(() => {
   // Reset navigation history state
   navigationHistory.stack = [];
   navigationHistory.index = -1;
+});
+
+test.each([
+  ['/preferences/resources', 'Settings > Resources'],
+  ['/preferences/tools/logs', 'Settings > Tools > Logs'],
+])('preserves the registered parent path in history for %s', (url, name) => {
+  navigationHistory.stack = [{ url }, { url: '/containers' }];
+  navigationHistory.index = 1;
+  expect(getBackEntries()[0]?.name).toBe(name);
 });
 
 describe('goBack', () => {
