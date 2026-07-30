@@ -1,19 +1,16 @@
 ---
-title: Writing custom extensions for Podman Desktop
+sidebar_position: 9
+title: Writing custom extensions
 description: A step-by-step guide to building a Podman Desktop extension, from progress tasks to CI/CD -- based on the DevConf.CZ 2026 workshop.
-slug: writing-custom-extensions
-authors: [gastoner]
-tags: [podman-desktop, extension, tutorial, devconf]
-hide_table_of_contents: false
+keywords: [podman-desktop, extension, tutorial, devconf]
+tags: [podman-desktop, writing-custom-extensions]
 ---
 
-Extensions let you add custom features to Podman Desktop -- new commands, status bar indicators, tray menus, webview dashboards, configuration panels, providers, onboarding workflows, and more. In this post we walk through building a real extension from scratch, covering the most important APIs along the way.
+# Writing custom extensions for Podman Desktop
+
+Extensions let you add custom features to Podman Desktop -- new commands, status bar indicators, tray menus, webview dashboards, configuration panels, providers, onboarding workflows, and more. In this tutorial we walk through building a real extension from scratch, covering the most important APIs along the way.
 
 The content is based on the [DevConf.CZ 2026 workshop](https://pretalx.devconf.info/devconf-cz-2026/talk/WQULVZ/) _"Podman Desktop -- Creating extensions to simplify container workflows"_. The companion repository provides 14 progressive branches, each introducing one API concept with a numbered placeholder comment you fill in yourself.
-
-<!--truncate-->
-
----
 
 ## Prerequisites
 

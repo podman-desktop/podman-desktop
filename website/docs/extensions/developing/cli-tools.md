@@ -8,7 +8,7 @@ keywords: [podman desktop, extension, cli, tool]
 
 # CLI tools
 
-Extensions can register CLI tools so they appear in the Podman Desktop **Settings > CLI Tools** page. This lets users see the tool's version, path, and update status alongside other registered tools like `kubectl` or `kind`.
+Want to automatically install and update a CLI binary your extension depends on, instead of asking users to install it themselves? Extensions can register CLI tools so they appear in the Podman Desktop **Settings > CLI Tools** page. This lets users see the tool's version, path, and update status alongside other registered tools like `kubectl` or `kind`, and optionally lets Podman Desktop drive the install and update flow on the user's behalf.
 
 ## Registering a CLI tool
 

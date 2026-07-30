@@ -110,7 +110,7 @@ These guides cover the most frequently used APIs when building an extension:
 - [Adding UI components](/docs/extensions/developing/adding-ui-components) -- use the `@podman-desktop/ui-svelte` library in webviews
 - [Adding icons](/docs/extensions/developing/adding-icons) -- customize your extension's icons
 
-For a hands-on walkthrough that combines many of these APIs in a real extension, see the [Writing custom extensions](/blog/writing-custom-extensions) blog post.
+For a hands-on walkthrough that combines many of these APIs in a real extension, see the [Writing custom extensions](/tutorial/writing-custom-extensions) tutorial.
 
 ## Expanding your extension
 
