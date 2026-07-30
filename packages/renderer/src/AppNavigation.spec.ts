@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -31,7 +31,8 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
-import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
+import { navigationDragState } from './stores/navigation/navigation-drag-state.svelte';
+import { fetchNavigationRegistries, setNavigationItemOrder } from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
 
@@ -91,6 +92,21 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
   expect(volumes).toBeInTheDocument();
   const settings = screen.getByRole('link', { name: 'Settings' });
   expect(settings).toBeInTheDocument();
+});
+
+test('places reorder shortcut metadata on the focused navigation link', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  expect(containers).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
+  expect(containers).toHaveAttribute('title', expect.stringContaining('Arrow to move'));
+  expect(containers.closest('[role="listitem"]')).not.toHaveAttribute('aria-keyshortcuts');
 });
 
 test('Test contributions', () => {
@@ -217,4 +233,46 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+test('native image drag is prevented on reorderable navigation items', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const firstRow = screen.getAllByRole('listitem')[0];
+  const event = new Event('dragstart', { bubbles: true, cancelable: true });
+  firstRow.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+});
+
+test('Ctrl+ArrowDown moves the focused item down and persists the order', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  await fetchNavigationRegistries();
+  const { unmount } = render(AppNavigation, {
+    meta: { url: '/' } as TinroRouteMeta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  containers.focus();
+  await fireEvent.keyDown(window, { key: 'ArrowDown', ctrlKey: true });
+
+  await vi.waitFor(() => {
+    const region = screen.getByRole('region', { name: 'Scrollable navigation list' });
+    const links = within(region).getAllByRole('link');
+    expect(links[0]).toHaveAccessibleName('Pods');
+    expect(links[1]).toHaveAccessibleName('Containers');
+  });
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith(
+    'navbar.itemOrder',
+    expect.arrayContaining(['Pods', 'Containers']),
+  );
+  expect(navigationDragState.announcement).toMatch(/^Moved Containers to position 2 of \d+$/);
+
+  unmount();
+  setNavigationItemOrder([]);
 });
