@@ -36,7 +36,7 @@ Uninstalling Podman Desktop does not automatically remove the created Kubernetes
 You can delete all pods, containers, and images by removing the Podman machine.
 
 1. Remove all Podman machines:
-   ```sh
+   ```shell-session
    $ podman machine reset -f
    ```
 1. Uninstall Podman from the Start menu, Settings, or Control Panel. For more details, see the [resource](https://support.microsoft.com/en-us/windows/uninstall-or-remove-apps-and-programs-in-windows-4b55f974-2cc6-2d2b-d092-5905080eaf98).
@@ -51,27 +51,27 @@ You can delete all pods, containers, and images by removing the Podman machine.
 <TabItem value="macOS" label="macOS" className="markdown">
 
 1. Remove all Podman machines:
-   ```sh
+   ```shell-session
    $ podman machine reset -f
    ```
 1. Perform one of the following steps based on your installation:
    - If you have installed Podman using `brew`, run the following command:
-     ```sh
+     ```shell-session
      $ brew uninstall podman
      ```
    - If you have installed Podman using the Podman Desktop setup, run the following commands one by one:
-     ```sh
+     ```shell-session
      $ sudo /opt/podman/bin/podman-mac-helper uninstall
      $ sudo rm /etc/paths.d/podman-pkg
      $ sudo rm -rfv /opt/podman
      ```
 1. Remove the Podman files and configurations:
-   ```sh
+   ```shell-session
    $ rm -rf ~/.local/share/containers/podman
    $ rm -rf ~/.config/containers/podman
    ```
 1. Optional: Delete storage configuration:
-   ```sh
+   ```shell-session
    $ rm -rf ~/.local/share/containers/storage
    ```
 
@@ -145,7 +145,7 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
 
 1. Perform one of the following steps based on your installation:
    - If you have installed Podman Desktop using `brew`, run the following command:
-     ```sh
+     ```shell-session
      $ brew uninstall podman-desktop
      ```
    - If you have installed Podman Desktop using the `.dmg` file, perform the following steps:
@@ -153,7 +153,7 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
      1. Drag the Podman Desktop icon and drop it to the trash folder.
 
 1. Remove the Podman Desktop configuration files:
-   ```sh
+   ```shell-session
    $ rm -rf ~/.local/share/containers/podman-desktop
    ```
 
@@ -162,12 +162,12 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
 
 1. Uninstall Podman Desktop using flatpak or flathub:
 
-   ```sh
+   ```shell-session
    $ flatpak uninstall io.podman_desktop.PodmanDesktop
    ```
 
 1. Remove the Podman Desktop configuration folder:
-   ```sh
+   ```shell-session
    $ rm -rf ~/.local/share/containers/podman-desktop
    ```
 
