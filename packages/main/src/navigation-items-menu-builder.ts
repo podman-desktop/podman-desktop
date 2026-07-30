@@ -162,18 +162,33 @@ export class NavigationItemsMenuBuilder {
     if (!allowLeafMatch || isGroupedName(itemName)) {
       return undefined;
     }
-    return this.navigationItems.find(item => isGroupedName(item.name) && leafName(item.name) === itemName);
+    const matches = this.navigationItems.filter(item => isGroupedName(item.name) && leafName(item.name) === itemName);
+    return matches.length === 1 ? matches[0] : undefined;
   }
 
-  /** Pin / Unpin for a promoted (Settings/submenu) item matched by linkText. */
+  protected findGroupedItemByLink(linkURL: string, pageURL?: string): DisplayItem | undefined {
+    try {
+      const url = new URL(linkURL, pageURL);
+      return this.navigationItems.find(
+        item => isGroupedName(item.name) && item.link && new URL(item.link, pageURL ?? url).href === url.href,
+      );
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Pin / Unpin for a registered sidebar destination, preferring its route over its label. */
   protected buildGroupedPinMenuItem(
     linkText: string | undefined,
     allowLeafMatch = true,
+    linkURL?: string,
+    pageURL?: string,
   ): MenuItemConstructorOptions | undefined {
-    if (!linkText) {
-      return undefined;
-    }
-    const item = this.findGroupedItemByLinkText(linkText, allowLeafMatch);
+    const item = linkURL
+      ? this.findGroupedItemByLink(linkURL, pageURL)
+      : linkText
+        ? this.findGroupedItemByLinkText(linkText, allowLeafMatch)
+        : undefined;
     if (!item) {
       return undefined;
     }
@@ -258,8 +273,13 @@ export class NavigationItemsMenuBuilder {
     const navWidth = this.getNavWidth();
     const inMainNav = parameters.x < navWidth;
 
-    // Pin/Unpin: leaf names only from settings/submenu sidebars; main nav needs the prefixed name.
-    const pinMenu = this.buildGroupedPinMenuItem(parameters.linkText, !inMainNav);
+    // Prefer the registered route; leaf-name fallback is only allowed outside the main navigation.
+    const pinMenu = this.buildGroupedPinMenuItem(
+      parameters.linkText,
+      !inMainNav,
+      parameters.linkURL,
+      parameters.pageURL,
+    );
     if (pinMenu) {
       items.push(pinMenu);
     } else if (parameters.linkText && inMainNav && parameters.y > 76) {

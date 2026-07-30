@@ -42,8 +42,10 @@ class TestNavigationItemsMenuBuilder extends NavigationItemsMenuBuilder {
   override buildGroupedPinMenuItem(
     linkText: string | undefined,
     allowLeafMatch = true,
+    linkURL?: string,
+    pageURL?: string,
   ): MenuItemConstructorOptions | undefined {
-    return super.buildGroupedPinMenuItem(linkText, allowLeafMatch);
+    return super.buildGroupedPinMenuItem(linkText, allowLeafMatch, linkURL, pageURL);
   }
   override buildNavigationToggleMenuItems(): MenuItemConstructorOptions[] {
     return super.buildNavigationToggleMenuItems();
@@ -175,6 +177,59 @@ describe('buildGroupedPinMenuItem', () => {
     expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Pods', true)?.label).toBe('Pin Pods to Navigation');
     expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Kubernetes > Pods', false)?.label).toBe(
       'Pin Pods to Navigation',
+    );
+  });
+
+  test.each(['http://localhost:9000/', 'file:///app/renderer/index.html'])(
+    'pins the clicked route when two submenus have the same child label (%s)',
+    pageURL => {
+      getConfigurationMock.mockReturnValue({ get: (key: string) => (key === 'itemOrder' ? [] : 160) });
+      navigationItemsMenuBuilder.receiveNavigationItems([
+        { name: 'Kubernetes > Nodes', link: '/kubernetes/nodes', visible: false },
+        { name: 'Tools > Nodes', link: '/tools/nodes', visible: false },
+        { name: 'Tools', link: '/tools', visible: true, index: 0 },
+      ]);
+
+      const menu = navigationItemsMenuBuilder.buildNavigationMenu({
+        linkText: 'Nodes',
+        linkURL: new URL('/tools/nodes', pageURL).href,
+        pageURL,
+        x: 220,
+      } as ContextMenuParams);
+
+      expect(menu[0]?.label).toBe('Pin Nodes to Navigation');
+      menu[0]?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+      expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith(
+        'navbar.itemOrder',
+        ['Tools > Nodes', 'Tools'],
+        'DEFAULT',
+      );
+      expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Nodes')).toBeUndefined();
+    },
+  );
+
+  test.each(['http://localhost:9000/unregistered', 'http://[invalid'])(
+    'does not pin by label for an unmatched URL %s',
+    linkURL => {
+      navigationItemsMenuBuilder.receiveNavigationItems([
+        { name: 'Settings > Kubernetes', link: '/preferences/kubernetes-contexts', visible: false },
+      ]);
+      expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Kubernetes', true, linkURL)).toBeUndefined();
+    },
+  );
+
+  test('unpins a collapsed navigation entry by its route without link text', () => {
+    getConfigurationMock.mockReturnValue({ get: () => ['Tools > Nodes', 'Tools'] });
+    navigationItemsMenuBuilder.receiveNavigationItems([
+      { name: 'Tools > Nodes', link: '/tools/nodes', visible: true, index: 0 },
+    ]);
+    const menu = navigationItemsMenuBuilder.buildGroupedPinMenuItem('', false, 'file:///tools/nodes');
+    expect(menu?.label).toBe('Unpin Nodes');
+    menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+    expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith(
+      'navbar.itemOrder',
+      ['Tools'],
+      'DEFAULT',
     );
   });
 });
