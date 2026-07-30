@@ -264,3 +264,8 @@ article .markdown ol ol {
 .navbar__items--right > *:nth-child(4) {
   order: 3;
 }
+
+/* Prevent shell prompt symbols from being included when manually selecting code from shell-session block */
+.token.shell-symbol {
+  user-select: none;
+}
