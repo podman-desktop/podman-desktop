@@ -67,7 +67,7 @@ $ podman run --rm --device nvidia.com/gpu=all nvidia/cuda:11.0.3-base-ubuntu20.0
 
 Example output:
 
-```shell-session
+```sh
 PS C:\Users\admin>  podman run --rm --device nvidia.com/gpu=all nvidia/cuda:11.0.3-base-ubuntu20.04 nvidia-smi
 Fri Aug 16 18:58:14 2024
 +---------------------------------------------------------------------------------------+
