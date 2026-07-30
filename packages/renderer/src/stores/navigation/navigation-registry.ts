@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import type { DisplayItem, GoToInfo } from '@podman-desktop/core-api';
+import type { GoToInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -50,6 +50,11 @@ export interface NavigationRegistryEntry {
   items?: NavigationRegistryEntry[];
   hidden?: boolean;
   index?: number;
+}
+
+interface DisplayItem {
+  name: string;
+  visible: boolean;
 }
 
 const windowEvents: string[] = [];
