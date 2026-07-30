@@ -29,6 +29,19 @@ import PreferencesNavigation from './PreferencesNavigation.svelte';
 import { configurationProperties } from './stores/configurationProperties';
 import { onDidChangeRegisteredFeatures, registeredFeatures } from './stores/registered-features';
 
+vi.mock(import('./stores/navigation/navigation-registry'), async () => {
+  const { writable } = await import('svelte/store');
+  return { navigationRegistry: writable([]), pinToNavbar: vi.fn() };
+});
+
+const windowDefaults = {
+  innerWidth: window.innerWidth,
+  getComputedStyle: window.getComputedStyle,
+  requestAnimationFrame: window.requestAnimationFrame,
+  addEventListener: window.addEventListener,
+  removeEventListener: window.removeEventListener,
+};
+
 const DEFAULT_META = {
   url: '/',
 } as unknown as TinroRouteMeta;
@@ -72,7 +85,9 @@ function mockNavigationMeasurements(options: {
     configurable: true,
     value: vi.fn((element: Element) => {
       const htmlElement = element as HTMLElement;
+      const style = windowDefaults.getComputedStyle(element);
       return {
+        getPropertyValue: style.getPropertyValue.bind(style),
         minWidth: htmlElement.getAttribute('aria-label') === 'PreferencesNavigation' ? minWidth : '',
         whiteSpace: htmlElement.dataset.settingsNavTitle !== undefined ? 'nowrap' : 'normal',
         font: '',
@@ -133,17 +148,9 @@ beforeEach(() => {
     configurable: true,
     value: undefined,
   });
-  Object.defineProperty(global, 'window', {
-    value: {
-      getConfigurationValue: vi.fn(),
-      events: {
-        receive: (_channel: string, func: () => void): void => {
-          func();
-        },
-      },
-    },
-    writable: true,
-  });
+  for (const [key, value] of Object.entries(windowDefaults)) {
+    Object.defineProperty(window, key, { configurable: true, writable: true, value });
+  }
   vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
 });
 
@@ -166,6 +173,29 @@ test('Test rendering of the preferences navigation bar and its items', () => {
   const authentication = screen.getByRole('link', { name: 'Authentication' });
   expect(authentication).toBeVisible();
   // ToDo: adding configuration section/items mocks for preferences, issue #2966
+});
+
+test('generated Preferences sections and children cannot be pinned', async () => {
+  configurationProperties.set([
+    {
+      id: 'appearance.theme',
+      title: 'Appearance',
+      default: 'system',
+      parentId: 'preferences.appearance',
+      type: 'string',
+      scope: 'DEFAULT',
+    },
+  ]);
+
+  renderPreferencesNavigation();
+
+  const preferencesLink = screen.getByRole('link', { name: /preferences/i });
+  expect(preferencesLink).not.toHaveAttribute('aria-keyshortcuts');
+  expect(preferencesLink.closest('[role="listitem"]')).not.toHaveClass('cursor-grab');
+  await fireEvent.click(preferencesLink);
+  const appearanceLink = screen.getByRole('link', { name: 'Appearance' });
+  expect(appearanceLink).not.toHaveAttribute('aria-keyshortcuts');
+  expect(appearanceLink.closest('[role="listitem"]')).not.toHaveClass('cursor-grab');
 });
 
 test('Test rendering of the compatibility docker pag if config is available', async () => {
