@@ -2,14 +2,23 @@
 import { DockerCompatibilitySettings } from '@podman-desktop/core-api';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
-import { onMount, tick } from 'svelte';
+import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
 import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
+import { longPress } from '/@/lib/ui/attachments/longpress';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
 
 import { configurationProperties } from './stores/configurationProperties';
+import { LONG_PRESS_MS } from './stores/navigation/navigation-drag-state.svelte';
+import {
+  beginPin,
+  consumePinClick,
+  navigationPinSource,
+  onPinPointerDown,
+  resetPin,
+} from './stores/navigation/navigation-pin-source.svelte';
 import { onDidChangeRegisteredFeatures, registeredFeatures } from './stores/registered-features';
 
 interface Props {
@@ -262,13 +271,24 @@ onMount(() => {
     onDidChangeRegisteredFeatures.removeEventListener(kubernetesContextsManagerFeature, featureListener);
   };
 });
+
+// --- Drag to main nav ---
+onDestroy(resetPin);
+
+function onLongPressPin(itemTitle: string, itemHref: string): void {
+  beginPin({
+    name: `Settings > ${itemTitle}`,
+    link: itemHref,
+  });
+}
 </script>
 
 <nav
   bind:this={navigationElement}
   style:width={navigationWidthPx ? `${navigationWidthPx}px` : undefined}
   class="z-1 w-leftsidebar min-w-leftsidebar max-w-none shrink-0 flex-col justify-between flex bg-[var(--pd-secondary-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
-  aria-label="PreferencesNavigation">
+  aria-label="PreferencesNavigation"
+  onpointercancel={resetPin}>
   <div class="flex items-center">
     <div class="pt-4 px-3 mb-5">
       <p
@@ -277,50 +297,98 @@ onMount(() => {
       </p>
     </div>
   </div>
-  <div class="h-full overflow-y-auto" style="margin-bottom:auto">
+  <div class="h-full overflow-y-auto mb-auto" role="list">
     {#each settingsNavigationItems as navItem, index (index)}
       {#if navItem.visible}
-        <SettingsNavItem 
-          title={navItem.title} 
-          href={navItem.href} 
-          icon={navItem.icon}
-          onClick={scheduleNavigationWidthUpdate}
-          selected={meta.url === navItem.href} 
-        />
+        <div
+          role="listitem"
+          class="relative touch-none select-none cursor-grab"
+          class:opacity-50={navigationPinSource.draggingLink === navItem.href}
+          title={navigationPinSource.draggingLink ? undefined : 'Hold to pin to navigation'}
+          onpointerdown={onPinPointerDown}
+          onclick={consumePinClick}
+          {@attach longPress(onLongPressPin.bind(undefined, navItem.title, navItem.href), 0, LONG_PRESS_MS)}>
+          <SettingsNavItem
+            title={navItem.title}
+            href={navItem.href}
+            icon={navItem.icon}
+            onClick={scheduleNavigationWidthUpdate}
+            selected={meta.url === navItem.href}
+          />
+        </div>
       {/if}
     {/each}
 
     <!-- Default configuration properties start -->
     {#each configProperties as [configSection, configItems] (configSection)}
-      <SettingsNavItem
-        title={configSection}
-        href="/preferences/default/{configSection}"
-        icon={PreferencesIcon}
-        section={configItems.length > 0}
-        selected={meta.url === `/preferences/default/${configSection}`}
-        onClick={scheduleNavigationWidthUpdate}
-        bind:expanded={sectionExpanded[configSection]} />
+      <div
+        role="listitem"
+        class="relative touch-none select-none cursor-grab"
+        class:opacity-50={navigationPinSource.draggingLink === `/preferences/default/${configSection}`}
+        title={navigationPinSource.draggingLink ? undefined : 'Hold to pin to navigation'}
+        onpointerdown={onPinPointerDown}
+        onclick={consumePinClick}
+        {@attach longPress(
+          onLongPressPin.bind(undefined, configSection, `/preferences/default/${configSection}`),
+          0,
+          LONG_PRESS_MS,
+        )}>
+        <SettingsNavItem
+          title={configSection}
+          href="/preferences/default/{configSection}"
+          icon={PreferencesIcon}
+          section={configItems.length > 0}
+          selected={meta.url === `/preferences/default/${configSection}`}
+          onClick={scheduleNavigationWidthUpdate}
+          bind:expanded={sectionExpanded[configSection]} />
+      </div>
       {#if sectionExpanded[configSection]}
         {#each sortItems(configItems) as configItem (configItem.id)}
-          <SettingsNavItem
-            title={configItem.title}
-            href="/preferences/default/{configItem.id}"
-            child={true}
-            onClick={scheduleNavigationWidthUpdate}
-            selected={meta.url === `/preferences/default/${configItem.id}`} />
+          <div
+            role="listitem"
+            class="relative touch-none select-none cursor-grab"
+            class:opacity-50={navigationPinSource.draggingLink === `/preferences/default/${configItem.id}`}
+            title={navigationPinSource.draggingLink ? undefined : 'Hold to pin to navigation'}
+            onpointerdown={onPinPointerDown}
+            onclick={consumePinClick}
+            {@attach longPress(
+              onLongPressPin.bind(undefined, configItem.title, `/preferences/default/${configItem.id}`),
+              0,
+              LONG_PRESS_MS,
+            )}>
+            <SettingsNavItem
+              title={configItem.title}
+              href="/preferences/default/{configItem.id}"
+              child={true}
+              onClick={scheduleNavigationWidthUpdate}
+              selected={meta.url === `/preferences/default/${configItem.id}`} />
+          </div>
         {/each}
       {/if}
     {/each}
     <!-- Default configuration properties end -->
-    <div class="mx-3 my-2 border-t border-(--pd-global-nav-bg-border)"></div>
-    <SettingsNavItem
-      icon='fas fa-crosshairs'
-      iconRight={ShortcutArrowIcon}
-      iconRightAlign="end"
-      title="Troubleshooting"
-      href="/troubleshooting/repair-connections"
-      onClick={scheduleNavigationWidthUpdate}
-      selected={meta.url === '/troubleshooting/repair-connections'}
-    />
+    <div class="mx-3 my-2 border-t border-(--pd-global-nav-bg-border)" role="presentation"></div>
+    <div
+      role="listitem"
+      class="relative touch-none select-none cursor-grab"
+      class:opacity-50={navigationPinSource.draggingLink === '/troubleshooting/repair-connections'}
+      title={navigationPinSource.draggingLink ? undefined : 'Hold to pin to navigation'}
+      onpointerdown={onPinPointerDown}
+      onclick={consumePinClick}
+      {@attach longPress(
+        onLongPressPin.bind(undefined, 'Troubleshooting', '/troubleshooting/repair-connections'),
+        0,
+        LONG_PRESS_MS,
+      )}>
+      <SettingsNavItem
+        icon="fas fa-crosshairs"
+        iconRight={ShortcutArrowIcon}
+        iconRightAlign="end"
+        title="Troubleshooting"
+        href="/troubleshooting/repair-connections"
+        onClick={scheduleNavigationWidthUpdate}
+        selected={meta.url === '/troubleshooting/repair-connections'}
+      />
+    </div>
   </div>
 </nav>

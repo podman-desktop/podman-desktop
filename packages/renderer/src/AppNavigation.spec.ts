@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import type { KubernetesObject } from '@kubernetes/client-node';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
-import { render, screen } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { get, readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -31,9 +31,22 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
-import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
+import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
+import { fetchNavigationRegistries, navigationRegistry } from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
+
+function makeEntry(overrides: Partial<NavigationRegistryEntry> & { name: string }): NavigationRegistryEntry {
+  return {
+    icon: {},
+    tooltip: overrides.name,
+    link: `/${overrides.name.toLowerCase()}`,
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+    ...overrides,
+  };
+}
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
@@ -43,6 +56,7 @@ vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
+  Object.defineProperty(window, 'getOsPlatform', { value: vi.fn().mockResolvedValue('linux') });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
@@ -53,7 +67,7 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
     url: '/',
   } as unknown as TinroRouteMeta;
 
-  // mock no kubernetes resources
+  // mock no kube resources
   vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
@@ -132,8 +146,8 @@ test('Navigation bar shows title when expanded', async () => {
     exitSettingsCallback: () => {},
   });
 
-  // Default width is 160px (expanded) — title should be in the DOM
   const dashboardTitle = screen.getByLabelText('Dashboard title');
+  // Default width is 160px (expanded) — title should be in the DOM
   await vi.waitFor(() => expect(dashboardTitle).toHaveTextContent('Dashboard'));
 });
 
@@ -189,4 +203,168 @@ test('Expanded threshold controls text visibility', async () => {
   // Grow above threshold — should expand again
   callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 135 } });
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
+});
+
+test('Items render sorted by index', async () => {
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  navigationRegistry.set([
+    makeEntry({ name: 'Containers', index: 2 }),
+    makeEntry({ name: 'Images', index: 3 }),
+    makeEntry({ name: 'Pods', index: 1 }),
+    makeEntry({ name: 'Volumes', index: 4 }),
+    makeEntry({ name: 'Secrets', index: 0 }),
+  ]);
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  await vi.waitFor(() => expect(screen.getByRole('link', { name: 'Secrets' })).toBeInTheDocument());
+
+  const relevantNames = ['Containers', 'Images', 'Secrets', 'Pods', 'Volumes'];
+  const renderedOrder = screen
+    .getAllByRole('link')
+    .map(link => link.getAttribute('aria-label'))
+    .filter((name): name is string => !!name && relevantNames.includes(name));
+
+  expect(renderedOrder).toStrictEqual(['Secrets', 'Pods', 'Containers', 'Images', 'Volumes']);
+});
+
+test('Hiding an indexed item removes it from the DOM', async () => {
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  const indexedEntry = makeEntry({ name: 'Volumes', index: 0 });
+  const otherEntry = makeEntry({ name: 'Networks', index: 1 });
+
+  navigationRegistry.set([
+    makeEntry({ name: 'Containers', index: 2 }),
+    makeEntry({ name: 'Images', index: 3 }),
+    indexedEntry,
+    otherEntry,
+  ]);
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  await vi.waitFor(() => expect(screen.getByRole('link', { name: 'Volumes' })).toBeInTheDocument());
+  expect(screen.getByRole('link', { name: 'Networks' })).toBeInTheDocument();
+
+  indexedEntry.hidden = true;
+  otherEntry.hidden = true;
+  navigationRegistry.set([...get(navigationRegistry)]);
+
+  await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Networks' })).not.toBeInTheDocument());
+  expect(screen.queryByRole('link', { name: 'Volumes' })).not.toBeInTheDocument();
+});
+
+test('Indexed children of any submenu entry are promoted into the main nav, unindexed siblings are not', async () => {
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  const indexedChild = makeEntry({ name: 'Widget A', link: '/my-submenu/widget-a', index: 0 });
+  const unindexedChild = makeEntry({ name: 'Widget B', link: '/my-submenu/widget-b' });
+
+  navigationRegistry.set([
+    makeEntry({ name: 'Containers', index: 1 }),
+    makeEntry({ name: 'Images', index: 2 }),
+    makeEntry({ name: 'My Submenu', type: 'submenu', items: [indexedChild, unindexedChild], index: 3 }),
+    makeEntry({ name: 'Volumes', index: 4 }),
+  ]);
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  await vi.waitFor(() => expect(screen.getByRole('link', { name: 'My Submenu > Widget A' })).toBeInTheDocument());
+  expect(screen.queryByRole('link', { name: 'Widget B' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'My Submenu > Widget B' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'My Submenu' })).toBeInTheDocument();
+
+  const relevantNames = ['Containers', 'Images', 'My Submenu > Widget A', 'My Submenu', 'Volumes'];
+  const renderedOrder = screen
+    .getAllByRole('link')
+    .map(link => link.getAttribute('aria-label'))
+    .filter((name): name is string => !!name && relevantNames.includes(name));
+
+  expect(renderedOrder).toStrictEqual(['My Submenu > Widget A', 'Containers', 'Images', 'My Submenu', 'Volumes']);
+});
+
+test('Indexed children with the same name from different submenus coexist, disambiguated by their submenu name', async () => {
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  const podsFromSubmenuA = makeEntry({ name: 'Pods', link: '/submenu-a/pods', index: 0 });
+  const podsFromSubmenuB = makeEntry({ name: 'Pods', link: '/submenu-b/pods', index: 1 });
+
+  navigationRegistry.set([
+    makeEntry({ name: 'Containers', index: 2 }),
+    makeEntry({ name: 'Images', index: 3 }),
+    makeEntry({ name: 'Submenu A', type: 'submenu', items: [podsFromSubmenuA], index: 4 }),
+    makeEntry({ name: 'Submenu B', type: 'submenu', items: [podsFromSubmenuB], index: 5 }),
+  ]);
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  await vi.waitFor(() => expect(screen.getByRole('link', { name: 'Submenu A > Pods' })).toBeInTheDocument());
+  expect(screen.getByRole('link', { name: 'Submenu B > Pods' })).toBeInTheDocument();
+
+  expect(screen.getByRole('link', { name: 'Submenu A > Pods' })).toHaveAttribute('href', '/submenu-a/pods');
+  expect(screen.getByRole('link', { name: 'Submenu B > Pods' })).toHaveAttribute('href', '/submenu-b/pods');
+});
+
+test('renders an aria-live region for navigation announcements', async () => {
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  navigationRegistry.set([makeEntry({ name: 'Containers', index: 0 })]);
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const liveRegion = await vi.waitFor(() => screen.getByTestId('nav-live-region'));
+  expect(liveRegion).toHaveAttribute('aria-live', 'polite');
+  expect(liveRegion).toHaveAttribute('role', 'status');
+});
+
+test('keyboard reorder announces the new position via the live region', async () => {
+  const meta = {
+    url: '/',
+  } as unknown as TinroRouteMeta;
+
+  navigationRegistry.set([
+    makeEntry({ name: 'Secrets', index: 0 }),
+    makeEntry({ name: 'Pods', index: 1 }),
+    makeEntry({ name: 'Containers', index: 2 }),
+  ]);
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const secrets = await vi.waitFor(() => screen.getByRole('link', { name: 'Secrets' }));
+  secrets.focus();
+
+  await fireEvent.keyDown(window, { key: 'ArrowDown', ctrlKey: true });
+
+  await vi.waitFor(() => {
+    expect(screen.getByTestId('nav-live-region')).toHaveTextContent('Moved Secrets to position 2 of 3');
+  });
 });

@@ -16,18 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface DisplayItem {
-  name: string;
-  visible: boolean;
-  /**
-   * Position in the main nav (0-based). Contiguous among items present in the nav.
-   * Undefined when the item is pinnable but not currently in the main nav.
-   */
-  index?: number;
-}
-
-export interface DragPayload {
-  /** Prefixed display name, e.g. "Settings > Resources" or "Kubernetes > Nodes". */
-  name: string;
-  link: string;
-}
+/**
+ * Theme-aware image icon with separate light and dark sources.
+ */
+export type ThemedIconImage = {
+  light: string;
+  dark: string;
+};
