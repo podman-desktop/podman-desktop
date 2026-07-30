@@ -20,7 +20,6 @@ import '@testing-library/jest-dom/vitest';
 
 import { autoUpdate, computePosition } from '@floating-ui/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { resetTooltipHideCount } from './tooltip-store';
@@ -70,8 +69,10 @@ describe('Tooltip', () => {
 
     // Simulate dropdown closing (shows tooltips)
     window.dispatchEvent(new Event('tooltip-show'));
-    await tick();
-    expect(screen.queryByText('test 1')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByText('test 1')).not.toBeInTheDocument();
+    });
 
     await fireEvent.mouseEnter(slot);
 
