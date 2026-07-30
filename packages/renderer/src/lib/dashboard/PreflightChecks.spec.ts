@@ -90,3 +90,51 @@ test('Expect preCheck to be displayed when having all props', async () => {
   // check openExternal is called
   expect(window.openExternal).toHaveBeenCalledWith('url');
 });
+
+test('Expect success icon to be displayed when check succeeded', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+        successful: true,
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  const svg = title.parentElement?.querySelector('svg');
+  expect(svg).toBeInTheDocument();
+  expect(svg).toHaveClass('text-(--pd-state-success)');
+});
+
+test('Expect error icon to be displayed when check failed', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+        successful: false,
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  const svg = title.parentElement?.querySelector('svg');
+  expect(svg).toBeInTheDocument();
+  expect(svg).toHaveClass('text-(--pd-state-error)');
+});
+
+test('Expect spinner to be displayed while check is pending', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  expect(title).toBeInTheDocument();
+  // the FA icon is rendered with role="img", the pending Spinner is not
+  const faIcon = title.parentElement?.querySelector('svg[role="img"]');
+  expect(faIcon).not.toBeInTheDocument();
+});
