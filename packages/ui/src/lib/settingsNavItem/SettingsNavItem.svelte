@@ -16,6 +16,9 @@ interface Props {
   iconRight?: IconDefinition | Component | string;
   iconRightAlign?: 'inline' | 'end';
   onClick?: () => void;
+  ariaKeyShortcuts?: string;
+  titleTooltip?: string;
+  onKeyDown?: (event: KeyboardEvent) => void;
 }
 
 let {
@@ -29,6 +32,9 @@ let {
   iconRight = undefined,
   iconRightAlign = 'end',
   onClick = (): void => {},
+  ariaKeyShortcuts,
+  titleTooltip,
+  onKeyDown,
 }: Props = $props();
 
 function click(): void {
@@ -37,7 +43,14 @@ function click(): void {
 }
 </script>
 
-<a class="no-underline block w-full" href={href} aria-label={title} title={title} onclick={click}>
+<a
+  class="no-underline block w-full"
+  href={href}
+  aria-label={title}
+  title={titleTooltip ?? title}
+  aria-keyshortcuts={ariaKeyShortcuts}
+  onclick={click}
+  onkeydown={onKeyDown}>
   <div
     data-settings-nav-row
     class="flex box-border w-full py-2 items-center cursor-pointer border-l-[4px]"

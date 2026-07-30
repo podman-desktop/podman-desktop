@@ -188,7 +188,7 @@ describe('buildNavigationToggleMenuItems', async () => {
       { name: 'A & A', visible: true, index: 0 },
       { name: 'B', visible: false, index: 1 },
       { name: 'C', visible: true, index: 2 },
-      { name: 'Kubernetes > Pods', visible: true, index: 3 },
+      { name: 'Kubernetes > Pods', visible: true },
     ]);
 
     const menu = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
@@ -242,6 +242,19 @@ describe('buildNavigationToggleMenuItems', async () => {
       expect.anything(),
       'DEFAULT',
     );
+  });
+
+  test('only includes indexed top-level items in the hide checklist', () => {
+    getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
+    navigationItemsMenuBuilder.receiveNavigationItems([
+      { name: 'Pods', visible: true, index: 0 },
+      { name: 'Settings > Resources', visible: true },
+      { name: 'Kubernetes > Nodes', visible: true },
+    ]);
+
+    const menu = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
+
+    expect(menu.map(item => item.label)).toEqual([undefined, 'Pods']);
   });
 });
 

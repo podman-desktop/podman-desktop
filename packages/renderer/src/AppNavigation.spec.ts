@@ -43,6 +43,7 @@ vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
+  Object.defineProperty(window, 'getOsPlatform', { value: vi.fn().mockResolvedValue('linux') });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
@@ -53,7 +54,7 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
     url: '/',
   } as unknown as TinroRouteMeta;
 
-  // mock no kubernetes resources
+  // mock no kube resources
   vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
@@ -91,6 +92,21 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
   expect(volumes).toBeInTheDocument();
   const settings = screen.getByRole('link', { name: 'Settings' });
   expect(settings).toBeInTheDocument();
+});
+
+test('places reorder shortcut metadata on the focused navigation link', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  expect(containers).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
+  expect(containers).toHaveAttribute('title', expect.stringContaining('Arrow to move'));
+  expect(containers.closest('[role="listitem"]')).not.toHaveAttribute('aria-keyshortcuts');
 });
 
 test('Test contributions', () => {
@@ -132,8 +148,8 @@ test('Navigation bar shows title when expanded', async () => {
     exitSettingsCallback: () => {},
   });
 
-  // Default width is 160px (expanded) — title should be in the DOM
   const dashboardTitle = screen.getByLabelText('Dashboard title');
+  // Default width is 160px (expanded) — title should be in the DOM
   await vi.waitFor(() => expect(dashboardTitle).toHaveTextContent('Dashboard'));
 });
 
