@@ -24,7 +24,6 @@ import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
-// items that can't be hidden
 const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
 
 const EXPANDED_WIDTH = 160;
@@ -113,33 +112,24 @@ export class NavigationItemsMenuBuilder {
   }
 
   protected computeItemName(rawItemName: string): string {
-    // need to filter any counter from the item name
-    // it's at the end with parenthesis like itemName (2)
     const itemName = rawItemName.replace(/\s\(\d+\)$/, '');
-
-    // Electron sends the whole element text including sub elements, each level separated by '\n'
     return itemName.split('\n')[0] ?? itemName;
   }
 
   protected buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
     const rawItemName = linkText;
-
-    // need to filter any counter from the item name
-    // it's at the end with parenthesis like itemName (2)
     const itemName = this.computeItemName(rawItemName);
 
     if (EXCLUDED_ITEMS.includes(itemName) || isGroupedName(itemName)) {
       return undefined;
     }
 
-    // on electron, need to esccape the & character to show it
     const itemDisplayName = this.escapeLabel(itemName);
 
     const item: MenuItemConstructorOptions = {
       label: `Hide ${itemDisplayName}`,
       visible: true,
       click: (): void => {
-        // flag the item as being disabled
         this.updateNavbarHiddenItem(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
       },
     };
@@ -202,16 +192,13 @@ export class NavigationItemsMenuBuilder {
       type: 'checkbox',
       checked: item.visible,
       click: (): void => {
-        // send the item to the frontend to show/hide it
         this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
           console.error('error disabling item', e),
         );
       },
     }));
     if (menuForNavItems.length > 0) {
-      // add separator
       items.push({ type: 'separator' });
-      // add all items
       items.push(...menuForNavItems);
     }
 
