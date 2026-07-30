@@ -16,17 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface BasicItem {
+export interface DisplayItem {
+  name: string;
+  visible: boolean;
+  /** Position in the main nav (0-based). Contiguous among items present in the nav. */
+  index: number;
+}
+
+export interface DragPayload {
+  /** Prefixed display name, e.g. "Settings > Resources" or "Kubernetes > Nodes". */
   name: string;
   link: string;
-}
-
-export interface DisplayItem extends BasicItem {
-  visible: boolean;
-  order?: number;
-}
-
-export interface DragPayload extends BasicItem {
-  sourceComponent: 'submenu' | 'settings';
-  parentName?: string;
 }
