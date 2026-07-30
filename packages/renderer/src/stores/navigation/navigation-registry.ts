@@ -49,6 +49,7 @@ export interface NavigationRegistryEntry {
   enabled?: boolean;
   items?: NavigationRegistryEntry[];
   hidden?: boolean;
+  index?: number;
 }
 
 const windowEvents: string[] = [];
@@ -88,6 +89,7 @@ function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: Dis
   items.push({
     name: navigationRegistryEntry.name,
     visible: navigationRegistryEntry.hidden ? false : true,
+    index: navigationRegistryEntry.index ?? 0,
   });
 }
 
