@@ -143,7 +143,7 @@
     "*.{css,json}": "biome format --write"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.6",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
     "@electron/fuses": "^2.1.3",
