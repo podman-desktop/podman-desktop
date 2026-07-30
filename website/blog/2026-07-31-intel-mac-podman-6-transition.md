@@ -23,10 +23,11 @@ Starting with current Podman Desktop releases, **not every download ships the sa
 | ------------------------------- | ---------------------- |
 | macOS installer (Apple silicon) | Podman 6               |
 | macOS installer (Intel)         | Podman 5               |
+| macOS installer (universal)     | Podman 5 and Podman 6  |
 | Windows installer               | Podman 6               |
 | Linux packages                  | Podman 6               |
 
-Intel Mac users will continue to receive a Podman Desktop installer, but it will bundle **Podman 5**, not Podman 6. Everyone else moves to Podman 6 with their next Podman Desktop update.
+Intel Mac users will continue to receive a Podman Desktop installer, but it will bundle **Podman 5**, not Podman 6. The universal macOS installer includes both architectures, so it installs Podman 5 on Intel Macs and Podman 6 on Apple silicon. Everyone else moves to Podman 6 with their next Podman Desktop update.
 
 ## I'm on an Apple silicon Mac. Does this affect me?
 
