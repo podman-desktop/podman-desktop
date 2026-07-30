@@ -168,6 +168,25 @@ test('Test rendering of the preferences navigation bar and its items', () => {
   // ToDo: adding configuration section/items mocks for preferences, issue #2966
 });
 
+test('Preferences section cannot be pinned', () => {
+  configurationProperties.set([
+    {
+      id: 'appearance.theme',
+      title: 'Appearance',
+      default: 'system',
+      parentId: 'preferences.appearance',
+      type: 'string',
+      scope: 'DEFAULT',
+    },
+  ]);
+
+  renderPreferencesNavigation();
+
+  const preferencesLink = screen.getByRole('link', { name: /preferences/i });
+  expect(preferencesLink).not.toHaveAttribute('aria-keyshortcuts');
+  expect(preferencesLink.closest('[role="listitem"]')).not.toHaveClass('cursor-grab');
+});
+
 test('Test rendering of the compatibility docker pag if config is available', async () => {
   render(PreferencesNavigation, {
     meta: {

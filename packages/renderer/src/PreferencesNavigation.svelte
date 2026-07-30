@@ -2,14 +2,17 @@
 import { DockerCompatibilitySettings } from '@podman-desktop/core-api';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
-import { onMount, tick } from 'svelte';
+import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
 import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
+import { longPress } from '/@/lib/ui/attachments/longpress';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
 
 import { configurationProperties } from './stores/configurationProperties';
+import { LONG_PRESS_MS, navigationDragState } from './stores/navigation/navigation-drag-state.svelte';
+import { NavigationPin } from './stores/navigation/navigation-pin';
 import { onDidChangeRegisteredFeatures, registeredFeatures } from './stores/registered-features';
 
 interface Props {
@@ -17,6 +20,7 @@ interface Props {
 }
 
 let { meta }: Props = $props();
+const navigationPin = new NavigationPin();
 
 let configProperties: Map<string, NavItem[]> = $state(new Map<string, NavItem[]>());
 let sectionExpanded: { [key: string]: boolean } = $state(
@@ -256,13 +260,29 @@ onMount(() => {
     onDidChangeRegisteredFeatures.removeEventListener(kubernetesContextsManagerFeature, featureListener);
   };
 });
+
+// --- Drag to main nav ---
+onDestroy(navigationPin.resetPin);
+
+function onLongPressPin(itemTitle: string, itemHref: string): void {
+  navigationPin.beginPin({
+    parentName: 'Settings',
+    name: itemTitle,
+    link: itemHref,
+  });
+}
+
+function onSettingsPinKeyDown(itemTitle: string, itemHref: string, event: KeyboardEvent): void {
+  navigationPin.onPinKeyDown({ parentName: 'Settings', name: itemTitle, link: itemHref }, event);
+}
 </script>
 
 <nav
   bind:this={navigationElement}
   style:width={navigationWidthPx ? `${navigationWidthPx}px` : undefined}
   class="z-1 w-leftsidebar min-w-leftsidebar max-w-none shrink-0 flex-col justify-between flex bg-[var(--pd-secondary-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
-  aria-label="PreferencesNavigation">
+  aria-label="PreferencesNavigation"
+  onpointercancel={navigationPin.resetPin}>
   <div class="flex items-center">
     <div class="pt-4 px-3 mb-5">
       <p
@@ -271,27 +291,47 @@ onMount(() => {
       </p>
     </div>
   </div>
-  <div class="h-full overflow-y-auto" style="margin-bottom:auto">
+  <div class="h-full overflow-y-auto mb-auto" role="list">
     {#each settingsNavigationItems as navItem, index (index)}
       {#if navItem.visible}
         {@const visibleChildren = navItem.children?.filter(c => c.visible) ?? []}
-        <SettingsNavItem
-          title={navItem.title}
-          href={navItem.href}
-          icon={navItem.icon}
-          section={visibleChildren.length > 0}
-          selected={meta.url === navItem.href && !visibleChildren.some(c => c.href === meta.url)}
-          onClick={scheduleNavigationWidthUpdate}
-          bind:expanded={sectionExpanded[navItem.title]} />
+        <div
+          role="listitem"
+          class="relative touch-none select-none cursor-grab"
+          class:opacity-50={navigationDragState.payload?.link === navItem.href}
+          onpointerdown={navigationPin.onPinPointerDown}
+          onclick={navigationPin.consumePinClick}
+          {@attach longPress(onLongPressPin.bind(undefined, navItem.title, navItem.href), 0, LONG_PRESS_MS)}>
+          <SettingsNavItem
+            title={navItem.title}
+            href={navItem.href}
+            icon={navItem.icon}
+            section={visibleChildren.length > 0}
+            selected={meta.url === navItem.href && !visibleChildren.some(c => c.href === meta.url)}
+            onClick={scheduleNavigationWidthUpdate}
+            ariaKeyShortcuts={NavigationPin.KEY_SHORTCUTS}
+            onKeyDown={onSettingsPinKeyDown.bind(undefined, navItem.title, navItem.href)}
+            bind:expanded={sectionExpanded[navItem.title]} />
+        </div>
         {#if sectionExpanded[navItem.title]}
           {#each visibleChildren as child (child.href)}
-            <SettingsNavItem
-              title={child.title}
-              href={child.href}
-              icon={child.icon}
-              child={true}
-              selected={meta.url === child.href}
-              onClick={scheduleNavigationWidthUpdate} />
+            <div
+              role="listitem"
+              class="relative touch-none select-none cursor-grab"
+              class:opacity-50={navigationDragState.payload?.link === child.href}
+              onpointerdown={navigationPin.onPinPointerDown}
+              onclick={navigationPin.consumePinClick}
+              {@attach longPress(onLongPressPin.bind(undefined, child.title, child.href), 0, LONG_PRESS_MS)}>
+              <SettingsNavItem
+                title={child.title}
+                href={child.href}
+                icon={child.icon}
+                child={true}
+                selected={meta.url === child.href}
+                onClick={scheduleNavigationWidthUpdate}
+                ariaKeyShortcuts={NavigationPin.KEY_SHORTCUTS}
+                onKeyDown={onSettingsPinKeyDown.bind(undefined, child.title, child.href)} />
+            </div>
           {/each}
         {/if}
       {/if}
@@ -299,35 +339,86 @@ onMount(() => {
 
     <!-- Default configuration properties start -->
     {#each configProperties as [configSection, configItems] (configSection)}
-      <SettingsNavItem
-        title={configSection}
-        href="/preferences/default/{configSection}"
-        icon={PreferencesIcon}
-        section={configItems.length > 0}
-        selected={meta.url === `/preferences/default/${configSection}`}
-        onClick={scheduleNavigationWidthUpdate}
-        bind:expanded={sectionExpanded[configSection]} />
+      {@const canPinSection = configSection !== 'preferences'}
+      <div
+        role="listitem"
+        class="relative touch-none select-none"
+        class:cursor-grab={canPinSection}
+        class:opacity-50={canPinSection && navigationDragState.payload?.link === `/preferences/default/${configSection}`}
+        onpointerdown={canPinSection ? navigationPin.onPinPointerDown : undefined}
+        onclick={canPinSection ? navigationPin.consumePinClick : undefined}
+        {@attach
+          canPinSection
+            ? longPress(
+                onLongPressPin.bind(undefined, configSection, `/preferences/default/${configSection}`),
+                0,
+                LONG_PRESS_MS,
+              )
+            : undefined}>
+        <SettingsNavItem
+          title={configSection}
+          href="/preferences/default/{configSection}"
+          icon={PreferencesIcon}
+          section={configItems.length > 0}
+          selected={meta.url === `/preferences/default/${configSection}`}
+          onClick={scheduleNavigationWidthUpdate}
+          ariaKeyShortcuts={canPinSection ? NavigationPin.KEY_SHORTCUTS : undefined}
+          onKeyDown={
+            canPinSection
+              ? onSettingsPinKeyDown.bind(undefined, configSection, `/preferences/default/${configSection}`)
+              : undefined
+          }
+          bind:expanded={sectionExpanded[configSection]} />
+      </div>
       {#if sectionExpanded[configSection]}
         {#each sortItems(configItems) as configItem (configItem.id)}
-          <SettingsNavItem
-            title={configItem.title}
-            href="/preferences/default/{configItem.id}"
-            child={true}
-            onClick={scheduleNavigationWidthUpdate}
-            selected={meta.url === `/preferences/default/${configItem.id}`} />
+          <div
+            role="listitem"
+            class="relative touch-none select-none cursor-grab"
+            class:opacity-50={navigationDragState.payload?.link === `/preferences/default/${configItem.id}`}
+            onpointerdown={navigationPin.onPinPointerDown}
+            onclick={navigationPin.consumePinClick}
+            {@attach longPress(
+              onLongPressPin.bind(undefined, configItem.title, `/preferences/default/${configItem.id}`),
+              0,
+              LONG_PRESS_MS,
+            )}>
+            <SettingsNavItem
+              title={configItem.title}
+              href="/preferences/default/{configItem.id}"
+              child={true}
+              onClick={scheduleNavigationWidthUpdate}
+              selected={meta.url === `/preferences/default/${configItem.id}`}
+              ariaKeyShortcuts={NavigationPin.KEY_SHORTCUTS}
+              onKeyDown={onSettingsPinKeyDown.bind(undefined, configItem.title, `/preferences/default/${configItem.id}`)} />
+          </div>
         {/each}
       {/if}
     {/each}
     <!-- Default configuration properties end -->
-    <div class="mx-3 my-2 border-t border-(--pd-global-nav-bg-border)"></div>
-    <SettingsNavItem
-      icon='fas fa-crosshairs'
-      iconRight={ShortcutArrowIcon}
-      iconRightAlign="end"
-      title="Troubleshooting"
-      href="/troubleshooting/repair-connections"
-      onClick={scheduleNavigationWidthUpdate}
-      selected={meta.url === '/troubleshooting/repair-connections'}
-    />
+    <div class="mx-3 my-2 border-t border-(--pd-global-nav-bg-border)" role="presentation"></div>
+    <div
+      role="listitem"
+      class="relative touch-none select-none cursor-grab"
+      class:opacity-50={navigationDragState.payload?.link === '/troubleshooting/repair-connections'}
+      onpointerdown={navigationPin.onPinPointerDown}
+      onclick={navigationPin.consumePinClick}
+      {@attach longPress(
+        onLongPressPin.bind(undefined, 'Troubleshooting', '/troubleshooting/repair-connections'),
+        0,
+        LONG_PRESS_MS,
+      )}>
+      <SettingsNavItem
+        icon="fas fa-crosshairs"
+        iconRight={ShortcutArrowIcon}
+        iconRightAlign="end"
+        title="Troubleshooting"
+        href="/troubleshooting/repair-connections"
+        onClick={scheduleNavigationWidthUpdate}
+        selected={meta.url === '/troubleshooting/repair-connections'}
+        ariaKeyShortcuts={NavigationPin.KEY_SHORTCUTS}
+        onKeyDown={onSettingsPinKeyDown.bind(undefined, 'Troubleshooting', '/troubleshooting/repair-connections')}
+      />
+    </div>
   </div>
 </nav>

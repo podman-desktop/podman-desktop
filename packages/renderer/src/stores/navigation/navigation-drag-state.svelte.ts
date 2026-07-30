@@ -16,20 +16,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface DisplayItem {
-  name: string;
-  visible: boolean;
-  /**
-   * Position in the main nav (0-based). Contiguous among items present in the nav.
-   * Undefined when the item is pinnable but not currently in the main nav.
-   */
-  index?: number;
-}
+import type { DragPayload } from '@podman-desktop/core-api';
 
-export interface DragPayload {
-  /** Optional parent navigation name, e.g. "Settings" or "Kubernetes". */
-  parentName?: string;
-  /** Entry display name, without its parent prefix. */
-  name: string;
-  link: string;
-}
+export const LONG_PRESS_MS = 350;
+
+/**
+ * Shared pointer/payload state while pinning from submenu or settings into the main nav.
+ */
+export const navigationDragState = $state<{
+  payload?: DragPayload;
+  pointerX: number;
+  pointerY: number;
+  /** Pointer offset into the grabbed row at long-press start (no hardcoded ghost centering). */
+  grabOffsetX: number;
+  grabOffsetY: number;
+  announcement: string;
+}>({
+  pointerX: 0,
+  pointerY: 0,
+  grabOffsetX: 0,
+  grabOffsetY: 0,
+  announcement: '',
+});
