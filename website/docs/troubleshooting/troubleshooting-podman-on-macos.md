@@ -12,7 +12,7 @@ description: How to investigate when Podman does not work as expected.
 
 When setting a custom binary path (under Preferences -> Custom binary path), Podman is unable to find `gvproxy` and `podman-mac-helper`:
 
-```shell-session
+```sh
 Error: unable to start host networking: "could not find \"gvproxy\" in one of [/usr/local/opt/podman/libexec /opt/homebrew/bin /opt/homebrew/opt/podman/libexec /usr/local/bin /usr/local/libexec/podman /usr/local/lib/podman /usr/libexec/podman /usr/lib/podman $BINDIR/../libexec/podman].  To resolve this error, set the helper_binaries_dir key in the `[engine]` section of containers.conf to the directory containing your helper binaries."
 ```
 
@@ -22,7 +22,7 @@ Error: unable to start host networking: "could not find \"gvproxy\" in one of [/
 2. Build the `podman-mac-helper` from the source code on the [Podman GitHub page](https://github.com/podman-container-tools/podman/tree/main/cmd/podman-mac-helper).
 3. Add the `helper_binaries_dir` entry to `~/.config/containers/containers.conf`:
 
-```shell-session
+```sh
 [containers]
 
 helper_binaries_dir=["/Users/user/example_directory"]
@@ -46,7 +46,7 @@ The Podman Installer and Homebrew use different locations to store the Podman En
 
 To check where exactly is your Podman Engine installed, run the command-
 
-```shell-session
+```sh
 which podman
 ```
 
@@ -54,13 +54,13 @@ This returns the path where the Podman Engine would be installed. This would hel
 
 For example, if you’re looking to completely uninstall Podman Engine from your system for a fresh installation, running `which podman` returns the exact path where Podman still exists. This could be the path where Podman Installer stores Podman Engine, such as `/opt/podman`. Once you know the path, run:
 
-```shell-session
+```sh
 sudo rm -rf /opt/podman
 ```
 
 Or
 
-```shell-session
+```sh
 sudo rm -rf path-where-podman-exists
 ```
 
