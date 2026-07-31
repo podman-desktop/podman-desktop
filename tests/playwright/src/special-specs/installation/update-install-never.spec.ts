@@ -68,6 +68,6 @@ test.describe
     test('User initiated update option is available', async ({ page, statusBar }) => {
       await playExpect(statusBar.updateButtonTitle).toHaveText(await statusBar.versionButton.innerText());
       await statusBar.updateButtonTitle.click();
-      await handleConfirmationDialog(page, 'Update Podman Desktop?', false, '', 'Cancel');
+      await handleConfirmationDialog({ page, dialogTitle: 'Update Podman Desktop?', buttonName: 'Cancel' });
     });
   });

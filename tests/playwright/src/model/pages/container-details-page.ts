@@ -100,7 +100,7 @@ export class ContainerDetailsPage extends DetailsPage {
     return test.step('Delete container', async () => {
       await playExpect(this.deleteButton).toBeEnabled();
       await this.deleteButton.click();
-      await handleConfirmationDialog(this.page, 'Delete Container?', true, 'Delete');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Delete Container?', buttonName: 'Delete' });
       return new ContainersPage(this.page);
     });
   }
