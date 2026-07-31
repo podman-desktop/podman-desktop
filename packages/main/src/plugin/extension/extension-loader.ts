@@ -1593,10 +1593,23 @@ export class ExtensionLoader implements IAsyncDisposable {
       navigate: async (routeId: string, ...args: unknown[]): Promise<void> => {
         return this.navigationManager.navigateToRoute(`${extensionInfo.id}.${routeId}`, args);
       },
-      register: (routeId: string, commandId: string): Disposable => {
+      register: (
+        routeId: string,
+        commandId: string,
+        searchEntry?: containerDesktopAPI.NavigationSearchEntry,
+      ): Disposable => {
+        let resolvedSearchEntry: containerDesktopAPI.NavigationSearchEntry | undefined;
+        if (searchEntry) {
+          resolvedSearchEntry = {
+            label: searchEntry.label,
+            icon: searchEntry.icon ? instance.updateImage(searchEntry.icon, extensionPath) : extensionInfo.icon,
+          };
+        }
+
         const disposable = this.navigationManager.registerRoute({
           routeId: `${extensionInfo.id}.${routeId}`,
           commandId: commandId,
+          searchEntry: resolvedSearchEntry,
         });
 
         disposables.push(disposable);
