@@ -49,4 +49,4 @@ If this transition affects your team or you have input on the timeline, please s
 
 ## Conclusion
 
-Podman 6 moves the container ecosystem forward, and Podman Desktop is moving with it. For Intel Mac users, Podman Desktop will keep bundling Podman 5 for as long as the Podman maintainers support the v5.8 series, currently through the 2nd week of June 2027. Use that runway to plan your next environment, and keep building with confidence on Apple silicon, Windows, and Linux where Podman 6 is ready today.
+Podman 6 moves the container ecosystem forward, and Podman Desktop is moving with it. This bundling change is available now in [Podman Desktop 1.29](https://podman-desktop.io/blog/podman-desktop-release-1.29). For Intel Mac users, Podman Desktop will keep bundling Podman 5 for as long as the Podman maintainers support the v5.8 series, currently through the 2nd week of June 2027. Use that runway to plan your next environment, and keep building with confidence on Apple silicon, Windows, and Linux where Podman 6 is ready today.
