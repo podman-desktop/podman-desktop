@@ -28,6 +28,7 @@ import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import { navigationSearchEntries } from '/@/stores/navigation-search-entries';
 
 import CommandPalette from './CommandPalette.svelte';
 
@@ -53,6 +54,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  navigationSearchEntries.set([]);
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
   vi.mocked(window.getCommandPaletteSearchOptions).mockResolvedValue([
     { category: 'category 1', text: 'Category 1 text', placeholder: 'Enter category 1 item' },
@@ -705,6 +707,132 @@ describe('Command Palette', () => {
     expect(screen.getByRole('listitem', { name: 'Containers (1)' })).toBeInTheDocument();
     expect(screen.getByRole('listitem', { name: 'Extensions: AI Lab' })).toBeInTheDocument();
     expect(screen.getByRole('listitem', { name: 'Extensions: Nested' })).toBeInTheDocument();
+  });
+
+  test('Extension route items should appear in Go to tab', async () => {
+    navigationSearchEntries.set([
+      { routeId: 'ext.dashboard', label: 'Extension Dashboard' },
+      { routeId: 'ext.models', label: 'Extension Models', icon: 'models.png' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    await waitFor(() => {
+      expect(screen.getByRole('listitem', { name: 'Extension Dashboard' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('listitem', { name: 'Extension Models' })).toBeInTheDocument();
+  });
+
+  test('Extension route items should appear in All tab', async () => {
+    navigationSearchEntries.set([{ routeId: 'ext.dashboard', label: 'Extension Dashboard' }]);
+    commandsInfos.set([{ id: 'my-cmd', title: 'My Command' }]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('listitem', { name: 'Extension Dashboard' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('listitem', { name: 'my-cmd' })).toBeInTheDocument();
+  });
+
+  test('Extension route items should be filtered by search input', async () => {
+    navigationSearchEntries.set([
+      { routeId: 'ext.dashboard', label: 'Extension Dashboard' },
+      { routeId: 'ext.models', label: 'Extension Models' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    await waitFor(() => {
+      expect(screen.getByRole('listitem', { name: 'Extension Dashboard' })).toBeInTheDocument();
+    });
+
+    const filterInput = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(filterInput, 'Models');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('listitem', { name: 'Extension Dashboard' })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('listitem', { name: 'Extension Models' })).toBeInTheDocument();
+  });
+
+  test('Clicking extension route item should call navigateToRoute', async () => {
+    navigationSearchEntries.set([{ routeId: 'ext.dashboard', label: 'Extension Dashboard' }]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const item = await screen.findByRole('button', { name: 'Extension Dashboard' });
+    await userEvent.click(item);
+
+    expect(vi.mocked(window.navigateToRoute)).toHaveBeenCalledWith('ext.dashboard');
+  });
+
+  test('Extension route item with light/dark icon should render both themed variants', async () => {
+    const darkIcon = 'data:image/png;base64,dark';
+    const lightIcon = 'data:image/png;base64,light';
+    navigationSearchEntries.set([
+      { routeId: 'ext.themed', label: 'Themed Route', icon: { light: lightIcon, dark: darkIcon } },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const listItem = await screen.findByRole('listitem', { name: 'Themed Route' });
+    const icons = listItem.querySelectorAll('img');
+    expect(icons).toHaveLength(2);
+    expect(icons[0]).toHaveAttribute('src', lightIcon);
+    expect(icons[1]).toHaveAttribute('src', darkIcon);
+  });
+
+  test('Extension route item without icon should use fallback FontAwesome icon', async () => {
+    navigationSearchEntries.set([{ routeId: 'ext.no-icon', label: 'No Icon Route' }]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const listItem = await screen.findByRole('listitem', { name: 'No Icon Route' });
+    expect(listItem).toBeInTheDocument();
+    const imgIcon = listItem.querySelector('img');
+    expect(imgIcon).not.toBeInTheDocument();
+    const svgIcon = listItem.querySelector('svg');
+    expect(svgIcon).toBeInTheDocument();
   });
 
   test('Expect hidden navigation entries are excluded from GoTo items', async () => {
