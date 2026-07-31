@@ -132,7 +132,7 @@ export class Exec {
         const escapedShellScript = shellScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         args = [
           '-e',
-          `do shell script "${escapedShellScript}" with prompt "Podman Desktop requires admin privileges " with administrator privileges`,
+          `do shell script "${escapedShellScript}" with prompt "Podman Desktop needs administrator privileges for this system-wide operation. Cancel to skip it." with administrator privileges`,
         ];
         command = 'osascript';
       } else if (isLinux()) {
