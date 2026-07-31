@@ -4,11 +4,42 @@
         <title>Podman Desktop Blog</title>
         <link>https://podman-desktop.io/blog</link>
         <description>Podman Desktop Blog</description>
-        <lastBuildDate>Thu, 30 Jul 2026 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 31 Jul 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
         <copyright>Copyright © 2026 Podman Desktop</copyright>
+        <item>
+            <title><![CDATA[Intel Mac support in Podman Desktop: What developers need to know]]></title>
+            <link>https://podman-desktop.io/blog/intel-mac-podman-6-transition</link>
+            <guid>https://podman-desktop.io/blog/intel-mac-podman-6-transition</guid>
+            <pubDate>Fri, 31 Jul 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[Podman 6 drops Intel Mac support. Podman Desktop will keep bundling Podman 5 for Intel Mac installs through upstream v5.8 support (through the second week of June 2027), while all other platforms move to Podman 6.]]></description>
+            <content:encoded><![CDATA[<p><a href="https://github.com/podman-container-tools/podman/releases/tag/v6.0.0" target="_blank" rel="noopener noreferrer" class="">Podman v6.0.0</a> has removed support for Intel-based Macs, and will no longer publish an installer. Podman Desktop is adjusting how we bundle the engine so Apple silicon, Windows, and Linux users can move to Podman 6 without leaving Intel Mac users with a broken install experience. This change shipped with <a href="https://podman-desktop.io/blog/podman-desktop-release-1.29" target="_blank" rel="noopener noreferrer" class="">Podman Desktop 1.29</a>. Here is what is changing, why, and what to do next.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="podman-on-macos-a-brief-history">Podman on macOS: A brief history<a href="https://podman-desktop.io/blog/intel-mac-podman-6-transition#podman-on-macos-a-brief-history" class="hash-link" aria-label="Direct link to Podman on macOS: A brief history" title="Direct link to Podman on macOS: A brief history" translate="no">​</a></h2>
+<p>Podman Desktop bundles Podman so developers can install a working container environment from a single download. On macOS, Podman runs inside a lightweight virtual machine, and Podman Desktop has shipped a universal installer supporting both Apple silicon and Intel hardware. That made sense when Intel Macs were still common in the field. With Podman 6 now released, there is neither support nor an installer for Intel Macs, so we need a clear plan for the developers still on that hardware.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="whats-changing">What's changing?<a href="https://podman-desktop.io/blog/intel-mac-podman-6-transition#whats-changing" class="hash-link" aria-label="Direct link to What's changing?" title="Direct link to What's changing?" translate="no">​</a></h2>
+<p>Starting with current Podman Desktop releases, <strong>not every download ships the same Podman version</strong>:</p>
+<table><thead><tr><th>Download</th><th>Bundled Podman version</th></tr></thead><tbody><tr><td>macOS installer (Apple silicon)</td><td>Podman 6</td></tr><tr><td>macOS installer (Intel)</td><td>Podman 5</td></tr><tr><td>macOS installer (universal)</td><td>Podman 5 and Podman 6</td></tr><tr><td>Windows installer</td><td>Podman 6</td></tr><tr><td>Linux packages</td><td>Podman 6</td></tr></tbody></table>
+<p>Intel Mac users will continue to receive a Podman Desktop installer, but it will bundle <strong>Podman 5</strong>, not Podman 6. The universal macOS installer includes both architectures, so it installs Podman 5 on Intel Macs and Podman 6 on Apple silicon. Everyone else moves to Podman 6 with their next Podman Desktop update.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="im-on-an-apple-silicon-mac-does-this-affect-me">I'm on an Apple silicon Mac. Does this affect me?<a href="https://podman-desktop.io/blog/intel-mac-podman-6-transition#im-on-an-apple-silicon-mac-does-this-affect-me" class="hash-link" aria-label="Direct link to I'm on an Apple silicon Mac. Does this affect me?" title="Direct link to I'm on an Apple silicon Mac. Does this affect me?" translate="no">​</a></h2>
+<p>No. If you are on Apple silicon, your Podman Desktop macOS installer bundles <strong>Podman 6</strong>. You get the latest engine improvements, and your upgrade path is unchanged. Install or update Podman Desktop as you normally would from the <a href="https://podman-desktop.io/downloads/macos" target="_blank" rel="noopener noreferrer" class="">downloads page</a>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="what-are-the-key-dates">What are the key dates?<a href="https://podman-desktop.io/blog/intel-mac-podman-6-transition#what-are-the-key-dates" class="hash-link" aria-label="Direct link to What are the key dates?" title="Direct link to What are the key dates?" translate="no">​</a></h2>
+<p>Podman Desktop follows the Podman project's support policy for the v5.8 series. As documented in the <a href="https://github.com/podman-container-tools/podman/blob/main/README.md" target="_blank" rel="noopener noreferrer" class="">Podman README</a>:</p>
+<blockquote>
+<p>After the release of Podman 6.0, the Podman maintainers have decided to extend upstream support of the v5.8 series of releases until the 2nd week of June in 2027, one year after the release of Podman 6.0. This support will only include CVE fixes and critical bugfixes.</p>
+</blockquote>
+<p>We are aligning with that policy. We will continue to provide a bundle for Intel-based Macs until the Podman team ceases support in the second week of June 2027. After that point, Intel Mac users who remain on that hardware will rely on previously released Podman Desktop versions or external Podman installations rather than current installers.</p>
+<p>If the Podman maintainers adjust the v5.8 support window, we will follow their lead and communicate any changes to this timeline.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="where-can-i-share-feedback">Where can I share feedback?<a href="https://podman-desktop.io/blog/intel-mac-podman-6-transition#where-can-i-share-feedback" class="hash-link" aria-label="Direct link to Where can I share feedback?" title="Direct link to Where can I share feedback?" translate="no">​</a></h2>
+<p>If this transition affects your team or you have input on the timeline, please share it on <a href="https://github.com/podman-desktop/podman-desktop/issues/16339" target="_blank" rel="noopener noreferrer" class="">GitHub issue #16339</a> or join us in <a href="https://podman-desktop.io/community" target="_blank" rel="noopener noreferrer" class="">community discussions</a>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="conclusion">Conclusion<a href="https://podman-desktop.io/blog/intel-mac-podman-6-transition#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
+<p>Podman 6 moves the container ecosystem forward, and Podman Desktop is moving with it. This bundling change is available now in <a href="https://podman-desktop.io/blog/podman-desktop-release-1.29" target="_blank" rel="noopener noreferrer" class="">Podman Desktop 1.29</a>. For Intel Mac users, Podman Desktop will keep bundling Podman 5 for as long as the Podman maintainers support the v5.8 series, currently through the 2nd week of June 2027. Use that runway to plan your next environment, and keep building with confidence on Apple silicon, Windows, and Linux where Podman 6 is ready today.</p>]]></content:encoded>
+            <category>podman-desktop</category>
+            <category>podman</category>
+            <category>macos</category>
+            <category>deprecation</category>
+        </item>
         <item>
             <title><![CDATA[Podman Desktop 1.29 Release]]></title>
             <link>https://podman-desktop.io/blog/podman-desktop-release-1.29</link>
@@ -3236,7 +3267,7 @@ release we received pull requests from the following people:</p>
 <li class="">chore(deps): bump electron-builder to v26 by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/12351" target="_blank" rel="noopener noreferrer" class="">#12351</a></li>
 <li class="">chore: remove no-explicit-any from dialogs by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/11480" target="_blank" rel="noopener noreferrer" class="">#11480</a></li>
 </ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="refactor-️">refactor 🛠️<a href="https://podman-desktop.io/blog/podman-desktop-release-1.20#refactor-%EF%B8%8F" class="hash-link" aria-label="Direct link to refactor 🛠️" title="Direct link to refactor 🛠️" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="refactor-️">refactor 🛠️<a href="https://podman-desktop.io/blog/podman-desktop-release-1.20#refactor-%EF%B8%8F" class="hash-link" aria-label="Direct link to refactor 🛠️" title="Direct link to refactor 🛠�️" translate="no">​</a></h3>
 <ul>
 <li class="">refactor(mock): simplify how to call a method on a mock object by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/13072" target="_blank" rel="noopener noreferrer" class="">#13072</a></li>
 <li class="">refactor: move message box interfaces to api package by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/13007" target="_blank" rel="noopener noreferrer" class="">#13007</a></li>
@@ -3702,69 +3733,6 @@ release, we received pull requests from the following people:</p>
             <category>release</category>
             <category>kubernetes</category>
             <category>openshift</category>
-        </item>
-        <item>
-            <title><![CDATA[Enabling OpenVINO Inference in Podman AI Lab]]></title>
-            <link>https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino</link>
-            <guid>https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino</guid>
-            <pubDate>Wed, 21 May 2025 00:00:00 GMT</pubDate>
-            <description><![CDATA[Use Podman AI Lab to run OpenVINO inference workloads locally.]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_tleR" id="introduction-to-podman-ai-lab">Introduction to Podman AI Lab<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#introduction-to-podman-ai-lab" class="hash-link" aria-label="Direct link to Introduction to Podman AI Lab" title="Direct link to Introduction to Podman AI Lab" translate="no">​</a></h2>
-<p>Podman AI Lab is an open-source platform designed to simplify the deployment, management, and experimentation of AI workloads using container technology. It provides a user-friendly interface for running, testing, and scaling AI models locally or in the cloud, leveraging the power and flexibility of Podman containers.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="what-is-openvino">What is OpenVINO?<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#what-is-openvino" class="hash-link" aria-label="Direct link to What is OpenVINO?" title="Direct link to What is OpenVINO?" translate="no">​</a></h2>
-<p>OpenVINO™ (Open Visual Inference and Neural Network Optimization) is an open-source toolkit developed by Intel to accelerate AI inference on a variety of hardware, including CPUs, GPUs, and specialized accelerators. It optimizes deep learning models for fast, efficient inference, making it a popular choice for edge and cloud AI applications.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="using-openvino-in-podman-ai-lab">Using OpenVINO in Podman AI Lab<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#using-openvino-in-podman-ai-lab" class="hash-link" aria-label="Direct link to Using OpenVINO in Podman AI Lab" title="Direct link to Using OpenVINO in Podman AI Lab" translate="no">​</a></h2>
-<p>Podman AI Lab now supports OpenVINO as an inference provider. This means you can:</p>
-<ul>
-<li class="">Select an OpenVINO compatible model when starting an inference server or playground.</li>
-<li class="">Benefit from hardware-accelerated inference on supported Intel devices.</li>
-<li class="">Easily switch between different inference providers (e.g., llama-cpp, OpenVINO) for benchmarking and compatibility testing.</li>
-</ul>
-<div class="theme-admonition theme-admonition-warning admonition_WCGJ alert alert--warning"><div class="admonitionHeading_GCBg"><span class="admonitionIcon_L39b"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>warning</div><div class="admonitionContent_pbrs"><p>This feature is only available on Intel based systems, as OpenVINO is optimized for Intel hardware. If you are using a non-Intel system, you will not be able to use OpenVINO as an inference provider.</p></div></div>
-<p><strong>How to use:</strong></p>
-<ol>
-<li class="">Launch Podman AI Lab and navigate to the model deployment or playground section.</li>
-<li class="">When configuring your model, choose an OpenVINO compatible model.</li>
-<li class="">Start the inference server or playground.</li>
-</ol>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="starting-an-openvino-inference-server">Starting an OpenVINO inference server<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#starting-an-openvino-inference-server" class="hash-link" aria-label="Direct link to Starting an OpenVINO inference server" title="Direct link to Starting an OpenVINO inference server" translate="no">​</a></h2>
-<ol>
-<li class="">Click the Podman AI Lab icon in the navigation bar.</li>
-<li class="">In the Podman AI Lab navigation bar, click <em>Models &gt; Services</em> menu item.</li>
-<li class="">Click the <em>New Model Service</em> button on the top right.</li>
-<li class="">Select an OpenVINO compatible model in the list (e.g. OpenVINO/mistral-7B-instruct-v0.2-int4-ov) in the <em>Model</em> list and click the <em>Create Service</em> button.</li>
-<li class="">The inference server for the model is being started and after a while, click on the <em>Open service</em> details button.</li>
-</ol>
-<p><img decoding="async" loading="lazy" alt="OpenVINO inference server details" src="https://podman-desktop.io/assets/images/openvino-inference-server-details-9ca98be0f9854a1c21e192638fef4c7e.png" width="1920" height="1140" class="img_SS3x"></p>
-<p>Using the terminal shell, execute the given curl command and see the inference result output.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="starting-a-playground-with-an-openvino-compatible-model">Starting a playground with an OpenVINO compatible model<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#starting-a-playground-with-an-openvino-compatible-model" class="hash-link" aria-label="Direct link to Starting a playground with an OpenVINO compatible model" title="Direct link to Starting a playground with an OpenVINO compatible model" translate="no">​</a></h2>
-<ol>
-<li class="">Click the Podman AI Lab icon in the navigation bar.</li>
-<li class="">In the Podman AI Lab navigation bar, click <em>Models &gt; Playgrounds</em> menu item.</li>
-<li class="">Click the <em>New Playground</em> button on the top right.</li>
-<li class="">Select an OpenVINO compatible model in the list (e.g. OpenVINO/mistral-7B-instruct-v0.2-int4-ov) in the <em>Model</em> list and click the <em>Create playground</em> button.</li>
-<li class="">The playground for the model is being started and after a while, a chat interface is displayed.</li>
-</ol>
-<p><img decoding="async" loading="lazy" alt="Initial playground on OpenVINO model" src="https://podman-desktop.io/assets/images/openvino-playground1-5ffbd4d25a18e6f35d5cb2e2d4f8cd7c.png" width="1920" height="1140" class="img_SS3x"></p>
-<p>Enter 'What is OpenVINO?' in the prompt and click the <em>Send</em> button. The OpenVINO model will respond with an answer.</p>
-<p><img decoding="async" loading="lazy" alt="OpenVINO model response in the playground" src="https://podman-desktop.io/assets/images/openvino-playground2-36cde0771b0b4c8e1a307c7e9ece2f19.png" width="1920" height="1140" class="img_SS3x"></p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="consistency-with-openshift-ai--openvino">Consistency with OpenShift AI + OpenVINO<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#consistency-with-openshift-ai--openvino" class="hash-link" aria-label="Direct link to Consistency with OpenShift AI + OpenVINO" title="Direct link to Consistency with OpenShift AI + OpenVINO" translate="no">​</a></h2>
-<p>One of the key advantages of using OpenVINO in Podman AI Lab is the consistency it brings when transitioning workloads to OpenShift AI. Both platforms now support OpenVINO, ensuring that:</p>
-<ul>
-<li class="">Models tested and optimized locally in Podman AI Lab will behave the same way when deployed to OpenShift AI.</li>
-<li class="">You can maintain a unified workflow from development to production, reducing surprises and integration issues.</li>
-<li class="">Performance optimizations and hardware acceleration are preserved across environments.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="conclusion">Conclusion<a href="https://podman-desktop.io/blog/2025/05/21/podman-ai-lab-openvino#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
-<p>By enabling OpenVINO as an inference provider, Podman AI Lab empowers users to leverage high-performance AI inference both locally and in the cloud, with a consistent experience across platforms like OpenShift AI. This integration streamlines the AI development lifecycle and unlocks new possibilities for deploying efficient, scalable AI solutions.</p>]]></content:encoded>
-            <category>podman-desktop</category>
-            <category>podman</category>
-            <category>extension</category>
-            <category>ai</category>
-            <category>llm</category>
-            <category>local</category>
-            <category>podman-ai-lab</category>
-            <category>openvino</category>
         </item>
     </channel>
 </rss>
