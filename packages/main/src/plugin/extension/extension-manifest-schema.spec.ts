@@ -162,6 +162,25 @@ describe('ExtensionManifestSchema', () => {
     );
   });
 
+  test('rejects empty contributed configuration property names', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      contributes: {
+        configuration: {
+          title: 'Podman',
+          properties: {
+            'podman.binary.path': {
+              name: '',
+              type: 'string',
+            },
+          },
+        },
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   test('accepts contributes with menus', () => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
