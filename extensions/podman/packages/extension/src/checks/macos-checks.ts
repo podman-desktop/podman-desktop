@@ -112,6 +112,15 @@ export class MacKrunkitPodmanMachineCreationCheck extends BaseCheck {
       return this.createSuccessfulResult();
     }
 
+    try {
+      const { stdout } = await extensionApi.process.exec('which', ['krunkit']);
+      if (stdout) {
+        return this.createSuccessfulResult();
+      }
+    } catch {
+      // krunkit is not available on PATH, check if Homebrew installed it
+    }
+
     // brew is installed, check if libKrun has been installed with brew
     try {
       const result = await extensionApi.process.exec('brew', ['list', '--verbose', 'krunkit'], {

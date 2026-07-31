@@ -65,15 +65,20 @@ test('expect success on a recent macOS version', async () => {
 
 describe('Krunkit', () => {
   test('Krunkit is installed by brew', async () => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValue({
-      exitCode: 0,
-      stdout: 'hello-world',
-    } as extensionApi.RunError);
+    vi.mocked(extensionApi.process.exec)
+      .mockResolvedValueOnce({ exitCode: 0, stdout: '/opt/homebrew/bin/brew' } as extensionApi.RunResult)
+      .mockRejectedValueOnce(new Error('Krunkit is not installed'))
+      .mockResolvedValueOnce({ exitCode: 0, stdout: 'krunkit' } as extensionApi.RunResult);
 
     const krunkitCheck = new MacKrunkitPodmanMachineCreationCheck();
     const result = await krunkitCheck.execute();
     expect(result).toBeDefined();
     expect(result.successful).toBeTruthy();
+    expect(extensionApi.process.exec).toHaveBeenNthCalledWith(1, 'which', ['brew']);
+    expect(extensionApi.process.exec).toHaveBeenNthCalledWith(2, 'which', ['krunkit']);
+    expect(extensionApi.process.exec).toHaveBeenNthCalledWith(3, 'brew', ['list', '--verbose', 'krunkit'], {
+      env: { HOMEBREW_NO_AUTO_UPDATE: '1', HOMEBREW_NO_ANALYTICS: '1' },
+    });
   });
 
   test('Krunkit is installed by Podman installer', async () => {
@@ -85,16 +90,25 @@ describe('Krunkit', () => {
     expect(result.successful).toBeTruthy();
   });
 
-  test('Krunkit is not installed', async () => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValue({
-      exitCode: 1,
-      stderr: 'error-world',
-    } as extensionApi.RunError);
+  test('Krunkit is installed manually and available on PATH', async () => {
+    vi.mocked(extensionApi.process.exec)
+      .mockResolvedValueOnce({ exitCode: 0, stdout: '/opt/homebrew/bin/brew' } as extensionApi.RunResult)
+      .mockResolvedValueOnce({ exitCode: 0, stdout: '/opt/podman/bin/krunkit' } as extensionApi.RunResult);
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      exitCode: 0,
-      stdout: 'hello-world',
-    } as extensionApi.RunError);
+    const krunkitCheck = new MacKrunkitPodmanMachineCreationCheck();
+    const result = await krunkitCheck.execute();
+
+    expect(result.successful).toBeTruthy();
+    expect(extensionApi.process.exec).toHaveBeenCalledTimes(2);
+    expect(extensionApi.process.exec).toHaveBeenNthCalledWith(1, 'which', ['brew']);
+    expect(extensionApi.process.exec).toHaveBeenNthCalledWith(2, 'which', ['krunkit']);
+  });
+
+  test('Krunkit is not installed', async () => {
+    vi.mocked(extensionApi.process.exec)
+      .mockResolvedValueOnce({ exitCode: 0, stdout: '/opt/homebrew/bin/brew' } as extensionApi.RunResult)
+      .mockRejectedValueOnce(new Error('Krunkit is not installed'))
+      .mockResolvedValueOnce({ exitCode: 1, stderr: 'error-world' } as extensionApi.RunError);
     const krunkitCheck = new MacKrunkitPodmanMachineCreationCheck();
     const result = await krunkitCheck.execute();
     expect(result).toBeDefined();
