@@ -2622,14 +2622,14 @@ For installation, you need a RHEL 10 machine that is registered with the subscri
 <ol>
 <li class="">
 <p>Open a terminal, and enable the RHEL extensions repository:</p>
-<div class="language-sh codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-sh codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ </span><span class="token function" style="color:rgb(80, 250, 123)">sudo</span><span class="token plain"> subscription-manager repos </span><span class="token parameter variable" style="color:rgb(189, 147, 249);font-style:italic">--enable</span><span class="token plain"> rhel-10-for-</span><span class="token variable" style="color:rgb(189, 147, 249);font-style:italic">$(</span><span class="token variable" style="color:rgb(189, 147, 249);font-style:italic">arch</span><span class="token variable" style="color:rgb(189, 147, 249);font-style:italic">)</span><span class="token plain">-extensions-rpms</span><br></div></code></pre></div></div>
+<div class="language-shell-session codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-shell-session codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token command shell-symbol important">$</span><span class="token command"> </span><span class="token command bash language-bash">sudo subscription-manager repos --enable rhel-10-for-$(arch)-extensions-rpms</span><br></div></code></pre></div></div>
 </li>
 <li class="">
 <p>Enter your password when prompted.</p>
 </li>
 <li class="">
 <p>Install Podman Desktop:</p>
-<div class="language-sh codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-sh codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ </span><span class="token function" style="color:rgb(80, 250, 123)">sudo</span><span class="token plain"> dnf </span><span class="token function" style="color:rgb(80, 250, 123)">install</span><span class="token plain"> podman-desktop</span><br></div></code></pre></div></div>
+<div class="language-shell-session codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-shell-session codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token command shell-symbol important">$</span><span class="token command"> </span><span class="token command bash language-bash">sudo dnf install podman-desktop</span><br></div></code></pre></div></div>
 </li>
 <li class="">
 <p>Enter <code>y</code> to confirm the installed size.</p>
