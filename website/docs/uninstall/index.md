@@ -111,21 +111,21 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
    - Run the following command:
 
      ```shell-session
-     > choco uninstall podman-desktop
+     choco uninstall podman-desktop
      ```
 
    #### Scoop package manager for Windows
    - Run the following command:
 
      ```shell-session
-     > scoop uninstall podman-desktop
+     scoop uninstall podman-desktop
      ```
 
    #### Winget
    - Run the following command:
 
      ```shell-session
-     > winget uninstall -e --id RedHat.Podman-Desktop
+     winget uninstall -e --id RedHat.Podman-Desktop
      ```
 
    </details>

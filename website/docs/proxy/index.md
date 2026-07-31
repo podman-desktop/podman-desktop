@@ -56,7 +56,7 @@ However, it does not contain additional utilities, such as Compose or Kind.
    Open the Command Prompt, and run:.
 
    ```shell-session
-   > wsl --install --no-distribution
+   wsl --install --no-distribution
    ```
 
 1. Restart your computer.
