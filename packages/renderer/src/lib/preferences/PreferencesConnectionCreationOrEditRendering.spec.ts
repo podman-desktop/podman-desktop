@@ -456,6 +456,34 @@ test(`Check itemsAudit receive updated values`, async () => {
   });
 });
 
+test('Expect a markdown factory-property description to use the compact spacing wrapper', async () => {
+  const callback = mockCallback(async () => {});
+  const markdownDescription = 'Import host trusted CA certificates into the machine during startup.';
+
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: [
+      {
+        title: 'Import host trusted CA certs',
+        parentId: '',
+        scope: 'ContainerProviderConnectionFactory',
+        id: 'test.import-native-ca',
+        type: 'boolean',
+        default: true,
+        markdownDescription,
+      },
+    ],
+    providerInfo,
+    connectionInfo: undefined,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+  });
+
+  const description = await screen.findByText(markdownDescription);
+  expect(description.closest('.connection-creation-markdown-description')).toBeInTheDocument();
+  expect(screen.getByRole('checkbox', { name: markdownDescription })).toBeInTheDocument();
+});
+
 test(`Expect create with unchecked and checked checkboxes`, async () => {
   const taskId = 4;
   const callback = mockCallback(async () => {});

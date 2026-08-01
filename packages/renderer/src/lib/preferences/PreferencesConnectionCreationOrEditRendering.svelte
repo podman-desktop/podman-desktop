@@ -582,7 +582,9 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
                   {#if configurationKey.description}
                     {configurationKey.description}:
                   {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}
-                    <Markdown markdown={configurationKey.markdownDescription} />
+                    <div class="connection-creation-markdown-description">
+                      <Markdown markdown={configurationKey.markdownDescription} />
+                    </div>
                   {/if}
                   {#if configurationKey.format === 'memory' || configurationKey.format === 'diskSize' || configurationKey.format === 'cpu'}
                     <div class="text-[var(--pd-content-text)]">
@@ -620,3 +622,10 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
     </div>
   {/if}
 </div>
+
+<style lang="postcss">
+  .connection-creation-markdown-description :global(.markdown > p:last-child) {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+</style>
