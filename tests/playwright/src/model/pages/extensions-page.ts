@@ -165,10 +165,10 @@ export class ExtensionsPage {
     return test.step(`Check if extension card ${label} is visible`, async () => {
       const regionCard = this.content.getByRole('region', { name: label, exact: true });
       if ((await regionCard.count()) > 0) {
-        return true;
+        return await regionCard.isVisible();
       }
       const groupCard = this.content.getByRole('group', { name: label, exact: true });
-      return (await groupCard.count()) > 0;
+      return (await groupCard.count()) > 0 && (await groupCard.isVisible());
     });
   }
 }

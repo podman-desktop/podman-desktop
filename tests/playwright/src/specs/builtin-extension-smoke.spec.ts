@@ -186,7 +186,10 @@ test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity',
       .toBeGreaterThan(0);
     const totalCards = await extensionsPage.countCatalogExtensionCards();
 
-    await extensionsPage.filterByName('bootc');
+    await extensionsPage.filterByName('Bootable Containers');
+    await playExpect
+      .poll(async () => await extensionsPage.extensionCardIsVisible('Bootable Containers'), { timeout: 10_000 })
+      .toBeTruthy();
     await playExpect
       .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
