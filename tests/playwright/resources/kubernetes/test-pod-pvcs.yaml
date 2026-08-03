@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: test-app-pvc
-    image: quay.io/podman-desktop-demo/podify-demo-backend:v1
+    image: ghcr.io/podmandesktop-ci/podify-demo-backend:v1
     volumeMounts:
     - name: config-volume
       mountPath: /etc/config

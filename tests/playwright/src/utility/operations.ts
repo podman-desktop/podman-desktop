@@ -26,6 +26,7 @@ import { ResourceElementState } from '/@/model/core/states';
 import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
 import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ExperimentalPage } from '/@/model/pages/experimental-page';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RegistriesPage } from '/@/model/pages/registries-page';
@@ -131,6 +132,60 @@ export async function deleteRegistry(page: Page, name: string, failIfNotExist = 
         await registryPage.removeRegistry(name);
       }
     }
+  });
+}
+
+export async function createRegistryAndVerify(
+  page: Page,
+  url: string,
+  username: string,
+  pswd: string,
+  registryLabel: string,
+  handleUntrustedCert?: boolean,
+): Promise<void> {
+  return test.step('Create registry and verify', async () => {
+    const navigationBar = new NavigationBar(page);
+    const settingsBar = await navigationBar.openSettings();
+    const registryPage = await settingsBar.openTabPage(RegistriesPage);
+    await registryPage.createRegistry(url, username, pswd, handleUntrustedCert);
+    const registryRow = await registryPage.getRegistryRowByName(registryLabel);
+    await playExpect(registryRow.getByText(username)).toBeVisible({ timeout: 50_000 });
+  });
+}
+
+export async function removeRegistryAndVerify(page: Page, registryLabel: string, username: string): Promise<void> {
+  return test.step('Remove registry and verify', async () => {
+    const navigationBar = new NavigationBar(page);
+    const settingsBar = await navigationBar.openSettings();
+    const registryPage = await settingsBar.openTabPage(RegistriesPage);
+    await registryPage.removeRegistry(registryLabel);
+    const registryRow = await registryPage.getRegistryRowByName(registryLabel);
+    await playExpect(registryRow.getByText(username)).toBeHidden();
+  });
+}
+
+export async function pushImageExpectFailure(page: Page, pushButton: Locator): Promise<string> {
+  return test.step('Push image and expect failure', async () => {
+    const dialog = page.getByRole('dialog', { name: 'Push image', exact: true });
+
+    await playExpect(pushButton).toBeEnabled();
+    await pushButton.click();
+
+    await playExpect(dialog).toBeVisible({ timeout: 10_000 });
+
+    const pushConfirmButton = dialog.getByRole('button', { name: 'Push image' });
+    await playExpect(pushConfirmButton).toBeEnabled();
+    await pushConfirmButton.click();
+
+    const doneButton = dialog.getByRole('button', { name: 'Done' });
+    await playExpect(doneButton).toBeEnabled({ timeout: 60_000 });
+
+    const dialogContent = (await dialog.textContent()) ?? '';
+
+    await doneButton.click();
+    await playExpect(dialog).toBeHidden({ timeout: 10_000 });
+
+    return dialogContent;
   });
 }
 
@@ -626,6 +681,29 @@ export async function setEnhancedDashboardFeature(
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
+}
+
+export async function waitForDashboardState(navigationBar: NavigationBar, enable: boolean): Promise<DashboardPage> {
+  // Assets in the dashboard take a bit to load, poll until they do.
+  // If the enhanced dashboard feature is enabled -> systemOverviewButton is expected.
+  // If the enhanced dashboard feature is disabled -> podmanProvider card is expected.
+  const getExpectedElement = (dashboard: DashboardPage): Locator =>
+    enable ? dashboard.systemOverviewButton : dashboard.podmanProvider;
+  let dashboardPage!: DashboardPage;
+  await playExpect
+    .poll(
+      async () => {
+        dashboardPage = await navigationBar.openDashboard();
+        if (await getExpectedElement(dashboardPage).isVisible()) {
+          return true;
+        }
+        await navigationBar.openContainers();
+        return false;
+      },
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
+  return dashboardPage;
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {

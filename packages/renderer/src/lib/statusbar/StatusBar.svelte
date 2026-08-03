@@ -35,7 +35,7 @@ onMount(async () => {
       .filter(descriptor => {
         return descriptor.alignLeft === true;
       })
-      .sort((d1, d2) => {
+      .toSorted((d1, d2) => {
         if (d1.priority > d2.priority) {
           return 1;
         } else if (d1.priority < d2.priority) {
@@ -52,7 +52,7 @@ onMount(async () => {
       .filter(descriptor => {
         return descriptor.alignLeft === false;
       })
-      .sort((d1, d2) => {
+      .toSorted((d1, d2) => {
         if (d1.priority > d2.priority) {
           return 1;
         } else if (d1.priority < d2.priority) {

@@ -40,6 +40,8 @@ export abstract class MainPage extends BasePage {
   readonly noContainerEngineHeading: Locator;
   readonly noImagesHeading: Locator;
   readonly rowTable: Locator;
+  readonly searchInput: Locator;
+  readonly environmentDropdown: Locator;
 
   constructor(page: Page, title: string) {
     super(page);
@@ -64,6 +66,8 @@ export abstract class MainPage extends BasePage {
       exact: true,
     });
     this.rowTable = this.content.getByRole('table');
+    this.searchInput = this.search.getByLabel(`search ${this.title}`);
+    this.environmentDropdown = this.bottomAdditionalActions.getByLabel('Environment');
   }
 
   /**
@@ -196,5 +200,43 @@ export abstract class MainPage extends BasePage {
     await playExpect(toggle).toBeAttached();
 
     return toggle;
+  }
+
+  async filterByName(name: string): Promise<void> {
+    return test.step(`Filter ${this.title} by name: ${name}`, async () => {
+      await playExpect(this.searchInput).toBeVisible();
+      await this.searchInput.fill(name);
+      await playExpect(this.searchInput).toHaveValue(name);
+    });
+  }
+
+  async clearFilterByName(): Promise<void> {
+    return test.step(`Clear name filter on ${this.title} page`, async () => {
+      await playExpect(this.searchInput).toBeVisible();
+      await this.searchInput.clear();
+      await playExpect(this.searchInput).toHaveValue('');
+    });
+  }
+
+  async filterByEnvironment(environment: string): Promise<void> {
+    return test.step(`Filter ${this.title} by environment: ${environment}`, async () => {
+      await playExpect(this.environmentDropdown).toBeVisible();
+      await this.environmentDropdown.click();
+      const option = this.environmentDropdown.getByRole('button').filter({ hasText: environment });
+      await playExpect(option).toBeVisible();
+      await option.click();
+    });
+  }
+
+  async clearFilterByEnvironment(): Promise<void> {
+    return test.step(`Clear environment filter on ${this.title} page`, async () => {
+      await this.filterByEnvironment('All');
+    });
+  }
+
+  async isEnvironmentFilterVisible(): Promise<boolean> {
+    return test.step(`Check if environment filter is visible on ${this.title} page`, async () => {
+      return await this.environmentDropdown.isVisible();
+    });
   }
 }

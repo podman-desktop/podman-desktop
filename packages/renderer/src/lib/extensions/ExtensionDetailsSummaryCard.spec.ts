@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ExtensionDetailsUI } from './extension-details-ui';
@@ -26,6 +26,7 @@ import ExtensionDetailsSummaryCard from './ExtensionDetailsSummaryCard.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
 });
 
 test('Expect to have text of the card including version, release date, publisher and categories', async () => {
@@ -66,4 +67,166 @@ test('Expect to have text of the card including version, release date, publisher
   // categories
   const categories = screen.getByText('cat1, cat2');
   expect(categories).toBeInTheDocument();
+});
+
+test('Expect repository link to open external URL', async () => {
+  const extensionDetails: ExtensionDetailsUI = {
+    displayName: 'my display name',
+    description: 'my description',
+    type: 'pd',
+    removable: false,
+    devMode: false,
+    state: 'started',
+    name: 'foo',
+    icon: 'fooIcon',
+    readme: { content: '' },
+    releaseDate: '2024-01-01',
+    categories: [],
+    publisherDisplayName: 'my publisher',
+    version: 'v1.2.3',
+    id: 'myId',
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: 'v3.4.5',
+    repository: 'https://github.com/example/repo',
+  };
+
+  render(ExtensionDetailsSummaryCard, { extensionDetails });
+
+  expect(screen.getByText('resources')).toBeInTheDocument();
+  const repoLink = screen.getByText('Repository');
+  expect(repoLink).toBeInTheDocument();
+
+  await fireEvent.click(repoLink);
+  expect(window.openExternal).toHaveBeenCalledWith('https://github.com/example/repo');
+});
+
+test('Expect repository object link to open external URL', async () => {
+  const extensionDetails: ExtensionDetailsUI = {
+    displayName: 'my display name',
+    description: 'my description',
+    type: 'pd',
+    removable: false,
+    devMode: false,
+    state: 'started',
+    name: 'foo',
+    icon: 'fooIcon',
+    readme: { content: '' },
+    releaseDate: '2024-01-01',
+    categories: [],
+    publisherDisplayName: 'my publisher',
+    version: 'v1.2.3',
+    id: 'myId',
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: 'v3.4.5',
+    repository: {
+      type: 'git',
+      url: 'https://github.com/example/repo-object',
+      directory: 'extensions/example',
+    },
+  };
+
+  render(ExtensionDetailsSummaryCard, { extensionDetails });
+
+  const repoLink = screen.getByText('Repository');
+  expect(repoLink).toBeInTheDocument();
+
+  await fireEvent.click(repoLink);
+  expect(window.openExternal).toHaveBeenCalledWith('https://github.com/example/repo-object');
+});
+
+test('Expect repository link to strip git+ prefix before opening', async () => {
+  const extensionDetails: ExtensionDetailsUI = {
+    displayName: 'my display name',
+    description: 'my description',
+    type: 'pd',
+    removable: false,
+    devMode: false,
+    state: 'started',
+    name: 'foo',
+    icon: 'fooIcon',
+    readme: { content: '' },
+    releaseDate: '2024-01-01',
+    categories: [],
+    publisherDisplayName: 'my publisher',
+    version: 'v1.2.3',
+    id: 'myId',
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: 'v3.4.5',
+    repository: {
+      type: 'git',
+      url: 'git+https://github.com/example/repo-with-git-plus.git',
+      directory: 'extensions/example',
+    },
+  };
+
+  render(ExtensionDetailsSummaryCard, { extensionDetails });
+
+  const repoLink = screen.getByText('Repository');
+  expect(repoLink).toBeInTheDocument();
+
+  await fireEvent.click(repoLink);
+  expect(window.openExternal).toHaveBeenCalledWith('https://github.com/example/repo-with-git-plus.git');
+});
+
+test('Expect homepage link to open external URL', async () => {
+  const extensionDetails: ExtensionDetailsUI = {
+    displayName: 'my display name',
+    description: 'my description',
+    type: 'pd',
+    removable: false,
+    devMode: false,
+    state: 'started',
+    name: 'foo',
+    icon: 'fooIcon',
+    readme: { content: '' },
+    releaseDate: '2024-01-01',
+    categories: [],
+    publisherDisplayName: 'my publisher',
+    version: 'v1.2.3',
+    id: 'myId',
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: 'v3.4.5',
+    homepage: 'https://example.com',
+  };
+
+  render(ExtensionDetailsSummaryCard, { extensionDetails });
+
+  expect(screen.getByText('resources')).toBeInTheDocument();
+  const homepageLink = screen.getByText('Homepage');
+  expect(homepageLink).toBeInTheDocument();
+
+  await fireEvent.click(homepageLink);
+  expect(window.openExternal).toHaveBeenCalledWith('https://example.com');
+});
+
+test('Expect no repository or homepage when not provided', async () => {
+  const extensionDetails: ExtensionDetailsUI = {
+    displayName: 'my display name',
+    description: 'my description',
+    type: 'pd',
+    removable: false,
+    devMode: false,
+    state: 'started',
+    name: 'foo',
+    icon: 'fooIcon',
+    readme: { content: '' },
+    releaseDate: '2024-01-01',
+    categories: [],
+    publisherDisplayName: 'my publisher',
+    version: 'v1.2.3',
+    id: 'myId',
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: 'v3.4.5',
+  };
+
+  render(ExtensionDetailsSummaryCard, { extensionDetails });
+
+  expect(screen.queryByText('resources')).not.toBeInTheDocument();
+  expect(screen.queryByText('Repository')).not.toBeInTheDocument();
+  expect(screen.queryByText('Homepage')).not.toBeInTheDocument();
 });

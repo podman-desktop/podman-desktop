@@ -73,7 +73,7 @@ beforeEach(() => {
 });
 
 test('Check deleting pod', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   render(PodActions, { pod });
 
@@ -90,7 +90,7 @@ test('Check deleting pod', async () => {
 });
 
 test('Check restarting pod', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   render(PodActions, { pod });
 

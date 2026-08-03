@@ -27,8 +27,8 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const podAppName = 'primary-podify-demo';
 const podName = 'podify-demo-pod';
-const frontendImage = 'quay.io/podman-desktop-demo/podify-demo-frontend';
-const backendImage = 'quay.io/podman-desktop-demo/podify-demo-backend';
+const frontendImage = 'ghcr.io/podmandesktop-ci/podify-demo-frontend';
+const backendImage = 'ghcr.io/podmandesktop-ci/podify-demo-backend';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

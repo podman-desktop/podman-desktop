@@ -17,7 +17,7 @@ import SettingsPage from './SettingsPage.svelte';
 </script>
 
 <SettingsPage title="Authentication">
-  <div class="container h-full" role="list">
+  <div class="container" role="list">
     <!-- Authentication Providers table start -->
     <EmptyScreen
       icon={KeyIcon}

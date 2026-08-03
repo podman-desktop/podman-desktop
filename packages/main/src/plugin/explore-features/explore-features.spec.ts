@@ -28,7 +28,6 @@ import type {
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
 } from '@podman-desktop/core-api';
-import type Electron from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
@@ -39,14 +38,6 @@ import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
 import { ExploreFeatures } from './explore-features.js';
-
-vi.mock(import('electron'), async () => {
-  return {
-    app: {
-      getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
-    },
-  } as unknown as typeof Electron;
-});
 
 vi.mock(import('node:fs'), () => ({
   existsSync: vi.fn(),

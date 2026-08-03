@@ -24,7 +24,7 @@ import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 
@@ -72,16 +72,13 @@ const mockedErroredPlayKubeInfo: PlayKubeInfo = {
 // mock the router
 vi.mock(import('tinro'));
 
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
+
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
@@ -145,7 +142,7 @@ test('error: When pressing the Play button, expect us to show the errors to the 
   await userEvent.click(playButton);
 
   // Since we error out with the mocked kubePlay function (see very top of tests)
-  // Expect the following error to be in in the document.
+  // Expect the following error to be in the document.
   const error = screen.getByText('The following pods were created but failed to start: error 1, error 2');
   expect(error).toBeInTheDocument();
 });

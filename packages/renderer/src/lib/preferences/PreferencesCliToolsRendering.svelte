@@ -9,7 +9,7 @@ import SettingsPage from './SettingsPage.svelte';
 </script>
 
 <SettingsPage title="CLI Tools">
-  <div class="h-full" role="table" aria-label="cli-tools">
+  <div role="table" aria-label="cli-tools">
     <EmptyScreen
       aria-label="no-resource-panel"
       icon={EngineIcon}

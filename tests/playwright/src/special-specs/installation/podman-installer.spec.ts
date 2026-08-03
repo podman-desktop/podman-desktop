@@ -49,10 +49,7 @@ test.afterAll(async ({ runner }) => {
 test.describe
   .serial('Podman installer integration in Podman Desktop', { tag: '@update-install' }, () => {
     test('Dashboard Podman provider card assets check', async ({ page }) => {
-      test.skip(
-        !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
-        'Only run on macOS and Windows in GitHub Actions',
-      );
+      test.skip(!isCI || process.env.GITHUB_ACTIONS !== 'true', 'Only run on macOS and Windows in GitHub Actions');
       const dashboardPage = await new NavigationBar(page).openDashboard();
       await playExpect(dashboardPage.heading).toBeVisible();
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 25_000 });

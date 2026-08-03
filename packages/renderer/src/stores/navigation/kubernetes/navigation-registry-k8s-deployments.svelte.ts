@@ -32,6 +32,7 @@ export function createNavigationKubernetesDeploymentsEntry(): NavigationRegistry
     link: '/kubernetes/deployments',
     tooltip: 'Deployments',
     type: 'entry',
+    destinations: [],
     get counter() {
       return count;
     },

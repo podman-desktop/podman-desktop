@@ -27,8 +27,6 @@ import product from '/@product.json' with { type: 'json' };
 
 import { Main } from './main.js';
 
-// mock electron
-vi.mock(import('electron'));
 vi.mock(import('/@/util.js'));
 vi.mock(import('/@/security-restrictions.js'));
 vi.mock(import('electron-context-menu'), () => ({

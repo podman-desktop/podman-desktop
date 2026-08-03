@@ -20,19 +20,10 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import CustomPick from './CustomPick.svelte';
 import type { CustomPickOptions } from './quickpick-input';
-
-const receiveFunctionMock = vi.fn();
-
-// mock some methods of the window object
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: receiveFunctionMock,
-  };
-});
 
 describe('CustomPick', () => {
   test('Expect that title is displayed', async () => {
@@ -55,11 +46,14 @@ describe('CustomPick', () => {
       hideItemSections: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: CustomPickOptions) => void) => {
-      if (message === 'showCustomPick:add') {
-        callback(customPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: CustomPickOptions) => void) => {
+        if (message === 'showCustomPick:add') {
+          callback(customPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(CustomPick, {});
 
@@ -87,11 +81,14 @@ describe('CustomPick', () => {
       hideItemSections: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: CustomPickOptions) => void) => {
-      if (message === 'showCustomPick:add') {
-        callback(customPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: CustomPickOptions) => void) => {
+        if (message === 'showCustomPick:add') {
+          callback(customPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(CustomPick, {});
 
@@ -121,11 +118,14 @@ describe('CustomPick', () => {
       hideItemSections: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: CustomPickOptions) => void) => {
-      if (message === 'showCustomPick:add') {
-        callback(customPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: CustomPickOptions) => void) => {
+        if (message === 'showCustomPick:add') {
+          callback(customPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(CustomPick, {});
 
@@ -158,11 +158,14 @@ describe('CustomPick', () => {
       hideItemSections: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: CustomPickOptions) => void) => {
-      if (message === 'showCustomPick:add') {
-        callback(customPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: CustomPickOptions) => void) => {
+        if (message === 'showCustomPick:add') {
+          callback(customPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(CustomPick, {});
 

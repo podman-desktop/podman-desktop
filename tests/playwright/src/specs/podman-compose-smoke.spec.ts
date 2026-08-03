@@ -34,8 +34,8 @@ const __dirname = path.dirname(__filename);
 const backendContainerName = 'backend-1';
 const frontendContainerName = 'frontend-1';
 const composeContainer = 'resources';
-const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
-const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
+const backendImageName = 'ghcr.io/podmandesktop-ci/podify-demo-backend';
+const frontendImageName = 'ghcr.io/podmandesktop-ci/podify-demo-frontend';
 let cliToolsPage: CLIToolsPage;
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {

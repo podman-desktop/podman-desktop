@@ -19,10 +19,8 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { Component } from 'svelte';
 
-import type { ContainerInfo } from './container-info.js';
-import type { ImageInfo } from './image-info.js';
-import type { PodInfo } from './pod-info.js';
-import type { VolumeInfo } from './volume-info.js';
+import type { NavigationPage } from '/@/navigation-page.js';
+import type { InferredNavigationRequest } from '/@/navigation-request.js';
 
 export interface DocumentationBaseInfo {
   name: string;
@@ -35,17 +33,7 @@ export interface DocumentationInfo extends DocumentationBaseInfo {
   category: string;
 }
 
-export type GoToInfo =
-  | (PodInfo & { type: 'Pod'; icon: GoToIcon })
-  | (ContainerInfo & { type: 'Container'; icon: GoToIcon })
-  | (ImageInfo & { type: 'Image'; icon: GoToIcon })
-  | (VolumeInfo & { type: 'Volume'; icon: GoToIcon })
-  | (NavigationInfo & { type: 'Navigation'; icon: GoToIcon });
-
-export interface NavigationInfo {
-  name: string;
-  link: string;
-}
+export type GoToInfo = InferredNavigationRequest<NavigationPage> & { name: string; icon: GoToIcon };
 
 export interface GoToIcon {
   iconImage?: string | { readonly light: string; readonly dark: string };

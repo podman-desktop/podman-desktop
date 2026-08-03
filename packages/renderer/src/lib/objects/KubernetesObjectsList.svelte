@@ -150,7 +150,7 @@ let selectedItemsNumber = $state<number>(0);
   {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full grow">
     <Table
       kind={singular}
       bind:selectedItemsNumber={selectedItemsNumber}

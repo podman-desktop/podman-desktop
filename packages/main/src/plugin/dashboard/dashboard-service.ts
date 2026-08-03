@@ -90,7 +90,7 @@ export class DashboardService implements IDisposable {
           type: 'boolean',
           description: 'Expand the system overview section on the dashboard',
           hidden: true,
-          default: false,
+          default: true,
         },
       },
     };

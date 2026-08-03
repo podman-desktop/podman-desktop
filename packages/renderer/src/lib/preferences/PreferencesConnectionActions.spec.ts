@@ -194,7 +194,7 @@ describe('delete', () => {
       status: 'stopped',
     };
     // mock Yes
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
     const { getByRole } = render(PreferencesConnectionActions, {
       connectionStatus,

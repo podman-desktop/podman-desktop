@@ -48,6 +48,7 @@ const myImage: ImageInfo = {
   Labels: {},
   engineId: 'engine0',
   engineName: 'podman',
+  engineType: 'podman',
   ParentId: '',
   RepoTags: ['myImageTag'],
   Created: 0,
@@ -89,8 +90,8 @@ afterEach(() => {
 });
 
 test('Expect redirect to previous page if image is deleted', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Delete' (confirm)
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   const routerGotoSpy = vi.spyOn(router, 'goto');
   listImagesMock.mockResolvedValue([myImage]);
@@ -323,7 +324,7 @@ test.each([
 
   // now assert status item contains the icon
   const subElement = statusElement.getElementsByClassName('podman-desktop-icon-my-custom-icon');
-  // should not be overriden for list contribution
+  // should not be overridden for list contribution
   if (IMAGE_LIST_VIEW_ICONS === viewIdContrib) {
     expect(subElement.length).toBe(0);
   } else {
@@ -378,7 +379,7 @@ test.each([
   // grab badge with label 'my-custom-badge'
   const badge = screen.queryByText('my-custom-badge');
 
-  // should not be overriden for list contribution
+  // should not be overridden for list contribution
 
   if (IMAGE_LIST_VIEW_BADGES === viewIdContrib) {
     expect(badge).not.toBeInTheDocument();

@@ -29,22 +29,6 @@ import * as util from './util.js';
 let trayMenu: TrayMenu;
 let tray: Tray;
 let animatedTray: AnimatedTray;
-vi.mock(import('electron'), async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Menu = {} as unknown as any;
-  Menu['buildFromTemplate'] = vi.fn();
-  return {
-    Menu,
-    ipcMain: {
-      emit: vi.fn(),
-      on: vi.fn(),
-    },
-    nativeImage: {
-      createFromDataURL: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
-
 beforeAll(() => {
   tray = {
     setContextMenu: vi.fn(),

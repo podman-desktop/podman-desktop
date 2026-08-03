@@ -20,7 +20,7 @@ import type { InstallCheck } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { OrCheck, SequenceCheck } from '/@/checks/base-check';
+import { SequenceCheck, WarningCheck } from '/@/checks/base-check';
 import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
 import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
@@ -35,7 +35,6 @@ import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols
 export class WinPlatform {
   readonly type = 'win';
 
-  private readonly windowsVirtualizationCheck: OrCheck;
   private readonly wslCheck: SequenceCheck;
   private readonly hyperVSequenceCheck: SequenceCheck;
 
@@ -68,12 +67,16 @@ export class WinPlatform {
       this.wSLVersionCheck,
       this.wSL2Check,
     ]);
-
-    this.windowsVirtualizationCheck = new OrCheck('Windows virtualization', this.wslCheck, this.hyperVSequenceCheck);
   }
 
   getPreflightChecks(): InstallCheck[] {
-    return [this.winBitCheck, this.winVersionCheck, this.winMemoryCheck, this.windowsVirtualizationCheck];
+    return [
+      this.winBitCheck,
+      this.winVersionCheck,
+      this.winMemoryCheck,
+      new WarningCheck(this.wslCheck),
+      new WarningCheck(this.hyperVSequenceCheck),
+    ];
   }
 
   async isWSLEnabled(): Promise<boolean> {

@@ -106,7 +106,7 @@ export class StatusBar extends BasePage {
     const barProviderButton = await this.getProviderButton(providerName);
     await playExpect(barProviderButton).toBeVisible();
     const providerArea = barProviderButton.locator('..').locator('..');
-    const providerTooltip = providerArea.getByLabel('tooltip');
+    const providerTooltip = providerArea.getByRole('tooltip');
 
     await barProviderButton.hover();
     await playExpect(providerTooltip).toBeVisible();

@@ -64,28 +64,27 @@ test.afterAll(async ({ runner }) => {
 });
 
 for (const extension of extensionsToTest) {
-  test.describe
-    .serial(`Verification of Built-In Extension: ${extension.extensionLabelName}`, {
-      tag: ['@smoke', '@windows_sanity', '@macos_sanity'],
-    }, () => {
-      test.describe.configure({ retries: 1 });
+  test.describe(`Verification of Built-In Extension: ${extension.extensionLabelName}`, {
+    tag: ['@smoke', '@windows_sanity', '@macos_sanity'],
+  }, () => {
+    test.describe.configure({ mode: 'serial', retries: 1 });
 
-      test(`Check ${extension.extensionLabelName} extension is enabled and present`, async () => {
-        await verifyBuiltInExtensionStatus(true, extension);
-      });
-
-      test(`Check that ${extension.extensionLabelName} extension can be disabled from Extension Page`, async () => {
-        const podmanExtensionPage = await openExtensionsPodmanPage(extension);
-        await podmanExtensionPage.disableExtension();
-        await verifyBuiltInExtensionStatus(false, extension);
-      });
-
-      test(`Check that ${extension.extensionLabelName} extension can be re-enabled from Extension Page`, async () => {
-        const podmanExtensionPage = await openExtensionsPodmanPage(extension);
-        await podmanExtensionPage.enableExtension();
-        await verifyBuiltInExtensionStatus(true, extension);
-      });
+    test(`Check ${extension.extensionLabelName} extension is enabled and present`, async () => {
+      await verifyBuiltInExtensionStatus(true, extension);
     });
+
+    test(`Check that ${extension.extensionLabelName} extension can be disabled from Extension Page`, async () => {
+      const podmanExtensionPage = await openExtensionsPodmanPage(extension);
+      await podmanExtensionPage.disableExtension();
+      await verifyBuiltInExtensionStatus(false, extension);
+    });
+
+    test(`Check that ${extension.extensionLabelName} extension can be re-enabled from Extension Page`, async () => {
+      const podmanExtensionPage = await openExtensionsPodmanPage(extension);
+      await podmanExtensionPage.enableExtension();
+      await verifyBuiltInExtensionStatus(true, extension);
+    });
+  });
 }
 
 async function verifyBuiltInExtensionStatus(

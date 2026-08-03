@@ -19,3 +19,11 @@
 import type { TablePersistence } from './table';
 
 export const tablePersistence = $state<{ storage: TablePersistence | undefined }>({ storage: undefined });
+
+/**
+ * Module-level map that preserves which table rows are collapsed across
+ * component remounts (e.g. when navigating away and back). Keyed by the
+ * Table's `kind` prop so each list maintains independent state.
+ * Cleared on app restart (in-memory only).
+ */
+export const collapsedStateMap = new Map<string, string[]>();

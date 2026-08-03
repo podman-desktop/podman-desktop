@@ -1,4 +1,5 @@
 <script lang="ts">
+import DOMPurify from 'dompurify';
 import { micromark } from 'micromark';
 import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
@@ -42,7 +43,12 @@ let html: string = $derived.by(() => {
   // remove href values in each anchor using # for links
   // and set the attribute data-pd-jump-in-page
   const parser = new DOMParser();
-  const doc = parser.parseFromString(decode(html), 'text/html');
+  const doc = parser.parseFromString(
+    DOMPurify.sanitize(decode(html), {
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|podman-desktop):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    }),
+    'text/html',
+  );
   const links = doc.querySelectorAll('a');
   links.forEach(link => {
     const currentHref = link.getAttribute('href');

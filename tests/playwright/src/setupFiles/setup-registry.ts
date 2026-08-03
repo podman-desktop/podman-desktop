@@ -31,3 +31,15 @@ export function canTestRegistry(): boolean {
   const [registry, username, passwd] = setupRegistry();
   return !!registry && !!username && !!passwd;
 }
+
+export function setupInsecureRegistry(): string[] {
+  const registryUrl = process.env.INSECURE_REGISTRY_URL ?? '';
+  const registryUsername = process.env.INSECURE_REGISTRY_USERNAME ?? '';
+  const registryPswdSecret = process.env.INSECURE_REGISTRY_PASSWORD ?? '';
+  return [registryUrl, registryUsername, registryPswdSecret];
+}
+
+export function canTestInsecureRegistry(): boolean {
+  const [registry, username, passwd] = setupInsecureRegistry();
+  return !!registry && !!username && !!passwd;
+}

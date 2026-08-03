@@ -10,7 +10,6 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
 import { podsInfos } from '/@/stores/pods';
 
-import { PodUtils } from './pod-utils';
 import PodActions from './PodActions.svelte';
 import PodDetailsInspect from './PodDetailsInspect.svelte';
 import PodDetailsKube from './PodDetailsKube.svelte';
@@ -28,18 +27,16 @@ let detailsPage: DetailsPage;
 let currentRouterPath: string;
 
 onMount(() => {
-  const podUtils = new PodUtils();
-
   router.subscribe(route => {
     currentRouterPath = route.path;
   });
 
   // loading pod info
   return podsInfos.subscribe(pods => {
-    const matchingPod = pods.find(podInPods => podInPods.Name === podName && podInPods.engineId === engineId);
+    const matchingPod = pods.find(podInPods => podInPods.name === podName && podInPods.engineId === engineId);
     if (matchingPod) {
       try {
-        pod = podUtils.getPodInfoUI(matchingPod);
+        pod = matchingPod;
 
         if (currentRouterPath.endsWith('/')) {
           router.goto(`${currentRouterPath}logs`);

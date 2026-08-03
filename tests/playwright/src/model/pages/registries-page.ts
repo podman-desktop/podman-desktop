@@ -20,6 +20,7 @@ import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
 import { Registries } from '/@/model/core/settings/registries';
+import { handleConfirmationDialog } from '/@/utility/operations';
 import { waitUntil } from '/@/utility/wait';
 
 import { SettingsPage } from './settings-page';
@@ -54,8 +55,8 @@ export class RegistriesPage extends SettingsPage {
     this.preferredRepositoriesField = page.locator(`input[name="${Registries.PREFERRED_INPUT_NAME}"]`);
   }
 
-  async createRegistry(url: string, username: string, pswd: string): Promise<void> {
-    return test.step('Create a new registry', async () => {
+  async submitRegistryForm(url: string, username: string, pswd: string): Promise<void> {
+    return test.step('Submit registry form', async () => {
       await this.page.waitForTimeout(4_000);
       await playExpect(this.addRegistryButton).toBeEnabled();
       await this.addRegistryButton.click();
@@ -68,6 +69,24 @@ export class RegistriesPage extends SettingsPage {
 
       await playExpect(this.confirmDialogButton).toBeEnabled();
       await this.confirmDialogButton.click();
+    });
+  }
+
+  async createRegistry(url: string, username: string, pswd: string, handleUntrustedCert?: boolean): Promise<void> {
+    return test.step('Create a new registry', async () => {
+      await this.submitRegistryForm(url, username, pswd);
+
+      if (handleUntrustedCert) {
+        try {
+          await handleConfirmationDialog(this.page, 'Add Untrusted Registry?', true, 'Add', 'Cancel', 5_000);
+        } catch (err) {
+          if ((err as Error).name !== 'TimeoutError' && !(err as Error).message?.includes('Timeout')) {
+            throw err;
+          }
+        }
+      }
+
+      await playExpect(this.addRegistryDialog).toBeHidden({ timeout: 30_000 });
     });
   }
 
@@ -195,7 +214,7 @@ export class RegistriesPage extends SettingsPage {
         );
         await loginButton.click({ timeout: 3000 });
       } catch (err) {
-        throw Error(`An error occured when trying to log into registry: ${(err as Error).message}`);
+        throw Error(`An error occurred when trying to log into registry: ${(err as Error).message}`);
       }
     });
   }

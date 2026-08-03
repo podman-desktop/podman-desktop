@@ -27,7 +27,7 @@ async function openCleanupDialog(): Promise<void> {
     buttons: ['Clean Up', 'Cancel'],
   });
 
-  if (result?.response === 0) {
+  if (result?.response === 'Clean Up') {
     await cleanup();
   }
 }

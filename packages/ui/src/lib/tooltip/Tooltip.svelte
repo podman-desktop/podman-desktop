@@ -15,6 +15,15 @@
 }
 </style>
 
+<script module lang="ts">
+let tooltipIdCounter = 0;
+
+function nextTooltipId(): string {
+  tooltipIdCounter += 1;
+  return `pd-tooltip-${tooltipIdCounter}`;
+}
+</script>
+
 <script lang="ts">
 import type { Placement } from '@floating-ui/dom';
 import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
@@ -36,7 +45,6 @@ interface Props {
   containerClass?: string;
   tipSnippet?: Snippet;
   children?: Snippet;
-  'aria-label'?: string;
 }
 
 let {
@@ -53,8 +61,9 @@ let {
   containerClass,
   tipSnippet,
   children,
-  'aria-label': ariaLabel,
 }: Props = $props();
+
+const tooltipId = nextTooltipId();
 
 let referenceElement: HTMLElement | undefined = $state(undefined);
 let tooltipElement: HTMLElement | undefined = $state(undefined);
@@ -64,6 +73,25 @@ let cleanupAutoUpdate: (() => void) | undefined;
 
 const tooltipInnerClasses =
   'pt-[4px] pb-[5px] px-[8px] rounded-[9px] bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-inner-border)] backdrop-blur-sm';
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
+function getTooltipAriaTarget(root: HTMLElement | undefined): HTMLElement | undefined {
+  if (!root) return undefined;
+  return root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? root;
+}
+
+function setTooltipAriaDescribedBy(root: HTMLElement | undefined, id: string | undefined): void {
+  const target = getTooltipAriaTarget(root);
+  if (!target) return;
+
+  if (id) {
+    target.setAttribute('aria-describedby', id);
+  } else {
+    target.removeAttribute('aria-describedby');
+  }
+}
 
 function getPreferredPlacement(): Placement {
   if (top) return 'top';
@@ -150,11 +178,19 @@ $effect((): (() => void) => {
     }
   };
 });
+
+$effect(() => {
+  const shouldDescribe = isVisible && !$tooltipHidden && (tip ?? tipSnippet);
+  setTooltipAriaDescribedBy(referenceElement, shouldDescribe ? tooltipId : undefined);
+
+  return (): void => {
+    setTooltipAriaDescribedBy(referenceElement, undefined);
+  };
+});
 </script>
 
-<div class={containerClass ?? 'relative inline-block'} aria-label={ariaLabel}>
+<div class={containerClass ?? 'relative inline-block'}>
   <span
-    role="none"
     data-testid="tooltip-trigger"
     class="group tooltip-slot {className}"
     bind:this={referenceElement}
@@ -171,12 +207,12 @@ $effect((): (() => void) => {
       class:opacity-0={!isPositioned}
       style="left: 0; top: 0;">
       {#if tip}
-        <div class="{tooltipInnerClasses} {className}" aria-label="tooltip">
+        <div class="{tooltipInnerClasses} {className}" role="tooltip" id={tooltipId}>
           {tip}
         </div>
       {/if}
       {#if tipSnippet && !tip}
-        <div class="{tooltipInnerClasses} {className}" aria-label="tooltip">
+        <div class="{tooltipInnerClasses} {className}" role="tooltip" id={tooltipId}>
           {@render tipSnippet?.()}
         </div>
       {/if}

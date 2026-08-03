@@ -85,6 +85,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -104,7 +105,6 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -116,6 +116,9 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   SystemOverviewStatusInfo,
@@ -281,8 +284,31 @@ export function initExposure(): void {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);
   });
 
+  contextBridge.exposeInMainWorld(
+    'navigateToExtensionHistoryEntry',
+    async (extensionId: string, entryId: string): Promise<void> => {
+      return ipcRenderer.invoke('navigation:navigateToHistoryEntry', extensionId, entryId);
+    },
+  );
+
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
+  });
+
+  contextBridge.exposeInMainWorld('listSecrets', async (): Promise<SecretInfo[]> => {
+    return ipcInvoke('container-provider-registry:listSecrets');
+  });
+
+  contextBridge.exposeInMainWorld('removeSecret', async (engineId: string, secretId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:removeSecret', engineId, secretId);
+  });
+
+  contextBridge.exposeInMainWorld('inspectSecret', async (engineId: string, secretId: string): Promise<SecretInfo> => {
+    return ipcInvoke('container-provider-registry:inspectSecret', engineId, secretId);
+  });
+
+  contextBridge.exposeInMainWorld('createSecret', async (options: SecretCreateOptions): Promise<SecretCreateResult> => {
+    return ipcInvoke('container-provider-registry:createSecret', options);
   });
 
   contextBridge.exposeInMainWorld(
@@ -292,7 +318,7 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('listImages', async (options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+  contextBridge.exposeInMainWorld('listImages', async (options?: ListImagesOptions): Promise<ImageInfo[]> => {
     return ipcInvoke('container-provider-registry:listImages', options);
   });
 
@@ -375,6 +401,9 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('startPod', async (engine: string, podId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:startPod', engine, podId);
   });
+  contextBridge.exposeInMainWorld('unpausePod', async (engine: string, podId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:unpausePod', engine, podId);
+  });
   contextBridge.exposeInMainWorld('restartPod', async (engine: string, podId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:restartPod', engine, podId);
   });
@@ -449,6 +478,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('startContainer', async (engine: string, containerId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:startContainer', engine, containerId);
+  });
+
+  contextBridge.exposeInMainWorld('unpauseContainer', async (engine: string, containerId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:unpauseContainer', engine, containerId);
   });
 
   contextBridge.exposeInMainWorld(
@@ -1752,6 +1785,13 @@ export function initExposure(): void {
     return ipcInvoke('colorRegistry:listColors', themeId);
   });
 
+  contextBridge.exposeInMainWorld(
+    'getThemeInfo',
+    async (themeId: string): Promise<{ isDark: boolean; isHighContrast: boolean }> => {
+      return ipcInvoke('colorRegistry:getThemeInfo', themeId);
+    },
+  );
+
   // Handle callback to open devtools for extensions
   // by delegating to the renderer process
   ipcRenderer.on('dev-tools:open-extension', (_, extensionId: string) => {
@@ -2718,6 +2758,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('trackExtensionFolder', async (path: string): Promise<void> => {
     return ipcInvoke('extension-development-folders:addDevelopmentFolder', path);
+  });
+
+  contextBridge.exposeInMainWorld('getExtensionDevelopmentDocsLink', async (): Promise<string | undefined> => {
+    return ipcInvoke('extension-development:getExtensionDevelopmentDocsLink');
   });
 
   contextBridge.exposeInMainWorld(

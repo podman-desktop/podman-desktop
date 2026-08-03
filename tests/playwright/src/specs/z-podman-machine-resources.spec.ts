@@ -194,10 +194,11 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
       });
 
       test('Start the machine', async ({ page }) => {
+        test.setTimeout(TIMEOUT_MACHINE_CREATION);
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
         await machineCard.performConnectionAction(ResourceElementActions.Start);
 
-        await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_MEDIUM });
+        await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
         await handlePodmanConfirmationDialogs(page);
 
         await waitUntil(

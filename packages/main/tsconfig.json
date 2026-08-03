@@ -15,12 +15,11 @@
     "emitDecoratorMetadata": true,
     "types": ["node"],
 
-    "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"],
       "/@tests/*": ["./tests/*"],
       "/@product.json": ["../../product.json"]
     }
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "../../types/**/*.d.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "vitest.setup.ts", "../../types/**/*.d.ts"]
 }

@@ -146,12 +146,14 @@ export enum VMTYPE {
   HYPERV = 'hyperv',
   APPLEHV = 'applehv',
   LIBKRUN = 'libkrun',
+  QEMU = 'qemu',
 }
 
 export const APPLEHV_LABEL = 'Apple HyperVisor';
 export const LIBKRUN_LABEL = 'default GPU enabled (LibKrun)';
 export const HYPERV_LABEL = 'Hyper-V';
 export const WSL_LABEL = 'WSL';
+export const QEMU_LABEL = 'QEMU';
 
 export function getProviderLabel(provider: string): string {
   switch (provider) {
@@ -163,6 +165,8 @@ export function getProviderLabel(provider: string): string {
       return WSL_LABEL;
     case VMTYPE.HYPERV:
       return HYPERV_LABEL;
+    case VMTYPE.QEMU:
+      return QEMU_LABEL;
     default:
       return provider;
   }
@@ -178,6 +182,8 @@ export function getProviderByLabel(label: string): string {
       return VMTYPE.WSL;
     case HYPERV_LABEL:
       return VMTYPE.HYPERV;
+    case QEMU_LABEL:
+      return VMTYPE.QEMU;
     default:
       return label;
   }

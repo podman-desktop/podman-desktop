@@ -63,6 +63,7 @@ vi.mock(import('electron-updater'), () => ({
     quitAndInstall: vi.fn(),
     checkForUpdates: vi.fn(),
     on: vi.fn(),
+    setFeedURL: vi.fn(),
     autoDownload: true,
     disableDifferentialDownload: false,
   } as unknown as AppUpdater,
@@ -99,6 +100,7 @@ const configurationMock = {
 const configurationRegistryMock = {
   registerConfigurations: vi.fn(),
   getConfiguration: vi.fn(),
+  updateConfigurationValue: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
 const statusBarRegistryMock = {
@@ -165,6 +167,10 @@ beforeEach(() => {
     title: '',
     summary: '',
     image: '',
+  };
+
+  vi.mocked(product).update = {
+    url: '',
   };
 
   vi.mocked(commandRegistryMock.executeCommand).mockResolvedValue(undefined);
@@ -244,6 +250,64 @@ test('expect configuration description to use product name', () => {
   );
 });
 
+test('expect setFeedURL not to be called when product.update.url is empty', () => {
+  vi.mocked(product).update = { url: '' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.setFeedURL).not.toHaveBeenCalled();
+});
+
+test('expect setFeedURL to be called with generic provider when product.update.url is set', () => {
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({
+    provider: 'generic',
+    url: 'https://updates.example.com/releases',
+  });
+});
+
+test('expect setFeedURL to be called before checkForUpdates', () => {
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases' };
+
+  const callOrder: string[] = [];
+  vi.mocked(autoUpdater.setFeedURL).mockImplementation(() => {
+    callOrder.push('setFeedURL');
+  });
+  vi.mocked(autoUpdater.checkForUpdates).mockImplementation(() => {
+    callOrder.push('checkForUpdates');
+    // eslint-disable-next-line no-null/no-null
+    return Promise.resolve(null);
+  });
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(callOrder).toStrictEqual(['setFeedURL', 'checkForUpdates']);
+});
+
 describe('differential download', () => {
   type TestCase = {
     platform: 'windows' | 'macos';
@@ -300,33 +364,32 @@ describe('differential download', () => {
       configuration: true,
       expectDifferentialDownload: 'disable',
     },
-  ])('expect differential download to be $expectDifferentialDownload on $platform with config $configuration', ({
-    platform,
-    configuration,
-    expectDifferentialDownload,
-  }) => {
-    // mock platform
-    vi.mocked(isMac).mockReturnValue(platform === 'macos');
-    vi.mocked(isWindows).mockReturnValue(platform === 'windows');
-    vi.mocked(isLinux).mockReturnValue(false);
+  ])(
+    'expect differential download to be $expectDifferentialDownload on $platform with config $configuration',
+    ({ platform, configuration, expectDifferentialDownload }) => {
+      // mock platform
+      vi.mocked(isMac).mockReturnValue(platform === 'macos');
+      vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+      vi.mocked(isLinux).mockReturnValue(false);
 
-    mockConfiguration({
-      'update.disableDifferentialDownload': configuration,
-    });
+      mockConfiguration({
+        'update.disableDifferentialDownload': configuration,
+      });
 
-    const updater = new Updater(
-      messageBoxMock,
-      configurationRegistryMock,
-      statusBarRegistryMock,
-      commandRegistryMock,
-      taskManagerMock,
-      apiSenderMock,
-    );
-    updater.init();
+      const updater = new Updater(
+        messageBoxMock,
+        configurationRegistryMock,
+        statusBarRegistryMock,
+        commandRegistryMock,
+        taskManagerMock,
+        apiSenderMock,
+      );
+      updater.init();
 
-    // Updater#init should set it to true
-    expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
-  });
+      // Updater#init should set it to true
+      expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
+    },
+  );
 });
 
 test('expect update available entry to be displayed when expected', () => {
@@ -537,7 +600,7 @@ test('expect command update not to be called when configuration value on never',
 
 test('clicking on "Update Never" should set the configuration value to never', async () => {
   vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
-    response: 3, // Update never
+    response: `Don't show again`,
   });
 
   let mListener: (() => Promise<void>) | undefined;
@@ -567,7 +630,7 @@ describe('expect update command to depends on context', async () => {
   type UpdateCommandListener = (context: 'startup' | 'status-bar-entry') => Promise<void>;
   const getUpdateListener = async (): Promise<UpdateCommandListener> => {
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
-      response: 2, // Update never
+      response: 'Cancel',
     });
 
     vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue({
@@ -691,7 +754,7 @@ describe('download task and progress', async () => {
 
     // call the update command callback
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
-      response: 0,
+      response: 'Update now',
     });
 
     await updateCommandCallback?.('status-bar-entry');
@@ -712,7 +775,7 @@ describe('download task and progress', async () => {
 
     // user click on restart
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
-      response: 0,
+      response: 'Restart',
     });
 
     onUpdateDownloadedCallback?.(updatedDownloadedEvent);
@@ -757,7 +820,7 @@ describe('download task and progress', async () => {
 
     // call the update command callback
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
-      response: 0,
+      response: 'Update now',
     });
 
     // simulate download failure
@@ -1093,4 +1156,149 @@ test('versions are not numbered versions', async () => {
   await vi.waitFor(() => expect(autoUpdater.checkForUpdates).toBeCalled());
 
   expect(updater.updateAvailable()).toBeTruthy();
+});
+
+test('clicking View Release Notes in version command should show release notes', async () => {
+  vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
+    response: 'View Release Notes',
+  });
+
+  vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue(undefined);
+
+  let versionListener: (() => Promise<void>) | undefined;
+  vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
+    (channel: string, listener: () => Promise<void>) => {
+      if (channel === 'version') versionListener = listener;
+      return Disposable.noop();
+    },
+  );
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+  expect(versionListener).toBeDefined();
+
+  await versionListener?.();
+
+  expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith('releaseNotesBanner.show', 'show');
+  expect(apiSenderMock.send).toHaveBeenCalledWith('show-release-notes');
+});
+
+test(`clicking What's new in update command should open release notes`, async () => {
+  vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
+    response: `What's new`,
+  });
+
+  vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue({
+    updateInfo: {
+      version: '2.0.0',
+    },
+  } as unknown as UpdateCheckResult);
+
+  type UpdateCommandListener = (context?: 'startup' | 'status-bar-entry') => Promise<void>;
+  let updateListener: UpdateCommandListener | undefined;
+  vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
+    (channel: string, listener: () => Promise<void>) => {
+      if (channel === 'update') updateListener = listener;
+      return Disposable.noop();
+    },
+  );
+
+  vi.mocked(shell.openExternal).mockResolvedValue();
+
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+  updater.init();
+
+  await vi.waitUntil(() => updater.updateAvailable(), { interval: 500, timeout: 2000 });
+
+  expect(updateListener).toBeDefined();
+  await updateListener?.('status-bar-entry');
+
+  expect(shell.openExternal).toHaveBeenCalled();
+});
+
+describe('appUpdate configuration', () => {
+  test('init should skip update setup when appUpdate is disabled', () => {
+    mockConfiguration({ 'update.appUpdate': false, 'update.reminder': 'never' });
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(autoUpdater.on).not.toHaveBeenCalled();
+    expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled();
+    expect(statusBarRegistryMock.setEntry).toHaveBeenCalled();
+
+    const registeredCommands = vi.mocked(commandRegistryMock.registerCommand).mock.calls.map(call => call[0]);
+    expect(registeredCommands).toContain('version');
+    expect(registeredCommands).not.toContain('update');
+  });
+
+  test('init should proceed with update setup when appUpdate is true', () => {
+    mockConfiguration({ 'update.appUpdate': true, 'update.reminder': 'never' });
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(autoUpdater.on).toHaveBeenCalled();
+    expect(autoUpdater.checkForUpdates).toHaveBeenCalled();
+  });
+
+  test('updateAvailable should return false when appUpdate is disabled', () => {
+    mockConfiguration({ 'update.appUpdate': false, 'update.reminder': 'never' });
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(updater.updateAvailable()).toBe(false);
+  });
+
+  test('registerConfiguration should include preferences.update.appUpdate', () => {
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
+    const configurations = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]![0]!;
+    const properties = configurations.flatMap(config => Object.keys(config.properties ?? {}));
+    expect(properties).toContain('preferences.update.appUpdate');
+  });
 });

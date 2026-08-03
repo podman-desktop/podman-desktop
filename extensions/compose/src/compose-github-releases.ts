@@ -31,15 +31,25 @@ export interface ComposeGithubReleaseArtifactMetadata extends QuickPickItem {
 export class ComposeGitHubReleases {
   private static readonly COMPOSE_GITHUB_OWNER = 'docker';
   private static readonly COMPOSE_GITHUB_REPOSITORY = 'compose';
+  private octokitFactory: () => Promise<Octokit>;
+  private octokit?: Octokit;
 
-  constructor(private readonly octokit: Octokit) {}
+  constructor(octokitFactory: () => Promise<Octokit>) {
+    this.octokitFactory = octokitFactory;
+  }
+
+  private async ensureOctokit(): Promise<Octokit> {
+    this.octokit ??= await this.octokitFactory();
+    return this.octokit;
+  }
 
   // Provides last 5 majors releases from GitHub using the GitHub API
   // return name, tag and id of the release
   async grabLatestsReleasesMetadata(): Promise<ComposeGithubReleaseArtifactMetadata[]> {
     // Grab last 5 majors releases from GitHub using the GitHub API
+    const octokit = await this.ensureOctokit();
 
-    const lastReleases = await this.octokit.repos.listReleases({
+    const lastReleases = await octokit.repos.listReleases({
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
     });
@@ -63,6 +73,8 @@ export class ComposeGitHubReleases {
   // operatingSystem: win32, darwin, linux (see os.platform())
   // arch: x64, arm64 (see os.arch())
   async getReleaseAssetId(releaseId: number, operatingSystem: string, arch: string): Promise<number> {
+    const octokit = await this.ensureOctokit();
+
     let extension = '';
     if (operatingSystem === 'win32') {
       operatingSystem = 'windows';
@@ -75,7 +87,7 @@ export class ComposeGitHubReleases {
       arch = 'aarch64';
     }
 
-    const listOfAssets = await this.octokit.paginate(this.octokit.repos.listReleaseAssets, {
+    const listOfAssets = await octokit.paginate(octokit.repos.listReleaseAssets, {
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
       release_id: releaseId,
@@ -94,7 +106,9 @@ export class ComposeGitHubReleases {
 
   // download the given asset id
   async downloadReleaseAsset(assetId: number, destination: string): Promise<void> {
-    const asset = await this.octokit.repos.getReleaseAsset({
+    const octokit = await this.ensureOctokit();
+
+    const asset = await octokit.repos.getReleaseAsset({
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
       asset_id: assetId,

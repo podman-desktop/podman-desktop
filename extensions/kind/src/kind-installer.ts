@@ -56,17 +56,25 @@ export class KindInstaller {
   private readonly KIND_GITHUB_OWNER = 'kubernetes-sigs';
   private readonly KIND_GITHUB_REPOSITORY = 'kind';
   private assetNames = new Map<string, string>();
+  private octokitFactory: () => Promise<Octokit>;
+  private octokit?: Octokit;
 
   constructor(
     private readonly storagePath: string,
     private telemetryLogger: extensionApi.TelemetryLogger,
-    private readonly octokit: Octokit,
+    octokitFactory: () => Promise<Octokit>,
   ) {
     this.assetNames.set(WINDOWS_X64_PLATFORM, WINDOWS_X64_ASSET_NAME);
     this.assetNames.set(LINUX_X64_PLATFORM, LINUX_X64_ASSET_NAME);
     this.assetNames.set(LINUX_ARM64_PLATFORM, LINUX_ARM64_ASSET_NAME);
     this.assetNames.set(MACOS_X64_PLATFORM, MACOS_X64_ASSET_NAME);
     this.assetNames.set(MACOS_ARM64_PLATFORM, MACOS_ARM64_ASSET_NAME);
+    this.octokitFactory = octokitFactory;
+  }
+
+  private async ensureOctokit(): Promise<Octokit> {
+    this.octokit ??= await this.octokitFactory();
+    return this.octokit;
   }
 
   // Get the latest version of kubectl from GitHub Releases
@@ -81,8 +89,9 @@ export class KindInstaller {
   // return name, tag and id of the release
   async grabLatestsReleasesMetadata(): Promise<KindGithubReleaseArtifactMetadata[]> {
     // Grab last 5 majors releases from GitHub using the GitHub API
+    const octokit = await this.ensureOctokit();
 
-    const lastReleases = await this.octokit.repos.listReleases({
+    const lastReleases = await octokit.repos.listReleases({
       owner: this.KIND_GITHUB_OWNER,
       repo: this.KIND_GITHUB_REPOSITORY,
     });
@@ -126,6 +135,8 @@ export class KindInstaller {
   // operatingSystem: win32, darwin, linux (see os.platform())
   // arch: x64, arm64 (see os.arch())
   async getReleaseAssetId(releaseId: number, operatingSystem: string, arch: string): Promise<number> {
+    const octokit = await this.ensureOctokit();
+
     if (operatingSystem === 'win32') {
       operatingSystem = 'windows';
     }
@@ -133,7 +144,7 @@ export class KindInstaller {
       arch = 'amd64';
     }
 
-    const listOfAssets = await this.octokit.repos.listReleaseAssets({
+    const listOfAssets = await octokit.repos.listReleaseAssets({
       owner: this.KIND_GITHUB_OWNER,
       repo: this.KIND_GITHUB_REPOSITORY,
       release_id: releaseId,
@@ -183,7 +194,9 @@ export class KindInstaller {
   }
 
   async downloadReleaseAsset(assetId: number, destination: string): Promise<void> {
-    const asset = await this.octokit.repos.getReleaseAsset({
+    const octokit = await this.ensureOctokit();
+
+    const asset = await octokit.repos.getReleaseAsset({
       owner: this.KIND_GITHUB_OWNER,
       repo: this.KIND_GITHUB_REPOSITORY,
       asset_id: assetId,

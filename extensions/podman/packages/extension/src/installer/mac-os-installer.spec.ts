@@ -65,52 +65,9 @@ describe('MacOSInstaller', () => {
     });
   });
 
-  test('call installer if universal installer is found', async () => {
-    // create the installer
-    const installer = new MacOSInstaller();
-
-    // mock existSync being true only for universal
-    vi.spyOn(fs, 'existsSync').mockImplementation(path => {
-      return path.toString().includes('universal');
-    });
-
-    // check we have an installer
-    expect(installer).toBeDefined();
-
-    // mock extensionApi.window.withProgress
-    const withProgressMock = vi.mocked(window.withProgress);
-
-    // call install
-    const promiseResult = installer?.install();
-
-    // wait our mock is called
-    await vi.waitFor(() => expect(withProgressMock).toBeCalled());
-
-    // get the call's argument to the method
-    const methodArgs = withProgressMock.mock.calls[0];
-    const promiseArg = methodArgs[1];
-    expect(promiseArg).toBeDefined();
-
-    const token = {
-      isCancellationRequested: false,
-    } as unknown as CancellationToken;
-
-    await promiseArg(progress, token);
-
-    await promiseResult;
-
-    // check we've called the execution of the universal installer
-    expect(vi.mocked(processAPI.exec)).toBeCalledWith(
-      'open',
-      expect.arrayContaining([expect.stringContaining('podman-installer-macos-universal')]),
-    );
-  });
-
-  test('call specific arch installer is found', async () => {
-    // mock existSync being true only if not universal binary
-    vi.spyOn(fs, 'existsSync').mockImplementation(path => {
-      return !path.toString().includes('universal');
-    });
+  test('call arch-specific installer', async () => {
+    // mock existSync being true for arch-specific installer
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     // create the installer
     const installer = new MacOSInstaller();
 

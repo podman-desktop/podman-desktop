@@ -47,7 +47,7 @@ test('Expect tooltip if value input is NaN', async () => {
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await userEvent.hover(tooltipTrigger);
 
-  const tooltip = await screen.findByLabelText('tooltip');
+  const tooltip = await screen.findByRole('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toContain('Expecting a number');
 });
@@ -71,7 +71,7 @@ test('Expect number with dot is valid but onChange is not called if dot is the l
   await userEvent.click(input);
   await userEvent.keyboard('.');
 
-  const tooltip = screen.queryByLabelText('tooltip');
+  const tooltip = screen.queryByRole('tooltip');
   expect(tooltip).not.toBeInTheDocument();
 
   expect(onChange).not.toBeCalled();
@@ -96,7 +96,7 @@ test('Expect onChange to be called with float number', async () => {
   await userEvent.click(input);
   await userEvent.keyboard('.2');
 
-  const tooltip = screen.queryByLabelText('tooltip');
+  const tooltip = screen.queryByRole('tooltip');
   expect(tooltip).not.toBeInTheDocument();
 
   await new Promise(resolve => setTimeout(resolve, 600));
@@ -127,7 +127,7 @@ test('Expect only one dot is added to input', async () => {
   await userEvent.keyboard('.');
   await userEvent.keyboard('2');
 
-  const tooltip = screen.queryByLabelText('tooltip');
+  const tooltip = screen.queryByRole('tooltip');
   expect(tooltip).not.toBeInTheDocument();
 
   await new Promise(resolve => setTimeout(resolve, 600));

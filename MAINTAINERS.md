@@ -7,6 +7,7 @@ The current Maintainers Group for the Podman Desktop Project consists of:
 | Axel Stefanini | @axel7083 | Red Hat|
 | Charlie Drage | @cdrage | Red Hat|
 | Denis Golovin | @dgolovin | Red Hat|
+| Dias Tursynbayev | @JustMell0 | Red Hat|
 | Emma Kidney | @ekidneyrh | Red Hat|
 | Evžen Gasta | @gastoner | Red Hat|
 | Florent Benoit | @benoitf | Red Hat|

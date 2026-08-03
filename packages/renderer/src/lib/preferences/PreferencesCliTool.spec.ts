@@ -139,6 +139,8 @@ beforeAll(() => {
   Object.defineProperty(global, 'window', {
     value: {
       updateCliTool: vi.fn(),
+      uninstallCliTool: vi.fn(),
+      showMessageBox: vi.fn(),
       executeCommand: vi.fn(),
       getUrlProtocol: vi.fn().mockResolvedValue('podman-desktop'),
       navigator: {
@@ -383,5 +385,19 @@ describe('CLI Tool item', () => {
     expect(updateLoadingButton).toBeEnabled();
     const installLoadingButton = screen.queryByRole('button', { name: 'Install' });
     expect(installLoadingButton).not.toBeInTheDocument();
+  });
+
+  test('cancelling uninstall confirmation should not call uninstallCliTool', async () => {
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
+
+    render(PreferencesCliTool, {
+      cliTool: cliToolInfoItem7,
+    });
+
+    const uninstallButton = screen.getByRole('button', { name: 'Uninstall' });
+    await fireEvent.click(uninstallButton);
+
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
+    expect(window.uninstallCliTool).not.toHaveBeenCalled();
   });
 });

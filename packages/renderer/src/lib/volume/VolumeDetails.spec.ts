@@ -39,6 +39,7 @@ const myVolume: VolumeListInfo = {
       Name: 'myVolume',
       engineId: 'engine0',
       engineName: 'podman',
+      engineType: 'podman',
       CreatedAt: '',
       containersUsage: [],
       Driver: '',
@@ -61,7 +62,7 @@ beforeAll(() => {
 
 test('Expect redirect to previous page if volume is deleted', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   const routerGotoSpy = vi.spyOn(router, 'goto');
   listVolumesMock.mockResolvedValue([myVolume]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));

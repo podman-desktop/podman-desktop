@@ -1,12 +1,19 @@
 <script lang="ts">
 import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { Snippet } from 'svelte';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ProviderStatus from '/@/lib/ui/ProviderStatus.svelte';
 
 import ProviderLinks from './ProviderLinks.svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+  update?: Snippet;
+  content?: Snippet;
+}
+
+let { provider, update, content }: Props = $props();
 </script>
 
 <div
@@ -29,12 +36,12 @@ export let provider: ProviderInfo;
           <ProviderStatus status={provider.status} />
         </div>
         <div class="my-3 empty:my-0 w-full">
-          <slot name="update" />
+          {@render update?.()}
         </div>
       </div>
     </div>
     <div class="flex items-center flex-row space-x-10 mt-5 w-full xl:mt-0 xl:w-3/4 flex-nowrap">
-      <slot name="content" />
+      {@render content?.()}
     </div>
   </div>
 

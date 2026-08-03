@@ -17,21 +17,11 @@
  ***********************************************************************/
 
 import { get } from 'svelte/store';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 
 import { setup } from './context';
-
-const contextCollectAllValues = vi.fn();
-const receiveMock = vi.fn();
-const addEventListenerMock = vi.fn();
-
-beforeAll(() => {
-  Object.defineProperty(window, 'contextCollectAllValues', { value: contextCollectAllValues });
-  Object.defineProperty(window, 'events', { value: { receive: receiveMock } });
-  Object.defineProperty(window, 'addEventListener', { value: addEventListenerMock });
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -39,13 +29,14 @@ beforeEach(() => {
 });
 
 test('context store values updated on context-value-updated/context-key-removed events', async () => {
-  receiveMock.mockImplementation((msg: string, f: (value: unknown) => void) => {
+  vi.mocked(window.events.receive).mockImplementation((msg, f) => {
     if (msg === 'context-value-updated') {
       setTimeout(() => f({ key: 'c', value: 'three' }), 5);
       setTimeout(() => f({ key: 'b', value: 2 }), 15);
     } else if (msg === 'context-key-removed') {
       setTimeout(() => f({ key: 'a', value: 1 }), 10);
     }
+    return { dispose: vi.fn() };
   });
 
   vi.useFakeTimers();
@@ -72,14 +63,11 @@ test('context store values updated on context-value-updated/context-key-removed 
 });
 
 test('context store values set on extensions-already-started', async () => {
-  contextCollectAllValues.mockResolvedValue({ a: 1, b: 'two' });
-  addEventListenerMock.mockImplementation((msg: string, f: () => void) => {
-    if (msg === 'extensions-already-started') {
-      f();
-    }
-  });
+  vi.mocked(window.contextCollectAllValues).mockResolvedValue({ a: 1, b: 'two' });
 
   const context = setup();
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   const expected = new ContextUI();
   expected.setValue('a', 1);

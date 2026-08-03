@@ -19,7 +19,6 @@
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
-import type Electron from 'electron';
 import { nativeTheme } from 'electron';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -30,12 +29,6 @@ import type { Directories } from './directories.js';
 import type { LockedConfiguration } from './locked-configuration.js';
 
 let configurationRegistry: ConfigurationRegistry;
-
-vi.mock(import('electron'), () => {
-  return {
-    nativeTheme: {},
-  } as unknown as typeof Electron;
-});
 
 const apiSender: ApiSenderType = {
   send: vi.fn(),
@@ -201,12 +194,12 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.markdownDescription).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.type).toBe('number');
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.default).toBe(0);
-  expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBe(0.1);
+  expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBeCloseTo(0.1);
 
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.description).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.type).toBe('string');
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
-    AppearanceSettings.IconAndTitle,
-  );
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.description).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.type).toBe('number');
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.minimum).toBe(50);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.maximum).toBe(240);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.default).toBe(160);
 });

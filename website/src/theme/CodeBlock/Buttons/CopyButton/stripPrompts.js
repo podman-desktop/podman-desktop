@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2023 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfoUI } from 'src/lib/image/ImageInfoUI';
-import type { Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
-
-/**
- * Defines the store used to define the image to run when starting a container.
- */
-export const runImageInfo: Writable<ImageInfoUI> = writable();
+// Strips a leading shell prompt prefix ('$ ', '# ', '> ') from code
+export function stripPrompts(code) {
+  if (
+    code?.length > 2 &&
+    (code.substring(0, 2) === '$ ' || code.substring(0, 2) === '# ' || code.substring(0, 2) === '> ')
+  ) {
+    return code.substring(2);
+  }
+  return code;
+}

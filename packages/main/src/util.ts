@@ -20,6 +20,7 @@ import { Buffer } from 'node:buffer';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
+import * as path from 'node:path';
 
 const windows = os.platform() === 'win32';
 export function isWindows(): boolean {
@@ -51,8 +52,9 @@ export function getBase64Image(imagePath: string): string | undefined {
       // convert to base64
       const base64Content = Buffer.from(imageContent).toString('base64');
 
-      // create base64 image content
-      return `data:image/png;base64,${base64Content}`;
+      const ext = path.extname(imagePath).toLowerCase();
+      const mimeType = ext === '.svg' ? 'svg+xml' : 'png';
+      return `data:image/${mimeType};base64,${base64Content}`;
     }
   } catch (error) {
     console.error(`Error while creating base64 image content for ${imagePath}`, error);

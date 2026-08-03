@@ -1,13 +1,14 @@
 <script lang="ts">
-import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 
 import ProviderCard from './ProviderCard.svelte';
+import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 
 export let provider: ProviderInfo;
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     {#if provider.containerConnections.length > 0}
       <div class="flex flex-row text-[var(--pd-content-text)] mt-4">
         <p>
@@ -15,5 +16,10 @@ export let provider: ProviderInfo;
         </p>
       </div>
     {/if}
-  </svelte:fragment>
+  {/snippet}
+  {#snippet update()}
+    {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
+      <ProviderUpdateButton onPreflightChecks={(): CheckStatus[] => []} provider={provider} />
+    {/if}
+  {/snippet}
 </ProviderCard>

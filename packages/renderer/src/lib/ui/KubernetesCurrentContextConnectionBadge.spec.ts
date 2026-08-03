@@ -180,7 +180,7 @@ describe.each<{
     }
 
     await vi.waitFor(() => {
-      const tooltip = screen.queryByLabelText('tooltip');
+      const tooltip = screen.queryByRole('tooltip');
       expect(tooltip).toBeNull();
     });
   });
@@ -197,7 +197,7 @@ describe.each<{
     await fireEvent.mouseEnter(tooltipTrigger);
 
     await vi.waitFor(() => {
-      const tooltip = screen.getByLabelText('tooltip');
+      const tooltip = screen.getByRole('tooltip');
       expect(tooltip).toBeInTheDocument();
     });
   });
@@ -216,7 +216,7 @@ describe.each<{
     await fireEvent.mouseEnter(tooltipTrigger);
 
     await vi.waitFor(() => {
-      const tooltip = screen.getByLabelText('tooltip');
+      const tooltip = screen.getByRole('tooltip');
       expect(tooltip).toBeInTheDocument();
       expect(tooltip).toHaveTextContent('connection lost, resources may be out of sync');
     });

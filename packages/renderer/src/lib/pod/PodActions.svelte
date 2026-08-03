@@ -89,8 +89,17 @@ function handleError(errorMessage: string): void {
 
 async function startPod(): Promise<void> {
   inProgress(true, 'STARTING');
+
+  const hasPaused = pod.containers.some(c => c.Status === 'paused');
+  const hasExited = pod.containers.some(c => c.Status === 'exited');
+
   try {
-    await window.startPod(pod.engineId, pod.id);
+    if (hasPaused) {
+      await window.unpausePod(pod.engineId, pod.id);
+    }
+    if (hasExited) {
+      await window.startPod(pod.engineId, pod.id);
+    }
   } catch (error) {
     handleError(String(error));
   } finally {

@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "node16",
-    "baseUrl": ".",
     "types": ["node"],
     "strict": true,
     "esModuleInterop": true,

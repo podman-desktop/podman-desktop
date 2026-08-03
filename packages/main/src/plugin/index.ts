@@ -83,6 +83,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -100,7 +101,6 @@ import type {
   OnboardingStatus,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -112,9 +112,13 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
+  ThemeInfo,
   V1Route,
   ViewInfoUI,
   VolumeCreateOptions,
@@ -152,7 +156,7 @@ import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
-import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
+import { IPCHandle, IPCMainOn, MainWindowDeferred } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -173,7 +177,6 @@ import product from '/@product.json' with { type: 'json' };
 
 // eslint-disable-next-line no-restricted-imports
 import rootPackage from '../../../../package.json' with { type: 'json' };
-import { MainWindowDeferred } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
@@ -279,7 +282,7 @@ export class PluginSystem {
   private uiReady = false;
 
   // true if the application is quitting
-  private isQuitting = false;
+  protected isQuitting = false;
 
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;
@@ -472,12 +475,10 @@ export class PluginSystem {
         cancelId: 2,
       });
 
-      if (result.response === 0) {
-        // open externally the URL
+      if (result.response === 'Open') {
         await shell.openExternal(url);
         return true;
-      } else if (result.response === 1) {
-        // copy to clipboard
+      } else if (result.response === 'Copy Link') {
         clipboard.writeText(url);
       }
       return false;
@@ -878,6 +879,31 @@ export class PluginSystem {
       return containerProviderRegistry.listContainers();
     });
 
+    this.ipcHandle('container-provider-registry:listSecrets', async (): Promise<Array<SecretInfo>> => {
+      return containerProviderRegistry.listSecrets();
+    });
+
+    this.ipcHandle(
+      'container-provider-registry:removeSecret',
+      async (_listener, engineId: string, secretId: string): Promise<void> => {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:inspectSecret',
+      async (_listener, engineId: string, secretId: string): Promise<SecretInfo> => {
+        return containerProviderRegistry.inspectSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:createSecret',
+      async (_listener, options: SecretCreateOptions): Promise<SecretCreateResult> => {
+        return containerProviderRegistry.createSecret(options);
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:listSimpleContainersByLabel',
       async (_listener, label: string, key: string): Promise<SimpleContainerInfo[]> => {
@@ -890,8 +916,8 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'container-provider-registry:listImages',
-      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
-        return containerProviderRegistry.podmanListImages(options);
+      async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.listImages(options);
       },
     );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
@@ -1013,6 +1039,12 @@ export class PluginSystem {
       'container-provider-registry:startPod',
       async (_listener, engine: string, podId: string): Promise<void> => {
         return containerProviderRegistry.startPod(engine, podId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:unpausePod',
+      async (_listener, engine: string, podId: string): Promise<void> => {
+        return containerProviderRegistry.unpausePod(engine, podId);
       },
     );
     this.ipcHandle(
@@ -1147,6 +1179,12 @@ export class PluginSystem {
       'container-provider-registry:startContainer',
       async (_listener, engine: string, containerId: string): Promise<void> => {
         return containerProviderRegistry.startContainer(engine, containerId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:unpauseContainer',
+      async (_listener, engine: string, containerId: string): Promise<void> => {
+        return containerProviderRegistry.unpauseContainer(engine, containerId);
       },
     );
     this.ipcHandle(
@@ -3151,8 +3189,8 @@ export class PluginSystem {
       return colorRegistry.listColors(themeId);
     });
 
-    this.ipcHandle('colorRegistry:isDarkTheme', async (_listener, themeId: string): Promise<boolean> => {
-      return colorRegistry.isDarkTheme(themeId);
+    this.ipcHandle('colorRegistry:getThemeInfo', async (_listener, themeId: string): Promise<ThemeInfo> => {
+      return colorRegistry.getThemeInfo(themeId);
     });
 
     this.ipcHandle('viewRegistry:listViewsContributions', async (_listener): Promise<ViewInfoUI[]> => {
@@ -3228,6 +3266,13 @@ export class PluginSystem {
       'navigation:navigateToRoute',
       async (_listener, routeId: string, ...args: unknown[]): Promise<void> => {
         return navigationManager.navigateToRoute(routeId, ...args);
+      },
+    );
+
+    this.ipcHandle(
+      'navigation:navigateToHistoryEntry',
+      async (_listener, extensionId: string, entryId: string): Promise<void> => {
+        navigationManager.navigateToHistoryEntry(extensionId, entryId);
       },
     );
 
@@ -3387,6 +3432,13 @@ export class PluginSystem {
       'extension-development-folders:removeDevelopmentFolder',
       async (_listener: unknown, path: string): Promise<void> => {
         return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development:getExtensionDevelopmentDocsLink',
+      async (_listener): Promise<string | undefined> => {
+        return product.extensions.developmentDocumentation;
       },
     );
 

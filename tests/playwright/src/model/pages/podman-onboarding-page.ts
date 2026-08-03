@@ -17,6 +17,9 @@
  ***********************************************************************/
 
 import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
+
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 
 import { MachineCreationForm } from './forms/machine-creation-form';
 import { OnboardingPage } from './onboarding-page';
@@ -37,5 +40,37 @@ export class PodmanOnboardingPage extends OnboardingPage {
     this.machineCreationForm = new MachineCreationForm(this.page);
     this.podmanMachineShowLogsButton = this.mainPage.getByRole('button', { name: 'Show Logs' });
     this.goBackButton = this.page.getByRole('button', { name: 'Go back to resources' });
+  }
+
+  public async createMachine(
+    machineName: string,
+    {
+      isRootful = false,
+      enableUserNet = false,
+      startNow = true,
+      virtualizationProvider,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
+    } = {},
+  ): Promise<void> {
+    return test.step(`Create Podman machine '${machineName}' from onboarding`, async () => {
+      await playExpect(this.header).toBeVisible();
+      await playExpect(this.mainPage).toBeVisible();
+      await this.nextStepButton.click();
+      await playExpect(this.onboardingStatusMessage).toHaveText(
+        `We could not find any Podman machine. Let's create one!`,
+        { timeout: 10_000 },
+      );
+      await this.nextStepButton.click();
+      await this.machineCreationForm.setupAndCreateMachine(machineName, {
+        isRootful,
+        enableUserNet,
+        startNow,
+        virtualizationProvider,
+      });
+    });
   }
 }

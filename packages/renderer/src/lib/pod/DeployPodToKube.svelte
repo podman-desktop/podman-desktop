@@ -402,7 +402,7 @@ $: {
 $: bodyPod && updateKubeResult();
 
 function updateKubeResult(): void {
-  kubeDetails = jsYaml.dump(bodyPod, { noArrayIndent: true, quotingType: '"', lineWidth: -1 });
+  kubeDetails = jsYaml.dump(bodyPod, { seqNoIndent: true, quoteStyle: 'double', lineWidth: -1 });
 }
 </script>
 

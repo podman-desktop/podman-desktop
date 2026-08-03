@@ -27,25 +27,21 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos, volumesEventStore } from '/@/stores/volumes';
 
 import VolumesList from './VolumesList.svelte';
 
-// fake the window.events object
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(async () => {
   vi.resetAllMocks();
   volumeListInfos.set([]);
+
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
@@ -104,6 +100,7 @@ test('Expect volumes being displayed once extensions are started (without size d
           Scope: 'local',
           engineName: 'Podman',
           engineId: 'podman.Podman Machine',
+          engineType: 'podman',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -170,6 +167,7 @@ test('Expect volumes being displayed once extensions are started (with size data
           Scope: 'local',
           engineName: 'Podman',
           engineId: 'podman.Podman Machine',
+          engineType: 'podman',
           UsageData: { RefCount: 1, Size: 89 },
           containersUsage: [],
           CreatedAt: '',
@@ -280,6 +278,7 @@ test('Expect filter empty screen', async () => {
           Scope: 'local',
           engineName: 'Podman',
           engineId: 'podman.Podman Machine',
+          engineType: 'podman',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -341,6 +340,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
           Scope: 'local',
           engineName: 'Podman',
           engineId: 'podman.Podman Machine',
+          engineType: 'podman',
           UsageData: { RefCount: 0, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -376,14 +376,14 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
   (window as any).showMessageBox = vi.fn();
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
   await fireEvent.click(deleteButton);
 
   expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.removeVolume).toHaveBeenCalled());
@@ -416,6 +416,7 @@ test('Expect to see empty page and no table when no container engine is running'
           Scope: 'local',
           engineName: 'Podman',
           engineId: 'podman.Podman Machine',
+          engineType: 'podman',
           UsageData: { RefCount: 0, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -469,6 +470,7 @@ test('Expect environment column sorted by engineId', async () => {
           Scope: 'local',
           engineName: 'name-aaa',
           engineId: 'engine-zzz',
+          engineType: 'podman',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -482,6 +484,7 @@ test('Expect environment column sorted by engineId', async () => {
           Scope: 'local',
           engineName: 'name-zzz',
           engineId: 'engine-aaa',
+          engineType: 'docker',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -558,6 +561,7 @@ test('Expect environment dropdown to appear with multiple running connections', 
           Scope: 'local',
           engineName: 'Podman Machine',
           engineId: 'podman.podman-machine-default',
+          engineType: 'docker',
           UsageData: { RefCount: 0, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -577,6 +581,7 @@ test('Expect environment dropdown to appear with multiple running connections', 
           Options: {},
           Scope: 'local',
           engineName: 'Docker Desktop',
+          engineType: 'docker',
           engineId: 'docker.docker-context',
           UsageData: { RefCount: 0, Size: -1 },
           containersUsage: [],
@@ -651,6 +656,7 @@ test('Expect environment dropdown to filter volumes by selected environment', as
           Scope: 'local',
           engineId: 'podman.podman-machine-default',
           engineName: 'Podman Machine',
+          engineType: 'podman',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -671,6 +677,7 @@ test('Expect environment dropdown to filter volumes by selected environment', as
           Scope: 'local',
           engineId: 'docker.docker-context',
           engineName: 'Docker Desktop',
+          engineType: 'docker',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',

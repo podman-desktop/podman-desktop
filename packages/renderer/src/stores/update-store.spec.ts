@@ -25,7 +25,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { updateAvailable, updateEventStore } from './update-store';
 
 const messages = new Map<string, any>();
-const receiveMock = vi.fn();
 const eventListenerMock = vi.fn();
 const podmanDesktopUpdateAvailableMock = vi.fn();
 const eventEmitter = {
@@ -37,9 +36,10 @@ const eventEmitter = {
 beforeEach(() => {
   vi.resetAllMocks();
   (window as any).podmanDesktopUpdateAvailable = podmanDesktopUpdateAvailableMock.mockResolvedValue(false);
-  (window.events as unknown) = {
-    receive: receiveMock.mockImplementation(eventEmitter.receive),
-  };
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    eventEmitter.receive(message, callback);
+    return { dispose: vi.fn() };
+  });
   (window as any).addEventListener = eventListenerMock.mockImplementation(eventEmitter.receive);
 });
 

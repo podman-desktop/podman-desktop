@@ -3,14 +3,15 @@
     "strict": true,
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "lib": ["ES2017", "webworker"],
     "sourceMap": true,
     "rootDirs": ["src", "scripts"],
     "outDir": "dist",
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src", "types/*.d.ts", "../../types/**/*.d.ts", "scripts"]
 }

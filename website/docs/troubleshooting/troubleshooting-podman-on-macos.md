@@ -20,7 +20,7 @@ Error: unable to start host networking: "could not find \"gvproxy\" in one of [/
 
 1. Download `gvproxy` from the [gvisor-tap-vsock release page](https://github.com/containers/gvisor-tap-vsock/releases).
 2. Build the `podman-mac-helper` from the source code on the [Podman GitHub page](https://github.com/podman-container-tools/podman/tree/main/cmd/podman-mac-helper).
-3. Add the `helpers_binaries_dir` entry to `~/.config/containers/containers.conf`:
+3. Add the `helper_binaries_dir` entry to `~/.config/containers/containers.conf`:
 
 ```sh
 [containers]
@@ -89,7 +89,7 @@ Podman machine is running as a `x86_64` process and it could be due to a dual in
 You can
 
 1. Uninstall Podman machine on your `x86_64` brew install (for example from a terminal running under rosetta) `brew uninstall podman`
-2. or uninstall brew `x86_64` as most brew receipe have now arm64 support: follow [these instructions](https://github.com/homebrew/install#uninstall-homebrew) from a terminal running under rosetta
+2. or uninstall brew `x86_64` as most brew recipes have now arm64 support: follow [these instructions](https://github.com/homebrew/install#uninstall-homebrew) from a terminal running under rosetta
 
 Then run a terminal in native mode (default) and install Podman machine `brew install podman`
 
@@ -281,7 +281,7 @@ With Podman Desktop 1.16, the log files are automatically cleaned at the restart
 
 Check the size of the Podman Desktop log files to troubleshoot:
 
-```sh
+```shell-session
 $ ls -la ~/Library/Logs/Podman\ Desktop/*.log
 ```
 
@@ -304,7 +304,7 @@ When you use Homebrew to upgrade to the latest version of Podman Desktop, you mi
 
 To resolve the error, use the `--greedy` flag with the `upgrade` command:
 
-```sh
+```shell-session
 $ brew upgrade --greedy podman-desktop
 ```
 

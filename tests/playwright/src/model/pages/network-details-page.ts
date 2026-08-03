@@ -59,6 +59,15 @@ export class NetworkDetailsPage extends DetailsPage {
       await playExpect(this.deleteButton).toBeEnabled();
       await this.deleteButton.click();
       await handleConfirmationDialog(this.page, 'Delete Network?', true, 'Delete');
+
+      const errorDialog = this.page.getByRole('dialog', { name: 'Delete Network Failed' });
+      if (await errorDialog.isVisible({ timeout: 2_000 }).catch(() => false)) {
+        const errorText = await errorDialog.textContent();
+        const dismissButton = errorDialog.getByRole('button', { name: 'Dismiss' });
+        await dismissButton.click();
+        throw new Error(`Network deletion failed: ${errorText}`);
+      }
+
       return new NetworksPage(this.page);
     });
   }

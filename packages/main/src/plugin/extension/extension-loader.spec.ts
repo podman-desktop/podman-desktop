@@ -338,14 +338,6 @@ const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesk
   return extensionLoader.createApi(analyzedExtension);
 };
 
-vi.mock(import('electron'), () => {
-  return {
-    app: {
-      getVersion: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
-
 vi.mock(import('/@/util.js'));
 
 vi.mock(import('node:fs/promises'));
@@ -1745,6 +1737,24 @@ describe('Navigation', async () => {
     // Valid we listed the contains properly each time
     expect(imageExistSpy).toHaveBeenCalledOnce();
   });
+  test('navigateToImageRun', async () => {
+    vi.mocked(containerProviderRegistry.imageExist).mockResolvedValue(true);
+
+    const api = createApi();
+
+    // Spy send method
+    const sendMock = vi.spyOn(apiSender, 'send');
+
+    await api.navigation.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+    expect(sendMock).toBeCalledWith('navigate', {
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: 'sha256:55',
+        engineId: 'podman.Podman',
+        tag: 'localhost/squid:latest',
+      },
+    });
+  });
   test('navigateToVolumes', async () => {
     const api = createApi();
 
@@ -2007,6 +2017,46 @@ describe('Navigation', async () => {
 
     await api.navigation.navigateToCliTools();
     expect(sendMock).toBeCalledWith('navigate', { page: NavigationPage.CLI_TOOLS });
+  });
+});
+
+describe('navigation history', () => {
+  test('pushHistoryEntry delegates to navigationManager with the calling extension id', () => {
+    const api = createApi();
+
+    const pushHistoryEntrySpy = vi.spyOn(navigationManager, 'pushHistoryEntry');
+
+    const entry = { id: 'model-1', label: 'Model 1' };
+    api.navigation.pushHistoryEntry(entry);
+
+    expect(pushHistoryEntrySpy).toHaveBeenCalledWith('publisher.extension-name', entry);
+  });
+
+  test('onDidNavigateToHistoryEntry delegates to navigationManager with the calling extension id', () => {
+    const api = createApi();
+
+    const onDidNavigateToHistoryEntrySpy = vi.spyOn(navigationManager, 'onDidNavigateToHistoryEntry');
+
+    const listener = vi.fn();
+    api.navigation.onDidNavigateToHistoryEntry(listener);
+
+    expect(onDidNavigateToHistoryEntrySpy).toHaveBeenCalledWith(
+      'publisher.extension-name',
+      listener,
+      undefined,
+      undefined,
+    );
+  });
+
+  test('onDidNavigateToHistoryEntry fires the listener when the extension navigates back to its own entry', () => {
+    const api = createApi();
+
+    const listener = vi.fn();
+    api.navigation.onDidNavigateToHistoryEntry(listener);
+
+    navigationManager.navigateToHistoryEntry('publisher.extension-name', 'model-1');
+
+    expect(listener).toHaveBeenCalledWith({ id: 'model-1' });
   });
 });
 
@@ -2423,7 +2473,7 @@ describe('containerEngine', async () => {
   });
 
   test('listImages without option ', async () => {
-    vi.mocked(containerProviderRegistry.podmanListImages).mockResolvedValue([]);
+    vi.mocked(containerProviderRegistry.listImages).mockResolvedValue([]);
 
     const api = createApi();
 
@@ -2431,11 +2481,11 @@ describe('containerEngine', async () => {
 
     const images = await api.containerEngine.listImages();
     expect(images.length).toBe(0);
-    expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith(undefined);
+    expect(containerProviderRegistry.listImages).toHaveBeenCalledWith(undefined);
   });
 
   test('listImages with provider option', async () => {
-    vi.mocked(containerProviderRegistry.podmanListImages).mockResolvedValue([]);
+    vi.mocked(containerProviderRegistry.listImages).mockResolvedValue([]);
     const api = createApi();
 
     expect(api).toBeDefined();
@@ -2444,7 +2494,7 @@ describe('containerEngine', async () => {
       provider: CONTAINER_PROVIDER_MOCK,
     });
     expect(images.length).toBe(0);
-    expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith({
+    expect(containerProviderRegistry.listImages).toHaveBeenCalledWith({
       provider: CONTAINER_PROVIDER_MOCK,
     });
   });

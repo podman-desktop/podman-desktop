@@ -447,7 +447,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
   {/snippet}
 
   {#snippet content()}
-    <div class="flex min-w-full h-full">
+    <div class="flex min-w-full grow">
       {#if providerConnections.length === 0}
         <NoContainerEngineEmptyScreen />
       {:else if containerGroups.length === 0}

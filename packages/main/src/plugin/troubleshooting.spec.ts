@@ -21,7 +21,6 @@ import * as fs from 'node:fs';
 import type { LogType } from '@podman-desktop/core-api';
 import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import type AdmZip from 'adm-zip';
-import type { IpcMain } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DialogRegistry } from '/@/plugin/dialog-registry.js';
@@ -43,14 +42,6 @@ const writeZipMock = vi.fn();
 const addFileMock = vi.fn();
 
 vi.mock(import('node:fs'));
-vi.mock(import('electron'), () => {
-  return {
-    ipcMain: {
-      emit: vi.fn(),
-      on: vi.fn(),
-    } as unknown as IpcMain,
-  };
-});
 
 vi.mock(import('adm-zip'), () => {
   return {

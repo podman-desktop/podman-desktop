@@ -26,7 +26,7 @@ type ResourceData = {
 let configurationKeys: IConfigurationPropertyRecordedSchema[] = $derived(
   $configurationProperties
     .filter(property => property.scope === 'ContainerConnection')
-    .sort((a, b) => (a?.id ?? '').localeCompare(b?.id ?? '')),
+    .toSorted((a, b) => (a?.id ?? '').localeCompare(b?.id ?? '')),
 );
 
 let resourceConfig = $state<IProviderConnectionConfigurationPropertyRecorded[]>([]);

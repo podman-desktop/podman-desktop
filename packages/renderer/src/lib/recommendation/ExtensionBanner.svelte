@@ -30,7 +30,7 @@ $effect(() => {
 });
 
 async function onClose(): Promise<void> {
-  let result: MessageBoxReturnValue = { response: -1 };
+  let result: MessageBoxReturnValue = { response: undefined };
   try {
     result = await window.showMessageBox({
       title: 'Hide Extension Recommendations?',
@@ -39,11 +39,11 @@ async function onClose(): Promise<void> {
       buttons: ['Keep', 'Hide'],
     });
 
-    if (result?.response === 1) {
+    if (result?.response === 'Hide') {
       await window.updateConfigurationValue(`extensions.ignoreBannerRecommendations`, true, 'DEFAULT');
     }
   } finally {
-    let choice: 'hide' | 'keep' = result?.response === 1 ? 'hide' : 'keep';
+    let choice: 'hide' | 'keep' = result?.response === 'Hide' ? 'hide' : 'keep';
     await window.telemetryTrack('hideRecommendationExtensionBanner', { choice });
   }
 }

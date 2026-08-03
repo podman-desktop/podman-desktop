@@ -44,6 +44,27 @@ You can find here troubleshooting help for issues specific to Windows.
 
 - [WSL documentation: Uninstall a Linux distribution](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#unregister-or-uninstall-a-linux-distribution)
 
+## Podman Desktop cannot find Podman machine
+
+#### Issue
+
+Podman Desktop does not detect existing Podman machines.
+
+#### Solution
+
+When running Podman Desktop as admin, you will be able to see Hyper-V Podman machines. When running in non-privileged mode, you should see your WSL Podman machines.
+
+To check that your Podman machine is discoverable, run `wsl --list` and `podman system connection list`. Once this is verified, check the machine's status using `podman machine ls`, and if it is stuck, reset it with `podman machine reset`.
+
+If the machine still does not show up in Podman Desktop:
+
+1. Restart Podman Desktop
+2. If the above does not work, restart WSL2 from the command line
+
+   ```shell-session
+   $ taskkill.exe /F /im wslservice.exe
+   ```
+
 ## The terminal session attaches to Podman Desktop when launching it from the command line
 
 #### Issue
@@ -83,7 +104,7 @@ Older versions of WSL might cause networking issues, such as the `Get-NetTCPConn
 
 On a Windows 10 LTSC version, running the `wsl --install --no-distribution` command does not work, and the Podman Desktop setup does not run smoothly.
 
-You must install a specific Windows Subsystem for Linux (WSL) distribution to make the Podman Desktop setup run smoothly. After setting up Podman Desktop, you can unintsall the WSL distribution.
+You must install a specific Windows Subsystem for Linux (WSL) distribution to make the Podman Desktop setup run smoothly. After setting up Podman Desktop, you can uninstall the WSL distribution.
 
 #### Solution: Enable Podman Desktop setup to run smoothly
 

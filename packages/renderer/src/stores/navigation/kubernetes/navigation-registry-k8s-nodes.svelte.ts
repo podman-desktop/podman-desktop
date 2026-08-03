@@ -32,6 +32,7 @@ export function createNavigationKubernetesNodesEntry(): NavigationRegistryEntry 
     link: '/kubernetes/nodes',
     tooltip: 'Nodes',
     type: 'entry',
+    destinations: [],
     get counter() {
       return count;
     },

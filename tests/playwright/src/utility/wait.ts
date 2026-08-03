@@ -19,6 +19,7 @@
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { SystemOverviewState } from '/@/model/core/states';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from '/@/utility/operations';
 
@@ -119,17 +120,35 @@ export async function waitForPodmanMachineStartup(page: Page, timeout = 30_000):
 
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
-    await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout });
 
-    try {
-      // sometimes the podman machine is stuck in STARTING state, so we try to reset it once
-      await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout });
-    } catch (error) {
-      console.error('Podman machine stuck in STARTING state, trying to restart it', error);
-      await resetPodmanMachinesFromCLI();
-      await createPodmanMachineFromCLI();
+    const isEnhancedDashboard = await dashboardPage.systemOverviewButton
+      .isVisible({ timeout: 5_000 })
+      .catch(() => false);
+
+    if (isEnhancedDashboard) {
+      await dashboardPage.expandSystemOverview(true);
+
+      try {
+        await playExpect(dashboardPage.statusButton).not.toHaveText(SystemOverviewState.Starting, { timeout });
+      } catch (error) {
+        console.error('Podman machine stuck in STARTING state, trying to restart it', error);
+        await resetPodmanMachinesFromCLI();
+        await createPodmanMachineFromCLI();
+      }
+
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, { timeout });
+    } else {
+      await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout });
+
+      try {
+        await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout });
+      } catch (error) {
+        console.error('Podman machine stuck in STARTING state, trying to restart it', error);
+        await resetPodmanMachinesFromCLI();
+        await createPodmanMachineFromCLI();
+      }
+
+      await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', { timeout });
     }
-
-    await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', { timeout });
   });
 }

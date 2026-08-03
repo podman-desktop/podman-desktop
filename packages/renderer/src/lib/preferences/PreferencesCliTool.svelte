@@ -109,7 +109,7 @@ async function uninstall(cliTool: CliToolInfo): Promise<void> {
     buttons: ['Uninstall', 'Cancel'],
   });
 
-  if (result?.response !== 0) {
+  if (result?.response !== 'Uninstall') {
     return;
   }
 
@@ -147,25 +147,25 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
   <div class="divide-x divide-[var(--pd-content-divider)] flex flex-row">
     <div>
       <!-- left col - cli-tool icon/name + "create new" button -->
-      <div class="min-w-[170px] max-w-[200px] h-full flex flex-col justify-between">
+      <div class="w-[170px] h-full flex flex-col justify-between">
         <div class="flex flex-row">
           {#if cliTool?.images?.icon ?? cliTool?.extensionInfo.icon}
             {#if cliTool?.images?.icon}
               <ThemedIcon
                 icon={cliTool.images.icon}
                 alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full" />
+                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
             {:else if typeof cliTool.extensionInfo.icon === 'string'}
               <img
                 src={cliTool.extensionInfo.icon}
                 aria-label="cli-logo"
                 alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full" />
+                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
             {/if}
           {/if}
           <span
             id={cliTool.id}
-            class="my-auto ml-3 break-words font-semibold text-[var(--pd-invert-content-header-text)]"
+            class="my-auto ml-3 break-all font-semibold text-[var(--pd-invert-content-header-text)]"
             aria-label="cli-name">{cliTool.name}</span>
         </div>
         <div class="flex flex-row space-x-1 w-full">
@@ -238,7 +238,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
         {#if cliTool.version}
           <div
             class="flex flex-row justify-between align-center bg-[var(--pd-invert-content-bg)] p-2 rounded-lg min-w-[320px] w-fit">
-            <Tooltip containerClass="relative inline-block my-auto" aria-label="cli-full-path" bottomRight={true} tip="Path: {cliTool.path}">
+            <Tooltip containerClass="relative inline-block my-auto" bottomRight={true} tip="Path: {cliTool.path}">
               <div
                 class="flex text-[var(--pd-invert-content-card-text)] font-bold text-sm items-center"
                 aria-label="cli-version">

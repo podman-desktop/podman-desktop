@@ -41,39 +41,6 @@ vi.mock(import('./util.js'), async () => ({
   stoppedExtensions: { val: true },
 }));
 
-vi.mock(import('electron'), async () => {
-  return {
-    autoUpdater: {
-      on: vi.fn(),
-    },
-    screen: {
-      getCursorScreenPoint: vi.fn(),
-      getDisplayNearestPoint: vi.fn().mockReturnValue({
-        workArea: { x: 0, y: 0, width: 1920, height: 1080 },
-      }),
-    },
-    app: {
-      getPath: vi.fn().mockReturnValue('/Applications/Podman Desktop.app'),
-      dock: {
-        hide: vi.fn(),
-      },
-      getLoginItemSettings: vi.fn().mockReturnValue({ wasOpenedAtLogin: false }),
-      on: vi.fn(),
-      quit: vi.fn(),
-    },
-    ipcMain: {
-      on: vi.fn(),
-      handle: vi.fn(),
-    },
-    nativeTheme: {
-      shouldUseDarkColors: false,
-    },
-    BrowserWindow: Object.assign(vi.fn(), {
-      getAllWindows: vi.fn().mockReturnValue([]),
-    }),
-  } as unknown as typeof Electron;
-});
-
 let originalArgv: string[] = [];
 
 beforeEach(() => {

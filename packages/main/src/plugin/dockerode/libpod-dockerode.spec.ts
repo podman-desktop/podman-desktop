@@ -23,7 +23,7 @@ import type { RequestOptions } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import type { PodmanListImagesOptions } from '@podman-desktop/core-api';
+import type { ListImagesOptions } from '@podman-desktop/core-api';
 import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
@@ -96,10 +96,37 @@ test('Check list of images using Podman API', async () => {
   server.listen({ onUnhandledRequest: 'error' });
 
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
-  const listOfImages = await (api as unknown as LibPod).podmanListImages({} as PodmanListImagesOptions);
+  const listOfImages = await (api as unknown as LibPod).podmanListImages({} as ListImagesOptions);
   expect(listOfImages.length).toBe(1);
   const firstImage = listOfImages[0];
   expect(firstImage?.Id).toBe('sha256:1234567890');
+});
+
+test('Check unpause Pod using Podman API', async () => {
+  const handler = vi.fn(() => HttpResponse.json({}, { status: 200 }));
+
+  server = setupServer(http.post('http://localhost/v4.2.0/libpod/pods/dummy/unpause', handler));
+
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  await (api as unknown as LibPod).unpausePod('dummy');
+  expect(handler).toHaveBeenCalledOnce();
+});
+
+test('Check unpause Pod for error handling using Podman API', async () => {
+  server = setupServer(
+    http.post('http://localhost/v4.2.0/libpod/pods/dummy/unpause', () =>
+      HttpResponse.text('no such pod', { status: 404 }),
+    ),
+  );
+
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  await expect((api as unknown as LibPod).unpausePod('dummy')).rejects.toThrow();
 });
 
 test('Check list of containers using Podman API', async () => {
@@ -545,5 +572,31 @@ describe('kube play', () => {
     assert(second);
 
     expect(second.headers.get('Content-Type')).toBe('application/yaml');
+  });
+});
+
+describe('secrets', () => {
+  test('removeSecret should call DELETE on libpod secrets endpoint', async () => {
+    const deleteHandler = vi.fn().mockReturnValue(HttpResponse.text('', { status: 204 }));
+
+    server = setupServer(http.delete('http://localhost/v4.2.0/libpod/secrets/secret123', deleteHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await (api as unknown as LibPod).removeSecret('secret123');
+
+    expect(deleteHandler).toHaveBeenCalledOnce();
+  });
+
+  test('removeSecret should reject when server returns an error', async () => {
+    server = setupServer(
+      http.delete('http://localhost/v4.2.0/libpod/secrets/secret123', () =>
+        HttpResponse.json({ message: 'no such secret' }, { status: 404 }),
+      ),
+    );
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await expect((api as unknown as LibPod).removeSecret('secret123')).rejects.toThrow();
   });
 });

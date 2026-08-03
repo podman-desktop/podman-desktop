@@ -58,5 +58,13 @@ function updateAppearance(appearance: string): void {
   } else if (appearance === AppearanceSettings.DarkHCEnumValue) {
     isDark.set(true);
     isHighContrast.set(true);
+  } else {
+    window.getThemeInfo(appearance).then(
+      info => {
+        isDark.set(info.isDark);
+        isHighContrast.set(info.isHighContrast);
+      },
+      (err: unknown) => console.error(`Error getting theme info for ${appearance}`, err),
+    );
   }
 }

@@ -124,7 +124,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
  {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full grow">
     {#if screen === 'installed'}
       {#if searchTerm && filteredInstalledExtensions.length === 0}
         <FilteredEmptyScreen

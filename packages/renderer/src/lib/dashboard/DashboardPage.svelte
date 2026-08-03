@@ -178,9 +178,9 @@ function handleDashboardToggle(itemId: string, enabled: boolean): void {
       resetButtonLabel="Reset Layout"
     />
   {/snippet}
-  
+
   {#snippet content()}
-  <div class="flex flex-col min-w-full h-full bg-[var(--pd-content-bg)] py-5">
+  <div class="flex flex-col min-w-full grow bg-[var(--pd-content-bg)] py-5">
     <div class="min-w-full flex-1">
       <NotificationsBox />
       <div class="px-5 space-y-5 h-full">

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "strict": true,
     "lib": ["ES2017", "webworker"],
     "sourceMap": true,

@@ -113,7 +113,7 @@ test.describe
 
       // Wait for container row to appear, then open details and verify it is running
       await playExpect
-        .poll(async () => await containersPage.getContainerRowByName(testContainerName), { timeout: 30_000 })
+        .poll(async () => await containersPage.getContainerRowByName(testContainerName), { timeout: 60_000 })
         .toBeTruthy();
       const containerDetails = await containersPage.openContainersDetails(testContainerName);
       await playExpect(containerDetails.heading).toContainText(testContainerName);

@@ -18,13 +18,44 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import DevelopmentExtensionEmptyScreen from './DevelopmentExtensionEmptyScreen.svelte';
 
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.getExtensionDevelopmentDocsLink).mockResolvedValue(undefined);
+});
+
 test('Expect we see the text of the empty screen', async () => {
   render(DevelopmentExtensionEmptyScreen);
-  const emptyText = screen.getByText('Enable Preferences > Extensions > Development Mode to test local extensions');
+  const emptyText = await waitFor(() =>
+    screen.getByText('Enable Preferences > Extensions > Development Mode to test local extensions'),
+  );
   expect(emptyText).toBeInTheDocument();
+});
+
+test('Should not show button when extension development link is not configured', async () => {
+  render(DevelopmentExtensionEmptyScreen);
+
+  await waitFor(() => {
+    expect(window.getExtensionDevelopmentDocsLink).toHaveBeenCalled();
+  });
+
+  const button = screen.queryByRole('button', { name: 'How to write your first extension' });
+  expect(button).not.toBeInTheDocument();
+});
+
+test('Should show button when extension development link is configured and open correct link when clicked', async () => {
+  const testLink = 'https://example.com/docs';
+  vi.mocked(window.getExtensionDevelopmentDocsLink).mockResolvedValue(testLink);
+  render(DevelopmentExtensionEmptyScreen);
+
+  const button = await waitFor(() => screen.getByRole('button', { name: 'How to write your first extension' }));
+  expect(button).toBeInTheDocument();
+
+  await userEvent.click(button);
+  expect(window.openExternal).toHaveBeenCalledWith(testLink);
 });

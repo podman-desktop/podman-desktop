@@ -111,8 +111,9 @@ function getIPv4Interfaces(): string[] {
   if (!intfs) {
     return [];
   }
-  return Object.values(intfs)
+  const addresses = Object.values(intfs)
     .flat()
     .filter((intf): intf is NetworkInterfaceInfoIPv4 => !!intf && intf.family === 'IPv4' && !!intf.address)
     .map(intf => intf.address);
+  return [...new Set(addresses)];
 }

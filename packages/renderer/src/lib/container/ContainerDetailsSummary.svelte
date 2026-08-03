@@ -63,7 +63,7 @@ function openPort(port: number): void {
     <DetailsCell>Ports</DetailsCell>
     {#if container.hasPublicPort}
       <DetailsCell>
-        {#each container.ports as port, i (port.PublicPort)}
+        {#each container.ports as port, i (`${port.IP ?? ''}-${port.PublicPort}-${port.Type}`)}
           {#if i > 0},&nbsp;{/if}
           <Tooltip tip={portUrl(port.PublicPort)} bottom>
             <Link on:click={(): void => openPort(port.PublicPort)}>

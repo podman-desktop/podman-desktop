@@ -5,7 +5,6 @@
 <script lang="ts">
 import { NavigationPage } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
-import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
@@ -15,6 +14,7 @@ import NewContentOnDashboardBadge from './lib/dashboard/NewContentOnDashboardBad
 import AccountIcon from './lib/images/AccountIcon.svelte';
 import DashboardIcon from './lib/images/DashboardIcon.svelte';
 import SettingsIcon from './lib/images/SettingsIcon.svelte';
+import { longPress } from './lib/ui/attachments/longpress';
 import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
@@ -30,10 +30,21 @@ let { exitSettingsCallback, meta = $bindable() }: Props = $props();
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
 let scrollRegionEl = $state<HTMLDivElement>();
-let iconWithTitle = $state(false);
 
-const iconSize = '22';
-const NAV_BAR_LAYOUT = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationAppearance}`;
+const iconSize = '24';
+const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
+
+const minWidth = 50;
+const maxWidth = 240;
+const expandedThreshold = 70;
+
+let navWidth = $state(160);
+let expanded = $derived(navWidth > expandedThreshold);
+let isDragging = $state(false);
+
+$effect(() => {
+  document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
+});
 
 /** Custom overlay scrollbar: thumb position and height (0–1) */
 let scrollThumbTop = $state(0);
@@ -102,16 +113,49 @@ function onThumbWheel(e: WheelEvent): void {
   }
 }
 
-onDidChangeConfiguration.addEventListener(NAV_BAR_LAYOUT, onDidChangeConfigurationCallback);
+// --- Resize handle logic ---
+let resizeStartX = 0;
+let resizeStartWidth = 0;
+function onResizeHandlePointerDown(e: PointerEvent): void {
+  e.preventDefault();
+  isDragging = true;
+  resizeStartX = e.clientX;
+  resizeStartWidth = navWidth;
+  window.addEventListener('pointermove', onResizeMove);
+  window.addEventListener('pointerup', onResizeUp);
+}
 
-let minNavbarWidth = $derived(iconWithTitle ? 'min-w-fit' : 'min-w-leftnavbar');
+function onResizeMove(e: PointerEvent): void {
+  const dx = e.clientX - resizeStartX;
+  navWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, resizeStartWidth + dx)));
+}
+
+function onResizeUp(): void {
+  isDragging = false;
+  window.removeEventListener('pointermove', onResizeMove);
+  window.removeEventListener('pointerup', onResizeUp);
+  persistWidth();
+}
+
+function onResizeHandleDblClick(): void {
+  toggleNavWidth();
+}
+
+function toggleNavWidth(): void {
+  navWidth = expanded ? minWidth : maxWidth;
+  persistWidth();
+}
+
+function persistWidth(): void {
+  window.updateConfigurationValue(NAV_BAR_WIDTH_KEY, Math.round(navWidth))?.catch(console.error);
+}
 
 let scrollRegionCleanup: (() => void) | undefined;
 
 onMount(async () => {
   const commandRegistry = new CommandRegistry();
   commandRegistry.init();
-  iconWithTitle = (await window.getConfigurationValue(NAV_BAR_LAYOUT)) === AppearanceSettings.IconAndTitle;
+  navWidth = (await window.getConfigurationValue<number>(NAV_BAR_WIDTH_KEY)) ?? maxWidth;
   await tick();
   const el = scrollRegionEl;
   if (el) {
@@ -127,7 +171,10 @@ onMount(async () => {
 });
 
 onDestroy(() => {
-  onDidChangeConfiguration.removeEventListener(NAV_BAR_LAYOUT, onDidChangeConfigurationCallback);
+  onDidChangeConfiguration.removeEventListener(NAV_BAR_WIDTH_KEY, onDidChangeConfigurationCallback);
+  window.removeEventListener('pointermove', onResizeMove);
+  window.removeEventListener('pointerup', onResizeUp);
+  isDragging = false;
   scrollRegionCleanup?.();
 });
 
@@ -139,11 +186,14 @@ function handleClick(): void {
   }
 }
 
+// --- Configuration persistence ---
+onDidChangeConfiguration.addEventListener(NAV_BAR_WIDTH_KEY, onDidChangeConfigurationCallback);
+
 function onDidChangeConfigurationCallback(e: Event): void {
   if ('detail' in e) {
-    const detail = e.detail as { key: string; value: string };
-    if (NAV_BAR_LAYOUT === detail?.key) {
-      iconWithTitle = detail.value === AppearanceSettings.IconAndTitle;
+    const detail = e.detail as { key: string; value: unknown };
+    if (NAV_BAR_WIDTH_KEY === detail?.key && typeof detail.value === 'number') {
+      navWidth = Math.max(minWidth, Math.min(maxWidth, detail.value));
     }
   }
 }
@@ -151,21 +201,19 @@ function onDidChangeConfigurationCallback(e: Event): void {
 
 <svelte:window />
 <nav
-  class="group w-leftnavbar {minNavbarWidth} h-full flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
-  aria-label="AppNavigation">
-  <NavItem href="/" tooltip="Dashboard" bind:meta={meta}>
-    <div class="relative w-full">
-      <div class="flex flex-col items-center w-full h-full">
-        <div class="flex items-center w-fit h-full relative">
-          <DashboardIcon size={iconSize} />
-          <NewContentOnDashboardBadge />
-        </div>
-        {#if iconWithTitle}
-          <div class="text-xs text-center ml-[2px]" aria-label="Dashboard title">
-            Dashboard
-          </div>
-        {/if}
+  class="group w-leftnavbar relative h-full flex-shrink-0 flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
+  aria-label="AppNavigation"
+  class:select-none={isDragging}
+  style:width="{navWidth}px">
+  <NavItem href="/" tooltip="Dashboard" bind:meta={meta} {expanded}>
+    <div class="flex items-center w-full">
+      <div class="flex items-center justify-center flex-shrink-0 w-6 relative">
+        <DashboardIcon size={iconSize} />
+        <NewContentOnDashboardBadge />
       </div>
+      {#if expanded}
+        <span class="text-sm truncate ml-3 flex-1 min-w-0" aria-label="Dashboard title">Dashboard</span>
+      {/if}
     </div>
   </NavItem>
   <div
@@ -184,10 +232,10 @@ function onDidChangeConfigurationCallback(e: Event): void {
         {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
           <!-- This is a group, list all items from the entry -->
           {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
+            <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
           {/each}
         {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} iconWithTitle={iconWithTitle} />
+          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
         {/if}
       {/each}
     </div>
@@ -212,30 +260,46 @@ function onDidChangeConfigurationCallback(e: Event): void {
     class="flex-shrink-0 w-full border-t border-[var(--pd-global-nav-bg-border)]"
     aria-hidden="true"></div>
 
-  <div bind:this={outsideWindow}>
-    <NavItem href="/accounts" tooltip="" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)}>
-      <Tooltip bottomRight tip="Accounts">
-        <div class="flex flex-col items-center w-full h-full">
-          <AccountIcon size={iconSize} />
-          {#if iconWithTitle}
-            <div class="text-xs text-center ml-[2px]" aria-label="Accounts title">
-              Accounts
+    <div bind:this={outsideWindow}>
+      <NavItem href="/accounts" tooltip="Accounts" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)} {expanded}>
+          <div class="flex items-center w-full">
+            <div class="flex-shrink-0 flex items-center justify-center w-6">
+              <AccountIcon size={iconSize} />
             </div>
-          {/if}
-        </div>
-      </Tooltip>
-      <AuthActions bind:this={authActions} outsideWindow={outsideWindow} />
-    </NavItem>
-  </div>
+            {#if expanded}
+              <span class="text-sm truncate ml-3" aria-label="Accounts title">
+                Accounts
+              </span>
+            {/if}
+          </div>
+        <AuthActions bind:this={authActions} outsideWindow={outsideWindow} />
+      </NavItem>
+    </div>
 
-  <NavItem href="/preferences" tooltip="Settings" bind:meta={meta} onClick={handleClick}>
-    <div class="flex flex-col items-center w-full">
-      <SettingsIcon size={iconSize} />
-    {#if iconWithTitle}
-      <div class="text-xs text-center ml-[2px]" aria-label="Settings title">
-        Settings
+  <NavItem href="/preferences" tooltip="Settings" bind:meta={meta} onClick={handleClick} {expanded}>
+    <div class="flex items-center w-full">
+      <div class="flex-shrink-0 flex items-center justify-center w-6">
+        <SettingsIcon size={iconSize} />
       </div>
-    {/if}
+      {#if expanded}
+        <span class="text-sm truncate ml-3" aria-label="Settings title">
+          Settings
+        </span>
+      {/if}
     </div>
   </NavItem>
+
+  <!-- Resize handle -->
+  <div
+    class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-50 hover:bg-[var(--pd-global-nav-icon-selected-highlight)] transition-colors duration-150"
+    class:bg-[var(--pd-global-nav-icon-selected-highlight)]={isDragging}
+    role="separator"
+    aria-orientation="vertical"
+    aria-label="Resize navigation bar"
+    aria-valuenow={navWidth}
+    aria-valuemin={minWidth}
+    aria-valuemax={maxWidth}
+    {@attach longPress(toggleNavWidth)}
+    onpointerdown={onResizeHandlePointerDown}
+    ondblclick={onResizeHandleDblClick}></div>
 </nav>
