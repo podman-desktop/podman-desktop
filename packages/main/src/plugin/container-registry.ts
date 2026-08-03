@@ -1767,8 +1767,13 @@ export class ContainerProviderRegistry {
     try {
       const provider = this.internalProviders.get(engineId);
       if (provider?.libpodApi) {
-        await provider.libpodApi.pruneAllVolumes();
-        return { VolumesDeleted: [], SpaceReclaimed: 0 };
+        try {
+          await provider.libpodApi.pruneAllVolumes();
+          return { VolumesDeleted: [], SpaceReclaimed: 0 };
+        } catch {
+          // pruneAllVolumes uses the "all" filter (Podman 6.0+);
+          // fall back to the compat API for older versions
+        }
       }
       return this.getMatchingEngine(engineId).pruneVolumes();
     } catch (error) {
