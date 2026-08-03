@@ -104,7 +104,7 @@ onDestroy(() => {
 });
 </script>
 
-<section class="prose max-w-none prose-sm" class:prose-invert={$isDark}  aria-label="markdown-content">
+<section class="prose max-w-none prose-sm pb-6" class:prose-invert={$isDark}  aria-label="markdown-content">
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   {@html html}
 </section>
