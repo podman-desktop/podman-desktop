@@ -6511,7 +6511,9 @@ describe('pruneVolumes', () => {
     api: {
       pruneVolumes: vi.fn(),
     } as unknown as Dockerode,
-    libpodApi: {} as unknown as LibPod,
+    libpodApi: {
+      pruneAllVolumes: vi.fn(),
+    } as unknown as LibPod,
     connection: {
       type: 'podman',
       name: 'podman',
@@ -6523,12 +6525,12 @@ describe('pruneVolumes', () => {
     },
   };
 
-  test('prune with podman passes all filter to include named volumes', async () => {
+  test('prune with podman uses libpod API to include named volumes', async () => {
     containerRegistry.addInternalProvider('podman.podman', podmanProvider);
 
     await containerRegistry.pruneVolumes('podman.podman');
 
-    expect(podmanProvider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+    expect(podmanProvider.libpodApi?.pruneAllVolumes).toBeCalled();
   });
 
   test('prune with docker does not pass all filter', async () => {

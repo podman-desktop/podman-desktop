@@ -1767,7 +1767,8 @@ export class ContainerProviderRegistry {
     try {
       const provider = this.internalProviders.get(engineId);
       if (provider?.libpodApi) {
-        return this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
+        await provider.libpodApi.pruneAllVolumes();
+        return { VolumesDeleted: [], SpaceReclaimed: 0 };
       }
       return this.getMatchingEngine(engineId).pruneVolumes();
     } catch (error) {
