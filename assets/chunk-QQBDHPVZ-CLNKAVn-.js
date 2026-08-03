@@ -1,1 +1,0 @@
-import{n as e}from"./rolldown-runtime-DaJ6WEGw.js";var t,n,r=e((()=>{t=(e,t,n)=>{let r=e.replace(/\s+/g,`-`),i=[`control`];return n&&i.push(n),t&&i.push(t),i.push(r),i.join(`-`)},n=(e,t,n)=>{let r=e.replace(/\s+/g,`-`),i=[`set`];return n&&i.push(n),t&&i.push(t),i.push(r),i.join(`-`)}}));export{n,r,t};
