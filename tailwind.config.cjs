@@ -95,6 +95,17 @@ module.exports = {
             },
           },
         },
+
+        // The typography plugin's `sm` modifier (applied via `prose-sm` in Markdown.svelte)
+        // defines its own `code` font-size, which otherwise wins over the DEFAULT override above.
+        sm: {
+          css: {
+            code: {
+              fontSize: '12px',
+              fontWeight: '400',
+            },
+          },
+        },
       }),
     },
   },
