@@ -59,20 +59,39 @@ module.exports = {
           css: {
             '--tw-prose-links': 'var(--pd-link)',
             '--tw-prose-invert-links': 'var(--pd-link)',
+
             p: {
               fontSize: '12px',
             },
-            h1: {
-              fontSize: '16px',
-            },
-            h2: {
-              fontSize: '14px',
-            },
-            h3: {
+
+            ul: {
               fontSize: '12px',
             },
+
+            ol: {
+              fontSize: '12px',
+            },
+
+            h1: {
+              fontWeight: '200',
+            },
+
+            h2: {
+              fontWeight: '300',
+              letterSpacing: '0.03em',
+            },
+
+            h3: {
+              fontWeight: '300',
+              letterSpacing: '0.03em',
+            },
+
             h4: {
               fontSize: '10px',
+            },
+
+            a: {
+              fontWeight: '400',
             },
           },
         },
