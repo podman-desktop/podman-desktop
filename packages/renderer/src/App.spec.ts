@@ -95,11 +95,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   sessionStorage.clear();
   router.goto('/');
-  (window.events as unknown) = {
-    receive: vi.fn().mockImplementation((channel, func) => {
-      messages.set(channel, func);
-    }),
-  };
+  vi.mocked(window.events.receive).mockImplementation((channel, func) => {
+    messages.set(channel, func);
+    return { dispose: vi.fn() };
+  });
   Object.defineProperty(window, 'dispatchEvent', { value: dispatchEventMock });
   (window.getConfigurationValue as unknown) = vi.fn();
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);

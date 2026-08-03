@@ -16,35 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ImageInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { filtered, imagesEventStore, imagesInfos } from './images';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
-    callbacks.set(message, callback);
-  },
-};
-
-const listImagesMock: Mock<() => Promise<ImageInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listImages: listImagesMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
 // We always mock findMatchInLeaves to return true so we can test image.ts without having to render
 // the component, as we are not testing the $searchPattern store / functionality.
@@ -52,23 +30,26 @@ vi.mock(import('./search-util'), () => ({
   findMatchInLeaves: vi.fn(() => true), // Assume it always finds a match unless specified otherwise
 }));
 
-beforeAll(() => {
-  vi.clearAllMocks();
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
+  });
 });
 
 test('images should be updated in case of a image is loaded from an archive', async () => {
   // initial images
-  listImagesMock.mockResolvedValue([
+  vi.mocked(window.listImages).mockResolvedValue([
     {
       Id: '1',
     } as unknown as ImageInfo,
   ]);
   const storeInfo = imagesEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // fetch
   await storeInfo.fetch();
@@ -79,11 +60,11 @@ test('images should be updated in case of a image is loaded from an archive', as
   expect(images[0].Id).toBe('1');
 
   // ok now mock the listImages function to return an empty list
-  listImagesMock.mockResolvedValue([]);
+  vi.mocked(window.listImages).mockResolvedValue([]);
 
   // call 'image-loadfromarchive-event' event
   const imageLoadFromArchiveCallback = callbacks.get('image-loadfromarchive-event');
-  expect(imageLoadFromArchiveCallback).toBeDefined();
+  assert(imageLoadFromArchiveCallback);
   await imageLoadFromArchiveCallback();
 
   // wait debounce
@@ -97,14 +78,13 @@ test('images should be updated in case of a image is loaded from an archive', as
 describe('filtered images tests', () => {
   test('images with isManifest field missing should be included', async () => {
     // No isManifest field
-    listImagesMock.mockResolvedValue([
+    vi.mocked(window.listImages).mockResolvedValue([
       { Id: '2' } as unknown as ImageInfo, // Simulate isManifest field missing
     ]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
-    const callback = callbacks.get('extensions-already-started');
-    await callback();
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
     await storeInfo.fetch();
 
     const images = get(filtered);
@@ -114,12 +94,11 @@ describe('filtered images tests', () => {
 
   test('images with isManifest false should be included', async () => {
     // isManifest but set to false
-    listImagesMock.mockResolvedValue([{ Id: '3', isManifest: false } as unknown as ImageInfo]);
+    vi.mocked(window.listImages).mockResolvedValue([{ Id: '3', isManifest: false } as unknown as ImageInfo]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
-    const callback = callbacks.get('extensions-already-started');
-    await callback();
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
     await storeInfo.fetch();
 
     // Check the filtered images
@@ -131,12 +110,11 @@ describe('filtered images tests', () => {
 
   test('images with isManifest true should be included', async () => {
     // isManifest but set to true
-    listImagesMock.mockResolvedValue([{ Id: '4', isManifest: true } as unknown as ImageInfo]);
+    vi.mocked(window.listImages).mockResolvedValue([{ Id: '4', isManifest: true } as unknown as ImageInfo]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
-    const callback = callbacks.get('extensions-already-started');
-    await callback();
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
     await storeInfo.fetch();
 
     // Check the filtered images, make sure that we do NOT have any images
@@ -147,7 +125,7 @@ describe('filtered images tests', () => {
 
   test('check against 3 images with different isManifest values', async () => {
     // 3 images with different isManifest values
-    listImagesMock.mockResolvedValue([
+    vi.mocked(window.listImages).mockResolvedValue([
       { Id: '5', isManifest: false } as unknown as ImageInfo,
       { Id: '6', isManifest: true } as unknown as ImageInfo,
       { Id: '7' } as unknown as ImageInfo, // Simulate isManifest field missing
@@ -155,8 +133,7 @@ describe('filtered images tests', () => {
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
-    const callback = callbacks.get('extensions-already-started');
-    await callback();
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
     await storeInfo.fetch();
 
     // Check the filtered images

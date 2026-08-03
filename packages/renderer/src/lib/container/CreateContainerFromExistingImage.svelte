@@ -45,6 +45,7 @@ let values: TypeaheadItem[] = $state([]);
 
 let imageToPull: string = $state('');
 let sortResults: ((a: string, b: string) => number) | undefined = $state();
+let searchRequestId = 0;
 
 let providerConnections = $derived(
   $providerInfos
@@ -71,7 +72,7 @@ async function resolveShortname(): Promise<void> {
     shortnameImages = [];
     usePodmanFQN = false;
   }
-  // checks if there is no FQN that is from dokcer hub
+  // checks if there is no FQN that is from docker hub
   if (!shortnameImages.find(name => name.includes('docker.io'))) {
     podmanFQN = shortnameImages[0];
   } else {
@@ -188,10 +189,10 @@ function validateImageName(image: string): void {
 
 // allTags is defined if last search was a query to search tags of an image
 let allTags: string[] | undefined = undefined;
-async function searchImages(value: string): Promise<string[]> {
+async function searchImages(value: string): Promise<{ images: string[]; tags: string[] | undefined }> {
   if (value.includes(':')) {
     if (allTags !== undefined) {
-      return allTags.filter(i => i.startsWith(value));
+      return { images: allTags.filter(i => i.startsWith(value)), tags: allTags };
     }
     const parts = value.split(':');
     const originalImage = parts[0];
@@ -200,12 +201,11 @@ async function searchImages(value: string): Promise<string[]> {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
     const tags = await window.listImageTagsInRegistry({ image });
-    allTags = tags.map(t => `${originalImage}:${t}`);
-    return allTags.filter(i => i.startsWith(value));
+    const computedTags = tags.map(t => `${originalImage}:${t}`);
+    return { images: computedTags.filter(i => i.startsWith(value)), tags: computedTags };
   }
-  allTags = undefined;
   if (value === undefined || value.trim() === '') {
-    return [];
+    return { images: [], tags: undefined };
   }
   const options: ImageSearchOptions = {
     query: '',
@@ -218,12 +218,11 @@ async function searchImages(value: string): Promise<string[]> {
     options.registry = registry;
     options.query = rest.join('/');
   }
-  let result: string[];
   const searchResult = await window.searchImageInRegistry(options);
-  result = searchResult.map(r => {
+  const result = searchResult.map(r => {
     return [options.registry, r.name].join('/');
   });
-  return result;
+  return { images: result, tags: undefined };
 }
 
 async function searchLocalImages(value: string): Promise<string[]> {
@@ -236,8 +235,7 @@ async function searchLocalImages(value: string): Promise<string[]> {
     }
     return [];
   });
-  matchingLocalImages = localImagesNames.flat().filter(image => image !== '' && image.includes(value));
-  return matchingLocalImages;
+  return localImagesNames.flat().filter(image => image !== '' && image.includes(value));
 }
 
 let latestTagMessage: string | undefined = $state();
@@ -304,7 +302,7 @@ async function buildContainerFromImage(): Promise<void> {
         parameters: {
           id: chosenImage[0].id,
           engineId: chosenImage[0].engineId,
-          base64RepoTag: chosenImage[0].base64RepoTag,
+          tag: chosenImage[0].tag ? `${chosenImage[0].name}:${chosenImage[0].tag}` : chosenImage[0].name,
         },
       });
     }
@@ -315,9 +313,16 @@ async function searchFunction(value: string): Promise<void> {
   // do not search for images if no connection is selected
   if (!selectedProviderConnection) return;
 
+  const requestId = ++searchRequestId;
   value = value.trim();
   const localImagesValues = await searchLocalImages(value);
-  const remoteImagesValues = await searchImages(value);
+  const remoteSearchResult = await searchImages(value);
+
+  if (requestId !== searchRequestId) return;
+
+  matchingLocalImages = localImagesValues;
+  allTags = remoteSearchResult.tags;
+
   sortResults = (a: string, b: string): number => {
     const dockerIoValue = `docker.io/${value}`;
     const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
@@ -332,8 +337,8 @@ async function searchFunction(value: string): Promise<void> {
   };
 
   values = [
-    ...localImagesValues.map(value => ({ value: value, group: 'Local Images' })),
-    ...remoteImagesValues.map(value => ({ value: value, group: 'Registry Images' })),
+    ...localImagesValues.map(v => ({ value: v, group: 'Local Images' })),
+    ...remoteSearchResult.images.map(v => ({ value: v, group: 'Registry Images' })),
   ];
 }
 
@@ -359,6 +364,11 @@ function onContainerConnectionChange(): void {
   matchingLocalImages = [];
   imageToPull = '';
 }
+
+// trigger search on mount to populate the typeahead with local images
+onMount(() => {
+  searchFunction('').catch(() => {});
+});
 </script>
 
 <EngineFormPage title="Select an image">
@@ -428,19 +438,18 @@ function onContainerConnectionChange(): void {
 
     <footer>
       <div class="w-full flex flex-col justify-end gap-3 my-3">
-        <div class="flex flex-row">
-          <Button type="secondary" class="mr-3 w-full" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
+        <div class="flex items-center justify-end gap-3">
+          <Button type="secondary" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
           {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
             <Button
               icon={faArrowCircleDown}
-              class="w-full"
               disabled={imageNameIsInvalid}
               on:click={pullImageAndRun}
               inProgress={pullInProgress}>
               Pull Image and Run
             </Button>
           {:else}
-            <Button icon={faCircleCheck} class="w-full" disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
+            <Button icon={faCircleCheck} disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
         </div>
         {#if pullError}

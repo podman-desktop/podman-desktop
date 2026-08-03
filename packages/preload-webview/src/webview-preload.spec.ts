@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ColorInfo, WebviewInfo } from '@podman-desktop/core-api';
+import type { ColorInfo, ThemeInfo, WebviewInfo } from '@podman-desktop/core-api';
 import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
@@ -52,8 +52,8 @@ class TestWebwiewPreload extends WebviewPreload {
   async getColors(themeId: string): Promise<ColorInfo[]> {
     return super.getColors(themeId);
   }
-  async isDarkTheme(theme: string): Promise<boolean> {
-    return super.isDarkTheme(theme);
+  async getThemeInfo(theme: string): Promise<ThemeInfo> {
+    return super.getThemeInfo(theme);
   }
 }
 
@@ -188,9 +188,8 @@ describe('changeContent', () => {
     const spyGetColors = vi.spyOn(webviewPreload, 'getColors');
     spyGetColors.mockResolvedValue([{ id: 'my-color', value: 'test', cssVar: '--pd-my-color' }]);
 
-    // spy isDarkTheme method
-    const spyIsDarkTheme = vi.spyOn(webviewPreload, 'isDarkTheme');
-    spyIsDarkTheme.mockResolvedValue(false);
+    const spyGetThemeInfo = vi.spyOn(webviewPreload, 'getThemeInfo');
+    spyGetThemeInfo.mockResolvedValue({ isDark: false, isHighContrast: false });
 
     // override window.addEventListener to keep the callback
     const spyAddEventListener = vi.spyOn(window, 'addEventListener');
@@ -240,9 +239,8 @@ describe('changeContent', () => {
     const spyGetColors = vi.spyOn(webviewPreload, 'getColors');
     spyGetColors.mockResolvedValue([{ id: 'my-color', value: 'test', cssVar: '--pd-my-color' }]);
 
-    // spy isDarkTheme method
-    const spyIsDarkTheme = vi.spyOn(webviewPreload, 'isDarkTheme');
-    spyIsDarkTheme.mockResolvedValue(true);
+    const spyGetThemeInfo = vi.spyOn(webviewPreload, 'getThemeInfo');
+    spyGetThemeInfo.mockResolvedValue({ isDark: true, isHighContrast: false });
 
     // override window.addEventListener to keep the callback
     const spyAddEventListener = vi.spyOn(window, 'addEventListener');

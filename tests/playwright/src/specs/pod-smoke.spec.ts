@@ -257,26 +257,27 @@ test.describe
       await playExpect(containerDetailsPage.terminalContent).toContainText('app');
     });
 
-    test('Checking deployed application', async () => {
-      test.setTimeout(75000);
+    test('Checking deployed application', async ({ navigationBar, page }) => {
+      test.setTimeout(90_000);
 
-      // fetch the application page
-      // this might not work on macos
-      const address = 'http://localhost:' + frontendPort;
-      await playExpect.poll(async () => await appRunningOnPort(address), { timeout: 60_000 }).toBeTruthy();
+      // Verify the frontend app from inside the pod's network namespace
+      // to avoid WSL2 host port-forwarding issues on Windows
+      const containers = await navigationBar.openContainers();
+      const containerDetailsPage = await containers.openContainersDetails(`${frontendContainer}-podified`);
+      await playExpect(containerDetailsPage.heading).toContainText(`${frontendContainer}-podified`);
+      await containerDetailsPage.activateTab('Terminal');
 
-      for (let i = 2; i < 5; i++) {
-        const response: Response = await fetch(address);
-        const blob: Blob = await response.blob();
-        const text: string = await blob.text();
-        playExpect(text).toContain('Hello World!');
-        // regex for div with number of visits
-        const regex = /<div[^>]*>(\d+)<\/div>/i;
-        const matches = RegExp(regex).exec(text);
-        playExpect(matches?.[1]).toEqual(i.toString());
-        playExpect(matches).toBeDefined();
-        playExpect(text).toContain('time(s)');
-      }
+      await playExpect(containerDetailsPage.terminalContent).toBeVisible();
+      await playExpect(containerDetailsPage.terminalContent).toContainText('@');
+      await page.waitForTimeout(1_000);
+
+      // Use grep -q to avoid flooding the xterm buffer with the full HTML response,
+      // and echo a unique sentinel so the assertion can't false-match the typed command
+      const curlCheck =
+        'for i in $(seq 1 30); do curl -sf http://localhost:5000 | grep -q "Hello World" && echo DEPLOY_OK && break; sleep 2; done';
+      await containerDetailsPage.terminalInput.pressSequentially(curlCheck, { delay: 15 });
+      await containerDetailsPage.terminalInput.press('Enter');
+      await playExpect(containerDetailsPage.terminalContent).toContainText('DEPLOY_OK', { timeout: 60_000 });
     });
 
     test.describe(() => {
@@ -376,14 +377,4 @@ test.describe
         }
       });
     });
-
-    async function appRunningOnPort(address: string): Promise<boolean> {
-      return await fetch(address)
-        .then(response => {
-          return response.ok;
-        })
-        .catch(() => {
-          return false;
-        });
-    }
   });

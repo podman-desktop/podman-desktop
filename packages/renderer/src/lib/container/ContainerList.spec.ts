@@ -56,12 +56,10 @@ beforeEach(() => {
       ],
     } as ProviderInfo,
   ]);
-  // fake the window.events object
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(
@@ -482,7 +480,7 @@ test('Expect filter empty screen', async () => {
   expect(filterButton).toBeInTheDocument();
 });
 
-test('Expect clear filter in empty screen to clear serach term, except is:...', async () => {
+test('Expect clear filter in empty screen to clear search term, except is:...', async () => {
   vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
@@ -983,7 +981,7 @@ test('pods with same name on different engines should have separate group', asyn
     Status: 'Running',
     pod: {
       name: 'my-pod',
-      id: `podman-engine-${index}`, // unique pod id (only pod-id is unique accross all engines)
+      id: `podman-engine-${index}`, // unique pod id (only pod-id is unique across all engines)
       status: 'Running',
       engineId: `podman-${index}`,
     },

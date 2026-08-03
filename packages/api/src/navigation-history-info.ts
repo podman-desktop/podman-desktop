@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import CopyButton from '@theme-original/CodeBlock/CopyButton';
-import React from 'react';
+/**
+ * Payload sent from the main process to the renderer when an extension calls
+ * `navigation.pushHistoryEntry`, so the entry can be added to the global
+ * back/forward navigation history stack.
+ */
+export interface NavigationHistoryPushInfo {
+  extensionId: string;
+  id: string;
+  label: string;
+}
 
-// Update the CopyButton to remove the '$ ' or '# ' from the code
-export default function CopyButtonWrapper(props) {
-  const updatedProps = { ...props };
-  if (
-    updatedProps?.code?.length > 2 &&
-    (updatedProps.code.substring(0, 2) === '$ ' ||
-      updatedProps.code.substring(0, 2) === '# ' ||
-      updatedProps.code.substring(0, 2) === '> ')
-  ) {
-    updatedProps.code = updatedProps.code.substring(2);
-  }
-  return (
-    <>
-      <CopyButton {...updatedProps} />
-    </>
-  );
+/**
+ * A single entry in the renderer's navigation history stack.
+ * Regular (router-based) entries only carry a `url`. Entries pushed by an
+ * extension via `navigation.pushHistoryEntry` also carry `extensionEntry`,
+ * and `url` is a synthetic display value (never passed to the router).
+ */
+export interface HistoryStackEntry {
+  url: string;
+  extensionEntry?: NavigationHistoryPushInfo;
 }

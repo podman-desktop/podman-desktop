@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { ActionKind, type ItemInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import HelpActionsItems from './HelpActionsItems.svelte';
 
@@ -39,12 +39,6 @@ export const Items: readonly ItemInfo[] = [
 let toggleMenuCallback: () => void;
 
 describe('HelpActionsItems component', () => {
-  beforeAll(() => {
-    (window.events as unknown) = {
-      receive: vi.fn(),
-    };
-  });
-
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {

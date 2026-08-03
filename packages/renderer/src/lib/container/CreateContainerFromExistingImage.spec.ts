@@ -239,7 +239,7 @@ test('Expect a local image to have an active run image button', async () => {
     expect(handleNavigation).toHaveBeenCalledWith({
       page: NavigationPage.IMAGE_RUN,
       parameters: {
-        base64RepoTag: expect.any(String),
+        tag: expect.any(String),
         engineId: selected.engineId,
         id: selected.Id,
       },

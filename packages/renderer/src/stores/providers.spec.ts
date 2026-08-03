@@ -16,38 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { containerConnectionCount, eventStore, providerInfos } from './providers';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
-    callbacks.set(message, callback);
-  },
-};
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
-const getProviderInfosMock: Mock<() => Promise<ProviderInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    getProviderInfos: getProviderInfosMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
+beforeEach(() => {
+  callbacks.clear();
   vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
+  });
 });
 
 test('no provider through window.getProviderInfos should make the store empty', () => {
@@ -55,10 +38,10 @@ test('no provider through window.getProviderInfos should make the store empty', 
   eventStore.setupWithDebounce(10, 10);
 
   // empty list
-  getProviderInfosMock.mockResolvedValue([]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('system-ready')();
+  window.dispatchEvent(new CustomEvent('system-ready'));
 
   // now get list
   const providerListResult = get(providerInfos);
@@ -85,28 +68,32 @@ test.each([
   eventStore.setupWithDebounce(10, 10);
 
   // empty list
-  getProviderInfosMock.mockResolvedValue([]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('system-ready')();
+  window.dispatchEvent(new CustomEvent('system-ready'));
 
   // clear mock calls
-  getProviderInfosMock.mockClear();
+  vi.mocked(window.getProviderInfos).mockClear();
 
   // now, setup at least one container
-  getProviderInfosMock.mockResolvedValue([
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       id: 'id123',
     } as unknown as ProviderInfo,
   ]);
 
-  // send event
-  const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
-  await callback();
+  // send event ('provider-lifecycle-change' is a window listener, the rest go through window.events)
+  if (eventName === 'provider-lifecycle-change') {
+    window.dispatchEvent(new CustomEvent(eventName));
+  } else {
+    const callback = callbacks.get(eventName);
+    assert(callback);
+    await callback();
+  }
 
   // wait listContainersMock is called
-  await vi.waitFor(() => expect(getProviderInfosMock).toHaveBeenCalled());
+  await vi.waitFor(() => expect(window.getProviderInfos).toHaveBeenCalled());
 
   // now get list
   const providerListResult = get(providerInfos);
@@ -143,19 +130,19 @@ describe('containerConnectionCount', () => {
     containerConnections: [],
   } as unknown as ProviderInfo;
 
-  function initProviderInfoStore(providers: ProviderInfo[]): Promise<void> {
+  async function initProviderInfoStore(providers: ProviderInfo[]): Promise<void> {
     // fast delays (10 & 10ms)
     eventStore.setupWithDebounce(10, 10);
 
     // empty list
-    getProviderInfosMock.mockResolvedValue(providers);
+    vi.mocked(window.getProviderInfos).mockResolvedValue(providers);
 
     // mark as ready to receive updates
-    callbacks.get('system-ready')();
-    callbacks.get('provider-change')();
+    window.dispatchEvent(new CustomEvent('system-ready'));
+    await callbacks.get('provider-change')?.();
 
     return vi.waitFor(() => {
-      expect(getProviderInfosMock).toHaveBeenCalled();
+      expect(window.getProviderInfos).toHaveBeenCalled();
       expect(get(providerInfos)).toHaveLength(providers.length);
     });
   }

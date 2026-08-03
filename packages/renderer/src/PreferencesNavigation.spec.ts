@@ -123,7 +123,6 @@ function mockNavigationMeasurements(options: {
   });
 }
 
-// fake the window.events object
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();

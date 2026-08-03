@@ -30,7 +30,7 @@ This template provides a webview template on how to build a Podman Desktop exten
 
 More information can be found on our [official extension documentation](https://podman-desktop.io/docs/extensions) on how to further expand your extension.
 
-With this template, you will see a new button on the navbar that says "Hello World!" and provides a frontend.A
+With this template, you will see a new button on the navbar that says "Hello World!" and provides a frontend.
 
 ### Full template
 

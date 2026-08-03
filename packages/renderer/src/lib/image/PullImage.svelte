@@ -73,7 +73,7 @@ async function resolveShortname(): Promise<void> {
     shortnameImages = [];
     usePodmanFQN = false;
   }
-  // checks if there is no FQN that is from dokcer hub
+  // checks if there is no FQN that is from docker hub
   if (!shortnameImages.find(name => name.includes('docker.io'))) {
     podmanFQN = shortnameImages[0];
   } else {
@@ -235,7 +235,7 @@ async function gotoImageRun(): Promise<void> {
       parameters: {
         id: image.id,
         engineId: image.engineId,
-        base64RepoTag: image.base64RepoTag,
+        tag: image.tag ? `${image.name}:${image.tag}` : image.name,
       },
     });
   }

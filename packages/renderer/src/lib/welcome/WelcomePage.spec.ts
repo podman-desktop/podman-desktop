@@ -31,7 +31,6 @@ import { providerInfos } from '/@/stores/providers';
 
 import WelcomePage from './WelcomePage.svelte';
 
-// fake the window.events object
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
@@ -39,11 +38,10 @@ beforeEach(() => {
     getStartedMessage: 'Get started with Podman Desktop',
     welcomeMessage: 'Welcome to Podman Desktop',
   });
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(customProperties: object): Promise<void> {

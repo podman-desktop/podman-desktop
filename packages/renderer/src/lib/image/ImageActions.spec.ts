@@ -18,19 +18,22 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { NavigationPage } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ImageActions from '/@/lib/image/ImageActions.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
+import { handleNavigation } from '/@/navigation';
 
 import { ImageUtils } from './image-utils';
 
 const getContributedMenusMock = vi.fn();
 
+vi.mock(import('/@/navigation'));
 vi.mock(import('./image-utils'));
 vi.mock(import('/@/lib/dialogs/messagebox-utils'), () => ({
   withConfirmation: vi.fn(),
@@ -262,6 +265,55 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
     expect(withConfirmation).toHaveBeenNthCalledWith(1, expect.anything(), 'delete image image-name:1.0', {
       title: 'Delete Image?',
       variant: 'delete',
+    });
+  });
+});
+
+describe('run', () => {
+  const image: ImageInfoUI = {
+    id: 'sha256:foobar',
+    name: 'localhost/foo',
+    engineId: 'podman.Podman',
+    tag: 'latest',
+    status: 'UNUSED',
+  } as ImageInfoUI;
+
+  beforeEach(() => {
+    getContributedMenusMock.mockResolvedValue([]);
+  });
+
+  test('Expect Run image to be there', async () => {
+    const { getByTitle } = render(ImageActions, {
+      onPushImage: vi.fn(),
+      onRenameImage: vi.fn(),
+      image,
+    });
+
+    const button = getByTitle('Run Image');
+    expect(button).toBeDefined();
+  });
+
+  test('Expect Run image to navigate to appropriate page', async () => {
+    const { getByTitle } = render(ImageActions, {
+      onPushImage: vi.fn(),
+      onRenameImage: vi.fn(),
+      image,
+    });
+
+    const button = getByTitle('Run Image');
+    expect(button).toBeDefined();
+
+    await fireEvent.click(button);
+
+    await vi.waitFor(() => {
+      expect(handleNavigation).toHaveBeenCalledExactlyOnceWith({
+        page: NavigationPage.IMAGE_RUN,
+        parameters: {
+          engineId: image.engineId,
+          id: image.id,
+          tag: `${image.name}:${image.tag}`,
+        },
+      });
     });
   });
 });

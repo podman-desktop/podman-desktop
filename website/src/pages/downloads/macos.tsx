@@ -109,7 +109,9 @@ export function MacOSDownloads(): JSX.Element {
                 <div className="dark:bg-charcoal-800/50 bg-zinc-300/50 p-1 truncate">
                   <p className="text-xl dark:text-purple-200 text-purple-600">
                     <FontAwesomeIcon size="xs" icon={faTerminal} className="mx-2 mt-3" />
-                    brew install --cask podman-desktop
+                    <code className="font-mono text-sm [font-variant-ligatures:none]">
+                      brew install --cask podman-desktop
+                    </code>
                     <button title="Copy To Clipboard" className="mr-2 p-1">
                       {' '}
                       <FontAwesomeIcon

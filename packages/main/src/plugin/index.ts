@@ -83,6 +83,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -100,7 +101,6 @@ import type {
   OnboardingStatus,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -118,6 +118,7 @@ import type {
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
+  ThemeInfo,
   V1Route,
   ViewInfoUI,
   VolumeCreateOptions,
@@ -915,8 +916,8 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'container-provider-registry:listImages',
-      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
-        return containerProviderRegistry.podmanListImages(options);
+      async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.listImages(options);
       },
     );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
@@ -3188,8 +3189,8 @@ export class PluginSystem {
       return colorRegistry.listColors(themeId);
     });
 
-    this.ipcHandle('colorRegistry:isDarkTheme', async (_listener, themeId: string): Promise<boolean> => {
-      return colorRegistry.isDarkTheme(themeId);
+    this.ipcHandle('colorRegistry:getThemeInfo', async (_listener, themeId: string): Promise<ThemeInfo> => {
+      return colorRegistry.getThemeInfo(themeId);
     });
 
     this.ipcHandle('viewRegistry:listViewsContributions', async (_listener): Promise<ViewInfoUI[]> => {
@@ -3265,6 +3266,13 @@ export class PluginSystem {
       'navigation:navigateToRoute',
       async (_listener, routeId: string, ...args: unknown[]): Promise<void> => {
         return navigationManager.navigateToRoute(routeId, ...args);
+      },
+    );
+
+    this.ipcHandle(
+      'navigation:navigateToHistoryEntry',
+      async (_listener, extensionId: string, entryId: string): Promise<void> => {
+        navigationManager.navigateToHistoryEntry(extensionId, entryId);
       },
     );
 

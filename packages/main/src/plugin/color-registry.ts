@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
-import type { ColorDefinition, ColorInfo, RawThemeContribution } from '@podman-desktop/core-api';
+import type { ColorDefinition, ColorInfo, RawThemeContribution, ThemeInfo } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 
@@ -241,25 +241,42 @@ export class ColorRegistry {
     return new ColorBuilder(colorId);
   }
 
-  // check if the given theme is dark
-  // if light or dark it's easy
-  // else we check the parent theme
   isDarkTheme(themeId: string): boolean {
     if (themeId === 'light') {
       return false;
     } else if (themeId === 'dark') {
       return true;
     } else {
-      // get the parent theme
       const parent = this.#parentThemes.get(themeId);
       if (parent) {
         return this.isDarkTheme(parent);
       } else {
         console.error(`Theme ${themeId} does not exist.`);
-        // return dark by default
         return true;
       }
     }
+  }
+
+  isHighContrastTheme(themeId: string): boolean {
+    if (themeId === 'hc-light' || themeId === 'hc-dark') {
+      return true;
+    } else if (themeId === 'light' || themeId === 'dark') {
+      return false;
+    } else {
+      const parent = this.#parentThemes.get(themeId);
+      if (parent) {
+        return this.isHighContrastTheme(parent);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  getThemeInfo(themeId: string): ThemeInfo {
+    return {
+      isDark: this.isDarkTheme(themeId),
+      isHighContrast: this.isHighContrastTheme(themeId),
+    };
   }
 
   /**
@@ -1047,14 +1064,14 @@ export class ColorRegistry {
     this.registerColor(`${sNav}on-bg`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: accent1[600],
+      hcDark: accent1[400],
       hcLight: accent1[700],
     });
 
     this.registerColor(`${sNav}on-focused-bg`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: accent1[600],
+      hcDark: accent1[400],
       hcLight: accent1[700],
     });
 
@@ -2099,6 +2116,13 @@ export class ColorRegistry {
     this.registerColor(`${onboarding}inactive-dot-border`, {
       dark: gray[700],
       light: gray[700],
+    });
+
+    this.registerColor(`${onboarding}step-completed-text`, {
+      light: white,
+      dark: black,
+      hcLight: white,
+      hcDark: black,
     });
   }
 

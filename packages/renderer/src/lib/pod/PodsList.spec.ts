@@ -235,7 +235,6 @@ const ocppod: PodInfo = {
   kind: 'podman',
 };
 
-// fake the window.events object
 beforeAll(() => {
   vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
   vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
@@ -250,11 +249,10 @@ beforeAll(() => {
   (window as any).getConfigurationValue = vi.fn();
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
-  (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   (window as any).getContributedMenus = getContributedMenusMock;
   getContributedMenusMock.mockResolvedValue([]);
@@ -343,7 +341,7 @@ test('Expect the route to a pod details page is correctly encoded with an engine
   await vi.waitUntil(
     () => {
       const infos = get(podsInfos);
-      return infos.length === 1 && infos[0].Name === ocppod.Name;
+      return infos.length === 1 && infos[0].name === ocppod.Name;
     },
     { timeout: 5000 },
   );
@@ -471,8 +469,8 @@ test('Expect All tab to show all pods running and stopped (not running)', async 
 
   expect(get(filtered)).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ Status: 'Running' }),
-      expect.objectContaining({ Status: 'Stopped' }),
+      expect.objectContaining({ status: 'RUNNING' }),
+      expect.objectContaining({ status: 'STOPPED' }),
     ]),
   );
 });
@@ -496,7 +494,7 @@ test('Expect Running tab to show running pods only', async () => {
 
   await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
 
-  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ Status: 'Running' })]));
+  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ status: 'RUNNING' })]));
 });
 
 test('Expect Stopped tab to show stopped (not running) pods only', async () => {
@@ -518,7 +516,7 @@ test('Expect Stopped tab to show stopped (not running) pods only', async () => {
 
   await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
 
-  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ Status: 'Stopped' })]));
+  expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ status: 'STOPPED' })]));
 });
 
 test('Expect tab filtering to not duplicate filter condition in the search bar', async () => {

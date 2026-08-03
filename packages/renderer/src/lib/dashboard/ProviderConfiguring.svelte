@@ -90,7 +90,7 @@ onDestroy(() => {
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     <div class="flex flex-col w-full lg:w-2/3 justify-center items-center">
       {#if initializationContext.mode === InitializeAndStartMode}
         <Steps steps={InitializationSteps} />
@@ -110,10 +110,10 @@ onDestroy(() => {
     </div>
 
     <PreflightChecks preflightChecks={preflightChecks} />
-  </svelte:fragment>
-  <svelte:fragment slot="update">
+  {/snippet}
+  {#snippet update()}
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
       <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </ProviderCard>

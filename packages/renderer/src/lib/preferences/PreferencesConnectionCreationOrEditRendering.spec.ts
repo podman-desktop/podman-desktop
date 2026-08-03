@@ -299,7 +299,7 @@ describe.each([
       providerId: providerInfo.id,
       name: providerInfo.name,
     });
-    // expect it is sucessful
+    // expect it is successful
     await vi.waitFor(() => expect(cancelTokenMock).toBeCalled(), { timeout: 3000 });
   });
 

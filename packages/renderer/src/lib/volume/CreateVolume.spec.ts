@@ -32,7 +32,6 @@ import CreateVolume from './CreateVolume.svelte';
 
 const createVolumeMock = vi.fn();
 
-// fake the window.events object
 beforeAll(() => {
   (window as any).createVolume = createVolumeMock;
 });

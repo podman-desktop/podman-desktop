@@ -19,7 +19,7 @@
 import type { RequestOptions } from 'node:http';
 
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@podman-desktop/api';
-import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, PodmanListImagesOptions } from '@podman-desktop/core-api';
+import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@podman-desktop/core-api';
 import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';
 import type { DialOptions } from 'docker-modem';
@@ -251,7 +251,7 @@ export interface LibPod {
   pruneAllImages(dangling: boolean): Promise<void>;
   podmanInfo(): Promise<Info>;
   getImages(options: GetImagesOptions): Promise<NodeJS.ReadableStream>;
-  podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]>;
+  podmanListImages(options?: ListImagesOptions): Promise<ImageInfo[]>;
   podmanCreateManifest(manifestOptions: ManifestCreateOptions): Promise<{ engineId: string; Id: string }>;
   podmanInspectManifest(manifestName: string): Promise<ManifestInspectInfo>;
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
@@ -344,7 +344,7 @@ export class LibpodDockerode {
     };
 
     // add listImages
-    prototypeOfDockerode.podmanListImages = function (options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+    prototypeOfDockerode.podmanListImages = function (options?: ListImagesOptions): Promise<ImageInfo[]> {
       const optsf = {
         path: '/v4.2.0/libpod/images/json',
         method: 'GET',
@@ -842,7 +842,7 @@ export class LibpodDockerode {
         },
         headers: headers,
         // We require all=true to always be present in the URL in order for the manifest to be pushed correctly.
-        // If you do not provide it, it will return a "uknown manifest blob" error as it's trying to push a manifest blob with no images.
+        // If you do not provide it, it will return a "unknown manifest blob" error as it's trying to push a manifest blob with no images.
         options: {
           all: 'true',
         },

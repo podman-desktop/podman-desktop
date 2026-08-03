@@ -3,49 +3,64 @@ import { faRocket } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+  onPreflightChecks: (status: CheckStatus[]) => void;
+}
 
-export let onPreflightChecks: (status: CheckStatus[]) => void;
+let { provider, onPreflightChecks }: Props = $props();
 
-let installInProgress = false;
+let installInProgress = $state(false);
 
-let checksStatus: CheckStatus[] = [];
+let checksStatus = $state<CheckStatus[]>([]);
 
-let preflightChecksFailed = false;
+let preflightChecksFailed = $state(false);
 
-async function performInstallation(provider: ProviderInfo): Promise<void> {
+let hasWarnings = $state(false);
+
+async function performInstallation(): Promise<void> {
   installInProgress = true;
-  checksStatus = [];
-  let checkSuccess = false;
-  let currentCheck: CheckStatus;
   try {
-    checkSuccess = await window.runInstallPreflightChecks(provider.internalId, {
-      endCheck: status => {
-        if (currentCheck) {
-          currentCheck = status;
-        } else {
+    if (!hasWarnings) {
+      checksStatus = [];
+      let checkSuccess = false;
+      let currentCheck: CheckStatus;
+      try {
+        checkSuccess = await window.runInstallPreflightChecks(provider.internalId, {
+          endCheck: status => {
+            if (currentCheck) {
+              currentCheck = status;
+            } else {
+              return;
+            }
+            checksStatus.push(currentCheck);
+            onPreflightChecks(checksStatus);
+          },
+          startCheck: status => {
+            currentCheck = status;
+            onPreflightChecks([...checksStatus, currentCheck]);
+          },
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      if (checkSuccess) {
+        if (checksStatus.some(c => c.successful === false && c.severity === 'warning')) {
+          hasWarnings = true;
           return;
         }
-        checksStatus.push(currentCheck);
-        onPreflightChecks(checksStatus);
-      },
-      startCheck: status => {
-        currentCheck = status;
-        onPreflightChecks([...checksStatus, currentCheck]);
-      },
-    });
-  } catch (err) {
-    console.error(err);
-  }
-  if (checkSuccess) {
-    await window.installProvider(provider.internalId);
-    // reset checks
-    onPreflightChecks([]);
-  } else {
-    preflightChecksFailed = true;
-  }
+      } else {
+        preflightChecksFailed = true;
+        return;
+      }
+    }
 
-  installInProgress = false;
+    await window.installProvider(provider.internalId);
+    onPreflightChecks([]);
+    hasWarnings = false;
+  } finally {
+    installInProgress = false;
+  }
 }
 </script>
 
@@ -54,7 +69,7 @@ async function performInstallation(provider: ProviderInfo): Promise<void> {
     inProgress={installInProgress}
     disabled={preflightChecksFailed}
     icon={faRocket}
-    on:click={(): Promise<void> => performInstallation(provider)}>
-    Install
+    onclick={performInstallation}>
+    {hasWarnings ? 'Proceed with installation' : 'Install'}
   </Button>
 {/if}

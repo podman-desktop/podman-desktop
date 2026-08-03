@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo } from '@podman-desktop/api';
-import type { ImageInspectInfo } from '@podman-desktop/core-api';
+import type { ImageInspectInfo, SecretInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -29,22 +29,23 @@ import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi
 import RunImage from '/@/lib/image/RunImage.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { imagesInfos } from '/@/stores/images';
+import { secretsInfo } from '/@/stores/secrets';
 
 const originalConsoleDebug = console.debug;
 
 const MY_IMAGE = {
   engineId: 'podman',
+  engineType: 'podman',
   Id: 'sha256:5555',
   Size: 0,
 } as unknown as ImageInfo;
 
 // fake the window.events object
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
   vi.mocked(window.listNetworks).mockResolvedValue([]);
   vi.mocked(window.listContainers).mockResolvedValue([]);
   vi.mocked(window.createAndStartContainer).mockResolvedValue({ id: '1234' });
@@ -55,6 +56,8 @@ beforeAll(() => {
 beforeEach(() => {
   console.error = vi.fn();
   vi.clearAllMocks();
+  secretsInfo.set([]);
+  router.goto('/basic');
 });
 
 afterEach(() => {
@@ -319,7 +322,6 @@ describe('RunImage', () => {
 
   test('Expect to see an error if the container/host ranges have different size', async () => {
     (window.isFreePort as Mock).mockResolvedValue(true);
-    router.goto('/basic');
 
     await createRunImage(undefined, ['command1', 'command2']);
 
@@ -515,6 +517,121 @@ describe('RunImage', () => {
     const button = screen.getByRole('button', { name: 'Start Container' });
     await tick();
     expect((button as HTMLButtonElement).disabled).toBeTruthy();
+  });
+
+  test('Expect "Add secret mapping" button to be disabled when no secrets available', async () => {
+    secretsInfo.set([]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    expect(addButton).toBeDisabled();
+  });
+
+  test('Expect "Add secret mapping" button to be enabled when secrets are available', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'my-secret' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    expect(addButton).toBeEnabled();
+  });
+
+  test('Expect mount secret mapping to be sent to API as Secrets', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'my-secret' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    await fireEvent.click(addButton);
+
+    const targetInputs = screen.getAllByPlaceholderText('Path inside the container');
+    const targetInput = targetInputs[targetInputs.length - 1]!;
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, '/run/secrets/my-secret');
+
+    const button = screen.getByRole('button', { name: 'Start Container' });
+    await fireEvent.click(button);
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        Secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
+        SecretEnv: {},
+      }),
+    );
+  });
+
+  test('Expect env secret mapping to be sent to API as SecretEnv', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'foo-data' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    await fireEvent.click(addButton);
+
+    // change type to env via keyboard navigation
+    const typeDropdown = screen.getByRole('button', { name: 'Mount' });
+    typeDropdown.focus();
+    await userEvent.keyboard('[ArrowDown]');
+    await userEvent.keyboard('[ArrowDown]');
+    await userEvent.keyboard('[Enter]');
+
+    const targetInput = screen.getByPlaceholderText('Name of the environment variable');
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, 'FOO_SECRET');
+
+    const button = screen.getByRole('button', { name: 'Start Container' });
+    await fireEvent.click(button);
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        Secrets: [],
+        SecretEnv: { FOO_SECRET: 'foo-data' },
+      }),
+    );
+  });
+
+  test('Expect secret mapping to be removed when clicking remove button', async () => {
+    secretsInfo.set([
+      { engineId: 'engineid', engineName: 'podman', engineType: 'podman', Id: 's1', Name: 'my-secret' } as SecretInfo,
+    ]);
+    await createRunImage('', []);
+
+    const link = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link);
+
+    const addButton = screen.getByRole('button', { name: 'Add secret mapping' });
+    await fireEvent.click(addButton);
+
+    const removeButton = screen.getByRole('button', { name: 'Remove secret' });
+    await fireEvent.click(removeButton);
+
+    const button = screen.getByRole('button', { name: 'Start Container' });
+    await fireEvent.click(button);
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        Secrets: [],
+        SecretEnv: {},
+      }),
+    );
   });
 
   test('Expect able to play with devices', async () => {

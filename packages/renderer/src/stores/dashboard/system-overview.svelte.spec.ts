@@ -43,17 +43,14 @@ describe('getSystemOverviewStatus', () => {
     expect(getSystemOverviewStatus('configured' as ProviderConnectionStatus)).toEqual(SYSTEM_OVERVIEW_STATUS.stable);
   });
 
-  test.each([
-    'started',
-    'stopped',
-    'starting',
-    'stopping',
-    'unknown',
-  ])('should return critical when error is present regardless of %s status', status => {
-    expect(getSystemOverviewStatus(status as ProviderConnectionStatus, 'Connection refused')).toEqual(
-      SYSTEM_OVERVIEW_STATUS.critical,
-    );
-  });
+  test.each(['started', 'stopped', 'starting', 'stopping', 'unknown'])(
+    'should return critical when error is present regardless of %s status',
+    status => {
+      expect(getSystemOverviewStatus(status as ProviderConnectionStatus, 'Connection refused')).toEqual(
+        SYSTEM_OVERVIEW_STATUS.critical,
+      );
+    },
+  );
 });
 
 describe('getConnectionDisplayName', () => {

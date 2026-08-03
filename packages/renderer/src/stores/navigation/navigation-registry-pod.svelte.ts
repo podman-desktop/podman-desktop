@@ -32,9 +32,9 @@ export function createNavigationPodEntry(): NavigationRegistryEntry {
     destinations = [
       ...pods.map(pod => ({
         page: NavigationPage.PODMAN_POD_SUMMARY as const,
-        parameters: { name: pod.Name, engineId: pod.engineId },
+        parameters: { name: pod.name, engineId: pod.engineId },
         icon: { iconComponent: PodIcon },
-        name: `Pod: ${pod.Name}`,
+        name: `Pod: ${pod.name}`,
       })),
       {
         page: NavigationPage.PODMAN_PODS as const,

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 - 2025 Red Hat, Inc.
+ * Copyright (C) 2023 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@
 import type * as proc from 'node:child_process';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { arch } from 'node:os';
+import path from 'node:path';
 
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
@@ -33,6 +35,7 @@ import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode'
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
+  PODMAN_EDIT_IMPORT_NATIVE_CA,
   PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
@@ -56,6 +59,7 @@ import { PodmanBinary } from '/@/utils/podman-binary';
 
 import * as extension from './extension';
 import {
+  getImportNativeCAFromConfig,
   initCheckAndRegisterUpdate,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
@@ -64,6 +68,7 @@ import {
 import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
+import type { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import { RosettaProvisioner } from './utils/rosetta';
@@ -258,6 +263,7 @@ beforeEach(async () => {
   extension.initTelemetryLogger();
   extension.initExtensionNotification();
   extension.resetShouldNotifySetup();
+  extension.initPodmanRemoteConnections(undefined as unknown as PodmanRemoteConnections);
 
   // mock PodmanInstall class methods
   vi.mocked(PODMAN_INSTALL_MOCK.checkForUpdate).mockResolvedValue({
@@ -298,6 +304,13 @@ const originalConsoleTrace = console.trace;
 const consoleTraceMock = vi.fn();
 
 vi.mock(import('node:fs'));
+vi.mock(import('node:fs/promises'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    readFile: vi.fn(),
+  };
+});
 vi.mock(import('node:child_process'), async importOriginal => {
   const childProcessActual = await importOriginal();
   return {
@@ -503,7 +516,6 @@ describe.each([
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct values with user mode networking %s', async ({ version, image }) => {
-    vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
       version,
     });
@@ -515,6 +527,7 @@ describe.each([
         'podman.factory.machine.memory': '1048000000',
         'podman.factory.machine.diskSize': '250000000000',
         'podman.factory.machine.user-mode-networking': true,
+        'podman.factory.machine.provider': provider,
       },
       podmanConfiguration,
     );
@@ -544,40 +557,39 @@ describe.each([
     { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
-  ])('verify create command called with now flag if start machine after creation is enabled %s', async ({
-    version,
-    image,
-  }) => {
-    vi.mocked(extensionApi.env).isMac = true;
+  ])(
+    'verify create command called with now flag if start machine after creation is enabled %s',
+    async ({ version, image }) => {
+      vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+        version,
+      });
 
-    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
-      version,
-    });
-
-    await extension.createMachine(
-      {
-        'podman.factory.machine.cpus': '2',
-        'podman.factory.machine.image': 'path',
-        'podman.factory.machine.memory': '1048000000',
-        'podman.factory.machine.diskSize': '250000000000',
-        'podman.factory.machine.now': true,
-      },
-      podmanConfiguration,
-    );
-
-    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
-      podmanCli.getPodmanCli(),
-      expect.arrayContaining([`--${image}`, 'path']),
-      {
-        logger: undefined,
-        env: {
-          CONTAINERS_MACHINE_PROVIDER: provider,
+      await extension.createMachine(
+        {
+          'podman.factory.machine.cpus': '2',
+          'podman.factory.machine.image': 'path',
+          'podman.factory.machine.memory': '1048000000',
+          'podman.factory.machine.diskSize': '250000000000',
+          'podman.factory.machine.now': true,
+          'podman.factory.machine.provider': provider,
         },
-        token: undefined,
-      },
-    );
-    expect(console.error).not.toBeCalled();
-  });
+        podmanConfiguration,
+      );
+
+      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+        podmanCli.getPodmanCli(),
+        expect.arrayContaining([`--${image}`, 'path']),
+        {
+          logger: undefined,
+          env: {
+            CONTAINERS_MACHINE_PROVIDER: provider,
+          },
+          token: undefined,
+        },
+      );
+      expect(console.error).not.toBeCalled();
+    },
+  );
 
   test('verify error contains name, message and stderr if creation fails', async () => {
     vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
@@ -714,6 +726,140 @@ describe.each([
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
       expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+    );
+  });
+
+  test('createMachine passes --import-native-ca when param is true and Podman >= 6', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.import-native-ca': true,
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--import-native-ca']),
+      expect.any(Object),
+    );
+  });
+
+  test('createMachine does not pass --import-native-ca when param is true but Podman < 6', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.8.0' });
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.import-native-ca': true,
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).not.toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--import-native-ca']),
+      expect.any(Object),
+    );
+  });
+
+  test('createMachine does not pass --import-native-ca when param is false and Podman >= 6', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.import-native-ca': false,
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).not.toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--import-native-ca']),
+      expect.any(Object),
+    );
+  });
+});
+
+describe('createMachine on windows without an explicit provider', () => {
+  let originalProvider: string | undefined;
+
+  beforeEach(() => {
+    originalProvider = process.env.CONTAINERS_MACHINE_PROVIDER;
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+  });
+
+  afterEach(() => {
+    process.env.CONTAINERS_MACHINE_PROVIDER = originalProvider;
+  });
+
+  test('defaults to wsl when CONTAINERS_MACHINE_PROVIDER is not set', async () => {
+    delete process.env.CONTAINERS_MACHINE_PROVIDER;
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--image', 'path']),
+      {
+        logger: undefined,
+        token: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: 'wsl',
+        },
+      },
+    );
+  });
+
+  test('uses CONTAINERS_MACHINE_PROVIDER when set', async () => {
+    process.env.CONTAINERS_MACHINE_PROVIDER = 'hyperv';
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--image', 'path']),
+      {
+        logger: undefined,
+        token: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: 'hyperv',
+        },
+      },
     );
   });
 });
@@ -1032,6 +1178,32 @@ describe('startMachine rosetta enable-file provisioning', () => {
 
     expect(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).not.toHaveBeenCalled();
     expect(provider.updateStatus).toHaveBeenCalledWith('started');
+  });
+});
+
+describe('on Linux, startMachine and stopMachine should not update provider status', () => {
+  beforeEach(() => {
+    vi.spyOn(provider, 'updateStatus').mockImplementation(() => {});
+    vi.mocked(extensionApi.env).isLinux = true;
+    vi.mocked(extensionApi.env).isMac = false;
+  });
+
+  test('startMachine does not call provider.updateStatus on Linux', async () => {
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.7.0' } as InstalledPodman);
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).mockResolvedValue(false);
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('stopMachine does not call provider.updateStatus on Linux', async () => {
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+
+    await extension.stopMachine(provider, machineInfo);
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
   });
 });
 
@@ -2068,6 +2240,82 @@ test('provider is registered with limited edit capabilities on (HyperV) Windows'
     expect.arrayContaining(['machine', 'set', machineInfo.name, '--rootful=true']),
     expect.any(Object),
   );
+});
+
+describe('edit lifecycle importNativeCA', () => {
+  function mockExecForMachineEdit() {
+    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+    spyExecPromise.mockImplementation(
+      (_command, args) =>
+        new Promise<extensionApi.RunResult>((resolve, reject) => {
+          if (args?.[0] === 'machine' && args?.[1] === 'list') {
+            resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+          } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+            resolve({
+              stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+            } as extensionApi.RunResult);
+          } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+            resolve({ stdout: '' } as extensionApi.RunResult);
+          } else {
+            reject(new Error('unexpected command'));
+          }
+        }),
+    );
+    return spyExecPromise;
+  }
+
+  function mockRegisterConnection() {
+    let registeredConnection: ContainerProviderConnection | undefined;
+    vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+      registeredConnection = connection;
+      return Disposable.from({ dispose: () => {} });
+    });
+    return () => registeredConnection;
+  }
+
+  test.each([
+    { importNativeCA: true, expectedArg: '--import-native-ca=true' },
+    { importNativeCA: false, expectedArg: '--import-native-ca=false' },
+  ])('passes --import-native-ca=$importNativeCA when Podman >= 6', async ({ importNativeCA, expectedArg }) => {
+    vi.mocked(extensionApi.env).isMac = true;
+    extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' } as InstalledPodman);
+    const spyExecPromise = mockExecForMachineEdit();
+    const getConnection = mockRegisterConnection();
+
+    await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+    expect(getConnection()?.lifecycle?.edit).toBeDefined();
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_EDIT_IMPORT_NATIVE_CA, true);
+
+    await getConnection()?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+      'podman.machine.importNativeCA': importNativeCA,
+    });
+    expect(spyExecPromise).toBeCalledWith(
+      expect.any(String),
+      expect.arrayContaining(['machine', 'set', machineInfo.name, expectedArg]),
+      expect.any(Object),
+    );
+  });
+
+  test('does not pass --import-native-ca when Podman < 6', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.3.0' } as InstalledPodman);
+    const spyExecPromise = mockExecForMachineEdit();
+    const getConnection = mockRegisterConnection();
+
+    await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_EDIT_IMPORT_NATIVE_CA, false);
+
+    await getConnection()?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+      'podman.machine.importNativeCA': true,
+    });
+    expect(spyExecPromise).not.toBeCalledWith(
+      expect.any(String),
+      expect.arrayContaining(['--import-native-ca=true']),
+      expect.any(Object),
+    );
+  });
 });
 
 test.each([
@@ -3602,6 +3850,134 @@ test('getJSONMachineList should get machines from hyperv and wsl if both are ena
   expect(execPodmanSpy).toHaveBeenNthCalledWith(2, ['machine', 'list', '--format', 'json'], 'hyperv');
 });
 
+describe('isMachineListAllProvidersSupported', () => {
+  test.each([
+    { version: '6.0.0', expected: true },
+    { version: '6.1.0', expected: true },
+    { version: '7.0.0', expected: true },
+    { version: '5.9.9', expected: false },
+    { version: '5.0.0', expected: false },
+    { version: '4.0.0', expected: false },
+  ])('returns $expected for podman $version', ({ version, expected }) => {
+    expect(extension.isMachineListAllProvidersSupported(version)).toBe(expected);
+  });
+});
+
+test('getJSONMachineList should call podman machine list once without provider for podman >= 6.0 on macOS', async () => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+
+  const fakeJSON: MachineJSON[] = [
+    {
+      Name: 'podman-machine-default',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: true,
+      Starting: false,
+      Default: true,
+      VMType: VMTYPE.APPLEHV,
+      Port: 123,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+    {
+      Name: 'podman-machine-libkrun',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: false,
+      Starting: false,
+      Default: false,
+      VMType: VMTYPE.LIBKRUN,
+      Port: 456,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+  ];
+  const execPodmanSpy = vi.spyOn(util, 'execPodman').mockResolvedValue({
+    stdout: JSON.stringify(fakeJSON),
+    stderr: '',
+    command: '',
+  });
+
+  const result = await extension.getJSONMachineList();
+
+  expect(execPodmanSpy).toHaveBeenCalledOnce();
+  expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'list', '--format', 'json'], undefined);
+  expect(result.list).toHaveLength(2);
+  expect(result.list[0].Name).toBe('podman-machine-default');
+  expect(result.list[1].Name).toBe('podman-machine-libkrun');
+});
+
+test('getJSONMachineList should call podman machine list once without provider for podman >= 6.0 on Windows', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.1.0' });
+  vi.mocked(WIN_PLATFORM_MOCK.isWSLEnabled).mockResolvedValue(true);
+  vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(true);
+
+  const fakeJSON: MachineJSON[] = [
+    {
+      Name: 'podman-machine-wsl',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: true,
+      Starting: false,
+      Default: true,
+      VMType: VMTYPE.WSL,
+      Port: 123,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+    {
+      Name: 'podman-machine-hyperv',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: false,
+      Starting: false,
+      Default: false,
+      VMType: VMTYPE.HYPERV,
+      Port: 456,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+  ];
+  const execPodmanSpy = vi.spyOn(util, 'execPodman').mockResolvedValue({
+    stdout: JSON.stringify(fakeJSON),
+    stderr: '',
+    command: '',
+  });
+
+  const result = await extension.getJSONMachineList();
+
+  expect(execPodmanSpy).toHaveBeenCalledOnce();
+  expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'list', '--format', 'json'], undefined);
+  expect(result.list).toHaveLength(2);
+});
+
+test('getJSONMachineList should update WSL/HyperV context even for podman >= 6.0 on Windows', async () => {
+  // Reset wslAndHypervEnabledContextValue to false so the update triggers setValue
+  extension.updateWSLHyperVEnabledContextValue(false);
+  vi.clearAllMocks();
+
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+  vi.mocked(WIN_PLATFORM_MOCK.isWSLEnabled).mockResolvedValue(true);
+  vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(true);
+
+  vi.spyOn(util, 'execPodman').mockResolvedValue({
+    stdout: JSON.stringify([]),
+    stderr: '',
+    command: '',
+  });
+
+  await extension.getJSONMachineList();
+
+  expect(extensionApi.context.setValue).toBeCalledWith(WSL_HYPERV_ENABLED_KEY, true);
+});
+
 describe('updateWSLHyperVEnabledValue', () => {
   beforeEach(() => {
     extension.updateWSLHyperVEnabledContextValue(true);
@@ -3901,6 +4277,94 @@ describe('Check notify podman setup', () => {
     expect(extensionApi.window.showNotification).toHaveBeenCalledTimes(2);
     expect(extensionApi.window.showNotification).toHaveBeenLastCalledWith(notifySetupPodmanExpectedContent);
   });
+
+  test('do not show setup podman notification if remote connections exist and machine list is empty', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(true),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(extensionApi.window.showNotification).not.toBeCalled();
+  });
+
+  test('show setup podman notification if no remote connections and machine list is empty', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(false),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(extensionApi.window.showNotification).toBeCalledWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('set provider status to ready when remote connections exist but no local machines', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(true),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(provider.updateStatus).toBeCalledWith('ready');
+  });
+
+  test('do not show setup notification on error if remote connections exist', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.spyOn(extensionApi.process, 'exec').mockRejectedValue({
+      name: 'name',
+      message: 'description',
+      stderr: 'error',
+    });
+
+    const mockRemoteConnections = {
+      hasConnections: vi.fn().mockReturnValue(true),
+    } as unknown as PodmanRemoteConnections;
+    extension.initPodmanRemoteConnections(mockRemoteConnections);
+
+    await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('description');
+    expect(extensionApi.window.showNotification).not.toBeCalled();
+    expect(extensionApi.context.setValue).toBeCalledWith('podmanRemoteConnectionExists', true, 'onboarding');
+  });
 });
 
 describe('monitorProvider', () => {
@@ -3952,6 +4416,62 @@ describe('activate sets PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY', () => {
     } as unknown as UpdateCheck);
     await extension.activate(getContextMock());
     expect(extensionApi.context.setValue).toHaveBeenCalledWith(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, supported);
+  });
+});
+
+describe('getImportNativeCAFromConfig', () => {
+  test('should return false when machineInspect is undefined', async () => {
+    const result = await getImportNativeCAFromConfig('machine1', undefined);
+    expect(result).toBe(false);
+  });
+
+  test('should return false when ConfigDir is missing', async () => {
+    const result = await getImportNativeCAFromConfig('machine1', { Rootful: true });
+    expect(result).toBe(false);
+  });
+
+  test('should return false when ConfigDir.Path is missing', async () => {
+    const result = await getImportNativeCAFromConfig('machine1', { ConfigDir: {} });
+    expect(result).toBe(false);
+  });
+
+  test('should return true when config file has ImportNativeCA set to true', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ ImportNativeCA: true }));
+    const configDir = path.join('some', 'config', 'dir');
+    const result = await getImportNativeCAFromConfig('machine1', { ConfigDir: { Path: configDir } });
+    expect(result).toBe(true);
+    expect(readFile).toHaveBeenCalledWith(path.join(configDir, 'machine1.json'), 'utf-8');
+  });
+
+  test('should return false when config file has ImportNativeCA set to false', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ ImportNativeCA: false }));
+    const result = await getImportNativeCAFromConfig('machine1', {
+      ConfigDir: { Path: path.join('some', 'config', 'dir') },
+    });
+    expect(result).toBe(false);
+  });
+
+  test('should return false when config file does not have ImportNativeCA field', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ Rootful: true }));
+    const result = await getImportNativeCAFromConfig('machine1', {
+      ConfigDir: { Path: path.join('some', 'config', 'dir') },
+    });
+    expect(result).toBe(false);
+  });
+
+  test('should return false when reading config file throws an error', async () => {
+    vi.mocked(readFile).mockRejectedValueOnce(new Error('ENOENT: no such file'));
+    const result = await getImportNativeCAFromConfig('machine1', {
+      ConfigDir: { Path: path.join('nonexistent', 'dir') },
+    });
+    expect(result).toBe(false);
+  });
+
+  test('should construct correct file path from configDir and machineName', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ ImportNativeCA: true }));
+    const configDir = path.join('home', 'user', '.config', 'containers', 'podman', 'machine', 'applehv');
+    await getImportNativeCAFromConfig('my-vm', { ConfigDir: { Path: configDir } });
+    expect(readFile).toHaveBeenCalledWith(path.join(configDir, 'my-vm.json'), 'utf-8');
   });
 });
 

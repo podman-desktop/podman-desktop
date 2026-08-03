@@ -117,4 +117,9 @@ export interface ContainerCreateOptions {
   volumes?: Array<ContainerCreateNamedVolume>;
   selinux_opts?: string[];
   devices?: PodmanDevice[];
+  secrets?: Array<{
+    Source: string;
+    Target: string;
+  }>;
+  secret_env?: Record<string, string>;
 }

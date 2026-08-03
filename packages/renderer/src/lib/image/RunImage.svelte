@@ -8,6 +8,7 @@ import type {
   HostConfigPortBinding,
   ImageInspectInfo,
   NetworkInspectInfo,
+  SecretInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } from '@podman-desktop/ui-svelte';
@@ -28,6 +29,7 @@ import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
+import { secretsInfo } from '/@/stores/secrets';
 
 interface Props {
   imageID: string;
@@ -54,6 +56,7 @@ let options: RunOptions = $state({
     environmentFiles: [''],
     hostContainerPortMappings: [],
     containerPortMapping: [],
+    secretMappings: [],
   },
   networking: {
     hostname: undefined,
@@ -83,6 +86,8 @@ let options: RunOptions = $state({
 });
 
 let imageInspectInfo: ImageInspectInfo;
+
+let secrets: Array<SecretInfo> = $derived($secretsInfo.filter(secret => secret.engineId === imageInspectInfo.engineId));
 
 let containerNameError: string | undefined = $derived.by(() => {
   // ok, now check if we already have a matching container: same name and same engine ID
@@ -393,6 +398,15 @@ async function startContainer(): Promise<void> {
     ExposedPorts,
     Tty,
     OpenStdin,
+    Secrets: options.basic.secretMappings
+      .filter(({ type }) => type === 'mount')
+      .map(({ name, target }) => ({
+        Source: name,
+        Target: target,
+      })),
+    SecretEnv: Object.fromEntries(
+      options.basic.secretMappings.filter(({ type }) => type === 'env').map(({ name, target }) => [target, name]),
+    ),
   };
   if (options.basic.command.trim().length > 0) {
     createOptions.Cmd = splitSpacesHandlingDoubleQuotes(options.basic.command);
@@ -614,6 +628,22 @@ function onPortInput(event: Event, portInfo: PortInfo): void {
   }, 500);
 }
 
+function addSecretMapping(): void {
+  if (secrets.length === 0) {
+    return;
+  }
+
+  options.basic.secretMappings.push({
+    name: secrets[0].Name,
+    target: '',
+    type: 'mount',
+  });
+}
+
+function removeSecretMapping(index: number): void {
+  options.basic.secretMappings.splice(index, 1);
+}
+
 const volumeDialogOptions: OpenDialogOptions = {
   title: 'Select a directory to mount in the container',
   selectors: ['openDirectory'],
@@ -797,6 +827,51 @@ const envDialogOptions: OpenDialogOptions = {
                     icon={faPlusCircle} />
                 </div>
               {/each}
+
+              {#if imageInspectInfo?.engineType === 'podman'}
+                <label
+                  for="secrets"
+                  class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                >Secrets:</label>
+                {#each options.basic.secretMappings as _, index (index)}
+                  <div class="flex gap-x-2 flex-row justify-center items-center w-full py-1">
+                    <Dropdown class="w-full" name="type" bind:value={options.basic.secretMappings[index].name}>
+                      {#each secrets as secret (secret.Id)}
+                        <option value={secret.Name}>{secret.Name}</option>
+                      {/each}
+                    </Dropdown>
+
+                    <Dropdown class="w-fit" name="type" bind:value={options.basic.secretMappings[index].type}>
+                      <option value="mount">Mount</option>
+                      <option value="env">Env</option>
+                    </Dropdown>
+
+                    <div class="w-full">
+                      <Input
+                        bind:value={options.basic.secretMappings[index].target}
+                        placeholder={options.basic.secretMappings[index].type === 'mount' ? 'Path inside the container' : 'Name of the environment variable'} />
+                    </div>
+
+                    <div class="w-fit">
+                      <Button
+                        type="link"
+                        aria-label="Remove secret"
+                        onclick={removeSecretMapping.bind(undefined, index)}
+                        icon={faMinusCircle} />
+                    </div>
+                  </div>
+                {/each}
+
+                <Button
+                  onclick={addSecretMapping}
+                  icon={faPlusCircle}
+                  disabled={secrets.length === 0}
+                  type="link"
+                  title={secrets.length === 0 ? 'No secrets available' : ''}
+                  aria-label="Add secret mapping">
+                  Add secret mapping
+                </Button>
+              {/if}
             </div>
           </Route>
           <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">

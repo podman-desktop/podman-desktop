@@ -16,39 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { ColorInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
 import { colorsEventStore, colorsInfos, darkContextColorsInfos, hcDarkContextColorsInfos } from './colors';
 
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
-    callbacks.set(message, callback);
-  },
-};
-
 vi.mock(import('/@/lib/appearance/appearance-util'));
-
-const listColorsMock: Mock<(theme: string) => Promise<ColorInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listColors: listColorsMock,
-    getConfigurationValue: vi.fn(),
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -56,7 +31,7 @@ beforeEach(() => {
 });
 
 test('grab colors', async () => {
-  listColorsMock.mockImplementation((theme: string) => {
+  vi.mocked(window.listColors).mockImplementation((theme: string) => {
     if (theme === 'dark') {
       return Promise.resolve([{ id: 'color-dark', value: '#dark01', cssVar: '--pd-color-dark' }]);
     }
@@ -70,15 +45,11 @@ test('grab colors', async () => {
   });
   colorsEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // wait listColors is called
-  while (!listColorsMock.mock.calls.length) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await vi.waitFor(() => expect(window.listColors).toHaveBeenCalled());
 
   // now get the current-theme list
   const colors = get(colorsInfos);

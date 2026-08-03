@@ -31,7 +31,6 @@ const clipboardWriteTextMock = vi.fn();
 const getConfigurationValueMock = vi.fn();
 const updateConfigurationValueMock = vi.fn();
 
-// fake the window.events object
 beforeAll(() => {
   (window as any).getDevtoolsConsoleLogs = getDevtoolsConsoleLogsMock;
   (window as any).clipboardWriteText = clipboardWriteTextMock;

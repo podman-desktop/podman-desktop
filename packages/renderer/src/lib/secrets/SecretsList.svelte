@@ -137,6 +137,8 @@ function gotoCreateSecret(): void {
           data={secrets}
           columns={columns}
           row={row}
+          key={(secret): string => `${secret.engineId}:${secret.Id}`}
+          label={(secret): string => secret.Name}
           defaultSortColumn="Id">
         </Table>
       {/if}
