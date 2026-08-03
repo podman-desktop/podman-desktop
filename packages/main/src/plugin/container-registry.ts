@@ -1765,6 +1765,10 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
+      const provider = this.internalProviders.get(engineId);
+      if (provider?.libpodApi) {
+        return this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
+      }
       return this.getMatchingEngine(engineId).pruneVolumes();
     } catch (error) {
       telemetryOptions = { error: error };
