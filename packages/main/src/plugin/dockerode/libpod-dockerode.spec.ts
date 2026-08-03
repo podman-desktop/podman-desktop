@@ -451,7 +451,9 @@ test('Check prune all volumes sends filters with all=true', async () => {
   server = setupServer(
     http.post('http://localhost/v4.2.0/libpod/volumes/prune', async info => {
       const url = new URL(info.request.url);
-      const filters = JSON.parse(decodeURIComponent(url.searchParams.get('filters')!)) as Record<string, string[]>;
+      const rawFilters = url.searchParams.get('filters');
+      expect(rawFilters).toBeDefined();
+      const filters = JSON.parse(rawFilters ?? '') as Record<string, string[]>;
       expect(filters).toEqual({ all: ['true'] });
       return HttpResponse.json([], { status: 200 });
     }),
