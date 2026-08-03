@@ -456,8 +456,9 @@ export class LibpodDockerode {
     };
 
     prototypeOfDockerode.pruneAllVolumes = function (): Promise<void> {
+      const filters = encodeURIComponent(JSON.stringify({ all: ['true'] }));
       const optsf = {
-        path: '/v4.2.0/libpod/volumes/prune?all=true&',
+        path: `/v4.2.0/libpod/volumes/prune?filters=${filters}&`,
         method: 'POST',
         statusCodes: {
           200: true,
