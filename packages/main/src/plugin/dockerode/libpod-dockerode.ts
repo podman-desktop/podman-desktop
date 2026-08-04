@@ -249,7 +249,6 @@ export interface LibPod {
     options?: { build?: boolean; replace?: boolean; abortSignal?: AbortSignal },
   ): Promise<PlayKubeInfo>;
   pruneAllImages(dangling: boolean): Promise<void>;
-  pruneAllVolumes(): Promise<void>;
   podmanInfo(): Promise<Info>;
   getImages(options: GetImagesOptions): Promise<NodeJS.ReadableStream>;
   podmanListImages(options?: ListImagesOptions): Promise<ImageInfo[]>;
@@ -444,28 +443,6 @@ export class LibpodDockerode {
         // For some reason the below doesn't work
         // options: {all: 'true'}, // this doesn't work
       }
-
-      return new Promise((resolve, reject) => {
-        this.modem.dial(optsf, (err: unknown, data: unknown) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(wrapAs<void>(data));
-        });
-      });
-    };
-
-    prototypeOfDockerode.pruneAllVolumes = function (): Promise<void> {
-      const filters = encodeURIComponent(JSON.stringify({ all: ['true'] }));
-      const optsf = {
-        path: `/v4.2.0/libpod/volumes/prune?filters=${filters}&`,
-        method: 'POST',
-        statusCodes: {
-          200: true,
-          400: 'bad parameter',
-          500: 'server error',
-        },
-      };
 
       return new Promise((resolve, reject) => {
         this.modem.dial(optsf, (err: unknown, data: unknown) => {

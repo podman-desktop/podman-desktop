@@ -1765,6 +1765,8 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
+      // Podman version below 6.0.0 does not support the `all` filter
+      // See https://github.com/containers/podman/pull/28235
       const provider = this.internalProviders.get(engineId);
       if (provider?.connection.type === 'podman') {
         const version = await this.getMatchingEngine(engineId).version();

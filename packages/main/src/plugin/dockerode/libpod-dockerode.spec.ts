@@ -447,23 +447,6 @@ test('Check prune default images (not all)', async () => {
   await (api as unknown as LibPod).pruneAllImages(false);
 });
 
-test('Check prune all volumes sends filters with all=true', async () => {
-  server = setupServer(
-    http.post('http://localhost/v4.2.0/libpod/volumes/prune', async info => {
-      const url = new URL(info.request.url);
-      const rawFilters = url.searchParams.get('filters');
-      expect(rawFilters).toBeDefined();
-      const filters = JSON.parse(rawFilters ?? '') as Record<string, string[]>;
-      expect(filters).toEqual({ all: ['true'] });
-      return HttpResponse.json([], { status: 200 });
-    }),
-  );
-  server.listen({ onUnhandledRequest: 'error' });
-
-  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
-  await (api as unknown as LibPod).pruneAllVolumes();
-});
-
 test('check pod inspect', async () => {
   server = setupServer(
     http.get('http://localhost/v4.2.0/libpod/pods/name1/json', () =>
