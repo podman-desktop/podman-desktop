@@ -18,8 +18,8 @@
 import '@testing-library/jest-dom/vitest';
 
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { render, screen, waitFor } from '@testing-library/svelte';
-import { afterEach, describe, expect, test } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import { describe, expect, test } from 'vitest';
 
 import { ContainerIcon } from '.';
 import Icon from './Icon.svelte';

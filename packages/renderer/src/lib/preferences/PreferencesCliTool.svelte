@@ -12,7 +12,6 @@ import {
   eventCollect,
   registerConnectionCallback,
 } from './preferences-connection-rendering-task';
-import ThemedIcon from './ThemedIcon.svelte';
 import type { ILoadingStatus } from './Util';
 
 export let cliTool: CliToolInfo;
@@ -149,19 +148,16 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
       <!-- left col - cli-tool icon/name + "create new" button -->
       <div class="w-[170px] h-full flex flex-col justify-between">
         <div class="flex flex-row">
-          {#if cliTool?.images?.icon ?? cliTool?.extensionInfo.icon}
-            {#if cliTool?.images?.icon}
-              <ThemedIcon
-                icon={cliTool.images.icon}
-                alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
-            {:else if typeof cliTool.extensionInfo.icon === 'string'}
-              <img
-                src={cliTool.extensionInfo.icon}
-                aria-label="cli-logo"
-                alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
-            {/if}
+          {#if cliTool?.images?.icon}
+            <Icon
+              icon={cliTool.images.icon}
+              title="{cliTool.name} logo"
+              class="max-w-[40px] max-h-[40px] h-full shrink-0" />
+          {:else if typeof cliTool.extensionInfo.icon === 'string'}
+            <Icon
+              icon={cliTool.extensionInfo.icon}
+              title="{cliTool.name} logo"
+              class="max-w-[40px] max-h-[40px] h-full shrink-0" />
           {/if}
           <span
             id={cliTool.id}
