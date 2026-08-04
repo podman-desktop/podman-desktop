@@ -2450,7 +2450,7 @@ describe('connection error property on lifecycle methods', () => {
     expect(registeredConnection).toBeDefined();
 
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
-    registeredConnection!.error = 'previous error';
+    extension.podmanMachinesErrors.set(machineInfo.name, 'previous error');
     await registeredConnection?.lifecycle?.start?.({} as extensionApi.LifecycleContext);
     expect(registeredConnection!.error).toBeUndefined();
   });
@@ -2475,7 +2475,7 @@ describe('connection error property on lifecycle methods', () => {
     expect(registeredConnection).toBeDefined();
 
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
-    registeredConnection!.error = 'previous error';
+    extension.podmanMachinesErrors.set(machineInfo.name, 'previous error');
     await registeredConnection?.lifecycle?.stop?.({} as extensionApi.LifecycleContext);
     expect(registeredConnection!.error).toBeUndefined();
   });
@@ -2500,7 +2500,7 @@ describe('connection error property on lifecycle methods', () => {
     expect(registeredConnection).toBeDefined();
 
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
-    registeredConnection!.error = 'previous error';
+    extension.podmanMachinesErrors.set(machineInfo.name, 'previous error');
     await registeredConnection?.lifecycle?.delete?.();
     expect(registeredConnection!.error).toBeUndefined();
   });

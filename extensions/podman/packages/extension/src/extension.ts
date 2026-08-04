@@ -183,6 +183,12 @@ async function doUpdateMachines(
     }
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
+    // expose the failure on every known machine, as we cannot tell their state anymore
+    const errorMessage = getErrorMessage(error);
+    for (const machineName of podmanMachinesStatuses.keys()) {
+      podmanMachinesErrors.set(machineName, errorMessage);
+    }
+
     if (!hasRemoteConnections) {
       extensionNotifications.notifySetupPodmanNotLinux();
     }
@@ -836,18 +842,18 @@ export async function registerProviderFor(
     start: async (context, logger): Promise<void> => {
       try {
         await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
-        containerProviderConnection.error = undefined;
+        podmanMachinesErrors.delete(machineInfo.name);
       } catch (err) {
-        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
         throw err;
       }
     },
     stop: async (context, logger): Promise<void> => {
       try {
         await stopMachine(provider, machineInfo, context, logger);
-        containerProviderConnection.error = undefined;
+        podmanMachinesErrors.delete(machineInfo.name);
       } catch (err) {
-        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
         throw err;
       }
     },
@@ -856,9 +862,9 @@ export async function registerProviderFor(
         await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
           logger,
         });
-        containerProviderConnection.error = undefined;
+        podmanMachinesErrors.delete(machineInfo.name);
       } catch (err) {
-        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
         throw err;
       }
     },
@@ -903,9 +909,9 @@ export async function registerProviderFor(
           if (isRootful !== undefined) {
             telemetryLogger.logUsage('podman.machine.edit.rootful', { isRootful });
           }
-          containerProviderConnection.error = undefined;
+          podmanMachinesErrors.delete(machineInfo.name);
         } catch (err) {
-          containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+          podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
           throw err;
         } finally {
           if (state === 'started') {

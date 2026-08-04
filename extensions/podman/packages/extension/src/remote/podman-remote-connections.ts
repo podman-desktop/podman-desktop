@@ -140,7 +140,7 @@ export class PodmanRemoteConnections {
       try {
         const uri = new URL(connection.URI);
         const host = uri.hostname;
-        const port = Number.parseInt(uri.port, 10);
+        const port = uri.port === '' ? 22 : Number.parseInt(uri.port, 10);
         const username = uri.username;
         const privateKeyFile = connection.Identity;
 
@@ -163,6 +163,9 @@ export class PodmanRemoteConnections {
         const connectionDisposable = this.#provider.registerContainerProviderConnection({
           name: connection.Name,
           status: () => tunnel.status(),
+          get error(): string | undefined {
+            return tunnel.error;
+          },
           type: 'podman',
           endpoint: {
             socketPath: localPath,
