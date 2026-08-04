@@ -1210,11 +1210,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^6.5.0
-        version: 6.5.0(@types/node@26.1.1)(supports-color@8.1.1)
+        specifier: ^6.6.0
+        version: 6.6.0(@types/node@26.1.1)(supports-color@8.1.1)
       '@argos-ci/playwright':
-        specifier: ^7.4.0
-        version: 7.4.0(@types/node@26.1.1)(supports-color@8.1.1)
+        specifier: ^7.4.1
+        version: 7.4.1(@types/node@26.1.1)(supports-color@8.1.1)
       '@playwright/test':
         specifier: 1.62.1
         version: 1.62.1
@@ -1331,25 +1331,25 @@ packages:
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
-  '@argos-ci/api-client@0.27.0':
-    resolution: {integrity: sha512-3m3skU6SIlDrjikDDdjEpyx80IVHdithkkOWFAEoIVN3Yr5Xh7EjYO3707PjfgmVIKJerTzUN3dU5ZHaOY3o+g==}
+  '@argos-ci/api-client@0.28.0':
+    resolution: {integrity: sha512-VQjt/WohF49NNXVGBNctMAqHV+mTBL+gE2oa+Sxg7cRdjGY01JO4nBqy0mhNWJ0VUuGsWohyhzrQYHhx35L7PA==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/browser@6.4.4':
     resolution: {integrity: sha512-fiA4OZBEtQ5dfBxmx3BTV1n9PcogokZoTBHI0+ylNAzBbHTQMqICUgPCqKDVh2fINkmzIEeU5G408nJ2HJ8ffg==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/cli@6.5.0':
-    resolution: {integrity: sha512-K4Yeeq8Ia1xIZyqeeHjRxF1oSluNf17tSE1fbyl1NWtERauQeHPJ0V6VxRfHc7BFAFAiwhhSQjNnUO1394dN9A==}
+  '@argos-ci/cli@6.6.0':
+    resolution: {integrity: sha512-CxVJX5Ws6fLx9hac9pzplUJecWClNV7Zt5l1if+vPfD7FBoJLkU0d4Fm4ifyJrzt9zE1dCEfgqDZ/SSTFqYK0A==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@argos-ci/core@6.7.0':
-    resolution: {integrity: sha512-OnsshGSq8YcCjservwG5qAr08C0I5LmfJez2NMbcBt0cL/yJFFO7HwNATz9onimqPYOjhF739pQpn9Z72AiNgw==}
+  '@argos-ci/core@6.7.1':
+    resolution: {integrity: sha512-sW+y56cOWDP5moJjezrp8XqqyDH/4QKEazZZelc8yWBA7K3zm0cMaSwUPJScxvHSbZL/3g7yiZbGPe8aDFhaJg==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/playwright@7.4.0':
-    resolution: {integrity: sha512-LfUdxAtz6/WuNH+5JadUBA6Gd5UHEq3hovER9Dw853Wbz4MhS+qZ6UrxYH96YEPiH4AUmBvewuPN+lyz3xLZHw==}
+  '@argos-ci/playwright@7.4.1':
+    resolution: {integrity: sha512-lzQCC+dZ4vjDrMVy/p+6HgdMTPJ7AEXuebsNAp2wrw8uUXuCVQIu9LucIID7ahcka7N+tMRwp7XmHpdCs8vZZw==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/util@4.1.0':
@@ -12477,8 +12477,8 @@ packages:
     resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
     engines: {node: '>=12.20'}
 
-  yoctocolors@2.1.2:
-    resolution: {integrity: sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug==}
+  yoctocolors@2.2.0:
+    resolution: {integrity: sha512-xYqdZFUK/VYazNl/oCDYN+3WloWQwMfZxBoiNt6qNyk+xfOdi598muWE42rNZFp1kNOiqW936q5RhUdnpqElSg==}
     engines: {node: '>=18'}
 
   youtube-video-element@1.8.0:
@@ -12650,7 +12650,7 @@ snapshots:
       package-manager-detector: 1.3.0
       tinyexec: 1.2.4
 
-  '@argos-ci/api-client@0.27.0(supports-color@8.1.1)':
+  '@argos-ci/api-client@0.28.0(supports-color@8.1.1)':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       openapi-fetch: 0.17.0
@@ -12660,10 +12660,10 @@ snapshots:
 
   '@argos-ci/browser@6.4.4': {}
 
-  '@argos-ci/cli@6.5.0(@types/node@26.1.1)(supports-color@8.1.1)':
+  '@argos-ci/cli@6.6.0(@types/node@26.1.1)(supports-color@8.1.1)':
     dependencies:
-      '@argos-ci/api-client': 0.27.0(supports-color@8.1.1)
-      '@argos-ci/core': 6.7.0(@types/node@26.1.1)(supports-color@8.1.1)
+      '@argos-ci/api-client': 0.28.0(supports-color@8.1.1)
+      '@argos-ci/core': 6.7.1(@types/node@26.1.1)(supports-color@8.1.1)
       commander: 15.0.0
       open: 11.0.0
       ora: 9.4.1
@@ -12672,9 +12672,9 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/core@6.7.0(@types/node@26.1.1)(supports-color@8.1.1)':
+  '@argos-ci/core@6.7.1(@types/node@26.1.1)(supports-color@8.1.1)':
     dependencies:
-      '@argos-ci/api-client': 0.27.0(supports-color@8.1.1)
+      '@argos-ci/api-client': 0.28.0(supports-color@8.1.1)
       '@argos-ci/util': 4.1.0
       convict: 6.2.5
       debug: 4.4.3(supports-color@8.1.1)
@@ -12687,10 +12687,10 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/playwright@7.4.0(@types/node@26.1.1)(supports-color@8.1.1)':
+  '@argos-ci/playwright@7.4.1(@types/node@26.1.1)(supports-color@8.1.1)':
     dependencies:
       '@argos-ci/browser': 6.4.4
-      '@argos-ci/core': 6.7.0(@types/node@26.1.1)(supports-color@8.1.1)
+      '@argos-ci/core': 6.7.1(@types/node@26.1.1)(supports-color@8.1.1)
       '@argos-ci/util': 4.1.0
       chalk: 5.6.2
       debug: 4.4.3(supports-color@8.1.1)
@@ -21685,7 +21685,7 @@ snapshots:
   log-symbols@7.0.1:
     dependencies:
       is-unicode-supported: 2.1.0
-      yoctocolors: 2.1.2
+      yoctocolors: 2.2.0
 
   long@5.3.2: {}
 
@@ -26009,7 +26009,7 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  yoctocolors@2.1.2: {}
+  yoctocolors@2.2.0: {}
 
   youtube-video-element@1.8.0: {}
 
