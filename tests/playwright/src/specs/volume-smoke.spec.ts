@@ -19,6 +19,7 @@
 import { ContainerState, VolumeState } from '/@/model/core/states';
 import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
+import { VolumesPage } from '/@/model/pages/volumes-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
@@ -29,6 +30,7 @@ const noVolumeImageToPull = 'ghcr.io/linuxcontainers/alpine';
 const containerName = 'alpine';
 const containerToRun = 'bootc-image-builder';
 const volumeName = 'e2eVolume';
+const volumeList = ['e2e-vol-first', 'e2e-vol-second', 'e2e-vol-third'];
 const containerVolumePath = '/tmp/mount';
 const fileName = 'test.txt';
 const textContent = 'This is a test file created in the volume.';
@@ -120,6 +122,47 @@ test.describe
           timeout: 35_000,
         })
         .toBeTruthy();
+    });
+
+    test('Filter and prune volumes', async ({ page, navigationBar }) => {
+      test.setTimeout(120_000);
+
+      let volumesPage = await navigationBar.openVolumes();
+      await playExpect(volumesPage.heading).toBeVisible();
+
+      for (const volume of volumeList) {
+        const createVolumePage = await volumesPage.openCreateVolumePage(volume);
+        volumesPage = await createVolumePage.createVolume(volume);
+        await playExpect
+          .poll(async () => await volumesPage.waitForVolumeExists(volume), { timeout: 25_000 })
+          .toBeTruthy();
+      }
+
+      volumesPage = new VolumesPage(page);
+      await test.step('Verify search filtering works for each volume', async () => {
+        for (const volume of volumeList) {
+          await volumesPage.filterByName(volume);
+          await playExpect
+            .poll(async () => await volumesPage.countRowsFromTable(), { timeout: 10_000 })
+            .toBeGreaterThanOrEqual(1);
+          await playExpect
+            .poll(async () => await volumesPage.getVolumeRowByName(volume), { timeout: 5_000 })
+            .toBeDefined();
+        }
+        await volumesPage.clearFilterByName();
+        await playExpect
+          .poll(async () => await volumesPage.countRowsFromTable(), { timeout: 10_000 })
+          .toBeGreaterThanOrEqual(volumeList.length);
+      });
+
+      volumesPage = await navigationBar.openVolumes();
+      await playExpect(volumesPage.heading).toBeVisible();
+      volumesPage = await volumesPage.pruneVolumes();
+      for (const volume of volumeList) {
+        await playExpect
+          .poll(async () => await volumesPage.waitForVolumeDelete(volume), { timeout: 35_000 })
+          .toBeTruthy();
+      }
     });
   });
 

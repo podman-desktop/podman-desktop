@@ -146,3 +146,59 @@ async function openExtensionsPodmanPage(ext: {
   const extensionsPage = await navigationBar.openExtensions();
   return extensionsPage.openExtensionDetails(ext.extensionLabelName, ext.regionAreaLabel, ext.extensionHeading);
 }
+
+test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity', '@macos_sanity'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+
+  test('Filter installed extensions by name', async () => {
+    const extensionsPage = await navigationBar.openExtensions();
+    await playExpect(extensionsPage.heading).toBeVisible();
+    await extensionsPage.openInstalledTab();
+
+    const totalCards = await extensionsPage.countInstalledExtensionCards();
+    playExpect(totalCards).toBeGreaterThan(0);
+
+    const extensionsToFilter = [
+      { search: 'podman', label: 'podman-desktop.podman' },
+      { search: 'compose', label: 'podman-desktop.compose' },
+    ];
+
+    for (const { search, label } of extensionsToFilter) {
+      await extensionsPage.filterByName(search);
+      await playExpect
+        .poll(async () => await extensionsPage.extensionCardIsVisible(label), { timeout: 10_000 })
+        .toBeTruthy();
+    }
+
+    await extensionsPage.clearFilterByName();
+    await playExpect
+      .poll(async () => await extensionsPage.countInstalledExtensionCards(), { timeout: 10_000 })
+      .toBe(totalCards);
+  });
+
+  test('Filter catalog extensions by name', async () => {
+    const extensionsPage = await navigationBar.openExtensions();
+    await playExpect(extensionsPage.heading).toBeVisible();
+    await extensionsPage.openCatalogTab();
+
+    await playExpect
+      .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: 10_000 })
+      .toBeGreaterThan(0);
+    const totalCards = await extensionsPage.countCatalogExtensionCards();
+
+    await extensionsPage.filterByName('Bootable Containers');
+    await playExpect
+      .poll(async () => await extensionsPage.extensionCardIsVisible('Bootable Containers'), { timeout: 10_000 })
+      .toBeTruthy();
+    await playExpect
+      .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: 10_000 })
+      .toBeGreaterThanOrEqual(1);
+    const filteredCards = await extensionsPage.countCatalogExtensionCards();
+    playExpect(filteredCards).toBeLessThan(totalCards);
+
+    await extensionsPage.clearFilterByName();
+    await playExpect
+      .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: 10_000 })
+      .toBe(totalCards);
+  });
+});

@@ -338,7 +338,7 @@ test.describe
       });
 
       test('Pruning pods', async ({ page, navigationBar }) => {
-        test.setTimeout(90_000);
+        test.setTimeout(120_000);
 
         const portsList = [5001, 5002, 5003];
 
@@ -361,6 +361,21 @@ test.describe
           await playExpect(podsPage.heading).toBeVisible({ timeout: 60_000 });
           await playExpect.poll(async () => await podsPage.podExists(podNames[i]), { timeout: 15_000 }).toBeTruthy();
         }
+
+        const podsPageForFilter = new PodsPage(page);
+        await test.step('Verify search filtering works for each pod', async () => {
+          for (const pod of podNames) {
+            await podsPageForFilter.filterByName(pod);
+            await playExpect
+              .poll(async () => await podsPageForFilter.countRowsFromTable(), { timeout: 10_000 })
+              .toBeGreaterThanOrEqual(1);
+            await playExpect.poll(async () => await podsPageForFilter.podExists(pod), { timeout: 5_000 }).toBeTruthy();
+          }
+          await podsPageForFilter.clearFilterByName();
+          await playExpect
+            .poll(async () => await podsPageForFilter.countRowsFromTable(), { timeout: 10_000 })
+            .toBeGreaterThanOrEqual(podNames.length);
+        });
 
         for (const pod of podNames) {
           const podDetailsPage = await new PodsPage(page).openPodDetails(pod);
