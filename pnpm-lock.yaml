@@ -43,7 +43,7 @@ overrides:
   protobufjs: ^7.6.5
   follow-redirects: ^1.16.0
   uuid: ^14.0.0
-  ip-address: '>=10.1.1'
+  ip-address: '>=10.3.1'
   fast-uri: '>=4.1.1'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.15.0'
@@ -8220,8 +8220,8 @@ packages:
   inversify@8.2.3:
     resolution: {integrity: sha512-OmTj/HB/lEV6WFaeHXBDXdUYWwtadF8QTbyEKT7LUZMzOkw5xF+Nrm1GTjIhBOrAUN4K65vtqKgxRWlSHzQH7w==}
 
-  ip-address@10.2.0:
-    resolution: {integrity: sha512-/+S6j4E9AHvW9SWMSEY9Xfy66O5PWvVEJ08O0y5JGyEKQpojb0K0GKpz/v5HJ/G0vi3D2sjGK78119oXZeE0qA==}
+  ip-address@10.4.0:
+    resolution: {integrity: sha512-oSK96Grm3aP6OrS263xVxbNDGVL7rzBtYdpGqlDG8iQdoenDoTs/nkki+DflYbAEE8Xl6o5YxhxlrKvI3nqKXQ==}
     engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
@@ -21053,7 +21053,7 @@ snapshots:
     transitivePeerDependencies:
       - reflect-metadata
 
-  ip-address@10.2.0: {}
+  ip-address@10.4.0: {}
 
   ipaddr.js@1.9.1: {}
 
@@ -24484,7 +24484,7 @@ snapshots:
 
   socks@2.8.7:
     dependencies:
-      ip-address: 10.2.0
+      ip-address: 10.4.0
       smart-buffer: 4.2.0
 
   sort-css-media-queries@2.2.0: {}
