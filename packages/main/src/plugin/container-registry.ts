@@ -79,7 +79,7 @@ import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
-import { coerce, gtr } from 'semver';
+import { coerce, gtr, lt } from 'semver';
 import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
@@ -1765,7 +1765,17 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
-      return this.getMatchingEngine(engineId).pruneVolumes();
+      // Podman version below 6.0.0 does not support the `all` filter
+      // See https://github.com/containers/podman/pull/28235
+      const provider = this.internalProviders.get(engineId);
+      if (provider?.connection.type === 'podman') {
+        const version = await this.getMatchingEngine(engineId).version();
+        const coerced = coerce(version.Version);
+        if (coerced && lt(coerced, '6.0.0')) {
+          return this.getMatchingEngine(engineId).pruneVolumes();
+        }
+      }
+      return this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
