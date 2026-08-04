@@ -150,7 +150,7 @@
     "@eslint/compat": "^2.1.0",
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.62.0",
+    "@playwright/test": "1.62.1",
     "@podman-desktop/api": "workspace:",
     "@tsconfig/strictest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
