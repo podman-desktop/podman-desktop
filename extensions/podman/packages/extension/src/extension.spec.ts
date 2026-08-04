@@ -64,6 +64,7 @@ import {
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
   setWSLEnabled,
+  updateProviderStatus,
 } from './extension';
 import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
@@ -4466,6 +4467,53 @@ describe('getImportNativeCAFromConfig', () => {
     const configDir = path.join('home', 'user', '.config', 'containers', 'podman', 'machine', 'applehv');
     await getImportNativeCAFromConfig('my-vm', { ConfigDir: { Path: configDir } });
     expect(readFile).toHaveBeenCalledWith(path.join(configDir, 'my-vm.json'), 'utf-8');
+  });
+});
+
+describe('updateProviderStatus on Linux updates the provider tile', () => {
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    vi.spyOn(provider, 'updateStatus').mockImplementation(() => {});
+    extension.podmanMachinesStatuses.clear();
+  });
+
+  test.each([
+    { from: 'started' as const, to: 'stopped' as const, expectedProviderStatus: 'stopped' },
+    { from: 'stopped' as const, to: 'started' as const, expectedProviderStatus: 'ready' },
+  ])(
+    'sets provider to $expectedProviderStatus when native socket transitions from $from to $to',
+    ({ from, to, expectedProviderStatus }) => {
+      updateProviderStatus(provider, from);
+      vi.mocked(provider.updateStatus).mockClear();
+
+      updateProviderStatus(provider, to);
+
+      expect(provider.updateStatus).toHaveBeenCalledWith(expectedProviderStatus);
+    },
+  );
+
+  test('does not call provider.updateStatus when status has not changed', () => {
+    updateProviderStatus(provider, 'started');
+    vi.mocked(provider.updateStatus).mockClear();
+
+    updateProviderStatus(provider, 'started');
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('does not call provider.updateStatus on non-Linux', () => {
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    updateProviderStatus(provider, 'started');
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('updates machine status map when machineName is provided', () => {
+    updateProviderStatus(provider, 'started', 'my-machine');
+
+    expect(extension.podmanMachinesStatuses.get('my-machine')).toBe('started');
+    expect(provider.updateStatus).not.toHaveBeenCalled();
   });
 });
 

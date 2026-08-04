@@ -699,7 +699,7 @@ function stopMonitoringPodmanSocket(machineName?: string): boolean {
   return stopLoop;
 }
 
-function updateProviderStatus(
+export function updateProviderStatus(
   provider: extensionApi.Provider,
   status: extensionApi.ProviderConnectionStatus,
   machineName?: string,
