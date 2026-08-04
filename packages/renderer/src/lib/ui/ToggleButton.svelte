@@ -20,6 +20,7 @@ function onclick(): void {
 
 <button
   disabled={disabled}
+  aria-pressed={selected ? 'true' : 'false'}
   class="first:rounded-l last:rounded-r"
   class:bg-[var(--pd-content-card-carousel-card-bg)]={!disabled && !selected}
   class:hover:bg-[var(--pd-content-card-carousel-card-hover-bg)]={!disabled && !selected}
