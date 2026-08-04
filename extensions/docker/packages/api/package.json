@@ -21,5 +21,8 @@
   },
   "dependencies": {
     "@podman-desktop/api": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5"
   }
 }

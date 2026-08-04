@@ -24,7 +24,7 @@ import { defineConfig } from 'vitest/config';
 const WORKSPACE_ROOT = join(__dirname, '..');
 
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   envDir: process.cwd(),
   resolve: {
     mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
@@ -34,7 +34,7 @@ export default defineConfig({
     target: 'esnext',
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE === 'production',
+    minify: process.env['MODE'] === 'production',
     lib: {
       entry: 'src/extension.ts',
       formats: ['cjs'],

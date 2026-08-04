@@ -15,20 +15,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
+import { defineConfig } from 'vitest/config';
+
 const PACKAGE_ROOT = __dirname;
 
-/**
- * Config for extensions tests
- * placed in project root tests folder
- * @type {import('vite').UserConfig}
- * @see https://vitest.dev/config/
- */
-const config = {
+export default defineConfig({
   root: PACKAGE_ROOT,
   test: {
     globals: true,
     include: ['*.{test,spec}.ts'],
   },
-};
-
-export default config;
+});

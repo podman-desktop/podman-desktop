@@ -53,6 +53,7 @@ const TYPESCRIPT_PROJECTS = [
   './extensions/*/packages/*/tsconfig.json',
   './tests/playwright/tsconfig.json',
   './storybook/tsconfig.json',
+  './tsconfig.json',
 ];
 
 export default [
@@ -62,6 +63,9 @@ export default [
       '*.config.*js',
       '**/*.config.*js',
       '**/*.tests.setup.*js',
+      '*.config.*ts',
+      '**/*.config.*ts',
+      '**/*.tests.setup.*ts',
       '**/dist/**/*',
       '**/test-resources',
       '**/__mocks__/',

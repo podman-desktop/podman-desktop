@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,53 +16,45 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
-import tailwindcss from '@tailwindcss/vite';
 
-let filename = fileURLToPath(import.meta.url);
-const PACKAGE_ROOT = path.dirname(filename);
+import { chrome } from '../../.electron-vendors.cache.json';
+import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 
-// https://vitejs.dev/config/
+const PACKAGE_ROOT = __dirname;
+
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
+  envDir: process.cwd(),
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js', hot: !process.env.VITEST }), svelteTesting()],
-  test: {
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    globals: true,
-    environment: 'jsdom',
-    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
-    deps: {
-      inline: ['moment'],
-    },
-  },
-  base: '',
-  server: {
-    fs: {
-      strict: true,
-    },
-  },
   build: {
-    sourcemap: true,
+    sourcemap: 'inline',
+    target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
+    minify: process.env['MODE'] !== 'development',
     lib: {
-      entry: 'src/lib/index.ts',
-      formats: ['es'],
+      entry: 'src/index.ts',
+      formats: ['cjs'],
     },
-
+    rollupOptions: {
+      platform: 'node',
+      external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
+      output: {
+        entryFileNames: '[name].cjs',
+      },
+    },
     emptyOutDir: true,
     reportCompressedSize: false,
+  },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 });

@@ -1,0 +1,14 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2023"],
+    "module": "preserve",
+    "target": "es2023",
+    "types": ["node", "vitest/globals"],
+    "exactOptionalPropertyTypes": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": ["**/vitest.config.ts", "**/vite.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "**/node_modules", "**/builtin/**", "**/dist/**"]
+}
