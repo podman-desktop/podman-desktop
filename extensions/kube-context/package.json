@@ -3,7 +3,7 @@
   "name": "kube-context",
   "displayName": "Kube Context",
   "description": "Easily switch between Kubernetes contexts",
-  "version": "1.29.0-next",
+  "version": "1.30.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -46,12 +46,12 @@
   },
   "dependencies": {
     "@podman-desktop/api": "workspace:*",
-    "js-yaml": "^5.2.1"
+    "js-yaml": "^5.2.2"
   },
   "devDependencies": {
     "adm-zip": "^0.6.0",
     "mkdirp": "^3.0.1",
-    "vite": "^8.1.4",
+    "vite": "^8.2.0",
     "vitest": "^4.1.10"
   }
 }

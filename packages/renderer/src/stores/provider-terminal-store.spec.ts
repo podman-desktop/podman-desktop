@@ -19,13 +19,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { get } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { getExistingTerminal, providerTerminals, registerTerminal } from './provider-terminal-store';
 import { providerInfos } from './providers';
 
-beforeAll(() => {
-  vi.clearAllMocks();
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('get a terminal', async () => {

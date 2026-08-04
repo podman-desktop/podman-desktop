@@ -147,25 +147,25 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
   <div class="divide-x divide-[var(--pd-content-divider)] flex flex-row">
     <div>
       <!-- left col - cli-tool icon/name + "create new" button -->
-      <div class="min-w-[170px] max-w-[200px] h-full flex flex-col justify-between">
+      <div class="w-[170px] h-full flex flex-col justify-between">
         <div class="flex flex-row">
           {#if cliTool?.images?.icon ?? cliTool?.extensionInfo.icon}
             {#if cliTool?.images?.icon}
               <ThemedIcon
                 icon={cliTool.images.icon}
                 alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full" />
+                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
             {:else if typeof cliTool.extensionInfo.icon === 'string'}
               <img
                 src={cliTool.extensionInfo.icon}
                 aria-label="cli-logo"
                 alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full" />
+                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
             {/if}
           {/if}
           <span
             id={cliTool.id}
-            class="my-auto ml-3 break-words font-semibold text-[var(--pd-invert-content-header-text)]"
+            class="my-auto ml-3 break-all font-semibold text-[var(--pd-invert-content-header-text)]"
             aria-label="cli-name">{cliTool.name}</span>
         </div>
         <div class="flex flex-row space-x-1 w-full">

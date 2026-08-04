@@ -85,6 +85,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -104,7 +105,6 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -284,6 +284,13 @@ export function initExposure(): void {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);
   });
 
+  contextBridge.exposeInMainWorld(
+    'navigateToExtensionHistoryEntry',
+    async (extensionId: string, entryId: string): Promise<void> => {
+      return ipcRenderer.invoke('navigation:navigateToHistoryEntry', extensionId, entryId);
+    },
+  );
+
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
   });
@@ -311,7 +318,7 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('listImages', async (options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+  contextBridge.exposeInMainWorld('listImages', async (options?: ListImagesOptions): Promise<ImageInfo[]> => {
     return ipcInvoke('container-provider-registry:listImages', options);
   });
 
@@ -1777,6 +1784,13 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('listColors', async (themeId: string): Promise<ColorInfo[]> => {
     return ipcInvoke('colorRegistry:listColors', themeId);
   });
+
+  contextBridge.exposeInMainWorld(
+    'getThemeInfo',
+    async (themeId: string): Promise<{ isDark: boolean; isHighContrast: boolean }> => {
+      return ipcInvoke('colorRegistry:getThemeInfo', themeId);
+    },
+  );
 
   // Handle callback to open devtools for extensions
   // by delegating to the renderer process

@@ -16,12 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { HistoryStackEntry, NavigationHistoryPushInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
 import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
+import { extensionInfos } from '/@/stores/extensions';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
@@ -41,11 +43,11 @@ export interface HistoryEntry {
 /**
  * Navigation history store
  *
- * @property stack - An array of URLs
+ * @property stack - An array of history stack entries
  * @property index - The current index in the stack
  */
 export const navigationHistory = $state<{
-  stack: string[];
+  stack: HistoryStackEntry[];
   index: number;
 }>({
   stack: [],
@@ -53,6 +55,10 @@ export const navigationHistory = $state<{
 });
 
 let isNavigatingHistory = false;
+
+// Extensions being navigated to via back/forward — ignore their pushes
+// until the navigation settles (webview re-mounts and replays initial route)
+const extensionsNavigatingHistory = new Set<string>();
 
 interface ParsedUrl {
   path: string;
@@ -159,13 +165,13 @@ function extractResourceInfo(parts: string[]): { typeLabel: string; name?: strin
  * // => 'Containers'
  *
  * urlToDisplayName('/containers/abc123/logs')
- * // => 'Containers > abc123 > logs'
+ * // => 'Containers → abc123 → logs'
  *
  * urlToDisplayName('/kubernetes/pods', ['Kubernetes', 'Pods'])
- * // => 'Kubernetes > Pods'
+ * // => 'Kubernetes → Pods'
  *
  * urlToDisplayName('/kubernetes/pods/my-pod/default/logs', ['Kubernetes', 'Pods'])
- * // => 'Kubernetes > Pods > my-pod > logs'
+ * // => 'Kubernetes → Pods → my-pod → logs'
  */
 function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
   const { parts } = parseUrl(url);
@@ -197,10 +203,10 @@ function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
       breadcrumb.push(capitalize(tabSegment));
     }
 
-    return breadcrumb.join(' > ');
+    return breadcrumb.join(' → ');
   }
 
-  return registryBreadcrumb?.length ? registryBreadcrumb.join(' > ') : typeLabel;
+  return registryBreadcrumb?.length ? registryBreadcrumb.join(' → ') : typeLabel;
 }
 
 /**
@@ -275,7 +281,7 @@ function matchesRoute(url: string, routeHref: string): boolean {
  * // => { name: 'Containers', icon: { ... } }
  *
  * getEntryInfo('/containers/abc123/logs')
- * // => { name: 'Containers > abc123', icon: { ... } }
+ * // => { name: 'Containers → abc123', icon: { ... } }
  *
  * getEntryInfo('/preferences/default/resources')
  * // => { name: 'Resources', icon: { iconComponent: SettingsIcon } }
@@ -317,6 +323,35 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
 }
 
 /**
+ * Get display name and icon for a history stack entry
+ * @param stackEntry - The history stack entry to get info for
+ * @returns Object with display name and optional icon
+ * @example
+ * getStackEntryInfo({ url: '/containers' })
+ * // => { name: 'Containers', icon: { ... } }
+ *
+ * getStackEntryInfo({
+ *   url: '/__extension__/my-extension/model-1',
+ *   extensionEntry: { extensionId: 'my-extension', id: 'model-1', label: 'Model 1' },
+ * })
+ * // => { name: 'My Extension → Model 1', icon: { iconImage: '...' } }
+ */
+function getStackEntryInfo(stackEntry: HistoryStackEntry): { name: string; icon?: HistoryEntryIcon } {
+  const { extensionEntry } = stackEntry;
+  if (!extensionEntry) {
+    return getEntryInfo(stackEntry.url);
+  }
+
+  const extension = get(extensionInfos).find(ext => ext.id === extensionEntry.extensionId);
+  const label = truncate(extensionEntry.label, 24);
+
+  return {
+    name: extension ? `${truncate(extension.displayName, 24)} → ${label}` : label,
+    icon: extension?.icon ? { iconImage: extension.icon } : undefined,
+  };
+}
+
+/**
  * Navigate to a specific index in the history stack
  * @param index - The history stack index to navigate to
  * @returns True if navigation occurred, false if index is invalid or current
@@ -331,11 +366,16 @@ function navigateToIndex(index: number): boolean {
     return false;
   }
 
-  isNavigatingHistory = true;
   navigationHistory.index = index;
-  const url = navigationHistory.stack[index];
-  if (url) {
-    router.goto(url);
+  const entry = navigationHistory.stack[index];
+  if (entry?.extensionEntry) {
+    extensionsNavigatingHistory.add(entry.extensionEntry.extensionId);
+    window
+      .navigateToExtensionHistoryEntry(entry.extensionEntry.extensionId, entry.extensionEntry.id)
+      .catch(console.error);
+  } else if (entry) {
+    isNavigatingHistory = true;
+    router.goto(entry.url);
   }
   return true;
 }
@@ -414,7 +454,7 @@ function getEntries(direction: Direction): HistoryEntry[] {
   for (let i = start; condition(i); i += step) {
     const url = navigationHistory.stack[i];
     if (url) {
-      const info = getEntryInfo(url);
+      const info = getStackEntryInfo(url);
       entries.push({
         index: i,
         name: info.name,
@@ -492,16 +532,24 @@ router.subscribe(navigation => {
       return;
     }
 
+    // Skip webview/contribs URLs — extensions push their own history entries via
+    // navigation.pushHistoryEntry, so recording the plain URL too would cause
+    // duplicate/interleaved entries for the same navigation.
+    const urlPath = navigation.url.split('?')[0];
+    if (urlPath.startsWith('/webviews/') || urlPath.startsWith('/contribs/')) {
+      return;
+    }
+
     // Truncate forward history if we're not at the end
     if (navigationHistory.index < navigationHistory.stack.length - 1) {
       navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
     }
 
-    const currentUrl = navigationHistory.stack[navigationHistory.index];
+    const currentEntry = navigationHistory.stack[navigationHistory.index];
 
     // Add every URL change to history (including tab changes)
-    if (currentUrl !== navigation.url) {
-      navigationHistory.stack = [...navigationHistory.stack, navigation.url];
+    if (currentEntry?.url !== navigation.url) {
+      navigationHistory.stack = [...navigationHistory.stack, { url: navigation.url }];
       navigationHistory.index = navigationHistory.stack.length - 1;
     }
   }
@@ -514,4 +562,32 @@ window.events?.receive('navigation-go-back', () => {
 
 window.events?.receive('navigation-go-forward', () => {
   goForward();
+});
+
+// Listen for history entries pushed by extensions via navigation.pushHistoryEntry
+window.events?.receive('navigation-history-push', (entry: NavigationHistoryPushInfo) => {
+  // The extension is replaying its initial route after being navigated to via
+  // back/forward (webview re-mount) — this push is stale, ignore it once.
+  if (extensionsNavigatingHistory.has(entry.extensionId)) {
+    extensionsNavigatingHistory.delete(entry.extensionId);
+    return;
+  }
+
+  // Truncate forward history if we're not at the end
+  if (navigationHistory.index < navigationHistory.stack.length - 1) {
+    navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
+  }
+
+  const currentEntry = navigationHistory.stack[navigationHistory.index];
+  const isSameEntry =
+    currentEntry?.extensionEntry?.extensionId === entry.extensionId && currentEntry?.extensionEntry?.id === entry.id;
+
+  if (!isSameEntry) {
+    const stackEntry: HistoryStackEntry = {
+      url: `/__extension__/${entry.extensionId}/${entry.id}`,
+      extensionEntry: entry,
+    };
+    navigationHistory.stack = [...navigationHistory.stack, stackEntry];
+    navigationHistory.index = navigationHistory.stack.length - 1;
+  }
 });

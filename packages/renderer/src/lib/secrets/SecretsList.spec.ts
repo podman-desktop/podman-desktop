@@ -146,8 +146,8 @@ test('Expect secrets table to be rendered with data', async () => {
   const table = screen.getByRole('table');
   expect(table).toBeInTheDocument();
 
-  expect(screen.getByText('my-secret-1')).toBeInTheDocument();
-  expect(screen.getByText('my-secret-2')).toBeInTheDocument();
+  expect(screen.getByRole('row', { name: 'my-secret-1' })).toBeInTheDocument();
+  expect(screen.getByRole('row', { name: 'my-secret-2' })).toBeInTheDocument();
 });
 
 test('Expect create button to be displayed when engine is available', async () => {

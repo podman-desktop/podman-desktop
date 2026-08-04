@@ -23,7 +23,7 @@ import type { RequestOptions } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import type { PodmanListImagesOptions } from '@podman-desktop/core-api';
+import type { ListImagesOptions } from '@podman-desktop/core-api';
 import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
@@ -96,7 +96,7 @@ test('Check list of images using Podman API', async () => {
   server.listen({ onUnhandledRequest: 'error' });
 
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
-  const listOfImages = await (api as unknown as LibPod).podmanListImages({} as PodmanListImagesOptions);
+  const listOfImages = await (api as unknown as LibPod).podmanListImages({} as ListImagesOptions);
   expect(listOfImages.length).toBe(1);
   const firstImage = listOfImages[0];
   expect(firstImage?.Id).toBe('sha256:1234567890');

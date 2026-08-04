@@ -16,41 +16,28 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { onDidChangeConfiguration, setupConfigurationChange } from './configurationProperties';
 
-// first, patch window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-Object.defineProperty(global, 'window', {
-  value: {
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
   setupConfigurationChange();
 });
 
 test('notified when there is a change', async () => {
   const received: IConfigurationChangeEvent[] = [];
 
-  onDidChangeConfiguration.addEventListener('my.property', (event: any) => {
-    received.push(event.detail);
+  onDidChangeConfiguration.addEventListener('my.property', event => {
+    received.push((event as CustomEvent<IConfigurationChangeEvent>).detail);
   });
 
   // expect no events have been received
@@ -58,10 +45,10 @@ test('notified when there is a change', async () => {
 
   // now, send an event
   const onDidChangeCallback = callbacks.get('onDidChangeConfiguration');
-  expect(onDidChangeCallback).toBeDefined();
+  assert(onDidChangeCallback);
 
   // call the callback with a new value
-  onDidChangeCallback({
+  await onDidChangeCallback({
     key: 'my.property',
     value: 'new value',
     scope: 'DEFAULT',

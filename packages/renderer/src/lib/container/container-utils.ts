@@ -44,7 +44,7 @@ export class ContainerUtils {
     /*
       When deploying with compose, the container name will be <project>-<service-name>-<container-number> under Names[0].
       This is added to the container name to make it unique.
-      HOWEVER, if you specify container_name in the compose file, the container name will be whatever is is set to and
+      HOWEVER, if you specify container_name in the compose file, the container name will be whatever is set to and
       will not have either the project or service number.
       Thus the easier way to show the correct name is to get the  containerInfo.Labels?.['com.docker.compose.project'] label
       remove it from the Names[0] and return the result.

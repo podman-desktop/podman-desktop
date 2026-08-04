@@ -180,7 +180,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const onboardingPromptUserForVersionCommand = extensionApi.commands.registerCommand(
     'compose.onboarding.promptUserForVersion',
     async () => {
-      // Prompt the user for the verison
+      // Prompt the user for the version
       const composeRelease = await composeDownload.promptUserForVersion();
 
       // Update the context value that this is the version we are downloading

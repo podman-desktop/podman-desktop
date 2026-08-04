@@ -137,7 +137,7 @@ export class EventStore<T> {
     eventName: string,
     args?: unknown[],
   ): Promise<void> {
-    // not intialized yet
+    // not initialized yet
     if (!this.updater) {
       return;
     }

@@ -273,6 +273,11 @@ export interface ContainerCreateOptions {
   Shell?: string[];
   NetworkConfig?: NetworkingConfig;
   pod?: string;
+  Secrets?: Array<{
+    Source: string;
+    Target: string;
+  }>;
+  SecretEnv?: Record<string, string>;
 }
 
 export type NetworkCreateOptions = Dockerode.NetworkCreateOptions;

@@ -34,7 +34,6 @@ import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 // xterm is used in the UI, but not tested, added in order to avoid the multiple warnings being shown during the test.
 vi.mock(import('@xterm/xterm'));
 
-// fake the window.events object
 beforeAll(() => {
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);

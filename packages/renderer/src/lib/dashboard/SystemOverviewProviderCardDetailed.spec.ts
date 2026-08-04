@@ -115,21 +115,21 @@ test('should render View button when connection is stopped but does not support 
   expect(screen.queryByRole('button', { name: 'Start Podman' })).not.toBeInTheDocument();
 });
 
-test.each([
-  'starting',
-  'stopping',
-] as const)('should not render action button when connection status is %s', async status => {
-  const connection = { ...containerConnection, status };
-  const provider = { ...baseProvider, containerConnections: [connection] };
-  render(SystemOverviewProviderCardDetailed, {
-    connection,
-    provider,
-    childConnections: [],
-  });
+test.each(['starting', 'stopping'] as const)(
+  'should not render action button when connection status is %s',
+  async status => {
+    const connection = { ...containerConnection, status };
+    const provider = { ...baseProvider, containerConnections: [connection] };
+    render(SystemOverviewProviderCardDetailed, {
+      connection,
+      provider,
+      childConnections: [],
+    });
 
-  await vi.waitFor(() => expect(screen.getByText('Podman Machine')).toBeInTheDocument());
-  expect(screen.queryByRole('button', { name: /Start|View|See Details/ })).not.toBeInTheDocument();
-});
+    await vi.waitFor(() => expect(screen.getByText('Podman Machine')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /Start|View|See Details/ })).not.toBeInTheDocument();
+  },
+);
 
 describe('stable subtitle text by connection type', () => {
   test.each([

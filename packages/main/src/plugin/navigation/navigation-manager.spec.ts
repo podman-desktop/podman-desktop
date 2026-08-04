@@ -27,6 +27,7 @@ import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js'
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 
 import { NavigationManager } from './navigation-manager.js';
@@ -47,7 +48,9 @@ const apiSender: ApiSenderType = {
   receive: vi.fn(),
 };
 
-const containerRegistry = {} as unknown as ContainerProviderRegistry;
+const containerRegistry = {
+  imageExist: vi.fn(),
+} as unknown as ContainerProviderRegistry;
 
 const contributionManager = {
   listContributions: vi.fn(),
@@ -150,6 +153,35 @@ test('check navigateToImageBuild', async () => {
     parameters: {
       taskId: undefined,
     },
+  });
+});
+
+describe('navigateToImageRun', () => {
+  test('expect to thrown error if image does not exists', async () => {
+    vi.mocked(containerRegistry.imageExist).mockResolvedValue(false);
+
+    await expect(async () => {
+      await navigationManager.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+    }).rejects.toThrow(
+      `Image with id sha256:55, engine id podman.Podman and tag localhost/squid:latest cannot be found.`,
+    );
+
+    expect(apiSender.send).not.toHaveBeenCalled();
+  });
+
+  test('check navigateToImageRun', async () => {
+    vi.mocked(containerRegistry.imageExist).mockResolvedValue(true);
+
+    await navigationManager.navigateToImageRun('sha256:55', 'podman.Podman', 'localhost/squid:latest');
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        id: 'sha256:55',
+        engineId: 'podman.Podman',
+        tag: 'localhost/squid:latest',
+      },
+    });
   });
 });
 
@@ -328,5 +360,73 @@ describe('register navigation commands', () => {
       expect.objectContaining({ command: 'navigation.goBack', title: 'Go Back', category: 'Navigation' }),
       expect.objectContaining({ command: 'navigation.goForward', title: 'Go Forward', category: 'Navigation' }),
     );
+  });
+});
+
+describe('pushHistoryEntry', () => {
+  test('sends the navigation-history-push payload', () => {
+    navigationManager.pushHistoryEntry('my.extension', {
+      id: 'entry-1',
+      label: 'Entry 1',
+    });
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigation-history-push', {
+      extensionId: 'my.extension',
+      id: 'entry-1',
+      label: 'Entry 1',
+    });
+  });
+});
+
+describe('onDidNavigateToHistoryEntry / navigateToHistoryEntry', () => {
+  test('a registered listener is called with a NavigateToHistoryEvent when the extension navigates back to it', () => {
+    const listener = vi.fn();
+    navigationManager.onDidNavigateToHistoryEntry('extensionA', listener);
+
+    navigationManager.navigateToHistoryEntry('extensionA', 'entry-1');
+
+    expect(listener).toHaveBeenCalledWith({ id: 'entry-1' });
+  });
+
+  test('two extensions with the same entry id do not cross-fire', () => {
+    const listenerA = vi.fn();
+    const listenerB = vi.fn();
+    navigationManager.onDidNavigateToHistoryEntry('extensionA', listenerA);
+    navigationManager.onDidNavigateToHistoryEntry('extensionB', listenerB);
+
+    navigationManager.navigateToHistoryEntry('extensionA', 'entry-1');
+
+    expect(listenerA).toHaveBeenCalledWith({ id: 'entry-1' });
+    expect(listenerB).not.toHaveBeenCalled();
+  });
+
+  test('is a safe no-op when no listener is registered for the extension', () => {
+    expect(() => navigationManager.navigateToHistoryEntry('unknown.extension', 'entry-1')).not.toThrow();
+  });
+});
+
+describe('dispose', () => {
+  test('clears the history emitters so previously registered listeners no longer fire', () => {
+    const listener = vi.fn();
+    navigationManager.onDidNavigateToHistoryEntry('extensionA', listener);
+
+    navigationManager.dispose();
+
+    navigationManager.navigateToHistoryEntry('extensionA', 'entry-1');
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  test('disposes the disposables registered during init', () => {
+    const commandDisposeFn = vi.fn();
+    vi.mocked(commandRegistry.registerCommand).mockReturnValue(Disposable.create(commandDisposeFn));
+    const paletteDisposeFn = vi.fn();
+    vi.mocked(commandRegistry.registerCommandPalette).mockReturnValue(Disposable.create(paletteDisposeFn));
+
+    navigationManager.init();
+    navigationManager.dispose();
+
+    expect(commandDisposeFn).toHaveBeenCalled();
+    expect(paletteDisposeFn).toHaveBeenCalled();
   });
 });

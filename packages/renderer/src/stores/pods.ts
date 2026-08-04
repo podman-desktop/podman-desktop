@@ -16,10 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfo } from '@podman-desktop/core-api';
 import { derived, type Writable, writable } from 'svelte/store';
 
 import PodIcon from '/@/lib/images/PodIcon.svelte';
+import { PodUtils } from '/@/lib/pod/pod-utils';
+import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';
@@ -54,12 +55,12 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const podsInfos: Writable<PodInfo[]> = writable([]);
+export const podsInfos: Writable<PodInfoUI[]> = writable([]);
 
 export const searchPattern = writable('');
 
-export const filtered = derived([searchPattern, podsInfos], ([$searchPattern, $imagesInfos]) => {
-  return $imagesInfos
+export const filtered = derived([searchPattern, podsInfos], ([$searchPattern, $podsInfoUis]) =>
+  $podsInfoUis
     .filter(podInfo =>
       findMatchInLeaves(
         podInfo,
@@ -72,20 +73,22 @@ export const filtered = derived([searchPattern, podsInfos], ([$searchPattern, $i
     )
     .filter(pod => {
       if ($searchPattern.includes('is:running')) {
-        return pod.Status === 'Running';
+        return pod.status === 'RUNNING';
       }
       if ($searchPattern.includes('is:stopped')) {
-        return pod.Status !== 'Running';
+        return pod.status !== 'RUNNING';
       }
       return true;
-    });
-});
+    }),
+);
 
-const listPods = (): Promise<PodInfo[]> => {
-  return window.listPods();
+const podUtils = new PodUtils();
+
+const listPods = async (): Promise<PodInfoUI[]> => {
+  return (await window.listPods()).map(podInfo => podUtils.getPodInfoUI(podInfo));
 };
 
-export const podsEventStore = new EventStore<PodInfo[]>(
+export const podsEventStore = new EventStore<PodInfoUI[]>(
   'pods',
   podsInfos,
   checkForUpdate,

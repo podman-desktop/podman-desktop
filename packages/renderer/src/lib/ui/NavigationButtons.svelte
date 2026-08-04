@@ -227,7 +227,7 @@ onMount(() => {
           options={dropdownOptions}
           ariaLabel={btn.ariaLabel}
           onChange={handleHistorySelect}
-          class="absolute left-0 top-full z-50 mt-1" />
+          class="absolute left-0 top-full z-50 mt-1 max-w-96" />
       </div>
     {/each}
 </div>

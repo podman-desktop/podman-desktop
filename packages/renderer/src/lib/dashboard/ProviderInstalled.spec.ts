@@ -53,14 +53,12 @@ class InitializationContextImpl {
   }
 }
 
-// fake the window.events object
 beforeAll(() => {
   vi.mocked(window.initializeProvider).mockResolvedValue([]);
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect installed provider shows button', async () => {

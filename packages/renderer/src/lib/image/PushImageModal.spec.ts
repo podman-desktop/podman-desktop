@@ -22,23 +22,20 @@ import type { ImageInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
 import { tick } from 'svelte';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 import PushImageModal from './PushImageModal.svelte';
 
 vi.mock(import('@xterm/xterm'));
 
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
+
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   vi.mocked(window.getImageInspect).mockRejectedValue({});
   vi.mocked(window.logsContainer).mockResolvedValue(undefined);

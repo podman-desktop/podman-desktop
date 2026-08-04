@@ -27,13 +27,8 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import type { InputBoxOptions, QuickPickOptions } from './quickpick-input';
 import QuickPickInput from './QuickPickInput.svelte';
 
-const receiveFunctionMock = vi.fn();
 // mock some methods of the window object
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: receiveFunctionMock,
-  };
-
   vi.mocked(window.sendShowQuickPickOnSelect).mockResolvedValue(undefined);
   vi.mocked(window.sendShowQuickPickValues).mockResolvedValue(undefined);
 });
@@ -51,11 +46,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
     // now, press the ESC key
@@ -81,11 +79,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -108,11 +109,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -143,11 +147,14 @@ describe('QuickPickInput', () => {
       id: idRequest,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: InputBoxOptions) => void) => {
-      if (message === 'showInputBox:add') {
-        callback(inputBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: InputBoxOptions) => void) => {
+        if (message === 'showInputBox:add') {
+          callback(inputBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -169,11 +176,14 @@ describe('QuickPickInput', () => {
       id: idRequest,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: InputBoxOptions) => void) => {
-      if (message === 'showInputBox:add') {
-        callback(inputBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: InputBoxOptions) => void) => {
+        if (message === 'showInputBox:add') {
+          callback(inputBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -196,11 +206,14 @@ describe('QuickPickInput', () => {
       id: idRequest,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: InputBoxOptions) => void) => {
-      if (message === 'showInputBox:add') {
-        callback(inputBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: InputBoxOptions) => void) => {
+        if (message === 'showInputBox:add') {
+          callback(inputBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -223,11 +236,14 @@ describe('QuickPickInput', () => {
       id: idRequest,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: InputBoxOptions) => void) => {
-      if (message === 'showInputBox:add') {
-        callback(inputBoxOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: InputBoxOptions) => void) => {
+        if (message === 'showInputBox:add') {
+          callback(inputBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     const { getByPlaceholderText } = render(QuickPickInput, {});
     const area = getByPlaceholderText('Some placeholder');
@@ -248,11 +264,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: true,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -291,11 +310,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: true,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -333,11 +355,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: true,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     render(QuickPickInput, {});
 
@@ -378,11 +403,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     const { getByText } = render(QuickPickInput, {});
 
@@ -407,11 +435,14 @@ describe('QuickPickInput', () => {
       onSelectCallback: false,
     };
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        callback(quickPickOptions);
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          callback(quickPickOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     const { getByTitle } = render(QuickPickInput, {});
 
@@ -442,11 +473,14 @@ describe('QuickPickInput', () => {
 
     let eventCallback: ((options: QuickPickOptions) => void) | undefined;
 
-    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
-      if (message === 'showQuickPick:add') {
-        eventCallback = callback;
-      }
-    });
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: QuickPickOptions) => void) => {
+        if (message === 'showQuickPick:add') {
+          eventCallback = callback;
+        }
+        return { dispose: vi.fn() };
+      },
+    );
 
     // when getting the response of the first quickpick, we ask to display the second quickpick
     vi.mocked(window.sendShowQuickPickValues).mockImplementation(() => {

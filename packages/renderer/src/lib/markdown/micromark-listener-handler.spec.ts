@@ -77,7 +77,7 @@ test('command button check: calls executeButtonCommand with args if data (with a
   expect(window.executeCommand).toHaveBeenCalledWith('foo', 'foo,bar,baz');
 });
 
-test('expect executeCommand is called if target is HTMLAnchorElement with NO commmand data', () => {
+test('expect executeCommand is called if target is HTMLAnchorElement with NO command data', () => {
   const target = document.createElement('a');
   target.dataset.command = 'foo';
   target.href = 'https://example.com';

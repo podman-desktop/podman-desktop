@@ -18,18 +18,17 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { beforeAll, test } from 'vitest';
+import { beforeAll, test, vi } from 'vitest';
 
 import ProviderStarting from '/@/lib/dashboard/ProviderStarting.svelte';
 
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect starting provider shows disabled update button', async () => {

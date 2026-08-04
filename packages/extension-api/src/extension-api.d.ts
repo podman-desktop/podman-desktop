@@ -617,6 +617,7 @@ declare module '@podman-desktop/api' {
 
   export interface CheckResult {
     successful: boolean;
+    severity?: 'error' | 'warning';
     description?: string;
     docLinksDescription?: string;
     docLinks?: CheckResultLink[];
@@ -2340,7 +2341,7 @@ declare module '@podman-desktop/api' {
      * export async function activate(extensionContext: api.ExtensionContext): Promise<void> {
      *   const statusBarItem = api.window.createStatusBarItem();
      *   statusBarItem.text = 'Information';
-     *   statusBarItem.tooltip = 'A problem occured';
+     *   statusBarItem.tooltip = 'A problem occurred';
      *   statusBarItem.command = 'extension-name.my-command';
      *   statusBarItem.iconClass = 'fa fa-exclamation-triangle';
      *   extensionContext.subscriptions.push(
@@ -5083,6 +5084,38 @@ declare module '@podman-desktop/api' {
     readonly searchTerm?: string;
   }
 
+  /**
+   * An entry that an extension pushes onto Podman Desktop's global back/forward
+   * navigation history, e.g. to reflect an internal SPA navigation inside one of
+   * its webviews.
+   */
+  export interface NavigationHistoryEntry {
+    /**
+     * Opaque identifier for this entry. Passed back verbatim to listeners registered
+     * with {@link navigation.onDidNavigateToHistoryEntry} when the user navigates
+     * back/forward to this entry. Only meaningful to the extension that pushed it.
+     */
+    readonly id: string;
+
+    /**
+     * Display label shown for this entry in the history dropdown.
+     */
+    readonly label: string;
+  }
+
+  /**
+   * Event payload fired by {@link navigation.onDidNavigateToHistoryEntry} when
+   * the user navigates back/forward to an entry previously pushed by this
+   * extension.
+   */
+  export interface NavigateToHistoryEvent {
+    /**
+     * The {@link NavigationHistoryEntry.id id} of the history entry the user
+     * navigated to. The extension should restore its webview state accordingly.
+     */
+    readonly id: string;
+  }
+
   export namespace navigation {
     // Navigate to the Dashboard page
     export function navigateToDashboard(): Promise<void>;
@@ -5104,6 +5137,22 @@ declare module '@podman-desktop/api' {
     // Navigate to a specific image referenced by id, engineId and tag
     export function navigateToImage(id: string, engineId: string, tag: string): Promise<void>;
 
+    /**
+     * Navigate to the Image Run referenced by id, engineId and tag
+     *
+     * @example
+     * ```ts
+     * import { navigation, containerEngine } from '@podman-desktop/api';
+     *
+     * const images = await containerEngine.listImages();
+     * const helloWorld = images.find(image => image.RepoTags?.find(tag => tag === 'quay.io/podman/hello:latest'));
+     *
+     * if(helloWorld) {
+     *   await navigation.navigateToImageRun(helloWorld.Id, helloWorld.engineId, helloWorld.RepoTags?.[0] ?? '<none>');
+     * }
+     * ```
+     */
+    export function navigateToImageRun(id: string, engineId: string, tag: string): Promise<void>;
     // Navigate to the Volumes page
     export function navigateToVolumes(): Promise<void>;
     // Navigate to a specific volume
@@ -5190,6 +5239,31 @@ declare module '@podman-desktop/api' {
      * @param args the arguments to provide to the command linked to the routeId
      */
     export function navigate(routeId: string, ...args: unknown[]): Promise<void>;
+
+    /**
+     * Push a new entry onto Podman Desktop's global back/forward navigation history.
+     * Call this whenever the user navigates to a new page within the extension's
+     * own webview (e.g. a SPA route change), so that the global Back/Forward
+     * buttons can step through it.
+     *
+     * @example
+     * ```typescript
+     * import { navigation } from '@podman-desktop/api';
+     *
+     * navigation.pushHistoryEntry({ id: '/models/llama3', label: 'Model: llama3' });
+     * ```
+     *
+     * @param entry the entry to push.
+     */
+    export function pushHistoryEntry(entry: NavigationHistoryEntry): void;
+
+    /**
+     * Fired when the user navigates back/forward through Podman Desktop's global
+     * history and lands on an entry previously pushed by this extension via
+     * {@link navigation.pushHistoryEntry}. The extension is responsible for
+     * restoring its own webview state accordingly (e.g. via `postMessage`).
+     */
+    export const onDidNavigateToHistoryEntry: Event<NavigateToHistoryEvent>;
   }
 
   /**

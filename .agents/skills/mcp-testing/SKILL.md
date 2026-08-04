@@ -190,83 +190,53 @@ If the start script exits with a non-zero code, report the error output to the u
 
 Do not retry the script automatically — let the user decide after seeing the error.
 
-#### Connect and verify (both modes)
+#### Extract the CDP port
 
-When the start script prints `Ready — call mcp__podman-desktop-mcp__connect(...)`, extract the port number from that line and connect:
+When the start script prints `Ready — call mcp__podman-desktop-mcp__connect(...)`, extract the port number from that line. You will pass it to the Haiku agent in the next phase.
 
-```text
-mcp__podman-desktop-mcp__connect({ port: PORT })
-```
+### Phase 4: Execute task (Haiku agent)
 
-After connecting, check the window title:
+1. Read `.agents/skills/mcp-testing/agent-prompt.md`
 
-```text
-mcp__podman-desktop-mcp__evaluate({ script: "document.title" })
-```
+2. **Select relevant operation references.** Using the task description and the table below, select which files from `.agents/skills/mcp-testing/references/operations/` to include. Always include `navigation.md`. Use your judgment — if the task implies an area even without exact keywords, include its reference.
 
-The result should contain "Podman Desktop". If it contains "DevTools":
+   | File                | Covers                                                                                                                   |
+   | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+   | `navigation.md`     | **Always include.** Sidebar nav, welcome/onboarding page, dashboard, breadcrumbs, back/forward, status bar               |
+   | `images.md`         | Pull/build/push/save/delete/prune images, image details, edit/rename, Containerfile, platform selection, registry search |
+   | `containers.md`     | Create/run/start/stop/delete/export containers, container details, logs, terminal, port mapping, prune                   |
+   | `pods.md`           | Kube Play (YAML deploy), podify (create pod from containers), pod lifecycle, pod logs, prune                             |
+   | `volumes.md`        | Create/delete/prune volumes, volume details, gather sizes, usage status                                                  |
+   | `networks.md`       | Create/delete networks, subnet configuration, network details, bulk delete                                               |
+   | `extensions.md`     | View/install/enable/disable/delete extensions, catalog, custom OCI install, extension status                             |
+   | `settings.md`       | Preferences, proxy configuration, resources, CLI tools section, Kubernetes settings                                      |
+   | `registries.md`     | Add/remove/login to registries, credentials, authentication (under Settings)                                             |
+   | `kubernetes.md`     | Kubernetes contexts, namespaces, resource browsing (nodes/pods/deployments/services), apply YAML                         |
+   | `compose.md`        | Docker Compose onboarding, CLI tool install/uninstall/version check                                                      |
+   | `search-palette.md` | Command palette (F1), search commands, navigate via palette                                                              |
 
-1. Disconnect immediately: `mcp__podman-desktop-mcp__disconnect()`
-2. Re-run the startup script — it closes any DevTools targets automatically via `close_devtools_targets`, then reconnect.
+   **Cross-dependencies** — when one area implies another, include both:
+   - Container operations → also include `images.md` (creating a container requires an image)
+   - Pod operations → also include `containers.md` (podify requires selecting containers)
+   - Registry operations → also include `settings.md` (registries is under Settings)
+   - Settings exploration → also include `registries.md` (registries is a Settings subsection)
+   - Compose/CLI tools → also include `settings.md` (CLI tools is under Settings)
+   - Settings exploration → also include `compose.md` when CLI tools may be relevant
+   - Docker mentioned (docker, docker-compose, Docker Hub) → include `compose.md` + `containers.md` + `images.md` + `extensions.md` + `settings.md`
+   - Kubernetes settings → also include `kubernetes.md`
+   - Any image name in the task (httpd, nginx, alpine, redis, etc.) → include `images.md`
+   - Ambiguous or broad scope (no single area clearly implied) → include `navigation.md` + `containers.md` + `images.md` + `settings.md` + `extensions.md`
+   - General exploration or unknown scope → include all references
 
-### Phase 4: Initial Setup (automatic)
+3. Read the selected reference files and concatenate their contents into an **Operations Reference** block
 
-After connecting, perform these steps automatically without asking:
+4. Spawn an agent with `model: "haiku"`, passing: `CDP port: {PORT}. Task: {TASK}` followed by the full content of agent-prompt.md, then the operations reference block
 
-**1. Handle Onboarding Dialog** (appears on first launch — disable telemetry but do NOT close it):
+The agent uses operation references directly when they cover the elements needed for the task. It falls back to compact snapshots only for elements not in the reference, and full `snapshot()` as a last resort.
 
-```text
-mcp__podman-desktop-mcp__evaluate({
-  script: `
-    const skipButton = Array.from(document.querySelectorAll('button'))
-      .find(b => b.textContent.trim() === 'Skip');
-    if (skipButton) {
-      const telemetry = document.querySelector('input[aria-label="Enable telemetry"]');
-      if (telemetry?.checked) telemetry.click();
-      'Onboarding dialog present — telemetry disabled (dialog left open for testing)';
-    } else {
-      'No onboarding dialog found';
-    }
-  `
-})
-```
+The agent returns a summary of what it found or did, and optionally a structured workflow trace (for E2E test writing tasks). The agent handles connecting to CDP, initial setup (dialogs), and disconnecting — the orchestrator only needs to pass the port number.
 
-> **Do not close the onboarding dialog automatically.** Some test scenarios need to interact with it. The task in Phase 5 will decide whether to skip it or test it.
-
-**2. Close Feedback Dialog** (appears after onboarding is completed — safe to run when absent):
-
-```text
-mcp__podman-desktop-mcp__evaluate({
-  script: `
-    const dialog = document.querySelector('[role="dialog"][aria-label="Share your feedback"]');
-    if (dialog) {
-      dialog.querySelector('button[aria-label="Close"]')?.click();
-      'Closed feedback dialog';
-    } else {
-      'No feedback dialog';
-    }
-  `
-})
-```
-
-**3. Take Initial Snapshot:**
-
-```text
-mcp__podman-desktop-mcp__snapshot()
-```
-
-Summarize what's visible on the current page to the user (including whether the onboarding dialog is showing).
-
-### Phase 5: Execute Task
-
-Execute the task provided when the skill was invoked. The task can be anything — exploring a page, testing a feature, verifying a workflow, checking UI state, etc. Work autonomously:
-
-- Use MCP tools (`snapshot`, `screenshot`, `evaluate`, `click`, `getText`, etc.) as needed — don't ask permission for individual actions.
-- Take screenshots and snapshots at your own judgment to verify state and gather information.
-- If something fails or is unexpected, investigate and retry before giving up.
-- When the task is complete, summarize what you found or did.
-
-**After completing the task**, use `AskUserQuestion`:
+**After the agent returns**, use `AskUserQuestion`:
 
 - **Question:** `What would you like to do next?`
 - **Header:** `Next`
@@ -274,21 +244,13 @@ Execute the task provided when the skill was invoked. The task can be anything �
   1. `Continue testing` — Provide another task (user enters free text via "Other")
   2. `Done — finish testing` — Disconnect and clean up
 
-If the user continues, execute the new task the same way and ask again when done. If done, proceed to Phase 6.
+If the user continues, run Phase 4 again with the new task. If done, proceed to Phase 5.
 
-### Phase 6: Cleanup
-
-**Step 1 — Disconnect from MCP:**
-
-```text
-mcp__podman-desktop-mcp__disconnect()
-```
-
-**Step 2 — Ask about the app:**
+### Phase 5: Cleanup
 
 Use `AskUserQuestion`:
 
-- **Question:** `Disconnected from MCP. What should I do with the app?`
+- **Question:** `What should I do with the app?`
 - **Header:** `Cleanup`
 - **Options:**
   1. `Leave running` — Keep the app alive so you can reconnect later
@@ -313,55 +275,6 @@ bash .agents/skills/mcp-testing/stop.sh
 pwsh .agents/skills/mcp-testing/stop.ps1
 ```
 
-## Selector Strategy
-
-When interacting with elements, prefer in this order:
-
-1. **ARIA roles and accessible names** (most stable)
-
-   ```javascript
-   document.querySelector('button[aria-label="Create"]').click();
-   ```
-
-2. **Text content**
-
-   ```javascript
-   Array.from(document.querySelectorAll('button'))
-     .find(b => b.textContent.includes('Pull'))
-     .click();
-   ```
-
-3. **data-testid attributes**
-
-   ```javascript
-   document.querySelector('[data-testid="help-menu"]').click();
-   ```
-
-4. **CSS / href selectors** (last resort)
-
-   ```javascript
-   document.querySelector('a[href="/containers"]').click();
-   ```
-
-## Common Navigation URLs
-
-- Dashboard: `/`
-- Containers: `/containers`
-- Pods: `/pods`
-- Images: `/images`
-- Volumes: `/volumes`
-- Networks: `/networks`
-- Kubernetes: `/kubernetes`
-- Extensions: `/extensions`
-
-Navigate using JavaScript evaluation:
-
-```text
-mcp__podman-desktop-mcp__evaluate({
-  script: `document.querySelector('a[href="/containers"]').click(); 'Navigated to Containers';`
-})
-```
-
 ## Troubleshooting
 
 ### `pnpm: command not found`
@@ -372,21 +285,9 @@ npm install -g pnpm
 
 Then re-open your terminal and verify with `pnpm --version`.
 
-### Connected to DevTools Instead of App
-
-**Symptom:** `connect` returns `Window title: DevTools`.
-
-**Fix:**
-
-1. `mcp__podman-desktop-mcp__disconnect()`
-2. Re-run the startup script for your mode — it closes DevTools targets automatically via `close_devtools_targets`
-3. `mcp__podman-desktop-mcp__connect({ port: PORT })`
-
 ### Production App Without CDP
 
 **Symptom:** Probe shows `PROD_RUNNING=true` but `PROD_CDP_PORT=none`.
-
-**Cause:** The production app was launched without the `--remote-debugging-port` flag.
 
 **Fix:** Run `start.sh --mode prod` (or `start.ps1 -Mode prod`) — it detects this case automatically, closes the running app, and relaunches it with CDP enabled.
 
@@ -396,54 +297,12 @@ Then re-open your terminal and verify with `pnpm --version`.
 
 **If startup still times out after 120s:** the production app may have restarted in the gap between detection and the kill, or a non-Podman-Desktop process holds port 9222. Run the stop script, verify port 9222 is free (`lsof -ti :9222`), then re-run the start script.
 
-### MCP Tools Become Unavailable Mid-Session
-
-**Symptom:** `mcp__podman-desktop-mcp__*` tools return errors.
-
-**Do not ask the user to restart the MCP server.** Try reconnecting:
-
-```text
-mcp__podman-desktop-mcp__connect({ port: PORT })
-```
-
-If the port is gone, re-run the startup script.
-
-### Element Not Found
-
-1. Use `snapshot()` to see current page structure
-2. Wait for page load: `mcp__podman-desktop-mcp__wait({ selector: 'main', timeout: 5000 })`
-3. Check if element is in a different frame or webview
-
-### Test Isolation (dev mode)
-
-Each `pnpm watch` session uses the same user data directory. For a clean state:
-
-```bash
-PODMAN_DESKTOP_HOME_DIR=/tmp/pd-dev-test pnpm watch
-```
-
-### "Too Many Open Files" Error (dev mode)
-
-```bash
-ulimit -n 65536
-```
-
-Add to `~/.bashrc` or `~/.zshrc` to make it permanent.
-
 ## Quick Reference
 
-| Command                                                   | Purpose                                        |
-| --------------------------------------------------------- | ---------------------------------------------- |
-| `bash probe.sh`                                           | Detect environment (what's running, CDP ports) |
-| `bash start.sh --mode dev`                                | Full dev startup                               |
-| `bash start.sh --mode dev-fast`                           | Fast-path (dev already running)                |
-| `bash start.sh --mode prod`                               | Launch/connect production app                  |
-| `mcp__podman-desktop-mcp__connect({ port: PORT })`        | Connect to app                                 |
-| `mcp__podman-desktop-mcp__disconnect()`                   | Disconnect from MCP                            |
-| `mcp__podman-desktop-mcp__snapshot()`                     | Get accessibility tree                         |
-| `mcp__podman-desktop-mcp__evaluate({ script: '...' })`    | Run JavaScript in renderer                     |
-| `mcp__podman-desktop-mcp__screenshot({ fullPage: true })` | Capture screenshot                             |
-
-## Additional Resources
-
-- **Example commands and selectors:** `examples.md` — Ready-to-use MCP command examples and selectors reference derived from Playwright Page Object Models
+| Command                                                    | Purpose                                        |
+| ---------------------------------------------------------- | ---------------------------------------------- |
+| `bash .agents/skills/mcp-testing/probe.sh`                 | Detect environment (what's running, CDP ports) |
+| `bash .agents/skills/mcp-testing/start.sh --mode dev`      | Full dev startup                               |
+| `bash .agents/skills/mcp-testing/start.sh --mode dev-fast` | Fast-path (dev already running)                |
+| `bash .agents/skills/mcp-testing/start.sh --mode prod`     | Launch/connect production app                  |
+| `bash .agents/skills/mcp-testing/stop.sh`                  | Stop app and free port                         |
