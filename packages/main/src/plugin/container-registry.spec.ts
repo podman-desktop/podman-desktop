@@ -6487,12 +6487,13 @@ describe('prune images', () => {
 });
 
 describe('pruneVolumes', () => {
-  test('prune passes all filter to include named volumes', async () => {
+  test('prune with Podman >= 6.0 passes all filter', async () => {
     const provider: InternalContainerProvider = {
-      name: 'engine',
-      id: 'engine1',
+      name: 'podman',
+      id: 'podman1',
       api: {
         pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '6.0.1' }),
       } as unknown as Dockerode,
       connection: {
         type: 'podman',
@@ -6505,24 +6506,20 @@ describe('pruneVolumes', () => {
       },
     };
 
-    containerRegistry.addInternalProvider('engine.test', provider);
+    containerRegistry.addInternalProvider('podman.new', provider);
 
-    await containerRegistry.pruneVolumes('engine.test');
+    await containerRegistry.pruneVolumes('podman.new');
 
     expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
   });
 
-  test('prune falls back to unfiltered call when all filter is rejected', async () => {
-    const pruneVolumes = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('"all" is an invalid volume filter'))
-      .mockResolvedValueOnce({ VolumesDeleted: ['vol1'], SpaceReclaimed: 100 });
-
+  test('prune with Podman < 6.0 skips all filter', async () => {
     const provider: InternalContainerProvider = {
-      name: 'engine',
-      id: 'engine1',
+      name: 'podman',
+      id: 'podman1',
       api: {
-        pruneVolumes,
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '5.4.2' }),
       } as unknown as Dockerode,
       connection: {
         type: 'podman',
@@ -6535,13 +6532,37 @@ describe('pruneVolumes', () => {
       },
     };
 
-    containerRegistry.addInternalProvider('engine.fallback', provider);
+    containerRegistry.addInternalProvider('podman.old', provider);
 
-    const result = await containerRegistry.pruneVolumes('engine.fallback');
+    await containerRegistry.pruneVolumes('podman.old');
 
-    expect(pruneVolumes).toHaveBeenNthCalledWith(1, { filters: { all: ['true'] } });
-    expect(pruneVolumes).toHaveBeenNthCalledWith(2);
-    expect(result).toEqual({ VolumesDeleted: ['vol1'], SpaceReclaimed: 100 });
+    expect(provider.api?.pruneVolumes).toBeCalledWith();
+  });
+
+  test('prune with Docker passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'docker',
+      id: 'docker1',
+      api: {
+        pruneVolumes: vi.fn(),
+      } as unknown as Dockerode,
+      libpodApi: undefined,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('docker.test', provider);
+
+    await containerRegistry.pruneVolumes('docker.test');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
   });
 });
 
