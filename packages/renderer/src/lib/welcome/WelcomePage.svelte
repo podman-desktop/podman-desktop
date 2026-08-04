@@ -1,10 +1,10 @@
 <script lang="ts">
 import type { OnboardingInfo, TelemetryMessages, WelcomeMessages } from '@podman-desktop/core-api';
 import { Button, Checkbox, Link, Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
@@ -127,7 +127,9 @@ function startOnboardingQueue(): void {
                     : 'border-[var(--pd-content-card-border)]'}">
                   <div class="place-items-top flex flex-col flex-1">
                     <div class="flex flex-row place-items-left flex-1">
-                      <IconImage image={onboarding.icon} class="max-h-12 h-auto w-auto" alt="{onboarding.name} logo" />
+                      {#if onboarding.icon}
+                        <Icon icon={onboarding.icon} class="max-h-12 h-auto w-auto" title="{onboarding.name} logo" />
+                      {/if}
                       <div
                         class="flex flex-1 mx-2 underline decoration-2 decoration-dotted underline-offset-2 cursor-default justify-left text-capitalize">
                         <Tooltip top tip={onboarding.description}>

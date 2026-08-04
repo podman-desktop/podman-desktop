@@ -45,7 +45,7 @@ test('Expect started icon', async () => {
     state: 'started',
     readme: '',
     path: '',
-    icon: 'my-icon',
+    icon: 'my-icon.png',
   };
   render(ExtensionIcon, { extension: extension });
 
@@ -71,7 +71,7 @@ test('Expect faded icon for other states', async () => {
     readme: '',
     state: 'stopped',
     path: '',
-    icon: 'my-icon',
+    icon: 'my-icon.png',
   };
   render(ExtensionIcon, { extension: extension });
 

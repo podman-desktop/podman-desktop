@@ -6,8 +6,8 @@ import {
   type SystemOverviewStatus,
 } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import { handleNavigation } from '/@/navigation';
 import {
   getConnectionDisplayName,
@@ -80,7 +80,9 @@ function navigateToConnection(): void {
     <Button type="secondary" onclick={navigateToConnection} title="Navigate to {connectionName}" aria-label="Navigate to {connectionName}" padding="px-2 py-[3px]">
       <div class="flex items-center gap-1.5">
         <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center">
-          <IconImage image={provider.images?.icon} alt={provider.name} class="max-w-7 max-h-7 object-contain" />
+          {#if provider.images?.icon}
+            <Icon icon={provider.images.icon} title={provider.name} class="max-w-7 max-h-7 object-contain" />
+          {/if}
         </div>
         <span class="text-xs whitespace-nowrap">{connectionName}</span>
       </div>
@@ -92,7 +94,9 @@ function navigateToConnection(): void {
       aria-label="Navigate to {connectionName}"
       title="Navigate to {connectionName}">
       <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center">
-        <IconImage image={provider.images?.icon} alt={provider.name} class="max-w-7 max-h-7 object-contain" />
+        {#if provider.images?.icon}
+          <Icon icon={provider.images.icon} title={provider.name} class="max-w-7 max-h-7 object-contain" />
+        {/if}
       </div>
     </button>
   {/if}

@@ -4,9 +4,9 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
@@ -285,7 +285,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                 <div class="flex items-center min-w-0">
                   <!-- Only show if a "suggested" registry icon has been added -->
                   {#if registry.icon}
-                    <IconImage image={registry.icon} class="w-6 h-6 shrink-0" alt={registry.name}></IconImage>
+                    <Icon icon={registry.icon} class="w-6 h-6 shrink-0" title={registry.name} />
                   {/if}
                   {#if registry.name}
                     <span class="ml-2 truncate">
@@ -411,7 +411,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               <div class="flex w-full h-full">
                 <div class="flex items-center min-w-0">
                   {#if registry.icon}
-                    <IconImage image={registry.icon} class="w-6 h-6 shrink-0" alt={registry.name}></IconImage>
+                    <Icon icon={registry.icon} class="w-6 h-6 shrink-0" title={registry.name} />
                   {/if}
                   <!-- By default, just show the name, but if we go to add it, show the full URL including https -->
                   <span class="ml-2 truncate">

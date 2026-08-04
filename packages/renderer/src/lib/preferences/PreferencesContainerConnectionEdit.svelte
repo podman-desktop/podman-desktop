@@ -5,11 +5,11 @@ import type {
   ProviderKubernetesConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import PreferencesConnectionCreationRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
@@ -76,7 +76,9 @@ async function editConnection(
       </div>
     {/snippet}
     {#snippet iconSnippet()}
-      <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
+      {#if providerInfo?.images?.icon}
+        <Icon icon={providerInfo.images.icon} title={providerInfo?.name} class="max-h-10" />
+      {/if}
     {/snippet}
     {#snippet subtitleSnippet()}
       {#if connectionInfo.status === 'started'}
