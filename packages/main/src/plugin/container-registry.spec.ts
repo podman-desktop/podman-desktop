@@ -6487,63 +6487,13 @@ describe('prune images', () => {
 });
 
 describe('pruneVolumes', () => {
-  const dockerProvider: InternalContainerProvider = {
-    name: 'docker',
-    id: 'docker1',
-    api: {
-      pruneVolumes: vi.fn(),
-    } as unknown as Dockerode,
-    libpodApi: undefined,
-    connection: {
-      type: 'docker',
-      name: 'docker',
-      displayName: 'docker',
-      endpoint: {
-        socketPath: '/endpoint1.sock',
-      },
-      status: vi.fn(),
-    },
-  };
-
-  const podmanProvider: InternalContainerProvider = {
-    name: 'podman',
-    id: 'podman1',
-    api: {
-      pruneVolumes: vi.fn(),
-    } as unknown as Dockerode,
-    libpodApi: {
-      pruneAllVolumes: vi.fn(),
-    } as unknown as LibPod,
-    connection: {
-      type: 'podman',
-      name: 'podman',
-      displayName: 'podman',
-      endpoint: {
-        socketPath: '/endpoint1.sock',
-      },
-      status: vi.fn(),
-    },
-  };
-
-  test('prune with podman uses libpod API to include named volumes', async () => {
-    containerRegistry.addInternalProvider('podman.podman', podmanProvider);
-
-    await containerRegistry.pruneVolumes('podman.podman');
-
-    expect(podmanProvider.libpodApi?.pruneAllVolumes).toBeCalled();
-    expect(podmanProvider.api?.pruneVolumes).not.toBeCalled();
-  });
-
-  test('prune with podman falls back to compat API when libpod rejects', async () => {
-    const fallbackProvider: InternalContainerProvider = {
-      name: 'podman',
-      id: 'podman1',
+  test('prune passes all filter to include named volumes', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'engine',
+      id: 'engine1',
       api: {
         pruneVolumes: vi.fn(),
       } as unknown as Dockerode,
-      libpodApi: {
-        pruneAllVolumes: vi.fn().mockRejectedValue(new Error('"all" is an invalid volume filter')),
-      } as unknown as LibPod,
       connection: {
         type: 'podman',
         name: 'podman',
@@ -6555,20 +6505,43 @@ describe('pruneVolumes', () => {
       },
     };
 
-    containerRegistry.addInternalProvider('podman.fallback', fallbackProvider);
+    containerRegistry.addInternalProvider('engine.test', provider);
 
-    await containerRegistry.pruneVolumes('podman.fallback');
+    await containerRegistry.pruneVolumes('engine.test');
 
-    expect(fallbackProvider.libpodApi?.pruneAllVolumes).toBeCalled();
-    expect(fallbackProvider.api?.pruneVolumes).toBeCalled();
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
   });
 
-  test('prune with docker does not pass all filter', async () => {
-    containerRegistry.addInternalProvider('docker.docker', dockerProvider);
+  test('prune falls back to unfiltered call when all filter is rejected', async () => {
+    const pruneVolumes = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('"all" is an invalid volume filter'))
+      .mockResolvedValueOnce({ VolumesDeleted: ['vol1'], SpaceReclaimed: 100 });
 
-    await containerRegistry.pruneVolumes('docker.docker');
+    const provider: InternalContainerProvider = {
+      name: 'engine',
+      id: 'engine1',
+      api: {
+        pruneVolumes,
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
 
-    expect(dockerProvider.api?.pruneVolumes).toBeCalledWith();
+    containerRegistry.addInternalProvider('engine.fallback', provider);
+
+    const result = await containerRegistry.pruneVolumes('engine.fallback');
+
+    expect(pruneVolumes).toHaveBeenNthCalledWith(1, { filters: { all: ['true'] } });
+    expect(pruneVolumes).toHaveBeenNthCalledWith(2);
+    expect(result).toEqual({ VolumesDeleted: ['vol1'], SpaceReclaimed: 100 });
   });
 });
 

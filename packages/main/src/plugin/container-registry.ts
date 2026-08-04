@@ -1765,15 +1765,10 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
-      const provider = this.internalProviders.get(engineId);
-      if (provider?.libpodApi) {
-        try {
-          await provider.libpodApi.pruneAllVolumes();
-          return { VolumesDeleted: [], SpaceReclaimed: 0 };
-        } catch {
-          // pruneAllVolumes uses the "all" filter (Podman 6.0+);
-          // fall back to the compat API for older versions
-        }
+      try {
+        return await this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
+      } catch {
+        // "all" filter unsupported (e.g. Podman < 6.0); fall back to unfiltered prune
       }
       return this.getMatchingEngine(engineId).pruneVolumes();
     } catch (error) {
