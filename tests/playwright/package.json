@@ -23,7 +23,7 @@
     "argos-ci:upload": "npx @argos-ci/cli upload --build-name podman-desktop-e2e ./output/screenshots"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.0",
+    "@playwright/test": "1.62.1",
     "@types/node": "^24",
     "electron": "43.2.0",
     "typescript": "^6.0.3",
