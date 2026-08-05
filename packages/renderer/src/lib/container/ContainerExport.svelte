@@ -12,18 +12,20 @@ import { containersInfos } from '/@/stores/containers';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let containerID: string;
+interface Props {
+  containerID: string;
+}
+let { containerID }: Props = $props();
 
-let container: ContainerInfoUI | undefined = undefined;
+let container: ContainerInfoUI | undefined = $state(undefined);
 
-let invalidName = false;
-let invalidFolder = true;
-let outputTarget = '';
+let invalidName = $state(false);
+let invalidFolder = $state(true);
+let outputTarget = $state('');
 let outputUri: Uri;
-let exportedError = '';
-let inProgress = false;
-let invalidFields: boolean;
-$: invalidFields = invalidName || invalidFolder;
+let exportedError = $state('');
+let inProgress = $state(false);
+let invalidFields = $derived(invalidName || invalidFolder);
 
 onMount(() => {
   const containerUtils = new ContainerUtils();
