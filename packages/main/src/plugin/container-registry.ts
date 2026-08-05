@@ -1830,14 +1830,9 @@ export class ContainerProviderRegistry {
         ...optionalParams,
       })
       .then(containerStream => {
-        // A single multi-byte UTF-8 character can be split across two stream
-        // chunks. Decoding each chunk independently with `toString('utf-8')`
-        // would emit a replacement character (U+FFFD, shown as `�`) for the
-        // partial bytes. StringDecoder buffers incomplete byte sequences until
-        // the rest of the character arrives in a later chunk.
+        // StringDecoder buffers incomplete multi-byte sequences across chunks
         const decoder = new StringDecoder('utf-8');
         containerStream.on('end', () => {
-          // Flush any bytes still buffered by the decoder before signalling end.
           const remaining = decoder.end();
           if (remaining) {
             logsParams.callback('data', remaining);

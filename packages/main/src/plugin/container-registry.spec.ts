@@ -2903,6 +2903,46 @@ test('container logs reassembles multi-byte UTF-8 characters split across chunks
   expect(dataChunks.join('')).not.toContain('\uFFFD');
 });
 
+test('container logs flushes buffered bytes when the stream ends mid-character', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+
+  const dataChunks: string[] = [];
+  const endPromise = new Promise<void>((resolve, reject) => {
+    const callback = (name: string, data: string): void => {
+      if (name === 'data') {
+        dataChunks.push(data);
+      } else if (name === 'end') {
+        resolve();
+      }
+    };
+    containerRegistry
+      .logsContainer({ engineId: 'podman', id: 'containerId', callback })
+      .catch((err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
+  });
+
+  // Emit only the first two bytes of "🚀" then end the stream, leaving an
+  // incomplete sequence buffered inside the decoder.
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.concat([Buffer.from('truncated '), rocketBytes.subarray(0, 2)]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  // The decoder flushes the incomplete sequence on end(), so the buffered bytes
+  // are reported instead of being silently dropped.
+  expect(dataChunks.length).toBe(2);
+  expect(dataChunks[0]).toBe('truncated ');
+  expect(dataChunks[1]).toBe('\uFFFD');
+});
+
 describe('createContainer', () => {
   test('test create and start Container', async () => {
     const createdId = '1234';
