@@ -40,7 +40,7 @@ jobs:
     permissions:
       contents: write  # for peaceiris/actions-gh-pages to push pages branch
     name: Build and deploy website
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     timeout-minutes: 60

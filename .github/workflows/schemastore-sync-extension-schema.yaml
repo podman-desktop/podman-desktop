@@ -28,7 +28,7 @@ permissions:
 jobs:
   prepare:
     name: Prepare release metadata
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       schemaMinorVersion: ${{ steps.version.outputs.schemaMinorVersion }}
@@ -55,7 +55,7 @@ jobs:
 
   sync-schemastore:
     name: Sync schema to SchemaStore
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: prepare
     environment: ${{ github.ref_type == 'tag' && 'schemastore-publication' || '' }}
     permissions:

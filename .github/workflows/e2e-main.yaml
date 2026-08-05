@@ -92,7 +92,7 @@ permissions:
 jobs:
   e2e-tests:
     name: Run E2E tests - ${{ matrix.installation }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:

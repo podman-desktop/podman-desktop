@@ -38,7 +38,7 @@ jobs:
 
   tag:
     name: Tagging
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     outputs:
@@ -144,7 +144,7 @@ jobs:
           - os: "macos-15"
           - os: "macos-15"
             airgap: "true"
-          - os: "ubuntu-24.04"
+          - os: "ubuntu-26.04"
     timeout-minutes: 60
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -175,7 +175,7 @@ jobs:
         run: pnpm install
 
       - name: Install flatpak on Linux
-        if: ${{ matrix.os=='ubuntu-24.04' }}
+        if: ${{ matrix.os=='ubuntu-26.04' }}
         run: |
           sudo apt-get update
           sudo apt-get install flatpak -y
@@ -213,7 +213,7 @@ jobs:
     name: Release
     permissions:
       contents: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: id
         run: echo the release id is ${{ needs.tag.outputs.releaseId}}
@@ -229,7 +229,7 @@ jobs:
   pnpm-store:
     needs: [tag, release]
     name: pnpm-store-${{ matrix.arch }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     strategy:

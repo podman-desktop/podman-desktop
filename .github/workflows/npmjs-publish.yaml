@@ -31,7 +31,7 @@ permissions:
 jobs:
   prepare-version:
     name: Prepare version info
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.set-version.outputs.version }}
       dist-tag: ${{ steps.set-version.outputs.dist-tag }}
@@ -77,7 +77,7 @@ jobs:
   publish:
     name: Publish to npm
     needs: [prepare-version]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # For tag releases, require an environment (so people can approve it)
     environment: ${{ needs.prepare-version.outputs.is-tag == 'true' && 'npmjs-publication' || '' }}
     permissions:

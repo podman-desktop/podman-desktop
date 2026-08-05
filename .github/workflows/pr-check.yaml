@@ -82,7 +82,7 @@ jobs:
   linux:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Linux
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -174,7 +174,7 @@ jobs:
   website-build:
     if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
     name: build website
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -210,7 +210,7 @@ jobs:
   lint-format:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: linter, formatters
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -247,7 +247,7 @@ jobs:
   typecheck:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: typecheck
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -275,7 +275,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2025, ubuntu-24.04, macos-15]
+        os: [windows-2025, ubuntu-26.04, macos-15]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -293,17 +293,17 @@ jobs:
 
         # run the unit tests with coverage on ubuntu
       - name: Run unit tests with coverage
-        if: ${{ matrix.os=='ubuntu-24.04' }}
+        if: ${{ matrix.os=='ubuntu-26.04' }}
         run: pnpm test:unit:coverage
 
         # do not run coverage on non-ubuntu os
       - name: Run unit tests
-        if: ${{ matrix.os!='ubuntu-24.04' }}
+        if: ${{ matrix.os!='ubuntu-26.04' }}
         run: pnpm test:unit
 
         # publish codecov report if linux
       - name: publish codecov report
-        if: ${{ matrix.os=='ubuntu-24.04' }}
+        if: ${{ matrix.os=='ubuntu-26.04' }}
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -312,7 +312,7 @@ jobs:
   smoke-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: smoke e2e tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -428,7 +428,7 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
-  
+
   macos-sanity-check-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: macos sanity check e2e tests
@@ -477,7 +477,7 @@ jobs:
   k8s-sanity-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: k8s sanity e2e tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -554,7 +554,7 @@ jobs:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     # name should not change since it is a required rule pattern
     name: Detect pnpm lock or pr-check files changes
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       trigger_update_tests: ${{ steps.detect_changes.outputs.TRIGGER_UPDATE_TESTS }}
     steps:
@@ -762,7 +762,7 @@ jobs:
 
   update-e2e-test:
     name: update E2E test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [win-update-e2e-test, mac-update-e2e-test]
     if: |
       always()
