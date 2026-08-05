@@ -130,13 +130,6 @@ export class ExtensionsPage extends BasePage {
     });
   }
 
-  public async countCatalogExtensions(): Promise<number> {
-    return test.step('Count catalog extension cards', async () => {
-      // Each catalog card has a "More details" button (visible label)
-      return await this.catalogExtensions.getByText('More details', { exact: true }).count();
-    });
-  }
-
   public async openExtensionDetails(name: string, label: string, heading: string): Promise<ExtensionDetailsPage> {
     const extensionCard = await this.getInstalledExtension(name, label);
     return await extensionCard.openExtensionDetails(heading);
@@ -168,5 +161,30 @@ export class ExtensionsPage extends BasePage {
       console.log(`Could not get ${label} extension version:`, error);
       return undefined;
     }
+  }
+
+  public async countInstalledExtensionCards(): Promise<number> {
+    return test.step('Count installed extension cards', async () => {
+      const cards = this.content.getByRole('region');
+      return await cards.count();
+    });
+  }
+
+  public async countCatalogExtensionCards(): Promise<number> {
+    return test.step('Count catalog extension cards', async () => {
+      const cards = this.content.getByRole('group');
+      return await cards.count();
+    });
+  }
+
+  public async extensionCardIsVisible(label: string): Promise<boolean> {
+    return test.step(`Check if extension card ${label} is visible`, async () => {
+      const regionCard = this.content.getByRole('region', { name: label, exact: true });
+      if ((await regionCard.count()) > 0) {
+        return await regionCard.isVisible();
+      }
+      const groupCard = this.content.getByRole('group', { name: label, exact: true });
+      return (await groupCard.count()) > 0 && (await groupCard.isVisible());
+    });
   }
 }

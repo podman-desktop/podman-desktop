@@ -53,7 +53,7 @@ test.describe('Extensions Catalog filter', { tag: ['@smoke'] }, () => {
       CATALOG_LOAD_TIMEOUT,
     );
 
-    const unfilteredCount = await extensionsPage.countCatalogExtensions();
+    const unfilteredCount = await extensionsPage.countCatalogExtensionCards();
     playExpect(unfilteredCount).toBeGreaterThanOrEqual(2);
 
     await test.step('Filter by known extension name shows only matching cards', async () => {
@@ -62,7 +62,7 @@ test.describe('Extensions Catalog filter', { tag: ['@smoke'] }, () => {
       await playExpect(matchingExtension1.parent).toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect(matchingExtension2.parent).not.toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect
-        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: ASSERT_TIMEOUT })
+        .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: ASSERT_TIMEOUT })
         .toBe(1);
     });
 
@@ -72,7 +72,7 @@ test.describe('Extensions Catalog filter', { tag: ['@smoke'] }, () => {
       await playExpect(matchingExtension1.parent).not.toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect(matchingExtension2.parent).not.toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect
-        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: ASSERT_TIMEOUT })
+        .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: ASSERT_TIMEOUT })
         .toBe(0);
       await playExpect(extensionsPage.clearFilterButton).toBeVisible({ timeout: ASSERT_TIMEOUT });
     });
@@ -83,7 +83,7 @@ test.describe('Extensions Catalog filter', { tag: ['@smoke'] }, () => {
       await playExpect(matchingExtension1.parent).toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect(matchingExtension2.parent).toBeVisible({ timeout: ASSERT_TIMEOUT });
       await playExpect
-        .poll(async () => await extensionsPage.countCatalogExtensions(), { timeout: ASSERT_TIMEOUT })
+        .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: ASSERT_TIMEOUT })
         .toBe(unfilteredCount);
       await playExpect(extensionsPage.clearFilterButton).not.toBeVisible();
     });
