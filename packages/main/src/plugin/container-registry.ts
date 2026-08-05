@@ -2911,7 +2911,14 @@ export class ContainerProviderRegistry {
     if (provider.libpodApi) {
       const podmanInfo = await provider.libpodApi.podmanInfo();
       const { memTotal, memFree, memAvailable } = podmanInfo.host;
-      const memoryUsed = memAvailable !== undefined && memAvailable >= 0 ? memTotal - memAvailable : memTotal - memFree;
+      let memoryUsed: number;
+      // Podman version >= 6.1.0 expose the memAvailable which is the amount of memory available to the system
+      if (memAvailable !== undefined && memAvailable >= 0) {
+        memoryUsed = memTotal - memAvailable;
+      } else {
+        memoryUsed = memTotal - memFree;
+      }
+
       return {
         engineId: provider.id,
         engineName: provider.name,
