@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { expect, test } from 'vitest';
 
-import { isFontAwesomeIcon, isFontAwesomeSize } from './icon-utils';
+import { isFontAwesomeIcon, isFontAwesomeSize, isThemedIconImage } from './icon-utils';
 
 test('ensure fas prefix is recognized', () => {
   expect(isFontAwesomeIcon(faTrash)).toBeTruthy();
@@ -34,4 +34,11 @@ test('ensure fontawesome size is recognized', () => {
   expect(isFontAwesomeSize('xs')).toBeTruthy();
   expect(isFontAwesomeSize('1x')).toBeTruthy();
   expect(isFontAwesomeSize('4.2x')).toBeTruthy();
+});
+
+test('ensure themed icon images are recognized', () => {
+  expect(isThemedIconImage({ light: 'light.png', dark: 'dark.png' })).toBeTruthy();
+  expect(isThemedIconImage(faTrash)).toBeFalsy();
+  expect(isThemedIconImage({ light: 'light.png' })).toBeFalsy();
+  expect(isThemedIconImage('light.png')).toBeFalsy();
 });

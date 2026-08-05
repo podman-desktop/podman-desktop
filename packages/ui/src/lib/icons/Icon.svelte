@@ -3,10 +3,11 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { Component } from 'svelte';
 import { Fa, type IconSize } from 'svelte-fa';
 
-import { isFontAwesomeIcon, isFontAwesomeSize } from '../utils/icon-utils';
+import { isFontAwesomeIcon, isFontAwesomeSize, isThemedIconImage } from '../utils/icon-utils';
+import type { ThemedIconImage } from './Icon';
 
 interface Props {
-  icon: IconDefinition | Component | string;
+  icon: IconDefinition | Component | string | ThemedIconImage;
   size?: IconSize | number | string;
   class?: string;
   title?: string;
@@ -18,6 +19,11 @@ let { icon, size, class: className, title, ariaHidden }: Props = $props();
 const role = $derived(ariaHidden ? undefined : 'img');
 const ariaHiddenAttr = $derived(ariaHidden ? 'true' : undefined);
 const IconComponent = icon;
+const sizeStyle = $derived(typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : '');
+
+const themedImageSrc = $derived(
+  isThemedIconImage(icon) ? (document.documentElement.classList.contains('dark') ? icon.dark : icon.light) : undefined,
+);
 </script>
 
 
@@ -31,10 +37,12 @@ const IconComponent = icon;
     {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-') || icon.startsWith('fab fa-') || icon.endsWith('-icon')}
         <span class={`${icon} ${size} ${className}`} role={role} aria-hidden={ariaHiddenAttr} {title}></span>
     {:else if icon.startsWith('data:image/')}
-        <img src={icon} alt={ariaHidden ? '' : (title ?? '')} {title} role={role} aria-hidden={ariaHiddenAttr} class={className} style={typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : ''} />
+        <img src={icon} alt={ariaHidden ? '' : (title ?? '')} {title} role={role} aria-hidden={ariaHiddenAttr} class={className} style={sizeStyle} />
     {/if}
+{:else if themedImageSrc}
+    <img src={themedImageSrc} alt={ariaHidden ? '' : (title ?? '')} {title} role={role} aria-hidden={ariaHiddenAttr} class={className} style={sizeStyle} />
 {:else}
-    {#if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
+    {#if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent) && !isThemedIconImage(IconComponent)}
         <span role={role} aria-hidden={ariaHiddenAttr} {title}><IconComponent class={className} {size}/></span>
     {/if}
 {/if}

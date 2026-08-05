@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -227,5 +227,26 @@ describe('string icon', () => {
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('alt', 'test title');
     expect(img).toHaveAttribute('src', icon);
+  });
+});
+
+describe('themed image icon', () => {
+  test('renders the light source by default', () => {
+    const icon = { light: 'light.png', dark: 'dark.png' };
+    render(Icon, { icon });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toHaveAttribute('src', 'light.png');
+  });
+
+  test('renders the dark source when the dark class is present', () => {
+    document.documentElement.classList.add('dark');
+    const icon = { light: 'light.png', dark: 'dark.png' };
+    render(Icon, { icon, size: 22 });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toHaveAttribute('src', 'dark.png');
+    expect(img).toHaveAttribute('style', 'width: 22px; height: 22px;');
+    document.documentElement.classList.remove('dark');
   });
 });
