@@ -20,6 +20,7 @@ import type { Page } from '@playwright/test';
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { ResourceElementState, SystemOverviewState } from '/@/model/core/states';
+import { CreateDummyK8sClusterPage } from '/@/model/pages/create-dummy-k8s-cluster-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import type { NavigationBar } from '/@/model/workbench/navigation';
@@ -230,30 +231,18 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
       });
 
     await test.step('Create dummy-cluster', async () => {
-      // click on 'Create new...'
       await playExpect(dummyK8sResourceCard.createButton).toBeVisible();
       await playExpect(dummyK8sResourceCard.createButton).toBeEnabled();
       await dummyK8sResourceCard.createButton.scrollIntoViewIfNeeded();
       await dummyK8sResourceCard.createButton.click();
-      // Create Kubernetes cluster (second form)
-      const k8sClusterForm = page
-        .getByRole('form', { name: 'Properties Information' })
-        .filter({ has: page.getByRole('textbox', { name: 'Cluster name' }) });
-      const createK8sClusterButton = k8sClusterForm.getByRole('button', { name: 'Create' });
-      await playExpect(createK8sClusterButton).toBeEnabled();
-      await createK8sClusterButton.click();
+      const createDummyK8sClusterPage = new CreateDummyK8sClusterPage(page);
+      await createDummyK8sClusterPage.createDummyK8sCluster(DUMMY_CLUSTER_NAME);
     });
 
     await test.step('Verify Kubernetes/VM connection on dashboard', async () => {
-      // check the resource has been created
-      const goBackButton = page.getByRole('button', { name: 'Go back to resources' });
-      await playExpect(goBackButton).toBeVisible();
-      await goBackButton.click();
-      // verify the 'Kubernetes/VM connections:' label is visible
       await navigationBar.openDashboard();
       await dashboardPage.k8sVmConnectionLabel.scrollIntoViewIfNeeded();
       await playExpect(dashboardPage.k8sVmConnectionLabel).toBeVisible();
-      // verify the new k8s connection button appears on the enhanced dashboard card
       const dummyK8sClusterButton = dashboardPage.getNavigateToConnectionButton(DUMMY_CLUSTER_NAME);
       await playExpect(dummyK8sClusterButton).toBeVisible();
       await playExpect(dummyK8sClusterButton).toBeEnabled();
