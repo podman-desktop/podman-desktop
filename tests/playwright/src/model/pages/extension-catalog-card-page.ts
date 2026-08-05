@@ -29,11 +29,10 @@ export class ExtensionCatalogCardPage extends BasePage {
   readonly downloadButton: Locator;
   readonly alreadyInstalledText: Locator;
 
-  constructor(page: Page, extensionName: string, container?: Locator) {
+  constructor(page: Page, extensionName: string) {
     super(page);
     this.extensionName = extensionName;
-    const root = container ?? this.page;
-    this.parent = root.getByRole('group', { name: this.extensionName });
+    this.parent = this.page.getByRole('group', { name: this.extensionName });
     this.detailsButton = this.parent.getByRole('button', {
       name: 'More details',
     });

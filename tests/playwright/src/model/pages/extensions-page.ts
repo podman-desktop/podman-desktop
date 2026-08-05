@@ -19,13 +19,12 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { BasePage } from './base-page';
 import { ExtensionCardPage } from './extension-card-page';
 import { ExtensionCatalogCardPage } from './extension-catalog-card-page';
 import type { ExtensionDetailsPage } from './extension-details-page';
-import { MainPage } from './main-page';
 
-export class ExtensionsPage extends MainPage{
-  readonly page: Page;
+export class ExtensionsPage extends BasePage {
   readonly heading: Locator;
   readonly header: Locator;
   readonly search: Locator;
@@ -38,17 +37,23 @@ export class ExtensionsPage extends MainPage{
   readonly localExtensionsTab: Locator;
   readonly installExtensionFromOCIImageButton: Locator;
   readonly clearFilterButton: Locator;
-  readonly searchInput: Locator;
 
   constructor(page: Page) {
-    super(page, 'extensions');
+    super(page);
+    this.header = page.getByRole('region', { name: 'header' });
+    this.search = page.getByRole('region', { name: 'search' });
+    this.searchInput = this.search.getByLabel('search extensions');
+    this.content = page.getByRole('region', { name: 'content' });
+    this.heading = this.header.getByRole('heading', { name: 'extensions' });
+    this.additionalActions = this.header.getByRole('group', {
+      name: 'additionalActions',
+    });
     this.catalogExtensions = this.content.getByRole('region', { name: 'Catalog Extensions' });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
     this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
     this.localExtensionsTab = this.page.getByRole('button', { name: 'Local Extensions' });
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
     this.clearFilterButton = this.content.getByRole('button', { name: 'Clear filter' });
-    this.searchInput = this.search.getByLabel('search extensions');
   }
 
   public async installExtensionFromOCIImage(extension: string, timeout = 100_000): Promise<ExtensionsPage> {
@@ -101,9 +106,25 @@ export class ExtensionsPage extends MainPage{
     });
   }
 
+  public async filterByName(name: string): Promise<void> {
+    return test.step(`Filter extensions by name: ${name}`, async () => {
+      await playExpect(this.searchInput).toBeVisible();
+      await this.searchInput.fill(name);
+      await playExpect(this.searchInput).toHaveValue(name);
+    });
+  }
+
+  public async clearFilterByName(): Promise<void> {
+    return test.step('Clear extensions name filter', async () => {
+      await playExpect(this.searchInput).toBeVisible();
+      await this.searchInput.clear();
+      await playExpect(this.searchInput).toHaveValue('');
+    });
+  }
+
   public async getCatalogExtension(extensionName: string, timeout = 10_000): Promise<ExtensionCatalogCardPage> {
     return test.step(`Get catalog extension: ${extensionName}`, async () => {
-      const extensionCard = new ExtensionCatalogCardPage(this.page, extensionName, this.catalogExtensions);
+      const extensionCard = new ExtensionCatalogCardPage(this.page, extensionName);
       await playExpect(extensionCard.parent).toBeVisible({ timeout });
       return extensionCard;
     });
@@ -111,11 +132,8 @@ export class ExtensionsPage extends MainPage{
 
   public async countCatalogExtensions(): Promise<number> {
     return test.step('Count catalog extension cards', async () => {
-      // Catalog cards are role=group entries that expose a details action
-      return await this.catalogExtensions
-        .getByRole('group')
-        .filter({ has: this.page.getByRole('button', { name: /details/i }) })
-        .count();
+      // Each catalog card has a "More details" button (visible label)
+      return await this.catalogExtensions.getByText('More details', { exact: true }).count();
     });
   }
 
@@ -150,46 +168,5 @@ export class ExtensionsPage extends MainPage{
       console.log(`Could not get ${label} extension version:`, error);
       return undefined;
     }
-  }
-
-  public async filterByName(name: string): Promise<void> {
-    return test.step(`Filter extensions by name: ${name}`, async () => {
-      await playExpect(this.searchInput).toBeVisible();
-      await this.searchInput.fill(name);
-      await playExpect(this.searchInput).toHaveValue(name);
-    });
-  }
-
-  public async clearFilterByName(): Promise<void> {
-    return test.step('Clear name filter on extensions page', async () => {
-      await playExpect(this.searchInput).toBeVisible();
-      await this.searchInput.clear();
-      await playExpect(this.searchInput).toHaveValue('');
-    });
-  }
-
-  public async countInstalledExtensionCards(): Promise<number> {
-    return test.step('Count installed extension cards', async () => {
-      const cards = this.content.getByRole('region');
-      return await cards.count();
-    });
-  }
-
-  public async countCatalogExtensionCards(): Promise<number> {
-    return test.step('Count catalog extension cards', async () => {
-      const cards = this.content.getByRole('group');
-      return await cards.count();
-    });
-  }
-
-  public async extensionCardIsVisible(label: string): Promise<boolean> {
-    return test.step(`Check if extension card ${label} is visible`, async () => {
-      const regionCard = this.content.getByRole('region', { name: label, exact: true });
-      if ((await regionCard.count()) > 0) {
-        return await regionCard.isVisible();
-      }
-      const groupCard = this.content.getByRole('group', { name: label, exact: true });
-      return (await groupCard.count()) > 0 && (await groupCard.isVisible());
-    });
   }
 }
