@@ -7,14 +7,17 @@ import WindowsMinIcon from '/@/lib/images/WindowsMinIcon.svelte';
 import WindowsUnmaxIcon from '/@/lib/images/WindowsUnmaxIcon.svelte';
 
 const iconSize = '16';
-let icon: Component;
-let state = 'initial';
 
-export let name: string;
+interface Props {
+  name: string;
+  action?: () => void;
+}
 
-export let action: () => void = () => {};
+let { name, action = (): void => {} }: Props = $props();
 
-let titleName: string;
+let icon = $state<Component>(WindowsMinIcon);
+let state = $state('initial');
+let titleName = $state<string>();
 
 onMount(() => {
   if (name === 'Minimize') {
@@ -55,13 +58,14 @@ function executeAction(): void {
 </script>
 
 <button
-  on:click={executeAction}
+  onclick={executeAction}
   aria-label={name}
   title={titleName}
   class="h-[32px] w-[45px] cursor-pointer {name === 'Close'
     ? 'hover:bg-(--pd-titlebar-windows-hover-exit-bg) hover:text-(--pd-titlebar-windows-hover-exit-text)'
     : 'hover:bg-(--pd-titlebar-windows-hover-bg)'} text-(--pd-titlebar-icon) flex place-items-center justify-center">
   {#if icon}
-    <svelte:component this={icon} size={iconSize} />
+    {@const Icon = icon}
+    <Icon size={iconSize} />
   {/if}
 </button>
