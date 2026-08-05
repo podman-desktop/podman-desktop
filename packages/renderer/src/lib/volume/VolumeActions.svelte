@@ -1,9 +1,10 @@
 <script lang="ts">
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher, onMount } from 'svelte';
+import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
@@ -38,6 +39,12 @@ async function removeVolume(): Promise<void> {
 // otherwise, leave blank.
 $: MenuComponent = dropdownMenu ? DropdownMenu : FlatMenu;
 </script>
+
+<ListItemButtonIcon
+  title="Export Volume"
+  onClick={(): void => router.goto(`/volumes/${encodeURI(volume.name)}/${encodeURI(volume.engineId)}/export`)}
+  detailed={detailed}
+  icon={faDownload} />
 
 {#if volume.status === 'UNUSED'}
   <ListItemButtonIcon

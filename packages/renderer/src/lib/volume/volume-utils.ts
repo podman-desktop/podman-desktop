@@ -23,6 +23,10 @@ import moment from 'moment';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
+export function isValidVolumeImportArchivePath(filePath: string): boolean {
+  return filePath.replace(/\\/g, '/').toLowerCase().endsWith('.tar');
+}
+
 export class VolumeUtils {
   getShortName(volumeInfo: VolumeInfo): string {
     // check if the name is 64 characters long and contains only hexa characters
