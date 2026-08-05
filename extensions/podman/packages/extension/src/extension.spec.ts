@@ -4473,8 +4473,6 @@ describe('getImportNativeCAFromConfig', () => {
 describe('updateProviderStatus on Linux updates the provider tile', () => {
   beforeEach(() => {
     vi.mocked(extensionApi.env).isLinux = true;
-    vi.spyOn(provider, 'updateStatus').mockImplementation(() => {});
-    extension.podmanMachinesStatuses.clear();
   });
 
   test.each([
@@ -4484,8 +4482,6 @@ describe('updateProviderStatus on Linux updates the provider tile', () => {
     'sets provider to $expectedProviderStatus when native socket transitions from $from to $to',
     ({ from, to, expectedProviderStatus }) => {
       updateProviderStatus(provider, from);
-      vi.mocked(provider.updateStatus).mockClear();
-
       updateProviderStatus(provider, to);
 
       expect(provider.updateStatus).toHaveBeenCalledWith(expectedProviderStatus);
@@ -4493,9 +4489,7 @@ describe('updateProviderStatus on Linux updates the provider tile', () => {
   );
 
   test('does not call provider.updateStatus when status has not changed', () => {
-    updateProviderStatus(provider, 'started');
-    vi.mocked(provider.updateStatus).mockClear();
-
+    // Initial status is 'started'
     updateProviderStatus(provider, 'started');
 
     expect(provider.updateStatus).not.toHaveBeenCalled();
