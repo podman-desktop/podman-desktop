@@ -7,12 +7,16 @@ import type { IconSize } from 'svelte-fa';
 
 const iconSize: IconSize | undefined = '0.875x';
 
-export let name: string;
-export let action: () => void = () => {};
+interface Props {
+  name: string;
+  action?: () => void;
+}
 
-let icon: IconDefinition;
+let { name, action = (): void => {} }: Props = $props();
 
-let titleName: string;
+let icon = $state<IconDefinition>(faMinus);
+
+let titleName = $state<string>();
 
 onMount(() => {
   if (name === 'Minimize') {
@@ -27,7 +31,7 @@ onMount(() => {
 </script>
 
 <button
-  on:click={action}
+  onclick={action}
   title={titleName}
   aria-label={name}
   class="h-[25px] w-[25px] cursor-pointer text-[var(--pd-titlebar-text)] hover:rounded-full hover:bg-[var(--pd-titlebar-hover-bg)] flex place-items-center justify-center">
