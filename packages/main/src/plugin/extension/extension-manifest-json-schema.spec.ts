@@ -76,20 +76,18 @@ describe('generateExtensionManifestJsonSchema', () => {
   test('requires visible content in contributed configuration property names', () => {
     const extensionSchema = getExtensionSchema();
     const extensionProperties = extensionSchema['properties'] as Record<string, Record<string, unknown>>;
-    const contributesProperties = extensionProperties['contributes']['properties'] as Record<
-      string,
-      Record<string, unknown>
-    >;
-    const configurationProperties = contributesProperties['configuration']['properties'] as Record<
-      string,
-      Record<string, unknown>
-    >;
-    const contributedProperties = configurationProperties['properties']['additionalProperties'] as Record<
+    const contributes = extensionProperties['contributes'] as Record<string, unknown>;
+    const contributesProperties = contributes['properties'] as Record<string, Record<string, unknown>>;
+    const configuration = contributesProperties['configuration'] as Record<string, unknown>;
+    const configurationProperties = configuration['properties'] as Record<string, Record<string, unknown>>;
+    const configurationPropertyMap = configurationProperties['properties'] as Record<string, unknown>;
+    const contributedProperties = configurationPropertyMap['additionalProperties'] as Record<
       string,
       Record<string, unknown>
     >;
     const propertySchema = contributedProperties['properties'] as Record<string, Record<string, unknown>>;
 
     expect(propertySchema['name']).toMatchObject({ minLength: 1, pattern: '\\S', type: 'string' });
+    expect((contributedProperties['required'] as string[] | undefined) ?? []).not.toContain('name');
   });
 });
