@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { ContainerState } from '/@/model/core/states';
+import { NetworksPage } from '/@/model/pages/networks-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage, deleteNetwork, isPodmanCliVersionAtLeast } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
@@ -26,6 +27,8 @@ const testNetworkName = 'e2e-test-network';
 const testNetworkSubnet = '192.168.1.0/24';
 const testContainerName = 'e2e-network-test-container';
 const testImageName = 'ghcr.io/linuxcontainers/alpine';
+const networkList = ['e2e-net-first', 'e2e-net-second', 'e2e-net-third'];
+const networkSubnets = ['10.90.0.0/24', '10.91.0.0/24', '10.92.0.0/24'];
 
 test.skip(
   !isPodmanCliVersionAtLeast('5.7.0'),
@@ -45,6 +48,9 @@ test.describe
         await deleteContainer(page, testContainerName);
         await deleteNetwork(page, testNetworkName);
         await deleteImage(page, testImageName);
+        for (const network of networkList) {
+          await deleteNetwork(page, network);
+        }
       } finally {
         await runner.close();
       }
@@ -186,5 +192,45 @@ test.describe
           timeout: 30_000,
         })
         .toBeFalsy();
+    });
+
+    test('Filter and delete networks', async ({ page, navigationBar }) => {
+      test.setTimeout(120_000);
+
+      let networksPage = await navigationBar.openNetworks();
+      await playExpect(networksPage.heading).toBeVisible();
+
+      for (let i = 0; i < networkList.length; i++) {
+        const networkDetails = await networksPage.createNetwork(networkList[i], networkSubnets[i]);
+        await playExpect(networkDetails.heading).toBeVisible({ timeout: 30_000 });
+
+        networksPage = await navigationBar.openNetworks();
+        await playExpect(networksPage.heading).toBeVisible();
+        await playExpect
+          .poll(async () => await networksPage.getNetworkRowByName(networkList[i]), { timeout: 30_000 })
+          .toBeTruthy();
+      }
+
+      networksPage = new NetworksPage(page);
+      await test.step('Verify search filtering works for each network', async () => {
+        for (const network of networkList) {
+          await networksPage.filterByName(network);
+          await playExpect
+            .poll(async () => await networksPage.countRowsFromTable(), { timeout: 10_000 })
+            .toBeGreaterThanOrEqual(1);
+          await playExpect.poll(async () => await networksPage.networkExists(network), { timeout: 5_000 }).toBeTruthy();
+        }
+        await networksPage.clearFilterByName();
+        await playExpect
+          .poll(async () => await networksPage.countRowsFromTable(), { timeout: 10_000 })
+          .toBeGreaterThanOrEqual(networkList.length);
+      });
+
+      for (const network of networkList) {
+        await networksPage.deleteNetwork(network);
+        await playExpect
+          .poll(async () => await networksPage.getNetworkRowByName(network), { timeout: 30_000 })
+          .toBeFalsy();
+      }
     });
   });

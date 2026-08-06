@@ -121,6 +121,9 @@ function onResizeHandlePointerDown(e: PointerEvent): void {
   isDragging = true;
   resizeStartX = e.clientX;
   resizeStartWidth = navWidth;
+  if (e.currentTarget instanceof HTMLElement) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
   window.addEventListener('pointermove', onResizeMove);
   window.addEventListener('pointerup', onResizeUp);
 }

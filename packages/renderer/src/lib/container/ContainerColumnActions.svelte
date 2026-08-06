@@ -6,7 +6,11 @@ import ContainerColumnActionsPod from './ContainerColumnActionsPod.svelte';
 import type { ContainerGroupInfoUI, ContainerInfoUI } from './ContainerInfoUI';
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
 
-export let object: ContainerInfoUI | ContainerGroupInfoUI;
+interface Props {
+  object: ContainerInfoUI | ContainerGroupInfoUI;
+}
+
+let { object }: Props = $props();
 
 const containerUtils = new ContainerUtils();
 </script>

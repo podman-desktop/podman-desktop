@@ -32,20 +32,29 @@ import VolumeColumnStatus from './VolumeColumnStatus.svelte';
 import VolumeEmptyScreen from './VolumeEmptyScreen.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-export let searchTerm = '';
-$: searchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let selectedEnvironment = '';
-let volumes: VolumeInfoUI[] = [];
-let enginesList: EngineInfoUI[];
+let { searchTerm = $bindable('') }: Props = $props();
+
+$effect(() => {
+  searchPattern.set(searchTerm);
+});
+
+let selectedEnvironment = $state('');
+let volumes: VolumeInfoUI[] = $state([]);
+let enginesList: EngineInfoUI[] = $state([]);
 
 // Filter volumes by selected environment
-$: filteredVolumes = selectedEnvironment ? volumes.filter(v => v.engineId === selectedEnvironment) : volumes;
+let filteredVolumes = $derived(selectedEnvironment ? volumes.filter(v => v.engineId === selectedEnvironment) : volumes);
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let providerConnections = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 const volumeUtils = new VolumeUtils();
 
@@ -93,7 +102,7 @@ onDestroy(() => {
 });
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state(false);
 async function deleteSelectedVolumes(): Promise<void> {
   const selectedVolumes = volumes.filter(volume => volume.selected);
 
@@ -118,7 +127,7 @@ async function deleteSelectedVolumes(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
-let fetchDataInProgress = false;
+let fetchDataInProgress = $state(false);
 async function fetchUsageData(): Promise<void> {
   fetchDataInProgress = true;
   try {
@@ -132,7 +141,7 @@ function gotoCreateVolume(): void {
   router.goto('/volumes/create');
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber: number = $state(0);
 
 let statusColumn = new TableColumn<VolumeInfoUI>('Status', {
   align: 'center',

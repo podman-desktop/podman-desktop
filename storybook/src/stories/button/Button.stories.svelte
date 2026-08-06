@@ -171,6 +171,22 @@ const tabVariants: ButtonVariant[] = [
   { name: 'Tab With Custom Class', args: { type: 'tab', content: 'Custom Tab', class: 'capitalize' } },
 ];
 
+const toggleVariants: ButtonVariant[] = [
+  { name: 'Toggle Pressed', args: { type: 'primary', content: 'Notifications', pressed: true } },
+  { name: 'Toggle Unpressed', args: { type: 'primary', content: 'Notifications', pressed: false } },
+  { name: 'Toggle Secondary Pressed', args: { type: 'secondary', content: 'Filter', pressed: true } },
+  { name: 'Toggle Secondary Unpressed', args: { type: 'secondary', content: 'Filter', pressed: false } },
+  {
+    name: 'Toggle Icon Only Pressed',
+    args: { type: 'secondary', icon: faBell, pressed: true, 'aria-label': 'Mute notifications' },
+  },
+  {
+    name: 'Toggle Icon Only Unpressed',
+    args: { type: 'secondary', icon: faBell, pressed: false, 'aria-label': 'Mute notifications' },
+  },
+  { name: 'Toggle Disabled Pressed', args: { type: 'secondary', content: 'Filter', pressed: true, disabled: true } },
+];
+
 // biome-ignore lint/correctness/noUnusedVariables: used in markup
 const groupKinds: Record<string, { label: string; variants: ButtonVariant[] }> = {
   basic: { label: 'Basic Types', variants: basicVariants },
@@ -179,6 +195,7 @@ const groupKinds: Record<string, { label: string; variants: ButtonVariant[] }> =
   examples: { label: 'Examples', variants: exampleVariants },
   patterns: { label: 'Patterns', variants: patternVariants },
   edges: { label: 'Edge Cases', variants: edgeVariants },
+  toggles: { label: 'Toggle Buttons', variants: toggleVariants },
   tabs: { label: 'Tabs', variants: tabVariants },
 };
 </script>
@@ -211,4 +228,5 @@ const groupKinds: Record<string, { label: string; variants: ButtonVariant[] }> =
 <Story name="Examples" args={{ kind: 'examples' }} />
 <Story name="Patterns" args={{ kind: 'patterns' }} />
 <Story name="Edge Cases" args={{ kind: 'edges' }} />
+<Story name="Toggle Buttons" args={{ kind: 'toggles' }} />
 <Story name="Tabs" args={{ kind: 'tabs' }} />

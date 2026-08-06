@@ -10,18 +10,24 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let container: ContainerInfoUI;
-export let screenReaderMode = false;
-let attachContainerTerminal: Terminal;
-let closed = false;
-let callbackId: number;
+interface Props {
+  container: ContainerInfoUI;
+  screenReaderMode?: boolean;
+}
+
+let { container, screenReaderMode = false }: Props = $props();
+let attachContainerTerminal: Terminal | undefined = $state(undefined);
+let closed = $state(false);
+let callbackId: number | undefined = $state(undefined);
 
 let listened = false;
-$: listenTerminalData(attachContainerTerminal, callbackId);
+$effect(() => {
+  listenTerminalData(attachContainerTerminal, callbackId);
+});
 
 // listenTerminalData only when attachContainerTerminal is bound from TerminalWindow component
 // and callbackId is defined
-function listenTerminalData(terminal: Terminal, cbId: number): void {
+function listenTerminalData(terminal: Terminal | undefined, cbId: number | undefined): void {
   if (!attachContainerTerminal || !cbId) {
     return;
   }
@@ -30,7 +36,10 @@ function listenTerminalData(terminal: Terminal, cbId: number): void {
   }
   listened = true;
   // pass data from xterm to container
-  terminal.onData(data => {
+  terminal?.onData(data => {
+    if (!callbackId) {
+      return;
+    }
     window
       .attachContainerSend(callbackId, data)
       .catch((err: unknown) => console.log(`Error sending data to container ${container.id}`, err));
@@ -63,6 +72,9 @@ async function attachToContainer(): Promise<void> {
 
   // pass data from xterm to container
   attachContainerTerminal?.onData(async data => {
+    if (!callbackId) {
+      return;
+    }
     await window.attachContainerSend(callbackId, data);
   });
 }

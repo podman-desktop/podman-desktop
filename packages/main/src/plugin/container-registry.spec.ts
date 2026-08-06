@@ -6486,6 +6486,86 @@ describe('prune images', () => {
   });
 });
 
+describe('pruneVolumes', () => {
+  test('prune with Podman >= 6.0 passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '6.0.1' }),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman.new', provider);
+
+    await containerRegistry.pruneVolumes('podman.new');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+  });
+
+  test('prune with Podman < 6.0 skips all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '5.4.2' }),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman.old', provider);
+
+    await containerRegistry.pruneVolumes('podman.old');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith();
+  });
+
+  test('prune with Docker passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'docker',
+      id: 'docker1',
+      api: {
+        pruneVolumes: vi.fn(),
+      } as unknown as Dockerode,
+      libpodApi: undefined,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('docker.test', provider);
+
+    await containerRegistry.pruneVolumes('docker.test');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+  });
+});
+
 describe('kube play', () => {
   const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
     name: 'podman',
