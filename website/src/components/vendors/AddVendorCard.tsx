@@ -2,6 +2,8 @@ import { faArrowUpRightFromSquare, faPlus } from '@fortawesome/free-solid-svg-ic
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 
+import GradientButton from '../GradientButton';
+
 const DISCUSSION_URL = 'https://github.com/podman-desktop/podman-desktop/discussions';
 
 export function AddVendorCard(): JSX.Element {
@@ -16,15 +18,11 @@ export function AddVendorCard(): JSX.Element {
         If you are a vendor for Podman Desktop and would like to be added to the website, please open a GitHub
         Discussion to be added.
       </p>
-      <div className="p-[2px] rounded border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mt-auto">
-        <a
-          href={DISCUSSION_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="vendor-card-cta inline-flex items-center gap-2 px-4 py-2 rounded font-semibold text-base bg-white dark:bg-charcoal-800 text-charcoal-300 dark:text-white no-underline hover:no-underline hover:bg-purple-600 hover:text-white transition-colors duration-200">
+      <div className="mt-auto">
+        <GradientButton href={DISCUSSION_URL} external className="vendor-card-cta">
           Open a discussion
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
-        </a>
+        </GradientButton>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 
+import GradientButton from '../GradientButton';
 import type { VendorCardProps } from './vendorData';
 
 export function VendorCard({ name, logo, logoDark, description, href }: VendorCardProps): JSX.Element {
@@ -27,15 +28,11 @@ export function VendorCard({ name, logo, logoDark, description, href }: VendorCa
         )}
       </div>
       <p className="text-charcoal-300 dark:text-gray-400 mb-4 flex-grow">{description}</p>
-      <div className="p-[2px] rounded border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mt-auto">
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="vendor-card-cta inline-flex items-center gap-2 px-4 py-2 rounded font-semibold text-base bg-white dark:bg-charcoal-800 text-charcoal-300 dark:text-white no-underline hover:no-underline hover:bg-purple-600 hover:text-white transition-colors duration-200">
+      <div className="mt-auto">
+        <GradientButton href={href} external className="vendor-card-cta">
           Learn more
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
-        </a>
+        </GradientButton>
       </div>
     </div>
   );
