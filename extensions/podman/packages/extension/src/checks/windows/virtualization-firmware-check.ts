@@ -45,6 +45,7 @@ export class VirtualizationFirmwareCheck extends MemoizedBaseCheck {
       }
     } catch (err) {
       // ignore error, this means that firmware virtualization could not be detected
+      console.warn('Error checking virtualization firmware:', err);
     }
     return this.createFailureResult({
       description:
