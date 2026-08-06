@@ -42,7 +42,11 @@ import type { V1Volume } from '@kubernetes/client-node';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsTitle.svelte';
 
-export let artifact: V1Volume;
+interface Props {
+  artifact?: V1Volume;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}
