@@ -18,6 +18,7 @@
 
 const tailwindColors = require('tailwindcss/colors');
 const colorPalette = require('./tailwind-color-palette.json');
+const typographyPlugin = require('@tailwindcss/typography');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -109,5 +110,5 @@ module.exports = {
       }),
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [typographyPlugin],
 };
