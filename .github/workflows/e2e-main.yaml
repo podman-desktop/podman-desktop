@@ -92,7 +92,7 @@ permissions:
 jobs:
   e2e-tests:
     name: Run E2E tests - ${{ matrix.installation }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:
@@ -118,12 +118,6 @@ jobs:
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
           echo "KIND_PROVIDER=${{ github.event.inputs.kind_provider || env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
-
-      - name: Install Podman v5 using external action
-        # Use the action from the other repository
-        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a

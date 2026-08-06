@@ -82,7 +82,7 @@ jobs:
   linux:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Linux
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -174,7 +174,7 @@ jobs:
   website-build:
     if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
     name: build website
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -210,7 +210,7 @@ jobs:
   lint-format:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: linter, formatters
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -247,7 +247,7 @@ jobs:
   typecheck:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: typecheck
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -275,7 +275,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2025, ubuntu-24.04, macos-15]
+        os: [windows-2025, ubuntu-26.04, macos-15]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -293,17 +293,17 @@ jobs:
 
         # run the unit tests with coverage on ubuntu
       - name: Run unit tests with coverage
-        if: ${{ matrix.os=='ubuntu-24.04' }}
+        if: ${{ matrix.os=='ubuntu-26.04' }}
         run: pnpm test:unit:coverage
 
         # do not run coverage on non-ubuntu os
       - name: Run unit tests
-        if: ${{ matrix.os!='ubuntu-24.04' }}
+        if: ${{ matrix.os!='ubuntu-26.04' }}
         run: pnpm test:unit
 
         # publish codecov report if linux
       - name: publish codecov report
-        if: ${{ matrix.os=='ubuntu-24.04' }}
+        if: ${{ matrix.os=='ubuntu-26.04' }}
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -312,19 +312,13 @@ jobs:
   smoke-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: smoke e2e tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
         mode: [production, development]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install Podman v5 using external action
-        # Use the action from the other repository
-        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
@@ -389,11 +383,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install latest Podman version using external action
-        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         name: Install pnpm
         with:
@@ -428,7 +417,7 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
-  
+
   macos-sanity-check-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: macos sanity check e2e tests
@@ -477,7 +466,7 @@ jobs:
   k8s-sanity-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: k8s sanity e2e tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -487,11 +476,6 @@ jobs:
           DEFAULT_KIND_PROVIDER: 'docker'
         run: |
           echo "KIND_PROVIDER=${{ env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
-
-      - name: Install Podman v5 using external action
-        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
@@ -554,7 +538,7 @@ jobs:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     # name should not change since it is a required rule pattern
     name: Detect pnpm lock or pr-check files changes
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       trigger_update_tests: ${{ steps.detect_changes.outputs.TRIGGER_UPDATE_TESTS }}
     steps:
@@ -762,7 +746,7 @@ jobs:
 
   update-e2e-test:
     name: update E2E test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [win-update-e2e-test, mac-update-e2e-test]
     if: |
       always()

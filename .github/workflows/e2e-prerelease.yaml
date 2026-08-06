@@ -30,7 +30,7 @@ permissions:
 jobs:
   trigger-e2e:
     name: Trigger E2E tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Trigger e2e-tests-main with all targets
         env:
@@ -47,7 +47,7 @@ jobs:
 
   trigger-testing-farm:
     name: Trigger Testing Farm E2E tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -73,7 +73,7 @@ jobs:
 
   trigger-managed-configuration:
     name: Trigger managed configuration tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Trigger managed configuration tests
         env:

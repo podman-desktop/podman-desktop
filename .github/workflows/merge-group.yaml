@@ -25,11 +25,11 @@ permissions:
 jobs:
   dco:
     name: DCO
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - run: echo "This DCO job runs on merge_queue event and does not do anything"
   semantic:
     name: Semantic PR
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - run: echo "This DCO job runs on merge_queue event and does not do anything"
