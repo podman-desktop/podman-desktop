@@ -66,7 +66,7 @@ export type ConfigurationScope = z.output<typeof ConfigurationScopeSchema>;
 
 const IConfigurationPropertySchemaSchema = z.object({
   id: z.string().optional(),
-  name: z.string().trim().min(1).optional(),
+  name: z.string().trim().min(1).regex(/\S/).optional(),
   type: z.union([IConfigurationPropertySchemaTypeSchema, z.array(IConfigurationPropertySchemaTypeSchema)]).optional(),
   default: z.unknown().optional(),
   group: z.string().optional(),

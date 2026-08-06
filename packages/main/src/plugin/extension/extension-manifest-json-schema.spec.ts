@@ -72,4 +72,24 @@ describe('generateExtensionManifestJsonSchema', () => {
     expect(required).toContain('publisher');
     expect(required).toContain('description');
   });
+
+  test('requires visible content in contributed configuration property names', () => {
+    const extensionSchema = getExtensionSchema();
+    const extensionProperties = extensionSchema['properties'] as Record<string, Record<string, unknown>>;
+    const contributesProperties = extensionProperties['contributes']['properties'] as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const configurationProperties = contributesProperties['configuration']['properties'] as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const contributedProperties = configurationProperties['properties']['additionalProperties'] as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const propertySchema = contributedProperties['properties'] as Record<string, Record<string, unknown>>;
+
+    expect(propertySchema['name']).toMatchObject({ minLength: 1, pattern: '\\S', type: 'string' });
+  });
 });
