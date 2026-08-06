@@ -8,6 +8,24 @@
 @source '../pages/**/*.tsx';
 @source '../components/**/*.{tsx,ts,jsx,js}';
 
+/* Hide nav CTAs on small screens — show from docusaurus desktop breakpoint */
+.pd-desktop-only {
+  display: none !important;
+}
+
+@media (min-width: 997px) {
+  .pd-desktop-only {
+    display: flex !important;
+  }
+}
+
+/* Hide color mode toggle on small screens — matches production */
+@media (max-width: 996px) {
+  div[class*='colorModeToggle'] {
+    display: none !important;
+  }
+}
+
 /* Manrope latin subset font */
 /* This font is a subset of Manrope from Google Fonts, optimized for Latin characters */
 @font-face {
