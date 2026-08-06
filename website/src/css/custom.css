@@ -5,6 +5,8 @@
 
 @import 'tailwindcss';
 @config '../../tailwind.config.js';
+@source '../pages/**/*.tsx';
+@source '../components/**/*.{tsx,ts,jsx,js}';
 
 /* Manrope latin subset font */
 /* This font is a subset of Manrope from Google Fonts, optimized for Latin characters */
@@ -39,6 +41,7 @@
 
 /* You can override the default Infima variables here. */
 :root {
+  --prototype-scope-bar-height: 40px;
   --ifm-font-family-base: 'Manrope', sans-serif;
   --ifm-color-primary: #6d28d9;
   --ifm-color-primary-dark: #7c3aed;
@@ -263,4 +266,498 @@ article .markdown ol ol {
 
 .navbar__items--right > *:nth-child(4) {
   order: 3;
+}
+
+/* Keep external-link icons inline (Tailwind preflight sets svg { display: block }) */
+.dropdown__link svg,
+.navbar__link svg[class*='iconExternalLink'],
+a svg[class*='iconExternalLink'] {
+  display: inline;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+/* Homepage 1-vendor enterprise layout: Red Hat + add-vendor side by side */
+.pd-single-vendor-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .pd-single-vendor-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    align-items: stretch;
+  }
+}
+
+/* Vendor card CTAs — never underline on hover */
+a.vendor-card-cta,
+a.vendor-card-cta:hover,
+a.vendor-card-cta:focus {
+  text-decoration: none !important;
+}
+
+/*
+ * Downloads page styles
+ */
+.pd-downloads-page h1,
+.pd-downloads-page h2,
+.pd-downloads-page h3,
+.pd-downloads-page p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.pd-downloads-title {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 0 !important;
+}
+
+@media (min-width: 640px) {
+  .pd-downloads-title {
+    font-size: 1.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pd-downloads-title {
+    font-size: 2.25rem;
+  }
+}
+
+.pd-downloads-section-title {
+  font-size: 1.5rem !important;
+  line-height: 1.3 !important;
+  margin: 0 0 0.5rem !important;
+}
+
+.pd-downloads-section-desc {
+  margin: 0 0 1.5rem !important;
+}
+
+:root {
+  --pd-download-cta-width: 13.25rem;
+}
+
+.pd-download-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  width: 100%;
+}
+
+.pd-download-row__info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.pd-download-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.pd-download-row__actions .pd-download-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.pd-download-row__actions .pd-download-cta {
+  width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+}
+
+.pd-download-chevron-slot--mobile {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.pd-download-chevron-slot--desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .pd-download-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .pd-download-row__actions {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .pd-download-row__actions .pd-download-cta-wrap {
+    flex: 0 0 var(--pd-download-cta-width);
+    width: var(--pd-download-cta-width);
+  }
+
+  .pd-download-chevron-slot--mobile {
+    display: none;
+    margin-left: 0;
+  }
+
+  .pd-download-chevron-slot--desktop {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+}
+
+.pd-platform-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.pd-platform-title {
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+
+@media (min-width: 768px) {
+  .pd-platform-title {
+    font-size: 1.25rem !important;
+  }
+}
+
+.pd-platform-subtitle {
+  font-size: 0.8125rem !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  color: #464649;
+}
+
+[data-theme='dark'] .pd-platform-subtitle {
+  color: #9ca3af;
+}
+
+.pd-download-caption {
+  display: block;
+  width: 100%;
+  margin: 0.25rem 0 0 !important;
+  font-size: 0.675rem !important;
+  line-height: 1.25 !important;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0.65;
+  color: inherit;
+}
+
+@media (max-width: 340px) {
+  .pd-download-caption {
+    white-space: normal;
+  }
+}
+
+.pd-download-details {
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .pd-download-details {
+    padding-left: 4rem !important;
+  }
+}
+
+/* Download CTA colors */
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary:link,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary:visited {
+  color: #fff !important;
+  background: #a855f7 none !important;
+  border-color: #a855f7 !important;
+  text-decoration: none !important;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary:hover,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary:focus,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary:focus-visible,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary:active {
+  color: #fff !important;
+  background: #9333ea none !important;
+  border-color: #9333ea !important;
+  text-decoration: none !important;
+}
+
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:link,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:visited {
+  color: #9333ea !important;
+  background: transparent none !important;
+  border-color: #a855f7 !important;
+  text-decoration: none !important;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:link,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:visited,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:link,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:visited {
+  color: #c084fc !important;
+}
+
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:hover,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:focus,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:focus-visible,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:active,
+html body #__docusaurus a.pd-download-cta.pd-download-cta--secondary.pd-download-cta--hovered,
+html body #__docusaurus .pd-download-cta-wrap:hover a.pd-download-cta.pd-download-cta--secondary,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:hover,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:focus,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:focus-visible,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:active,
+html[data-theme='dark'] body #__docusaurus a.pd-download-cta.pd-download-cta--secondary.pd-download-cta--hovered,
+html[data-theme='dark'] body #__docusaurus .pd-download-cta-wrap:hover a.pd-download-cta.pd-download-cta--secondary,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:hover,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:focus,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:focus-visible,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary:active,
+html.dark body #__docusaurus a.pd-download-cta.pd-download-cta--secondary.pd-download-cta--hovered,
+html.dark body #__docusaurus .pd-download-cta-wrap:hover a.pd-download-cta.pd-download-cta--secondary {
+  color: #fff !important;
+  background: #a855f7 none !important;
+  border-color: #a855f7 !important;
+  text-decoration: none !important;
+}
+
+html body #__docusaurus a.pd-download-cta.pd-download-cta--primary.pd-download-cta--hovered {
+  color: #fff !important;
+  background: #9333ea none !important;
+  border-color: #9333ea !important;
+}
+
+/* Copy tooltip */
+.pd-copy-tooltip {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  z-index: 20;
+  margin-bottom: 0.5rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  background-color: #18181b;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #fff;
+  opacity: 0;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2);
+  transition: opacity 0.15s ease;
+}
+
+[data-theme='dark'] .pd-copy-tooltip {
+  background-color: #27272a;
+}
+
+.pd-copy:hover .pd-copy-tooltip,
+.pd-copy:focus-within .pd-copy-tooltip {
+  opacity: 1;
+}
+
+.pd-copy__button:hover,
+.pd-copy__button:focus {
+  color: #a855f7 !important;
+}
+
+[data-theme='dark'] .pd-copy__button:hover,
+[data-theme='dark'] .pd-copy__button:focus {
+  color: #d8b4fe !important;
+}
+
+/* Install command chips */
+.pd-install-command {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  line-height: 1.25;
+}
+
+.pd-install-command__prompt {
+  margin-top: 0.05rem;
+}
+
+.pd-install-command__text {
+  min-width: 0;
+  flex: 1 1 auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.pd-install-command .group\/copy > button {
+  padding: 0.125rem !important;
+  line-height: 1;
+}
+
+.pd-install-command .group\/copy svg {
+  font-size: 0.95rem !important;
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+@media (min-width: 768px) {
+  .pd-install-command {
+    width: fit-content;
+  }
+}
+
+#__docusaurus a.text-white,
+#__docusaurus a.text-white:hover,
+#__docusaurus a.text-white:focus,
+#__docusaurus a.text-white:active,
+#__docusaurus a.hover\:text-white:hover {
+  color: #fff !important;
+}
+
+/* Show/Hide other platforms button width stability */
+.pd-platforms-toggle__label {
+  display: inline-grid;
+  place-items: center;
+}
+
+.pd-platforms-toggle__sizer,
+.pd-platforms-toggle__text {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.pd-platforms-toggle__sizer {
+  visibility: hidden;
+}
+
+.pd-platforms-toggle__icon {
+  width: 0.875rem;
+  flex-shrink: 0;
+}
+
+/* Prototype scope bar */
+.prototype-scope-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  padding: 0.35rem 0;
+  background: #fef3c7;
+  border-bottom: 1px solid #fcd34d;
+  color: #78350f;
+}
+
+.navbar {
+  top: var(--prototype-scope-bar-height) !important;
+}
+
+[data-theme='dark'] .prototype-scope-bar {
+  background: #713f12;
+  border-bottom-color: #a16207;
+  color: #fef3c7;
+}
+
+.prototype-scope-bar__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.prototype-scope-bar__group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prototype-scope-bar__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.prototype-scope-bar__toggle {
+  display: flex;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid #fbbf24;
+}
+
+[data-theme='dark'] .prototype-scope-bar__toggle {
+  border-color: #ca8a04;
+}
+
+.prototype-scope-bar__btn {
+  padding: 0.2rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fff;
+  color: #57534e;
+  border: none;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .prototype-scope-bar__btn {
+  background: #292524;
+  color: #d6d3d1;
+}
+
+.prototype-scope-bar__btn:hover {
+  background: #f5f5f4;
+}
+
+[data-theme='dark'] .prototype-scope-bar__btn:hover {
+  background: #44403c;
+}
+
+.prototype-scope-bar__btn--active {
+  background: #7c3aed !important;
+  color: #fff !important;
+}
+
+.prototype-scope-bar__btn + .prototype-scope-bar__btn {
+  border-left: 1px solid #fbbf24;
+}
+
+[data-theme='dark'] .prototype-scope-bar__btn + .prototype-scope-bar__btn {
+  border-left-color: #ca8a04;
 }

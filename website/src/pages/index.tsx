@@ -11,6 +11,7 @@ import { ExpandableFAQ } from '../components/ExpandableFAQ';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
+import { SupportedVendorsSection } from '../components/vendors/SupportedVendorsSection';
 
 function Hero(): JSX.Element {
   return (
@@ -440,6 +441,7 @@ export default function Home(): JSX.Element {
       <Pods />
       <AdditionalFeatures />
       <Testimonials />
+      <SupportedVendorsSection />
       <FAQ />
     </Layout>
   );
