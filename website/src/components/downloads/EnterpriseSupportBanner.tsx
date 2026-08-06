@@ -1,5 +1,5 @@
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import { faArrowUpRightFromSquare, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpRightFromSquare, faDownload, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 
@@ -53,8 +53,9 @@ export function EnterpriseSupportBanner(): JSX.Element {
           href={DISCUSSION_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline text-purple-500 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-200">
+          className="underline text-purple-500 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-200 inline-flex items-center gap-1">
           open a discussion
+          <FontAwesomeIcon icon={faUpRightFromSquare} className="text-xs" />
         </a>
         .
       </p>

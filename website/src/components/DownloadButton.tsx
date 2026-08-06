@@ -41,7 +41,7 @@ function MainDownloadButton(): JSX.Element {
     );
   }
 
-  const { os, url } = platform;
+  const { os } = platform;
 
   return (
     <div>
@@ -49,7 +49,7 @@ function MainDownloadButton(): JSX.Element {
         className="inline-flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-4 mb-0 ml-4"
         eventPath="landing"
         eventTitle="hero-download"
-        to={`/downloads/${url}`}>
+        to="/downloads">
         <FontAwesomeIcon size="1x" icon={faDownload} className="px-2 py-1" /> Download Now
       </TelemetryLink>
       <caption className="block mt-2 dark:text-gray-400">
@@ -59,32 +59,14 @@ function MainDownloadButton(): JSX.Element {
   );
 }
 
-// Same as MainDownloadButton but instead it's "Download" and has no fontawesome icon
 export function HeaderDownloadButton(): JSX.Element {
-  const platform = getClientPlatform();
-
-  // If we cannot get the platform, make the link just go to downloads.
-  if (!platform) {
-    return (
-      <div>
-        <Link
-          className="hidden xl:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
-          to="/downloads">
-          Download
-        </Link>
-      </div>
-    );
-  }
-
-  const { url } = platform;
-
   return (
     <div>
       <TelemetryLink
         className="hidden xl:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
         eventPath="landing"
         eventTitle="hero-download"
-        to={`/downloads/${url}`}>
+        to="/downloads">
         Download
       </TelemetryLink>
     </div>

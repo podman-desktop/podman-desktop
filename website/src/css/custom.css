@@ -114,6 +114,16 @@ svg.lightToggleIcon_node_modules-\@docusaurus-theme-classic-lib-next-theme-Color
   color: #343e50;
 }
 
+/* Ensure Docusaurus built-in color mode toggle is visible (Tailwind preflight hides it) */
+div[class*='colorModeToggle'] {
+  display: flex !important;
+}
+
+button[class*='toggleButton'] {
+  display: flex !important;
+  visibility: visible !important;
+}
+
 /* inline icons after the link name */
 li.footer__item a svg {
   display: inline;
@@ -128,10 +138,15 @@ li.footer__item a svg {
 
 .navbar__logo img {
   padding-right: 7px;
+  display: inline-block !important;
+  width: auto !important;
+  height: 56px !important;
 }
 
 .navbar__logo {
   min-height: 56px;
+  display: flex !important;
+  align-items: center;
 }
 
 .navbar__item {
