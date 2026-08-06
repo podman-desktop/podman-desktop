@@ -14,8 +14,7 @@ interface Props {
 
 let { name, action = (): void => {} }: Props = $props();
 
-let icon = $state<IconDefinition>(faMinus);
-
+let icon = $state<IconDefinition>();
 let titleName = $state<string>();
 
 onMount(() => {
@@ -35,5 +34,7 @@ onMount(() => {
   title={titleName}
   aria-label={name}
   class="h-[25px] w-[25px] cursor-pointer text-[var(--pd-titlebar-text)] hover:rounded-full hover:bg-[var(--pd-titlebar-hover-bg)] flex place-items-center justify-center">
-  <Icon size={iconSize} icon={icon} />
+  {#if icon}
+    <Icon size={iconSize} icon={icon} />
+  {/if}
 </button>
