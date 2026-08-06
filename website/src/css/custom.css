@@ -158,6 +158,62 @@ li.footer__item a svg {
   display: none;
 }
 
+/*
+ * Mobile nav: hide secondary "Back to main menu", keep Download sticky
+ * at the bottom of the primary menu as a full-width CTA.
+ */
+.navbar-sidebar__back {
+  display: none !important;
+}
+
+.navbar-sidebar__item.menu:first-child {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100dvh - var(--ifm-navbar-height));
+  box-sizing: border-box;
+}
+
+.navbar-sidebar__item.menu:first-child > .menu__list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.menu__list-item.pd-mobile-nav-download {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem 0.75rem 1.25rem;
+  list-style: none;
+  background: var(--ifm-navbar-background-color);
+  z-index: 2;
+}
+
+.pd-mobile-nav-download__btn.menu__link {
+  display: flex !important;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  padding: 0.875rem 1rem !important;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff !important;
+  background-image: linear-gradient(to bottom, #8b5cf6, #7c3aed);
+  background-color: #7c3aed;
+}
+
+.pd-mobile-nav-download__btn.menu__link:hover,
+.pd-mobile-nav-download__btn.menu__link:focus {
+  color: #fff !important;
+  background-image: linear-gradient(to bottom, #7c3aed, #6d28d9);
+  background-color: #6d28d9;
+}
+
 /**
   Using base font color for all links
  */
@@ -775,4 +831,21 @@ html body #__docusaurus a.pd-download-cta.pd-download-cta--primary.pd-download-c
 
 [data-theme='dark'] .prototype-scope-bar__btn + .prototype-scope-bar__btn {
   border-left-color: #ca8a04;
+}
+
+/* Disable hover effects on touch/small screens */
+@media (hover: none) {
+  a.vendor-card-cta:hover,
+  a.pd-download-cta:hover,
+  .pd-download-cta-wrap:hover a.pd-download-cta,
+  .pd-copy__button:hover,
+  .prototype-scope-bar__btn:hover,
+  .pd-mobile-nav-download__btn.menu__link:hover {
+    background: inherit !important;
+    color: inherit !important;
+  }
+
+  .pd-copy:hover .pd-copy-tooltip {
+    opacity: 0 !important;
+  }
 }

@@ -1,27 +1,26 @@
 import Link from '@docusaurus/Link';
-import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
 import { faDownload, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { MouseEventHandler } from 'react';
 
 import { TelemetryLink } from '../components/TelemetryLink';
 
-// Utility to detect platform
 function getClientPlatform(): {
   os: string;
-  url: string;
-  icon: IconProp;
+  id: string;
+  icon: typeof faApple;
 } | null {
   const ua = navigator.userAgent;
 
   if (ua.includes('Windows')) {
-    return { os: 'Windows', url: 'windows', icon: faWindows };
+    return { os: 'Windows', id: 'windows', icon: faWindows };
   }
   if (ua.includes('Mac')) {
-    return { os: 'macOS', url: 'macos', icon: faApple };
+    return { os: 'macOS', id: 'macos', icon: faApple };
   }
   if (ua.includes('Linux')) {
-    return { os: 'Linux', url: 'linux', icon: faLinux };
+    return { os: 'Linux', id: 'linux', icon: faLinux };
   }
   return null;
 }
@@ -41,31 +40,51 @@ function MainDownloadButton(): JSX.Element {
     );
   }
 
-  const { os } = platform;
-
   return (
     <div>
       <TelemetryLink
         className="inline-flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-4 mb-0 ml-4"
         eventPath="landing"
         eventTitle="hero-download"
-        to="/downloads">
+        to={`/downloads?os=${platform.id}`}>
         <FontAwesomeIcon size="1x" icon={faDownload} className="px-2 py-1" /> Download Now
       </TelemetryLink>
       <caption className="block mt-2 dark:text-gray-400">
-        For <strong>{os}</strong> <em>(browser detected)</em>
+        For <strong>{platform.os}</strong> <em>(browser detected)</em>
       </caption>
     </div>
   );
 }
 
-export function HeaderDownloadButton(): JSX.Element {
+export function HeaderDownloadButton({
+  mobile = false,
+  onClick,
+}: {
+  readonly mobile?: boolean;
+  readonly onClick?: MouseEventHandler<HTMLAnchorElement>;
+}): JSX.Element {
+  if (mobile) {
+    return (
+      <li className="menu__list-item pd-mobile-nav-download">
+        <TelemetryLink
+          className="pd-mobile-nav-download__btn menu__link no-underline hover:no-underline"
+          eventPath="landing"
+          eventTitle="nav-download"
+          to="/downloads"
+          onClick={onClick}>
+          <FontAwesomeIcon icon={faDownload} />
+          Download
+        </TelemetryLink>
+      </li>
+    );
+  }
+
   return (
-    <div>
+    <div className="pd-desktop-only">
       <TelemetryLink
-        className="hidden xl:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
+        className="flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
         eventPath="landing"
-        eventTitle="hero-download"
+        eventTitle="nav-download"
         to="/downloads">
         Download
       </TelemetryLink>
@@ -75,9 +94,9 @@ export function HeaderDownloadButton(): JSX.Element {
 
 function OtherDownloadLink(): JSX.Element {
   const platforms = [
-    { name: 'macOS', icon: faApple, url: '/downloads/macos' },
-    { name: 'Linux', icon: faLinux, url: '/downloads/linux' },
-    { name: 'Windows', icon: faWindows, url: '/downloads/windows' },
+    { name: 'macOS', icon: faApple, url: '/downloads?os=macos' },
+    { name: 'Linux', icon: faLinux, url: '/downloads?os=linux' },
+    { name: 'Windows', icon: faWindows, url: '/downloads?os=windows' },
     { name: 'Other', icon: faEllipsis, url: '/downloads' },
   ];
 
