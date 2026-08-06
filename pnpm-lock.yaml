@@ -258,6 +258,10 @@ importers:
       '@podman-desktop/api':
         specifier: workspace:*
         version: link:../../../../packages/extension-api
+    devDependencies:
+      vite:
+        specifier: ^8.1.5
+        version: 8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
 
   extensions/docker/packages/extension:
     dependencies:
@@ -548,7 +552,11 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  packages/extension-api: {}
+  packages/extension-api:
+    devDependencies:
+      vite:
+        specifier: ^8.1.5
+        version: 8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/main:
     dependencies:
@@ -747,6 +755,9 @@ importers:
       electron:
         specifier: 43.2.0
         version: 43.2.0(supports-color@8.1.1)
+      vite:
+        specifier: ^8.1.5
+        version: 8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))
@@ -978,7 +989,11 @@ importers:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))
 
-  packages/webview-api: {}
+  packages/webview-api:
+    devDependencies:
+      vite:
+        specifier: ^8.1.5
+        version: 8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
 
   storybook:
     dependencies:
@@ -1100,6 +1115,9 @@ importers:
       unplugin-dts:
         specifier: 1.0.3
         version: 1.0.3(@microsoft/api-extractor@7.55.2(@types/node@24.13.3))(esbuild@0.28.1)(rolldown@1.2.1)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.28.1))
+      vite:
+        specifier: ^8.1.5
+        version: 8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@24.13.3)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@24.13.3)(typescript@6.0.3))(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))
@@ -1203,6 +1221,9 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      vite:
+        specifier: ^8.1.5
+        version: 8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.2.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.1)(yaml@2.9.0))

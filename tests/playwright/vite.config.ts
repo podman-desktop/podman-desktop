@@ -16,19 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { join } from 'path';
-import { builtinModules } from 'module';
+import { defineConfig } from 'vite';
+
+import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 import dts from 'unplugin-dts/vite';
 
 const PACKAGE_ROOT = __dirname;
 const PACKAGE_NAME = '@podman-desktop/tests-playwright';
 
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
-  mode: process.env.MODE,
+export default defineConfig({
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
@@ -60,6 +58,4 @@ const config = {
       },
     },
   },
-};
-
-export default config;
+});

@@ -16,17 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { defineConfig } from 'vite';
+
 import { node } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
-import { builtinModules } from 'module';
+import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 
 const PACKAGE_ROOT = __dirname;
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
-  mode: process.env.MODE,
+export default defineConfig({
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
@@ -46,7 +44,7 @@ const config = {
     target: `node${node}`,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE === 'production',
+    minify: process.env['MODE'] === 'production',
     lib: {
       entry: ['src/index.ts', 'scripts/download-remote-extensions.ts', 'scripts/generate-extension-schema.ts'],
       formats: ['cjs'],
@@ -76,6 +74,4 @@ const config = {
     include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     setupFiles: ['./vitest.setup.ts'],
   },
-};
-
-export default config;
+});
