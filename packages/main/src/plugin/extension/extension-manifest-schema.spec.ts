@@ -162,7 +162,7 @@ describe('ExtensionManifestSchema', () => {
     );
   });
 
-  test('rejects empty contributed configuration property names', () => {
+  test.each(['', '   '])('rejects blank contributed configuration property names', name => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
       contributes: {
@@ -170,7 +170,7 @@ describe('ExtensionManifestSchema', () => {
           title: 'Podman',
           properties: {
             'podman.binary.path': {
-              name: '',
+              name,
               type: 'string',
             },
           },

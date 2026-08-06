@@ -131,6 +131,10 @@
                       "id": {
                         "type": "string"
                       },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
                       "type": {
                         "anyOf": [
                           {
