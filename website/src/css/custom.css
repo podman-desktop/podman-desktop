@@ -544,6 +544,7 @@ a.vendor-card-cta:focus {
 
 .pd-download-details {
   box-sizing: border-box;
+  padding-left: 2.75rem !important;
 }
 
 @media (min-width: 768px) {

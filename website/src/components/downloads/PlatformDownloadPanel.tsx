@@ -326,7 +326,7 @@ export function PlatformDownloadPanel({
       </div>
 
       {expanded && (
-        <div className="pd-download-details px-4 pb-3 flex flex-col gap-2 border-t border-purple-500/40 pt-3">
+        <div className="pd-download-details pl-6 pr-4 pb-3 flex flex-col gap-2 border-t border-purple-500/40 pt-3">
           <PlatformDetails os={platform.os} />
         </div>
       )}
