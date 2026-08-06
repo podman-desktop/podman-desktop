@@ -2943,6 +2943,32 @@ test('container logs flushes buffered bytes when the stream ends mid-character',
   expect(dataChunks[1]).toBe('\uFFFD');
 });
 
+test('container logs forwards the since option', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+
+  await containerRegistry.logsContainer({
+    engineId: 'podman',
+    id: 'containerId',
+    callback: vi.fn(),
+    since: '1700000000',
+  });
+
+  expect(vi.mocked(dockerodeContainer.logs).mock.calls[0]?.[0]).toStrictEqual({
+    follow: true,
+    stdout: true,
+    stderr: true,
+    abortSignal: undefined,
+    tail: undefined,
+    timestamps: undefined,
+    since: '1700000000',
+  });
+});
+
 describe('createContainer', () => {
   test('test create and start Container', async () => {
     const createdId = '1234';
