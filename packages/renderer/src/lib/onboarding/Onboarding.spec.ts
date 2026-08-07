@@ -408,6 +408,7 @@ test('Expect that Esc closes', async () => {
   // Espect the div 'Skip Setup Popup' to be in the document
   const skipSetupPopup = screen.getByLabelText('Skip Setup Popup');
   expect(skipSetupPopup).toBeInTheDocument();
+  expect(skipSetupPopup.parentElement).toHaveClass('bg-(--pd-modal-fade)/60');
 });
 
 test('Expect onboarding to handle two extension ids and global onboarding set to true', async () => {
