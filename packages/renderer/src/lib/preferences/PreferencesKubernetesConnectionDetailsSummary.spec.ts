@@ -24,7 +24,7 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderKubernetesConnectionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import PreferencesKubernetesConnectionDetailsSummary from './PreferencesKubernetesConnectionDetailsSummary.svelte';
 
@@ -45,22 +45,26 @@ test('Expect that name, url and kubernetes are displayed', async () => {
   render(PreferencesKubernetesConnectionDetailsSummary, {
     kubernetesConnectionInfo: kubernetesConnection,
   });
-  const spanConnection = screen.getByLabelText('connection');
-  expect(spanConnection).toBeInTheDocument();
-  const spanUrl = screen.getByLabelText('url');
-  expect(spanUrl).toBeInTheDocument();
-  const kubernetes = screen.getByLabelText('kubernetes');
-  expect(kubernetes).toBeInTheDocument();
-  expect(kubernetes.textContent).toBe('Kubernetes');
+  await vi.waitFor(() => {
+    const spanConnection = screen.getByLabelText('connection');
+    expect(spanConnection).toBeInTheDocument();
+    const spanUrl = screen.getByLabelText('url');
+    expect(spanUrl).toBeInTheDocument();
+    const kubernetes = screen.getByLabelText('kubernetes');
+    expect(kubernetes).toBeInTheDocument();
+    expect(kubernetes.textContent).toBe('Kubernetes');
+  });
 });
 
 test('Expect error is displayed when connection has error', async () => {
   render(PreferencesKubernetesConnectionDetailsSummary, {
     kubernetesConnectionInfo: { ...kubernetesConnection, error: 'Failed to start cluster' },
   });
-  const errorAlert = screen.getByRole('alert');
-  expect(errorAlert).toBeInTheDocument();
-  expect(errorAlert).toHaveTextContent('Failed to start cluster');
+  await vi.waitFor(() => {
+    const errorAlert = screen.getByRole('alert');
+    expect(errorAlert).toBeInTheDocument();
+    expect(errorAlert).toHaveTextContent('Failed to start cluster');
+  });
 });
 
 test('Expect error is not displayed when connection has no error', async () => {
