@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ export async function installBinaryToSystem(binaryPath: string, binaryName: stri
   let args: string[] = [];
   let command: string | undefined;
   if (system === 'win32') {
-    // admin privileges are are not needed on Windows
+    // admin privileges are not needed on Windows
     await fs.promises.copyFile(binaryPath, destinationPath);
     return destinationPath;
   } else if (system === 'darwin') {
@@ -91,13 +91,45 @@ export async function installBinaryToSystem(binaryPath: string, binaryName: stri
     console.log(`Successfully installed '${binaryName}' binary.`);
     if (!(system === 'darwin' || process.env.FLATPAK_ID) && !process.env.PATH?.includes(destinationFolder)) {
       await extensionApi.window.showWarningMessage(
-        `The compose binary has been installed into ${destinationFolder} but it is not in the system path. You should add it manually if you want to use compose from cli.`,
+        `The ${binaryName} binary has been installed into ${destinationFolder} but it is not in the system path. You should add it manually if you want to use ${binaryName} from cli.`,
         'OK',
       );
     }
     return destinationPath;
   } catch (error) {
     console.error(`Failed to install '${binaryName}' binary: ${error}`);
+    throw error;
+  }
+}
+
+export async function deleteFile(filePath: string): Promise<void> {
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      await fs.promises.unlink(filePath);
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error.code === 'EACCES' || error.code === 'EPERM')
+      ) {
+        await deleteFileAsAdmin(filePath);
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
+async function deleteFileAsAdmin(filePath: string): Promise<void> {
+  const args: string[] = [filePath];
+  const command = extensionApi.env.isWindows ? 'del' : 'rm';
+
+  try {
+    // Use admin privileges
+    await extensionApi.process.exec(command, args, { isAdmin: true });
+  } catch (error) {
+    console.error(`Failed to uninstall '${filePath}': ${error}`);
     throw error;
   }
 }

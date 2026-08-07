@@ -1,0 +1,30 @@
+{
+  "name": "@podman-desktop/cli-installer",
+  "version": "1.29.0-next",
+  "description": "Shared CLI installer helpers for Podman Desktop extensions",
+  "type": "module",
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "!dist/**/*.spec.*"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest watch --coverage"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@podman-desktop/api": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5",
+    "vite-plugin-dts": "^5.0.3",
+    "vitest": "^4.1.10"
+  }
+}
