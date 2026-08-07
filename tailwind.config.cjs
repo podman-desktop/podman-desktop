@@ -18,7 +18,9 @@
 
 const tailwindColors = require('tailwindcss/colors');
 const colorPalette = require('./tailwind-color-palette.json');
+const typographyPlugin = require('@tailwindcss/typography');
 
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     'packages/renderer/index.html',
@@ -52,6 +54,61 @@ module.exports = {
         700: tailwindColors.zinc[700],
       },
     },
+    extend: {
+      typography: () => ({
+        DEFAULT: {
+          css: {
+            '--tw-prose-links': 'var(--pd-link)',
+            '--tw-prose-invert-links': 'var(--pd-link)',
+
+            p: {
+              fontSize: '12px',
+            },
+
+            ul: {
+              fontSize: '12px',
+            },
+
+            ol: {
+              fontSize: '12px',
+            },
+
+            h1: {
+              fontWeight: '200',
+            },
+
+            h2: {
+              fontWeight: '300',
+              letterSpacing: '0.03em',
+            },
+
+            h3: {
+              fontWeight: '300',
+              letterSpacing: '0.03em',
+            },
+
+            h4: {
+              fontSize: '10px',
+            },
+
+            a: {
+              fontWeight: '400',
+            },
+          },
+        },
+
+        // The typography plugin's `sm` modifier (applied via `prose-sm` in Markdown.svelte)
+        // defines its own `code` font-size, which otherwise wins over the DEFAULT override above.
+        sm: {
+          css: {
+            code: {
+              fontSize: '12px',
+              fontWeight: '400',
+            },
+          },
+        },
+      }),
+    },
   },
-  plugins: [],
+  plugins: [typographyPlugin],
 };
