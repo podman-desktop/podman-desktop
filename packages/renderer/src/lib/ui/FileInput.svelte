@@ -3,15 +3,34 @@ import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 
-export let placeholder: string | undefined = undefined;
-export let id: string | undefined = undefined;
-export let name: string | undefined = undefined;
-export let value: string | undefined = undefined;
-export let options: OpenDialogOptions;
-export let readonly: boolean = false;
-export let required: boolean = false;
-export let clearable: boolean = false;
-export let onChange: (value: string) => void = () => {};
+interface Props {
+  placeholder?: string;
+  id?: string;
+  name?: string;
+  value?: string;
+  options: OpenDialogOptions;
+  readonly?: boolean;
+  required?: boolean;
+  clearable?: boolean;
+  onChange?: (value: string) => void;
+  class?: string;
+  'aria-label'?: string;
+  'aria-invalid'?: boolean | 'grammar' | 'spelling';
+}
+let {
+  placeholder,
+  id,
+  name,
+  value = $bindable(),
+  options,
+  readonly = false,
+  required = false,
+  clearable = false,
+  onChange = (): void => {},
+  class: className,
+  'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+}: Props = $props();
 
 async function openDialog(): Promise<void> {
   const result = await window.openDialog(options);
@@ -31,16 +50,16 @@ function onInput(event: Event): void {
   <Input
     id={id}
     name={name}
-    class={$$props.class ?? ''}
+    class={className}
     bind:value={value}
-    on:input={onInput}
+    oninput={onInput}
     on:keypress
     placeholder={placeholder}
     readonly={readonly}
     required={required}
     clearable={clearable}
-    aria-label={$$props['aria-label']}
-    aria-invalid={$$props['aria-invalid']}>
+    aria-label={ariaLabel}
+    aria-invalid={ariaInvalid}>
   </Input>
   <Button aria-label="browse" icon={faFolderOpen} on:click={openDialog} />
 </div>
