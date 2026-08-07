@@ -26,9 +26,40 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { containerTerminals } from '/@/stores/container-terminal-store';
 
 import ContainerDetailsTerminal from './ContainerDetailsTerminal.svelte';
+import ContainerDetailsTerminalTest from './ContainerDetailsTerminalTest.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 let shellInContainerMock = vi.fn();
+
+/**
+ * Returns the `resize` listeners that were added to `window` and never removed from it.
+ * xterm registers a `resize` listener of its own, so the listeners are matched by identity
+ * instead of being counted.
+ */
+function stillAttachedResizeListeners(
+  addCalls: readonly (readonly unknown[])[],
+  removeCalls: readonly (readonly unknown[])[],
+): EventListener[] {
+  const removed = removeCalls.filter(([type]) => type === 'resize').map(([, listener]) => listener);
+  const attached: EventListener[] = [];
+  for (const [type, listener] of addCalls) {
+    if (type !== 'resize') {
+      continue;
+    }
+    const index = removed.indexOf(listener);
+    if (index === -1) {
+      attached.push(listener as EventListener);
+    } else {
+      removed.splice(index, 1);
+    }
+  }
+  return attached;
+}
+
+/** Returns the `resize` listeners that were added to `window`, in registration order. */
+function registeredResizeListeners(addCalls: readonly (readonly unknown[])[]): EventListener[] {
+  return addCalls.filter(([type]) => type === 'resize').map(([, listener]) => listener as EventListener);
+}
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -724,4 +755,62 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
     const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
     expect(terminalLinesLiveRegion).toHaveTextContent('prompt$ hello world prompt$');
   });
+});
+
+test('resize listeners are removed when leaving the terminal tab', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  const sendCallbackId = 12345;
+  shellInContainerMock.mockResolvedValue(sendCallbackId);
+
+  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+  const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+  // enter and leave the terminal tab three times
+  for (let visit = 1; visit <= 3; visit++) {
+    const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+    await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(visit));
+    renderObject.unmount();
+  }
+
+  // no listener of any of the three visits is left behind on window
+  const attached = stillAttachedResizeListeners(addEventListenerSpy.mock.calls, removeEventListenerSpy.mock.calls);
+  expect(attached).toHaveLength(0);
+
+  addEventListenerSpy.mockRestore();
+  removeEventListenerSpy.mockRestore();
+});
+
+test('resize listener does not fail when the container is gone', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  const sendCallbackId = 12345;
+  shellInContainerMock.mockResolvedValue(sendCallbackId);
+
+  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+
+  const renderObject = render(ContainerDetailsTerminalTest, { container });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(1));
+
+  const listeners = registeredResizeListeners(addEventListenerSpy.mock.calls);
+  expect(listeners.length).toBeGreaterThan(0);
+
+  // the container is removed: the parent stops providing it and tears the terminal down
+  await renderObject.rerender({ container: undefined });
+
+  // a resize event delivered after that must not fail with
+  // "TypeError: Cannot read properties of undefined (reading 'id')"
+  for (const listener of listeners) {
+    expect(() => listener(new Event('resize'))).not.toThrow();
+  }
+
+  addEventListenerSpy.mockRestore();
 });

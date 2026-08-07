@@ -33,6 +33,7 @@ let containerState = $derived(container.state);
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 let onDataDisposable: IDisposable | undefined;
 let reconnecting = false;
+let resizeHandler: (() => void) | undefined;
 
 function registerInputHandler(callbackId: number): void {
   onDataDisposable?.dispose();
@@ -185,16 +186,23 @@ async function refreshTerminal(): Promise<void> {
   shellTerminal.open(terminalXtermDiv);
 
   // call fit addon each time we resize the window
-  window.addEventListener('resize', () => {
-    if (currentRouterPath === `/containers/${container.id}/terminal`) {
+  resizeHandler = (): void => {
+    // the container may be gone by the time a resize event is delivered: it can be removed,
+    // or its engine may no longer be available, and the prop then resolves to undefined
+    if (!container) {
+      return;
+    }
+    const containerId = container.id;
+    if (currentRouterPath === `/containers/${containerId}/terminal`) {
       fitAddon.fit();
       if (sendCallbackId) {
         window
           .shellInContainerResize(sendCallbackId, shellTerminal.cols, shellTerminal.rows)
-          .catch((err: unknown) => console.error(`Error resizing terminal for container ${container.id}`, err));
+          .catch((err: unknown) => console.error(`Error resizing terminal for container ${containerId}`, err));
       }
     }
-  });
+  };
+  window.addEventListener('resize', resizeHandler);
   fitAddon.fit();
 }
 onMount(async () => {
@@ -203,6 +211,12 @@ onMount(async () => {
 });
 
 onDestroy(() => {
+  // without this the listener stays on window for the lifetime of the application, and a new
+  // one is added every time the terminal tab is opened again
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler);
+    resizeHandler = undefined;
+  }
   clearReconnectTimer();
   onDataDisposable?.dispose();
   terminalContent = serializeAddon.serialize();
