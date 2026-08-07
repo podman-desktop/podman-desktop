@@ -25,21 +25,25 @@ import PreferencesKubernetesConnectionDetailsSummary from './PreferencesKubernet
 import type { IConnectionRestart, IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let apiUrlBase64 = '';
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  apiUrlBase64?: string;
+}
+let { properties = [], providerInternalId, apiUrlBase64 = '' }: Props = $props();
 
-const apiURL: string = Buffer.from(apiUrlBase64, 'base64').toString();
+const apiURL: string = $derived(Buffer.from(apiUrlBase64, 'base64').toString());
 let connectionName = '';
-let connectionStatus: IConnectionStatus;
-let noLog = true;
-let connectionInfo: ProviderKubernetesConnectionInfo | undefined;
-let providerInfo: ProviderInfo | undefined;
+let connectionStatus: IConnectionStatus | undefined = $state();
+let noLog = $state(true);
+let connectionInfo: ProviderKubernetesConnectionInfo | undefined = $state();
+let providerInfo: ProviderInfo | undefined = $state();
 let loggerHandlerKey: symbol | undefined;
-let configurationKeys: IConfigurationPropertyRecordedSchema[];
-$: configurationKeys = properties
-  .filter(property => property.scope === 'KubernetesConnection')
-  .toSorted((a, b) => (a?.id ?? '').localeCompare(b?.id ?? ''));
+let configurationKeys: IConfigurationPropertyRecordedSchema[] = $derived(
+  properties
+    .filter(property => property.scope === 'KubernetesConnection')
+    .toSorted((a, b) => (a?.id ?? '').localeCompare(b?.id ?? '')),
+);
 
 let providersUnsubscribe: Unsubscriber;
 onMount(async () => {
