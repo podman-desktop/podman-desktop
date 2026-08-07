@@ -7,8 +7,12 @@ import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.s
 import KubePVCArtifact from '/@/lib/kube/details/KubePVCArtifact.svelte';
 import KubePVCStatusArtifact from '/@/lib/kube/details/KubePVCStatusArtifact.svelte';
 
-export let pvc: V1PersistentVolumeClaim | undefined;
-export let kubeError: string | undefined = undefined;
+interface Props {
+  pvc?: V1PersistentVolumeClaim;
+  kubeError?: string;
+}
+
+let { pvc, kubeError }: Props = $props();
 </script>
 
 <!-- Show the kube error if we're unable to retrieve the data correctly, but we still want to show the
