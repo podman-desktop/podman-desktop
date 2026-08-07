@@ -102,6 +102,9 @@ const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } 
 
 const DEFAULT_PROVIDER_TIMEOUT = 30;
 
+// size of the header prefixing every frame of a multiplexed (non-TTY) container stream
+const DOCKER_STREAM_HEADER_SIZE = 8;
+
 export interface InternalContainerProvider {
   name: string;
   id: string;
@@ -1819,6 +1822,18 @@ export class ContainerProviderRegistry {
     if (logsParams.since) {
       optionalParams['since'] = logsParams.since;
     }
+
+    // containers started without a TTY return their logs multiplexed: every frame is prefixed
+    // with an 8-byte header (stream type + payload size) that must be stripped, otherwise the
+    // header bytes are decoded as text and pollute the beginning of the log lines
+    let multiplexed = false;
+    try {
+      multiplexed = !(await container.inspect()).Config.Tty;
+    } catch (error: unknown) {
+      // if the container cannot be inspected, fall back to forwarding the stream as-is
+      console.warn(`Unable to read the TTY mode of container ${logsParams.id}`, error);
+    }
+
     container
       .logs({
         follow: true,
@@ -1832,6 +1847,8 @@ export class ContainerProviderRegistry {
       .then(containerStream => {
         // StringDecoder buffers incomplete multi-byte sequences across chunks
         const decoder = new StringDecoder('utf-8');
+        // holds the bytes of a multiplexed frame that is not complete yet
+        let pending = Buffer.alloc(0);
         containerStream.on('end', () => {
           const remaining = decoder.end();
           if (remaining) {
@@ -1844,7 +1861,20 @@ export class ContainerProviderRegistry {
             firstMessage = false;
             logsParams.callback('first-message', '');
           }
-          logsParams.callback('data', decoder.write(chunk));
+          if (!multiplexed) {
+            logsParams.callback('data', decoder.write(chunk));
+            return;
+          }
+          pending = pending.length > 0 ? Buffer.concat([pending, chunk]) : chunk;
+          while (pending.length >= DOCKER_STREAM_HEADER_SIZE) {
+            const payloadSize = pending.readUInt32BE(4);
+            const frameSize = DOCKER_STREAM_HEADER_SIZE + payloadSize;
+            if (pending.length < frameSize) {
+              break;
+            }
+            logsParams.callback('data', decoder.write(pending.subarray(DOCKER_STREAM_HEADER_SIZE, frameSize)));
+            pending = pending.subarray(frameSize);
+          }
         });
       })
       .catch((error: unknown) => {
