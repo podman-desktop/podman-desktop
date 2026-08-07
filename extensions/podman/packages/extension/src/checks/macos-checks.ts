@@ -104,10 +104,19 @@ export class MacPodmanInstallCheck extends BaseCheck {
 export class MacKrunkitPodmanMachineCreationCheck extends BaseCheck {
   title = 'Krunkit Installation';
   async execute(): Promise<extensionApi.CheckResult> {
+    try {
+      const { stdout } = await extensionApi.process.exec('which', ['krunkit']);
+      if (stdout) {
+        return this.createSuccessfulResult();
+      }
+    } catch {
+      // krunkit is not available on PATH, check if Homebrew installed it
+    }
+
     // we need to check if brew is installed to avoid unexpected error
     try {
       await extensionApi.process.exec('which', ['brew']);
-    } catch (err) {
+    } catch {
       // brew is not installed so do not check if krunkit has been installed with brew
       return this.createSuccessfulResult();
     }
