@@ -4384,3 +4384,44 @@ function getContextMock() {
     },
   } as unknown as extensionApi.ExtensionContext;
 }
+
+// https://github.com/podman-desktop/podman-desktop/issues/2861
+describe('isLinuxRootfulSocketAccessible', () => {
+  test('returns false when the rootful socket does not exist', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+    const accessSyncSpy = vi.spyOn(fs, 'accessSync');
+
+    const result = extension.isLinuxRootfulSocketAccessible('/run/podman/podman.sock');
+
+    expect(result).toBeFalsy();
+    // no point checking permissions on a socket that isn't there
+    expect(accessSyncSpy).not.toHaveBeenCalled();
+  });
+
+  test('returns false when the rootful socket exists but is not accessible to the current user', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'accessSync').mockImplementation(() => {
+      throw new Error('EACCES: permission denied');
+    });
+
+    const result = extension.isLinuxRootfulSocketAccessible('/run/podman/podman.sock');
+
+    expect(result).toBeFalsy();
+  });
+
+  test('returns true when the rootful socket exists and is readable/writable by the current user', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    const accessSyncSpy = vi.spyOn(fs, 'accessSync').mockReturnValue(undefined);
+
+    const result = extension.isLinuxRootfulSocketAccessible('/run/podman/podman.sock');
+
+    expect(result).toBeTruthy();
+    expect(accessSyncSpy).toHaveBeenCalledWith('/run/podman/podman.sock', fs.constants.R_OK | fs.constants.W_OK);
+  });
+});
+
+describe('getLinuxRootfulSocketPath', () => {
+  test('returns the well-known system-wide rootful socket path', () => {
+    expect(extension.getLinuxRootfulSocketPath()).toBe('/run/podman/podman.sock');
+  });
+});

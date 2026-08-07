@@ -110,6 +110,7 @@ let defaultMachineMonitor = true;
 // current status of machines
 export const podmanMachinesStatuses = new Map<string, extensionApi.ProviderConnectionStatus>();
 let podmanProviderStatus: extensionApi.ProviderConnectionStatus = 'started';
+let podmanRootfulProviderStatus: extensionApi.ProviderConnectionStatus = 'started';
 const podmanMachinesInfo = new Map<string, MachineInfo>();
 const currentConnections = new Map<string, extensionApi.Disposable>();
 const containerProviderConnections = new Map<string, extensionApi.ContainerProviderConnection>();
@@ -590,6 +591,26 @@ function getLinuxSocketPath(): string {
   return `/run/user/${uid}/podman/podman.sock`;
 }
 
+// rootful podman exposes a system-wide socket, independent of the user's uid
+export function getLinuxRootfulSocketPath(): string {
+  return '/run/podman/podman.sock';
+}
+
+// returns true only if the socket exists AND the current user can read/write it
+// (e.g. via the SocketGroup override documented in #2861). We never try to
+// elevate privileges or start the rootful service ourselves - detection only.
+export function isLinuxRootfulSocketAccessible(socketPath: string): boolean {
+  if (!fs.existsSync(socketPath)) {
+    return false;
+  }
+  try {
+    fs.accessSync(socketPath, fs.constants.R_OK | fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // on linux, socket is started by the system service on a path like /run/user/1000/podman/podman.sock
 async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> {
   const socketPath = getLinuxSocketPath();
@@ -599,6 +620,7 @@ async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> 
 
   const containerProviderConnection: extensionApi.ContainerProviderConnection = {
     name: 'Podman',
+    displayName: 'Podman (rootless)',
     type: 'podman',
     status: () => podmanProviderStatus,
     endpoint: {
@@ -613,6 +635,53 @@ async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> 
   const disposable = provider.registerContainerProviderConnection(containerProviderConnection);
   currentConnections.set('podman', disposable);
   storedExtensionContext?.subscriptions.push(disposable);
+}
+
+// on linux, if a rootful podman.socket unit is already enabled system-wide and the
+// current user has been granted access to it (see #2861), surface it as a second
+// connection alongside the rootless one. We only ever discover this socket, never
+// start or manage it, since that would require elevated privileges.
+async function initDefaultLinuxRootful(provider: extensionApi.Provider): Promise<void> {
+  const socketPath = getLinuxRootfulSocketPath();
+  if (!isLinuxRootfulSocketAccessible(socketPath)) {
+    return;
+  }
+
+  const containerProviderConnection: extensionApi.ContainerProviderConnection = {
+    name: 'Podman (rootful)',
+    displayName: 'Podman (rootful)',
+    type: 'podman',
+    status: () => podmanRootfulProviderStatus,
+    endpoint: {
+      socketPath,
+    },
+  };
+
+  monitorLinuxRootfulSocket(socketPath).catch((error: unknown) => {
+    console.error('Error monitoring rootful podman socket', error);
+  });
+
+  const disposable = provider.registerContainerProviderConnection(containerProviderConnection);
+  currentConnections.set('podman-rootful', disposable);
+  storedExtensionContext?.subscriptions.push(disposable);
+}
+
+// dedicated monitor loop for the rootful native-linux socket. Deliberately does not
+// reuse monitorPodmanSocket()'s machineName plumbing, since podmanMachinesStatuses is
+// actively pruned elsewhere based on the real list of podman machines (VMs), and a
+// synthetic "rootful" key there risks being garbage-collected by that unrelated logic.
+async function monitorLinuxRootfulSocket(socketPath: string): Promise<void> {
+  if (!stopLoop) {
+    try {
+      podmanRootfulProviderStatus = (await isPodmanSocketAlive(socketPath)) ? 'started' : 'stopped';
+    } catch {
+      // ignore errors, keep the last known status
+    }
+    await timeout(5000);
+    monitorLinuxRootfulSocket(socketPath).catch((error: unknown) => {
+      console.error('Error monitoring rootful podman socket', error);
+    });
+  }
 }
 
 async function isPodmanSocketAlive(socketPath: string): Promise<boolean> {
@@ -1655,6 +1724,9 @@ export async function start(
     extensionContext.subscriptions.push(disposable);
     initDefaultLinux(provider).catch((error: unknown) => {
       console.error('Error while initializing default linux', error);
+    });
+    initDefaultLinuxRootful(provider).catch((error: unknown) => {
+      console.error('Error while initializing default linux rootful', error);
     });
   }
 
