@@ -23,6 +23,7 @@ import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { StringDecoder } from 'node:string_decoder';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
@@ -102,6 +103,12 @@ import { withTimeout } from './util/timeout.js';
 const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } = require('tar-fs');
 
 const DEFAULT_PROVIDER_TIMEOUT = 30;
+
+// size of the header prefixing every frame of a multiplexed (non-TTY) container stream
+const DOCKER_STREAM_HEADER_SIZE = 8;
+
+// stream type of the first header byte of a multiplexed frame, also used as the decoder key of a raw (TTY) stream
+const DOCKER_STREAM_TYPE_STDOUT = 1;
 
 export interface InternalContainerProvider {
   name: string;
@@ -1935,6 +1942,18 @@ export class ContainerProviderRegistry {
     if (logsParams.since) {
       optionalParams['since'] = logsParams.since;
     }
+
+    // containers started without a TTY return their logs multiplexed: every frame is prefixed
+    // with an 8-byte header (stream type + payload size) that must be stripped, otherwise the
+    // header bytes are decoded as text and pollute the beginning of the log lines
+    let multiplexed = false;
+    try {
+      multiplexed = !(await container.inspect()).Config.Tty;
+    } catch (error: unknown) {
+      // if the container cannot be inspected, fall back to forwarding the stream as-is
+      console.warn(`Unable to read the TTY mode of container ${logsParams.id}`, error);
+    }
+
     container
       .logs({
         follow: true,
@@ -1946,7 +1965,27 @@ export class ContainerProviderRegistry {
         ...optionalParams,
       })
       .then(containerStream => {
+        // StringDecoder buffers incomplete multi-byte sequences across chunks. stdout and stderr are
+        // interleaved in the multiplexed stream, so each one needs its own decoder: a shared one
+        // would let a frame of one stream complete the pending character of the other.
+        const decoders = new Map<number, StringDecoder>();
+        const decoderFor = (streamType: number): StringDecoder => {
+          let decoder = decoders.get(streamType);
+          if (!decoder) {
+            decoder = new StringDecoder('utf-8');
+            decoders.set(streamType, decoder);
+          }
+          return decoder;
+        };
+        // holds the bytes of a multiplexed frame that is not complete yet
+        let pending = Buffer.alloc(0);
         containerStream.on('end', () => {
+          for (const decoder of decoders.values()) {
+            const remaining = decoder.end();
+            if (remaining) {
+              logsParams.callback('data', remaining);
+            }
+          }
           logsParams.callback('end', '');
         });
         containerStream.on('data', chunk => {
@@ -1954,7 +1993,24 @@ export class ContainerProviderRegistry {
             firstMessage = false;
             logsParams.callback('first-message', '');
           }
-          logsParams.callback('data', chunk.toString('utf-8'));
+          if (!multiplexed) {
+            logsParams.callback('data', decoderFor(DOCKER_STREAM_TYPE_STDOUT).write(chunk));
+            return;
+          }
+          pending = pending.length > 0 ? Buffer.concat([pending, chunk]) : chunk;
+          while (pending.length >= DOCKER_STREAM_HEADER_SIZE) {
+            const streamType = pending.readUInt8(0);
+            const payloadSize = pending.readUInt32BE(4);
+            const frameSize = DOCKER_STREAM_HEADER_SIZE + payloadSize;
+            if (pending.length < frameSize) {
+              break;
+            }
+            logsParams.callback(
+              'data',
+              decoderFor(streamType).write(pending.subarray(DOCKER_STREAM_HEADER_SIZE, frameSize)),
+            );
+            pending = pending.subarray(frameSize);
+          }
         });
       })
       .catch((error: unknown) => {
