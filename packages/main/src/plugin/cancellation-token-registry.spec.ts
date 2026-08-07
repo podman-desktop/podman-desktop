@@ -54,3 +54,12 @@ test('Return CancellationToken if id valid', async () => {
   expect(token).toBeDefined();
   expect(token instanceof CancellationTokenSource).toBeTruthy();
 });
+
+test('Remove CancellationToken if id valid', () => {
+  const tokenSourceId = cancellationTokenRegistry.createCancellationTokenSource();
+
+  cancellationTokenRegistry.removeCancellationTokenSource(tokenSourceId);
+
+  expect(cancellationTokenRegistry.hasCancellationTokenSource(tokenSourceId)).toBe(false);
+  expect(cancellationTokenRegistry.getCancellationTokenSource(tokenSourceId)).toBeUndefined();
+});
