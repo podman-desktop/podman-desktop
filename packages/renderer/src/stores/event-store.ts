@@ -212,7 +212,16 @@ export class EventStore<T> {
     // for throttling every 5s if not already done
     let timeoutThrottle: NodeJS.Timeout | undefined;
 
+    // track whether an update was skipped while the window was hidden
+    let pendingUpdateWhileHidden = false;
+
     const update = async (eventName: string, args?: unknown[]): Promise<void> => {
+      // when the window is hidden, skip IPC calls and mark a pending update
+      if (document.hidden) {
+        pendingUpdateWhileHidden = true;
+        return;
+      }
+
       const needUpdate = await this.checkForUpdate(eventName, args);
 
       // method that do the update
@@ -272,6 +281,15 @@ export class EventStore<T> {
         }, this.debounceThrottleTimeoutDelay);
       }
     };
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && pendingUpdateWhileHidden) {
+        pendingUpdateWhileHidden = false;
+        eventStoreInfo.fetch().catch((error: unknown) => {
+          console.error(`Failed to refresh ${this.name} on visibility change`, error);
+        });
+      }
+    });
 
     this.windowEvents.forEach(eventNameWithOptionalKeys => {
       const [eventName, keysList] = eventNameWithOptionalKeys.split(EVENT_SEPARATOR);

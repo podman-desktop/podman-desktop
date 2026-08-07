@@ -17,14 +17,17 @@
  ***********************************************************************/
 
 import { get, type Writable, writable } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { EventStore, type EventStoreInfo, fineGrainedEvents } from './event-store';
 
 const callbacks = new Map<string, (arg?: unknown) => Promise<void> | void>();
 
+const documentCallbacks = new Map<string, EventListener>();
+
 beforeEach(() => {
   callbacks.clear();
+  documentCallbacks.clear();
   vi.resetAllMocks();
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
@@ -33,6 +36,14 @@ beforeEach(() => {
   vi.spyOn(window, 'addEventListener').mockImplementation((event, callback) => {
     callbacks.set(event, callback as (arg?: unknown) => void);
   });
+  vi.spyOn(document, 'addEventListener').mockImplementation((event, callback) => {
+    documentCallbacks.set(event, callback as EventListener);
+  });
+  Object.defineProperty(document, 'hidden', { value: false, writable: true, configurable: true });
+});
+
+afterEach(() => {
+  Object.defineProperty(document, 'hidden', { value: false, writable: true, configurable: true });
 });
 
 interface MyCustomTypeInfo {
@@ -436,4 +447,88 @@ test('Check debounce+delay', async () => {
 
   // check buffer events
   expect(eventStoreInfo.bufferEvents.length).toBeGreaterThan(1);
+});
+
+test('should skip updates when document is hidden', async () => {
+  const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);
+  const checkForUpdateMock = vi.fn();
+  const windowEventName = 'my-custom-event';
+  const updater = vi.fn();
+
+  checkForUpdateMock.mockResolvedValue(true);
+
+  const eventStore = new TestEventStore('my-test', myStoreInfo, checkForUpdateMock, [windowEventName], [], updater);
+  eventStore.setup();
+
+  const callback = callbacks.get(windowEventName);
+  expect(callback).toBeDefined();
+
+  updater.mockResolvedValue([{ name: 'item' }]);
+
+  // simulate the window being hidden
+  Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+
+  await callback?.();
+
+  // updater should not have been called while hidden
+  expect(updater).not.toHaveBeenCalled();
+  expect(get(myStoreInfo)).toStrictEqual([]);
+});
+
+test('should flush pending update when document becomes visible', async () => {
+  const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);
+  const checkForUpdateMock = vi.fn();
+  const windowEventName = 'my-custom-event';
+  const updater = vi.fn();
+
+  checkForUpdateMock.mockResolvedValue(true);
+
+  const myCustomTypeInfo: MyCustomTypeInfo = { name: 'my-custom-type' };
+  updater.mockResolvedValue([myCustomTypeInfo]);
+
+  const eventStore = new TestEventStore('my-test', myStoreInfo, checkForUpdateMock, [windowEventName], [], updater);
+  eventStore.setup();
+
+  const callback = callbacks.get(windowEventName);
+  expect(callback).toBeDefined();
+
+  // simulate the window being hidden and receiving an event
+  Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+  await callback?.();
+  expect(updater).not.toHaveBeenCalled();
+
+  // simulate the window becoming visible again
+  Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+  const visibilityCallback = documentCallbacks.get('visibilitychange');
+  expect(visibilityCallback).toBeDefined();
+  visibilityCallback?.(new Event('visibilitychange'));
+
+  // the store should be refreshed
+  await vi.waitFor(() => {
+    expect(updater).toHaveBeenCalled();
+  });
+  await vi.waitFor(() => {
+    expect(get(myStoreInfo)).toStrictEqual([myCustomTypeInfo]);
+  });
+});
+
+test('should not flush on visibility change if no events were received while hidden', async () => {
+  const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);
+  const checkForUpdateMock = vi.fn();
+  const updater = vi.fn();
+
+  checkForUpdateMock.mockResolvedValue(true);
+
+  const eventStore = new TestEventStore('my-test', myStoreInfo, checkForUpdateMock, ['my-event'], [], updater);
+  eventStore.setup();
+
+  // go hidden and come back without any events firing
+  Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+  Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+  const visibilityCallback = documentCallbacks.get('visibilitychange');
+  visibilityCallback?.(new Event('visibilitychange'));
+
+  // small delay to ensure nothing fires
+  await new Promise(resolve => setTimeout(resolve, 100));
+  expect(updater).not.toHaveBeenCalled();
 });
