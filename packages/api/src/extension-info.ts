@@ -34,6 +34,7 @@ export interface ExtensionInfo {
   displayName: string;
   publisher: string;
   removable: boolean;
+  bundled: boolean;
   devMode: boolean;
   version: string;
   state: string;

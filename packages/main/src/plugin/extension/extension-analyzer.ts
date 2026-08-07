@@ -36,6 +36,10 @@ export interface AnalyzedExtension {
   mainPath?: string;
   api?: typeof containerDesktopAPI;
   removable: boolean;
+  /**
+   * true if the extension is bundled with the application
+   */
+  bundled: boolean;
 
   // true if the extension is running in development mode
   // it means we're using a separate development folder
@@ -61,12 +65,18 @@ export interface AnalyzedExtension {
 export interface ExtensionAnalyzerOptions {
   extensionPath: string;
   removable: boolean;
+  bundled: boolean;
   devMode?: boolean;
 }
 
 @injectable()
 export class ExtensionAnalyzer {
-  async analyzeExtension({ extensionPath, removable, devMode }: ExtensionAnalyzerOptions): Promise<AnalyzedExtension> {
+  async analyzeExtension({
+    extensionPath,
+    bundled,
+    removable,
+    devMode,
+  }: ExtensionAnalyzerOptions): Promise<AnalyzedExtension> {
     const resolvedExtensionPath = await realpath(extensionPath);
     // do nothing if there is no package.json file
     let error = undefined;
@@ -81,6 +91,7 @@ export class ExtensionAnalyzer {
         readme: '',
         api: <typeof containerDesktopAPI>{},
         removable: removable,
+        bundled,
         devMode: devMode ?? false,
         subscriptions: [],
         dispose(): void {},
@@ -113,6 +124,7 @@ export class ExtensionAnalyzer {
       mainPath: manifest.main ? path.resolve(resolvedExtensionPath, manifest.main) : undefined,
       readme,
       removable,
+      bundled,
       devMode: devMode ?? false,
       subscriptions: disposables,
       dispose(): void {
