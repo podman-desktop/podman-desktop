@@ -398,6 +398,10 @@ describe('MessageBox', () => {
     };
 
     function renderAndOpenBoth(): void {
+      // The real bridge returns a promise; the shared mock returns undefined,
+      // which would break the .catch() on the answer sent for the replaced box.
+      vi.mocked(window.sendShowMessageBoxOnSelect).mockResolvedValue(undefined);
+
       let openMessageBox: ((options: MessageBoxOptions) => void) | undefined;
 
       vi.mocked(window.events.receive).mockImplementation(
@@ -416,20 +420,32 @@ describe('MessageBox', () => {
       openMessageBox?.(secondOptions);
     }
 
-    test('Expect the displayed message box not to be replaced by the next one', async () => {
+    // Replacing in place is the behaviour the updater depends on: it shows
+    // "an update is being downloaded" and then swaps in "restart now?" without
+    // anyone dismissing the first one. Queueing the second box instead broke
+    // that flow — the restart prompt never rendered.
+    test('Expect the next message box to replace the displayed one', async () => {
       renderAndOpenBoth();
 
-      expect(await screen.findByText('First dialog')).toBeInTheDocument();
-      expect(screen.queryByText('Second dialog')).not.toBeInTheDocument();
+      expect(await screen.findByText('Second dialog')).toBeInTheDocument();
+      expect(screen.queryByText('First dialog')).not.toBeInTheDocument();
+    });
+
+    // The regression this PR is about. The replaced box's id used to be
+    // overwritten before anyone answered it, so the deferred promise the main
+    // process holds for it was never settled and its caller waited forever.
+    test('Expect the replaced message box to be answered with its cancel id', async () => {
+      renderAndOpenBoth();
+
+      expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(801, undefined);
     });
 
     test('Expect every requested message box to be answered', async () => {
       renderAndOpenBoth();
 
-      await fireEvent.click(await screen.findByRole('button', { name: 'Answer 1' }));
       await fireEvent.click(await screen.findByRole('button', { name: 'Answer 2' }));
 
-      expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(801, 0, undefined);
+      expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(801, undefined);
       expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(802, 0, undefined);
     });
   });
