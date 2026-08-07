@@ -24,8 +24,21 @@ let footerMarkdownDescription: string | undefined = $state();
 
 let display = $state(false);
 
+// message boxes received while another one is being displayed, kept in order
+const pendingMessageBoxes: MessageBoxOptions[] = [];
+
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
+  // do not overwrite the message box currently displayed: its id would be lost and
+  // the caller waiting on it would never be answered
+  if (display) {
+    pendingMessageBoxes.push(options);
+    return;
+  }
+  showMessageBox(options);
+};
+
+function showMessageBox(options: MessageBoxOptions): void {
   currentId = options?.id || 0;
   title = options?.title || '';
   message = options?.message || '';
@@ -77,7 +90,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   });
 
   display = true;
-};
+}
 
 onMount(() => {
   // handle the showMessageBox event
@@ -94,14 +107,27 @@ function cleanup(): void {
   message = '';
 }
 
+// display the next queued message box, if any, otherwise close the dialog
+function showNextMessageBox(): void {
+  const next = pendingMessageBoxes.shift();
+  if (next) {
+    showMessageBox(next);
+  } else {
+    cleanup();
+  }
+}
+
 async function clickButton(index?: number, dropdownIndex?: number): Promise<void> {
-  cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, index, dropdownIndex);
+  const answeredId = currentId;
+  showNextMessageBox();
+  await window.sendShowMessageBoxOnSelect(answeredId, index, dropdownIndex);
 }
 
 async function onClose(): Promise<void> {
-  cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
+  const answeredId = currentId;
+  const answeredCancelId = cancelId >= 0 ? cancelId : undefined;
+  showNextMessageBox();
+  await window.sendShowMessageBoxOnSelect(answeredId, answeredCancelId);
 }
 
 function getButtonType(b: boolean): ButtonType {

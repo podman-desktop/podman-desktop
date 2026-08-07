@@ -382,4 +382,55 @@ describe('MessageBox', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Run' }));
     expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
   });
+
+  describe('several message boxes requested at once', () => {
+    const firstOptions: MessageBoxOptions = {
+      id: 801,
+      title: 'First dialog',
+      message: 'First message',
+      buttons: ['Answer 1'],
+    };
+    const secondOptions: MessageBoxOptions = {
+      id: 802,
+      title: 'Second dialog',
+      message: 'Second message',
+      buttons: ['Answer 2'],
+    };
+
+    function renderAndOpenBoth(): void {
+      let openMessageBox: ((options: MessageBoxOptions) => void) | undefined;
+
+      vi.mocked(window.events.receive).mockImplementation(
+        (message: string, callback: (options: MessageBoxOptions) => void) => {
+          if (message === 'showMessageBox:open') {
+            openMessageBox = callback;
+          }
+          return { dispose: vi.fn() };
+        },
+      );
+
+      render(MessageBox, {});
+
+      // both requests reach the renderer before the user answers the first one
+      openMessageBox?.(firstOptions);
+      openMessageBox?.(secondOptions);
+    }
+
+    test('Expect the displayed message box not to be replaced by the next one', async () => {
+      renderAndOpenBoth();
+
+      expect(await screen.findByText('First dialog')).toBeInTheDocument();
+      expect(screen.queryByText('Second dialog')).not.toBeInTheDocument();
+    });
+
+    test('Expect every requested message box to be answered', async () => {
+      renderAndOpenBoth();
+
+      await fireEvent.click(await screen.findByRole('button', { name: 'Answer 1' }));
+      await fireEvent.click(await screen.findByRole('button', { name: 'Answer 2' }));
+
+      expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(801, 0, undefined);
+      expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(802, 0, undefined);
+    });
+  });
 });
