@@ -26,22 +26,26 @@ import PreferencesContainerConnectionDetailsSummary from './PreferencesContainer
 import type { IConnectionRestart, IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let connection: string | undefined = undefined;
-export let name: string | undefined = undefined;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  connection?: string;
+  name?: string;
+}
+let { properties = [], providerInternalId, connection, name }: Props = $props();
 
-const connectionName = Buffer.from(name ?? '', 'base64').toString();
-const socketPath: string = Buffer.from(connection ?? '', 'base64').toString();
-let connectionStatus: IConnectionStatus;
-let noLog = true;
-let connectionInfo: ProviderContainerConnectionInfo | undefined;
-let providerInfo: ProviderInfo | undefined;
+const connectionName = $derived(Buffer.from(name ?? '', 'base64').toString());
+const socketPath: string = $derived(Buffer.from(connection ?? '', 'base64').toString());
+let connectionStatus: IConnectionStatus | undefined = $state();
+let noLog = $state(true);
+let connectionInfo: ProviderContainerConnectionInfo | undefined = $state();
+let providerInfo: ProviderInfo | undefined = $state();
 let loggerHandlerKey: symbol | undefined;
-let configurationKeys: IConfigurationPropertyRecordedSchema[];
-$: configurationKeys = properties
-  .filter(property => property.scope === 'ContainerConnection')
-  .toSorted((a, b) => (a.id ?? '').localeCompare(b.id ?? ''));
+let configurationKeys: IConfigurationPropertyRecordedSchema[] = $derived(
+  properties
+    .filter(property => property.scope === 'ContainerConnection')
+    .toSorted((a, b) => (a.id ?? '').localeCompare(b.id ?? '')),
+);
 
 let providersUnsubscribe: Unsubscriber;
 onMount(async () => {
