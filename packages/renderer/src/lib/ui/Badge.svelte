@@ -3,11 +3,15 @@ import { onMount } from 'svelte';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
-export let color: string | { light: string; dark: string } = 'bg-[var(--pd-badge-gray)]';
-export let label: string = '';
+interface Props {
+  color?: string | { light: string; dark: string };
+  label?: string;
+  class?: string;
+}
+let { color = 'bg-[var(--pd-badge-gray)]', label = '', class: className }: Props = $props();
 
-let customStyle: string = '';
-let customClass: string = '';
+let customStyle: string = $state('');
+let customClass: string = $state('');
 
 onMount(async () => {
   const appearanceUtil = new AppearanceUtil();
@@ -24,6 +28,6 @@ onMount(async () => {
 });
 </script>
 
-<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none {customClass} {$$props.class}" style={customStyle} aria-label="badge-{label}">
+<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none {customClass} {className}" style={customStyle} aria-label="badge-{label}">
   {label}
 </div>
