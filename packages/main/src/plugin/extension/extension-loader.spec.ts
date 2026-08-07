@@ -2749,6 +2749,36 @@ test('when registering a navigation route, should be pushed to disposables', () 
   expect(disposables.length).toBe(1);
 });
 
+test('when registering a navigation route with searchEntry, the searchEntry should be passed through', () => {
+  const api = createApi();
+
+  const disposable = api.navigation.register('search-route', 'my-command', { label: 'My Label' });
+
+  const routes = navigationManager.getSearchableRoutes();
+  expect(routes).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        routeId: 'publisher.extension-name.search-route',
+        label: 'My Label',
+      }),
+    ]),
+  );
+
+  disposable.dispose();
+});
+
+test('when registering a navigation route with searchEntry without icon and no extension icon, icon should be undefined', () => {
+  const api = createApi();
+
+  const disposable = api.navigation.register('icon-fallback-route', 'my-command', { label: 'My Label' });
+
+  const routes = navigationManager.getSearchableRoutes();
+  const route = routes.find(r => r.routeId === 'publisher.extension-name.icon-fallback-route');
+  expect(route?.icon).toBeUndefined();
+
+  disposable.dispose();
+});
+
 test('withProgress should add the extension id to the routeId', async () => {
   vi.mocked(progress.withProgress).mockResolvedValue(undefined);
   const api = createApi();

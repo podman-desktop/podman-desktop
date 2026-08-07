@@ -68,6 +68,7 @@ export * from './menu-context.js';
 export * from './navigation-history-info.js';
 export * from './navigation-page.js';
 export * from './navigation-request.js';
+export * from './navigation-search-entry-info.js';
 export * from './network-info.js';
 export * from './notification.js';
 export * from './onboarding.js';

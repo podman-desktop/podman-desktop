@@ -95,6 +95,7 @@ import type {
   MessageBoxOptions,
   MessageBoxReturnValue,
   NavigationRequest,
+  NavigationSearchEntryInfo,
   NetworkCreateOptions,
   NetworkCreateResult,
   NetworkInspectInfo,
@@ -290,6 +291,10 @@ export function initExposure(): void {
       return ipcRenderer.invoke('navigation:navigateToHistoryEntry', extensionId, entryId);
     },
   );
+
+  contextBridge.exposeInMainWorld('getSearchableNavigationRoutes', async (): Promise<NavigationSearchEntryInfo[]> => {
+    return ipcInvoke('navigation:getSearchableRoutes');
+  });
 
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
