@@ -2938,12 +2938,15 @@ test('container logs flushes buffered bytes when the stream ends mid-character',
 
 // builds a frame of a multiplexed container stream: 8-byte header (stream type + payload size)
 // followed by the payload itself
-function buildLogFrame(payload: string, streamType = 1): Buffer {
-  const body = Buffer.from(payload, 'utf-8');
+function buildLogFrameFromBytes(body: Buffer, streamType = 1): Buffer {
   const header = Buffer.alloc(8);
   header[0] = streamType;
   header.writeUInt32BE(body.length, 4);
   return Buffer.concat([header, body]);
+}
+
+function buildLogFrame(payload: string, streamType = 1): Buffer {
+  return buildLogFrameFromBytes(Buffer.from(payload, 'utf-8'), streamType);
 }
 
 test('container logs strips the multiplexed stream header of non-TTY containers', async () => {
@@ -2989,6 +2992,33 @@ test('container logs buffers multiplexed frames split across chunks', async () =
   await endPromise;
 
   expect(dataChunks.join('')).toBe('split payload\n');
+});
+
+test('container logs decodes stdout and stderr with separate decoders', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // "🚀" split over two stdout frames, with a stderr frame emitted in between: a shared decoder
+  // would let the stderr payload complete the pending stdout character and corrupt both streams
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+  const firstHalf = buildLogFrameFromBytes(rocketBytes.subarray(0, 2), 1);
+  const secondHalf = buildLogFrameFromBytes(rocketBytes.subarray(2), 1);
+
+  setTimeout(() => {
+    stream.emit('data', firstHalf);
+    stream.emit('data', buildLogFrame('err\n', 2));
+    stream.emit('data', secondHalf);
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('err\n🚀');
 });
 
 test('container logs forwards the raw stream when the container cannot be inspected', async () => {

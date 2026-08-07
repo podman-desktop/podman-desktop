@@ -105,6 +105,9 @@ const DEFAULT_PROVIDER_TIMEOUT = 30;
 // size of the header prefixing every frame of a multiplexed (non-TTY) container stream
 const DOCKER_STREAM_HEADER_SIZE = 8;
 
+// stream type of the first header byte of a multiplexed frame, also used as the decoder key of a raw (TTY) stream
+const DOCKER_STREAM_TYPE_STDOUT = 1;
+
 export interface InternalContainerProvider {
   name: string;
   id: string;
@@ -1845,14 +1848,26 @@ export class ContainerProviderRegistry {
         ...optionalParams,
       })
       .then(containerStream => {
-        // StringDecoder buffers incomplete multi-byte sequences across chunks
-        const decoder = new StringDecoder('utf-8');
+        // StringDecoder buffers incomplete multi-byte sequences across chunks. stdout and stderr are
+        // interleaved in the multiplexed stream, so each one needs its own decoder: a shared one
+        // would let a frame of one stream complete the pending character of the other.
+        const decoders = new Map<number, StringDecoder>();
+        const decoderFor = (streamType: number): StringDecoder => {
+          let decoder = decoders.get(streamType);
+          if (!decoder) {
+            decoder = new StringDecoder('utf-8');
+            decoders.set(streamType, decoder);
+          }
+          return decoder;
+        };
         // holds the bytes of a multiplexed frame that is not complete yet
         let pending = Buffer.alloc(0);
         containerStream.on('end', () => {
-          const remaining = decoder.end();
-          if (remaining) {
-            logsParams.callback('data', remaining);
+          for (const decoder of decoders.values()) {
+            const remaining = decoder.end();
+            if (remaining) {
+              logsParams.callback('data', remaining);
+            }
           }
           logsParams.callback('end', '');
         });
@@ -1862,17 +1877,21 @@ export class ContainerProviderRegistry {
             logsParams.callback('first-message', '');
           }
           if (!multiplexed) {
-            logsParams.callback('data', decoder.write(chunk));
+            logsParams.callback('data', decoderFor(DOCKER_STREAM_TYPE_STDOUT).write(chunk));
             return;
           }
           pending = pending.length > 0 ? Buffer.concat([pending, chunk]) : chunk;
           while (pending.length >= DOCKER_STREAM_HEADER_SIZE) {
+            const streamType = pending.readUInt8(0);
             const payloadSize = pending.readUInt32BE(4);
             const frameSize = DOCKER_STREAM_HEADER_SIZE + payloadSize;
             if (pending.length < frameSize) {
               break;
             }
-            logsParams.callback('data', decoder.write(pending.subarray(DOCKER_STREAM_HEADER_SIZE, frameSize)));
+            logsParams.callback(
+              'data',
+              decoderFor(streamType).write(pending.subarray(DOCKER_STREAM_HEADER_SIZE, frameSize)),
+            );
             pending = pending.subarray(frameSize);
           }
         });
