@@ -1,5 +1,5 @@
 import Link from '@docusaurus/Link';
-import type { ReactNode } from 'react';
+import type { MouseEventHandler, ReactNode } from 'react';
 
 type TelemetryLinkProps = {
   to: string;
@@ -8,6 +8,7 @@ type TelemetryLinkProps = {
   className: string;
   children?: ReactNode[];
   mobile?: boolean;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
 const sendGoatCounterEvent = (path: string, title: string): void => {
@@ -18,15 +19,17 @@ const sendGoatCounterEvent = (path: string, title: string): void => {
   });
 };
 
-export const TelemetryLink = ({ children, mobile = false, ...props }: TelemetryLinkProps): JSX.Element => {
+export const TelemetryLink = ({ children, mobile = false, onClick, ...props }: TelemetryLinkProps): JSX.Element => {
   const link = (
     <Link
       className={props.className}
       to={props.to}
-      onClick={() => sendGoatCounterEvent(props.eventPath, props.eventTitle)}>
+      onClick={event => {
+        sendGoatCounterEvent(props.eventPath, props.eventTitle);
+        onClick?.(event);
+      }}>
       {children}
     </Link>
   );
-  /**check for mobile menu */
   return mobile ? <li className="menu__list-item">{link}</li> : link;
 };
