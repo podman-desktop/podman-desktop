@@ -571,6 +571,64 @@ test('expect command update to be called when configuration value on startup', (
   expect(commandRegistryMock.executeCommand).toHaveBeenCalledWith('update', 'startup');
 });
 
+test('expect command update not to be called when the next reminder timestamp is still in the future', () => {
+  vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+
+  let mListener: (() => void) | undefined;
+  vi.spyOn(autoUpdater, 'on').mockImplementation((channel: keyof AppUpdaterEvents, listener: unknown): AppUpdater => {
+    if (channel === 'update-available') mListener = listener as () => void;
+    return {} as unknown as AppUpdater;
+  });
+
+  mockConfiguration({
+    'update.reminder': 'startup',
+    // 12 hours in the future - less than the 24h "Remind me tomorrow" snooze
+    'update.nextReminderTimestamp': new Date('2026-01-01T12:00:00Z').getTime(),
+  });
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  mListener?.();
+
+  expect(commandRegistryMock.executeCommand).not.toHaveBeenCalled();
+});
+
+test('expect command update to be called once the next reminder timestamp has passed', () => {
+  vi.setSystemTime(new Date('2026-01-02T00:00:00Z'));
+
+  let mListener: (() => void) | undefined;
+  vi.spyOn(autoUpdater, 'on').mockImplementation((channel: keyof AppUpdaterEvents, listener: unknown): AppUpdater => {
+    if (channel === 'update-available') mListener = listener as () => void;
+    return {} as unknown as AppUpdater;
+  });
+
+  mockConfiguration({
+    'update.reminder': 'startup',
+    // in the past relative to the current (mocked) time
+    'update.nextReminderTimestamp': new Date('2026-01-01T12:00:00Z').getTime(),
+  });
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  mListener?.();
+
+  expect(commandRegistryMock.executeCommand).toHaveBeenCalledWith('update', 'startup');
+});
+
 test('expect command update not to be called when configuration value on never', () => {
   let mListener: (() => void) | undefined;
   vi.spyOn(autoUpdater, 'on').mockImplementation((channel: keyof AppUpdaterEvents, listener: unknown): AppUpdater => {
@@ -600,10 +658,11 @@ test('expect command update not to be called when configuration value on never',
 
 test('clicking on "Update Never" should set the configuration value to never', async () => {
   vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
-    response: `Don't show again`,
+    response: 'Later',
+    dropdownIndex: 1,
   });
 
-  let mListener: (() => Promise<void>) | undefined;
+  let mListener: ((context?: 'startup' | 'status-bar-entry') => Promise<void>) | undefined;
   vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
     (channel: string, listener: () => Promise<void>) => {
       if (channel === 'update') mListener = listener;
@@ -621,9 +680,44 @@ test('clicking on "Update Never" should set the configuration value to never', a
   ).init();
   expect(mListener).toBeDefined();
 
-  await mListener?.();
+  await mListener?.('startup');
 
   expect(configurationMock.update).toHaveBeenCalledWith('update.reminder', 'never');
+});
+
+test('clicking on "Later" then "Remind me tomorrow" should snooze the prompt for 24 hours', async () => {
+  vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+
+  vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
+    response: 'Later',
+    dropdownIndex: 0,
+  });
+
+  let mListener: ((context?: 'startup' | 'status-bar-entry') => Promise<void>) | undefined;
+  vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
+    (channel: string, listener: () => Promise<void>) => {
+      if (channel === 'update') mListener = listener;
+      return Disposable.noop();
+    },
+  );
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+  expect(mListener).toBeDefined();
+
+  await mListener?.('startup');
+
+  expect(configurationMock.update).not.toHaveBeenCalledWith('update.reminder', 'never');
+  expect(configurationMock.update).toHaveBeenCalledWith(
+    'update.nextReminderTimestamp',
+    new Date('2026-01-02T00:00:00Z').getTime(),
+  );
 });
 
 describe('expect update command to depends on context', async () => {
@@ -680,8 +774,12 @@ describe('expect update command to depends on context', async () => {
     await mListener?.('startup');
 
     expect(messageBoxMock.showMessageBox).toHaveBeenCalledWith({
-      cancelId: 2,
-      buttons: ['Update now', `What's new`, 'Remind me later', `Don't show again`],
+      cancelId: undefined,
+      buttons: [
+        'Update now',
+        `What's new`,
+        { type: 'dropdownButton', heading: 'Later', buttons: ['Remind me tomorrow', `Don't show again`] },
+      ],
       message:
         'A new version v@debug-next of Podman Desktop is available. Do you want to update your current version v@debug?',
       title: 'Update Podman Desktop?',
@@ -703,6 +801,32 @@ describe('expect update command to depends on context', async () => {
       title: 'Update Podman Desktop?',
       type: 'info',
     });
+  });
+
+  test('startup context, clicking "Update now" should start the download', async () => {
+    const mListener = await getUpdateListener();
+
+    vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
+      response: 'Update now',
+    });
+
+    await mListener?.('startup');
+
+    expect(taskManagerMock.createTask).toHaveBeenCalled();
+    expect(autoUpdater.downloadUpdate).toHaveBeenCalled();
+  });
+
+  test(`startup context, clicking "What's new" should open release notes`, async () => {
+    const mListener = await getUpdateListener();
+
+    vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
+      response: `What's new`,
+    });
+    vi.mocked(shell.openExternal).mockResolvedValue();
+
+    await mListener?.('startup');
+
+    expect(shell.openExternal).toHaveBeenCalled();
   });
 });
 
