@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ export class RunImagePage extends BasePage {
   readonly containerEntryPointInput: Locator;
   readonly containerComamndInput: Locator;
   readonly containerAddCustomPortMappingButton: Locator;
+  readonly addSecretMappingButton: Locator;
   readonly volumeNameInput: Locator;
   readonly volumeContainerPath: Locator;
 
@@ -59,6 +60,7 @@ export class RunImagePage extends BasePage {
     this.containerEntryPointInput = page.getByLabel('Entrypoint');
     this.containerComamndInput = page.getByLabel('Command');
     this.containerAddCustomPortMappingButton = page.getByLabel('Add custom port mapping', { exact: true });
+    this.addSecretMappingButton = page.getByRole('button', { name: 'Add secret mapping' });
     this.volumeNameInput = page.getByPlaceholder('Path on the host');
     this.volumeContainerPath = page.getByPlaceholder('Path inside the container');
   }
@@ -186,6 +188,47 @@ export class RunImagePage extends BasePage {
       const containerPort = this.page.getByLabel('container port');
       await hostPort.fill(customPortMapping.split(':')[0]);
       await containerPort.fill(customPortMapping.split(':')[1]);
+    });
+  }
+
+  async addSecretMapping(secretName: string, type: 'mount' | 'env', target: string): Promise<void> {
+    return test.step(`Add secret mapping: ${secretName} as ${type} -> ${target}`, async () => {
+      await this.activateTab('Basic');
+
+      await playExpect(this.addSecretMappingButton).toBeEnabled();
+      await this.addSecretMappingButton.click();
+
+      // Each Dropdown renders a hidden <input aria-label="hidden input">.
+      // The last 2 hidden inputs belong to the newly added mapping (name + type dropdowns).
+      const allHiddenInputs = this.page.locator('input[aria-label="hidden input"]');
+      const totalCount = await allHiddenInputs.count();
+      const nameHiddenInput = allHiddenInputs.nth(totalCount - 2);
+      const typeHiddenInput = allHiddenInputs.nth(totalCount - 1);
+
+      const currentName = await nameHiddenInput.inputValue();
+      if (currentName !== secretName) {
+        const nameContainer = nameHiddenInput.locator('..');
+        const nameTrigger = nameContainer.getByRole('button').first();
+        await nameTrigger.click();
+        const nameOption = nameContainer.getByRole('button', { name: secretName, exact: true });
+        await playExpect(nameOption).toBeVisible();
+        await nameOption.click();
+      }
+
+      if (type === 'env') {
+        const typeContainer = typeHiddenInput.locator('..');
+        const typeTrigger = typeContainer.getByRole('button').first();
+        await typeTrigger.click();
+        const envOption = typeContainer.getByRole('button', { name: 'Env' });
+        await playExpect(envOption).toBeVisible();
+        await envOption.click();
+      }
+
+      const placeholder = type === 'mount' ? 'Path inside the container' : 'Name of the environment variable';
+      const targetInput = this.page.getByPlaceholder(placeholder).last();
+      await playExpect(targetInput).toBeVisible();
+      await targetInput.fill(target);
+      await playExpect(targetInput).toHaveValue(target);
     });
   }
 
