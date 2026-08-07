@@ -287,13 +287,21 @@ export class PluginSystem {
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;
   private validExtList!: ExtensionInfo[];
+  protected container?: Container;
 
   constructor(
     private trayMenu: TrayMenu,
     private mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
   ) {
-    app.on('before-quit', () => {
+    app.on('before-quit', event => {
+      if (this.isQuitting) return;
       this.isQuitting = true;
+      if (!this.container) return;
+      event.preventDefault();
+      this.container
+        .unbindAllAsync()
+        .catch((err: unknown) => console.error('[PluginSystem] error disposing container:', err))
+        .finally(() => app.quit());
     });
   }
 
@@ -515,7 +523,8 @@ export class PluginSystem {
 
     // init api sender
     const apiSender = this.getApiSender(this.getWebContentsSender());
-    const container = new Container();
+    this.container = new Container();
+    const container = this.container;
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
     container.bind<IPCMainOn>(IPCMainOn).toConstantValue(this.ipcMainOn);
