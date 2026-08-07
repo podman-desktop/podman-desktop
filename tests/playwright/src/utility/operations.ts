@@ -681,6 +681,26 @@ export async function setEnhancedDashboardFeature(
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
+  await waitForDashboardReady(page, navigationBar, enable);
+}
+
+async function waitForDashboardReady(page: Page, navigationBar: NavigationBar, enhanced: boolean): Promise<void> {
+  const expectedLocator = (dashboard: DashboardPage): Locator =>
+    enhanced ? dashboard.systemOverview : dashboard.podmanProvider;
+
+  await playExpect
+    .poll(
+      async () => {
+        const dashboardPage = await navigationBar.openDashboard();
+        if (await expectedLocator(dashboardPage).isVisible()) {
+          return true;
+        }
+        await navigationBar.openContainers();
+        return false;
+      },
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
 }
 
 export async function waitForDashboardState(navigationBar: NavigationBar, enable: boolean): Promise<DashboardPage> {
