@@ -1,7 +1,12 @@
 <script lang="ts">
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { Menu } from '@podman-desktop/core-api';
+import { MenuContext } from '@podman-desktop/core-api';
+import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
+import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { NetworkInfoUI } from './NetworkInfoUI';
@@ -9,10 +14,14 @@ import UpdateNetworkDialog from './UpdateNetworkDialog.svelte';
 
 interface Props {
   object: NetworkInfoUI;
+  dropdownMenu?: boolean;
   detailed?: boolean;
 }
 
-let { object, detailed = false }: Props = $props();
+let { object, dropdownMenu = true, detailed = false }: Props = $props();
+
+const contributions: Promise<Menu[]> = $derived(window.getContributedMenus(MenuContext.DASHBOARD_NETWORK));
+const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 
 let showUpdateNetworkDialog = $state(false);
 
@@ -55,3 +64,17 @@ function closeUpdateDialog(): void {
 {#if showUpdateNetworkDialog}
   <UpdateNetworkDialog network={object} onClose={closeUpdateDialog} />
 {/if}
+
+{#await contributions then menus}
+  {#if menus.length > 0}
+    <MenuComponent>
+      <ContributionActions
+        args={[object]}
+        contextPrefix="networkItem"
+        dropdownMenu={dropdownMenu}
+        contributions={menus}
+        detailed={detailed}
+        onError={(errorMessage: string): void => console.error(errorMessage)} />
+    </MenuComponent>
+  {/if}
+{/await}
