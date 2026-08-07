@@ -43,7 +43,6 @@ import PreferencesProviderInstallationModal from './PreferencesProviderInstallat
 import PreferencesResourcesRenderingCopyButton from './PreferencesResourcesRenderingCopyButton.svelte';
 import ProviderActionButtons from './ProviderActionButtons.svelte';
 import SettingsPage from './SettingsPage.svelte';
-import ThemedIcon from './ThemedIcon.svelte';
 import {
   getProviderConnectionName,
   type IConnectionRestart,
@@ -488,7 +487,9 @@ $effect(() => {
           <!-- left col - provider icon/name + "create new" button -->
           <div class="min-w-[170px] max-w-[200px] pr-5 py-2 flex flex-col flex-1">
             <div class="flex">
-              <ThemedIcon icon={provider.images.icon} alt={provider.name} class="max-w-[40px]" />
+              {#if provider.images.icon}
+                <Icon icon={provider.images.icon} title={provider.name} class="max-w-[40px]" />
+              {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
               {#if provider.version}

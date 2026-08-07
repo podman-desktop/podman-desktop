@@ -1,14 +1,14 @@
 <script lang="ts">
-import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCaretDown, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { type Component, onMount, type Snippet } from 'svelte';
+import { onMount, type Snippet } from 'svelte';
 
+import type { IconType } from '../icons/Icon';
 import Icon from '../icons/Icon.svelte';
 
 interface Option {
   value: string;
   label: string;
-  icon?: IconDefinition | Component | string;
+  icon?: IconType;
 }
 
 interface Props {
