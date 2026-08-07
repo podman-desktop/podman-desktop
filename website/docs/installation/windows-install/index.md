@@ -39,7 +39,7 @@ _**Using WinGet**_
 1. Install from the terminal:
 
    ```shell-session
-   > winget install RedHat.Podman-Desktop
+   winget install RedHat.Podman-Desktop
    ```
 
 <details>
@@ -57,7 +57,7 @@ Alternate installation methods:
 1. To install without user interaction, run the Windows installer with the silent flag `/S` from the Command Prompt:
 
    ```shell-session
-   > podman-desktop-1.6.4-setup-x64.exe /S
+   podman-desktop-1.6.4-setup-x64.exe /S
    ```
 
 #### Chocolatey
@@ -67,7 +67,7 @@ Alternate installation methods:
 1. Install from the terminal:
 
    ```shell-session
-   > choco install podman-desktop
+   choco install podman-desktop
    ```
 
 #### Scoop package manager for Windows
@@ -77,8 +77,8 @@ Alternate installation methods:
 1. Install from the terminal:
 
    ```shell-session
-   > scoop bucket add extras
-   > scoop install podman-desktop
+   scoop bucket add extras
+   scoop install podman-desktop
    ```
 
 </details>
@@ -117,8 +117,8 @@ Check that your environment meets the following requirements:
 1. Run the following commands to enable the WSL feature without installing the default Ubuntu distribution of Linux:
 
    ```shell-session
-   > wsl --update
-   > wsl --install --no-distribution
+   wsl --update
+   wsl --install --no-distribution
    ```
 
    :::note
@@ -159,13 +159,13 @@ Check that your environment meets the following requirements:
    **Using command prompt**
 
    ```shell-session
-   > DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V
+   DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V
    ```
 
    **Using PowerShell**
 
    ```shell-session
-   > Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
+   Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
    ```
 
 1. Restart your machine.
@@ -177,13 +177,13 @@ Check that your environment meets the following requirements:
   **Using command prompt**
 
   ```shell-session
-  > systeminfo
+  systeminfo
   ```
 
   **Using PowerShell**
 
   ```shell-session
-  > Get-Service vmcompute
+  Get-Service vmcompute
   ```
 
 ### Install Podman Desktop dependencies
