@@ -32,6 +32,7 @@ export type TestFixtures = {
   welcomePage: WelcomePage;
   page: Page;
   statusBar: StatusBar;
+  abortController: AbortController;
 };
 
 export type FixtureOptions = {
@@ -58,6 +59,9 @@ export const test = base.extend<TestFixtures & FixtureOptions>({
   statusBar: async ({ page }, use) => {
     const statusBar = new StatusBar(page);
     await use(statusBar);
+  },
+  abortController: async (_, use) => {
+    await use(new AbortController());
   },
 });
 export { expect } from '@playwright/test';
