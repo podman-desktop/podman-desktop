@@ -100,12 +100,19 @@ function registerProvider(
   console.log('Lima extension is active');
 }
 
+// The configuration schema declares an empty string as the default value of lima.home,
+// lima.name and lima.socket, so an unset setting is read back as '' rather than as
+// undefined. Map it to undefined so that the fallbacks below are actually applied.
+function getLimaConfigurationValue(section: string): string | undefined {
+  const value = configuration.getConfiguration('lima').get<string>(section);
+  return value === '' ? undefined : value;
+}
+
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
-  const engineType: string = configuration.getConfiguration('lima').get('type') ?? 'podman';
-  const instanceName: string = configuration.getConfiguration('lima').get('name') ?? engineType;
-  const socketName: string = configuration.getConfiguration('lima').get('socket') ?? engineType + '.sock';
-  const limaHome: string =
-    configuration.getConfiguration('lima').get('home') ?? process.env['LIMA_HOME'] ?? os.homedir() + '/.lima';
+  const engineType: string = getLimaConfigurationValue('type') ?? 'podman';
+  const instanceName: string = getLimaConfigurationValue('name') ?? engineType;
+  const socketName: string = getLimaConfigurationValue('socket') ?? engineType + '.sock';
+  const limaHome: string = getLimaConfigurationValue('home') ?? process.env['LIMA_HOME'] ?? os.homedir() + '/.lima';
 
   const socketPath = path.resolve(limaHome ?? '', instanceName + '/sock/' + socketName);
   const configPath = path.resolve(limaHome ?? '', instanceName + '/copied-from-guest/kubeconfig.yaml');
