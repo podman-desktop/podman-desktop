@@ -57,6 +57,7 @@ import type {
   ContextHealth,
   ContextPermission,
   ContributionInfo,
+  DisplayItem,
   DockerSocketMappingStatusInfo,
   DocumentationInfo,
   ExploreFeature,
@@ -273,12 +274,9 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld(
-    'sendNavigationItems',
-    async (items: { name: string; visible: boolean }[]): Promise<void> => {
-      return ipcRenderer.invoke('navigation:sendNavigationItems', items);
-    },
-  );
+  contextBridge.exposeInMainWorld('sendNavigationItems', async (items: DisplayItem[]): Promise<void> => {
+    return ipcRenderer.invoke('navigation:sendNavigationItems', items);
+  });
 
   contextBridge.exposeInMainWorld('navigateToRoute', async (routeId: string, ...args: unknown[]): Promise<void> => {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);
