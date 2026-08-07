@@ -724,6 +724,27 @@ withConfirmation(cancelTask, `cancel task ${name}`, {
 });
 ```
 
+### Two-choice dialogs
+
+When a dialog presents two equally valid options (not a cancel/action pair), style both buttons as `type="primary"` – neither option is subordinate to the other.
+
+- Use parallel action verbs: `Use Existing Image` / `Use Containerfile`
+- Order: less common option on the left, more common option on the right
+- Never pair `Cancel` with the options when the user must pick one
+- Use action verbs, not descriptive labels
+
+```svelte
+<Button type="primary" on:click={fromExistingImage}>Use Existing Image</Button>
+<Button type="primary" on:click={fromDockerfile}>Use Containerfile</Button>
+```
+
+Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and only one button is `type="primary"`:
+
+```svelte
+<Button type="link" on:click={cancel}>Cancel</Button>
+<Button type="primary" on:click={save}>Save</Button>
+```
+
 ### Tone
 
 - Professional but conversational
