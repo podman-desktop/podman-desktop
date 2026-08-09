@@ -10,8 +10,12 @@ import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let container: ContainerInfoUI;
-let labelsDropdownOpen: boolean = false;
+interface Props {
+  container: ContainerInfoUI;
+}
+
+let { container }: Props = $props();
+let labelsDropdownOpen: boolean = $state(false);
 let startedTime: Date = new Date(container.startedAt);
 let createdTime: Date | undefined;
 if (container.groupInfo.created) {
