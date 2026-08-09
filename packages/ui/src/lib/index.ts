@@ -30,6 +30,19 @@ import type { IconType, ThemedIconImage } from './icons/Icon';
 import Input from './inputs/Input.svelte';
 import NumberInput from './inputs/NumberInput.svelte';
 import SearchInput from './inputs/SearchInput.svelte';
+import ContextMenu from './layout/ContextMenu.svelte';
+import Panel from './layout/Panel.svelte';
+import PanelGroup from './layout/PanelGroup.svelte';
+import TabBar from './layout/TabBar.svelte';
+import type {
+  ContextMenuAction,
+  LeafPanelNode,
+  OpenMode,
+  PanelNode,
+  SplitDirection,
+  SplitPanelNode,
+  TabDescriptor,
+} from './layout/types';
 import DetailsPage from './layouts/DetailsPage.svelte';
 import FormPage from './layouts/FormPage.svelte';
 import type { ListOrganizerItem } from './layouts/ListOrganizer';
@@ -54,7 +67,20 @@ import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType, IconType, ListOrganizerItem, TablePersistence, ThemedIconImage };
+export type {
+  ButtonType,
+  ContextMenuAction,
+  IconType,
+  LeafPanelNode,
+  ListOrganizerItem,
+  OpenMode,
+  PanelNode,
+  SplitDirection,
+  SplitPanelNode,
+  TabDescriptor,
+  TablePersistence,
+  ThemedIconImage,
+};
 export {
   Button,
   ButtonRow,
@@ -62,6 +88,7 @@ export {
   Checkbox,
   ChevronExpander,
   CloseButton,
+  ContextMenu,
   DetailsPage,
   Dropdown,
   DropdownMenu,
@@ -78,12 +105,15 @@ export {
   NavPage,
   NumberInput,
   Page,
+  Panel,
+  PanelGroup,
   ProgressBar,
   SearchInput,
   SettingsNavItem,
   Spinner,
   StatusIcon,
   Tab,
+  TabBar,
   Table,
   TableColumn,
   TableDurationColumn,

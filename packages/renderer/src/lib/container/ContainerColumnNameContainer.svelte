@@ -1,7 +1,7 @@
 <script lang="ts">
-import { NavigationPage } from '@desktop-framework/api';
+import { ContextMenu } from '@podman-desktop/ui-svelte';
 
-import { handleNavigation } from '/@/navigation';
+import { buildOpenContextMenuActions, openContainerInWorkspace } from '/@/lib/layout/resource-open-actions';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
@@ -11,17 +11,24 @@ interface Props {
 
 let { object }: Props = $props();
 
-function openContainerDetails(container: ContainerInfoUI): void {
-  handleNavigation({
-    page: NavigationPage.CONTAINER,
-    parameters: {
-      id: container.id,
-    },
-  });
+let contextMenu: { x: number; y: number } | undefined = $state();
+
+// A plain click opens straight into the workspace tab (replacing whatever was showing),
+// same destination Cmd/Ctrl+click uses for a new tab - no intermediate detail route/flash.
+function onClick(event: MouseEvent): void {
+  openContainerInWorkspace(object, event.metaKey || event.ctrlKey ? 'newTab' : 'replace');
+}
+
+function onContextMenu(event: MouseEvent): void {
+  event.preventDefault();
+  contextMenu = { x: event.clientX, y: event.clientY };
 }
 </script>
 
-<button class="flex flex-col whitespace-nowrap max-w-full" onclick={(): void => openContainerDetails(object)}>
+<button
+  class="flex flex-col whitespace-nowrap max-w-full"
+  onclick={onClick}
+  oncontextmenu={onContextMenu}>
   <div class="flex items-center max-w-full">
     <div class="max-w-full">
       <div class="flex flex-nowrap max-w-full">
@@ -38,3 +45,13 @@ function openContainerDetails(container: ContainerInfoUI): void {
     </div>
   </div>
 </button>
+
+{#if contextMenu}
+  <ContextMenu
+    x={contextMenu.x}
+    y={contextMenu.y}
+    actions={buildOpenContextMenuActions((mode): void => openContainerInWorkspace(object, mode))}
+    onClose={(): void => {
+      contextMenu = undefined;
+    }} />
+{/if}
