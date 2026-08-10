@@ -4,7 +4,10 @@ import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import ProviderCard from './ProviderCard.svelte';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+}
+let { provider }: Props = $props();
 </script>
 
 <ProviderCard provider={provider}>
