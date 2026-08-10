@@ -14,20 +14,18 @@ import { context } from '/@/stores/context';
 
 import { replaceContextKeyPlaceholders, replaceContextKeyPlaceHoldersByRegex } from './onboarding-utils';
 
-export let extension: string;
-export let item: OnboardingStepItem;
-export let inProgressCommandExecution: (
-  command: string,
-  state: 'starting' | 'failed' | 'successful',
-  value?: unknown,
-) => void;
+interface Props {
+  extension: string;
+  item: OnboardingStepItem;
+  inProgressCommandExecution: (command: string, state: 'starting' | 'failed' | 'successful', value?: unknown) => void;
+}
+
+let { extension, item, inProgressCommandExecution }: Props = $props();
 
 const configurationRegex = new RegExp(/\${configuration:(.+?)}/g);
-let html: string;
-$: html;
+let html = $state<string>('');
 let configurationItems: IConfigurationPropertyRecordedSchema[];
-let configurationItem: IConfigurationPropertyRecordedSchema | undefined;
-$: configurationItem;
+let configurationItem = $state<IConfigurationPropertyRecordedSchema | undefined>();
 
 let globalContext: ContextUI;
 let contextsUnsubscribe: Unsubscriber;
