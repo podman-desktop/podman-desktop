@@ -98,6 +98,15 @@ function cleanupAndExit(signal) {
   }
 }
 
+/**
+ * Preserve whether a child exited with a status code or a signal.
+ * @param {number | null} code
+ * @param {NodeJS.Signals | null} signal
+ */
+function cleanupOnChildExit(code, signal) {
+  cleanupAndExit(signal ?? code ?? 0);
+}
+
 // Ensure termination propagates to all child processes.
 process.on('SIGINT', cleanupAndExit);
 process.on('SIGTERM', cleanupAndExit);
@@ -179,7 +188,7 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
     configFile: 'packages/main/vite.config.js',
     writeBundle() {
       if (spawnProcess !== null) {
-        spawnProcess.off('exit', cleanupAndExit);
+        spawnProcess.off('exit', cleanupOnChildExit);
         killChild(spawnProcess, 'SIGINT');
         spawnProcess = null;
       }
@@ -204,7 +213,7 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
       });
 
       // Stops the watch script when the application has been quit
-      spawnProcess.on('exit', cleanupAndExit);
+      spawnProcess.on('exit', cleanupOnChildExit);
 
       // Register cleanup first so the process group remains tracked while
       // cleanupAndExit terminates any surviving descendants.
@@ -234,7 +243,7 @@ const setupUiPackageWatcher = () => {
     cwd: './packages/ui/',
     env: { PATH: newPath, ...process.env },
     shell: process.platform === 'win32',
-    detached: true,
+    detached: process.platform !== 'win32',
   });
 
   spawnProcess.stdout.on('data', d => d.toString().trim() && logger.warn(d.toString(), { timestamp: true }));
@@ -247,7 +256,7 @@ const setupUiPackageWatcher = () => {
   });
 
   // Stops the watch script when the application has been quit
-  spawnProcess.on('exit', cleanupAndExit);
+  spawnProcess.on('exit', cleanupOnChildExit);
 
   trackChildProcess(spawnProcess);
   spawnProcess.unref();
@@ -341,7 +350,7 @@ const setupExtensionApiWatcher = name => {
   const spawnProcess = spawn('pnpm', ['watch'], {
     cwd: folderName,
     shell: process.platform === 'win32',
-    detached: true,
+    detached: process.platform !== 'win32',
   });
 
   spawnProcess.stdout.on('data', d => d.toString().trim() && console.warn(d.toString(), { timestamp: true }));
@@ -352,7 +361,7 @@ const setupExtensionApiWatcher = name => {
   });
 
   // Stops the watch script when the application has been quit
-  spawnProcess.on('exit', cleanupAndExit);
+  spawnProcess.on('exit', cleanupOnChildExit);
 
   // Register cleanup first so the process group remains tracked while
   // cleanupAndExit terminates any surviving descendants.
