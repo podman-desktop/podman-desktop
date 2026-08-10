@@ -109,6 +109,10 @@ interface Breakpoint {
 
 // Numeric values below are a visual-tuning starting point, not final –
 // see the design spec's "Responsive behavior" section.
+//
+// particleCount is raised above DEFAULT_CONFIG's 130 at the two narrower breakpoints on
+// purpose: maxParticleSize shrinks much more sharply there (56/100 vs. 250), so the extra
+// count keeps the band looking as dense as it does on desktop instead of going sparse.
 const BREAKPOINTS: Breakpoint[] = [
   {
     minWidth: 0,
@@ -309,13 +313,9 @@ export function stepParticlePool(pool: ParticlePool, deltaSeconds: number, trave
   const advance = deltaSeconds / travelDurationSeconds;
 
   for (let i = 0; i < pool.count; i++) {
-    let next = pool.t[i] + advance;
+    const next = pool.t[i] + advance;
 
-    if (next >= 1) {
-      next -= 1;
-    }
-
-    pool.t[i] = next;
+    pool.t[i] = next - Math.floor(next);
   }
 }
 

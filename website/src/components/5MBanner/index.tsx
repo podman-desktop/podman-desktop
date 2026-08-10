@@ -1,3 +1,21 @@
+/**********************************************************************
+ * Copyright (C) 2026 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
 import { useColorMode } from '@docusaurus/theme-common';
 import ThemedImage from '@theme/ThemedImage';
 import { useEffect, useRef } from 'react';
@@ -20,6 +38,7 @@ function Banner(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const atlasRef = useRef<HTMLImageElement | null>(null);
   const atlasReadyRef = useRef(false);
+  const drawRef = useRef<(() => void) | null>(null);
   const { colorMode } = useColorMode();
 
   useEffect(() => {
@@ -59,15 +78,6 @@ function Banner(): JSX.Element {
     let resizeAnimationFrameId = 0;
     let lastTimestamp = 0;
 
-    // Load the atlas image and set up the onload handler. The theme effect owns src
-    // assignment (initial mount and later toggles) so this effect stays theme-agnostic.
-    const atlas = new Image();
-    atlasRef.current = atlas;
-    atlas.onload = (): void => {
-      atlasReadyRef.current = true;
-      draw();
-    };
-
     // Resize the canvas to match the container's width and height.
     function resize(): void {
       const width = container.clientWidth;
@@ -95,10 +105,12 @@ function Banner(): JSX.Element {
     // Draw the canvas.
     function draw(): void {
       const width = container.clientWidth;
+      const height = config.redZoneHeight + config.blueZoneHeight;
       const atlasImage = atlasRef.current;
 
-      // Clear the canvas.
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Clear the canvas, in CSS px – ctx's transform is already scaled by dpr, so
+      // clearing canvas.width/height (device px) here would double-apply that scale.
+      ctx.clearRect(0, 0, width, height);
 
       // Return early if the atlas is not yet ready.
       if (!atlasReadyRef.current || !atlasImage) {
@@ -108,9 +120,17 @@ function Banner(): JSX.Element {
       simulation.draw(ctx, atlasImage, width);
     }
 
+    // Exposed so the theme-change effect below can trigger a redraw once a new atlas
+    // image finishes loading, without this effect depending on colorMode.
+    drawRef.current = draw;
+
     // Update the simulation state and redraw on each animation frame.
     function tick(timestamp: number): void {
-      const deltaSeconds = lastTimestamp === 0 ? 0 : (timestamp - lastTimestamp) / 1000;
+      const rawDeltaSeconds = lastTimestamp === 0 ? 0 : (timestamp - lastTimestamp) / 1000;
+
+      // Clamp so a long frame gap (e.g. the tab was backgrounded) advances particles by at
+      // most 0.1s of simulated time instead of jumping them across most of the path at once.
+      const deltaSeconds = Math.min(rawDeltaSeconds, 0.1);
 
       lastTimestamp = timestamp;
 
@@ -163,6 +183,7 @@ function Banner(): JSX.Element {
       resizeObserver.disconnect();
       atlasRef.current = null;
       atlasReadyRef.current = false;
+      drawRef.current = null;
 
       if (animationFrameId) {
         // Cancel the animation frame if it's still running.
@@ -176,23 +197,41 @@ function Banner(): JSX.Element {
     };
   }, []);
 
-  // Assign atlas.src on mount and on theme change without rebuilding the particle pool.
+  // Loads the atlas for the active color mode on mount and on every theme change, without
+  // rebuilding the particle pool. Loads into a fresh Image rather than reusing atlasRef's
+  // current one, so the currently drawn atlas stays active (no blank/flicker frame) until
+  // the replacement has fully loaded, at which point atlasRef and atlasReadyRef are swapped
+  // together.
   useEffect(() => {
-    const atlas = atlasRef.current;
-    if (!atlas) {
-      return;
-    }
+    const src = atlasSrcForColorMode(colorMode);
+    const image = new Image();
 
-    atlasReadyRef.current = false;
-    atlas.src = atlasSrcForColorMode(colorMode);
+    image.onload = (): void => {
+      atlasRef.current = image;
+      atlasReadyRef.current = true;
+      drawRef.current?.();
+    };
+
+    image.onerror = (): void => {
+      console.error(`5MBanner: failed to load atlas image at ${src}`);
+    };
+
+    image.src = src;
+
+    return (): void => {
+      // Drop the handlers so a load that finishes after a rapid theme toggle (or after
+      // unmount) can't overwrite atlasRef with a now-stale image.
+      image.onload = null;
+      image.onerror = null;
+    };
   }, [colorMode]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-18 sm:h-21 xl:h-40">
+    <div ref={containerRef} className="relative w-full h-[232px] sm:h-[294px] xl:h-[420px]">
       <a
         ref={anchorRef}
         href={BLOG_POST_URL}
-        className="absolute inset-x-0 top-0 block bg-linear-to-r from-purple-300 to-purple-700 dark:from-purple-800 dark:to-purple-900">
+        className="absolute inset-x-0 top-0 block bg-linear-to-r from-purple-300 to-purple-700 dark:from-purple-800 dark:to-purple-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500">
         <span className="sr-only">Read about Podman Desktop reaching 5 million downloads</span>
       </a>
       <canvas ref={canvasRef} className="pointer-events-none relative block w-full" />

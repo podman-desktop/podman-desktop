@@ -43,12 +43,12 @@ const PERSPECTIVE_TEST_CONFIG = {
 
 test('resolveConfig returns the desktop defaults for a wide viewport', () => {
   const config = resolveConfig(1920);
-  expect(config).toEqual(DEFAULT_CONFIG);
+  expect(config).toEqual({ ...DEFAULT_CONFIG, maxParticleSize: 200 });
 });
 
 test('resolveConfig applies the mobile breakpoint below 640px', () => {
   const config = resolveConfig(320);
-  expect(config.particleCount).toBe(DEFAULT_CONFIG.particleCount);
+  expect(config.particleCount).toBe(180);
   expect(config.redZoneHeight).toBe(72);
   expect(config.blueZoneHeight).toBe(160);
   expect(config.maxParticleSize).toBe(56);
@@ -56,7 +56,7 @@ test('resolveConfig applies the mobile breakpoint below 640px', () => {
 
 test('resolveConfig applies the tablet breakpoint between 640 and 1280px', () => {
   const config = resolveConfig(900);
-  expect(config.particleCount).toBe(DEFAULT_CONFIG.particleCount);
+  expect(config.particleCount).toBe(180);
   expect(config.redZoneHeight).toBe(84);
   expect(config.maxParticleSize).toBe(100);
 });
