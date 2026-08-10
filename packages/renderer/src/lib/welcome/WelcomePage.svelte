@@ -12,14 +12,18 @@ import { providerInfos } from '/@/stores/providers';
 import bgImage from './background.png';
 import { WelcomeUtils } from './welcome-utils';
 
-export let showWelcome = false;
-export let showTelemetry = false;
+interface Props {
+  showWelcome?: boolean;
+  showTelemetry?: boolean;
+}
 
-let telemetry = true;
-let telemetryMessages: TelemetryMessages;
+let { showWelcome = false, showTelemetry = false }: Props = $props();
+
+let telemetry = $state(true);
+let telemetryMessages = $state<TelemetryMessages>();
 
 const welcomeUtils = new WelcomeUtils();
-let podmanDesktopVersion: string;
+let podmanDesktopVersion = $state<string>();
 
 // Extend ProviderInfo to have a selected property
 interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
@@ -27,28 +31,31 @@ interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
   containerEngine?: boolean;
 }
 
-let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
-let welcomeMessages: WelcomeMessages;
+let welcomeMessages = $state<WelcomeMessages>();
 
 // Get every provider that has a container connections
-$: providersWithContainerConnections = $providerInfos.filter(provider => provider.containerConnections.length > 0);
+let providersWithContainerConnections = $derived(
+  $providerInfos.filter(provider => provider.containerConnections.length > 0),
+);
 
 // Using providerInfos as well as the information we have from onboarding,
 // we will by default auto-select as well as add containerEngine to the list as true/false
 // so we can make sure that extensions with container engines are listed first
-$: onboardingProviders = $onboardingList
-  .map(provider => {
-    // Check if it's in the list, if it is, then it has a container engine
-    const hasContainerConnection = providersWithContainerConnections.some(
-      connectionProvider => connectionProvider.extensionId === provider.extension,
-    );
-    return {
-      ...provider,
-      selected: true,
-      containerEngine: hasContainerConnection,
-    };
-  })
-  .toSorted((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = $derived(
+  $onboardingList
+    .map(provider => {
+      // Check if it's in the list, if it is, then it has a container engine
+      const hasContainerConnection = providersWithContainerConnections.some(
+        connectionProvider => connectionProvider.extensionId === provider.extension,
+      );
+      return {
+        ...provider,
+        selected: true,
+        containerEngine: hasContainerConnection,
+      };
+    })
+    .toSorted((a, b) => Number(b.containerEngine) - Number(a.containerEngine)), // Sort by containerEngine (true first)
+);
 
 onMount(async () => {
   const ver = await welcomeUtils.getVersion();
@@ -170,7 +177,7 @@ function startOnboardingQueue(): void {
               {#if telemetryMessages?.info}
                 <Link
                   on:click={async (): Promise<void> => {
-                    await window.openExternal(telemetryMessages.info?.url ?? '');
+                    await window.openExternal(telemetryMessages?.info?.url ?? '');
                   }}>{telemetryMessages?.info.link}</Link>
               {/if}
             {/if}
