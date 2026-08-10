@@ -60,8 +60,5 @@ export const test = base.extend<TestFixtures & FixtureOptions>({
     const statusBar = new StatusBar(page);
     await use(statusBar);
   },
-  abortController: async (_, use) => {
-    await use(new AbortController());
-  },
 });
 export { expect } from '@playwright/test';
