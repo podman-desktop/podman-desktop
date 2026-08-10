@@ -7,8 +7,12 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
-export let configMapSecret: ConfigMapSecretUI;
-export let detailed = false;
+interface Props {
+  configMapSecret: ConfigMapSecretUI;
+  detailed?: boolean;
+}
+
+let { configMapSecret, detailed = false }: Props = $props();
 
 const configmapSecretUtils = new ConfigMapSecretUtils();
 
