@@ -6,9 +6,12 @@ import ProviderCard from './ProviderCard.svelte';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 import ProviderWarnings from './ProviderWarnings.svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+}
+let { provider }: Props = $props();
 
-let preflightChecks: CheckStatus[] = [];
+let preflightChecks: CheckStatus[] = $state([]);
 </script>
 
 <ProviderCard provider={provider}>
