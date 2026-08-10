@@ -26,7 +26,7 @@ function focusInitialAction(): void {
     buttonRow.querySelectorAll<HTMLElement>(
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ),
-  ).filter(action => !action.hidden && action.getAttribute('aria-hidden') !== 'true');
+  ).filter(action => action.closest('[hidden], [aria-hidden="true"]') === null);
   const action = initialFocus === 'first' ? focusableActions[0] : focusableActions[focusableActions.length - 1];
   action?.focus();
 }
