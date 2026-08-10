@@ -14,15 +14,20 @@ import bgImage from './background.png';
 import type { OnboardingInfoWithAdditionalInfo } from './welcome-utils';
 import { WelcomeUtils } from './welcome-utils';
 
-export let showWelcome = false;
+interface Props {
+  showWelcome?: boolean;
+}
+
+let { showWelcome = false }: Props = $props();
 
 const welcomeUtils = new WelcomeUtils();
-let podmanDesktopVersion: string;
+let podmanDesktopVersion = $state<string>();
 
-let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
-let welcomeMessages: WelcomeMessages;
+let welcomeMessages = $state<WelcomeMessages>();
 
-$: onboardingProviders = welcomeUtils.getSortedOnboardingExtensions($onboardingList, $providerInfos);
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = $derived(
+  welcomeUtils.getSortedOnboardingExtensions($onboardingList, $providerInfos),
+);
 
 onMount(async () => {
   const result = await welcomeUtils.enforceFirstRun();
