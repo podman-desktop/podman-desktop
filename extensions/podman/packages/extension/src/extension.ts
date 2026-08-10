@@ -375,7 +375,7 @@ async function doUpdateMachines(
   // the native podman installation / not machine.
   if (!extensionApi.env.isLinux) {
     if (machines.length === 0 && !hasRemoteConnections) {
-      if (provider.status !== 'configuring') {
+      if (provider.status !== 'configuring' && installedPodman) {
         provider.updateStatus('installed');
       }
     } else if (machines.length === 0 && hasRemoteConnections) {
