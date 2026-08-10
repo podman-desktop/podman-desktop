@@ -5,10 +5,14 @@ import { organizeContainers } from './Dots';
 import StatusDot from './StatusDot.svelte';
 import { capitalize } from './Util';
 
-// All the possible statuses that will appear for both Pods and Kubernetes
-export let containers: PodInfoContainerUI[];
+interface Props {
+  // All the possible statuses that will appear for both Pods and Kubernetes
+  containers: PodInfoContainerUI[];
+}
 
-$: organizedContainers = organizeContainers(containers);
+let { containers }: Props = $props();
+
+let organizedContainers = $derived(organizeContainers(containers));
 </script>
 
 <!-- If containers is more than 10, we will group them and show the number of containers -->

@@ -2920,14 +2920,23 @@ export class ContainerProviderRegistry {
     }
     if (provider.libpodApi) {
       const podmanInfo = await provider.libpodApi.podmanInfo();
+      const { memTotal, memFree, memAvailable } = podmanInfo.host;
+      let memoryUsed: number;
+      // Podman version >= 6.1.0 expose the memAvailable which is the amount of memory available to the system
+      if (memAvailable !== undefined && memAvailable >= 0) {
+        memoryUsed = memTotal - memAvailable;
+      } else {
+        memoryUsed = memTotal - memFree;
+      }
+
       return {
         engineId: provider.id,
         engineName: provider.name,
         engineType: provider.connection.type,
         cpus: podmanInfo.host.cpus,
         cpuIdle: podmanInfo.host.cpuUtilization.idlePercent,
-        memory: podmanInfo.host.memTotal,
-        memoryUsed: podmanInfo.host.memTotal - podmanInfo.host.memFree,
+        memory: memTotal,
+        memoryUsed,
         diskSize: podmanInfo.store.graphRootAllocated,
         diskUsed: podmanInfo.store.graphRootUsed,
       };

@@ -96,6 +96,8 @@ describe('MacOSInstaller', () => {
 
     await promiseArg(progress, token);
 
+    expect(progress.report).toHaveBeenCalledWith({ increment: -1 });
+
     await promiseResult;
 
     // check we've called the execution of the universal installer
@@ -140,6 +142,7 @@ describe('MacOSInstaller', () => {
     } as unknown as CancellationToken;
 
     await expect(promiseArg(progress, token)).rejects.toThrow(`Can't find Podman package`);
+    expect(progress.report).toHaveBeenCalledWith({ increment: -1 });
     expect(promiseResult).toBeDefined();
   });
 });
