@@ -16,39 +16,51 @@ let checksStatus = $state<CheckStatus[]>([]);
 
 let preflightChecksFailed = $state(false);
 
-async function performInstallation(provider: ProviderInfo): Promise<void> {
+let hasWarnings = $state(false);
+
+async function performInstallation(): Promise<void> {
   installInProgress = true;
-  checksStatus = [];
-  let checkSuccess = false;
-  let currentCheck: CheckStatus;
   try {
-    checkSuccess = await window.runInstallPreflightChecks(provider.internalId, {
-      endCheck: status => {
-        if (currentCheck) {
-          currentCheck = status;
-        } else {
+    if (!hasWarnings) {
+      checksStatus = [];
+      let checkSuccess = false;
+      let currentCheck: CheckStatus;
+      try {
+        checkSuccess = await window.runInstallPreflightChecks(provider.internalId, {
+          endCheck: status => {
+            if (currentCheck) {
+              currentCheck = status;
+            } else {
+              return;
+            }
+            checksStatus.push(currentCheck);
+            onPreflightChecks(checksStatus);
+          },
+          startCheck: status => {
+            currentCheck = status;
+            onPreflightChecks([...checksStatus, currentCheck]);
+          },
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      if (checkSuccess) {
+        if (checksStatus.some(c => c.successful === false && c.severity === 'warning')) {
+          hasWarnings = true;
           return;
         }
-        checksStatus.push(currentCheck);
-        onPreflightChecks(checksStatus);
-      },
-      startCheck: status => {
-        currentCheck = status;
-        onPreflightChecks([...checksStatus, currentCheck]);
-      },
-    });
-  } catch (err) {
-    console.error(err);
-  }
-  if (checkSuccess) {
-    await window.installProvider(provider.internalId);
-    // reset checks
-    onPreflightChecks([]);
-  } else {
-    preflightChecksFailed = true;
-  }
+      } else {
+        preflightChecksFailed = true;
+        return;
+      }
+    }
 
-  installInProgress = false;
+    await window.installProvider(provider.internalId);
+    onPreflightChecks([]);
+    hasWarnings = false;
+  } finally {
+    installInProgress = false;
+  }
 }
 </script>
 
@@ -57,7 +69,7 @@ async function performInstallation(provider: ProviderInfo): Promise<void> {
     inProgress={installInProgress}
     disabled={preflightChecksFailed}
     icon={faRocket}
-    on:click={(): Promise<void> => performInstallation(provider)}>
-    Install
+    onclick={performInstallation}>
+    {hasWarnings ? 'Proceed with installation' : 'Install'}
   </Button>
 {/if}

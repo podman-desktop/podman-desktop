@@ -250,6 +250,8 @@ function handleReset(): void {
     class:text-[var(--pd-action-button-hover-text)]={isOpen}
     onclick={toggleDropdown}
     title={title}
+    aria-label={title}
+    aria-expanded={isOpen}
     tabindex="0"
   >
     <Icon icon={faPen} />

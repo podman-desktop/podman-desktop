@@ -6,9 +6,13 @@ import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-export let volume: VolumeInfoUI;
+interface Props {
+  volume: VolumeInfoUI;
+}
 
-let inspectDetails: string;
+let { volume }: Props = $props();
+
+let inspectDetails: string = $state('');
 
 onMount(async () => {
   // grab inspect result from the container

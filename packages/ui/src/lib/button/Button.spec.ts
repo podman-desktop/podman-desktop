@@ -289,3 +289,41 @@ test('Icon button with title should not throw', () => {
   expect(() => render(Button, { icon: faTrash, title: 'Delete' })).not.toThrow();
   expect(screen.getByRole('button')).toBeInTheDocument();
 });
+
+test('Button without pressed prop should not have aria-pressed attribute', async () => {
+  render(Button, { type: 'primary' });
+  const button = screen.getByRole('button');
+  expect(button).not.toHaveAttribute('aria-pressed');
+});
+
+test('Button with pressed true should have aria-pressed true and pressed styling', async () => {
+  render(Button, { type: 'primary', pressed: true });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+  expect(button).toHaveClass('bg-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});
+
+test('Button with pressed false should have aria-pressed false and regular styling', async () => {
+  render(Button, { type: 'primary', pressed: false });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'false');
+  expect(button).toHaveClass('bg-[var(--pd-button-primary-bg)]');
+  expect(button).toHaveClass('border-[var(--pd-button-primary-border)]');
+});
+
+test('Pressed secondary button should have pressed styling', async () => {
+  render(Button, { type: 'secondary', pressed: true });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+  expect(button).toHaveClass('bg-[var(--pd-button-secondary-hover-bg)]');
+  expect(button).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});
+
+test('Disabled pressed button should keep aria-pressed but use disabled styling', async () => {
+  render(Button, { type: 'primary', pressed: true, disabled: true });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+  expect(button).toHaveClass('bg-[var(--pd-button-disabled-bg)]');
+  expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});

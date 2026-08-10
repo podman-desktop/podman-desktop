@@ -79,7 +79,7 @@ import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
-import { coerce, gtr } from 'semver';
+import { coerce, gtr, lt } from 'semver';
 import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
@@ -1765,7 +1765,17 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
-      return this.getMatchingEngine(engineId).pruneVolumes();
+      // Podman version below 6.0.0 does not support the `all` filter
+      // See https://github.com/containers/podman/pull/28235
+      const provider = this.internalProviders.get(engineId);
+      if (provider?.connection.type === 'podman') {
+        const version = await this.getMatchingEngine(engineId).version();
+        const coerced = coerce(version.Version);
+        if (coerced && lt(coerced, '6.0.0')) {
+          return this.getMatchingEngine(engineId).pruneVolumes();
+        }
+      }
+      return this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
@@ -2910,14 +2920,23 @@ export class ContainerProviderRegistry {
     }
     if (provider.libpodApi) {
       const podmanInfo = await provider.libpodApi.podmanInfo();
+      const { memTotal, memFree, memAvailable } = podmanInfo.host;
+      let memoryUsed: number;
+      // Podman version >= 6.1.0 expose the memAvailable which is the amount of memory available to the system
+      if (memAvailable !== undefined && memAvailable >= 0) {
+        memoryUsed = memTotal - memAvailable;
+      } else {
+        memoryUsed = memTotal - memFree;
+      }
+
       return {
         engineId: provider.id,
         engineName: provider.name,
         engineType: provider.connection.type,
         cpus: podmanInfo.host.cpus,
         cpuIdle: podmanInfo.host.cpuUtilization.idlePercent,
-        memory: podmanInfo.host.memTotal,
-        memoryUsed: podmanInfo.host.memTotal - podmanInfo.host.memFree,
+        memory: memTotal,
+        memoryUsed,
         diskSize: podmanInfo.store.graphRootAllocated,
         diskUsed: podmanInfo.store.graphRootUsed,
       };

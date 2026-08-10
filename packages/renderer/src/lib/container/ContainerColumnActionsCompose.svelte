@@ -3,7 +3,11 @@ import ComposeActions from '/@/lib/compose/ComposeActions.svelte';
 
 import type { ContainerGroupInfoUI } from './ContainerInfoUI';
 
-export let object: ContainerGroupInfoUI;
+interface Props {
+  object: ContainerGroupInfoUI;
+}
+
+let { object }: Props = $props();
 </script>
 
 {#if object.status && object.engineId && object.engineType}
