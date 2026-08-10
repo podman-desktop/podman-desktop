@@ -43,6 +43,10 @@
       "types": "./dist/button/Button.svelte.d.ts",
       "svelte": "./dist/button/Button.svelte"
     },
+    "./ButtonRow": {
+      "types": "./dist/buttonRow/ButtonRow.svelte.d.ts",
+      "svelte": "./dist/buttonRow/ButtonRow.svelte"
+    },
     "./Table": {
       "types": "./dist/table/Table.svelte.d.ts",
       "svelte": "./dist/table/Table.svelte"
