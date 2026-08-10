@@ -251,6 +251,9 @@ export default [
       'sonarjs/prefer-specific-assertions': 'off',
       'sonarjs/super-linear-regex': 'off',
       'sonarjs/no-trivial-assertions': 'off',
+      'sonarjs/parameterized-tests': 'off',
+      'sonarjs/no-fixed-wait-in-tests': 'off',
+      'sonarjs/explicit-test-skip': 'off',
 
       // redundant-undefined custom rules
       'redundant-undefined/redundant-undefined': 'error',
