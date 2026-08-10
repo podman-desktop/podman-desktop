@@ -253,6 +253,35 @@ export async function deleteNetwork(page: Page, name: string): Promise<void> {
   });
 }
 
+/**
+ * Delete secret defined by its name
+ * @param page playwright's page object
+ * @param name name of secret to be removed
+ */
+export async function deleteSecret(page: Page, name: string): Promise<void> {
+  return test.step(`Delete secret with name ${name}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const secretsPage = await navigationBar.openSecrets();
+    await playExpect(secretsPage.heading).toBeVisible({ timeout: 10_000 });
+    const secretExists = await secretsPage.secretExists(name);
+
+    if (!secretExists) {
+      console.log(`secret '${name}' does not exist, skipping...`);
+    } else {
+      await secretsPage.deleteSecret(name);
+
+      try {
+        console.log('Waiting for secret to get deleted ...');
+        await playExpect.poll(async () => await secretsPage.getSecretRowByName(name), { timeout: 30_000 }).toBeFalsy();
+      } catch (error) {
+        if (!(error as Error).message.includes('Page is empty')) {
+          throw Error(`Error waiting for secret '${name}' to get removed, ${error}`);
+        }
+      }
+    }
+  });
+}
+
 // Handles dialog that has accessible name `dialogTitle` and either confirms or rejects it.
 export async function handleConfirmationDialog(
   page: Page,
