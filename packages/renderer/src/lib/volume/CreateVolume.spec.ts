@@ -473,6 +473,58 @@ test('Expect no false positive when providers share connection name', async () =
   });
 });
 
+test('Expect no duplicate error after successful creation when store updates', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  createVolumeMock.mockResolvedValue(undefined);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'new-volume');
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  await userEvent.click(createButton);
+
+  // Simulate the store updating with the newly created volume
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'new-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  // The "Done" button should appear and no error should be shown
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  });
+});
+
 test('Expect error clears when name is corrected', async () => {
   providerInfos.set([
     {

@@ -2,11 +2,19 @@
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: string | undefined;
-export let onChange = async (_id: string, _value: string): Promise<void> => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value?: string;
+  onChange?: (_id: string, _value: string) => Promise<void>;
+}
 
-let invalidEntry = false;
+let {
+  record,
+  value = $bindable(),
+  onChange = async (_id: string, _value: string): Promise<void> => {},
+}: Props = $props();
+
+let invalidEntry = $state(false);
 
 function onChangeHandler(newValue: unknown): void {
   invalidEntry = false;

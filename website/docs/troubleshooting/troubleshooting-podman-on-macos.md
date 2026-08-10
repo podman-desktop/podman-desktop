@@ -281,7 +281,7 @@ With Podman Desktop 1.16, the log files are automatically cleaned at the restart
 
 Check the size of the Podman Desktop log files to troubleshoot:
 
-```sh
+```shell-session
 $ ls -la ~/Library/Logs/Podman\ Desktop/*.log
 ```
 
@@ -304,7 +304,7 @@ When you use Homebrew to upgrade to the latest version of Podman Desktop, you mi
 
 To resolve the error, use the `--greedy` flag with the `upgrade` command:
 
-```sh
+```shell-session
 $ brew upgrade --greedy podman-desktop
 ```
 

@@ -1,12 +1,18 @@
 <script lang="ts">
-export let size = '40';
+interface Props {
+  size?: string;
+  class?: string;
+  style?: string;
+}
+
+let { size = '40', class: className, style: styleName }: Props = $props();
 </script>
 
 <svg
   width={size}
   height={size}
-  class={$$props.class}
-  style={$$props.style}
+  class={className}
+  style={styleName}
   viewBox="-0.5 -0.5 17 17"
   fill="none"
   aria-hidden="true"

@@ -35,7 +35,7 @@ If you have not added a remote podman connection yet, you can follow the [offici
 
 1. Generate a local ed25519 key:
 
-```sh
+```shell-session
 $ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 ```
 
@@ -47,7 +47,7 @@ Your public SSH key needs to be copied to the `~/.ssh/authorized_keys` file on t
 
 <TabItem value="win" label="Windows">
 
-```sh
+```shell-session
 $ type ~\.ssh\id_ed25519.pub | ssh user@my-server-ip "cat >> .ssh/authorized_keys"
 ```
 
@@ -55,7 +55,7 @@ $ type ~\.ssh\id_ed25519.pub | ssh user@my-server-ip "cat >> .ssh/authorized_key
 
 <TabItem value="linux-macos" label="Linux & MacOS">
 
-```sh
+```shell-session
 $ ssh-copy-id -i ~/.ssh/id_ed25519.pub user@my-server-ip
 ```
 
@@ -66,14 +66,14 @@ $ ssh-copy-id -i ~/.ssh/id_ed25519.pub user@my-server-ip
 
 By default, the podman.socket is **disabled** in Podman installations. Enabling the systemd socket allows remote clients to control Podman.
 
-```sh
+```shell-session
 $ systemctl enable podman.socket
 $ systemctl start podman.socket
 ```
 
 Confirm that the socket is enabled by checking the status:
 
-```sh
+```shell-session
 $ systemctl status --user podman.socket
 ```
 
@@ -83,21 +83,21 @@ It's important to know which socket path you are using, as this varies between r
 
 Use `podman info` to determine the correct socket path:
 
-```sh
+```shell-session
 $ ssh user@my-server-ip podman info | grep sock
    path: /run/user/1000/podman/podman.sock
 ```
 
 If you are using root, it may appear as:
 
-```sh
+```shell-session
 $ ssh root@my-server-ip podman info | grep sock
    path: /run/podman/podman.sock
 ```
 
 Now you are ready to add the connection. Add it with a distinct name to the Podman system connection list:
 
-```sh
+```shell-session
 # non-root
 $ podman system connection add my-remote-machine --identity ~/.ssh/id_ed25519 ssh://myuser@my-server-ip/run/user/1000/podman/podman.sock
 
@@ -119,7 +119,7 @@ On Windows, you need to use an absolute path for the identities; a path with ~ w
 
 1. Run a helloworld container on the remote machine:
 
-```sh
+```shell-session
 $ ssh user@my-server-ip podman run -d quay.io/podman/hello
 ```
 
@@ -129,13 +129,13 @@ $ ssh user@my-server-ip podman run -d quay.io/podman/hello
 
 1. Set your remote connection as the default:
 
-```sh
+```shell-session
 $ podman system connection default my-remote-machine
 ```
 
 2. Verify that the container appears in the CLI:
 
-```sh
+```shell-session
 $ podman ps
 ```
 
