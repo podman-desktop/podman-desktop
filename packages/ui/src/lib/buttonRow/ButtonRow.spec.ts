@@ -73,3 +73,9 @@ test('skips a hidden first action when choosing the first action to focus', () =
 
   expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus();
 });
+
+test('skips an action in an aria-hidden wrapper when choosing the first action to focus', () => {
+  render(ButtonRowTest, { initialFocus: 'first', ariaHiddenCancel: true });
+
+  expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus();
+});
