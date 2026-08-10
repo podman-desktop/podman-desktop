@@ -32,7 +32,6 @@ export type TestFixtures = {
   welcomePage: WelcomePage;
   page: Page;
   statusBar: StatusBar;
-  abortController: AbortController;
 };
 
 export type FixtureOptions = {

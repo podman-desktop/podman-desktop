@@ -255,7 +255,7 @@ export async function deleteNetwork(page: Page, name: string): Promise<void> {
 
 export interface HandleConfirmationDialogOptions {
   page: Page;
-  dialogTitle: string;
+  dialogTitle: string | RegExp;
   /** Button to click in the dialog. Defaults to 'Yes'. */
   buttonName?: string;
   /** If the dialog transitions to a follow-up state, click this button next. */
@@ -276,7 +276,10 @@ export async function handleConfirmationDialog({
   // Note: Intentionally not wrapped in test.step to allow proper try-catch handling
   // by callers. test.step has special failure semantics that can interfere with
   // exception handling when this function is used in "try and see" patterns.
-  const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
+  const dialog = page.getByRole('dialog', {
+    name: dialogTitle,
+    ...(typeof dialogTitle === 'string' && { exact: true }),
+  });
   await dialog.waitFor({ state: 'visible', timeout, signal });
 
   const button = dialog.getByRole('button', { name: buttonName });
