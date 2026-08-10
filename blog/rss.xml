@@ -1516,7 +1516,7 @@ release we received pull requests from the following people:</p>
 </ul>
 <p>Beyond the core app, the <a href="https://podman-desktop.io/blog/bootc-release-1.6" target="_blank" rel="noopener noreferrer" class=""><strong>BootC extension</strong></a> gained traction, enabling workflows that turn containers into bootable images.</p>
 <p>A great start to a year where the ecosystem began expanding beyond just the main application.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="the-spring-push-march--may">The Spring Push (March – May)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#the-spring-push-march--may" class="hash-link" aria-label="Direct link to The Spring Push (March �– May)" title="Direct link to The Spring Push (March – May)" translate="no">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="the-spring-push-march--may">The Spring Push (March – May)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#the-spring-push-march--may" class="hash-link" aria-label="Direct link to The Spring Push (March – May)" title="Direct link to The Spring Push (March – May)" translate="no">​</a></h2>
 <p>Spring brought rapid iteration across releases <a href="https://podman-desktop.io/blog/podman-desktop-release-1.17" target="_blank" rel="noopener noreferrer" class=""><strong>1.17</strong></a>, <a href="https://podman-desktop.io/blog/podman-desktop-release-1.18" target="_blank" rel="noopener noreferrer" class=""><strong>1.18</strong></a>, and <a href="https://podman-desktop.io/blog/podman-desktop-release-1.19" target="_blank" rel="noopener noreferrer" class=""><strong>1.19</strong></a> continuing Podman Desktop’s rhythm of monthly improvements.</p>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="key-highlights">Key highlights:<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#key-highlights" class="hash-link" aria-label="Direct link to Key highlights:" title="Direct link to Key highlights:" translate="no">​</a></h3>
 <ul>
@@ -3267,7 +3267,7 @@ release we received pull requests from the following people:</p>
 <li class="">chore(deps): bump electron-builder to v26 by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/12351" target="_blank" rel="noopener noreferrer" class="">#12351</a></li>
 <li class="">chore: remove no-explicit-any from dialogs by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/11480" target="_blank" rel="noopener noreferrer" class="">#11480</a></li>
 </ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="refactor-️">refactor 🛠️<a href="https://podman-desktop.io/blog/podman-desktop-release-1.20#refactor-%EF%B8%8F" class="hash-link" aria-label="Direct link to refactor 🛠️" title="Direct link to refactor 🛠️" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="refactor-️">refactor 🛠️<a href="https://podman-desktop.io/blog/podman-desktop-release-1.20#refactor-%EF%B8%8F" class="hash-link" aria-label="Direct link to refactor 🛠️" title="Direct link to refactor 🛠�️" translate="no">​</a></h3>
 <ul>
 <li class="">refactor(mock): simplify how to call a method on a mock object by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/13072" target="_blank" rel="noopener noreferrer" class="">#13072</a></li>
 <li class="">refactor: move message box interfaces to api package by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/13007" target="_blank" rel="noopener noreferrer" class="">#13007</a></li>
