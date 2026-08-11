@@ -1,6 +1,5 @@
 <script lang="ts">
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
-import { derived, type Readable } from 'svelte/store';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
 import extensionIcon from '/@/lib/images/ExtensionIcon.svelte';
@@ -18,53 +17,51 @@ import ExtensionDetailsSummaryCard from './ExtensionDetailsSummaryCard.svelte';
 import { ExtensionsUtils } from './extensions-utils';
 import InstalledExtensionActions from './InstalledExtensionActions.svelte';
 
-export let extensionId: string;
+interface Props {
+  extensionId: string;
+}
+let { extensionId }: Props = $props();
 
-let screen: 'README' | 'ERROR' = 'README';
-let detailsPage: DetailsPage;
+let screen: 'README' | 'ERROR' = $state('README');
+let detailsPage: DetailsPage | undefined = $state();
 const extensionsUtils = new ExtensionsUtils();
 
-let extension: Readable<ExtensionDetailsUI | undefined>;
-
-$: extension = derived(
-  [catalogExtensionInfos, combinedInstalledExtensions],
-  ([$catalogExtensionInfos, $combinedInstalledExtensions]) => {
-    return extensionsUtils.extractExtensionDetail(
-      $catalogExtensionInfos,
-      $combinedInstalledExtensions,
-      decodeURIComponent(extensionId),
-    );
-  },
-);
+let extension: ExtensionDetailsUI | undefined = $derived.by(() => {
+  return extensionsUtils.extractExtensionDetail(
+    $catalogExtensionInfos,
+    $combinedInstalledExtensions,
+    decodeURIComponent(extensionId),
+  );
+});
 </script>
 
-{#if $extension}
-  <DetailsPage title="{$extension.displayName} extension" subtitle={$extension.description} bind:this={detailsPage}>
+{#if extension}
+  <DetailsPage title="{extension.displayName} extension" subtitle={extension.description} bind:this={detailsPage}>
     {#snippet iconSnippet()}
       <div class="flex flex-col mt-1 items-baseline w-8">
         <div class="w-8 min-h-8">
           <!-- Display icon being installed using base64 -->
-          {#if $extension.icon}
-            <ExtensionIcon extension={$extension} />
-          {:else if $extension.iconRef}
-            <img src={$extension.iconRef} alt="{$extension.displayName} icon" class="max-w-8 max-h-8" />
+          {#if extension.icon}
+            <ExtensionIcon {extension} />
+          {:else if extension.iconRef}
+            <img src={extension.iconRef} alt="{extension.displayName} icon" class="max-w-8 max-h-8" />
           {/if}
         </div>
         <div class="flex flex-row mt-3">
-          <ExtensionStatus status={$extension.type === 'dd' ? 'started' : $extension.state} />
+          <ExtensionStatus status={extension.type === 'dd' ? 'started' : extension.state} />
         </div>
       </div>
     {/snippet}
     {#snippet actionsSnippet()}
       <div class="flex items-center space-x-10 w-full">
-        {#if $extension.installedExtension}
-          <InstalledExtensionActions class="w-48" extension={$extension.installedExtension} />
-        {:else if $extension.fetchable}
+        {#if extension.installedExtension}
+          <InstalledExtensionActions class="w-48" extension={extension.installedExtension} />
+        {:else if extension.fetchable}
           <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">
             <div class="italic text-sm text-[var(--pd-content-text)] pb-3">
               Install this extension with a single click
             </div>
-            <FeaturedExtensionDownload extension={$extension} />
+            <FeaturedExtensionDownload {extension} />
           </div>
         {/if}
       </div>
@@ -72,12 +69,12 @@ $: extension = derived(
 
     {#snippet detailSnippet()}
       <div class="flex">
-        <ExtensionBadge class="mt-2" extension={$extension} />
+        <ExtensionBadge class="mt-2" {extension} />
       </div>
     {/snippet}
     <!-- Display tabs only if extension is in error state -->
     {#snippet tabsSnippet()}
-      {#if $extension.state === 'failed'}
+      {#if extension.state === 'failed'}
         <Button
           type="tab"
           on:click={(): void => {
@@ -96,10 +93,10 @@ $: extension = derived(
     {#snippet contentSnippet()}
       <div class="flex w-full h-full overflow-y-auto p-5 flex-col lg:flex-row">
         {#if screen === 'README'}
-          <ExtensionDetailsSummaryCard extensionDetails={$extension} />
-          <ExtensionDetailsReadme readme={$extension.readme} />
+          <ExtensionDetailsSummaryCard extensionDetails={extension} />
+          <ExtensionDetailsReadme readme={extension.readme} />
         {:else if screen === 'ERROR'}
-          <ExtensionDetailsError extension={$extension} />
+          <ExtensionDetailsError {extension} />
         {/if}
       </div>
     {/snippet}
