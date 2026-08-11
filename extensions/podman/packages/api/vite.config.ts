@@ -16,14 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 /* eslint-env node */
-import { join } from 'path';
+import { join } from 'node:path';
 import { defineConfig } from 'vite';
 
 const PACKAGE_ROOT = __dirname;
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   base: '',
   server: {
