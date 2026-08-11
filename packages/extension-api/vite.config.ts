@@ -15,59 +15,38 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-import { chrome } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
-import { builtinModules } from 'module';
+/* eslint-env node */
+import { join } from 'node:path';
+import { defineConfig } from 'vite';
 
 const PACKAGE_ROOT = __dirname;
 
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
-  mode: process.env.MODE,
+// https://vitejs.dev/config/
+export default defineConfig({
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
-  envDir: process.cwd(),
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  /*plugins: [
-    commonjs({
-      dynamicRequireTargets: [
-        // include using a glob pattern (either a string or an array of strings)
-        'node_modules/ssh2/lib/protocol/crypto/poly1305.js',
-      ]
-      }),
-  ],*/
+  base: '',
+  server: {
+    fs: {
+      strict: true,
+    },
+  },
   build: {
-    sourcemap: 'inline',
-    target: `chrome${chrome}`,
+    sourcemap: true,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE !== 'development',
-    lib: {
-      entry: 'src/index.ts',
-      formats: ['cjs'],
-    },
-    rollupOptions: {
-      platform: 'node',
-      external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
-      output: {
-        entryFileNames: '[name].cjs',
-      },
-    },
+
     emptyOutDir: true,
     reportCompressedSize: false,
   },
   test: {
-    environment: 'jsdom',
+    environment: 'node',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     passWithNoTests: true,
   },
-};
-
-export default config;
+});

@@ -17,12 +17,12 @@
  ***********************************************************************/
 
 /* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
+import { join } from 'node:path';
+import * as path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 
 let filename = fileURLToPath(import.meta.url);
@@ -30,7 +30,7 @@ const PACKAGE_ROOT = path.dirname(filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
@@ -43,8 +43,8 @@ export default defineConfig({
     svelteTesting(),
     {
       name: 'inject-meta',
-      transformIndexHtml(html) {
-        if (process.env.MODE !== 'production') {
+      transformIndexHtml(html): string {
+        if (process.env['MODE'] !== 'production') {
           return html;
         }
 
@@ -84,9 +84,6 @@ export default defineConfig({
       deps: {
         inline: ['@fortawesome/fontawesome-free/css/all.min.css'],
       },
-    },
-    deps: {
-      inline: ['moment'],
     },
     setupFiles: ['./vite.tests.setup.js'],
   },

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,46 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-/* eslint-env node */
-import { join } from 'path';
+
 import { defineConfig } from 'vite';
+
+import { chrome } from '../../.electron-vendors.cache.json';
+import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 
 const PACKAGE_ROOT = __dirname;
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
+  envDir: process.cwd(),
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  base: '',
-  server: {
-    fs: {
-      strict: true,
-    },
-  },
   build: {
-    sourcemap: true,
+    sourcemap: 'inline',
+    target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
-
+    minify: process.env['MODE'] !== 'development',
+    lib: {
+      entry: 'src/index.ts',
+      formats: ['cjs'],
+    },
+    rollupOptions: {
+      platform: 'node',
+      external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
+      output: {
+        entryFileNames: '[name].cjs',
+      },
+    },
     emptyOutDir: true,
     reportCompressedSize: false,
   },
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    passWithNoTests: true,
   },
 });

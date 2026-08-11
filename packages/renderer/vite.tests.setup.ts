@@ -16,12 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
-import { readFileSync } from 'node:fs';
 import 'vitest-canvas-mock';
+
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import typescript from 'typescript';
-import { EventStore } from './src/stores/event-store';
-import { vi } from 'vitest';
+import { expect, vi } from 'vitest';
+
+import { EventStore, type EventStoreInfo } from './src/stores/event-store';
 
 /**
  * Mock matchMedia
@@ -52,17 +55,22 @@ Object.defineProperty(window, 'events', {
 });
 
 // read the given path and extract the method names from the Window interface
-function extractWindowMethods(filePath) {
+function extractWindowMethods(filePath: string): string[] {
   // Read the content of the .d.ts file
   const fileContent = readFileSync(filePath, 'utf-8');
 
   // Create a TypeScript SourceFile
-  const sourceFile = typescript.createSourceFile(filePath, fileContent, typescript.ScriptTarget.Latest, true);
+  const sourceFile: typescript.SourceFile = typescript.createSourceFile(
+    filePath,
+    fileContent,
+    typescript.ScriptTarget.Latest,
+    true,
+  );
 
-  const methodNames = [];
+  const methodNames: string[] = [];
 
   // Visit each node in the AST
-  const visit = node => {
+  const visit = (node: typescript.Node): void => {
     // Look for the Window interface
     if (
       typescript.isInterfaceDeclaration(node) &&
@@ -70,7 +78,7 @@ function extractWindowMethods(filePath) {
     ) {
       for (const member of node.members) {
         if (typescript.isPropertySignature(member) && member.type && typescript.isFunctionTypeNode(member.type)) {
-          const name = member.name.text;
+          const name = member.name.getText();
           methodNames.push(name);
         }
       }
@@ -104,9 +112,9 @@ for (const methodName of methodNames) {
 
 // Mock ResizeObserver for @floating-ui/dom
 class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
 }
 
 global.ResizeObserver = ResizeObserverMock;
@@ -114,6 +122,9 @@ global.window.ResizeObserver = ResizeObserverMock;
 
 // Override the prototype of setupWithDebounce to ensure default values are 10ms
 const originalSetupWithDebounce = EventStore.prototype.setupWithDebounce;
-EventStore.prototype.setupWithDebounce = function (debounceTimeoutDelay = 10, debounceThrottleTimeoutDelay = 10) {
+EventStore.prototype.setupWithDebounce = function (
+  debounceTimeoutDelay = 10,
+  debounceThrottleTimeoutDelay = 10,
+): EventStoreInfo {
   return originalSetupWithDebounce.call(this, debounceTimeoutDelay, debounceThrottleTimeoutDelay);
 };
