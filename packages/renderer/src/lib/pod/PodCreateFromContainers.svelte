@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import { Button, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
@@ -17,22 +17,36 @@ import { handleNavigation } from '/@/navigation';
 import { type PodCreation, podCreationHolder } from '/@/stores/creation-from-containers-store';
 import { providerInfos } from '/@/stores/providers';
 
-let podCreation: PodCreation;
-let createInProgress = false;
-let createError: string | undefined = undefined;
+let podCreation = $state<PodCreation>();
+let createInProgress = $state<boolean>(false);
+let createError = $state<string>();
 let mapPortExposed = new SvelteMap<number, { exposed: boolean; container: string }>();
-let containersPorts: { containers: string[]; ports: number[] }[] = [];
+let containersPorts = $state<{ containers: string[]; ports: number[] }[]>([]);
 
-let providers: ProviderInfo[] = [];
-$: providerConnections = providers
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined;
-$: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-let selectedProvider: ProviderContainerConnectionInfo | undefined;
-$: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
+let providerConnections = $derived<ProviderContainerConnectionInfo[]>(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
+
+//eslint-disable-next-line svelte/prefer-writable-derived
+let selectedProviderConnection = $state<ProviderContainerConnectionInfo>();
+//eslint-disable-next-line svelte/prefer-writable-derived
+let selectedProvider = $state<ProviderContainerConnectionInfo>();
+
+$effect(() => {
+  selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
+  const exists = providerConnections.some(
+    connection =>
+      connection.name === selectedProvider?.name &&
+      connection.endpoint.socketPath === selectedProvider?.endpoint.socketPath,
+  );
+  if (!exists) {
+    selectedProvider = selectedProviderConnection;
+  }
+});
 
 async function createPodFromContainers(): Promise<void> {
   createInProgress = true;
@@ -47,7 +61,9 @@ async function doCreatePodFromContainers(): Promise<void> {
   if (!selectedProvider) {
     throw new Error('no provider selected');
   }
-
+  if (!podCreation) {
+    throw new Error('no pod creation');
+  }
   // fetch port info from all containers
   const portmappingsArray = await Promise.all(
     podCreation.containers.map(async container => {
@@ -120,13 +136,8 @@ async function doCreatePodFromContainers(): Promise<void> {
   router.goto('/pods/');
 }
 
-let providersUnsubscribe: Unsubscriber;
 let podCreationUnsubscribe: Unsubscriber;
 onMount(() => {
-  providersUnsubscribe = providerInfos.subscribe(value => {
-    providers = value;
-  });
-
   podCreationUnsubscribe = podCreationHolder.subscribe(value => {
     if (!value) {
       return;
@@ -175,9 +186,6 @@ function getIndexSameContainersItems(containers: string[]): number | undefined {
 }
 
 onDestroy(() => {
-  if (providersUnsubscribe) {
-    providersUnsubscribe();
-  }
   if (podCreationUnsubscribe) {
     podCreationUnsubscribe();
   }
