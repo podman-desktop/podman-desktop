@@ -129,7 +129,7 @@ describe('createNewWindow', () => {
     expect(app.dock?.hide).toHaveBeenCalled();
   });
 
-  test('should defer window show on macOS login item launch and show when minimize is false', async () => {
+  test('should show window on macOS login item launch when config registry arrives before ready-to-show and minimize is false', async () => {
     vi.mocked(util.isMac).mockReturnValue(true);
     vi.mocked(app.getLoginItemSettings).mockReturnValue({
       wasOpenedAtLogin: true,
@@ -142,13 +142,7 @@ describe('createNewWindow', () => {
     const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
     assert(bwInstance);
 
-    const readyToShow = getHandler(bwInstance.on, 'ready-to-show');
-    readyToShow();
-
-    // Window should NOT have been shown yet (deferred)
-    expect(bwInstance.show).not.toHaveBeenCalled();
-
-    // Simulate configuration-registry IPC with minimize=false
+    // Fire configuration-registry BEFORE ready-to-show (matches real startup order)
     const configHandler = getHandler(vi.mocked(ipcMain.on), 'configuration-registry');
 
     const mockConfigRegistry = {
@@ -159,12 +153,15 @@ describe('createNewWindow', () => {
 
     configHandler({}, mockConfigRegistry);
 
-    // Now window should be shown
+    // Now fire ready-to-show — config registry is already available
+    const readyToShow = getHandler(bwInstance.on, 'ready-to-show');
+    readyToShow();
+
     expect(bwInstance.show).toHaveBeenCalled();
     expect(app.dock?.hide).not.toHaveBeenCalled();
   });
 
-  test('should defer window show on macOS login item launch and hide dock when minimize is true', async () => {
+  test('should hide dock on macOS login item launch when config registry arrives before ready-to-show and minimize is true', async () => {
     vi.mocked(util.isMac).mockReturnValue(true);
     vi.mocked(app.getLoginItemSettings).mockReturnValue({
       wasOpenedAtLogin: true,
@@ -177,13 +174,7 @@ describe('createNewWindow', () => {
     const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
     assert(bwInstance);
 
-    const readyToShow = getHandler(bwInstance.on, 'ready-to-show');
-    readyToShow();
-
-    // Window should NOT have been shown yet (deferred)
-    expect(bwInstance.show).not.toHaveBeenCalled();
-
-    // Simulate configuration-registry IPC with minimize=true
+    // Fire configuration-registry BEFORE ready-to-show (matches real startup order)
     const configHandler = getHandler(vi.mocked(ipcMain.on), 'configuration-registry');
 
     const mockConfigRegistry = {
@@ -194,7 +185,10 @@ describe('createNewWindow', () => {
 
     configHandler({}, mockConfigRegistry);
 
-    // Window should remain hidden, dock should be hidden
+    // Now fire ready-to-show — config registry is already available
+    const readyToShow = getHandler(bwInstance.on, 'ready-to-show');
+    readyToShow();
+
     expect(bwInstance.show).not.toHaveBeenCalled();
     expect(app.dock?.hide).toHaveBeenCalled();
   });
