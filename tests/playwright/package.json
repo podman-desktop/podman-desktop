@@ -28,6 +28,7 @@
     "electron": "43.4.0",
     "typescript": "^6.0.3",
     "unplugin-dts": "1.0.3",
+    "vite": "^8.1.5",
     "vitest": "^4.1.10"
   }
 }
