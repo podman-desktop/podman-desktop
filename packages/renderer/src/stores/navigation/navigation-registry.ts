@@ -139,19 +139,38 @@ function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void 
   }
 }
 
+export function findActiveItem(entries: NavigationRegistryEntry[], pathname: string): string | undefined {
+  for (const entry of entries) {
+    if (entry.link && entry.link !== '/' && pathname.startsWith(entry.link)) {
+      return entry.name;
+    }
+    if (entry.items) {
+      for (const sub of entry.items) {
+        if (sub.link && sub.link !== '/' && pathname.startsWith(sub.link)) {
+          return sub.name;
+        }
+      }
+    }
+  }
+  if (pathname === '/') {
+    return 'Dashboard';
+  }
+  return undefined;
+}
+
 async function hideItems(): Promise<void> {
   // for each item, set the hidden property to true
   values.forEach(item => {
     hideSingleItem(item);
   });
 
-  // send to the main side the list of all items, items being displayed or hidden
   const navItems: DisplayItem[] = [];
   values.forEach(item => {
     collecItem(item, navItems);
   });
 
-  await window.sendNavigationItems(navItems);
+  const activeItem = findActiveItem(values, window.location.pathname);
+  await window.sendNavigationItems({ items: navItems, activeItem });
   values = [...values];
   navigationRegistry.set(values);
 }

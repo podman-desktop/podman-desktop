@@ -275,8 +275,8 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld(
     'sendNavigationItems',
-    async (items: { name: string; visible: boolean }[]): Promise<void> => {
-      return ipcRenderer.invoke('navigation:sendNavigationItems', items);
+    async (data: { items: { name: string; visible: boolean }[]; activeItem?: string }): Promise<void> => {
+      return ipcRenderer.invoke('navigation:sendNavigationItems', data);
     },
   );
 
