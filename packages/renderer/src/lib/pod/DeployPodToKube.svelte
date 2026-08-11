@@ -14,36 +14,40 @@ import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { registeredFeatures } from '/@/stores/registered-features';
 
-export let resourceId: string;
-export let engineId: string;
-export let type: string;
+interface Props {
+  resourceId: string;
+  engineId: string;
+  type: string;
+}
 
-let kubeDetails: string;
+let { resourceId, engineId, type }: Props = $props();
 
-let defaultContextName: string | undefined;
-let currentNamespace: string;
-let allNamespaces: V1NamespaceList;
-let deployStarted = false;
-let deployFinished = false;
-let deployError = '';
-let deployWarning = '';
+let kubeDetails: string = $state('');
+
+let defaultContextName: string | undefined = $state();
+let currentNamespace: string = $state('default');
+let allNamespaces: V1NamespaceList | undefined = $state();
+let deployStarted = $state(false);
+let deployFinished = $state(false);
+let deployError = $state('');
+let deployWarning = $state('');
 let updatePodInterval: NodeJS.Timeout;
-let openshiftConsoleURL: string | undefined;
-let openshiftRouteGroupSupported = false;
+let openshiftConsoleURL: string | undefined = $state();
+let openshiftRouteGroupSupported = $state(false);
 
-let deployUsingServices = true;
-let deployUsingRoutes = true;
-let deployUsingRestrictedSecurityContext = false;
-let createdPod: V1Pod | undefined = undefined;
-let bodyPod: V1Pod;
+let deployUsingServices = $state(true);
+let deployUsingRoutes = $state(true);
+let deployUsingRestrictedSecurityContext = $state(false);
+let createdPod: V1Pod | undefined = $state();
+let bodyPod: V1Pod | undefined = $state();
 
-let createIngress = false;
-let ingressPort: number;
-let containerPortArray: string[] = [];
+let createIngress = $state(false);
+let ingressPort: number | undefined = $state();
+let containerPortArray: string[] = $state([]);
 
-let createdRoutes: V1Route[] = [];
+let createdRoutes: V1Route[] = $state([]);
 
-$: kubernetesDashboardActive = $registeredFeatures.includes('kubernetes-dashboard');
+let kubernetesDashboardActive = $derived($registeredFeatures.includes('kubernetes-dashboard'));
 
 onMount(async () => {
   // If type = compose
@@ -184,7 +188,7 @@ async function deployToKube(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let ingressesToCreate: any[] = [];
 
-  if (bodyPod.metadata?.name) {
+  if (bodyPod?.metadata?.name) {
     // if we deploy using services, we need to get rid of .hostPort and generate kubernetes services object
     if (deployUsingServices) {
       // collect all ports
@@ -192,7 +196,7 @@ async function deployToKube(): Promise<void> {
       bodyPod.spec?.containers?.forEach((container: any) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         container?.ports?.forEach((port: any) => {
-          let portName = `${bodyPod.metadata?.name}-${port.hostPort}`;
+          let portName = `${bodyPod?.metadata?.name}-${port.hostPort}`;
           if (port.hostPort) {
             // create service
             const service = {
@@ -212,7 +216,7 @@ async function deployToKube(): Promise<void> {
                   },
                 ],
                 selector: {
-                  app: bodyPod.metadata?.name,
+                  app: bodyPod?.metadata?.name,
                 },
               },
             };
@@ -224,7 +228,7 @@ async function deployToKube(): Promise<void> {
                 apiVersion: 'route.openshift.io/v1',
                 kind: 'Route',
                 metadata: {
-                  name: `${bodyPod.metadata?.name}-${port.hostPort}`,
+                  name: `${bodyPod?.metadata?.name}-${port.hostPort}`,
                   namespace: currentNamespace,
                 },
                 spec: {
@@ -233,7 +237,7 @@ async function deployToKube(): Promise<void> {
                   },
                   to: {
                     kind: 'Service',
-                    name: `${bodyPod.metadata?.name}-${port.hostPort}`,
+                    name: `${bodyPod?.metadata?.name}-${port.hostPort}`,
                   },
                   tls: {
                     termination: 'edge',
@@ -352,7 +356,7 @@ async function deployToKube(): Promise<void> {
       }
 
       // create pod
-      createdPod = await window.kubernetesCreatePod(currentNamespace, bodyPod);
+      createdPod = await window.kubernetesCreatePod(currentNamespace, $state.snapshot(bodyPod));
 
       // create services
       for (const service of servicesToCreate) {
@@ -393,13 +397,17 @@ async function deployToKube(): Promise<void> {
 
 // Update bodyPod.metadata.labels.app to be the same as bodyPod.metadata.name
 // If statement required as bodyPod.metadata is undefined when bodyPod is undefined
-$: {
+$effect(() => {
   if (bodyPod?.metadata?.labels) {
     bodyPod.metadata.labels.app = bodyPod.metadata.name ?? '';
   }
-}
+});
 
-$: bodyPod && updateKubeResult();
+$effect(() => {
+  if (bodyPod) {
+    updateKubeResult();
+  }
+});
 
 function updateKubeResult(): void {
   kubeDetails = jsYaml.dump(bodyPod, { seqNoIndent: true, quoteStyle: 'double', lineWidth: -1 });
