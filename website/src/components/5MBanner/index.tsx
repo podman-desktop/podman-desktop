@@ -227,11 +227,11 @@ function Banner(): JSX.Element {
   }, [colorMode]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-[232px] sm:h-[294px] xl:h-[420px]">
+    <div ref={containerRef} className="relative w-full h-18 sm:h-21 xl:h-40">
       <a
         ref={anchorRef}
         href={BLOG_POST_URL}
-        className="absolute inset-x-0 top-0 block bg-linear-to-r from-purple-300 to-purple-700 dark:from-purple-800 dark:to-purple-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500">
+        className="absolute inset-x-0 top-0 block bg-linear-to-r from-purple-300 to-purple-700 dark:from-purple-800 dark:to-purple-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500">
         <span className="sr-only">Read about Podman Desktop reaching 5 million downloads</span>
       </a>
       <canvas ref={canvasRef} className="pointer-events-none relative block w-full" />
