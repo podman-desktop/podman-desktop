@@ -23,15 +23,24 @@ import {
 } from './ProviderInitUtils';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 
-export let provider: ProviderInfo;
-export let initializationContext: InitializationContext;
+interface Props {
+  provider: ProviderInfo;
+  initializationContext: InitializationContext;
+}
 
-let initializationButtonVisible: boolean;
-let initializeInProgress = false;
+let { provider, initializationContext }: Props = $props();
 
-let initializeError: string | undefined = undefined;
+let installationButtonVisible = $state(false);
+let initializationButtonVisible = $derived(
+  (provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization) &&
+    !installationButtonVisible,
+);
 
-let preflightChecks: CheckStatus[] = [];
+let initializeInProgress = $state(false);
+
+let initializeError: string | undefined = $state();
+
+let preflightChecks: CheckStatus[] = $state([]);
 
 let logsXtermDiv: HTMLDivElement;
 let logsTerminal: Terminal;
@@ -39,9 +48,9 @@ let logsTerminal: Terminal;
 // Terminal resize
 let resizeObserver: ResizeObserver;
 let termFit: FitAddon;
-let installationOptionsMenuVisible = false;
-let installationOptionSelected = InitializeAndStartMode;
-let checksInProgress = false;
+let installationOptionsMenuVisible = $state(false);
+let installationOptionSelected = $state(InitializeAndStartMode);
+let checksInProgress = $state(false);
 
 async function runChecks(): Promise<void> {
   checksInProgress = true;
@@ -65,10 +74,6 @@ async function runChecks(): Promise<void> {
   }
   checksInProgress = false;
 }
-
-// no initialize support, hide the button
-$: initializationButtonVisible =
-  provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization;
 
 function showLastExecutionError(): void {
   initializeError = initializationContext.error;
@@ -156,7 +161,7 @@ function updateOptionsMenu(visible: boolean): void {
 
 async function onInstallationClick(): Promise<void> {
   initializeInProgress = true;
-  initializationButtonVisible = false;
+  installationButtonVisible = false;
   initializationContext.mode = installationOptionSelected as InitializationMode;
   await initializeProvider();
 }
@@ -184,13 +189,13 @@ async function onInstallationClick(): Promise<void> {
         <div class="bg-[var(--pd-invert-content-card-bg)] text-[var(--pd-button-text)] flex w-[212px]">
           <button
             class="float-left bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] pt-2 pr-3 pl-3 pb-2 text-[13px] text-[var(--pd-button-text)] mr-px w-[180px]"
-            on:click={onInstallationClick}>
+            onclick={onInstallationClick}>
             {installationOptionSelected}
           </button>
           <button
             class="inline-block bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] text-[13px] text-[var(--pd-button-text)] pt-2 pr-3 pl-3 pb-2 w-[32px]"
             aria-label="Installation options menu"
-            on:click={(): void => updateOptionsMenu(!installationOptionsMenuVisible)}>
+            onclick={(): void => updateOptionsMenu(!installationOptionsMenuVisible)}>
             <i class="fas fa-caret-down"></i>
           </button>
         </div>
@@ -201,7 +206,7 @@ async function onInstallationClick(): Promise<void> {
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"
-                on:click={(): void => {
+                onclick={(): void => {
                   installationOptionSelected = InitializeOnlyMode;
                   installationOptionsMenuVisible = false;
                 }}>
@@ -212,7 +217,7 @@ async function onInstallationClick(): Promise<void> {
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"
-                on:click={(): void => {
+                onclick={(): void => {
                   installationOptionSelected = InitializeAndStartMode;
                   installationOptionsMenuVisible = false;
                 }}>
