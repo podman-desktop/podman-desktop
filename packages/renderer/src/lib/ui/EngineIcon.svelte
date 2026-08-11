@@ -1,3 +1,11 @@
+<script lang="ts">
+interface Props {
+  class?: string;
+  style?: string;
+}
+let { class: className, style: styleName }: Props = $props();
+</script>
+
 <svg
   xmlns:xlink="http://www.w3.org/1999/xlink"
   width="47.234"
@@ -5,8 +13,8 @@
   height="32.672"
   id="screenshot-35d51602-f708-80de-8002-4e67d62df00c"
   viewBox="-0.75 -0.75 47.234 32.672"
-  class={$$props.class}
-  style={$$props.style}
+  class={className}
+  style={styleName}
   fill="none"
   version="1.1"
   ><g

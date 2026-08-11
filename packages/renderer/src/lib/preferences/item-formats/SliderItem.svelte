@@ -3,9 +3,16 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 
 import { uncertainStringToNumber } from '/@/lib/preferences/Util';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: number;
-export let onChange = async (_id: string, _value: number): Promise<void> => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value?: number;
+  onChange?: (_id: string, _value: number) => Promise<void>;
+}
+let {
+  record,
+  value = $bindable(),
+  onChange = async (_id: string, _value: number): Promise<void> => {},
+}: Props = $props();
 
 async function onInput(event: Event): Promise<void> {
   const target = event.currentTarget as HTMLInputElement;
@@ -23,6 +30,6 @@ async function onInput(event: Event): Promise<void> {
   step={record.step}
   value={value}
   aria-label={record.description}
-  on:input={onInput}
+  oninput={onInput}
   disabled={!!record.readonly || !!record.locked}
   class="w-full h-1 bg-[var(--pd-input-toggle-on-bg)] rounded-lg appearance-none accent-[var(--pd-input-toggle-on-bg)] cursor-pointer range-xs mt-2" />
