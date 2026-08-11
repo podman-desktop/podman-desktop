@@ -19,23 +19,28 @@
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
+import { dialog } from 'electron';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
-// items that can't be hidden
-const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
+const EXCLUDED_ITEMS = ['Accounts', 'Settings', 'Containers', 'Images', 'Dashboard'];
 
 const EXPANDED_WIDTH = 160;
 
-// This class is responsible of creating the items to hide a given selected item of the left navigation bar
-// and also display a list of all items with the ability to toggle the visibility of each item.
+export interface NavigationItemsPayload {
+  items: { name: string; visible: boolean }[];
+  activeItem?: string;
+}
+
 export class NavigationItemsMenuBuilder {
   private navigationItems: { name: string; visible: boolean }[] = [];
+  private activeItemName: string | undefined;
 
   constructor(private configurationRegistry: ConfigurationRegistry) {}
 
-  receiveNavigationItems(data: { name: string; visible: boolean }[]): void {
-    this.navigationItems = data;
+  receiveNavigationItems(data: NavigationItemsPayload): void {
+    this.navigationItems = data.items;
+    this.activeItemName = data.activeItem;
   }
 
   protected async updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
@@ -68,26 +73,71 @@ export class NavigationItemsMenuBuilder {
     return itemName.split('\n')[0] ?? itemName;
   }
 
+  protected isHideConfirmationDismissed(): boolean {
+    const configuration = this.configurationRegistry.getConfiguration('navbar');
+    return configuration.get<boolean>('hideConfirmationDismissed', false);
+  }
+
+  protected async dismissHideConfirmation(): Promise<void> {
+    await this.configurationRegistry.updateConfigurationValue(
+      'navbar.hideConfirmationDismissed',
+      true,
+      CONFIGURATION_DEFAULT_SCOPE,
+    );
+  }
+
+  protected async showHideConfirmation(itemName: string): Promise<boolean> {
+    if (this.isHideConfirmationDismissed()) {
+      return true;
+    }
+
+    const result = await dialog.showMessageBox({
+      type: 'question',
+      title: 'Hide From Navigation Bar',
+      message: `Hide "${itemName}" from the navigation bar?`,
+      detail:
+        'You can restore hidden items by right-clicking the navigation bar and selecting "Show Hidden Items", or by using "Reset Navigation Bar".',
+      buttons: ['Hide', "Don't show again", 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+    });
+
+    if (result.response === 2) {
+      return false;
+    }
+
+    if (result.response === 1) {
+      await this.dismissHideConfirmation();
+    }
+
+    return true;
+  }
+
   protected buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
     const rawItemName = linkText;
-
-    // need to filter any counter from the item name
-    // it's at the end with parenthesis like itemName (2)
     const itemName = this.computeItemName(rawItemName);
 
     if (EXCLUDED_ITEMS.includes(itemName)) {
       return undefined;
     }
 
-    // on electron, need to esccape the & character to show it
+    if (itemName === this.activeItemName) {
+      return undefined;
+    }
+
     const itemDisplayName = this.escapeLabel(itemName);
 
     const item: MenuItemConstructorOptions = {
-      label: `Hide ${itemDisplayName}`,
+      label: `Hide ${itemDisplayName} From Navigation Bar`,
       visible: true,
       click: (): void => {
-        // flag the item as being disabled
-        this.updateNavbarHiddenItem(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
+        this.showHideConfirmation(itemName)
+          .then(confirmed => {
+            if (confirmed) {
+              return this.updateNavbarHiddenItem(itemName, false);
+            }
+          })
+          .catch((e: unknown) => console.error('error hiding item', e));
       },
     };
     return item;
