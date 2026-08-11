@@ -2,7 +2,10 @@
 import type { SelectableExtensionDevelopmentFolderInfoUI } from '/@/lib/extensions/dev-mode/development-folder-info-ui';
 import Actions from '/@/lib/extensions/dev-mode/selectable/Actions.svelte';
 
-export let object: SelectableExtensionDevelopmentFolderInfoUI;
+interface Props {
+  object: SelectableExtensionDevelopmentFolderInfoUI;
+}
+let { object }: Props = $props();
 </script>
 
 <Actions extensionFolder={object} />

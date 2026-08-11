@@ -73,7 +73,7 @@ export class PodsPage extends MainPage {
   async prunePods(): Promise<PodsPage> {
     return test.step('Prune Pods', async () => {
       await this.prunePodsButton.click();
-      await handleConfirmationDialog(this.page, 'Prune Pods?', true, 'Prune');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Prune Pods?', buttonName: 'Prune' });
       return this;
     });
   }

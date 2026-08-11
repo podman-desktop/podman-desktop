@@ -4,7 +4,11 @@ import { ErrorMessage } from '@podman-desktop/ui-svelte';
 import PodActions from './PodActions.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 
-export let object: PodInfoUI;
+interface Props {
+  object: PodInfoUI;
+}
+
+let { object }: Props = $props();
 </script>
 
 <div class="flex w-full">

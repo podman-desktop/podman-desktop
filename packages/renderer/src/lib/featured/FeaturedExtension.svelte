@@ -5,9 +5,12 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 
-export let featuredExtension: FeaturedExtension;
-export let variant: 'primary' | 'secondary' = 'primary';
-export let displayTitle: boolean = false;
+interface Props {
+  featuredExtension: FeaturedExtension;
+  variant?: 'primary' | 'secondary';
+  displayTitle?: boolean;
+}
+let { featuredExtension, variant = 'primary', displayTitle = false }: Props = $props();
 </script>
 
 <div

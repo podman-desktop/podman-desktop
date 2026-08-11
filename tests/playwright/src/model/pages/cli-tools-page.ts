@@ -106,7 +106,7 @@ export class CLIToolsPage extends SettingsPage {
       const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
       try {
         await playExpect(confirmationDialog).toBeVisible();
-        await handleConfirmationDialog(this.page, toolName);
+        await handleConfirmationDialog({ page: this.page, dialogTitle: toolName });
       } catch {
         console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
       }
@@ -125,7 +125,11 @@ export class CLIToolsPage extends SettingsPage {
 
       await playExpect(this.getUninstallButton(toolName)).toBeEnabled();
       await this.getUninstallButton(toolName).click();
-      await handleConfirmationDialog(this.page, `Uninstall ${toolName}?`, true, 'Uninstall');
+      await handleConfirmationDialog({
+        page: this.page,
+        dialogTitle: `Uninstall ${toolName}?`,
+        buttonName: 'Uninstall',
+      });
 
       await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBeFalsy();
       return this;

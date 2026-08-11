@@ -30,7 +30,7 @@ import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
-  handleConfirmationDialog,
+  handlePodmanConfirmationDialogs,
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
@@ -256,18 +256,6 @@ test.describe
   });
 
 // Helper functions
-
-/**
- * Handles Podman confirmation dialogs (Yes and OK buttons)
- */
-async function handlePodmanConfirmationDialogs(page: Page): Promise<void> {
-  try {
-    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-    await handleConfirmationDialog(page, 'Podman', true, 'OK');
-  } catch (error) {
-    console.log('No handling dialog displayed', error);
-  }
-}
 
 /**
  * Opens the Resources page from the navigation bar
