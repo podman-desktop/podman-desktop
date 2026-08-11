@@ -20,6 +20,8 @@ import type { PodInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { assert, beforeEach, expect, test, vi } from 'vitest';
 
+import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
+
 import { clearPodActionInProgress, podsEventStore, podsInfos, setPodActionError, setPodStatus } from './pods';
 
 const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
@@ -80,8 +82,8 @@ test.each([
 
 test('setPodStatus updates the status and sets actionInProgress', () => {
   podsInfos.set([
-    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' },
-  ] as any);
+    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' } as PodInfoUI,
+  ]);
 
   setPodStatus('engine1', 'pod1', 'STARTING');
 
@@ -93,8 +95,8 @@ test('setPodStatus updates the status and sets actionInProgress', () => {
 
 test('clearPodActionInProgress clears the actionInProgress flag', () => {
   podsInfos.set([
-    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' },
-  ] as any);
+    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' } as PodInfoUI,
+  ]);
 
   clearPodActionInProgress('engine1', 'pod1');
 
@@ -105,8 +107,8 @@ test('clearPodActionInProgress clears the actionInProgress flag', () => {
 
 test('setPodActionError sets the error and status to ERROR', () => {
   podsInfos.set([
-    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' },
-  ] as any);
+    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' } as PodInfoUI,
+  ]);
 
   setPodActionError('engine1', 'pod1', 'something went wrong');
 
@@ -118,9 +120,9 @@ test('setPodActionError sets the error and status to ERROR', () => {
 
 test('setPodStatus does not affect other pods', () => {
   podsInfos.set([
-    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' },
-    { id: 'pod2', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' },
-  ] as any);
+    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' } as PodInfoUI,
+    { id: 'pod2', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' } as PodInfoUI,
+  ]);
 
   setPodStatus('engine1', 'pod1', 'STOPPING');
 
