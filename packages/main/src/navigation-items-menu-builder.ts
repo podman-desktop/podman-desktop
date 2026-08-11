@@ -168,6 +168,34 @@ export class NavigationItemsMenuBuilder {
     return items;
   }
 
+  protected buildShowHiddenItemsSubmenu(): MenuItemConstructorOptions | undefined {
+    const hiddenItems = this.navigationItems.filter(item => !item.visible);
+    if (hiddenItems.length === 0) {
+      return undefined;
+    }
+
+    return {
+      label: 'Show Hidden Items',
+      submenu: hiddenItems.map(item => ({
+        label: this.escapeLabel(item.name),
+        click: (): void => {
+          this.updateNavbarHiddenItem(item.name, true).catch((e: unknown) => console.error('error showing item', e));
+        },
+      })),
+    };
+  }
+
+  protected buildResetMenuItem(): MenuItemConstructorOptions {
+    return {
+      label: 'Reset Navigation Bar',
+      click: (): void => {
+        this.configurationRegistry
+          .updateConfigurationValue('navbar.disabledItems', [], CONFIGURATION_DEFAULT_SCOPE)
+          .catch((e: unknown) => console.error('error resetting navigation bar', e));
+      },
+    };
+  }
+
   protected getNavWidth(): number {
     const configuration = this.configurationRegistry.getConfiguration(AppearanceSettings.SectionName);
     return configuration.get<number>(AppearanceSettings.NavigationBarWidth, EXPANDED_WIDTH);
@@ -177,7 +205,6 @@ export class NavigationItemsMenuBuilder {
     const items: MenuItemConstructorOptions[] = [];
     const navWidth = this.getNavWidth();
 
-    // allow to hide the item being selected
     if (parameters.linkText && parameters.x < navWidth && parameters.y > 76) {
       const menu = this.buildHideMenuItem(parameters.linkText);
       if (menu) {
@@ -186,6 +213,15 @@ export class NavigationItemsMenuBuilder {
     }
     if (parameters.x < navWidth) {
       items.push(...this.buildNavigationToggleMenuItems());
+
+      const showHidden = this.buildShowHiddenItemsSubmenu();
+      if (showHidden) {
+        items.push({ type: 'separator' });
+        items.push(showHidden);
+      }
+
+      items.push({ type: 'separator' });
+      items.push(this.buildResetMenuItem());
     }
     return items;
   }
