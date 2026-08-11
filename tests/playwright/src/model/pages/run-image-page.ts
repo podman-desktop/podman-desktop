@@ -52,7 +52,7 @@ export class RunImagePage extends BasePage {
     this.backToImageDetailsLink = page.getByRole('link', {
       name: 'Go back to Image Details',
     });
-    this.startContainerButton = page.getByLabel('Start Container', {
+    this.startContainerButton = page.getByLabel('Create and Start', {
       exact: true,
     });
     this.containerNameInput = page.getByLabel('Container Name');

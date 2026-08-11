@@ -1313,6 +1313,14 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'container-provider-registry:createContainer',
+      async (_listener, engine: string, options: ContainerCreateOptions): Promise<{ id: string }> => {
+        options.start = false;
+        return containerProviderRegistry.createContainer(engine, options);
+      },
+    );
+
+    this.ipcHandle(
       'container-provider-registry:createVolume',
       async (
         _listener,

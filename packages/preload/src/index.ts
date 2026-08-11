@@ -602,6 +602,13 @@ export function initExposure(): void {
   );
 
   contextBridge.exposeInMainWorld(
+    'createContainer',
+    async (engine: string, options: ContainerCreateOptions): Promise<{ id: string }> => {
+      return ipcInvoke('container-provider-registry:createContainer', engine, options);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
     'createVolume',
     async (
       providerContainerConnectionInfo: ProviderContainerConnectionInfo,

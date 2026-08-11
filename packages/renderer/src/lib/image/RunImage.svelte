@@ -253,8 +253,8 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
   }
 }
 
-async function startContainer(): Promise<void> {
-  if (!image) return;
+function buildCreateOptions(): ContainerCreateOptions | undefined {
+  if (!image) return undefined;
 
   createError = undefined;
   // create ExposedPorts objects
@@ -286,7 +286,7 @@ async function startContainer(): Promise<void> {
   } catch (e) {
     createError = String(e);
     console.error('Error while creating container', e);
-    return;
+    return undefined;
   }
 
   const Env = options.basic.environmentVariables
@@ -423,11 +423,17 @@ async function startContainer(): Promise<void> {
     createOptions.Hostname = options.networking.hostname;
   }
 
+  return createOptions;
+}
+
+async function createAndStartContainer(): Promise<void> {
+  const createOptions = buildCreateOptions();
+  if (!createOptions) return;
+
   try {
     const data = await window.createAndStartContainer(imageInspectInfo.engineId, createOptions);
 
-    // redirect to containers if no tty, else redirect to the container details
-    if (Tty && OpenStdin) {
+    if (createOptions.Tty && createOptions.OpenStdin) {
       handleNavigation({
         page: NavigationPage.CONTAINER_TTY,
         parameters: {
@@ -437,6 +443,25 @@ async function startContainer(): Promise<void> {
     } else {
       handleNavigation({ page: NavigationPage.CONTAINERS });
     }
+  } catch (e) {
+    createError = String(e);
+    console.error('Error while creating container', e);
+    return;
+  }
+}
+
+async function createContainer(): Promise<void> {
+  const createOptions = buildCreateOptions();
+  if (!createOptions) return;
+
+  try {
+    const data = await window.createContainer(imageInspectInfo.engineId, createOptions);
+    handleNavigation({
+      page: NavigationPage.CONTAINER_SUMMARY,
+      parameters: {
+        id: data.id,
+      },
+    });
   } catch (e) {
     createError = String(e);
     console.error('Error while creating container', e);
@@ -1203,11 +1228,18 @@ const envDialogOptions: OpenDialogOptions = {
             Cancel
           </Button>
           <Button
-            on:click={startContainer}
-            icon={faPlay}
-            aria-label="Start Container"
+            type="secondary"
+            on:click={createContainer}
+            aria-label="Create"
             disabled={invalidFields}>
-            Start Container
+            Create
+          </Button>
+          <Button
+            on:click={createAndStartContainer}
+            icon={faPlay}
+            aria-label="Create and Start"
+            disabled={invalidFields}>
+            Create and Start
           </Button>
         </div>
         <div aria-label="createError">
