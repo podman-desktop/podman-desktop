@@ -324,6 +324,21 @@ describe('cli#update', () => {
     expect(disposeMock).toHaveBeenCalled();
   });
 
+  test('cancelled system-wide update should not update the recorded version', async () => {
+    vi.mocked(util.installBinaryToSystem).mockRejectedValue(new Error('cancelled'));
+
+    vi.mocked(KindInstaller.prototype.getKindCliStoragePath).mockReturnValue('storage-path');
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue(mockV1Release);
+
+    const update: extensionApi.CliToolSelectUpdate = await getCliToolUpdate();
+    const providerUpdateCallCount = PROVIDER_MOCK.updateVersion.mock.calls.length;
+    await update.selectVersion();
+
+    await expect(update.doUpdate({} as unknown as extensionApi.Logger)).rejects.toThrowError('cancelled');
+    expect(CLI_TOOL_MOCK.updateVersion).not.toHaveBeenCalled();
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledTimes(providerUpdateCallCount);
+  });
+
   test('uninstall updatable version should dispose update', async () => {
     vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(mockV1Release);
 

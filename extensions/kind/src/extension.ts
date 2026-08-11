@@ -559,11 +559,7 @@ async function registerCliTool(
       // download, install system wide and update cli version
       await installer.download(releaseToUpdateTo);
       let cliPath = installer.getKindCliStoragePath();
-      try {
-        cliPath = await installBinaryToSystem(cliPath, KIND_CLI_NAME);
-      } catch (err: unknown) {
-        console.log(`${KIND_CLI_NAME} not updated system-wide. Error: ${String(err)}`);
-      }
+      cliPath = await installBinaryToSystem(cliPath, KIND_CLI_NAME);
       kindCli?.updateVersion({
         version: releaseVersionToUpdateTo,
         installationSource: 'extension',
