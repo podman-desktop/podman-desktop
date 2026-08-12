@@ -1,5 +1,5 @@
 <script lang="ts" generics="T">
-import { onDestroy } from 'svelte';
+import { onDestroy, untrack } from 'svelte';
 import type { TinroBreadcrumb, TinroRouteMeta } from 'tinro';
 import { createRouteObject } from 'tinro/dist/tinro_lib';
 
@@ -82,12 +82,10 @@ function processMetaBreadcrumbs(breadcrumbs?: Array<TinroBreadcrumb>): void {
 }
 
 $effect(() => {
-  route.update({
-    path,
-    redirect,
-    firstmatch,
-    breadcrumb,
-  });
+  const args = { path, redirect, firstmatch, breadcrumb };
+
+  // untrack to prevent route.update() internal store reads/writes from being tracked as dependencies
+  untrack(() => route.update(args));
 });
 
 onDestroy(() => {
