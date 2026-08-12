@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import type { GoToInfo } from '@podman-desktop/core-api';
+import type { GoToInfo, NavigationItemInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -51,11 +51,6 @@ export interface NavigationRegistryEntry {
   hidden?: boolean;
 }
 
-interface DisplayItem {
-  name: string;
-  visible: boolean;
-}
-
 const windowEvents: string[] = [];
 const windowListeners = ['extensions-already-started', 'system-ready'];
 
@@ -78,7 +73,7 @@ const init = (): void => {
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
-function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[]): void {
+function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: NavigationItemInfo[]): void {
   if (navigationRegistryEntry.items && navigationRegistryEntry.type === 'group') {
     navigationRegistryEntry.items.forEach(item => {
       collecItem(item, items);
@@ -164,7 +159,7 @@ async function hideItems(): Promise<void> {
     hideSingleItem(item);
   });
 
-  const navItems: DisplayItem[] = [];
+  const navItems: NavigationItemInfo[] = [];
   values.forEach(item => {
     collecItem(item, navItems);
   });

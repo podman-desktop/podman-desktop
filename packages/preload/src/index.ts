@@ -94,6 +94,7 @@ import type {
   Menu,
   MessageBoxOptions,
   MessageBoxReturnValue,
+  NavigationItemsPayload,
   NavigationRequest,
   NetworkCreateOptions,
   NetworkCreateResult,
@@ -273,12 +274,9 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld(
-    'sendNavigationItems',
-    async (data: { items: { name: string; visible: boolean }[]; activeItem?: string }): Promise<void> => {
-      return ipcRenderer.invoke('navigation:sendNavigationItems', data);
-    },
-  );
+  contextBridge.exposeInMainWorld('sendNavigationItems', async (data: NavigationItemsPayload): Promise<void> => {
+    return ipcRenderer.invoke('navigation:sendNavigationItems', data);
+  });
 
   contextBridge.exposeInMainWorld('navigateToRoute', async (routeId: string, ...args: unknown[]): Promise<void> => {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);

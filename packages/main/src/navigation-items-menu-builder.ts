@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NavigationItemInfo, NavigationItemsPayload } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
@@ -27,13 +28,8 @@ const EXCLUDED_ITEMS = ['Accounts', 'Settings', 'Containers', 'Images', 'Dashboa
 
 const EXPANDED_WIDTH = 160;
 
-export interface NavigationItemsPayload {
-  items: { name: string; visible: boolean }[];
-  activeItem?: string;
-}
-
 export class NavigationItemsMenuBuilder {
-  private navigationItems: { name: string; visible: boolean }[] = [];
+  private navigationItems: NavigationItemInfo[] = [];
   private activeItemName: string | undefined;
 
   constructor(private configurationRegistry: ConfigurationRegistry) {}
