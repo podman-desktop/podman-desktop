@@ -134,14 +134,18 @@ function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void 
   }
 }
 
+function matchesRoute(pathname: string, link: string): boolean {
+  return pathname === link || pathname.startsWith(link + '/');
+}
+
 export function findActiveItem(entries: NavigationRegistryEntry[], pathname: string): string | undefined {
   for (const entry of entries) {
-    if (entry.link && entry.link !== '/' && pathname.startsWith(entry.link)) {
+    if (entry.link && entry.link !== '/' && matchesRoute(pathname, entry.link)) {
       return entry.name;
     }
     if (entry.items) {
       for (const sub of entry.items) {
-        if (sub.link && sub.link !== '/' && pathname.startsWith(sub.link)) {
+        if (sub.link && sub.link !== '/' && matchesRoute(pathname, sub.link)) {
           return sub.name;
         }
       }
