@@ -81,7 +81,7 @@ function processMetaBreadcrumbs(breadcrumbs?: Array<TinroBreadcrumb>): void {
   }
 }
 
-$effect(() => {
+$effect.pre(() => {
   const args = { path, redirect, firstmatch, breadcrumb };
 
   // untrack to prevent route.update() internal store reads/writes from being tracked as dependencies
