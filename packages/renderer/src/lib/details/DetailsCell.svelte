@@ -1,6 +1,11 @@
 <script lang="ts">
-export let style: string = '';
-export let onClick: () => void = () => {};
+interface Props {
+  style?: string;
+  onClick?: () => void;
+  class?: string;
+}
+
+let { style = '', onClick = (): void => {}, class: className = '' }: Props = $props();
 </script>
 
 <!-- wrap-anywhere, because a details cell holds values nobody chose the length
@@ -12,6 +17,6 @@ export let onClick: () => void = () => {};
      Not break-all: that breaks ordinary words too, so prose and hyphenated names
      get chopped mid-word even when they would have fitted. overflow-wrap:
      anywhere breaks only what would otherwise overflow. -->
-<td class="pt-1 pl-3 wrap-anywhere {style} {$$props.class}" on:click={onClick}>
+<td class="pt-1 pl-3 wrap-anywhere {style} {className}" onclick={onClick}>
   <slot />
 </td>
