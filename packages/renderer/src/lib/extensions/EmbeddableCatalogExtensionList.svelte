@@ -10,18 +10,26 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import { ExtensionsUtils } from './extensions-utils';
 
-// restricted category to display
-export let category: string | undefined = undefined;
-export let keywords: string[] = [];
-export let title = 'Available extensions';
-export let showEmptyScreen: boolean = true;
-export let oninstall: (extensionId: string) => void = () => {};
-export let ondetails: (extensionId: string) => void = () => {};
+interface Props {
+  category?: string;
+  keywords?: string[];
+  title?: string;
+  showEmptyScreen?: boolean;
+  oninstall?: (extensionId: string) => void;
+  ondetails?: (extensionId: string) => void;
+  showInstalled?: boolean;
+}
+let {
+  category,
+  keywords = [],
+  title = 'Available extensions',
+  showEmptyScreen = true,
+  oninstall = (_extensionId: string): void => {},
+  ondetails = (_extensionId: string): void => {},
+  showInstalled = true,
+}: Props = $props();
 
-// show installed extensions
-export let showInstalled: boolean = true;
-
-let enableCatalog = true;
+let enableCatalog = $state(true);
 
 onMount(async () => {
   const value = await window.getConfigurationValue<boolean>('extensions.catalog.enabled');

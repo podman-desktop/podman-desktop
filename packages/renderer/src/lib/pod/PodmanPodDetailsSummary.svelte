@@ -10,11 +10,13 @@ import { handleNavigation } from '/@/navigation';
 
 import type { PodInfoContainerUI, PodInfoUI } from './PodInfoUI';
 
-export let pod: PodInfoUI | undefined;
-let creationTime: Date;
-if (pod) {
-  creationTime = new Date(pod.created);
+interface Props {
+  pod: PodInfoUI;
 }
+
+let { pod }: Props = $props();
+
+let creationTime: Date = $derived(new Date(pod.created));
 
 function navigateToLogs(container: PodInfoContainerUI): void {
   return handleNavigation({ page: NavigationPage.CONTAINER_LOGS, parameters: { id: container.Id } });

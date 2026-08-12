@@ -3,9 +3,14 @@ import { onMount } from 'svelte';
 
 import CopyToClipboard from '/@/lib/ui/CopyToClipboard.svelte';
 
-let url: string | undefined;
+interface Props {
+  path: string;
+  class?: string;
+}
 
-export let path: string;
+let { path, class: className }: Props = $props();
+
+let url: string | undefined = $state();
 
 onMount(async () => {
   try {
@@ -27,5 +32,5 @@ onMount(async () => {
 </script>
 
 {#if url}
-  <CopyToClipboard title={url} clipboardData={url} class={$$props.class} />
+  <CopyToClipboard title={url} clipboardData={url} class={className} />
 {/if}

@@ -5,9 +5,13 @@ import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 
 import type { PodInfoUI } from './PodInfoUI';
 
-export let pod: PodInfoUI;
+interface Props {
+  pod: PodInfoUI;
+}
 
-let kubeDetails: string;
+let { pod }: Props = $props();
+
+let kubeDetails: string = $state('');
 
 onMount(async () => {
   // grab kube result from the pod

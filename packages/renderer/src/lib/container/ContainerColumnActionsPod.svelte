@@ -28,6 +28,5 @@ let { object }: Props = $props();
         Status: container.state,
       })),
     }}
-    dropdownMenu={true}
-    on:update />
+    dropdownMenu={true} />
 {/if}

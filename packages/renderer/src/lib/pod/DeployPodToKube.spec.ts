@@ -23,7 +23,7 @@ import type { SimpleContainerInfo, V1Route } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import * as jsYaml from 'js-yaml';
-import { type ComponentProps, tick } from 'svelte';
+import { tick } from 'svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -96,12 +96,8 @@ beforeEach(() => {
   vi.mocked(window.listSimpleContainersByLabel).mockResolvedValue([simpleContainerInfo]);
 });
 
-async function waitRender(customProperties: Partial<ComponentProps<DeployPodToKube>>): Promise<void> {
+async function waitRender(customProperties: Partial<DeployPodToKube>): Promise<void> {
   render(DeployPodToKube, { resourceId: 'foo', engineId: 'bar', type: 'unknown', ...customProperties });
-  await tick();
-  await tick();
-  await tick();
-  await tick();
   await tick();
 }
 
@@ -296,7 +292,7 @@ test('When deploying a pod, volumes should not be added (they are deleted by pod
 
 // Test deploying a compose group of containers
 test('Test deploying a group of compose containers with type compose still functions the same as normal deploy', async () => {
-  await waitRender({ type: 'compose' });
+  await waitRender({ type: 'compose' } as Partial<DeployPodToKube>);
   const createButton = screen.getByRole('button', { name: 'Deploy' });
   expect(createButton).toBeInTheDocument();
   expect(createButton).toBeEnabled();
