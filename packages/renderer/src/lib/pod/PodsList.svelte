@@ -19,7 +19,7 @@ import PodIcon from '/@/lib/images/PodIcon.svelte';
 import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
-import { filtered, podsInfos, searchPattern } from '/@/stores/pods';
+import { filtered, podsInfos, searchPattern, setPodStatus } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 
 import { PodUtils } from './pod-utils';
@@ -104,8 +104,7 @@ async function deleteSelectedPods(): Promise<void> {
 
   // mark pods for deletion
   bulkDeleteInProgress = true;
-  selectedPods.forEach(pod => (pod.status = 'DELETING'));
-  pods = pods;
+  selectedPods.forEach(pod => setPodStatus(pod.engineId, pod.id, 'DELETING'));
 
   await Promise.all(
     selectedPods.map(async pod => {
@@ -272,8 +271,7 @@ function label(pod: PodInfoUI): string {
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
         key={key}
-        label={label}
-        on:update={(): PodInfoUI[] => (pods = pods)}>
+        label={label}>
       </Table>
     {/if}
   </div>

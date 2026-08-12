@@ -9,22 +9,24 @@ import PreferencesConnectionCreationOrEditRendering from '/@/lib/preferences/Pre
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { providerInfos } from '/@/stores/providers';
 
-export let component: OnboardingEmbeddedComponentType;
-export let extensionId: string;
+interface Props {
+  component: OnboardingEmbeddedComponentType;
+  extensionId: string;
+}
 
-let configurationItems: IConfigurationPropertyRecordedSchema[];
-$: configurationItems;
+let { component, extensionId }: Props = $props();
+
+let configurationItems = $state<IConfigurationPropertyRecordedSchema[]>();
 let providers: ProviderInfo[];
-let providerInfo: ProviderInfo | undefined;
-$: providerInfo;
+let providerInfo = $state<ProviderInfo | undefined>();
 
-let providerDisplayName: string | undefined;
-$: providerDisplayName =
+let providerDisplayName = $derived(
   (providerInfo?.containerProviderConnectionCreation
     ? (providerInfo?.containerProviderConnectionCreationDisplayName ?? undefined)
     : providerInfo?.kubernetesProviderConnectionCreation
       ? providerInfo?.kubernetesProviderConnectionCreationDisplayName
-      : undefined) ?? providerInfo?.name;
+      : undefined) ?? providerInfo?.name,
+);
 
 onMount(() => {
   configurationProperties.subscribe(value => {
