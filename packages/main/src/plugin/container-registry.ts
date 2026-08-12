@@ -102,12 +102,6 @@ const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } 
 
 const DEFAULT_PROVIDER_TIMEOUT = 30;
 
-// size of the header prefixing every frame of a multiplexed (non-TTY) container stream
-const DOCKER_STREAM_HEADER_SIZE = 8;
-
-// stream type of the first header byte of a multiplexed frame, also used as the decoder key of a raw (TTY) stream
-const DOCKER_STREAM_TYPE_STDOUT = 1;
-
 export interface InternalContainerProvider {
   name: string;
   id: string;
@@ -1851,19 +1845,19 @@ export class ContainerProviderRegistry {
         // StringDecoder buffers incomplete multi-byte sequences across chunks. stdout and stderr are
         // interleaved in the multiplexed stream, so each one needs its own decoder: a shared one
         // would let a frame of one stream complete the pending character of the other.
-        const decoders = new Map<number, StringDecoder>();
-        const decoderFor = (streamType: number): StringDecoder => {
-          let decoder = decoders.get(streamType);
-          if (!decoder) {
-            decoder = new StringDecoder('utf-8');
-            decoders.set(streamType, decoder);
+        const stdoutDecoder = new StringDecoder('utf-8');
+        const stderrDecoder = new StringDecoder('utf-8');
+
+        const emitData = (decoder: StringDecoder, chunk: Buffer): void => {
+          if (firstMessage) {
+            firstMessage = false;
+            logsParams.callback('first-message', '');
           }
-          return decoder;
+          logsParams.callback('data', decoder.write(chunk));
         };
-        // holds the bytes of a multiplexed frame that is not complete yet
-        let pending = Buffer.alloc(0);
+
         containerStream.on('end', () => {
-          for (const decoder of decoders.values()) {
+          for (const decoder of [stdoutDecoder, stderrDecoder]) {
             const remaining = decoder.end();
             if (remaining) {
               logsParams.callback('data', remaining);
@@ -1871,30 +1865,19 @@ export class ContainerProviderRegistry {
           }
           logsParams.callback('end', '');
         });
-        containerStream.on('data', chunk => {
-          if (firstMessage) {
-            firstMessage = false;
-            logsParams.callback('first-message', '');
-          }
-          if (!multiplexed) {
-            logsParams.callback('data', decoderFor(DOCKER_STREAM_TYPE_STDOUT).write(chunk));
-            return;
-          }
-          pending = pending.length > 0 ? Buffer.concat([pending, chunk]) : chunk;
-          while (pending.length >= DOCKER_STREAM_HEADER_SIZE) {
-            const streamType = pending.readUInt8(0);
-            const payloadSize = pending.readUInt32BE(4);
-            const frameSize = DOCKER_STREAM_HEADER_SIZE + payloadSize;
-            if (pending.length < frameSize) {
-              break;
-            }
-            logsParams.callback(
-              'data',
-              decoderFor(streamType).write(pending.subarray(DOCKER_STREAM_HEADER_SIZE, frameSize)),
-            );
-            pending = pending.subarray(frameSize);
-          }
-        });
+
+        if (multiplexed) {
+          const decodeInto = (decoder: StringDecoder): Writable =>
+            new Writable({
+              write(chunk: Buffer, _encoding, done): void {
+                emitData(decoder, chunk);
+                done();
+              },
+            });
+          container.modem.demuxStream(containerStream, decodeInto(stdoutDecoder), decodeInto(stderrDecoder));
+        } else {
+          containerStream.on('data', (chunk: Buffer) => emitData(stdoutDecoder, chunk));
+        }
       })
       .catch((error: unknown) => {
         telemetryOptions = { error: error };

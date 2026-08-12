@@ -2954,6 +2954,7 @@ test('container logs strips the multiplexed stream header of non-TTY containers'
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
     inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
   } as unknown as Dockerode.Container;
 
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
@@ -2975,6 +2976,7 @@ test('container logs buffers multiplexed frames split across chunks', async () =
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
     inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
   } as unknown as Dockerode.Container;
 
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
@@ -2999,6 +3001,7 @@ test('container logs decodes stdout and stderr with separate decoders', async ()
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
     inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
   } as unknown as Dockerode.Container;
 
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
