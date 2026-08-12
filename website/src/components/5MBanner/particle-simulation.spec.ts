@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import {
   computeDrawRect,
@@ -24,6 +24,7 @@ import {
   depthScale,
   easePostBendProgress,
   getAtlasCellRect,
+  ParticleRow,
   ParticleSimulation,
   pathX,
   pathY,
@@ -32,6 +33,10 @@ import {
   resolveConfig,
   stepParticlePool,
 } from './particle-simulation';
+
+function createMockCanvasContext(): CanvasRenderingContext2D {
+  return { drawImage: vi.fn() } as unknown as CanvasRenderingContext2D;
+}
 
 const PERSPECTIVE_TEST_CONFIG = {
   ...DEFAULT_CONFIG,
@@ -325,5 +330,55 @@ test('ParticleSimulation.step advances every row', () => {
 
   simulation.rows.forEach((row, index) => {
     expect(row.pool.t[0]).toBeCloseTo((before[index] + 0.1) % 1, 5);
+  });
+});
+
+test('ParticleRow.draw draws one image per particle with the computed rects', () => {
+  const row = new ParticleRow(2, DEFAULT_CONFIG.spriteVariantCount, 1, 0, () => 0.5);
+  const ctx = createMockCanvasContext();
+  const atlas = {} as CanvasImageSource;
+
+  row.draw(ctx, atlas, 1000, DEFAULT_CONFIG);
+
+  expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+
+  const t0 = row.pool.t[0];
+  const expectedRect = computeDrawRect(t0, 1000, DEFAULT_CONFIG, { bendScale: 1, baselineOffset: 0 });
+  const expectedCell = getAtlasCellRect(row.pool.spriteIndex[0], DEFAULT_CONFIG);
+
+  expect(ctx.drawImage).toHaveBeenNthCalledWith(
+    1,
+    atlas,
+    expectedCell.sx,
+    expectedCell.sy,
+    expectedCell.sw,
+    expectedCell.sh,
+    expectedRect.x,
+    expectedRect.y,
+    expectedRect.size,
+    expectedRect.size,
+  );
+});
+
+test('ParticleRow.draw draws nothing for an empty pool', () => {
+  const row = new ParticleRow(0, DEFAULT_CONFIG.spriteVariantCount, 1, 0, () => 0);
+  const ctx = createMockCanvasContext();
+
+  row.draw(ctx, {} as CanvasImageSource, 1000, DEFAULT_CONFIG);
+
+  expect(ctx.drawImage).not.toHaveBeenCalled();
+});
+
+test('ParticleSimulation.draw draws every row in far-to-near order', () => {
+  const simulation = new ParticleSimulation({ ...DEFAULT_CONFIG, particleCount: 3 }, () => 0);
+  const ctx = createMockCanvasContext();
+  const atlas = {} as CanvasImageSource;
+
+  const drawSpies = simulation.rows.map(row => vi.spyOn(row, 'draw'));
+
+  simulation.draw(ctx, atlas, 1000);
+
+  drawSpies.forEach(spy => {
+    expect(spy).toHaveBeenCalledExactlyOnceWith(ctx, atlas, 1000, simulation.config);
   });
 });
