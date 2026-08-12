@@ -59,7 +59,7 @@ beforeEach(() => {
   navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(configurationRegistryMock, showMessageBoxMock);
 });
 
-describe('buildHideMenuItem', () => {
+describe('buildHideMenuItem', async () => {
   test('build hide item with updated label', () => {
     getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
 
@@ -215,10 +215,11 @@ describe('buildHideMenuItem', () => {
   });
 });
 
-describe('buildNavigationToggleMenuItems', () => {
-  test('build navigation toggle menu items', () => {
+describe('buildNavigationToggleMenuItems', async () => {
+  test('build navigation toggle menu items', async () => {
     getConfigurationMock.mockReturnValue({ get: () => ['existing'] } as unknown as ConfigurationRegistry);
 
+    // send 3 items, two being visible, one being hidden
     navigationItemsMenuBuilder.receiveNavigationItems({
       items: [
         { name: 'A & A', visible: true },
@@ -229,8 +230,13 @@ describe('buildNavigationToggleMenuItems', () => {
 
     const menu = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
 
+    // 4 items (first one being a separator)
     expect(menu.length).toBe(4);
+
+    // check the first item is a separator
     expect(menu[0]?.type).toBe('separator');
+
+    // label should be escaped as we have an &
     expect(menu[1]?.label).toBe('A && A');
     expect(menu[1]?.checked).toBe(true);
     expect(menu[2]?.label).toBe('B');
@@ -238,17 +244,22 @@ describe('buildNavigationToggleMenuItems', () => {
     expect(menu[3]?.label).toBe('C');
     expect(menu[3]?.checked).toBe(true);
 
+    // click on the A item
     menu[1]?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
 
     expect(getConfigurationMock).toBeCalled();
+    // if clicking it should send the item to the configuration as being disabled
     expect(configurationRegistryMock.updateConfigurationValue).toBeCalledWith(
       'navbar.disabledItems',
+      // item A & A should not be escaped
       ['existing', 'A & A'],
       'DEFAULT',
     );
 
+    // reset the calls
     vi.mocked(configurationRegistryMock.updateConfigurationValue).mockClear();
 
+    // click on the B item should unhide it so disabled items should be empty
     menu[2]?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
     expect(configurationRegistryMock.updateConfigurationValue).toBeCalledWith(
       'navbar.disabledItems',
@@ -375,8 +386,8 @@ describe('buildResetMenuItem', () => {
   });
 });
 
-describe('buildNavigationMenu', () => {
-  test('no items if no linktext and outside navbar', () => {
+describe('buildNavigationMenu', async () => {
+  test('no items if no linktext and outside navbar', async () => {
     getConfigurationMock.mockReturnValue({ get: () => 160 });
     const parameters = {} as unknown as ContextMenuParams;
 
@@ -385,7 +396,7 @@ describe('buildNavigationMenu', () => {
     expect(menu).toStrictEqual([]);
   });
 
-  test('no items if outside of range of navbar', () => {
+  test('no items if outside of range of navbar', async () => {
     getConfigurationMock.mockReturnValue({ get: () => 160 });
     const parameters = {
       linkText: 'outside',
