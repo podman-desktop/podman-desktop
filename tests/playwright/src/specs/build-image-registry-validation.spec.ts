@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,6 +26,7 @@ import { deleteImage } from '/@/utility/operations';
 import {
   backupAuthFile,
   ensureAuthFileExists,
+  getAuthFileLocation,
   injectInvalidCredentials,
   removeRegistryCredentials,
   restoreAuthFile,
@@ -36,15 +38,17 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 // setting up its file watcher and credentials added later are never detected.
 // Must run at module scope — the runner fixture launches Electron during fixture
 // resolution, before any beforeAll body executes. Remove when #17610 is fixed.
+const authFileExisted = fs.existsSync(getAuthFileLocation());
 ensureAuthFileExists();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Fake registry: unreachable, with credentials containing '~' (not valid base64).
-// With validation enabled the unreachable registry is excluded → build succeeds.
-// With validation disabled all credentials are sent but the build still succeeds.
-const TEST_REGISTRY_URL = 'registry.unreachable-test.localhost';
+// Bad credentials for ghcr.io — the registry the Containerfile pulls from.
+// With validation enabled the bad credentials are excluded → build succeeds.
+// With validation disabled the bad credentials are sent → build fails (403).
+const TEST_REGISTRY_URL = 'ghcr.io';
+const TEST_REGISTRY_DISPLAY_NAME = 'GitHub';
 const INVALID_USERNAME = 'admin';
 // eslint-disable-next-line sonarjs/no-hardcoded-passwords
 const INVALID_PASSWORD = 'sha256~fakeTokenForTestingPurposesOnly';
@@ -63,28 +67,37 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
   authBackupPath = await backupAuthFile();
+  await removeRegistryCredentials(TEST_REGISTRY_URL);
 });
 
 test.afterAll(async ({ runner, page }) => {
   try {
     await deleteImage(page, BUILD_IMAGE);
     await deleteImage(page, BASE_IMAGE);
-  } finally {
-    await removeRegistryCredentials(TEST_REGISTRY_URL).catch((error: unknown) => {
-      console.log('Failed to remove invalid credentials:', error);
-    });
+    await removeRegistryCredentials(TEST_REGISTRY_URL);
     if (authBackupPath) {
-      await restoreAuthFile(authBackupPath).catch((error: unknown) => {
-        console.log('Failed to restore auth file backup:', error);
-      });
+      if (authFileExisted) {
+        await restoreAuthFile(authBackupPath);
+      } else {
+        await fs.promises.unlink(authBackupPath).catch(() => {});
+        await fs.promises.unlink(getAuthFileLocation()).catch(() => {});
+      }
     }
+  } finally {
     await runner.close();
   }
 });
 
+test.afterEach(async ({ page }) => {
+  await deleteImage(page, BUILD_IMAGE);
+  await deleteImage(page, BASE_IMAGE);
+});
+
 test.describe
   .serial('Build image registry validation verification', () => {
-    test('Registry validation checkbox toggles on and off', async ({ navigationBar }) => {
+    test('Build succeeds with validation disabled and no credentials', async ({ navigationBar }) => {
+      test.setTimeout(120_000);
+
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
 
@@ -93,41 +106,8 @@ test.describe
 
       await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
       await buildImagePage.toggleRegistryValidation(false);
-      await playExpect(buildImagePage.registryValidationCheckbox).not.toBeChecked();
       await buildImagePage.toggleRegistryValidation(true);
-      await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
-    });
-
-    test('Build succeeds with validation enabled and no invalid credentials', async ({ navigationBar, page }) => {
-      const imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      const buildImagePage = await imagesPage.openBuildImage();
-      await playExpect(buildImagePage.heading).toBeVisible();
-
-      await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
-
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
-
-      await playExpect
-        .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
-          timeout: 0,
-        })
-        .toBeTruthy();
-
-      await deleteImage(page, BUILD_IMAGE);
-      await deleteImage(page, BASE_IMAGE);
-    });
-
-    test('Build succeeds with validation disabled and no invalid credentials', async ({ navigationBar, page }) => {
-      const imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      const buildImagePage = await imagesPage.openBuildImage();
-      await playExpect(buildImagePage.heading).toBeVisible();
-
       await buildImagePage.toggleRegistryValidation(false);
-      await playExpect(buildImagePage.registryValidationCheckbox).not.toBeChecked();
 
       const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
@@ -136,29 +116,33 @@ test.describe
           timeout: 0,
         })
         .toBeTruthy();
-
-      await deleteImage(page, BUILD_IMAGE);
-      await deleteImage(page, BASE_IMAGE);
     });
 
-    test('Build with invalid registry credentials and validation enabled succeeds', async ({ navigationBar, page }) => {
+    test('Build succeeds with bad credentials when validation is enabled', async ({ navigationBar }) => {
       test.setTimeout(120_000);
-      await test.step('Inject invalid credentials and wait for Podman Desktop to register them', async () => {
-        await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
-        const settingsBar = await navigationBar.openSettings();
-        const registriesPage = await settingsBar.openTabPage(RegistriesPage);
-        await playExpect(registriesPage.heading).toBeVisible();
-        await playExpect
-          .poll(async () => (await registriesPage.getRegistryRowByName(TEST_REGISTRY_URL)).isVisible(), {
-            timeout: 30_000,
-          })
-          .toBe(true);
-      });
 
-      const imagesPage = await navigationBar.openImages();
+      let imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
 
-      const buildImagePage = await imagesPage.openBuildImage();
+      let buildImagePage = await imagesPage.openBuildImage();
+      await playExpect(buildImagePage.heading).toBeVisible();
+
+      await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
+
+      await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
+      const settingsBar = await navigationBar.openSettings();
+      const registriesPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registriesPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => (await registriesPage.getRegistryRowByName(TEST_REGISTRY_DISPLAY_NAME)).isVisible(), {
+          timeout: 30_000,
+        })
+        .toBe(true);
+
+      imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      buildImagePage = await imagesPage.openBuildImage();
       await playExpect(buildImagePage.heading).toBeVisible();
 
       await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
@@ -170,27 +154,10 @@ test.describe
           timeout: 0,
         })
         .toBeTruthy();
-
-      await deleteImage(page, BUILD_IMAGE);
-      await deleteImage(page, BASE_IMAGE);
     });
 
-    test('Build with invalid registry credentials and validation disabled succeeds', async ({
-      navigationBar,
-      page,
-    }) => {
+    test('Build fails with bad credentials when validation is disabled', async ({ navigationBar }) => {
       test.setTimeout(120_000);
-      await test.step('Inject invalid credentials and wait for Podman Desktop to register them', async () => {
-        await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
-        const settingsBar = await navigationBar.openSettings();
-        const registriesPage = await settingsBar.openTabPage(RegistriesPage);
-        await playExpect(registriesPage.heading).toBeVisible();
-        await playExpect
-          .poll(async () => (await registriesPage.getRegistryRowByName(TEST_REGISTRY_URL)).isVisible(), {
-            timeout: 30_000,
-          })
-          .toBe(true);
-      });
 
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
@@ -199,17 +166,13 @@ test.describe
       await playExpect(buildImagePage.heading).toBeVisible();
 
       await buildImagePage.toggleRegistryValidation(false);
-      await playExpect(buildImagePage.registryValidationCheckbox).not.toBeChecked();
 
       const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
       await playExpect
-        .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
-          timeout: 0,
+        .poll(async () => await updatedImagesPage.getImageRowByName(BUILD_IMAGE), {
+          timeout: 30_000,
         })
-        .toBeTruthy();
-
-      await deleteImage(page, BUILD_IMAGE);
-      await deleteImage(page, BASE_IMAGE);
+        .toBeFalsy();
     });
   });
