@@ -34,6 +34,7 @@ let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 let onDataDisposable: IDisposable | undefined;
 let reconnecting = false;
 let resizeHandler: (() => void) | undefined;
+let destroyed = false;
 
 function registerInputHandler(callbackId: number): void {
   onDataDisposable?.dispose();
@@ -53,7 +54,7 @@ $effect(() => {
 });
 
 async function restartTerminal(): Promise<void> {
-  if (reconnecting) return;
+  if (destroyed || reconnecting) return;
   reconnecting = true;
   try {
     clearReconnectTimer();
@@ -73,10 +74,10 @@ function clearReconnectTimer(): void {
 }
 
 function scheduleReconnect(): void {
-  if (reconnectTimer) return;
+  if (destroyed || reconnectTimer) return;
   reconnectTimer = setTimeout(() => {
     reconnectTimer = undefined;
-    if (container.state === 'RUNNING') {
+    if (!destroyed && container.state === 'RUNNING') {
       restartTerminal().catch((err: unknown) => {
         console.error('Error restarting terminal', err);
         scheduleReconnect();
@@ -105,7 +106,7 @@ function createDataCallback(): (data: Buffer) => void {
 }
 
 function receiveEndCallback(): void {
-  if (!sendCallbackId) return;
+  if (destroyed || !sendCallbackId) return;
 
   if (reconnecting) {
     scheduleReconnect();
@@ -124,7 +125,7 @@ function receiveEndCallback(): void {
 
 // call exec command
 async function executeShellIntoContainer(): Promise<void> {
-  if (container.state !== 'RUNNING') {
+  if (destroyed || container.state !== 'RUNNING') {
     return;
   }
   // grab logs of the container
@@ -135,7 +136,13 @@ async function executeShellIntoContainer(): Promise<void> {
     () => {},
     receiveEndCallback,
   );
+  if (destroyed) {
+    return;
+  }
   await window.shellInContainerResize(callbackId, shellTerminal.cols, shellTerminal.rows);
+  if (destroyed) {
+    return;
+  }
   registerInputHandler(callbackId);
   sendCallbackId = callbackId;
 }
@@ -151,13 +158,22 @@ async function refreshTerminal(): Promise<void> {
   const fontSize = await window.getConfigurationValue<number>(
     TerminalSettings.SectionName + '.' + TerminalSettings.FontSize,
   );
+  if (destroyed) {
+    return;
+  }
   const lineHeight = await window.getConfigurationValue<number>(
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
+  if (destroyed) {
+    return;
+  }
 
   const scrollback = await window.getConfigurationValue<number>(
     TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
   );
+  if (destroyed) {
+    return;
+  }
 
   // get terminal if any
   const existingTerminal = getExistingTerminal(container.engineId, container.id);
@@ -211,6 +227,7 @@ onMount(async () => {
 });
 
 onDestroy(() => {
+  destroyed = true;
   // without this the listener stays on window for the lifetime of the application, and a new
   // one is added every time the terminal tab is opened again
   if (resizeHandler) {
@@ -219,7 +236,7 @@ onDestroy(() => {
   }
   clearReconnectTimer();
   onDataDisposable?.dispose();
-  terminalContent = serializeAddon.serialize();
+  terminalContent = serializeAddon?.serialize() ?? '';
   registerTerminal({
     engineId: container.engineId,
     containerId: container.id,

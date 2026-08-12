@@ -814,3 +814,33 @@ test('resize listener does not fail when the container is gone', async () => {
 
   addEventListenerSpy.mockRestore();
 });
+
+test('does not continue initializing after it is destroyed while loading terminal settings', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  let resolveFontSize: ((value: number | undefined) => void) | undefined;
+  const fontSize = new Promise<number | undefined>(resolve => {
+    resolveFontSize = resolve;
+  });
+  vi.mocked(window.getConfigurationValue).mockReturnValueOnce(fontSize);
+
+  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+  const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+
+  await waitFor(() => expect(window.getConfigurationValue).toHaveBeenCalledOnce());
+  expect(() => renderObject.unmount()).not.toThrow();
+
+  resolveFontSize?.(undefined);
+  await Promise.resolve();
+  await Promise.resolve();
+
+  expect(window.getConfigurationValue).toHaveBeenCalledOnce();
+  expect(shellInContainerMock).not.toHaveBeenCalled();
+  expect(registeredResizeListeners(addEventListenerSpy.mock.calls)).toHaveLength(0);
+
+  addEventListenerSpy.mockRestore();
+});
