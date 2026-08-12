@@ -261,6 +261,66 @@ describe('buildNavigationToggleMenuItems', () => {
       'DEFAULT',
     );
   });
+
+  test('should disable excluded items in toggle menu', () => {
+    getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
+
+    navigationItemsMenuBuilder.receiveNavigationItems({
+      items: [
+        { name: 'Containers', visible: true },
+        { name: 'Dashboard', visible: true },
+        { name: 'Pods', visible: true },
+      ],
+    });
+
+    const menu = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
+
+    const containersItem = menu.find(m => m.label === 'Containers');
+    expect(containersItem?.enabled).toBe(false);
+
+    const dashboardItem = menu.find(m => m.label === 'Dashboard');
+    expect(dashboardItem?.enabled).toBe(false);
+
+    const podsItem = menu.find(m => m.label === 'Pods');
+    expect(podsItem?.enabled).toBe(true);
+  });
+
+  test('should disable active item in toggle menu', () => {
+    getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
+
+    navigationItemsMenuBuilder.receiveNavigationItems({
+      items: [
+        { name: 'Pods', visible: true },
+        { name: 'Volumes', visible: true },
+      ],
+      activeItem: 'Pods',
+    });
+
+    const menu = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
+
+    const podsItem = menu.find(m => m.label === 'Pods');
+    expect(podsItem?.enabled).toBe(false);
+
+    const volumesItem = menu.find(m => m.label === 'Volumes');
+    expect(volumesItem?.enabled).toBe(true);
+  });
+
+  test('should not hide excluded items via updateNavbarHiddenItem', () => {
+    getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
+
+    navigationItemsMenuBuilder.receiveNavigationItems({
+      items: [
+        { name: 'Containers', visible: true },
+        { name: 'Pods', visible: true },
+      ],
+    });
+
+    const menu = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
+    const containersItem = menu.find(m => m.label === 'Containers');
+    containersItem?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+
+    expect(configurationRegistryMock.updateConfigurationValue).not.toHaveBeenCalled();
+  });
 });
 
 describe('buildShowHiddenItemsSubmenu', () => {

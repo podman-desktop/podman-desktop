@@ -40,6 +40,11 @@ export class NavigationItemsMenuBuilder {
   }
 
   protected async updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
+    // defense-in-depth: prevent hiding protected items
+    if (!visible && (EXCLUDED_ITEMS.includes(itemName) || itemName === this.activeItemName)) {
+      return;
+    }
+
     // grab the disabled items, and add the new one
     const configuration = this.configurationRegistry.getConfiguration('navbar');
     let items = configuration.get<string[]>('disabledItems', []);
@@ -143,17 +148,21 @@ export class NavigationItemsMenuBuilder {
     const items: MenuItemConstructorOptions[] = [];
 
     // add all navigation items to be able to show/hide them
-    const menuForNavItems: Electron.MenuItemConstructorOptions[] = this.navigationItems.map(item => ({
-      label: this.escapeLabel(item.name),
-      type: 'checkbox',
-      checked: item.visible,
-      click: (): void => {
-        // send the item to the frontend to show/hide it
-        this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
-          console.error('error disabling item', e),
-        );
-      },
-    }));
+    const menuForNavItems: Electron.MenuItemConstructorOptions[] = this.navigationItems.map(item => {
+      const isProtected = EXCLUDED_ITEMS.includes(item.name) || item.name === this.activeItemName;
+      return {
+        label: this.escapeLabel(item.name),
+        type: 'checkbox',
+        checked: item.visible,
+        enabled: !isProtected,
+        click: (): void => {
+          // send the item to the frontend to show/hide it
+          this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
+            console.error('error disabling item', e),
+          );
+        },
+      };
+    });
     if (menuForNavItems.length > 0) {
       // add separator
       items.push({ type: 'separator' });
