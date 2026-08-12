@@ -367,6 +367,67 @@ describe('buildShowHiddenItemsSubmenu', () => {
       'DEFAULT',
     );
   });
+
+  test('item can be hidden again after being restored via Show Hidden Items', async () => {
+    getConfigurationMock.mockReturnValue({
+      get: (key: string) => (key === 'hideConfirmationDismissed' ? true : []),
+    } as unknown as ConfigurationRegistry);
+    vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue();
+
+    // Step 1: Start with Kubernetes visible
+    navigationItemsMenuBuilder.receiveNavigationItems({
+      items: [
+        { name: 'Kubernetes', visible: true },
+        { name: 'Pods', visible: true },
+      ],
+    });
+
+    // Step 2: Hide Kubernetes
+    const hideMenu = navigationItemsMenuBuilder.buildHideMenuItem('Kubernetes');
+    expect(hideMenu?.label).toBe('Hide Kubernetes From Navigation Bar');
+    hideMenu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+
+    await vi.waitFor(() => {
+      expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith(
+        'navbar.disabledItems',
+        ['Kubernetes'],
+        'DEFAULT',
+      );
+    });
+
+    // Step 3: Verify "Show Hidden Items" submenu appears
+    const showHiddenMenu = navigationItemsMenuBuilder.buildShowHiddenItemsSubmenu();
+    expect(showHiddenMenu?.label).toBe('Show Hidden Items');
+    const submenu = showHiddenMenu?.submenu as MenuItemConstructorOptions[];
+    expect(submenu).toHaveLength(1);
+    expect(submenu[0]?.label).toBe('Kubernetes');
+
+    // Step 4: Restore Kubernetes via "Show Hidden Items"
+    vi.mocked(configurationRegistryMock.updateConfigurationValue).mockClear();
+    submenu[0]?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+
+    await vi.waitFor(() => {
+      expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith(
+        'navbar.disabledItems',
+        [],
+        'DEFAULT',
+      );
+    });
+
+    // Step 5: Verify Kubernetes can be hidden again (this is the bug - should not fail)
+    vi.mocked(configurationRegistryMock.updateConfigurationValue).mockClear();
+    const reHideMenu = navigationItemsMenuBuilder.buildHideMenuItem('Kubernetes');
+    expect(reHideMenu?.label).toBe('Hide Kubernetes From Navigation Bar');
+    reHideMenu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+
+    await vi.waitFor(() => {
+      expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith(
+        'navbar.disabledItems',
+        ['Kubernetes'],
+        'DEFAULT',
+      );
+    });
+  });
 });
 
 describe('buildResetMenuItem', () => {

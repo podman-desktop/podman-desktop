@@ -68,6 +68,12 @@ export class NavigationItemsMenuBuilder {
       items,
       CONFIGURATION_DEFAULT_SCOPE,
     );
+
+    // Optimistic local update to keep state in sync before renderer round-trip
+    const item = this.navigationItems.find(i => i.name === itemName);
+    if (item) {
+      item.visible = visible;
+    }
   }
 
   protected escapeLabel(label: string): string {
