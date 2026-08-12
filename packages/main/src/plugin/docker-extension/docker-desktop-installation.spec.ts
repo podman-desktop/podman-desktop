@@ -74,8 +74,8 @@ class TestDockerDesktopInstallation extends DockerDesktopInstallation {
     return super.isHttpMethod(methodName);
   }
 
-  override asHttpMethod(methodName: string): string {
-    return super.asHttpMethod(methodName);
+  override assertHttpMethod(methodName: string): string {
+    return super.assertHttpMethod(methodName);
   }
 
   override async handleExtensionVMServiceRequest(port: string, config: RequestConfig): Promise<unknown> {
@@ -116,10 +116,10 @@ test('Check isHttpMethod', async () => {
 });
 
 test('Check asHttpMethod', async () => {
-  expect(dockerDesktopInstallation.asHttpMethod('GET')).toBe('GET');
-  expect(dockerDesktopInstallation.asHttpMethod('get')).toBe('get');
+  expect(dockerDesktopInstallation.assertHttpMethod('GET')).toBe('GET');
+  expect(dockerDesktopInstallation.assertHttpMethod('get')).toBe('get');
 
-  expect(() => dockerDesktopInstallation.asHttpMethod('foobar')).toThrowError('Invalid method');
+  expect(() => dockerDesktopInstallation.assertHttpMethod('foobar')).toThrowError('Invalid method');
 });
 
 describe('handleExtensionVMServiceRequest', () => {
@@ -266,7 +266,7 @@ describe('handleExtensionVMServiceRequest', () => {
   });
 
   test('Check unknown error ', async () => {
-    vi.spyOn(dockerDesktopInstallation, 'asHttpMethod').mockImplementation(() => {
+    vi.spyOn(dockerDesktopInstallation, 'assertHttpMethod').mockImplementation(() => {
       throw new Error('foo error');
     });
 

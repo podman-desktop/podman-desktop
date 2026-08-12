@@ -252,7 +252,7 @@ export class DockerDesktopInstallation {
     return allMethods.includes(methodName);
   }
 
-  protected asHttpMethod(methodName: string): string {
+  protected assertHttpMethod(methodName: string): string {
     if (!this.isHttpMethod(methodName)) {
       throw Error('Invalid method');
     }
@@ -260,7 +260,7 @@ export class DockerDesktopInstallation {
   }
 
   protected async handleExtensionVMServiceRequest(port: string, config: v1.RequestConfig): Promise<unknown> {
-    const method = this.asHttpMethod(config.method);
+    const method = this.assertHttpMethod(config.method);
 
     const headers: Record<string, string> = { ...config.headers };
     let body: string | undefined;
