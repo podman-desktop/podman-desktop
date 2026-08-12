@@ -60,6 +60,7 @@ async function restartTerminal(): Promise<void> {
     clearReconnectTimer();
     ignoreFirstData = true;
     await executeShellIntoContainer();
+    if (destroyed) return;
     window.dispatchEvent(new Event('resize'));
   } finally {
     reconnecting = false;
@@ -236,14 +237,18 @@ onDestroy(() => {
   }
   clearReconnectTimer();
   onDataDisposable?.dispose();
-  terminalContent = serializeAddon?.serialize() ?? '';
-  registerTerminal({
-    engineId: container.engineId,
-    containerId: container.id,
-    terminal: terminalContent,
-    callbackId: sendCallbackId,
-  });
-  serializeAddon?.dispose();
+  if (serializeAddon) {
+    terminalContent = serializeAddon.serialize();
+    if (terminalContent) {
+      registerTerminal({
+        engineId: container.engineId,
+        containerId: container.id,
+        terminal: terminalContent,
+        callbackId: sendCallbackId,
+      });
+    }
+    serializeAddon.dispose();
+  }
   shellTerminal?.dispose();
   sendCallbackId = undefined;
 });
