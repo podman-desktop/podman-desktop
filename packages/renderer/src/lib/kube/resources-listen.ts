@@ -46,7 +46,7 @@ export async function listenResources(
   let contextName: string | undefined;
   let searchTermStoreUnsubscribe: Unsubscriber | undefined;
 
-  const disposable = window.events.receive(`kubernetes-update-${resourceName}`, () => {
+  const disposable = window.events?.receive(`kubernetes-update-${resourceName}`, () => {
     if (!contextName) {
       return;
     }
@@ -78,7 +78,7 @@ export async function listenResources(
 
   return {
     dispose: (): void => {
-      disposable.dispose();
+      disposable?.dispose();
       kubernetesContextsUnsubscribe();
       searchTermStoreUnsubscribe?.();
     },

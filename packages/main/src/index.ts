@@ -15,6 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+// (delete-me) cold-start trace — write to file since Playwright consumes both stdout and stderr
+import { appendFileSync } from 'node:fs';
+
 import type { Event } from '@podman-desktop/core-api';
 import { app, ipcMain, Menu, Tray } from 'electron';
 
@@ -36,10 +39,25 @@ import { isMac, isWindows, stoppedExtensions } from './util.js';
 
 let extensionLoader: ExtensionLoader | undefined;
 let animatedTray: AnimatedTray | undefined;
+const T0 = Date.now();
+const traceFile = process.env['PD_COLD_TRACE_FILE'];
+const trace = (msg: string): void => {
+  const line = `[TRACE] +${Date.now() - T0}ms ${msg}\n`;
+  if (traceFile)
+    try {
+      appendFileSync(traceFile, line);
+    } catch (_e) {
+      /* ignore */
+    }
+  process.stderr.write(line);
+};
+trace('index.ts module loaded');
 
 // Main startup
 const podmanDesktopMain = new Main(app);
+trace('Main constructed');
 podmanDesktopMain.main(process.argv);
+trace('Main.main() returned');
 
 // TODO: remove when index.spec.ts tests are migrated in podmanDesktopMain-main.spec
 export const mainWindowDeferred = podmanDesktopMain.mainWindowDeferred;
@@ -94,6 +112,7 @@ app.on('will-finish-launching', () => {
 
 app.whenReady().then(
   async () => {
+    trace('index.ts app.whenReady() fired');
     // Setup the default tray icon + menu items (skip if user disabled tray)
     const showTrayIcon = readShowTrayIconSetting();
     if (showTrayIcon) {
@@ -101,6 +120,7 @@ app.whenReady().then(
       tray = new Tray(animatedTray.getDefaultImage());
       animatedTray.setTray(tray);
     }
+    trace('tray setup done');
     const trayMenu = new TrayMenu(tray, animatedTray);
 
     const _onDidCreatedConfigurationRegistry = new Emitter<ConfigurationRegistry>();
@@ -108,6 +128,7 @@ app.whenReady().then(
 
     // Start extensions
     const pluginSystem = new PluginSystem(trayMenu, podmanDesktopMain.mainWindowDeferred);
+    trace('PluginSystem constructed, calling initExtensions()');
 
     onDidCreatedConfigurationRegistry(async (configurationRegistry: ConfigurationRegistry) => {
       // If we've manually set the tray icon color, update the tray icon. This can only be done
@@ -155,6 +176,7 @@ app.whenReady().then(
     });
 
     extensionLoader = await pluginSystem.initExtensions(_onDidCreatedConfigurationRegistry);
+    trace('initExtensions() completed');
   },
   (e: unknown) => console.error('Failed to start app:', e),
 );

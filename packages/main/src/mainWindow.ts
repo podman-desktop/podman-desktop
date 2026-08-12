@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+// (delete-me) cold-start trace — write to file since Playwright consumes both stdout and stderr
+import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 
@@ -33,11 +35,24 @@ import { isLinux, isMac, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
+const T0 = Date.now();
+const traceFile = process.env['PD_COLD_TRACE_FILE'];
+const trace = (msg: string): void => {
+  const line = `[TRACE] +${Date.now() - T0}ms ${msg}\n`;
+  if (traceFile)
+    try {
+      appendFileSync(traceFile, line);
+    } catch (_e) {
+      /* ignore */
+    }
+  process.stderr.write(line);
+};
 
 // development mode for extensions
 let isExtensionsDevelopmentModeEnabled = false;
 
 async function createWindow(): Promise<BrowserWindow> {
+  trace('createWindow() start');
   const INITIAL_APP_WIDTH = 1050;
   const INITIAL_APP_MIN_WIDTH = 640;
   const INITIAL_APP_HEIGHT = 700;
@@ -80,7 +95,9 @@ async function createWindow(): Promise<BrowserWindow> {
     browserWindowConstructorOptions.trafficLightPosition = { x: 20, y: 13 };
   }
 
+  trace('creating BrowserWindow');
   const browserWindow = new BrowserWindow(browserWindowConstructorOptions);
+  trace('BrowserWindow created');
 
   const { getCursorScreenPoint, getDisplayNearestPoint } = screen;
   const workArea = getDisplayNearestPoint(getCursorScreenPoint()).workArea;
@@ -110,6 +127,7 @@ async function createWindow(): Promise<BrowserWindow> {
 
   // Shared show logic used by both ready-to-show and the Wayland did-finish-load fallback.
   const handleWindowShow = (): void => {
+    trace('handleWindowShow() fired');
     // If started with --minimize flag (Windows login item or manual CLI), hide the window
     if (isStartedMinimize()) {
       if (isMac()) {
@@ -260,7 +278,9 @@ async function createWindow(): Promise<BrowserWindow> {
       ? import.meta.env.VITE_DEV_SERVER_URL
       : new URL('../renderer/dist/index.html', 'file://' + __dirname).toString();
 
+  trace(`loadURL start: ${pageUrl}`);
   await browserWindow.loadURL(pageUrl);
+  trace('loadURL done');
 
   return browserWindow;
 }

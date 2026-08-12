@@ -26,7 +26,7 @@ export async function listenActiveResourcesCount(
     return;
   }
 
-  const disposable = window.events.receive('kubernetes-active-resources-count', () => {
+  const disposable = window.events?.receive('kubernetes-active-resources-count', () => {
     collectAndSendCount(callback);
   });
 
@@ -34,7 +34,7 @@ export async function listenActiveResourcesCount(
 
   return {
     dispose: (): void => {
-      disposable.dispose();
+      disposable?.dispose();
     },
   };
 }
