@@ -113,7 +113,7 @@ export class NavigationItemsMenuBuilder {
       message: `Hide "${itemName}" from the navigation bar?`,
       detail:
         'You can restore hidden items by right-clicking the navigation bar and selecting "Show Hidden Items", or by using "Reset Navigation Bar".',
-      buttons: ['Hide', "Don't show again", 'Cancel'],
+      buttons: ['Hide', `Don't show again`, 'Cancel'],
       defaultId: 0,
       cancelId: 2,
     });
@@ -122,7 +122,7 @@ export class NavigationItemsMenuBuilder {
       return false;
     }
 
-    if (result.response === "Don't show again") {
+    if (result.response === `Don't show again`) {
       await this.dismissHideConfirmation();
     }
 
@@ -148,9 +148,9 @@ export class NavigationItemsMenuBuilder {
       visible: true,
       click: (): void => {
         this.showHideConfirmation(itemName)
-          .then(confirmed => {
+          .then(async confirmed => {
             if (confirmed) {
-              return this.updateNavbarHiddenItem(itemName, false);
+              await this.updateNavbarHiddenItem(itemName, false);
             }
           })
           .catch((e: unknown) => console.error('error hiding item', e));

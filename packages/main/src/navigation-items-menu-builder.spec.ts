@@ -173,7 +173,7 @@ describe('buildHideMenuItem', async () => {
     getConfigurationMock.mockReturnValue({
       get: (key: string) => (key === 'hideConfirmationDismissed' ? false : []),
     } as unknown as ConfigurationRegistry);
-    showMessageBoxMock.mockResolvedValue({ response: "Don't show again" });
+    showMessageBoxMock.mockResolvedValue({ response: `Don't show again` });
     vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue();
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem('Pods');
