@@ -17,17 +17,12 @@
  ***********************************************************************/
 
 import type { BrowserWindow, ContextMenuParams, MenuItem, MenuItemConstructorOptions } from 'electron';
-import { dialog } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
-vi.mock(import('electron'), async () => ({
-  dialog: {
-    showMessageBox: vi.fn(),
-  },
-}));
+const showMessageBoxMock = vi.fn();
 
 let navigationItemsMenuBuilder: TestNavigationItemsMenuBuilder;
 
@@ -61,7 +56,7 @@ class TestNavigationItemsMenuBuilder extends NavigationItemsMenuBuilder {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(configurationRegistryMock);
+  navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(configurationRegistryMock, showMessageBoxMock);
 });
 
 describe('buildHideMenuItem', () => {
@@ -124,14 +119,14 @@ describe('buildHideMenuItem', () => {
     getConfigurationMock.mockReturnValue({
       get: (key: string) => (key === 'hideConfirmationDismissed' ? false : []),
     } as unknown as ConfigurationRegistry);
-    vi.mocked(dialog.showMessageBox).mockResolvedValue({ response: 0, checkboxChecked: false });
+    showMessageBoxMock.mockResolvedValue({ response: 'Hide' });
     vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue();
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem('Pods');
     menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
 
     await vi.waitFor(() => {
-      expect(dialog.showMessageBox).toHaveBeenCalled();
+      expect(showMessageBoxMock).toHaveBeenCalled();
     });
   });
 
@@ -139,7 +134,7 @@ describe('buildHideMenuItem', () => {
     getConfigurationMock.mockReturnValue({
       get: (key: string) => (key === 'hideConfirmationDismissed' ? false : []),
     } as unknown as ConfigurationRegistry);
-    vi.mocked(dialog.showMessageBox).mockResolvedValue({ response: 0, checkboxChecked: false });
+    showMessageBoxMock.mockResolvedValue({ response: 'Hide' });
     vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue();
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem('Pods');
@@ -158,13 +153,13 @@ describe('buildHideMenuItem', () => {
     getConfigurationMock.mockReturnValue({
       get: (key: string) => (key === 'hideConfirmationDismissed' ? false : []),
     } as unknown as ConfigurationRegistry);
-    vi.mocked(dialog.showMessageBox).mockResolvedValue({ response: 2, checkboxChecked: false });
+    showMessageBoxMock.mockResolvedValue({ response: 'Cancel' });
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem('Pods');
     menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
 
     await vi.waitFor(() => {
-      expect(dialog.showMessageBox).toHaveBeenCalled();
+      expect(showMessageBoxMock).toHaveBeenCalled();
     });
 
     expect(configurationRegistryMock.updateConfigurationValue).not.toHaveBeenCalledWith(
@@ -178,7 +173,7 @@ describe('buildHideMenuItem', () => {
     getConfigurationMock.mockReturnValue({
       get: (key: string) => (key === 'hideConfirmationDismissed' ? false : []),
     } as unknown as ConfigurationRegistry);
-    vi.mocked(dialog.showMessageBox).mockResolvedValue({ response: 1, checkboxChecked: false });
+    showMessageBoxMock.mockResolvedValue({ response: "Don't show again" });
     vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue();
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem('Pods');
@@ -216,7 +211,7 @@ describe('buildHideMenuItem', () => {
       );
     });
 
-    expect(dialog.showMessageBox).not.toHaveBeenCalled();
+    expect(showMessageBoxMock).not.toHaveBeenCalled();
   });
 });
 

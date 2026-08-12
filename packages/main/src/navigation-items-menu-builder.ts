@@ -16,11 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigationItemInfo, NavigationItemsPayload } from '@podman-desktop/core-api';
+import type {
+  MessageBoxOptions,
+  MessageBoxReturnValue,
+  NavigationItemInfo,
+  NavigationItemsPayload,
+} from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
-import { dialog } from 'electron';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
@@ -28,11 +32,16 @@ const EXCLUDED_ITEMS = ['Accounts', 'Settings', 'Containers', 'Images', 'Dashboa
 
 const EXPANDED_WIDTH = 160;
 
+export type ShowMessageBoxFn = (options: MessageBoxOptions) => Promise<MessageBoxReturnValue>;
+
 export class NavigationItemsMenuBuilder {
   private navigationItems: NavigationItemInfo[] = [];
   private activeItemName: string | undefined;
 
-  constructor(private configurationRegistry: ConfigurationRegistry) {}
+  constructor(
+    private configurationRegistry: ConfigurationRegistry,
+    private showMessageBox: ShowMessageBoxFn,
+  ) {}
 
   receiveNavigationItems(data: NavigationItemsPayload): void {
     this.navigationItems = data.items;
@@ -92,7 +101,7 @@ export class NavigationItemsMenuBuilder {
       return true;
     }
 
-    const result = await dialog.showMessageBox({
+    const result = await this.showMessageBox({
       type: 'question',
       title: 'Hide From Navigation Bar',
       message: `Hide "${itemName}" from the navigation bar?`,
@@ -103,11 +112,11 @@ export class NavigationItemsMenuBuilder {
       cancelId: 2,
     });
 
-    if (result.response === 2) {
+    if (result.response === 'Cancel') {
       return false;
     }
 
-    if (result.response === 1) {
+    if (result.response === "Don't show again") {
       await this.dismissHideConfirmation();
     }
 

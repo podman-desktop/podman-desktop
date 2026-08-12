@@ -835,6 +835,7 @@ export class PluginSystem {
 
     // setup security restrictions on links
     const messageBox = container.get<MessageBox>(MessageBox);
+    ipcMain.emit('message-box', '', messageBox);
     const imageChecker = container.get<ImageCheckerImpl>(ImageCheckerImpl);
     const imageFiles = container.get<ImageFilesRegistry>(ImageFilesRegistry);
     const viewRegistry = container.get<ViewRegistry>(ViewRegistry);
