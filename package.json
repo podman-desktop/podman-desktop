@@ -157,7 +157,7 @@
     "@typescript-eslint/eslint-plugin": "^8.66.0",
     "@typescript-eslint/parser": "^8.66.0",
     "@vitest/coverage-v8": "^4.1.10",
-    "@vitest/eslint-plugin": "^1.6.26",
+    "@vitest/eslint-plugin": "^1.6.27",
     "cross-env": "10.1.0",
     "dts-for-context-bridge": "0.7.1",
     "electron": "43.2.0",
