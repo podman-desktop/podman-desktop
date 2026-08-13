@@ -33,11 +33,13 @@ const eventEmitter = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  messages.clear();
   vi.mocked(window.podmanDesktopUpdateAvailable).mockResolvedValue(false);
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     eventEmitter.receive(message, callback);
     return { dispose: vi.fn() };
   });
+  vi.spyOn(window, 'addEventListener').mockImplementation(eventEmitter.receive as any);
 });
 
 test('updateAvailable starts as podmanDesktopUpdateAvailable value or false if undefined', async () => {
