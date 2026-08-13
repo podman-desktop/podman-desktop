@@ -17,8 +17,6 @@
  ***********************************************************************/
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
 
 import '@testing-library/jest-dom/vitest';
 
@@ -39,8 +37,8 @@ async function waitRender(customProperties: any): Promise<void> {
 }
 
 beforeAll(() => {
-  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(true);
-  (window as any).telemetryPage = vi.fn().mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
 });
 
 const record: IConfigurationPropertyRecordedSchema = {
