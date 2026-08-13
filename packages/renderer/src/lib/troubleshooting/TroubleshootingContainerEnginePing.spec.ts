@@ -16,25 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import TroubleshootingContainerEnginePing from './TroubleshootingContainerEnginePing.svelte';
 
-const pingContainerEngineMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  (window as any).pingContainerEngine = pingContainerEngineMock;
-});
-
 test('Check ping button is available and click on it', async () => {
-  pingContainerEngineMock.mockReturnValue('OK');
+  vi.mocked(window.pingContainerEngine).mockResolvedValue('OK');
 
   const providerContainerEngine = {} as unknown as ProviderContainerConnectionInfo;
   render(TroubleshootingContainerEnginePing, { providerContainerEngine });
@@ -57,7 +48,7 @@ test('Check ping button is available and click on it', async () => {
 });
 
 test('Check ping button is available and get error', async () => {
-  pingContainerEngineMock.mockImplementation(() => {
+  vi.mocked(window.pingContainerEngine).mockImplementation(() => {
     throw new Error('Unable to ping container engine');
   });
 
