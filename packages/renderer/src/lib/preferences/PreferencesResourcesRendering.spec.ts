@@ -121,6 +121,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  vi.clearAllMocks();
   onboardingList.set([]);
 });
 
