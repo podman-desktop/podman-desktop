@@ -251,8 +251,7 @@ describe('CLI Tool item', () => {
   });
 
   test('check version is sent to updateCliTool', async () => {
-    const selectCliToolVersionToUpdateMock = vi.fn().mockResolvedValue('1.1.1');
-    (window as any).selectCliToolVersionToUpdate = selectCliToolVersionToUpdateMock;
+    vi.mocked(window.selectCliToolVersionToUpdate).mockResolvedValue('1.1.1');
     render(PreferencesCliTool, {
       cliTool: cliToolInfoItem4,
     });
@@ -262,7 +261,7 @@ describe('CLI Tool item', () => {
 
     await userEvent.click(updateAvailableElement);
 
-    expect(selectCliToolVersionToUpdateMock).toBeCalledWith(cliToolInfoItem4.id);
+    expect(vi.mocked(window.selectCliToolVersionToUpdate)).toBeCalledWith(cliToolInfoItem4.id);
     expect(vi.mocked(window.updateCliTool)).toBeCalledWith(
       cliToolInfoItem4.id,
       expect.any(Symbol),
