@@ -143,6 +143,7 @@ beforeAll(() => {
       showMessageBox: vi.fn(),
       executeCommand: vi.fn(),
       getUrlProtocol: vi.fn().mockResolvedValue('podman-desktop'),
+      selectCliToolVersionToUpdate: vi.fn(),
       navigator: {
         clipboard: {
           writeText: vi.fn(),
