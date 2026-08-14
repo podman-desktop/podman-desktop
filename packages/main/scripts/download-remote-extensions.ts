@@ -97,7 +97,9 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
 
   // if only one is defined => raise error
   if (!usernameValue || !secretValue) {
-    throw new Error(`if one of ${usernameKey} and ${secretKey} is specified, both need to be defined.`);
+    throw new Error(
+      `if one of ${usernameKey}/AUTH_REGISTRY_USER and ${secretKey}/AUTH_REGISTRY_SECRET is specified, both need to be defined.`,
+    );
   }
 
   return {
