@@ -448,7 +448,7 @@ function VendorCards(): JSX.Element {
             description="Red Hat offers the Red Hat Build of Podman Desktop with enterprise support, long-term maintenance, and production-ready builds."
             logo="/img/redhat-logo.svg"
             logoDark="/img/redhat-logo-dark.svg"
-            learnMore="https://developers.redhat.com/products/red-hat-build-podman-desktop"
+            learnMore="https://red.ht/redhatbuildofpodmandesktop"
             addClass="col-span-2"
           />
           <AddVendorCard />
