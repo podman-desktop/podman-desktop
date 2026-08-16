@@ -9,8 +9,12 @@ import KubeIngressStatusArtifact from '/@/lib/kube/details/KubeIngressStatusArti
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 import OpenshiftRouteArtifact from '/@/lib/kube/details/OpenshiftRouteArtifact.svelte';
 
-export let ingressRoute: V1Ingress | V1Route | undefined;
-export let kubeError: string | undefined = undefined;
+interface Props {
+  ingressRoute?: V1Ingress | V1Route;
+  kubeError?: string;
+}
+
+let { ingressRoute, kubeError }: Props = $props();
 
 // Determine if the artifact is an Ingress or a Route
 function isIngress(ingressRoute: V1Ingress | V1Route): ingressRoute is V1Ingress {

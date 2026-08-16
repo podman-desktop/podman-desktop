@@ -48,6 +48,7 @@ import type { CustomPickRegistry } from '/@/plugin/custompick/custompick-registr
 import type { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import type { Directories } from '/@/plugin/directories.js';
 import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import type { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { IconRegistry } from '/@/plugin/icon-registry.js';
@@ -324,6 +325,10 @@ const extensionAnalyzer = {
   analyzeExtension: vi.fn(),
 } as unknown as ExtensionAnalyzer;
 
+const extensionsBundle = {
+  all: vi.fn(),
+} as unknown as ExtensionsBundle;
+
 const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesktopAPI => {
   const analyzedExtension = {
     path: '/path',
@@ -394,6 +399,7 @@ beforeEach(() => {
     extensionAnalyzer,
     extensionApiVersion,
     featureRegistry,
+    extensionsBundle,
   );
 });
 
@@ -402,6 +408,8 @@ vi.mock(import('node:fs'));
 beforeEach(() => {
   telemetryTrackMock.mockResolvedValue(undefined);
   vi.clearAllMocks();
+
+  vi.mocked(extensionsBundle.all).mockReturnValue([]);
 
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: vi.fn().mockImplementation((key: string, defaultValue?: unknown) => {
@@ -415,33 +423,11 @@ beforeEach(() => {
 });
 
 describe('extensionLoader#start', () => {
-  test('should load extensions & extensions-extra', async () => {
-    vi.stubEnv('PROD', true);
-
-    const readProductionFoldersMock = vi.spyOn(extensionLoader, 'readProductionFolders');
-    readProductionFoldersMock.mockResolvedValue([]);
-    const readDevelopmentFoldersMock = vi.spyOn(extensionLoader, 'readDevelopmentFolders');
-    readDevelopmentFoldersMock.mockResolvedValue([]);
-
-    await extensionLoader.start();
-
-    expect(readProductionFoldersMock).toHaveBeenCalledOnce();
-    const prodFolder = readProductionFoldersMock.mock.calls[0]?.[0];
-    expect(prodFolder?.endsWith('extensions')).toBeTruthy();
-
-    expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
-    const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
-    expect(devFolder).toEqual(path.join(process.resourcesPath, 'extensions-extra'));
-  });
-
   test('error in one of analyzeExtension should not be dramatic', async () => {
     const fakeDirectory = '/fake/path/scanning';
 
     // fake scanning property
     extensionLoader.setPluginsScanDirectory(fakeDirectory);
-
-    vi.spyOn(extensionLoader, 'readProductionFolders').mockResolvedValue([]);
-    vi.spyOn(extensionLoader, 'readDevelopmentFolders').mockResolvedValue([]);
 
     const analyzeExtensionMock = vi.spyOn(extensionLoader, 'analyzeExtension');
     analyzeExtensionMock.mockRejectedValueOnce(new Error('Failed one'));
@@ -2778,172 +2764,6 @@ test('withProgress should add the extension id to the routeId', async () => {
     },
     expect.any(Function),
   );
-});
-
-describe('loading extension folders', () => {
-  const fileEntry = {
-    isDirectory: () => false,
-  } as unknown as fs.Dirent<string>;
-  const nodeModulesEntry = {
-    isDirectory: () => true,
-    name: 'node_modules',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry = {
-    isDirectory: () => true,
-    name: 'extension1',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry2 = {
-    isDirectory: () => true,
-    name: 'extension2',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry3 = {
-    isDirectory: () => true,
-    name: 'extension3',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry4 = {
-    isDirectory: () => true,
-    name: 'extension4',
-  } as unknown as fs.Dirent<string>;
-
-  describe('in dev mode', () => {
-    beforeEach(() => {
-      vi.restoreAllMocks();
-      vi.resetAllMocks();
-    });
-
-    test('ignores files', async () => {
-      readdirMock.mockResolvedValue([fileEntry]);
-
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('if folder does not exists do not readdir', async () => {
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-      expect(readdirMock).not.toHaveBeenCalled();
-    });
-    test('ignores node_modules folders', async () => {
-      readdirMock.mockResolvedValue([nodeModulesEntry]);
-
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('ignores folders without package.json', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-    });
-
-    test('recognizes a plain extension when only ext/package.json is present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(true);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1'));
-    });
-
-    test('recognizes as an api extension when only ext/packages/extension/package.json is present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension'));
-    });
-
-    test('recognizes as an api extension when ext/package.json and ext/packages/extension/package.json are present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension'));
-    });
-
-    test('works correctly for multiple different extensions, files and empty folders', async () => {
-      readdirMock.mockResolvedValue([fileEntry, dirEntry, dirEntry2, dirEntry3, dirEntry4]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        // an api extension
-        .mockReturnValueOnce(true)
-        // an plain extension
-        .mockReturnValueOnce(false) // plain extension
-        // priority to an api extension
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true) // priority to api extension
-        // ignore no package.json folders
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(3);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension'));
-      expect(folders[1]).toBe(path.join('path', 'extension2'));
-      expect(folders[2]).toBe(path.join('path', 'extension3', 'packages', 'extension'));
-    });
-  });
-
-  describe('in prod mode', () => {
-    test('ignores files', async () => {
-      readdirMock.mockResolvedValue([fileEntry]);
-
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('ignores node_modules folders', async () => {
-      readdirMock.mockResolvedValue([nodeModulesEntry]);
-
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('recognizes a plain extension when only ext/package.json is present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true);
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'builtin', 'extension1.cdix'));
-    });
-    test('recognizes an api extension when ext/package.json is not present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension', 'builtin', `extension1.cdix`));
-    });
-  });
 });
 
 test('reload extensions', async () => {

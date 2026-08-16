@@ -4,9 +4,12 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 
-export let extension: { icon?: string | { light: string; dark: string }; name: string; state: string };
+interface Props {
+  extension: { icon?: string | { light: string; dark: string }; name: string; state: string };
+}
+let { extension }: Props = $props();
 
-$: fade = extension.state !== 'started' ? ' brightness-50' : '';
+let fade = $derived(extension.state !== 'started' ? ' brightness-50' : '');
 </script>
 
 {#if extension.icon}

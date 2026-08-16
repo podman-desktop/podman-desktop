@@ -6,9 +6,12 @@ import { router } from 'tinro';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-export let extension: CombinedExtensionInfoUI;
-
-export let displayIcon: boolean = true;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+  displayIcon?: boolean;
+  class?: string;
+}
+let { extension, displayIcon = true, class: className }: Props = $props();
 
 function openDetailsExtension(): void {
   router.goto(`/extensions/details/${encodeURIComponent(extension.id)}/`);
@@ -16,12 +19,12 @@ function openDetailsExtension(): void {
 </script>
 
 <Tooltip top tip="{extension.name} extension details">
-  <button aria-label="{extension.name} extension details" type="button" on:click={openDetailsExtension}>
+  <button aria-label="{extension.name} extension details" type="button" onclick={openDetailsExtension}>
     <div class="flex flex-row items-center text-[var(--pd-content-header)]">
       {#if displayIcon}
         <Icon icon={faCircleInfo} />
       {/if}
-      <div class="text-left before:{$$props.class}">
+      <div class="text-left before:{className}">
         {extension.displayName} extension
       </div>
     </div>

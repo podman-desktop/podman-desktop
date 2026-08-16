@@ -22,12 +22,15 @@ import PreferencesConnectionDetailsTerminal from './PreferencesConnectionDetails
 import type { IConnectionRestart, IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
-export let providerInternalId: string | undefined = undefined;
-export let connectionName = '';
+interface Props {
+  providerInternalId?: string;
+  connectionName?: string;
+}
+let { providerInternalId, connectionName = '' }: Props = $props();
 
-let connectionStatus: IConnectionStatus;
-let connectionInfo: ProviderVmConnectionInfo | undefined;
-let providerInfo: ProviderInfo | undefined;
+let connectionStatus: IConnectionStatus | undefined = $state();
+let connectionInfo: ProviderVmConnectionInfo | undefined = $state();
+let providerInfo: ProviderInfo | undefined = $state();
 let loggerHandlerKey: symbol | undefined;
 
 let providersUnsubscribe: Unsubscriber;

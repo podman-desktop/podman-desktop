@@ -1,7 +1,10 @@
 <script lang="ts">
 import type { ExtensionDetailsUI } from './extension-details-ui';
 
-export let extension: ExtensionDetailsUI;
+interface Props {
+  extension: ExtensionDetailsUI;
+}
+let { extension }: Props = $props();
 </script>
 
 {#if extension.error}

@@ -1201,6 +1201,68 @@ describe('listContainers', () => {
     });
     expect(container?.State).toBe('running');
   });
+
+  test('list containers with Podman API and a multi-argument command', async () => {
+    const containersWithPodmanAPI = [
+      {
+        AutoRemove: false,
+        Command: ['ls', '-l', '/etc'],
+        Created: '2023-08-10T15:37:44.555961563+02:00',
+        CreatedAt: '',
+        Exited: true,
+        ExitedAt: 1691674673,
+        ExitCode: 0,
+        Id: '31a4b282691420be2611817f203765402d8da7e13cd530f80a6ddd1bb4aa63b4',
+        Image: 'docker.io/library/httpd:latest',
+        ImageID: '911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a',
+        IsInfra: false,
+        Labels: {},
+        Mounts: [],
+        Names: ['admiring_wing'],
+        Namespaces: {},
+        Networks: ['podman'],
+        Pid: 0,
+        Pod: '',
+        PodName: '',
+        Ports: [],
+        Restarts: 0,
+        Size: null,
+        StartedAt: 1691674664,
+        State: 'running',
+        Status: '',
+      },
+    ];
+
+    const handlers = [
+      http.get('http://localhost/v4.2.0/libpod/containers/json', () => HttpResponse.json(containersWithPodmanAPI)),
+
+      http.get('http://localhost/v4.2.0/libpod/pods/json', () => HttpResponse.json([])),
+    ];
+    server = setupServer(...handlers);
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+    const libpod = new LibpodDockerode();
+    libpod.enhancePrototypeWithLibPod();
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: dockerAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    const containers = await containerRegistry.listContainers();
+
+    // the whole command line, not only the executable: libpod reports Command
+    // as an array and the compatibility shape is a single string
+    expect(containers).toHaveLength(1);
+    expect(containers[0]?.Command).toBe('ls -l /etc');
+  });
 });
 
 test('pull unknown image fails with error 403', async () => {

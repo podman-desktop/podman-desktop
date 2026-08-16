@@ -5,7 +5,11 @@ import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
-export let artifact: V1ConfigMap | undefined;
+interface Props {
+  artifact?: V1ConfigMap;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}

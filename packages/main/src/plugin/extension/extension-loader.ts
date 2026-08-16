@@ -47,6 +47,7 @@ import { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { IconRegistry } from '/@/plugin/icon-registry.js';
@@ -225,6 +226,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private extensionApiVersion: ExtensionApiVersion,
     @inject(FeatureRegistry)
     private featureRegistry: FeatureRegistry,
+    @inject(ExtensionsBundle)
+    private extensionsBundle: ExtensionsBundle,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -482,36 +485,11 @@ export class ExtensionLoader implements IAsyncDisposable {
       fs.mkdirSync(this.extensionsStorageDirectory);
     }
 
-    let folders: string[];
-    // scan all extensions that we can find from the extensions folder
-    if (import.meta.env.PROD) {
-      // in production mode, use the extensions & extensions-extra locally
-      const promises = await Promise.all([
-        this.readProductionFolders(path.join(__dirname, '../../../extensions')),
-        this.readDevelopmentFolders(path.join(process.resourcesPath, 'extensions-extra')),
-      ]);
+    // Get the bundled extensions
+    const analyzedExtensions: AnalyzedExtension[] = this.extensionsBundle.all().filter(extension => !extension.error);
 
-      folders = promises.flat();
-    } else {
-      // in development mode, use the extensions locally
-      folders = await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions'));
-    }
+    // Get the external foldr extensions
     const externalExtensions = await this.readExternalFolders();
-    // ok now load grab all extensions from these folders
-    const analyzedExtensions: AnalyzedExtension[] = [];
-
-    const analyzedFoldersExtension = (
-      await Promise.all(
-        folders.map(folder =>
-          this.analyzeExtension({
-            extensionPath: folder,
-            removable: false,
-          }),
-        ),
-      )
-    ).filter(extension => !extension.error);
-    analyzedExtensions.push(...analyzedFoldersExtension);
-
     const analyzedExternalExtensions = (
       await Promise.all(
         externalExtensions.map(folder =>
@@ -674,26 +652,6 @@ export class ExtensionLoader implements IAsyncDisposable {
     return sorted;
   }
 
-  async readDevelopmentFolders(folderPath: string): Promise<string[]> {
-    // only readdir on existing folder
-    if (!fs.existsSync(folderPath)) return [];
-
-    const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
-    // filter only directories ignoring node_modules directory
-    return entries
-      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
-      .reduce((directories: string[], directory) => {
-        const apiExtFolder = path.join(folderPath, directory.name, 'packages', 'extension');
-        const plainExtFolder = path.join(folderPath, directory.name);
-        if (fs.existsSync(path.join(apiExtFolder, 'package.json'))) {
-          directories.push(apiExtFolder);
-        } else if (fs.existsSync(path.join(plainExtFolder, 'package.json'))) {
-          directories.push(plainExtFolder);
-        }
-        return directories;
-      }, []);
-  }
-
   async readExternalFolders(): Promise<string[]> {
     const pathes = [];
     for (let index = 0; index < process.argv.length; index++) {
@@ -703,22 +661,6 @@ export class ExtensionLoader implements IAsyncDisposable {
     }
     // filter all undefined values
     return pathes.filter(path => path !== undefined);
-  }
-
-  async readProductionFolders(folderPath: string): Promise<string[]> {
-    // only readdir on existing folder
-    if (!fs.existsSync(folderPath)) return [];
-
-    const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
-    return entries
-      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
-      .map(directory => {
-        const rootExtPath = path.join(folderPath, directory.name);
-        const plainExtPath = path.join(rootExtPath, 'builtin', `${directory.name}.cdix`);
-        return fs.existsSync(plainExtPath)
-          ? plainExtPath
-          : path.join(rootExtPath, 'packages', 'extension', 'builtin', `${directory.name}.cdix`);
-      });
   }
 
   /**
