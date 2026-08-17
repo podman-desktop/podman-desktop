@@ -448,8 +448,8 @@ importers:
         specifier: ^7.8.5
         version: 7.8.5
       smol-toml:
-        specifier: 1.7.1
-        version: 1.7.1
+        specifier: 1.8.0
+        version: 1.8.0
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -11304,8 +11304,8 @@ packages:
     resolution: {integrity: sha512-aqVvWoyO21L23mb+drl4RmMXbf6N7FdHjAhTRA9ZBL7apWBgfWC16KjrASI+1p9GAroljyMHj6fK67i0UiTNvQ==}
     engines: {node: '>= 18'}
 
-  smol-toml@1.7.1:
-    resolution: {integrity: sha512-PPlsspAZ4jbMBu5DMFhfUGDQLu/vrL4SyBROVS37x8ynnVmFIs1VPBz1Co8Xks3TvpIaZXmU85y4DrQ+UyVFoQ==}
+  smol-toml@1.8.0:
+    resolution: {integrity: sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ==}
     engines: {node: '>= 18'}
 
   snake-case@3.0.4:
@@ -24787,7 +24787,7 @@ snapshots:
 
   smol-toml@1.7.0: {}
 
-  smol-toml@1.7.1: {}
+  smol-toml@1.8.0: {}
 
   snake-case@3.0.4:
     dependencies:
