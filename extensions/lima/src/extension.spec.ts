@@ -18,10 +18,11 @@
 
 import * as fs from 'node:fs';
 import * as os from 'node:os';
+import * as path from 'node:path';
 
 import type * as extensionApi from '@podman-desktop/api';
 import * as podmanDesktopApi from '@podman-desktop/api';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { activate, deactivate } from './extension';
 import { ImageHandler } from './image-handler';
@@ -96,6 +97,53 @@ describe('activate', () => {
 
     expect(podmanDesktopApi.provider.createProvider).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Lima', id: 'lima' }),
+    );
+  });
+});
+
+describe('unset settings returning an empty string', () => {
+  // the configuration schema in package.json declares `""` as the default value of
+  // lima.home, lima.name and lima.socket, so `get()` hands back an empty string
+  // (not undefined) for every setting the user did not touch.
+  beforeEach(() => {
+    vi.stubEnv('LIMA_HOME', undefined);
+
+    vi.mocked(podmanDesktopApi.configuration.getConfiguration).mockReturnValue({
+      get: vi.fn().mockImplementation((key: string) => {
+        switch (key) {
+          case 'type':
+            return 'docker';
+          default:
+            return '';
+        }
+      }),
+    } as unknown as podmanDesktopApi.Configuration);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test('should derive the socket path from the engine type', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    await activate(createExtensionContext());
+
+    expect(fs.existsSync).toHaveBeenCalledWith(path.resolve('/home/testuser/.lima', 'docker/sock/docker.sock'));
+  });
+
+  test('should register the container provider connection found at the derived socket path', async () => {
+    const expectedSocketPath = path.resolve('/home/testuser/.lima', 'docker/sock/docker.sock');
+    vi.mocked(fs.existsSync).mockImplementation((p: fs.PathLike) => String(p) === expectedSocketPath);
+
+    await activate(createExtensionContext());
+
+    expect(PROVIDER_MOCK.registerContainerProviderConnection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Lima docker',
+        type: 'docker',
+        endpoint: { socketPath: expectedSocketPath },
+      }),
     );
   });
 });

@@ -14,6 +14,7 @@ import {
   InitializeOnlyMode,
 } from './ProviderInitUtils';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
+import ProviderWarnings from './ProviderWarnings.svelte';
 
 interface Props {
   provider: ProviderInfo;
@@ -64,6 +65,7 @@ onMount(async () => {
           v{provider.version}
         {/if} needs to be started.
       </p>
+      <ProviderWarnings provider={provider} />
       <div class="w-1/3 flex justify-center">
         <Button on:click={runProvider}>
           Run {provider.name}

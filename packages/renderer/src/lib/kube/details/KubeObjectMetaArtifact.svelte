@@ -7,7 +7,11 @@ import Title from '/@/lib/details/DetailsTitle.svelte';
 
 import { internalKubernetesKeys } from './utils';
 
-export let artifact: V1ObjectMeta | undefined;
+interface Props {
+  artifact?: V1ObjectMeta;
+}
+
+let { artifact }: Props = $props();
 
 if (artifact?.creationTimestamp) {
   artifact.creationTimestamp = new Date(artifact.creationTimestamp);

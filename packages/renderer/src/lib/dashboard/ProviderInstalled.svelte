@@ -22,6 +22,7 @@ import {
   InitializeOnlyMode,
 } from './ProviderInitUtils';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
+import ProviderWarnings from './ProviderWarnings.svelte';
 
 export let provider: ProviderInfo;
 export let initializationContext: InitializationContext;
@@ -167,6 +168,8 @@ async function onInstallationClick(): Promise<void> {
     <p class="text-sm text-[var(--pd-content-text)] w-2/3 text-center" aria-label="Suggested Actions">
       To start working with containers, {provider.name} needs to be initialized.
     </p>
+
+    <ProviderWarnings provider={provider} />
 
     <div class="flex space-x-2 mb-2">
       {#if provider.installationSupport}
