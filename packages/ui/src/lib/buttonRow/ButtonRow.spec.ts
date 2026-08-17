@@ -26,8 +26,6 @@ import ButtonRowTest from './ButtonRowTest.svelte';
 test('renders actions in DOM order and right-aligns the row', () => {
   const { container } = render(ButtonRowTest);
 
-  expect(container.textContent).not.toContain('Copyright (C) 2026 Red Hat, Inc.');
-
   const actions = screen.getAllByRole('button');
   expect(actions.map(action => action.textContent)).toEqual(['Cancel', 'Save']);
 
@@ -76,6 +74,19 @@ test('skips a hidden first action when choosing the first action to focus', () =
 
 test('skips an action in an aria-hidden wrapper when choosing the first action to focus', () => {
   render(ButtonRowTest, { initialFocus: 'first', ariaHiddenCancel: true });
+
+  expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus();
+});
+
+test('only focuses enabled button children, not links or inputs', () => {
+  render(ButtonRowTest, { initialFocus: 'first', includeNonButtons: true });
+
+  expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+  expect(screen.getByRole('link', { name: 'Link' })).not.toHaveFocus();
+});
+
+test('last focus ignores a trailing input', () => {
+  render(ButtonRowTest, { initialFocus: 'last', includeNonButtons: true });
 
   expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus();
 });

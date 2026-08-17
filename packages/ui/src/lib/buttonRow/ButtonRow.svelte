@@ -23,9 +23,7 @@ function focusInitialAction(): void {
   }
 
   const focusableActions = Array.from(
-    buttonRow.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-    ),
+    buttonRow.querySelectorAll<HTMLElement>('button:not([disabled])'),
   ).filter(action => action.closest('[hidden], [aria-hidden="true"]') === null);
   const action = initialFocus === 'first' ? focusableActions[0] : focusableActions[focusableActions.length - 1];
   action?.focus();
