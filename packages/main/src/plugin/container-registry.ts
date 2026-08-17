@@ -20,8 +20,9 @@ import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
@@ -73,7 +74,7 @@ import type {
   ContainerCreatePortMappingOption,
   PodmanDevice,
 } from '@podman-desktop/core-api/libpod';
-import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import { PlayKubeInfo, PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
@@ -2714,7 +2715,7 @@ export class ContainerProviderRegistry {
   }
 
   async playKube(
-    kubernetesYamlFilePath: string,
+    input: PlayKubeInput,
     selectedProvider: ProviderContainerConnectionInfo,
     options?: {
       build?: boolean;
@@ -2732,9 +2733,10 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      // if we don't build, we use the file directory
+      // if we don't build, we can pass the input straight through
       if (!options?.build) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       // ensure build support is true, otherwise let's throw a nice user friendly error
@@ -2744,12 +2746,16 @@ export class ContainerProviderRegistry {
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
 
-      const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
+      const kubePlay =
+        input.type === 'path'
+          ? KubePlayContext.fromFile(input.value)
+          : KubePlayContext.fromContent(input.value, tmpdir());
       await kubePlay.init();
 
       // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       return provider.libpodApi.playKube(kubePlay.build(), options);
