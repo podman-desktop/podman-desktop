@@ -20,7 +20,7 @@ import { useColorMode } from '@docusaurus/theme-common';
 import ThemedImage from '@theme/ThemedImage';
 import { useEffect, useRef } from 'react';
 
-import { ParticleSimulation, resolveConfig } from './particle-simulation';
+import { needsParticlePoolRecreation, ParticleSimulation, resolveConfig } from './particle-simulation';
 import { atlasSrcForColorMode, TITLE_DARK_SRC, TITLE_LIGHT_SRC } from './theme-assets';
 
 // TODO: replace with the published blog post URL once it exists.
@@ -65,8 +65,8 @@ function Banner(): JSX.Element {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Recomputed (rather than resized in place) on breakpoint changes, since particleCount
-    // and row layout are fixed at construction time.
+    // Rebuilt only when particleCount or spriteVariantCount changes at a breakpoint;
+    // otherwise updateConfig keeps sprite choices and path progress across resizes.
     function createSimulation(width: number): ParticleSimulation {
       return new ParticleSimulation(resolveConfig(width));
     }
@@ -140,10 +140,19 @@ function Banner(): JSX.Element {
       animationFrameId = window.requestAnimationFrame(tick);
     }
 
-    // Handle resize events by recreating the simulation state and redrawing.
+    // Handle resize by updating layout config in place; rebuild pools only when the
+    // breakpoint changes particle count or sprite variant count.
     function handleResize(): void {
-      simulation = createSimulation(container.clientWidth);
-      config = simulation.config;
+      const width = container.clientWidth;
+      const nextConfig = resolveConfig(width);
+
+      if (needsParticlePoolRecreation(config, nextConfig)) {
+        simulation = createSimulation(width);
+        config = simulation.config;
+      } else {
+        simulation.updateConfig(nextConfig);
+        config = nextConfig;
+      }
 
       resize();
       draw();

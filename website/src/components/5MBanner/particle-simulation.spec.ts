@@ -24,6 +24,7 @@ import {
   depthScale,
   easePostBendProgress,
   getAtlasCellRect,
+  needsParticlePoolRecreation,
   ParticleRow,
   ParticleSimulation,
   pathX,
@@ -289,6 +290,41 @@ test('computeDrawRect matches manual math at a known point', () => {
   expect(rect.size).toBe(size);
   expect(rect.x).toBeCloseTo(-PERSPECTIVE_TEST_CONFIG.offscreenMargin - size / 2, 5);
   expect(rect.y).toBeCloseTo(PERSPECTIVE_TEST_CONFIG.redZoneHeight / 2 - size / 2, 5);
+});
+
+test('needsParticlePoolRecreation is false when only layout fields change', () => {
+  const mobile = resolveConfig(320);
+  const tablet = resolveConfig(900);
+
+  expect(needsParticlePoolRecreation(mobile, tablet)).toBe(false);
+});
+
+test('needsParticlePoolRecreation is true when particleCount changes across breakpoints', () => {
+  const mobile = resolveConfig(320);
+  const desktop = resolveConfig(1920);
+
+  expect(needsParticlePoolRecreation(mobile, desktop)).toBe(true);
+});
+
+test('ParticleSimulation.updateConfig updates layout without resetting pool state', () => {
+  const simulation = new ParticleSimulation({ ...DEFAULT_CONFIG, particleCount: 9 }, () => 0.5);
+  const spriteIndicesBefore = simulation.rows.map(row => Array.from(row.pool.spriteIndex));
+  const tBefore = Array.from(simulation.rows[0].pool.t);
+  const nextConfig = {
+    ...DEFAULT_CONFIG,
+    particleCount: 9,
+    redZoneHeight: 99,
+    rowBaselineOffsets: [-10, 5, 20] as const,
+  };
+
+  simulation.updateConfig(nextConfig);
+
+  expect(simulation.config.redZoneHeight).toBe(99);
+  expect(simulation.rows[0].baselineOffset).toBe(-10);
+  expect(simulation.rows[1].baselineOffset).toBe(5);
+  expect(simulation.rows[2].baselineOffset).toBe(20);
+  expect(simulation.rows.map(row => Array.from(row.pool.spriteIndex))).toEqual(spriteIndicesBefore);
+  expect(Array.from(simulation.rows[0].pool.t)).toEqual(tBefore);
 });
 
 test('ParticleSimulation gives each row the same count so columns share a t lattice', () => {

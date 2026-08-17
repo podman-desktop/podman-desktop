@@ -361,11 +361,22 @@ export function computeDrawRect(
   };
 }
 
+/** True when a viewport-driven config change requires rebuilding particle pools (count or atlas variants). */
+export function needsParticlePoolRecreation(
+  previousConfig: FiveMillionBannerConfig,
+  nextConfig: FiveMillionBannerConfig,
+): boolean {
+  return (
+    previousConfig.particleCount !== nextConfig.particleCount ||
+    previousConfig.spriteVariantCount !== nextConfig.spriteVariantCount
+  );
+}
+
 /** One depth layer: SoA particle pool plus bend and baseline for that row. */
 export class ParticleRow {
   readonly pool: ParticlePool;
-  readonly bendScale: number;
-  readonly baselineOffset: number;
+  bendScale: number;
+  baselineOffset: number;
 
   constructor(
     count: number,
@@ -377,6 +388,12 @@ export class ParticleRow {
     this.bendScale = bendScale;
     this.baselineOffset = baselineOffset;
     this.pool = createParticlePool(count, spriteVariantCount, rng);
+  }
+
+  /** Updates row layout from a new config without touching particle pool state. */
+  updateLayout(bendScale: number, baselineOffset: number): void {
+    this.bendScale = bendScale;
+    this.baselineOffset = baselineOffset;
   }
 
   /** Advances this row's particles along the shared travel duration. */
@@ -412,11 +429,15 @@ export class ParticleRow {
  * Draw order is far first so nearer rows occlude farther ones.
  */
 export class ParticleSimulation {
-  readonly config: FiveMillionBannerConfig;
+  private _config: FiveMillionBannerConfig;
   readonly rows: readonly ParticleRow[];
 
+  get config(): FiveMillionBannerConfig {
+    return this._config;
+  }
+
   constructor(config: FiveMillionBannerConfig, rng: () => number = Math.random) {
-    this.config = config;
+    this._config = config;
 
     // Same count per row is required for column alignment: t is initialized as i/count, so a
     // remainder dumped onto one row would use a different spacing and shift that row horizontally.
@@ -432,6 +453,15 @@ export class ParticleSimulation {
           rng,
         ),
     );
+  }
+
+  /** Applies a new config while keeping existing particle positions and sprite choices. */
+  updateConfig(config: FiveMillionBannerConfig): void {
+    this._config = config;
+
+    for (let index = 0; index < this.rows.length; index++) {
+      this.rows[index].updateLayout(config.rowBendScales[index], config.rowBaselineOffsets[index]);
+    }
   }
 
   /** Advances every row by the same time delta. */
