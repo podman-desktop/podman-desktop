@@ -31,7 +31,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tsconfig/svelte": "^5.0.8",
-    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
     "autoprefixer": "^10.5.4",
     "cross-env": "10.1.0",
     "eslint-plugin-storybook": "10.5.7",
