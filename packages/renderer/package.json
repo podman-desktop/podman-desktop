@@ -48,7 +48,7 @@
     "@xterm/xterm": "^6.0.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-search": "^0.16.0",
-    "vitest-canvas-mock": "^1.1.4",
+    "vitest-canvas-mock": "^1.1.5",
     "yaml": "^2.9.0"
   },
   "dependencies": {

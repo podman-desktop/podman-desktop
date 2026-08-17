@@ -890,8 +890,8 @@ importers:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.2.1(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.12)(yaml@2.9.0))
       vitest-canvas-mock:
-        specifier: ^1.1.4
-        version: 1.1.4(vitest@4.1.10)
+        specifier: ^1.1.5
+        version: 1.1.5(vitest@4.1.10)
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
@@ -12259,8 +12259,8 @@ packages:
       vite:
         optional: true
 
-  vitest-canvas-mock@1.1.4:
-    resolution: {integrity: sha512-4boWHY+STwAxGl1+uwakNNoQky5EjPLC8HuponXNoAscYyT1h/F7RUvTkl4IyF/MiWr3V8Q626je3Iel3eArqA==}
+  vitest-canvas-mock@1.1.5:
+    resolution: {integrity: sha512-PWtzolkO/GsG9I9qsLxJ8HzdXQKNz1iRVUcCDJbNBiDuxMp50NC1MWwz2UmDYS4vJqNeKyoLWm7RgjfKWIoQOQ==}
     peerDependencies:
       vitest: ^3.0.0 || ^4.0.0
 
@@ -25842,7 +25842,7 @@ snapshots:
     optionalDependencies:
       vite: 8.2.1(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.12)(yaml@2.9.0)
 
-  vitest-canvas-mock@1.1.4(vitest@4.1.10):
+  vitest-canvas-mock@1.1.5(vitest@4.1.10):
     dependencies:
       cssfontparser: 1.2.1
       moo-color: 1.0.3
