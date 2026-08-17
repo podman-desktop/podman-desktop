@@ -21,16 +21,9 @@ import '@testing-library/jest-dom/vitest';
 import type { ExtensionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import ExtensionIcon from './ExtensionIcon.svelte';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
-beforeAll(() => {
-  (window as any).getConfigurationValue = vi.fn();
-});
 
 test('Expect started icon', async () => {
   const extension: ExtensionInfo = {

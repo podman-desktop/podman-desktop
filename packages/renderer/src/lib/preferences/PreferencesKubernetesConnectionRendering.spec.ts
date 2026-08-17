@@ -16,10 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
@@ -46,9 +42,6 @@ test('Expect that removing the connection is going back to the previous page', a
   const kindCluster3 = 'kind cluster 3';
 
   const routerGotoSpy = vi.spyOn(router, 'goto');
-
-  const deleteMock = vi.fn();
-  (window as any).deleteProviderConnectionLifecycle = deleteMock;
 
   const providerInfo: ProviderInfo = {
     id: 'kind',
@@ -123,7 +116,7 @@ test('Expect that removing the connection is going back to the previous page', a
   const apiUrlBase64 = Buffer.from('http://localhost:8181').toString('base64');
 
   // delete current cluster 2 from the provider info
-  deleteMock.mockImplementation(() => {
+  vi.mocked(window.deleteProviderConnectionLifecycle).mockImplementation(async () => {
     providerInfos.update(providerInfos =>
       providerInfos.map(provider => {
         provider.kubernetesConnections = provider.kubernetesConnections.filter(
@@ -165,9 +158,6 @@ test('Expect that removing the connection is going back to the previous page', a
 test('Expect to see error message if action fails', async () => {
   const apiURL = 'http://localhost:8081';
   const kindCluster = 'kind cluster';
-
-  const deleteMock = vi.fn();
-  (window as any).deleteProviderConnectionLifecycle = deleteMock;
 
   const providerInfo: ProviderInfo = {
     id: 'kind',
@@ -217,7 +207,7 @@ test('Expect to see error message if action fails', async () => {
   const apiUrlBase64 = Buffer.from(apiURL).toString('base64');
 
   // simulate that the delete action fails
-  deleteMock.mockRejectedValue('failed to delete machine');
+  vi.mocked(window.deleteProviderConnectionLifecycle).mockRejectedValue('failed to delete machine');
 
   render(PreferencesKubernetesConnectionRendering, {
     apiUrlBase64,

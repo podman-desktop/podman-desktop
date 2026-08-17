@@ -84,6 +84,7 @@ import type { ActivatedExtension, AnalyzedExtensionWithApi, RequireCacheDict } f
 import { ExtensionLoader } from './extension-loader.js';
 import type { ExtensionManifest } from './extension-manifest-schema.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
+import type { ExtensionsExternal } from './local/extensions-external.js';
 
 vi.mock(import('node:fs'));
 
@@ -329,6 +330,10 @@ const extensionsBundle = {
   all: vi.fn(),
 } as unknown as ExtensionsBundle;
 
+const extensionsExternal = {
+  all: vi.fn(),
+} as unknown as ExtensionsExternal;
+
 const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesktopAPI => {
   const analyzedExtension = {
     path: '/path',
@@ -400,6 +405,7 @@ beforeEach(() => {
     extensionApiVersion,
     featureRegistry,
     extensionsBundle,
+    extensionsExternal,
   );
 });
 
@@ -410,6 +416,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 
   vi.mocked(extensionsBundle.all).mockReturnValue([]);
+  vi.mocked(extensionsExternal.all).mockReturnValue([]);
 
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: vi.fn().mockImplementation((key: string, defaultValue?: unknown) => {

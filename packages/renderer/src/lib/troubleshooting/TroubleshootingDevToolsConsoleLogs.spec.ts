@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
@@ -26,18 +24,9 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import TroubleshootingDevToolsConsoleLogs from './TroubleshootingDevToolsConsoleLogs.svelte';
 
-const getDevtoolsConsoleLogsMock = vi.fn();
-const clipboardWriteTextMock = vi.fn();
-const getConfigurationValueMock = vi.fn();
-const updateConfigurationValueMock = vi.fn();
-
 beforeAll(() => {
-  (window as any).getDevtoolsConsoleLogs = getDevtoolsConsoleLogsMock;
-  (window as any).clipboardWriteText = clipboardWriteTextMock;
-  (window as any).getConfigurationValue = getConfigurationValueMock;
-  (window as any).updateConfigurationValue = updateConfigurationValueMock;
-  getConfigurationValueMock.mockResolvedValue(false);
-  updateConfigurationValueMock.mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue(undefined);
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -47,7 +36,7 @@ async function waitRender(customProperties: object): Promise<void> {
 
 test('Check logs are displayed with clipboard button', async () => {
   const fixedDate = new Date('2026-04-29T14:30:45');
-  getDevtoolsConsoleLogsMock.mockReturnValue([
+  vi.mocked(window.getDevtoolsConsoleLogs).mockResolvedValue([
     {
       logType: 'log',
       message: 'test1',
@@ -78,12 +67,12 @@ test('Check logs are displayed with clipboard button', async () => {
   await fireEvent.click(clipboardButton);
 
   // timestamps are hidden by default, so clipboard should not include them
-  expect(clipboardWriteTextMock).toHaveBeenCalledWith('log : test1\nerror : test2');
+  expect(window.clipboardWriteText).toHaveBeenCalledWith('log : test1\nerror : test2');
 });
 
 test('Timestamps are hidden by default and shown after toggle', async () => {
   const fixedDate = new Date('2026-04-29T14:30:45');
-  getDevtoolsConsoleLogsMock.mockReturnValue([{ logType: 'log', message: 'hello', date: fixedDate }]);
+  vi.mocked(window.getDevtoolsConsoleLogs).mockResolvedValue([{ logType: 'log', message: 'hello', date: fixedDate }]);
 
   await waitRender({});
 
@@ -107,23 +96,23 @@ test('Timestamps are hidden by default and shown after toggle', async () => {
 });
 
 test('Toggle persists the setting via updateConfigurationValue', async () => {
-  getDevtoolsConsoleLogsMock.mockReturnValue([{ logType: 'log', message: 'hello', date: new Date() }]);
+  vi.mocked(window.getDevtoolsConsoleLogs).mockResolvedValue([{ logType: 'log', message: 'hello', date: new Date() }]);
 
   await waitRender({});
 
   const toggleButton = screen.getByRole('button', { name: 'Toggle Timestamps' });
   await fireEvent.click(toggleButton);
 
-  expect(updateConfigurationValueMock).toHaveBeenCalledWith('troubleshooting.logsTimestamps', true);
+  expect(vi.mocked(window.updateConfigurationValue)).toHaveBeenCalledWith('troubleshooting.logsTimestamps', true);
 
   await fireEvent.click(toggleButton);
 
-  expect(updateConfigurationValueMock).toHaveBeenCalledWith('troubleshooting.logsTimestamps', false);
+  expect(vi.mocked(window.updateConfigurationValue)).toHaveBeenCalledWith('troubleshooting.logsTimestamps', false);
 });
 
 test('Clipboard includes timestamps when toggle is enabled', async () => {
   const fixedDate = new Date('2026-04-29T14:30:45');
-  getDevtoolsConsoleLogsMock.mockReturnValue([
+  vi.mocked(window.getDevtoolsConsoleLogs).mockResolvedValue([
     { logType: 'log', message: 'test1', date: fixedDate },
     { logType: 'error', message: 'test2', date: fixedDate },
   ]);
@@ -138,5 +127,5 @@ test('Clipboard includes timestamps when toggle is enabled', async () => {
   const clipboardButton = screen.getByRole('button', { name: 'Copy To Clipboard' });
   await fireEvent.click(clipboardButton);
 
-  expect(clipboardWriteTextMock).toHaveBeenCalledWith('14:30:45 log : test1\n14:30:45 error : test2');
+  expect(window.clipboardWriteText).toHaveBeenCalledWith('14:30:45 log : test1\n14:30:45 error : test2');
 });

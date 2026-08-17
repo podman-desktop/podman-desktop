@@ -1,17 +1,17 @@
 {
   "versions": {
     "v5": {
-      "version": "5.8.5",
-      "tagVersion": "v5.8.5",
+      "version": "5.8.6",
+      "tagVersion": "v5.8.6",
       "releaseNotes": {
-        "href": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.5"
+        "href": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.6"
       }
     },
     "v6": {
-      "version": "6.0.2",
-      "tagVersion": "v6.0.2",
+      "version": "6.1.0",
+      "tagVersion": "v6.1.0",
       "releaseNotes": {
-        "href": "https://github.com/podman-container-tools/podman/releases/tag/v6.0.2"
+        "href": "https://github.com/podman-container-tools/podman/releases/tag/v6.1.0"
       }
     }
   },
@@ -32,11 +32,11 @@
       "arch": {
         "x64": {
           "versionRef": "v5",
-          "fileName": "podman-installer-macos-amd64-v5.8.5.pkg"
+          "fileName": "podman-installer-macos-amd64-v5.8.6.pkg"
         },
         "arm64": {
           "versionRef": "v6",
-          "fileName": "podman-installer-macos-aarch64-v6.0.2.pkg"
+          "fileName": "podman-installer-macos-aarch64-v6.1.0.pkg"
         }
       }
     }
