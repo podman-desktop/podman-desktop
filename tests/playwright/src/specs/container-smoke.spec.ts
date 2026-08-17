@@ -130,7 +130,9 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     // on Windows podman does not capture TTY output so the empty state is shown instead
     await containersDetails.activateTab('Logs');
     const noLogsHeading = containersDetails.tabContent.getByRole('heading', { name: 'No Log' });
-    await playExpect(containersDetails.terminalContent.or(noLogsHeading)).toBeVisible();
+    await playExpect
+      .poll(async () => (await containersDetails.terminalContent.isVisible()) || (await noLogsHeading.isVisible()))
+      .toBeTruthy();
     // Switch between various other tabs, no checking of the content
     await containersDetails.activateTab('Inspect');
     await containersDetails.activateTab('Kube');
