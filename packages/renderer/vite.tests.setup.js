@@ -18,7 +18,6 @@
 
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
-import 'vitest-canvas-mock';
 import typescript from 'typescript';
 import { EventStore } from './src/stores/event-store';
 import { vi } from 'vitest';
