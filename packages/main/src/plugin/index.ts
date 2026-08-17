@@ -162,6 +162,7 @@ import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.j
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
 import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
+import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-external.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
@@ -804,6 +805,7 @@ export class PluginSystem {
 
     container.bind<ExtensionApiVersion>(ExtensionApiVersion).toSelf().inSingletonScope();
     container.bind<ExtensionsBundle>(ExtensionsBundle).toSelf().inSingletonScope();
+    container.bind<ExtensionsExternal>(ExtensionsExternal).toSelf().inSingletonScope();
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
     this.extensionLoader = await container.getAsync<ExtensionLoader>(ExtensionLoader);

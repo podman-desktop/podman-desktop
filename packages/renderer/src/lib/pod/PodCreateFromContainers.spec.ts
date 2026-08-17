@@ -18,8 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInspectInfo } from '@podman-desktop/api';
-import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { ContainerInspectInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
@@ -243,10 +242,8 @@ test('Expect to see name input, containers and exposed ports list', async () => 
 });
 
 test('Show error if pod creation fails', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).getContainerInspect = vi.fn().mockResolvedValue(containerInspectInfo);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).createPod = vi.fn().mockRejectedValue('error create pod');
+  vi.mocked(window.getContainerInspect).mockResolvedValue(containerInspectInfo);
+  vi.mocked(window.createPod).mockRejectedValue('error create pod');
   providerInfos.set([providerInfo]);
   podCreationHolder.set(podCreation);
 

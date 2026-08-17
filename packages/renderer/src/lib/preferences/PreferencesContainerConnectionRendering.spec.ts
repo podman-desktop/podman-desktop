@@ -16,10 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
@@ -150,9 +146,6 @@ test('Expect that removing the connection is going back to the previous page', a
 
   const routerGotoSpy = vi.spyOn(router, 'goto');
 
-  const deleteMock = vi.fn();
-  (window as any).deleteProviderConnectionLifecycle = deleteMock;
-
   const providerInfo: ProviderInfo = {
     ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
@@ -214,7 +207,7 @@ test('Expect that removing the connection is going back to the previous page', a
   lastPage.set({ name: 'Fake Previous', path: '/last' });
 
   // delete current machine 2 from the provider info
-  deleteMock.mockImplementation(() => {
+  vi.mocked(window.deleteProviderConnectionLifecycle).mockImplementation(async () => {
     providerInfos.update(providerInfos =>
       providerInfos.map(provider => {
         provider.containerConnections = provider.containerConnections.filter(
@@ -258,9 +251,6 @@ test('Expect to see error message if action fails', async () => {
   const socketPath = '/my/common-socket-path';
   const podmanMachineName = 'podman machine';
 
-  const deleteMock = vi.fn();
-  (window as any).deleteProviderConnectionLifecycle = deleteMock;
-
   const providerInfo: ProviderInfo = {
     ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
@@ -290,7 +280,7 @@ test('Expect to see error message if action fails', async () => {
   const connection = Buffer.from(socketPath).toString('base64');
 
   // simulate that the delete action fails
-  deleteMock.mockRejectedValue('failed to delete machine');
+  vi.mocked(window.deleteProviderConnectionLifecycle).mockRejectedValue('failed to delete machine');
 
   render(PreferencesContainerConnectionRendering, {
     name,
@@ -322,11 +312,6 @@ test('Expect to see error message if action fails', async () => {
 test('Expect startContainerProvider to only be called once when restarting', async () => {
   const socketPath = '/my/common-socket-path';
   const podmanMachineName = 'podman machine';
-
-  const stopConnectionMock = vi.fn();
-  const startConnectionMock = vi.fn();
-  (window as any).stopProviderConnectionLifecycle = stopConnectionMock;
-  (window as any).startProviderConnectionLifecycle = startConnectionMock;
 
   const providerInfo: ProviderInfo = {
     ...EMPTY_PROVIDER_MOCK,
@@ -376,18 +361,13 @@ test('Expect startContainerProvider to only be called once when restarting', asy
   providerInfo.containerConnections[0].status = 'started';
   providerInfos.set([providerInfo]);
 
-  expect(startConnectionMock).toBeCalledTimes(1);
+  expect(window.startProviderConnectionLifecycle).toBeCalledTimes(1);
 });
 
 test('Expect display name to be used in favor of name for page title', async () => {
   const socketPath = '/my/common-socket-path';
   const podmanMachineName = 'podman-machine-default';
   const podmanMachineDisplayName = 'Dummy Podman Display Name';
-
-  const stopConnectionMock = vi.fn();
-  const startConnectionMock = vi.fn();
-  (window as any).stopProviderConnectionLifecycle = stopConnectionMock;
-  (window as any).startProviderConnectionLifecycle = startConnectionMock;
 
   const providerInfo: ProviderInfo = {
     ...EMPTY_PROVIDER_MOCK,

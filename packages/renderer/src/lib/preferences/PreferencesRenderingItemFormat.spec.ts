@@ -17,8 +17,6 @@
  ***********************************************************************/
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
 
 import '@testing-library/jest-dom/vitest';
 
@@ -429,7 +427,7 @@ test('Expect value is updated from an external change', async () => {
   expect(inputField.value).toBe('1');
 
   // change getConfigurationValue to return 5
-  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(5);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(5);
 
   // now update the configuration value
   onDidChangeConfiguration.dispatchEvent(
