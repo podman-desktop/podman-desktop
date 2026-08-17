@@ -59,6 +59,7 @@ export class ExtensionsBundle {
           extensionPath: folder,
           removable: false,
           devMode: false,
+          bundled: true,
         }),
       ),
     );

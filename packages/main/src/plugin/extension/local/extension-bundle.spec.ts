@@ -77,6 +77,24 @@ test('should load extensions & extensions-extra', async () => {
   expect(devFolder).toEqual(path.join(process.resourcesPath, 'extensions-extra'));
 });
 
+test('should call ExtensionAnalyzer#analyzeExtension with builtin true', async () => {
+  vi.stubEnv('PROD', true);
+
+  const readProductionFoldersMock = vi.spyOn(extensionBundle, 'readProductionFolders');
+  readProductionFoldersMock.mockResolvedValue(['foo-bar']);
+  const readDevelopmentFoldersMock = vi.spyOn(extensionBundle, 'readDevelopmentFolders');
+  readDevelopmentFoldersMock.mockResolvedValue([]);
+
+  await extensionBundle.init();
+
+  expect(EXTENSION_ANALYZER.analyzeExtension).toHaveBeenCalledExactlyOnceWith({
+    builtin: true,
+    devMode: false,
+    extensionPath: 'foo-bar',
+    removable: false,
+  });
+});
+
 describe('loading extension folders', () => {
   const fileEntry = {
     isDirectory: () => false,
