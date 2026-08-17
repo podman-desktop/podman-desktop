@@ -48,6 +48,7 @@ import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
+import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-external.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { IconRegistry } from '/@/plugin/icon-registry.js';
@@ -109,8 +110,6 @@ export interface ActivatedExtension {
   extensionContext: containerDesktopAPI.ExtensionContext;
   packageJSON: unknown;
 }
-
-const EXTENSION_OPTION = '--extension-folder';
 
 export interface RequireCacheDict {
   [key: string]: NodeModule | undefined;
@@ -228,6 +227,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private featureRegistry: FeatureRegistry,
     @inject(ExtensionsBundle)
     private extensionsBundle: ExtensionsBundle,
+    @inject(ExtensionsExternal)
+    private extensionsExternal: ExtensionsExternal,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -486,22 +487,10 @@ export class ExtensionLoader implements IAsyncDisposable {
     }
 
     // Get the bundled extensions
-    const analyzedExtensions: AnalyzedExtension[] = this.extensionsBundle.all().filter(extension => !extension.error);
-
-    // Get the external foldr extensions
-    const externalExtensions = await this.readExternalFolders();
-    const analyzedExternalExtensions = (
-      await Promise.all(
-        externalExtensions.map(folder =>
-          this.analyzeExtension({
-            extensionPath: folder,
-            removable: false,
-            devMode: true,
-          }),
-        ),
-      )
-    ).filter(extension => !extension.error);
-    analyzedExtensions.push(...analyzedExternalExtensions);
+    const analyzedExtensions: AnalyzedExtension[] = [
+      ...this.extensionsBundle.all(),
+      ...this.extensionsExternal.all(),
+    ].filter(extension => !extension.error);
 
     // also load extensions from the plugins directory
     if (fs.existsSync(this.pluginsDirectory)) {
@@ -650,17 +639,6 @@ export class ExtensionLoader implements IAsyncDisposable {
     });
 
     return sorted;
-  }
-
-  async readExternalFolders(): Promise<string[]> {
-    const pathes = [];
-    for (let index = 0; index < process.argv.length; index++) {
-      if (process.argv[index] === EXTENSION_OPTION && index < process.argv.length - 1) {
-        pathes.push(process.argv[++index]);
-      }
-    }
-    // filter all undefined values
-    return pathes.filter(path => path !== undefined);
   }
 
   /**
