@@ -126,10 +126,9 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     // test state of container in summary tab
     const containerState = await containersDetails.getState();
     playExpect(containerState).toContain(ContainerState.Running);
-    // check Logs output
+    // check Logs output — interactive TTY container produces log data (shell prompt)
     await containersDetails.activateTab('Logs');
-    const helloWorldMessage = containersDetails.getPage().getByText('No Log');
-    await playExpect(helloWorldMessage).toBeVisible();
+    await playExpect(containersDetails.terminalContent).toBeVisible();
     // Switch between various other tabs, no checking of the content
     await containersDetails.activateTab('Inspect');
     await containersDetails.activateTab('Kube');
