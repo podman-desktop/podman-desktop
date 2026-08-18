@@ -34,10 +34,10 @@ It's tempting to assume that if you build a feature, people will use it. We've l
 
 The last lesson might be the most encouraging one. Building on open-source foundations has a compounding value: it lets a community grow around a project in ways a closed, corporate roadmap never could. Case in point, we've discovered large-scale corporate adoption of Podman Desktop that had been happening quietly, without any of us knowing about it beforehand.
 
-Five million downloads isn't really about the number. It's proof that people are picking up Podman Desktop, building on it, and using it in places we didn't even know to look.
+Five million downloads isn't really about the number. It shows that people are picking up Podman Desktop and gives us more to learn about where and how they use it.
 
 ## What's next
 
-We're bringing this retro to our community call on the 27th, live, with room for questions and anyone who wants to celebrate with us.
+We're bringing this retro to our [community call on Thursday, August 27](https://github.com/podman-desktop/community/issues/25), live, with room for questions and anyone who wants to celebrate with us.
 
 From all of us on the Podman Desktop team, thank you for the downloads, the issues, the pull requests, the extensions, and the honest feedback that keeps teaching us these lessons. Here's to the next 5 million. 🚀
