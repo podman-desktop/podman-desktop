@@ -21,10 +21,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ExtensionState } from '/@/model/core/states';
-import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import type { ExtensionDetailsPage } from '/@/model/pages/extension-details-page';
-import { NavigationBar } from '/@/model/workbench/navigation';
-import { StatusBar } from '/@/model/workbench/status-bar';
+import type { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,29 +36,44 @@ interface PreInstalledExtension {
 }
 
 function loadPreInstalledExtensions(): PreInstalledExtension[] {
-  const filePath = process.env.PREINSTALLED_EXTENSIONS_FILE ?? DEFAULT_PREINSTALLED_FILE;
-  if (!existsSync(filePath)) return [];
+  const envFile = process.env.PREINSTALLED_EXTENSIONS_FILE;
+  const filePath = envFile ?? DEFAULT_PREINSTALLED_FILE;
+
+  if (!existsSync(filePath)) {
+    if (envFile) {
+      throw new Error(`PREINSTALLED_EXTENSIONS_FILE not found: ${filePath}`);
+    }
+    return [];
+  }
 
   // eslint-disable-next-line n/no-sync
   const content = readFileSync(filePath, 'utf-8');
-  return content
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0 && !line.startsWith('#'))
-    .map(line => {
-      const pairs = Object.fromEntries(
-        line.split(',').map(pair => {
-          const [key, ...rest] = pair.split('=');
-          return [key.trim(), rest.join('=').trim()];
-        }),
-      );
-      return {
-        label: pairs.label,
-        name: pairs.name,
-        ...(pairs.version ? { version: pairs.version } : {}),
-      };
-    })
-    .filter((ext): ext is PreInstalledExtension => Boolean(ext.label) && Boolean(ext.name));
+  const lines = content.split('\n');
+  const extensions: PreInstalledExtension[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i].trim();
+    if (raw.length === 0 || raw.startsWith('#')) continue;
+
+    const pairs = Object.fromEntries(
+      raw.split(',').map(pair => {
+        const [key, ...rest] = pair.split('=');
+        return [key.trim(), rest.join('=').trim()];
+      }),
+    );
+
+    if (!pairs.label || !pairs.name) {
+      throw new Error(`Malformed entry at ${filePath}:${i + 1} — missing label or name: "${raw}"`);
+    }
+
+    extensions.push({
+      label: pairs.label,
+      name: pairs.name,
+      ...(pairs.version ? { version: pairs.version } : {}),
+    });
+  }
+
+  return extensions;
 }
 
 const extensionsToTest = [
@@ -91,15 +104,11 @@ const extensionsToTest = [
   },
 ];
 
-let dashboardPage: DashboardPage;
-let navigationBar: NavigationBar;
 let pdVersion: string;
 
-test.beforeAll(async ({ runner, welcomePage, page }) => {
+test.beforeAll(async ({ runner, welcomePage, statusBar }) => {
   runner.setVideoAndTraceName('builtin-extension-e2e');
   await welcomePage.handleWelcomePage(true);
-  navigationBar = new NavigationBar(page);
-  const statusBar = new StatusBar(page);
   await playExpect(statusBar.versionButton).toBeVisible();
   pdVersion = await statusBar.versionButton.innerText();
 });
@@ -114,29 +123,34 @@ for (const extension of extensionsToTest) {
   }, () => {
     test.describe.configure({ mode: 'serial', retries: 1 });
 
-    test(`Check ${extension.extensionLabelName} extension is enabled and present`, async () => {
-      await verifyBuiltInExtensionStatus(true, extension);
+    test(`Check ${extension.extensionLabelName} extension is enabled and present`, async ({ navigationBar }) => {
+      await verifyBuiltInExtensionStatus(navigationBar, true, extension);
     });
 
-    test(`Check that ${extension.extensionLabelName} extension can be disabled from Extension Page`, async () => {
-      const podmanExtensionPage = await openExtensionsPodmanPage(extension);
+    test(`Check that ${extension.extensionLabelName} extension can be disabled from Extension Page`, async ({
+      navigationBar,
+    }) => {
+      const podmanExtensionPage = await openExtensionsPodmanPage(navigationBar, extension);
       await podmanExtensionPage.disableExtension();
-      await verifyBuiltInExtensionStatus(false, extension);
+      await verifyBuiltInExtensionStatus(navigationBar, false, extension);
     });
 
-    test(`Check that ${extension.extensionLabelName} extension can be re-enabled from Extension Page`, async () => {
-      const podmanExtensionPage = await openExtensionsPodmanPage(extension);
+    test(`Check that ${extension.extensionLabelName} extension can be re-enabled from Extension Page`, async ({
+      navigationBar,
+    }) => {
+      const podmanExtensionPage = await openExtensionsPodmanPage(navigationBar, extension);
       await podmanExtensionPage.enableExtension();
-      await verifyBuiltInExtensionStatus(true, extension);
+      await verifyBuiltInExtensionStatus(navigationBar, true, extension);
     });
   });
 }
 
 async function verifyBuiltInExtensionStatus(
+  navigationBar: NavigationBar,
   enabled: boolean,
   ext: { regionAreaLabel: string; extensionLabelName: string; extensionHeading: string },
 ): Promise<void> {
-  dashboardPage = await navigationBar.openDashboard();
+  const dashboardPage = await navigationBar.openDashboard();
   await playExpect(dashboardPage.heading).toBeVisible({ timeout: 20_000 });
 
   const extensionsPage = await navigationBar.openExtensions();
@@ -183,11 +197,14 @@ async function verifyBuiltInExtensionStatus(
   }
 }
 
-async function openExtensionsPodmanPage(ext: {
-  regionAreaLabel: string;
-  extensionLabelName: string;
-  extensionHeading: string;
-}): Promise<ExtensionDetailsPage> {
+async function openExtensionsPodmanPage(
+  navigationBar: NavigationBar,
+  ext: {
+    regionAreaLabel: string;
+    extensionLabelName: string;
+    extensionHeading: string;
+  },
+): Promise<ExtensionDetailsPage> {
   const extensionsPage = await navigationBar.openExtensions();
   return extensionsPage.openExtensionDetails(ext.extensionLabelName, ext.regionAreaLabel, ext.extensionHeading);
 }
@@ -200,20 +217,20 @@ for (const ext of preInstalledExtensions) {
   }, () => {
     test.describe.configure({ mode: 'serial', retries: 1 });
 
-    test(`Check ${ext.name} is installed and active`, async () => {
+    test(`Check ${ext.name} is installed and active`, async ({ navigationBar }) => {
       const extensionsPage = await navigationBar.openExtensions();
       const extensionCard = await extensionsPage.getInstalledExtension(ext.name.toLowerCase(), ext.label);
       await playExpect(extensionCard.status).toHaveText(ExtensionState.Active, { timeout: 20_000 });
     });
 
-    test(`Check ${ext.name} is marked as Pre-installed`, async () => {
+    test(`Check ${ext.name} is marked as Pre-installed`, async ({ navigationBar }) => {
       const extensionsPage = await navigationBar.openExtensions();
       await extensionsPage.openInstalledTab();
       const card = extensionsPage.content.getByRole('region', { name: ext.label, exact: true });
       await playExpect(card).toContainText('Pre-installed');
     });
 
-    test(`Check ${ext.name} shows expected version`, async () => {
+    test(`Check ${ext.name} shows expected version`, async ({ navigationBar }) => {
       const expectedVersion = ext.version ? `v${ext.version}` : pdVersion;
       const extensionsPage = await navigationBar.openExtensions();
       const version = await extensionsPage.getInstalledExtensionVersion(ext.name.toLowerCase(), ext.label);
@@ -225,7 +242,7 @@ for (const ext of preInstalledExtensions) {
 test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity', '@macos_sanity'] }, () => {
   test.describe.configure({ mode: 'serial' });
 
-  test('Filter installed extensions by name', async () => {
+  test('Filter installed extensions by name', async ({ navigationBar }) => {
     const extensionsPage = await navigationBar.openExtensions();
     await playExpect(extensionsPage.heading).toBeVisible();
     await extensionsPage.openInstalledTab();
@@ -251,7 +268,7 @@ test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity',
       .toBe(totalCards);
   });
 
-  test('Filter catalog extensions by name', async () => {
+  test('Filter catalog extensions by name', async ({ navigationBar }) => {
     const extensionsPage = await navigationBar.openExtensions();
     await playExpect(extensionsPage.heading).toBeVisible();
     await extensionsPage.openCatalogTab();
