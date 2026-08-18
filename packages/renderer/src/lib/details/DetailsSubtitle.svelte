@@ -1,11 +1,9 @@
 <script lang="ts">
-interface Props {
-  style?: string;
-}
+import type { HTMLAttributes } from 'svelte/elements';
 
-let { style = '' }: Props = $props();
+let { ...props }: HTMLAttributes<HTMLTableCellElement> = $props();
 </script>
 
-<td class="pl-2 text-md font-semibold text-[var(--pd-table-body-text-sub-secondary)] {style}">
+<td class="pl-2 text-md font-semibold text-[var(--pd-table-body-text-sub-secondary)]" {...props}>
   <slot />
 </td>
