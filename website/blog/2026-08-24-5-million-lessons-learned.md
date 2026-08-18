@@ -6,7 +6,7 @@ authors: [kyetter]
 tags: [podman-desktop, 5-million, downloads, celebrate, community]
 ---
 
-## Wooohooo!!
+## Wooohooo 🎉
 
 Podman Desktop just crossed **5,000,000 downloads**! Less than a year ago we were celebrating [3 million](/blog/3-million), and now we're humbled to be at 5 million. That kind of growth doesn't happen without a community pushing us, challenging us, and choosing us. Thank you.
 
@@ -20,7 +20,7 @@ But flexibility has limits. Early on, we relied on Docker extensions in our cata
 
 ## 2. Scaling breaks things
 
-For us, that was telemetry. When usage was low, we could log almost anything without a second thought, and that granular data was a great way to track feature adoption and inform the roadmap. As we grew, the cost of collecting that much data caught up with us. We went back and rebuilt a leaner, more prioritized approach to gathering telemetry.
+For us, that was telemetry. When usage was low, we could gather the data we needed about product use without paying much attention to cost. That granular data was a great way to track feature adoption and inform the roadmap. As we grew, the cost of collecting it, and how we'd structured it, caught up with us. We went back and rebuilt a leaner, more prioritized approach to gathering telemetry.
 
 ## 3. More is not always more
 
@@ -34,7 +34,7 @@ It's tempting to assume that if you build a feature, people will use it. We've l
 
 The last lesson might be the most encouraging one. Building on open-source foundations has a compounding value: it lets a community grow around a project in ways a closed, corporate roadmap never could. Case in point, we've discovered large-scale corporate adoption of Podman Desktop that had been happening quietly, without any of us knowing about it beforehand.
 
-Five million downloads isn't really about the number. It's proof that people are picking up Podman Desktop, building on it, and putting it into production in places we didn't even know to look.
+Five million downloads isn't really about the number. It's proof that people are picking up Podman Desktop, building on it, and using it in places we didn't even know to look.
 
 ## What's next
 
