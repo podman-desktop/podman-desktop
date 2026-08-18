@@ -18,6 +18,6 @@ let { class: className, children, ...restProps }: Props = $props();
      Not break-all: that breaks ordinary words too, so prose and hyphenated names
      get chopped mid-word even when they would have fitted. overflow-wrap:
      anywhere breaks only what would otherwise overflow. -->
-<td class="{['pt-1', 'pl-3', 'wrap-anywhere', className]}" {...restProps}>
+<td class="{['pt-1 pl-3 wrap-anywhere', className]}" {...restProps}>
   {@render children?.()}
 </td>
