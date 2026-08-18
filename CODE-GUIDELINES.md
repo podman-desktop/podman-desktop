@@ -701,12 +701,22 @@ Include the specific resource name: `Are you sure you want to delete container a
 
 ### Button text
 
+These rules apply to native `showMessageBox` dialog buttons, which follow OS dialog conventions.
+
 - Use action verbs that match the title: `Delete`, `Install`, `Update`, `Prune`
 - Never use generic labels: no `Yes`, `No`, `OK`, `Confirm`
 - Use `Dismiss` for single-button info/error dialogs
 - Use `Cancel` for the cancel/escape action
 - Use title case for multi-word buttons: `View Release Notes`, `Copy Link`
 - Destructive actions use `variant: 'delete'` for danger styling
+
+### Button labels
+
+In-app `<Button>` components (anywhere outside native `showMessageBox` dialogs, e.g. page actions, modals built with the `Dialog` component) use sentence case instead of title case, matching the rest of the UI.
+
+- Capitalize only the first word and proper nouns: `Manage registries`, `Clear all`, `Use existing image`
+- Proper nouns and product/technical terms keep their standard capitalization: `Use Containerfile`, `Update Podman Desktop`
+- Do not title-case every word: avoid `Use Existing Image`, `Manage Registries`
 
 ### Using `withConfirmation`
 
@@ -722,6 +732,28 @@ withConfirmation(cancelTask, `cancel task ${name}`, {
   title: 'Cancel Task?',
   buttonLabel: 'Cancel',
 });
+```
+
+### Two-choice dialogs
+
+When a dialog presents two equally valid options (not a cancel/action pair), style both buttons as `type="primary"` – neither option is subordinate to the other.
+
+- Use parallel action verbs: `Use existing image` / `Use Containerfile`
+- Use sentence case, not title case: capitalize only the first word and proper nouns (e.g. `Containerfile`, `Podman`) – see [Button labels](#button-labels)
+- Order: less common option on the left, more common option on the right
+- Never pair `Cancel` with the options when the user must pick one
+- Use action verbs, not descriptive labels
+
+```svelte
+<Button type="primary" on:click={fromExistingImage}>Use existing image</Button>
+<Button type="primary" on:click={fromDockerfile}>Use Containerfile</Button>
+```
+
+Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and only one button is `type="primary"`:
+
+```svelte
+<Button type="link" on:click={cancel}>Cancel</Button>
+<Button type="primary" on:click={save}>Save</Button>
 ```
 
 ### Tone

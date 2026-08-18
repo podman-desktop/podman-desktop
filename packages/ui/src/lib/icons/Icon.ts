@@ -16,20 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-enum ProxyLabels {
-  PROXY_CONFIGURATION = 'Proxy configuration',
-  HTTP = 'Web Proxy (HTTP)',
-  HTTPS = 'Secure Web Proxy (HTTPS)',
-  NO_PROXY = 'Bypass proxy settings for these hosts and domains',
-  MANAGED = 'Managed by your organization',
-}
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
 
-export class Proxy {
-  static readonly Labels = ProxyLabels;
+/**
+ * Theme-aware image icon with separate light and dark sources.
+ */
+export type ThemedIconImage = {
+  light: string;
+  dark: string;
+};
 
-  // Element IDs matching PreferencesProxiesRendering.svelte
-  static readonly TOGGLE_PROXY_ID = 'toggle-proxy';
-  static readonly HTTP_PROXY_ID = 'httpProxy';
-  static readonly HTTPS_PROXY_ID = 'httpsProxy';
-  static readonly NO_PROXY_ID = 'noProxy';
-}
+export type IconType = IconDefinition | Component | string | ThemedIconImage;

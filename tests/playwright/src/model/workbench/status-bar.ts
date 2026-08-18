@@ -55,9 +55,9 @@ export class StatusBar extends BasePage {
   public async installKindCLI(): Promise<void> {
     await playExpect(this.kindInstallationButton).toBeVisible();
     await this.kindInstallationButton.click();
-    await handleConfirmationDialog(this.page, 'Kind');
-    await handleConfirmationDialog(this.page, 'Kind');
-    await handleConfirmationDialog(this.page, 'Kind', true, 'OK');
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Kind' });
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Kind' });
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Kind', buttonName: 'OK' });
   }
 
   public async validateKubernetesContext(context: string): Promise<void> {

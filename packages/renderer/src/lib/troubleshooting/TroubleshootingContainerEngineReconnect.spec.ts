@@ -16,21 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import TroubleshootingContainerEngineReconnect from './TroubleshootingContainerEngineReconnect.svelte';
-
-const reconnectContainerProvidersMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  (window as any).reconnectContainerProviders = reconnectContainerProvidersMock;
-});
 
 test('Check reconnect button is available and click on it', async () => {
   render(TroubleshootingContainerEngineReconnect, {});
@@ -53,7 +44,7 @@ test('Check reconnect button is available and click on it', async () => {
 });
 
 test('Check reconnect button is available and get error', async () => {
-  reconnectContainerProvidersMock.mockImplementation(() => {
+  vi.mocked(window.reconnectContainerProviders).mockImplementation(() => {
     throw new Error('Unable to ping container engine');
   });
   render(TroubleshootingContainerEngineReconnect);

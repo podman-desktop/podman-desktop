@@ -48,6 +48,10 @@ if [[ -z "$versioned_schema_file_name" ]]; then
   exit 1
 fi
 
+# Install dependencies needed by the sync TypeScript script
+(cd "${REPO_ROOT}" && pnpm install --frozen-lockfile)
+
+# Install SchemaStore dependencies (prettier, etc.)
 npm install --no-audit --no-fund --ignore-scripts
 
 node --experimental-strip-types "${REPO_ROOT}/scripts/schemastore-sync-extension-schema.ts" \

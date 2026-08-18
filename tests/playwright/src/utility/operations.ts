@@ -60,7 +60,7 @@ export async function deleteContainer(page: Page, name: string): Promise<void> {
       // delete the container
       const deleteButton = container.getByRole('button').and(container.getByLabel('Delete Container'));
       await deleteButton.click();
-      await handleConfirmationDialog(page, 'Delete Container?', true, 'Delete');
+      await handleConfirmationDialog({ page, dialogTitle: 'Delete Container?', buttonName: 'Delete' });
       // wait for container to disappear
       try {
         console.log('Waiting for container to get deleted ...');
@@ -93,7 +93,7 @@ export async function deleteImage(page: Page, name: string): Promise<void> {
       const deleteButton = row.getByRole('button', { name: 'Delete Image' });
       if (await deleteButton.isEnabled()) {
         await deleteButton.click();
-        await handleConfirmationDialog(page, 'Delete Image?', true, 'Delete');
+        await handleConfirmationDialog({ page, dialogTitle: 'Delete Image?', buttonName: 'Delete' });
       } else {
         throw Error(`Cannot delete image ${name}, because it is in use`);
       }
@@ -203,7 +203,7 @@ export async function deletePod(page: Page, name: string, timeout = 50_000): Pro
       const deleteButton = pod.getByRole('button').and(pod.getByLabel('Delete Pod'));
       await deleteButton.click();
       // config delete dialog
-      await handleConfirmationDialog(page, 'Delete Pod?', true, 'Delete');
+      await handleConfirmationDialog({ page, dialogTitle: 'Delete Pod?', buttonName: 'Delete' });
       // wait for pod to disappear
       try {
         console.log('Waiting for pod to get deleted ...');
@@ -253,36 +253,63 @@ export async function deleteNetwork(page: Page, name: string): Promise<void> {
   });
 }
 
+export interface HandleConfirmationDialogOptions {
+  page: Page;
+  dialogTitle: string | RegExp;
+  /** Button to click in the dialog. Defaults to 'Yes'. */
+  buttonName?: string;
+  /** If the dialog transitions to a follow-up state, click this button next. */
+  followUpButton?: string;
+  timeout?: number;
+  signal?: AbortSignal;
+}
+
 // Handles dialog that has accessible name `dialogTitle` and either confirms or rejects it.
-export async function handleConfirmationDialog(
-  page: Page,
-  dialogTitle: string,
-  confirm = true,
-  confirmationButton = 'Yes',
-  cancelButton = 'Cancel',
+export async function handleConfirmationDialog({
+  page,
+  dialogTitle,
+  buttonName = 'Yes',
+  followUpButton,
   timeout = 10_000,
-  moreThanOneConsecutiveDialogs = false,
-): Promise<void> {
+  signal,
+}: HandleConfirmationDialogOptions): Promise<void> {
   // Note: Intentionally not wrapped in test.step to allow proper try-catch handling
   // by callers. test.step has special failure semantics that can interfere with
   // exception handling when this function is used in "try and see" patterns.
-  let errMessage = `Timeout (${timeout} ms) reached waiting for ${dialogTitle} dialog to show up`;
-  const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
-  await waitUntil(async () => await dialog.isVisible(), { timeout: timeout, message: errMessage });
-  const button = confirm
-    ? dialog.getByRole('button', { name: confirmationButton })
-    : dialog.getByRole('button', { name: cancelButton });
-  await playExpect(button).toBeEnabled({ timeout: timeout });
-  await button.click();
+  const dialog = page.getByRole('dialog', {
+    name: dialogTitle,
+    ...(typeof dialogTitle === 'string' && { exact: true }),
+  });
+  await dialog.waitFor({ state: 'visible', timeout, signal });
 
-  if (moreThanOneConsecutiveDialogs) {
-    const doneButton = dialog.getByRole('button', { name: 'Done' });
-    await playExpect(doneButton).toBeEnabled({ timeout: timeout });
-    await doneButton.click();
+  const button = dialog.getByRole('button', { name: buttonName });
+  await playExpect(button).toBeEnabled({ timeout, signal });
+  await button.click({ signal });
+
+  if (followUpButton) {
+    const nextButton = dialog.getByRole('button', { name: followUpButton });
+    await playExpect(nextButton).toBeEnabled({ timeout, signal });
+    await nextButton.click({ signal });
   }
 
-  errMessage = `Timeout (${timeout} ms) reached waiting for ${dialogTitle} dialog to disolve when clicking: ${confirm ? confirmationButton : cancelButton}`;
-  await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout, message: errMessage });
+  await dialog.waitFor({ state: 'hidden', timeout, signal });
+}
+
+/**
+ * Handles optional Podman confirmation dialogs that may appear after machine operations.
+ * Pass a signal to cancel early if the dialogs don't appear.
+ */
+export async function handlePodmanConfirmationDialogs(page: Page, signal?: AbortSignal): Promise<void> {
+  try {
+    await handleConfirmationDialog({ page, dialogTitle: 'Podman', signal });
+    await handleConfirmationDialog({ page, dialogTitle: 'Podman', buttonName: 'OK', signal });
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      console.log('Podman confirmation dialogs did not appear (aborted)');
+    } else {
+      console.log('No handling dialog displayed', error);
+    }
+  }
 }
 
 /**

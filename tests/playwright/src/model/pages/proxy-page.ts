@@ -18,8 +18,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
-import { Proxy } from '/@/model/core/settings/proxy';
-import { ProxyTypes } from '/@/model/core/types';
+import { ProxyElementId, ProxyLabel, ProxyTypes } from '/@/model/core/types';
 import { handleConfirmationDialog } from '/@/utility/operations';
 
 import { SettingsPage } from './settings-page';
@@ -100,7 +99,7 @@ export class ProxyPage extends SettingsPage {
     await this.updateButton.click();
     // dialog can be a warning or info, both has only OK button.
     // on windows podman machine might needs to be restarted
-    await handleConfirmationDialog(this.page, 'Proxy Settings Updated', true, 'Dismiss');
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Proxy Settings Updated', buttonName: 'Dismiss' });
   }
 
   public async fillHttpProxy(value: string): Promise<void> {
@@ -123,7 +122,7 @@ export class ProxyPage extends SettingsPage {
     return test.step(`Check if ${fieldId} has Managed label`, async () => {
       try {
         const fieldSection = this.content.locator(`label[for="${fieldId}"]`).locator('..');
-        const managedLabel = fieldSection.getByText(Proxy.Labels.MANAGED, { exact: true });
+        const managedLabel = fieldSection.getByText(ProxyLabel.MANAGED, { exact: true });
         await managedLabel.waitFor({ state: 'visible', timeout: 5_000 });
         return true;
       } catch (err) {
@@ -136,18 +135,18 @@ export class ProxyPage extends SettingsPage {
   }
 
   public async isProxyConfigurationManaged(): Promise<boolean> {
-    return this.isFieldManaged(Proxy.TOGGLE_PROXY_ID);
+    return this.isFieldManaged(ProxyElementId.TOGGLE_PROXY);
   }
 
   public async isHttpProxyManaged(): Promise<boolean> {
-    return this.isFieldManaged(Proxy.HTTP_PROXY_ID);
+    return this.isFieldManaged(ProxyElementId.HTTP_PROXY);
   }
 
   public async isHttpsProxyManaged(): Promise<boolean> {
-    return this.isFieldManaged(Proxy.HTTPS_PROXY_ID);
+    return this.isFieldManaged(ProxyElementId.HTTPS_PROXY);
   }
 
   public async isNoProxyManaged(): Promise<boolean> {
-    return this.isFieldManaged(Proxy.NO_PROXY_ID);
+    return this.isFieldManaged(ProxyElementId.NO_PROXY);
   }
 }

@@ -117,7 +117,7 @@ export class ContainersPage extends MainPage {
       await playExpect(containerRowDeleteButton).toBeVisible();
       await playExpect(containerRowDeleteButton).toBeEnabled();
       await containerRowDeleteButton.click();
-      await handleConfirmationDialog(this.page, 'Delete Container?', true, 'Delete');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Delete Container?', buttonName: 'Delete' });
       return new ContainersPage(this.page);
     });
   }
@@ -166,7 +166,7 @@ export class ContainersPage extends MainPage {
   async pruneContainers(): Promise<ContainersPage> {
     return test.step('Prune Containers', async () => {
       await this.pruneContainersButton.click();
-      await handleConfirmationDialog(this.page, 'Prune Containers?', true, 'Prune');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Prune Containers?', buttonName: 'Prune' });
       return this;
     });
   }

@@ -6,8 +6,12 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { PVCUI } from './PVCUI';
 
-export let pvc: PVCUI;
-export let detailed = false;
+interface Props {
+  pvc: PVCUI;
+  detailed?: boolean;
+}
+
+let { pvc, detailed = false }: Props = $props();
 
 async function deletePVC(): Promise<void> {
   pvc.status = 'DELETING';

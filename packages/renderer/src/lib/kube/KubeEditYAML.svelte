@@ -3,22 +3,29 @@ import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 
+interface Props {
+  content?: string;
+}
+
 // Make sure that when using the MonacoEditor, the content is "stringified" before
 // being passed into this component. ex. stringify(kubeDeploymentYAML)
 // this is the 'initial' content.
-export let content = '';
-let key = 0; // Initial key
-let originalContent = '';
-let editorContent: string;
-let inProgress = false;
-let changesDetected = false;
+let { content = $bindable('') }: Props = $props();
+
+let key = $state(0); // Initial key
+let originalContent = $state('');
+let editorContent: string = $state('');
+let inProgress = $state(false);
+let changesDetected = $state(false);
 
 // Reactive statement to update originalContent only if it's blank and content is not
 // as sometimes content is blank until it's "loaded". This does not work with onMount,
 // so we use the reactive statement
-$: if (originalContent === '' && content !== '') {
-  originalContent = content;
-}
+$effect(() => {
+  if (originalContent === '' && content !== '') {
+    originalContent = content;
+  }
+});
 
 // Handle the content change from the MonacoEditor / store it for us to use for applying to the cluster.
 function handleContentChange(event: CustomEvent<string>): void {

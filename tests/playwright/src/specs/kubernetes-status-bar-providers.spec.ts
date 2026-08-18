@@ -30,7 +30,7 @@ import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
   ensureCliInstalled,
-  handleConfirmationDialog,
+  handlePodmanConfirmationDialogs,
   setStatusBarProvidersFeature,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
@@ -151,24 +151,14 @@ test.describe
       playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
 
       await deletePodmanMachine(page, newMachineName);
-      try {
-        await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-        await handleConfirmationDialog(page, 'Podman', true, 'OK');
-      } catch (error) {
-        console.log('No handling dialog displayed', error);
-      }
+      await handlePodmanConfirmationDialogs(page);
 
       playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
 
       if (isMac) {
         const defaultMachineCard = new ResourceConnectionCardPage(page, 'podman', defaultMachine);
         await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
-        try {
-          await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-          await handleConfirmationDialog(page, 'Podman', true, 'OK');
-        } catch (error) {
-          console.log('No handling dialog displayed', error);
-        }
+        await handlePodmanConfirmationDialogs(page);
         await waitUntil(
           async () =>
             (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(
