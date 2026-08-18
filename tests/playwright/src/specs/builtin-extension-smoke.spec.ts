@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,52 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { ExtensionState } from '/@/model/core/states';
 import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import type { ExtensionDetailsPage } from '/@/model/pages/extension-details-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
+import { StatusBar } from '/@/model/workbench/status-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DEFAULT_PREINSTALLED_FILE = path.resolve(__dirname, '..', '..', 'resources', 'preinstalled-extensions.txt');
+
+interface PreInstalledExtension {
+  label: string;
+  name: string;
+  version?: string;
+}
+
+function loadPreInstalledExtensions(): PreInstalledExtension[] {
+  const filePath = process.env.PREINSTALLED_EXTENSIONS_FILE ?? DEFAULT_PREINSTALLED_FILE;
+  if (!existsSync(filePath)) return [];
+
+  // eslint-disable-next-line n/no-sync
+  const content = readFileSync(filePath, 'utf-8');
+  return content
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !line.startsWith('#'))
+    .map(line => {
+      const pairs = Object.fromEntries(
+        line.split(',').map(pair => {
+          const [key, ...rest] = pair.split('=');
+          return [key.trim(), rest.join('=').trim()];
+        }),
+      );
+      return {
+        label: pairs.label,
+        name: pairs.name,
+        ...(pairs.version ? { version: pairs.version } : {}),
+      };
+    })
+    .filter((ext): ext is PreInstalledExtension => Boolean(ext.label) && Boolean(ext.name));
+}
 
 const extensionsToTest = [
   {
@@ -52,11 +93,15 @@ const extensionsToTest = [
 
 let dashboardPage: DashboardPage;
 let navigationBar: NavigationBar;
+let pdVersion: string;
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('builtin-extension-e2e');
   await welcomePage.handleWelcomePage(true);
   navigationBar = new NavigationBar(page);
+  const statusBar = new StatusBar(page);
+  await playExpect(statusBar.versionButton).toBeVisible();
+  pdVersion = await statusBar.versionButton.innerText();
 });
 
 test.afterAll(async ({ runner }) => {
@@ -145,6 +190,36 @@ async function openExtensionsPodmanPage(ext: {
 }): Promise<ExtensionDetailsPage> {
   const extensionsPage = await navigationBar.openExtensions();
   return extensionsPage.openExtensionDetails(ext.extensionLabelName, ext.regionAreaLabel, ext.extensionHeading);
+}
+
+const preInstalledExtensions = loadPreInstalledExtensions();
+
+for (const ext of preInstalledExtensions) {
+  test.describe(`Verification of Pre-Installed Extension: ${ext.name}`, {
+    tag: ['@smoke', '@windows_sanity', '@macos_sanity'],
+  }, () => {
+    test.describe.configure({ mode: 'serial', retries: 1 });
+
+    test(`Check ${ext.name} is installed and active`, async () => {
+      const extensionsPage = await navigationBar.openExtensions();
+      const extensionCard = await extensionsPage.getInstalledExtension(ext.name.toLowerCase(), ext.label);
+      await playExpect(extensionCard.status).toHaveText(ExtensionState.Active, { timeout: 20_000 });
+    });
+
+    test(`Check ${ext.name} is marked as Pre-installed`, async () => {
+      const extensionsPage = await navigationBar.openExtensions();
+      await extensionsPage.openInstalledTab();
+      const card = extensionsPage.content.getByRole('region', { name: ext.label, exact: true });
+      await playExpect(card).toContainText('Pre-installed');
+    });
+
+    test(`Check ${ext.name} shows expected version`, async () => {
+      const expectedVersion = ext.version ? `v${ext.version}` : pdVersion;
+      const extensionsPage = await navigationBar.openExtensions();
+      const version = await extensionsPage.getInstalledExtensionVersion(ext.name.toLowerCase(), ext.label);
+      playExpect(version).toBe(expectedVersion);
+    });
+  });
 }
 
 test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity', '@macos_sanity'] }, () => {
