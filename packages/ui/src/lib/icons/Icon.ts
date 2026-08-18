@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import '@testing-library/jest-dom/vitest';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+/**
+ * Theme-aware image icon with separate light and dark sources.
+ */
+export type ThemedIconImage = {
+  light: string;
+  dark: string;
+};
 
-import Steps from './Steps.svelte';
-
-test('Check step styling', async () => {
-  render(Steps, { steps: ['One', 'Two'] });
-
-  // check the div has the correct class
-  const step = screen.getByTestId('step-div');
-  expect(step).toBeInTheDocument();
-  expect(step).toHaveClass('bootstrap-color');
-});
+export type IconType = IconDefinition | Component | string | ThemedIconImage;

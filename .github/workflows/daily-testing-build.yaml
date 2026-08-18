@@ -166,7 +166,7 @@ jobs:
       - name: Run Windows Build and Compile
         if: runner.os == 'Windows' && env.BUILD_ALL != 'true'
         timeout-minutes: 60
-        run: pnpm compile:next --win --x64 nsis
+        run: pnpm compile:next --win nsis --x64
 
       - name: Run macOS Build and Compile - next
         if: runner.os == 'macOS' && env.BUILD_ALL != 'true'

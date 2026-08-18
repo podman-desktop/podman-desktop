@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,22 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import Steps from './Steps.svelte';
+import DetailsCell from './DetailsCell.svelte';
 
-test('Check step styling', async () => {
-  render(Steps, { steps: ['One', 'Two'] });
+test('a details cell can wrap a value with nothing to wrap at', async () => {
+  render(DetailsCell);
 
-  // check the div has the correct class
-  const step = screen.getByTestId('step-div');
-  expect(step).toBeInTheDocument();
-  expect(step).toHaveClass('bootstrap-color');
+  // The defect this guards: a details cell holds values nobody chose the length
+  // of — a container command, an image digest, a secret. One with no spaces
+  // cannot wrap, so the table takes its width from that value and the card
+  // scrolls sideways, putting the labels and every other field off-screen.
+  expect(screen.getByRole('cell')).toHaveClass('wrap-anywhere');
+});
+
+test('the caller can still add classes of its own', async () => {
+  render(DetailsCell, { style: 'text-right' });
+
+  const cell = screen.getByRole('cell');
+  expect(cell).toHaveClass('text-right');
+  expect(cell).toHaveClass('wrap-anywhere');
 });

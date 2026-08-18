@@ -16,25 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { IconInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { get } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { iconsInfos } from '/@/stores/icons';
 
 import IconsStyle from './IconsStyle.svelte';
-
-const listIconsMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  (window as any).listIcons = listIconsMock;
-});
 
 test('Check containers button is available and click on it', async () => {
   const file = 'file://my-font.woff';
@@ -56,7 +47,7 @@ test('Check containers button is available and click on it', async () => {
     },
   };
 
-  listIconsMock.mockResolvedValue([icon]);
+  vi.mocked(window.listIcons).mockResolvedValue([icon]);
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
