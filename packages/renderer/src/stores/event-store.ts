@@ -226,6 +226,11 @@ export class EventStore<T> {
 
       // method that do the update
       const doUpdate = async (): Promise<void> => {
+        // re-check visibility: the timer may fire after the document became hidden
+        if (document.hidden) {
+          pendingUpdateWhileHidden = true;
+          return;
+        }
         await this.performUpdate(needUpdate, eventStoreInfo, eventName, args);
       };
 

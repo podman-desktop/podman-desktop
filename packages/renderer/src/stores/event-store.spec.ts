@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { get, type Writable, writable } from 'svelte/store';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { EventStore, type EventStoreInfo, fineGrainedEvents } from './event-store';
 
@@ -510,6 +510,54 @@ test('should flush pending update when document becomes visible', async () => {
   await vi.waitFor(() => {
     expect(get(myStoreInfo)).toStrictEqual([myCustomTypeInfo]);
   });
+});
+
+test('should defer debounced update when document becomes hidden before timer fires', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: false });
+
+  try {
+    const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);
+    const checkForUpdateMock = vi.fn().mockResolvedValue(true);
+    const windowEventName = 'my-custom-event';
+    const updater = vi.fn();
+
+    const myCustomTypeInfo: MyCustomTypeInfo = { name: 'deferred-item' };
+    updater.mockResolvedValue([myCustomTypeInfo]);
+
+    const eventStore = new TestEventStore('my-test', myStoreInfo, checkForUpdateMock, [windowEventName], [], updater);
+    eventStore.setupWithDebounce(500, 0);
+
+    const callback = callbacks.get(windowEventName);
+    assert(callback);
+
+    // fire the event while visible — this schedules a 500ms debounce timer
+    await callback?.();
+    expect(updater).not.toHaveBeenCalled();
+
+    // hide the document before the debounce timer fires
+    Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+
+    // advance past the debounce timeout — doUpdate should see document.hidden and skip
+    await vi.advanceTimersByTimeAsync(600);
+    expect(updater).not.toHaveBeenCalled();
+    expect(get(myStoreInfo)).toStrictEqual([]);
+
+    // restore visibility and fire the visibilitychange event
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+    const visibilityCallback = documentCallbacks.get('visibilitychange');
+    assert(visibilityCallback);
+    visibilityCallback(new Event('visibilitychange'));
+
+    // the pending update should now flush
+    await vi.waitFor(() => {
+      expect(updater).toHaveBeenCalled();
+    });
+    await vi.waitFor(() => {
+      expect(get(myStoreInfo)).toStrictEqual([myCustomTypeInfo]);
+    });
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test('should not flush on visibility change if no events were received while hidden', async () => {
