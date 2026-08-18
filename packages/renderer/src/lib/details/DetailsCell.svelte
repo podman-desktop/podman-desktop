@@ -1,11 +1,12 @@
 <script lang="ts">
-interface Props {
-  style?: string;
-  onClick?: () => void;
-  class?: string;
+import type { Snippet } from 'svelte';
+import type { HTMLTdAttributes } from 'svelte/elements';
+
+interface Props extends HTMLTdAttributes {
+  children?: Snippet;
 }
 
-let { style = '', onClick = (): void => {}, class: className = '' }: Props = $props();
+let { class: className, children, ...restProps }: Props = $props();
 </script>
 
 <!-- wrap-anywhere, because a details cell holds values nobody chose the length
@@ -17,6 +18,6 @@ let { style = '', onClick = (): void => {}, class: className = '' }: Props = $pr
      Not break-all: that breaks ordinary words too, so prose and hyphenated names
      get chopped mid-word even when they would have fitted. overflow-wrap:
      anywhere breaks only what would otherwise overflow. -->
-<td class="pt-1 pl-3 wrap-anywhere {style} {className}" onclick={onClick}>
-  <slot />
+<td class="pt-1 pl-3 wrap-anywhere {className}" {...restProps}>
+  {@render children?.()}
 </td>

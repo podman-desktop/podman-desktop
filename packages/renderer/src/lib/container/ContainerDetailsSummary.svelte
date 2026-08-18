@@ -94,7 +94,7 @@ function openPort(port: number): void {
   </tr>
   {#if Object.entries(container.labels).length > 0}
     <tr>
-      <DetailsCell style="cursor-pointer flex items-center" onClick={(): boolean => (labelsDropdownOpen = !labelsDropdownOpen)}>
+      <DetailsCell class="cursor-pointer flex items-center" onclick={(): boolean => (labelsDropdownOpen = !labelsDropdownOpen)}>
         Labels
         <ChevronExpander expanded={labelsDropdownOpen} size="0.9x" class="ml-1" />
       </DetailsCell>
