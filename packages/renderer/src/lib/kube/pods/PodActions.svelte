@@ -10,9 +10,13 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { PodUI } from './PodUI';
 
-export let pod: PodUI;
-export let dropdownMenu = false;
-export let detailed = false;
+interface Props {
+  pod: PodUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+}
+
+let { pod = $bindable(), dropdownMenu = false, detailed = false }: Props = $props();
 
 let openingKubernetesUrls = new SvelteMap<string, string>();
 
@@ -48,12 +52,7 @@ async function deletePod(): Promise<void> {
 
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
 // otherwise, leave blank.
-let actionsStyle: typeof DropdownMenu | typeof FlatMenu;
-if (dropdownMenu) {
-  actionsStyle = DropdownMenu;
-} else {
-  actionsStyle = FlatMenu;
-}
+let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
@@ -63,7 +62,7 @@ if (dropdownMenu) {
   detailed={detailed}/>
 
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
-<svelte:component this={actionsStyle}>
+<ActionsStyle>
   <ListItemButtonIcon
     title="Restart Pod"
     onClick={restartPod}
@@ -105,4 +104,4 @@ if (dropdownMenu) {
         {/each}
       </DropdownMenu>
     {/if}
-</svelte:component>
+</ActionsStyle>

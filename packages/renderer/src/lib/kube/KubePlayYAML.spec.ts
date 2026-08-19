@@ -333,7 +333,7 @@ describe('Options', () => {
     await userEvent.click(playButton);
 
     expect(window.playKube).toHaveBeenCalledWith(
-      'Containerfile',
+      { type: 'path', value: 'Containerfile' },
       expect.anything(),
       expect.objectContaining({ build: true }),
     );
@@ -355,7 +355,7 @@ describe('Options', () => {
     await userEvent.click(playButton);
 
     expect(window.playKube).toHaveBeenCalledWith(
-      'Containerfile',
+      { type: 'path', value: 'Containerfile' },
       expect.anything(),
       expect.objectContaining({ replace: true }),
     );
@@ -421,7 +421,7 @@ describe('Custom YAML mode', () => {
   });
 });
 
-test('file mode: does not attempt temp file cleanup', async () => {
+test('file mode: playKube is called with a path input', async () => {
   vi.mocked(window.playKube).mockResolvedValue({
     Pods: [],
     RmReport: [],
@@ -441,11 +441,12 @@ test('file mode: does not attempt temp file cleanup', async () => {
   const playButton = screen.getByRole('button', { name: 'Play' });
   await userEvent.click(playButton);
 
-  // Verify playKube was called with the selected file
-  expect(window.playKube).toHaveBeenCalledWith('Containerfile', expect.anything(), expect.anything());
-
-  // Verify no temp file operations occurred
-  expect(window.removeTempFile).not.toHaveBeenCalled();
+  // Verify playKube was called with a path input for the selected file, not raw content
+  expect(window.playKube).toHaveBeenCalledWith(
+    { type: 'path', value: 'Containerfile' },
+    expect.anything(),
+    expect.anything(),
+  );
 });
 
 test('custom YAML mode: button text changes to "Play custom YAML"', async () => {

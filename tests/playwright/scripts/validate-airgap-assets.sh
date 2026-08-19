@@ -21,7 +21,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 ASSETS_DIR="${REPO_ROOT}/extensions/podman/packages/extension/assets"
-PODMAN_JSON="${REPO_ROOT}/extensions/podman/packages/extension/src/podman5.json"
+PODMAN_JSON="${REPO_ROOT}/extensions/podman/packages/extension/src/podman.json"
 
 ERRORS=0
 CHECKSUM_DETAILS=()
