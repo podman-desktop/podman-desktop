@@ -1,15 +1,15 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import type { HTMLAttributes } from 'svelte/elements';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
-interface Props {
+interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
   color?: string | { light: string; dark: string };
   label?: string;
-  class?: string;
 }
 
-let { color = 'bg-[var(--pd-badge-gray)]', label = '', class: className = '' }: Props = $props();
+let { color = 'bg-[var(--pd-badge-gray)]', label = '', class: className, ...restProps }: Props = $props();
 
 let customStyle = $state('');
 let customClass = $state('');
@@ -29,6 +29,6 @@ onMount(async () => {
 });
 </script>
 
-<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none {customClass} {className}" style={customStyle} aria-label="badge-{label}">
+<div class={['text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none', customClass, className]} style={customStyle} aria-label="badge-{label}" {...restProps}>
   {label}
 </div>
