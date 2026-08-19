@@ -1217,7 +1217,7 @@ test('Expect create container dialog opens when Create button is clicked', async
   });
 });
 
-test('Expect create container dialog has both choice buttons styled as primary', async () => {
+test('Expect create container dialog has both choice buttons styled as secondary', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -1232,8 +1232,8 @@ test('Expect create container dialog has both choice buttons styled as primary',
   const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
   const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
 
-  expect(existingImageButton.className).toContain('bg-[var(--pd-button-primary-bg)]');
-  expect(containerfileButton.className).toContain('bg-[var(--pd-button-primary-bg)]');
+  expect(existingImageButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
+  expect(containerfileButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
 
   const dialogButtons = within(dialog).getAllByRole('button');
   const existingImageIndex = dialogButtons.indexOf(existingImageButton);
