@@ -77,7 +77,7 @@ test('should load extensions & extensions-extra', async () => {
   expect(devFolder).toEqual(path.join(process.resourcesPath, 'extensions-extra'));
 });
 
-test('should call ExtensionAnalyzer#analyzeExtension with builtin true', async () => {
+test('should call ExtensionAnalyzer#analyzeExtension with bundled true', async () => {
   vi.stubEnv('PROD', true);
 
   const readProductionFoldersMock = vi.spyOn(extensionBundle, 'readProductionFolders');
@@ -88,7 +88,7 @@ test('should call ExtensionAnalyzer#analyzeExtension with builtin true', async (
   await extensionBundle.init();
 
   expect(EXTENSION_ANALYZER.analyzeExtension).toHaveBeenCalledExactlyOnceWith({
-    builtin: true,
+    bundled: true,
     devMode: false,
     extensionPath: 'foo-bar',
     removable: false,
