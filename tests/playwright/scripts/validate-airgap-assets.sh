@@ -60,72 +60,119 @@ installer_shasums_name() {
   echo "${name}"
 }
 
-verify_installer_checksums() {
-  local version="$1"
-  local shasums_url="https://github.com/podman-container-tools/podman/releases/download/v${version}/shasums"
-
-  echo "Fetching shasums from GitHub release v${version}..."
-  local shasums_content
-  if ! shasums_content=$(curl -sL --fail "${shasums_url}" | tr -d '\r'); then
-    echo "FAIL: could not fetch shasums from GitHub (curl failed)"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
-
-  if [ -z "${shasums_content}" ]; then
-    echo "FAIL: shasums response was empty"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
-
-  local files=()
+# podman.json key for the current OS, or empty when the OS ships no installers
+platform_key() {
   case "${OS}" in
     Darwin)
-      while IFS= read -r fname; do
-        files+=("${fname}")
-      done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
+      echo "darwin"
       ;;
     MINGW*|MSYS*|CYGWIN*|Windows_NT)
-      while IFS= read -r fname; do
-        files+=("${fname}")
-      done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
+      echo "win32"
       ;;
     *)
-      echo "SKIP: no installer checksums to verify on ${OS}"
-      return
+      echo ""
       ;;
   esac
+}
 
-  echo "Files to verify: ${files[*]:-none}"
+# each platform/arch entry points at .versions via versionRef, and the refs may
+# differ per arch (darwin ships v5 on x64 and v6 on arm64), so versions have to
+# be resolved per entry rather than once for the whole file
+version_for_ref() {
+  jq -r --arg ref "$1" '.versions[$ref].version' "${PODMAN_JSON}" | tr -d '\r'
+}
 
-  for local_name in "${files[@]}"; do
-    local path="${ASSETS_DIR}/${local_name}"
-    if [ ! -f "${path}" ]; then
+tag_for_ref() {
+  jq -r --arg ref "$1" '.versions[$ref].tagVersion' "${PODMAN_JSON}" | tr -d '\r'
+}
+
+refs_for_platform() {
+  jq -r --arg p "$1" '[.platform[$p].arch[].versionRef] | unique[]' "${PODMAN_JSON}" | tr -d '\r'
+}
+
+filenames_for_ref() {
+  jq -r --arg p "$1" --arg ref "$2" \
+    '.platform[$p].arch | to_entries[] | select(.value.versionRef == $ref) | .value.fileName' \
+    "${PODMAN_JSON}" | tr -d '\r'
+}
+
+archs_for_ref() {
+  jq -r --arg p "$1" --arg ref "$2" \
+    '.platform[$p].arch | to_entries[] | select(.value.versionRef == $ref) | .key' \
+    "${PODMAN_JSON}" | tr -d '\r'
+}
+
+verify_installer_checksums() {
+  local pkey
+  pkey=$(platform_key)
+
+  if [ -z "${pkey}" ]; then
+    echo "SKIP: no installer checksums to verify on ${OS}"
+    return
+  fi
+
+  local ref
+  for ref in $(refs_for_platform "${pkey}"); do
+    local tag
+    tag=$(tag_for_ref "${ref}")
+
+    if [ -z "${tag}" ] || [ "${tag}" = "null" ]; then
+      echo "FAIL: ${pkey} references unknown version '${ref}' (no .versions.${ref}.tagVersion)"
+      ERRORS=$((ERRORS + 1))
       continue
     fi
 
-    local shasums_name
-    shasums_name=$(installer_shasums_name "${local_name}")
+    local files=()
+    while IFS= read -r fname; do
+      [ -z "${fname}" ] && continue
+      files+=("${fname}")
+    done < <(filenames_for_ref "${pkey}" "${ref}")
 
-    local expected
-    expected=$(echo "${shasums_content}" | grep -F "${shasums_name}" | awk '{print $1}' || true)
-
-    if [ -z "${expected}" ]; then
-      echo "WARN: no shasums entry found for ${shasums_name} (local: ${local_name})"
+    if [ ${#files[@]} -eq 0 ]; then
       continue
     fi
 
-    verify_checksum "${path}" "${expected}" "${local_name}"
+    echo "Fetching shasums from GitHub release ${tag} (${ref}) for: ${files[*]}"
+
+    local shasums_content
+    if ! shasums_content=$(curl -sL --fail "https://github.com/podman-container-tools/podman/releases/download/${tag}/shasums" | tr -d '\r'); then
+      echo "FAIL: could not fetch shasums from GitHub for ${tag} (curl failed)"
+      ERRORS=$((ERRORS + 1))
+      continue
+    fi
+
+    if [ -z "${shasums_content}" ]; then
+      echo "FAIL: shasums response was empty for ${tag}"
+      ERRORS=$((ERRORS + 1))
+      continue
+    fi
+
+    local local_name
+    for local_name in "${files[@]}"; do
+      local path="${ASSETS_DIR}/${local_name}"
+      if [ ! -f "${path}" ]; then
+        continue
+      fi
+
+      local shasums_name
+      shasums_name=$(installer_shasums_name "${local_name}")
+
+      local expected
+      expected=$(echo "${shasums_content}" | grep -F "${shasums_name}" | awk '{print $1}' || true)
+
+      if [ -z "${expected}" ]; then
+        echo "WARN: no shasums entry found for ${shasums_name} (local: ${local_name})"
+        continue
+      fi
+
+      verify_checksum "${path}" "${expected}" "${local_name}"
+    done
   done
 }
 
 verify_oci_checksums() {
-  local version="$1"
-  local major_minor
-  major_minor=$(echo "${version}" | cut -d. -f1,2)
-
-  local registry_url="https://quay.io/v2/podman/machine-os"
-  local manifest_url="${registry_url}/manifests/${major_minor}"
+  local pkey
+  pkey=$(platform_key)
 
   local disktype
   case "${OS}" in
@@ -141,72 +188,105 @@ verify_oci_checksums() {
       ;;
   esac
 
-  echo "Fetching OCI manifest from ${manifest_url} (disktype: ${disktype})..."
-  local index_manifest
-  if ! index_manifest=$(curl -sL --fail \
-    -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
-    "${manifest_url}" | tr -d '\r'); then
-    echo "FAIL: could not fetch OCI manifest index (curl failed)"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
+  local registry_url="https://quay.io/v2/podman/machine-os"
 
-  if [ -z "${index_manifest}" ]; then
-    echo "FAIL: OCI manifest response was empty"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
+  local ref
+  for ref in $(refs_for_platform "${pkey}"); do
+    local version
+    version=$(version_for_ref "${ref}")
 
-  if echo "${index_manifest}" | jq -e '.errors' &>/dev/null; then
-    echo "FAIL: OCI manifest returned errors"
-    echo "${index_manifest}" | jq '.errors' 2>/dev/null || true
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
-
-  local arch_digests
-  arch_digests=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" '.manifests[] | select(.annotations.disktype == $dt) | "\(.platform.architecture) \(.digest)"' || true)
-
-  if [ -z "${arch_digests}" ]; then
-    echo "WARN: no manifests found for disktype ${disktype}"
-    return
-  fi
-
-  echo "Found OCI entries for: $(echo "${arch_digests}" | awk '{printf "%s ", $1}')"
-
-  while IFS=' ' read -r arch digest; do
-    [ -z "${arch}" ] && continue
-
-    local local_name
-    case "${arch}" in
-      aarch64) local_name="podman-image-arm64.zst" ;;
-      x86_64)  local_name="podman-image-x64.zst" ;;
-      *)       local_name="podman-image-${arch}.zst" ;;
-    esac
-
-    local path="${ASSETS_DIR}/${local_name}"
-    if [ ! -f "${path}" ]; then
+    if [ -z "${version}" ] || [ "${version}" = "null" ]; then
+      echo "FAIL: ${pkey} references unknown version '${ref}' (no .versions.${ref}.version)"
+      ERRORS=$((ERRORS + 1))
       continue
     fi
 
-    local arch_manifest
-    if ! arch_manifest=$(curl -sL --fail \
-      -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
-      "${registry_url}/manifests/${digest}" | tr -d '\r'); then
-      echo "WARN: could not fetch arch manifest for ${arch}"
+    # the machine-os image is tagged major.minor, while podman.json carries the full version
+    local major_minor
+    major_minor=$(echo "${version}" | cut -d. -f1,2)
+    local manifest_url="${registry_url}/manifests/${major_minor}"
+
+    # only the arches that actually resolve to this ref belong to this manifest
+    local wanted_archs
+    wanted_archs=$(archs_for_ref "${pkey}" "${ref}")
+
+    if [ -z "${wanted_archs}" ]; then
       continue
     fi
 
-    local layer_digest
-    layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' 2>/dev/null | sed 's/sha256://' || true)
-
-    if [ -z "${layer_digest}" ] || [ "${layer_digest}" = "null" ]; then
-      echo "WARN: could not extract layer digest for ${arch} (${local_name})"
+    echo "Fetching OCI manifest from ${manifest_url} (disktype: ${disktype}, arch: $(echo ${wanted_archs} | tr '\n' ' '))..."
+    local index_manifest
+    if ! index_manifest=$(curl -sL --fail \
+      -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
+      "${manifest_url}" | tr -d '\r'); then
+      echo "FAIL: could not fetch OCI manifest index for ${major_minor} (curl failed)"
+      ERRORS=$((ERRORS + 1))
       continue
     fi
 
-    verify_checksum "${path}" "${layer_digest}" "${local_name}"
-  done <<< "${arch_digests}"
+    if [ -z "${index_manifest}" ]; then
+      echo "FAIL: OCI manifest response was empty for ${major_minor}"
+      ERRORS=$((ERRORS + 1))
+      continue
+    fi
+
+    if echo "${index_manifest}" | jq -e '.errors' &>/dev/null; then
+      echo "FAIL: OCI manifest returned errors for ${major_minor}"
+      echo "${index_manifest}" | jq '.errors' 2>/dev/null || true
+      ERRORS=$((ERRORS + 1))
+      continue
+    fi
+
+    local arch_digests
+    arch_digests=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" '.manifests[] | select(.annotations.disktype == $dt) | "\(.platform.architecture) \(.digest)"' || true)
+
+    if [ -z "${arch_digests}" ]; then
+      echo "WARN: no manifests found for disktype ${disktype} in ${major_minor}"
+      continue
+    fi
+
+    echo "Found OCI entries for: $(echo "${arch_digests}" | awk '{printf "%s ", $1}')"
+
+    while IFS=' ' read -r arch digest; do
+      [ -z "${arch}" ] && continue
+
+      local json_arch
+      local local_name
+      case "${arch}" in
+        aarch64) json_arch="arm64"; local_name="podman-image-arm64.zst" ;;
+        x86_64)  json_arch="x64";   local_name="podman-image-x64.zst" ;;
+        *)       json_arch="${arch}"; local_name="podman-image-${arch}.zst" ;;
+      esac
+
+      # skip arches served by a different versionRef, they get their own manifest
+      if ! echo "${wanted_archs}" | grep -qx "${json_arch}"; then
+        continue
+      fi
+
+      local path="${ASSETS_DIR}/${local_name}"
+      if [ ! -f "${path}" ]; then
+        continue
+      fi
+
+      local arch_manifest
+      if ! arch_manifest=$(curl -sL --fail \
+        -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
+        "${registry_url}/manifests/${digest}" | tr -d '\r'); then
+        echo "WARN: could not fetch arch manifest for ${arch}"
+        continue
+      fi
+
+      local layer_digest
+      layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' 2>/dev/null | sed 's/sha256://' || true)
+
+      if [ -z "${layer_digest}" ] || [ "${layer_digest}" = "null" ]; then
+        echo "WARN: could not extract layer digest for ${arch} (${local_name})"
+        continue
+      fi
+
+      verify_checksum "${path}" "${layer_digest}" "${local_name}"
+    done <<< "${arch_digests}"
+  done
 }
 
 validate_file() {
@@ -244,19 +324,25 @@ if [ ! -d "${ASSETS_DIR}" ]; then
   exit 1
 fi
 
-VERSION=$(jq -r '.version' "${PODMAN_JSON}" | tr -d '\r')
-echo "Podman version: ${VERSION}"
-
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 echo "Platform: ${OS} / ${ARCH}"
+
+PLATFORM_KEY=$(platform_key)
+if [ -n "${PLATFORM_KEY}" ]; then
+  echo "Podman versions:"
+  jq -r --arg p "${PLATFORM_KEY}" \
+    '.versions as $v | .platform[$p].arch | to_entries[]
+     | "  \(.key): \(.value.versionRef) -> \($v[.value.versionRef].version // "UNKNOWN")"' \
+    "${PODMAN_JSON}" | tr -d '\r'
+fi
 echo ""
 
 echo "--- DEBUG: assets directory listing ---"
 ls -la "${ASSETS_DIR}/" 2>&1 || echo "(empty or inaccessible)"
 echo ""
 
-echo "--- DEBUG: podman5.json platform structure ---"
+echo "--- DEBUG: podman.json platform structure ---"
 jq '.platform' "${PODMAN_JSON}"
 echo ""
 
@@ -265,21 +351,14 @@ ls -la "${REPO_ROOT}/dist/" 2>&1 || echo "(no dist directory)"
 echo ""
 
 echo "--- Installer assets ---"
-case "${OS}" in
-  Darwin)
-    while IFS= read -r fname; do
-      validate_file "${fname}"
-    done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
-    ;;
-  MINGW*|MSYS*|CYGWIN*|Windows_NT)
-    while IFS= read -r fname; do
-      validate_file "${fname}"
-    done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
-    ;;
-  *)
-    echo "SKIP: no installer assets expected on ${OS}"
-    ;;
-esac
+if [ -n "${PLATFORM_KEY}" ]; then
+  while IFS= read -r fname; do
+    [ -z "${fname}" ] && continue
+    validate_file "${fname}"
+  done < <(jq -r --arg p "${PLATFORM_KEY}" '.platform[$p].arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
+else
+  echo "SKIP: no installer assets expected on ${OS}"
+fi
 
 echo ""
 echo "--- Airgap machine OS images ---"
@@ -295,9 +374,9 @@ esac
 
 echo ""
 echo "--- Checksum verification ---"
-verify_installer_checksums "${VERSION}"
+verify_installer_checksums
 echo ""
-verify_oci_checksums "${VERSION}"
+verify_oci_checksums
 
 echo ""
 if [ "${ERRORS}" -gt 0 ]; then
