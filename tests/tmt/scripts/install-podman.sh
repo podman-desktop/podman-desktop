@@ -33,7 +33,7 @@ if [[ "$PODMAN_VERSION" == "podman6" ]]; then
         exit 1
     fi
     sudo dnf copr enable -y rhcontainerbot/f44-podman6
-    sudo dnf install -y podman
+    sudo dnf install -y podman --disablerepo=testing-farm-tag-repository
 # "nightly": latest nightly build from rhcontainerbot/podman-next COPR repository
 elif [[ "$PODMAN_VERSION" == "nightly" ]]; then
     sudo dnf copr enable -y rhcontainerbot/podman-next
