@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,20 @@ import { expect, test, vi } from 'vitest';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
 
+test('displays what the cleanup action will and will not delete', () => {
+  render(TroubleshootingRepairCleanup);
+
+  expect(screen.getByText('Proceeding with this action will result in data loss.')).toBeInTheDocument();
+  expect(screen.getByText('It will delete:')).toBeInTheDocument();
+  expect(screen.getByText('The current Podman machine')).toBeInTheDocument();
+  expect(screen.getByText('Containers, images, volumes, configuration files')).toBeInTheDocument();
+  expect(screen.getByText('SSH keys')).toBeInTheDocument();
+  expect(screen.getByText('It will not delete:')).toBeInTheDocument();
+  expect(screen.getByText('Podman logs')).toBeInTheDocument();
+});
+
 test('Check cleanupProviders is called and button is in progress', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean Up' });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean / purge data' });
 
   render(TroubleshootingRepairCleanup);
 
@@ -55,10 +67,10 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Clean Up', 'Cancel'],
+    buttons: ['Clean / purge data', 'Cancel'],
     type: 'danger',
-    message: 'This action may delete data. Proceed?',
-    title: 'Clean Up Data?',
+    message: 'This action will delete data and cannot be undone. Proceed?',
+    title: 'Clean / purge data?',
   });
 
   // check that we're calling the vi.mocked(window.cleanupProviders)
@@ -66,7 +78,7 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 });
 
 test('Check errors are displayed with clipboard button', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean Up' });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean / purge data' });
 
   render(TroubleshootingRepairCleanup);
 
@@ -83,10 +95,10 @@ test('Check errors are displayed with clipboard button', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Clean Up', 'Cancel'],
+    buttons: ['Clean / purge data', 'Cancel'],
     type: 'danger',
-    message: 'This action may delete data. Proceed?',
-    title: 'Clean Up Data?',
+    message: 'This action will delete data and cannot be undone. Proceed?',
+    title: 'Clean / purge data?',
   });
 
   // check that we're calling the vi.mocked(window.cleanupProviders)
