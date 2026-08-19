@@ -26,8 +26,16 @@ sudo dnf remove -y podman
 COMPOSE_VERSION="fc$(echo "$COMPOSE" | cut -d'-' -f2)"
 
 # Install Podman based on the requested version:
+# "podman6": Podman 6 build from rhcontainerbot/f44-podman6 COPR repository (Fedora 44 only)
+if [[ "$PODMAN_VERSION" == "podman6" ]]; then
+    if [[ "$(rpm -E %fedora)" != "44" ]]; then
+        echo "Error: PODMAN_VERSION=podman6 requires Fedora 44 (rhcontainerbot/f44-podman6 has no builds for this OS version)."
+        exit 1
+    fi
+    sudo dnf copr enable -y rhcontainerbot/f44-podman6
+    sudo dnf install -y podman
 # "nightly": latest nightly build from rhcontainerbot/podman-next COPR repository
-if [[ "$PODMAN_VERSION" == "nightly" ]]; then
+elif [[ "$PODMAN_VERSION" == "nightly" ]]; then
     sudo dnf copr enable -y rhcontainerbot/podman-next
     sudo dnf install -y podman --disablerepo=testing-farm-tag-repository 
     PODMAN_VERSION="$(dnf --quiet \
@@ -53,13 +61,20 @@ else
     rm -f podman.rpm
 fi
 
-# Verify that the installed Podman version matches the expected version. 
+# Verify that the installed Podman version matches the expected version.
 INSTALLED_PODMAN_VERSION="$(podman --version | cut -d' ' -f3)"
-NORMALIZED_PODMAN_VERSION="${PODMAN_VERSION//\~/-}"
 
-if [[ "$INSTALLED_PODMAN_VERSION" != "$NORMALIZED_PODMAN_VERSION" ]]; then
-    echo "Podman version mismatch: expected $NORMALIZED_PODMAN_VERSION but got $INSTALLED_PODMAN_VERSION"
-    exit 1
+if [[ "$PODMAN_VERSION" == "podman6" ]]; then
+    if [[ "$INSTALLED_PODMAN_VERSION" != 6.* ]]; then
+        echo "Podman version mismatch: expected a podman 6.x build from f44-podman6 but got $INSTALLED_PODMAN_VERSION"
+        exit 1
+    fi
+else
+    NORMALIZED_PODMAN_VERSION="${PODMAN_VERSION//\~/-}"
+    if [[ "$INSTALLED_PODMAN_VERSION" != "$NORMALIZED_PODMAN_VERSION" ]]; then
+        echo "Podman version mismatch: expected $NORMALIZED_PODMAN_VERSION but got $INSTALLED_PODMAN_VERSION"
+        exit 1
+    fi
 fi
 
 echo "Podman installed successfully: $INSTALLED_PODMAN_VERSION"
