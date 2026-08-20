@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@expo/sudo-prompt": "^9.3.2",
-    "@kubernetes/client-node": "^1.4.0",
+    "@kubernetes/client-node": "^2.0.0",
     "@podman-desktop/core-api": "workspace:*",
     "@segment/analytics-node": "^3.1.0",
     "adm-zip": "^0.6.0",
