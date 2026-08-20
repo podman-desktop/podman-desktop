@@ -15,27 +15,25 @@ Podman Desktop just crossed **5,000,000 downloads**! Less than a year ago we wer
 
 Download numbers can easily become vanity metrics. So instead of just announcing one, we wanted to mark this milestone the way developers _actually_ like to celebrate: with a retro. Here's what came out of it.
 
-## 1. Be flexible, but not too flexible
+## 1. Extensibility works
 
 The container landscape hasn't stood still since Podman Desktop launched: new tooling, AI, and constant churn in integration points, to name a few. Our extension-based architecture made it easier to respond. Extensions like Apple Container and AI Lab let us adapt to the market without disrupting the core application, and that same extensibility lets users build their own extensions wherever we can't keep up.
 
-But flexibility has limits. Early on, we relied on Docker extensions in our catalog. As those APIs kept shifting, and some platforms drifted toward closed-source models, we struggled to keep up. Our answer was to build and maintain our own extensions rather than depend on ones we couldn't control. Staying flexible turned out to mean staying independent.
-
 ## 2. Scaling breaks things
 
-For us, that was telemetry. When usage was low, we could gather the data we needed about product use without paying much attention to cost. That granular data was a great way to track feature adoption and inform the roadmap. As we grew, the cost of collecting it, and how we'd structured it, caught up with us. We went back and rebuilt a leaner, more prioritized approach to gathering telemetry.
+For us, that was telemetry. When usage was low, we could gather the data we needed about product use without paying much attention to volume. That granular data was a great way to track feature adoption and inform the roadmap. As we grew, our methods of collecting it and how that was impacting users caught up with us. We went back and streamlined our approach to gathering telemetry. We now have more useful data and the users have a better tool.
 
-## 3. More is not always more
+## 3. Building the community we want
 
-More downloads brought more contributions, more issues, and more pull requests. It didn't automatically bring more progress. Contribution volume is up, but not always the engagement or quality we need, and more contributions end up abandoned partway through. That means real time spent chasing authors for follow-up instead of shipping. The lesson: a community of intentional, well-scoped contributions matters more than raw volume.
+More downloads brought more contributions, more issues, and more pull requests. While our progress relies on our excellent contributors, there have been growing pains. Contribution volume is up and that means real time spent chasing authors for follow-up instead of shipping. The lesson: maintaining a community of intentional and well-scoped contributors is paramount.
 
 ## 4. Adoption doesn't always look the way you expect
 
-It's tempting to assume that if you build a feature, people will use it. We've learned that isn't true. Building a great product is part strategic vision, part user feedback, and part enablement and awareness. We try to stay grounded in how the product is used today, while still leaving room to make strategic bets for the future.
+It's tempting to assume that if you build a great feature, people will use it. When we launched the Kubernetes Extension, adoption didn't match how useful we thought this feature was. Adoption doesn't always happen right away and we know building a great product is part strategic vision, part user feedback, and part enablement and awareness. We try to stay grounded in how the product is used today, while still leaving room to make strategic bets for the future.
 
 ## 5. Open source travels farther than you can see
 
-The last lesson might be the most encouraging one. Building on open-source foundations has a compounding value: it lets a community grow around a project in ways a closed, corporate roadmap never could. Case in point, we've discovered large-scale corporate adoption of Podman Desktop that had been happening quietly, without any of us knowing about it beforehand.
+This last lesson might be the most encouraging. Building on open-source foundations has compounding value: it lets a community grow around a project in ways a closed, corporate roadmap never could. Case in point, we've discovered large-scale corporate adoption of Podman Desktop that had been happening quietly.
 
 Five million downloads isn't really about the number. It shows that people are picking up Podman Desktop and gives us more to learn about where and how they use it.
 
