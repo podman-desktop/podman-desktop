@@ -1,14 +1,14 @@
 /**********************************************************************
  * Copyright (C) 2024-2025 Red Hat, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -207,11 +207,15 @@ test.runIf(os.platform() === 'darwin')('Watch a directory with a lot of files', 
 describe('FilesystemMonitoring', () => {
   let monitoring: FilesystemMonitoring;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await promises.writeFile(path.join(rootdir, 'somefile'), 'test');
+    await promises.writeFile(path.join(rootdir, 'file'), 'test');
+    await promises.writeFile(path.join(rootdir, 'file1'), 'test');
+    await promises.writeFile(path.join(rootdir, 'file2'), 'test');
     monitoring = new FilesystemMonitoring();
   });
 
-  test('createFileSystemWatcher should return a FileSystemWatcher', () => {
+  test('createFileSystemWatcher should return a FileSystemWatcher for valid path', () => {
     const fsWatcher = monitoring.createFileSystemWatcher(path.join(rootdir, 'somefile'));
     expect(fsWatcher).toBeDefined();
     expect(fsWatcher.dispose).toBeDefined();
@@ -219,6 +223,12 @@ describe('FilesystemMonitoring', () => {
     expect(fsWatcher.onDidChange).toBeDefined();
     expect(fsWatcher.onDidDelete).toBeDefined();
     fsWatcher.dispose();
+  });
+
+  test('createFileSystemWatcher should not return a FileSystemWatcher for invalid path', () => {
+    expect(() => {
+      monitoring.createFileSystemWatcher(path.join('/tmp/non-existent/', 'somefile'));
+    }).toThrow('/tmp/non-existent/somefile does not exist');
   });
 
   test('asyncDispose should dispose all tracked watchers', async () => {
