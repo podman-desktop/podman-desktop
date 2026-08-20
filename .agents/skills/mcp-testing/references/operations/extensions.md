@@ -16,7 +16,7 @@
 │   ├── [role="heading"]                        ← "Extensions"
 │   └── button:has-text("Installed")          ← tab buttons
 │       button:has-text("Catalog")
-│       button:has-text("Local Extensions")
+│       button:has-text("Local extensions")
 ├── [role="region"][aria-label="content"]
 │   └── [role="region"][aria-label="{extensionId}"]     ← extension cards
 ```
@@ -30,7 +30,7 @@
 | Page heading          | `[aria-label="header"] [role="heading"]:has-text("extensions")` |
 | Installed tab         | `button:has-text("Installed")`                                  |
 | Catalog tab           | `button:has-text("Catalog")`                                    |
-| Local Extensions tab  | `button:has-text("Local Extensions")`                           |
+| Local extensions tab  | `button:has-text("Local extensions")`                           |
 | Install custom button | `[aria-label="Install custom"]`                                 |
 
 ### Install Custom Extension Dialog
