@@ -20,14 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo } from '@podman-desktop/api';
 import type { ImageInspectInfo, SecretInfo } from '@podman-desktop/core-api';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import RunImage from '/@/lib/image/RunImage.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
 import { secretsInfo } from '/@/stores/secrets';
 
@@ -692,5 +694,28 @@ describe('RunImage', () => {
         }),
       }),
     );
+  });
+});
+
+describe('RunImage container name collision', () => {
+  test('Expect an error when the name matches one of an existing container aliases', async () => {
+    // the store holds ContainerInfoUI, whose `name` is compose-stripped and slash-free.
+    // The collision check compares against the raw `/name` form, so it needs `names`.
+    containersInfos.set([
+      {
+        id: 'existing',
+        engineId: 'engineid',
+        name: 'web-1',
+        names: ['/myproject-web-1', '/existing-container'],
+      } as unknown as ContainerInfoUI,
+    ]);
+
+    await createRunImage(undefined, []);
+
+    const nameInput = screen.getByRole('textbox', { name: 'Container Name' });
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'existing-container');
+
+    await waitFor(() => expect(screen.getByText(/The name existing-container already exists/)).toBeInTheDocument());
   });
 });
