@@ -135,6 +135,7 @@ const updateMachinesMutex = new Mutex();
 let createWSLMachineOptionSelected = false;
 let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
+let wslWarningShown = false;
 
 let extensionNotifications: ExtensionNotifications;
 let podmanRemoteConnections: PodmanRemoteConnections | undefined;
@@ -151,6 +152,14 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
   } else {
     return false;
   }
+}
+
+export function isWSLServiceError(output: string | undefined): boolean {
+  if (!output) {
+    return false;
+  }
+  const lower = output.toLowerCase();
+  return lower.includes('wsl/service/') || lower.includes('exit status 0xffffffff') || lower.includes('wsl_e_');
 }
 
 export async function updateMachines(
@@ -179,11 +188,19 @@ async function doUpdateMachines(
     if (runError.stderr) {
       shouldCleanMachine = isIncompatibleMachineOutput(runError.stderr);
     }
-    extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    if (!hasRemoteConnections) {
+    if (isWSLServiceError(runError.stderr ?? runError.message)) {
+      if (!wslWarningShown) {
+        wslWarningShown = true;
+        await extensionApi.window.showWarningMessage(
+          `Podman machines cannot be listed due to a WSL error. Try running 'wsl --shutdown' in a terminal and restarting the machine from Podman Desktop. Error: ${runError.stderr ?? runError.message}`,
+        );
+      }
+    } else if (!hasRemoteConnections) {
       extensionNotifications.notifySetupPodmanNotLinux();
     }
+
+    extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
     throw error;
   }
 
@@ -198,6 +215,18 @@ async function doUpdateMachines(
   // check if the machine needs to be cleaned for v4 --> v5 format
   if (!shouldCleanMachine) {
     shouldCleanMachine = isIncompatibleMachineOutput(machineListOutput.error);
+  }
+
+  // check if there are WSL service errors in the accumulated error output
+  if (isWSLServiceError(machineListOutput.error)) {
+    if (!wslWarningShown) {
+      wslWarningShown = true;
+      await extensionApi.window.showWarningMessage(
+        `Some Podman machines may not be visible due to a WSL error. Try running 'wsl --shutdown' in a terminal. Error: ${machineListOutput.error.trim()}`,
+      );
+    }
+  } else {
+    wslWarningShown = false;
   }
 
   // invalid machines is not making the provider working properly so always notify
@@ -346,7 +375,7 @@ async function doUpdateMachines(
   // the native podman installation / not machine.
   if (!extensionApi.env.isLinux) {
     if (machines.length === 0 && !hasRemoteConnections) {
-      if (provider.status !== 'configuring') {
+      if (provider.status !== 'configuring' && installedPodman) {
         provider.updateStatus('installed');
       }
     } else if (machines.length === 0 && hasRemoteConnections) {
@@ -689,7 +718,7 @@ export async function monitorMachines(
     try {
       await updateMachines(provider, podmanConfiguration);
     } catch (error) {
-      // ignore the update of machines
+      console.warn('Error updating podman machines', error);
     }
 
     await timeout(5000);
@@ -1939,9 +1968,14 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const list: MachineJSON[] = [];
   let error = '';
   for (const provider of containerMachineProviders) {
-    const machineListOutput = await getJSONMachineListByProvider(provider);
-    list.push(...(JSON.parse(machineListOutput.stdout) as MachineJSON[]));
-    error += machineListOutput.stderr + '\n';
+    try {
+      const machineListOutput = await getJSONMachineListByProvider(provider);
+      list.push(...(JSON.parse(machineListOutput.stdout) as MachineJSON[]));
+      error += machineListOutput.stderr + '\n';
+    } catch (err) {
+      const runError = err as RunError;
+      error += (runError.stderr ?? runError.message ?? String(err)) + '\n';
+    }
   }
 
   return { list, error };
@@ -2366,6 +2400,10 @@ export async function createMachine(
 
 export function resetShouldNotifySetup(): void {
   extensionNotifications.shouldNotifySetup = true;
+}
+
+export function resetWSLWarningFlag(): void {
+  wslWarningShown = false;
 }
 
 async function switchCompatibilityMode(enabled: boolean): Promise<void> {

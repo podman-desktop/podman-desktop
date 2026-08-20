@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ChildProcess } from 'node:child_process';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -170,7 +171,8 @@ export class ElectronRunner extends Runner {
       throw Error('Podman Desktop is not running');
     }
 
-    const pid = this._app?.process()?.pid;
+    const proc = this._app?.process();
+    const pid = proc?.pid;
     console.log(`Closing Podman Desktop with a timeout of ${timeout} ms, PID: ${pid}`);
     try {
       await this.raceWithTimeout(
@@ -182,6 +184,8 @@ export class ElectronRunner extends Runner {
       console.log(`Caught exception in closing: ${err}`);
       this.ensureElectronProcessesStopped(pid);
     }
+
+    await this.waitForProcessExit(proc, pid, 5_000);
 
     this._running = false;
     RunnerFactory.dispose();
@@ -206,6 +210,30 @@ export class ElectronRunner extends Runner {
    * all Electron processes by image name. This prevents a stale
    * single-instance lock from blocking subsequent test launches.
    */
+  protected async waitForProcessExit(
+    proc: ChildProcess | undefined | null,
+    pid: number | undefined,
+    timeout: number,
+  ): Promise<void> {
+    if (proc?.exitCode !== null || proc?.signalCode !== null) {
+      return;
+    }
+    console.log(`Waiting up to ${timeout}ms for PID ${pid} to exit...`);
+    try {
+      await this.raceWithTimeout(
+        new Promise<void>(resolve => {
+          proc.on('exit', resolve);
+        }),
+        timeout,
+        `Process ${pid} did not exit within ${timeout}ms`,
+      );
+      console.log(`Process ${pid} exited`);
+    } catch {
+      console.log(`Process ${pid} still alive after ${timeout}ms, force-killing`);
+      this.ensureElectronProcessesStopped(pid);
+    }
+  }
+
   protected ensureElectronProcessesStopped(pid: number | undefined): void {
     if (pid) {
       this.forceKillByPid(pid);

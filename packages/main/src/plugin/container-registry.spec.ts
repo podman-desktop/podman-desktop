@@ -6752,7 +6752,7 @@ describe('kube play', () => {
 
     await expect(async () => {
       await containerRegistry.playKube(
-        'dummy-file',
+        { type: 'path', value: 'dummy-file' },
         {
           name: PODMAN_PROVIDER.name,
           endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6769,7 +6769,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6788,7 +6788,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6808,7 +6808,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6821,6 +6821,55 @@ describe('kube play', () => {
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
       abortSignal: ABORT_SIGNAL,
     });
+  });
+
+  test('content input without build should call playKube with a Readable stream', async () => {
+    const RAW_YAML = 'apiVersion: v1\nkind: Pod\n';
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'content', value: RAW_YAML },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), KUBE_PLAY_OPT);
+    const stream = vi.mocked(PODMAN_PROVIDER.libpodApi.playKube).mock.calls[0]?.[0] as Readable;
+    const chunks: string[] = [];
+    for await (const chunk of stream) {
+      chunks.push(String(chunk));
+    }
+    expect(chunks.join('')).toBe(RAW_YAML);
+  });
+
+  test('content input with build and no build contexts should play kube with a Readable stream', async () => {
+    const RAW_YAML = 'apiVersion: v1\nkind: Pod\n';
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    const fakeKubePlayContext = {
+      init: vi.fn().mockResolvedValue(undefined),
+      getBuildContexts: vi.fn().mockReturnValue([]),
+    } as unknown as KubePlayContext;
+    vi.mocked(KubePlayContext.fromContent).mockReturnValue(fakeKubePlayContext);
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'content', value: RAW_YAML },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      { build: true },
+    );
+
+    expect(KubePlayContext.fromContent).toHaveBeenCalledWith(RAW_YAML, expect.any(String));
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), { build: true });
   });
 });
 

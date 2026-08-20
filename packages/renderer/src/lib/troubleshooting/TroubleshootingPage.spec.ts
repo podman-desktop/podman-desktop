@@ -16,23 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import TroubleshootingPage from './TroubleshootingPage.svelte';
 
-const getDevtoolsConsoleLogsMock = vi.fn();
-// fake the window object
-beforeAll(() => {
-  (window as any).getDevtoolsConsoleLogs = getDevtoolsConsoleLogsMock;
-});
-
 test('Check Troubleshooting Page', async () => {
-  getDevtoolsConsoleLogsMock.mockReturnValue([]);
+  vi.mocked(window.getDevtoolsConsoleLogs).mockResolvedValue([]);
   render(TroubleshootingPage, {});
 
   // click on the first tab

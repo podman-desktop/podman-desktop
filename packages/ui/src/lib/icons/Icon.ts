@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,16 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-/* eslint-env node */
-import { join } from 'path';
-import { defineConfig } from 'vite';
 
-const PACKAGE_ROOT = __dirname;
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  mode: process.env.MODE,
-  root: PACKAGE_ROOT,
-  resolve: {
-    alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
-    },
-  },
-  base: '',
-  server: {
-    fs: {
-      strict: true,
-    },
-  },
-  build: {
-    sourcemap: true,
-    outDir: 'dist',
-    assetsDir: '.',
+/**
+ * Theme-aware image icon with separate light and dark sources.
+ */
+export type ThemedIconImage = {
+  light: string;
+  dark: string;
+};
 
-    emptyOutDir: true,
-    reportCompressedSize: false,
-  },
-  test: {
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    passWithNoTests: true,
-  },
-});
+export type IconType = IconDefinition | Component | string | ThemedIconImage;

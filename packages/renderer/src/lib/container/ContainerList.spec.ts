@@ -1217,7 +1217,7 @@ test('Expect create container dialog opens when Create button is clicked', async
   });
 });
 
-test('Expect create container dialog has secondary button before primary button', async () => {
+test('Expect create container dialog has both choice buttons styled as secondary', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -1229,12 +1229,15 @@ test('Expect create container dialog has secondary button before primary button'
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const dialogButtons = within(dialog).getAllByRole('button');
-  const existingImageIndex = dialogButtons.findIndex(b => b.textContent?.includes('Existing image'));
-  const containerfileIndex = dialogButtons.findIndex(b => b.textContent?.includes('Containerfile or Dockerfile'));
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
 
-  expect(existingImageIndex).toBeGreaterThanOrEqual(0);
-  expect(containerfileIndex).toBeGreaterThanOrEqual(0);
+  expect(existingImageButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
+  expect(containerfileButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
+
+  const dialogButtons = within(dialog).getAllByRole('button');
+  const existingImageIndex = dialogButtons.indexOf(existingImageButton);
+  const containerfileIndex = dialogButtons.indexOf(containerfileButton);
   expect(existingImageIndex).toBeLessThan(containerfileIndex);
 });
 
@@ -1250,7 +1253,7 @@ test('Expect clicking Containerfile button navigates to build image page', async
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Containerfile or Dockerfile' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
   await fireEvent.click(containerfileButton);
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
@@ -1269,7 +1272,7 @@ test('Expect clicking Existing image button closes dialog', async () => {
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const existingImageButton = within(dialog).getByRole('button', { name: 'Existing image' });
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
   await fireEvent.click(existingImageButton);
 
   await waitFor(() => {

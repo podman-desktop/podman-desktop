@@ -56,10 +56,10 @@ export class ContainersPage extends MainPage {
     });
     this.createDialogCloseButton = this.createDialog.getByLabel('Close');
     this.createDialogContainerOrDockerfileButton = this.createDialog.getByRole('button', {
-      name: 'Containerfile or Dockerfile',
+      name: 'Use Containerfile',
     });
     this.createDialogExistingImageButton = this.createDialog.getByRole('button', {
-      name: 'Existing image',
+      name: 'Use existing image',
     });
   }
 

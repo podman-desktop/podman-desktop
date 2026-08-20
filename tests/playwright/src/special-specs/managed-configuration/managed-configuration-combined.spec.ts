@@ -237,6 +237,33 @@ test.describe
       });
 
     test.describe
+      .serial('Defaults + Locked preference: App Update', () => {
+        let appUpdateRow: Locator;
+        let value: boolean;
+        test('Expected settings value', async () => {
+          appUpdateRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.APP_UPDATE);
+          await playExpect(appUpdateRow).toBeAttached();
+
+          const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.APP_UPDATE);
+          playExpect(isManaged).toBeTruthy();
+
+          value = await preferencesPage.getPreferenceCheckboxValue(
+            Preferences.Labels.APP_UPDATE,
+            Preferences.APP_UPDATE_TOGGLE_BUTTON_LABEL,
+          );
+          playExpect(value).toBeFalsy();
+        });
+        test('Preference can not be changed', async () => {
+          const selectionToggle = appUpdateRow.getByLabel(Preferences.APP_UPDATE_TOGGLE_BUTTON_LABEL);
+          await playExpect(selectionToggle).toBeDisabled();
+        });
+        test('Preference can not be reset', async () => {
+          const resetButton = appUpdateRow.getByRole('button', { name: 'Reset to default value' });
+          await playExpect(resetButton).not.toBeAttached();
+        });
+      });
+
+    test.describe
       .serial('Locked preference: Line Height', () => {
         let lineHeightRow: Locator;
         let value: string;

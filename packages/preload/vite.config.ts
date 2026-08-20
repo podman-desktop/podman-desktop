@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2026 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,46 +16,54 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { builtinModules } from 'node:module';
+import { defineConfig } from 'vite';
+
+import { chrome } from '../../.electron-vendors.cache.json';
 import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 
-import { defineConfig } from 'vitest/config';
-
-const WORKSPACE_ROOT = join(__dirname, '..');
+const PACKAGE_ROOT = __dirname;
 
 export default defineConfig({
   mode: process.env['MODE'],
+  root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
-    mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
+    alias: {
+      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+    },
   },
+  /*plugins: [
+    commonjs({
+      dynamicRequireTargets: [
+        // include using a glob pattern (either a string or an array of strings)
+        'node_modules/ssh2/lib/protocol/crypto/poly1305.js',
+      ]
+      }),
+  ],*/
   build: {
     sourcemap: 'inline',
-    target: 'esnext',
+    target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env['MODE'] === 'production',
+    minify: process.env['MODE'] !== 'development',
     lib: {
-      entry: 'src/extension.ts',
+      entry: 'src/index.ts',
       formats: ['cjs'],
     },
     rollupOptions: {
       platform: 'node',
-      external: ['@podman-desktop/api', ...builtinModules.flatMap(p => [p, `node:${p}`])],
+      external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
-        entryFileNames: '[name].js',
+        entryFileNames: '[name].cjs',
       },
     },
     emptyOutDir: true,
     reportCompressedSize: false,
   },
   test: {
-    globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    globalSetup: [join(WORKSPACE_ROOT, 'packages', 'api-mocks-vitest', 'src', 'vitest-generate-api-global-setup.ts')],
-    alias: {
-      '@podman-desktop/api': join(WORKSPACE_ROOT, 'packages', 'api-mocks-vitest', 'src', '@podman-desktop', 'api.js'),
-    },
+    passWithNoTests: true,
   },
 });
