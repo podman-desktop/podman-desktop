@@ -227,8 +227,8 @@ describe('FilesystemMonitoring', () => {
 
   test('createFileSystemWatcher should not return a FileSystemWatcher for invalid path', () => {
     expect(() => {
-      monitoring.createFileSystemWatcher(path.join('/tmp/non-existent/', 'somefile'));
-    }).toThrow('/tmp/non-existent/somefile does not exist');
+      monitoring.createFileSystemWatcher(path.join('tmp', 'non-existent', 'somefile'));
+    }).toThrow(`${path.join('tmp', 'non-existent', 'somefile')} does not exist`);
   });
 
   test('asyncDispose should dispose all tracked watchers', async () => {
