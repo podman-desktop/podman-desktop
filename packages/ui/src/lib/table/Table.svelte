@@ -383,8 +383,13 @@ function eventTargetElement(event: MouseEvent): Element | undefined {
   return undefined;
 }
 
-function isInteractiveClick(event: MouseEvent): boolean {
-  return event.composedPath().some(node => node instanceof Element && node.matches(INTERACTIVE_SELECTOR));
+function isInteractiveClick(event: MouseEvent, rowElement: HTMLElement): boolean {
+  const target = eventTargetElement(event);
+  if (!target || !rowElement.contains(target)) {
+    return false;
+  }
+
+  return target.closest(INTERACTIVE_SELECTOR) !== null;
 }
 
 function shouldIgnoreRowClick(rowElement: HTMLElement, event: MouseEvent): boolean {
@@ -397,7 +402,7 @@ function shouldIgnoreRowClick(rowElement: HTMLElement, event: MouseEvent): boole
 
   // Do not stopPropagation: Svelte 5 delegates onclick to the document, so
   // stopping at a cell prevents action buttons from receiving the click.
-  if (isInteractiveClick(event)) {
+  if (isInteractiveClick(event, rowElement)) {
     return true;
   }
 
@@ -425,17 +430,34 @@ function shouldIgnoreRowClick(rowElement: HTMLElement, event: MouseEvent): boole
   return visibleColumns[columnIndex].info.excludeFromRowClick === true;
 }
 
-function handleRowClick(object: T, event: MouseEvent): void {
+function invokeRowClick(object: T, rowElement: HTMLElement, event: Event): void {
   if (!isRowClickable(object) || !row.info.onClick) {
     return;
   }
 
-  const rowElement = event.currentTarget as HTMLElement;
-  if (shouldIgnoreRowClick(rowElement, event)) {
+  if (event instanceof MouseEvent && shouldIgnoreRowClick(rowElement, event)) {
     return;
   }
 
   row.info.onClick(object, event);
+}
+
+function handleRowClick(object: T, event: MouseEvent): void {
+  invokeRowClick(object, event.currentTarget as HTMLElement, event);
+}
+
+function handleRowKeyDown(object: T, event: KeyboardEvent): void {
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+
+  const rowElement = event.currentTarget as HTMLElement;
+  if (event.target !== rowElement) {
+    return;
+  }
+
+  event.preventDefault();
+  invokeRowClick(object, rowElement, event);
 }
 </script>
 
@@ -517,20 +539,24 @@ function handleRowClick(object: T, event: MouseEvent): void {
       {@const children = row.info.children?.(object) ?? []}
       {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
-          class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
+          class="grid grid-table gap-x-0.5 min-h-[48px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
+          class:group={!!row.info.onClick}
+          class:hover:bg-[var(--pd-content-card-hover-bg)]={!row.info.onClick}
           class:rounded-t-lg={!collapsed.includes(itemKey) &&
             children.length > 0}
           class:rounded-lg={collapsed.includes(itemKey) ||
             children.length === 0}
           class:cursor-pointer={isRowClickable(object)}
-          class:opacity-50={row.info.onClick && !isRowClickable(object)}
           role="row"
+          tabindex={isRowClickable(object) ? 0 : undefined}
           aria-label={label(object)}
-          on:click={handleRowClick.bind(undefined, object)}>
-          <div class="whitespace-nowrap place-self-center" role="cell">
+          on:click={handleRowClick.bind(undefined, object)}
+          on:keydown={handleRowKeyDown.bind(undefined, object)}>
+          <div
+            class="whitespace-nowrap place-self-center"
+            class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick && isRowClickable(object)}
+            role="cell">
             {#if children.length > 0}
               <button
                 title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
@@ -564,6 +590,10 @@ function handleRowClick(object: T, event: MouseEvent): void {
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
               class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
+              class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick &&
+                isRowClickable(object) &&
+                !column.info.excludeFromRowClick}
+              class:opacity-50={row.info.onClick && !isRowClickable(object) && !column.info.excludeFromRowClick}
               class:cursor-default={column.info.excludeFromRowClick && isRowClickable(object)}
               role="cell">
               {#if column.info.renderer}

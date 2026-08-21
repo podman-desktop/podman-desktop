@@ -935,7 +935,7 @@ describe('Table#rowClick', () => {
     const { getByRole } = render(Table<Item>, {
       kind: 'row-click-disabled-style-test',
       data: DATA,
-      columns: [NAME_COLUMN],
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
       row: ROW,
       key: (item: Item): string => item.id,
       label: (item: Item): string => item.name,
@@ -943,8 +943,16 @@ describe('Table#rowClick', () => {
 
     const row = getByRole('row', { name: 'Alice' });
     expect(row).not.toHaveClass('cursor-pointer');
-    expect(row).toHaveClass('opacity-50');
-    expect(row).toHaveClass('hover:bg-[var(--pd-content-card-hover-bg)]');
+    expect(row).not.toHaveClass('opacity-50');
+    expect(row).not.toHaveClass('hover:bg-[var(--pd-content-card-hover-bg)]');
+
+    const cells = row.querySelectorAll('[role="cell"]');
+    const nameCell = cells[1];
+    expect(nameCell).toHaveClass('opacity-50');
+    expect(nameCell).not.toHaveClass('group-hover:bg-[var(--pd-content-card-hover-bg)]');
+
+    const actionsCell = cells[cells.length - 1];
+    expect(actionsCell).not.toHaveClass('opacity-50');
   });
 
   test('click on expand button does not call onClick', async () => {
@@ -989,6 +997,61 @@ describe('Table#rowClick', () => {
     const row = getByRole('row', { name: 'Alice' });
     const checkbox = within(row).getByRole('checkbox');
     await fireEvent.click(checkbox);
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('click on button in data column does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-data-button-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const nameCell = within(row).getByText('Alice').closest('[role="cell"]');
+    const actionButton = document.createElement('button');
+    actionButton.textContent = 'Run';
+    nameCell?.appendChild(actionButton);
+
+    const buttonHandler = vi.fn();
+    actionButton.addEventListener('click', buttonHandler);
+
+    await fireEvent.click(actionButton);
+
+    expect(buttonHandler).toHaveBeenCalledOnce();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('click inside dropdown menu marker does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-dropdown-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const nameCell = within(row).getByText('Alice').closest('[role="cell"]');
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.setAttribute('data-pd-dropdown-menu', '');
+    const menuItem = document.createElement('button');
+    menuItem.textContent = 'Delete';
+    dropdownMenu.appendChild(menuItem);
+    nameCell?.appendChild(dropdownMenu);
+
+    await fireEvent.click(menuItem);
 
     expect(onClick).not.toHaveBeenCalled();
   });
@@ -1044,6 +1107,88 @@ describe('Table#rowClick', () => {
 
     const row = getByRole('row', { name: 'Alice' });
     expect(row).toHaveClass('cursor-pointer');
+    expect(row).toHaveClass('group');
+    expect(row).not.toHaveClass('hover:bg-[var(--pd-content-card-hover-bg)]');
+
+    const nameCell = within(row).getByText('Alice').closest('[role="cell"]');
+    expect(nameCell).toHaveClass('group-hover:bg-[var(--pd-content-card-hover-bg)]');
+  });
+
+  test('clickable row is keyboard focusable', async () => {
+    const ROW = new Row<Item>({ onClick: vi.fn() });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-tabindex-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    expect(row).toHaveAttribute('tabindex', '0');
+  });
+
+  test('non-clickable row is not keyboard focusable', async () => {
+    const ROW = new Row<Item>({
+      onClick: vi.fn(),
+      clickable: (): boolean => false,
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-no-tabindex-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    expect(row).not.toHaveAttribute('tabindex');
+  });
+
+  test('Enter key on focused row calls onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-enter-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    row.focus();
+    await fireEvent.keyDown(row, { key: 'Enter' });
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(KeyboardEvent));
+  });
+
+  test('Space key on focused row calls onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-space-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    row.focus();
+    await fireEvent.keyDown(row, { key: ' ' });
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(KeyboardEvent));
   });
 
   test('excluded column cell has cursor-default class', async () => {

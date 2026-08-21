@@ -127,7 +127,7 @@ export interface RowInformation<Type, ChildType> {
    * Handler invoked when a clickable row is clicked.
    * Applies to parent rows only; expanded child rows do not invoke this handler.
    */
-  readonly onClick?: (object: Type, event: MouseEvent) => void;
+  readonly onClick?: (object: Type, event: Event) => void;
 
   /**
    * Returns true if the row should respond to clicks.
