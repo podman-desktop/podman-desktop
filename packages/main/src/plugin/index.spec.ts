@@ -125,6 +125,18 @@ class TestPluginSystem extends PluginSystem {
   setQuitting(value: boolean): void {
     this.isQuitting = value;
   }
+
+  setContainer(container?: InversifyContainer): void {
+    this.container = container;
+  }
+}
+
+type Listener = (...args: unknown[]) => void;
+
+function getElectronAppListener(event: string): Listener {
+  const callback = vi.mocked(app.on).mock.calls.find(([mEvent]) => mEvent === event)?.[1];
+  assert(callback, `cannot find listener for event ${event}`);
+  return callback;
 }
 
 let inversifyContainer: InversifyContainer;
@@ -1258,5 +1270,67 @@ describe('container-provider-registry:playKube', () => {
     const createdTask = vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value;
     expect(createdTask.status).toBe('failure');
     expect(createdTask.error).toBe('Error: Dummy Foo');
+  });
+});
+
+describe('before-quit container disposal', () => {
+  test('should call unbindAllAsync and app.quit when before-quit is emitted with a container', async () => {
+    const unbindAllAsyncMock = vi.fn().mockResolvedValue(undefined);
+    const mockContainer = { unbindAllAsync: unbindAllAsyncMock } as unknown as InversifyContainer;
+    pluginSystem.setContainer(mockContainer);
+    pluginSystem.setQuitting(false);
+
+    const listener = getElectronAppListener('before-quit');
+    const event = { preventDefault: vi.fn() };
+    listener(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(app.quit).toHaveBeenCalled();
+    });
+    expect(unbindAllAsyncMock).toHaveBeenCalled();
+  });
+
+  test('should log error and still call app.quit if unbindAllAsync throws', async () => {
+    const error = new Error('dispose error');
+    const unbindAllAsyncMock = vi.fn().mockRejectedValue(error);
+    const mockContainer = { unbindAllAsync: unbindAllAsyncMock } as unknown as InversifyContainer;
+    pluginSystem.setContainer(mockContainer);
+    pluginSystem.setQuitting(false);
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const listener = getElectronAppListener('before-quit');
+    const event = { preventDefault: vi.fn() };
+    listener(event);
+
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('[PluginSystem] error disposing container:', error);
+    });
+    expect(app.quit).toHaveBeenCalled();
+  });
+
+  test('should not call preventDefault when container is undefined', () => {
+    pluginSystem.setContainer();
+    pluginSystem.setQuitting(false);
+
+    const listener = getElectronAppListener('before-quit');
+    const event = { preventDefault: vi.fn() };
+    listener(event);
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
+
+  test('should skip disposal on re-entrant before-quit call', () => {
+    const unbindAllAsyncMock = vi.fn().mockResolvedValue(undefined);
+    const mockContainer = { unbindAllAsync: unbindAllAsyncMock } as unknown as InversifyContainer;
+    pluginSystem.setContainer(mockContainer);
+    pluginSystem.setQuitting(true);
+
+    const listener = getElectronAppListener('before-quit');
+    const event = { preventDefault: vi.fn() };
+    listener(event);
+
+    expect(unbindAllAsyncMock).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
   });
 });
