@@ -365,6 +365,78 @@ async function resetColumns(): Promise<void> {
     columnOrdering.clear();
   }
 }
+
+const INTERACTIVE_SELECTOR =
+  'button, a, input, select, textarea, label, [role="button"], [role="menuitem"], [role="checkbox"], [role="switch"], [data-pd-dropdown-menu]';
+
+function isRowClickable(object: T): boolean {
+  return !!row.info.onClick && (row.info.clickable?.(object) ?? true);
+}
+
+function eventTargetElement(event: MouseEvent): Element | undefined {
+  if (event.target instanceof Element) {
+    return event.target;
+  }
+  if (event.target instanceof Text) {
+    return event.target.parentElement ?? undefined;
+  }
+  return undefined;
+}
+
+function isInteractiveClick(event: MouseEvent): boolean {
+  return event.composedPath().some(node => node instanceof Element && node.matches(INTERACTIVE_SELECTOR));
+}
+
+function shouldIgnoreRowClick(rowElement: HTMLElement, event: MouseEvent): boolean {
+  const target = eventTargetElement(event);
+
+  // Clicks on the row background / CSS grid gaps must navigate.
+  if (!target || target === rowElement) {
+    return false;
+  }
+
+  // Do not stopPropagation: Svelte 5 delegates onclick to the document, so
+  // stopping at a cell prevents action buttons from receiving the click.
+  if (isInteractiveClick(event)) {
+    return true;
+  }
+
+  const cell = target.closest('[role="cell"]');
+  if (!cell || !rowElement.contains(cell)) {
+    return true;
+  }
+
+  const cells = Array.from(rowElement.querySelectorAll(':scope > [role="cell"]'));
+  const cellIndex = cells.indexOf(cell as HTMLElement);
+  if (cellIndex < 0) {
+    return true;
+  }
+
+  const columnIndex = cellIndex - (row.info.selectable ? 2 : 1);
+  if (columnIndex < 0) {
+    // Expander and checkbox columns: allow navigation unless an interactive control handled above.
+    return false;
+  }
+
+  if (columnIndex >= visibleColumns.length) {
+    return true;
+  }
+
+  return visibleColumns[columnIndex].info.excludeFromRowClick === true;
+}
+
+function handleRowClick(object: T, event: MouseEvent): void {
+  if (!isRowClickable(object) || !row.info.onClick) {
+    return;
+  }
+
+  const rowElement = event.currentTarget as HTMLElement;
+  if (shouldIgnoreRowClick(rowElement, event)) {
+    return;
+  }
+
+  row.info.onClick(object, event);
+}
 </script>
 
 <div
@@ -445,14 +517,19 @@ async function resetColumns(): Promise<void> {
       {@const children = row.info.children?.(object) ?? []}
       {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
           class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
           class:rounded-t-lg={!collapsed.includes(itemKey) &&
             children.length > 0}
           class:rounded-lg={collapsed.includes(itemKey) ||
             children.length === 0}
+          class:cursor-pointer={isRowClickable(object)}
+          class:opacity-50={row.info.onClick && !isRowClickable(object)}
           role="row"
-          aria-label={label(object)}>
+          aria-label={label(object)}
+          on:click={handleRowClick.bind(undefined, object)}>
           <div class="whitespace-nowrap place-self-center" role="cell">
             {#if children.length > 0}
               <button
@@ -487,6 +564,7 @@ async function resetColumns(): Promise<void> {
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
               class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
+              class:cursor-default={column.info.excludeFromRowClick && isRowClickable(object)}
               role="cell">
               {#if column.info.renderer}
                 <svelte:component
