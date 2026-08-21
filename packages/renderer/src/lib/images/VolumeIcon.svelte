@@ -1,13 +1,17 @@
 <script lang="ts">
-export let size = '40';
-export let solid = false;
+import type { HTMLAttributes } from 'svelte/elements';
+
+interface Props extends HTMLAttributes<SVGSVGElement> {
+  size?: string;
+  solid?: boolean;
+}
+let { size = '40', solid = false, ...restProps }: Props = $props();
 </script>
 
 <svg
+  {...restProps}
   width={size}
   height={size}
-  class={$$props.class}
-  style={$$props.style}
   viewBox="0.926 0.926 4.498 4.498"
   version="1.1"
   xml:space="preserve"
