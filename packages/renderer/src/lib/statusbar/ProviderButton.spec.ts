@@ -35,7 +35,7 @@ const PROVIDER_MOCK = {
   vmConnections: [],
   status: 'ready' as ProviderStatus,
   images: {
-    icon: 'my-nice-icon',
+    icon: 'my-nice-icon.png',
   },
 } as unknown as ProviderInfo;
 

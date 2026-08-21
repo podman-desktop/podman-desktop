@@ -3,12 +3,12 @@ import type { ProviderConnectionInfo, ProviderContainerConnectionInfo, ProviderI
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Tab } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
@@ -160,7 +160,9 @@ function setNoLogs(): void {
       {/if}
     {/snippet}
     {#snippet iconSnippet()}
-      <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
+      {#if providerInfo?.images?.icon}
+        <Icon icon={providerInfo.images.icon} title={providerInfo?.name} class="max-h-10" />
+      {/if}
     {/snippet}
     {#snippet tabsSnippet()}
       {#if connectionInfo}
