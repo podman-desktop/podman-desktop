@@ -15,28 +15,32 @@ import {
 import ThemedIcon from './ThemedIcon.svelte';
 import type { ILoadingStatus } from './Util';
 
-export let cliTool: CliToolInfo;
-let showError = false;
-let errorMessage = '';
-let newVersion: string | undefined = cliTool.newVersion;
-let cliToolUpdateStatus: ILoadingStatus;
-$: cliToolUpdateStatus = {
-  inProgress: false,
+interface Props {
+  cliTool: CliToolInfo;
+}
+let { cliTool }: Props = $props();
+
+let showError = $state(false);
+let errorMessage = $state('');
+let newVersion: string | undefined = $derived(cliTool.newVersion);
+let updateInProgress = $state(false);
+let installInProgress = $state(false);
+let uninstallInProgress = $state(false);
+let cliToolUpdateStatus: ILoadingStatus = $derived({
+  inProgress: updateInProgress,
   status: cliTool.canUpdate ? 'toUpdate' : 'unknown',
   action: 'update',
-};
-let cliToolInstallStatus: ILoadingStatus;
-$: cliToolInstallStatus = {
-  inProgress: false,
+});
+let cliToolInstallStatus: ILoadingStatus = $derived({
+  inProgress: installInProgress,
   status: cliTool.canInstall ? 'toInstall' : 'unknown',
   action: 'install',
-};
-let cliToolUninstallStatus: ILoadingStatus;
-$: cliToolUninstallStatus = {
-  inProgress: false,
+});
+let cliToolUninstallStatus: ILoadingStatus = $derived({
+  inProgress: uninstallInProgress,
   status: cliTool.canInstall ? 'toUninstall' : 'unknown',
   action: 'uninstall',
-};
+});
 
 async function showTaskManager(): Promise<void> {
   // call the command show-task-manager'
@@ -58,8 +62,7 @@ async function update(cliTool: CliToolInfo): Promise<void> {
     return;
   }
   try {
-    cliToolUpdateStatus.inProgress = true;
-    cliToolUpdateStatus = cliToolUpdateStatus;
+    updateInProgress = true;
     const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(cliTool.id));
     await window.updateCliTool(cliTool.id, loggerHandlerKey, newVersion, eventCollect);
     showError = false;
@@ -67,8 +70,7 @@ async function update(cliTool: CliToolInfo): Promise<void> {
     errorMessage = `Unable to update ${cliTool.displayName} to version ${newVersion}.`;
     showError = true;
   } finally {
-    cliToolUpdateStatus.inProgress = false;
-    cliToolUpdateStatus = cliToolUpdateStatus;
+    updateInProgress = false;
   }
 }
 
@@ -87,8 +89,7 @@ async function install(cliTool: CliToolInfo): Promise<void> {
     return;
   }
   try {
-    cliToolInstallStatus.inProgress = true;
-    cliToolInstallStatus = cliToolInstallStatus;
+    installInProgress = true;
     const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(cliTool.id));
     await window.installCliTool(cliTool.id, versionToInstall, loggerHandlerKey, eventCollect);
     showError = false;
@@ -96,8 +97,7 @@ async function install(cliTool: CliToolInfo): Promise<void> {
     errorMessage = `Unable to install ${cliTool.displayName} to version ${versionToInstall}.`;
     showError = true;
   } finally {
-    cliToolInstallStatus.inProgress = false;
-    cliToolInstallStatus = cliToolInstallStatus;
+    installInProgress = false;
   }
 }
 
@@ -114,8 +114,7 @@ async function uninstall(cliTool: CliToolInfo): Promise<void> {
   }
 
   try {
-    cliToolUninstallStatus.inProgress = true;
-    cliToolUninstallStatus = cliToolUninstallStatus;
+    uninstallInProgress = true;
     const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(cliTool.id));
     await window.uninstallCliTool(cliTool.id, loggerHandlerKey, eventCollect);
     showError = false;
@@ -123,8 +122,7 @@ async function uninstall(cliTool: CliToolInfo): Promise<void> {
     errorMessage = `Unable to uninstall ${cliTool.displayName}. Error: ${String(e)}`;
     showError = true;
   } finally {
-    cliToolUninstallStatus.inProgress = false;
-    cliToolUninstallStatus = cliToolUninstallStatus;
+    uninstallInProgress = false;
   }
 }
 
