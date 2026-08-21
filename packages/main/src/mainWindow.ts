@@ -116,8 +116,17 @@ async function createWindow(): Promise<BrowserWindow> {
         app.dock?.hide();
       }
     } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
-      // On macOS login item launch, defer showing until we can check the minimize preference
-      deferredShow = true;
+      if (configurationRegistry) {
+        const preferencesConfig = configurationRegistry.getConfiguration('preferences');
+        const minimize = preferencesConfig.get<boolean>('login.minimize');
+        if (minimize) {
+          app.dock?.hide();
+        } else {
+          browserWindow.show();
+        }
+      } else {
+        deferredShow = true;
+      }
     } else {
       browserWindow.show();
     }
