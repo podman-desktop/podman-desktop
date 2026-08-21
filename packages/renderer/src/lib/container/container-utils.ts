@@ -176,6 +176,7 @@ export class ContainerUtils {
       selected: false,
       created: containerInfo.Created,
       labels: containerInfo.Labels,
+      isInfra: containerInfo.IsInfra,
       icon: this.iconClass(containerInfo, context, viewContributions) ?? ContainerIcon,
       imageBase64RepoTag: containerInfo.ImageBase64RepoTag,
       imageHref: this.getImageHref(containerInfo),

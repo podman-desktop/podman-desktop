@@ -70,6 +70,7 @@ export interface ContainerInfoUI {
   actionInProgress?: boolean;
   actionError?: string;
   labels: { [label: string]: string };
+  isInfra?: boolean;
   icon?: string | IconDefinition | Component;
   imageBase64RepoTag: string;
   imageHref?: string;
