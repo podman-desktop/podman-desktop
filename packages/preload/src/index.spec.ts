@@ -263,6 +263,20 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     expect(result).toEqual([{ routeId: 'ext.dashboard', label: 'Dashboard', icon: 'icon.png' }]);
   });
 
+  test('searchDynamicProviders', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({
+      result: [{ label: 'Test Result', command: 'test.command', providerLabel: 'Test Provider' }],
+    });
+
+    const searchDynamicProvidersExposure = getInMainWorld('searchDynamicProviders');
+
+    const result = await searchDynamicProvidersExposure('test query', 10);
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith('navigation:searchDynamicProviders', 'test query', 10);
+
+    expect(result).toEqual([{ label: 'Test Result', command: 'test.command', providerLabel: 'Test Provider' }]);
+  });
+
   test('logger passed to createVmProviderConnection is called during provider-registry:taskConnection-onData', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
     const createVmProviderConnectionExposure = getInMainWorld('createVmProviderConnection');
