@@ -27,7 +27,7 @@ In foldable details, you can find alternative steps for least common contexts:
 1. Start a session in your WSL distribution:
 
    ```shell-session
-   > wsl --distribution your-distribution-name
+   wsl --distribution your-distribution-name
    ```
 
 1. To communicate with the remote Podman Machine, you need a Podman client.
@@ -108,7 +108,7 @@ In foldable details, you can find alternative steps for least common contexts:
       Open a new Command Prompt, and list your Podman system connections:
 
       ```shell-session
-      > podman system connection list
+      podman system connection list
       ```
 
       The default connection line ends with `true`.
@@ -153,7 +153,7 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
 1. Start a session in your WSL distribution:
 
    ```shell-session
-   > wsl
+   wsl
    ```
 
 1. Verify that your user is member of the group delivering access to the remote Podman Machine socket:
