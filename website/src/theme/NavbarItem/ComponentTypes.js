@@ -11,7 +11,7 @@ export default {
       Downloads
     </TelemetryLink>
   ),
-  'custom-downloadButton': () => <HeaderDownloadButton className="navbar__item navbar__link" />,
+  'custom-downloadButton': props => <HeaderDownloadButton mobile={props.mobile} onClick={props.onClick} />,
   // passing mobile as property
   'custom-githubStarsButton': props => <GitHubStarsButton mobile={props.mobile} />,
 };

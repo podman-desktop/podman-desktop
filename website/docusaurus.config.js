@@ -47,16 +47,16 @@ const config = {
       {
         redirects: [
           {
-            to: '/downloads/windows',
-            from: '/downloads/Windows',
+            to: '/downloads',
+            from: ['/downloads/windows', '/downloads/Windows'],
           },
           {
-            to: '/downloads/macos',
-            from: '/downloads/macOS',
+            to: '/downloads',
+            from: ['/downloads/macos', '/downloads/macOS'],
           },
           {
-            to: '/downloads/linux',
-            from: '/downloads/Linux',
+            to: '/downloads',
+            from: ['/downloads/linux', '/downloads/Linux'],
           },
           {
             to: '/docs/intro',
@@ -452,13 +452,6 @@ const config = {
             sidebarId: 'mySidebar',
             position: 'left',
             label: 'Documentation',
-          },
-          {
-            type: 'custom-telemetryLink',
-            position: 'left',
-            to: '/downloads',
-            eventPath: '/download',
-            eventTitle: 'navigation-download',
           },
           { to: '/community', label: 'Community', position: 'left' },
           {

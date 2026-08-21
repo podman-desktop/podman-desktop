@@ -1,0 +1,39 @@
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
+
+import GradientButton from '../GradientButton';
+import type { VendorCardProps } from './vendorData';
+
+export function VendorCard({ name, logo, logoDark, description, href }: VendorCardProps): JSX.Element {
+  const resolvedLogo = useBaseUrl(logo);
+  const resolvedLogoDark = useBaseUrl(logoDark ?? logo);
+  return (
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col h-full bg-white/60 dark:bg-charcoal-800/60">
+      <div className="mb-4">
+        <img
+          src={resolvedLogo}
+          alt={name}
+          className={logoDark ? 'dark:hidden' : ''}
+          style={{ height: '48px', objectFit: 'contain' }}
+        />
+        {logoDark && (
+          <img
+            src={resolvedLogoDark}
+            alt={name}
+            className="hidden dark:block"
+            style={{ height: '48px', objectFit: 'contain' }}
+          />
+        )}
+      </div>
+      <p className="text-charcoal-300 dark:text-gray-400 mb-4 flex-grow">{description}</p>
+      <div className="mt-auto">
+        <GradientButton href={href} external className="vendor-card-cta">
+          Learn more
+          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
+        </GradientButton>
+      </div>
+    </div>
+  );
+}
