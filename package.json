@@ -175,7 +175,7 @@
     "eslint-plugin-sonarjs": "^4.1.0",
     "eslint-plugin-unicorn": "^73.0.0",
     "fzstd": "^0.1.1",
-    "get-tsconfig": "^4.14.2",
+    "get-tsconfig": "^4.14.3",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
     "jsonc-parser": "^3.3.1",
