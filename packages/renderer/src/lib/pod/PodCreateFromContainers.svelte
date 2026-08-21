@@ -1,12 +1,11 @@
 <script lang="ts">
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import { Button, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { onDestroy, onMount } from 'svelte';
+import { onDestroy } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
-import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -17,22 +16,90 @@ import { handleNavigation } from '/@/navigation';
 import { type PodCreation, podCreationHolder } from '/@/stores/creation-from-containers-store';
 import { providerInfos } from '/@/stores/providers';
 
-let podCreation: PodCreation;
-let createInProgress = false;
-let createError: string | undefined = undefined;
-let mapPortExposed = new SvelteMap<number, { exposed: boolean; container: string }>();
-let containersPorts: { containers: string[]; ports: number[] }[] = [];
+let podCreation = $state<PodCreation | undefined>($podCreationHolder);
+let createInProgress = $state(false);
+let createError: string | undefined = $state(undefined);
+// User toggles for whether a public port should be exposed (defaults to true when absent)
+let portExposureOverrides = $state<Record<number, boolean>>({});
 
-let providers: ProviderInfo[] = [];
-$: providerConnections = providers
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined;
-$: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-let selectedProvider: ProviderContainerConnectionInfo | undefined;
-$: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
+let providerConnections = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
+
+let selectedProviderConnection = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
+
+let selectedProvider = $state<ProviderContainerConnectionInfo | undefined>(undefined);
+
+$effect(() => {
+  if (!selectedProvider && selectedProviderConnection) {
+    selectedProvider = selectedProviderConnection;
+  }
+});
+
+let mapPortExposed = $derived.by(() => {
+  const map = new SvelteMap<number, { exposed: boolean; container: string }>();
+  if (!podCreation) {
+    return map;
+  }
+  for (const container of podCreation.containers) {
+    for (const port of container.ports) {
+      map.set(port.PublicPort, {
+        exposed: portExposureOverrides[port.PublicPort] ?? true,
+        container: container.name,
+      });
+    }
+  }
+  return map;
+});
+
+let containersPorts = $derived.by(() => {
+  if (!podCreation) {
+    return [] as { containers: string[]; ports: number[] }[];
+  }
+  const mapPortPrivate = new SvelteMap<number, string[]>();
+  for (const container of podCreation.containers) {
+    for (const port of container.ports) {
+      mapPortPrivate.set(port.PrivatePort, [...(mapPortPrivate.get(port.PrivatePort) ?? []), container.name]);
+    }
+  }
+  const result: { containers: string[]; ports: number[] }[] = [];
+  mapPortPrivate.forEach((containers, privatePort) => {
+    if (containers.length < 2) {
+      return;
+    }
+    const indexContainersItem = getIndexSameContainersItems(result, containers);
+    if (indexContainersItem !== undefined) {
+      result[indexContainersItem].ports.push(privatePort);
+    } else {
+      result.push({
+        containers,
+        ports: [privatePort],
+      });
+    }
+  });
+  return result;
+});
+
+let warningText = $derived.by(() => {
+  let text = '';
+  for (const item of containersPorts) {
+    text += 'Containers ';
+    item.containers.forEach((container, index) => {
+      text += `${container} `;
+      if (index === item.containers.length - 2) {
+        text += 'and ';
+      } else if (index < item.containers.length - 1) {
+        text += ', ';
+      }
+    });
+    text += `use same ${item.ports.length > 1 ? 'ports' : 'port'} ${item.ports.join(', ')}\n`;
+  }
+  return text;
+});
 
 async function createPodFromContainers(): Promise<void> {
   createInProgress = true;
@@ -44,8 +111,15 @@ async function createPodFromContainers(): Promise<void> {
   createInProgress = false;
 }
 async function doCreatePodFromContainers(): Promise<void> {
+  if (!podCreation) {
+    throw new Error('no pod creation');
+  }
+
   if (!selectedProvider) {
     throw new Error('no provider selected');
+  }
+  if (!podCreation) {
+    throw new Error('no pod creation data');
   }
 
   // fetch port info from all containers
@@ -120,49 +194,12 @@ async function doCreatePodFromContainers(): Promise<void> {
   router.goto('/pods/');
 }
 
-let providersUnsubscribe: Unsubscriber;
-let podCreationUnsubscribe: Unsubscriber;
-onMount(() => {
-  providersUnsubscribe = providerInfos.subscribe(value => {
-    providers = value;
-  });
-
-  podCreationUnsubscribe = podCreationHolder.subscribe(value => {
-    if (!value) {
-      return;
-    }
-    podCreation = value;
-    const mapPortPrivate = new SvelteMap<number, string[]>();
-    podCreation.containers.forEach(container => {
-      container.ports.forEach(port => {
-        mapPortExposed.set(port.PublicPort, {
-          exposed: true,
-          container: container.name,
-        });
-        mapPortPrivate.set(port.PrivatePort, [...(mapPortPrivate.get(port.PrivatePort) ?? []), container.name]);
-      });
-    });
-    mapPortPrivate.forEach((value, key) => {
-      if (value.length < 2) {
-        mapPortPrivate.delete(key);
-        return;
-      }
-      const indexContainersItem = getIndexSameContainersItems(value);
-      if (indexContainersItem !== undefined) {
-        containersPorts[indexContainersItem].ports.push(key);
-      } else {
-        containersPorts.push({
-          containers: value,
-          ports: [key],
-        });
-      }
-    });
-  });
-});
-
-function getIndexSameContainersItems(containers: string[]): number | undefined {
+function getIndexSameContainersItems(
+  entries: { containers: string[]; ports: number[] }[],
+  containers: string[],
+): number | undefined {
   let index = 0;
-  for (const entry of containersPorts) {
+  for (const entry of entries) {
     const isDiff =
       containers.filter(arr1Item => !entry.containers.includes(arr1Item)).length > 0 ||
       entry.containers.filter(arr1Item => !containers.includes(arr1Item)).length > 0;
@@ -175,42 +212,12 @@ function getIndexSameContainersItems(containers: string[]): number | undefined {
 }
 
 onDestroy(() => {
-  if (providersUnsubscribe) {
-    providersUnsubscribe();
-  }
-  if (podCreationUnsubscribe) {
-    podCreationUnsubscribe();
-  }
   // reset
   podCreationHolder.set(undefined);
 });
 
 function updatePortExposure(port: number, checked: boolean): void {
-  const val = mapPortExposed.get(port);
-  if (val) {
-    mapPortExposed.set(port, {
-      exposed: checked,
-      container: val.container,
-    });
-    mapPortExposed = mapPortExposed;
-  }
-}
-
-function getWarningText(): string {
-  let text = '';
-  containersPorts.forEach(item => {
-    text += 'Containers ';
-    item.containers.forEach((container, index) => {
-      text += `${container} `;
-      if (index === item.containers.length - 2) {
-        text += 'and ';
-      } else if (index < item.containers.length - 1) {
-        text += ', ';
-      }
-    });
-    text += `use same ${item.ports.length > 1 ? 'ports' : 'port'} ${item.ports.join(', ')}\n`;
-  });
-  return text;
+  portExposureOverrides[port] = checked;
 }
 
 function navigateToContainers(): void {
@@ -228,7 +235,7 @@ function navigateToContainers(): void {
     <div>
       {#if podCreation}
         {#if containersPorts.length > 0}
-          <WarningMessage class="flex flex-row w-full  mb-2" error={getWarningText()} />
+          <WarningMessage class="flex flex-row w-full  mb-2" error={warningText} />
         {/if}
         <div class="mb-2">
           <span class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
@@ -271,8 +278,8 @@ function navigateToContainers(): void {
               <div class="p-2 flex flex-row align-items text-sm text-[var(--pd-content-card-text)]">
                 <Checkbox
                   class="pt-0.5 mr-5"
-                  bind:checked={value.exposed}
-                  on:click={(event): void => updatePortExposure(port, event.detail)} />
+                  checked={value.exposed}
+                  onclick={updatePortExposure.bind(undefined, port)} />
                 <div class="w-28 mr-5">Port {port.toString()}</div>
                 <span>{value.container}</span>
               </div>
@@ -294,7 +301,7 @@ function navigateToContainers(): void {
         />
       {/if}
       {#if providerConnections.length === 1 && selectedProviderConnection?.name}
-        <input type="hidden" name="providerChoice" readonly bind:value={selectedProviderConnection.name} />
+        <input type="hidden" name="providerChoice" readonly value={selectedProviderConnection.name} />
       {/if}
 
       <div class="w-full grid justify-items-end mt-5">
