@@ -36,12 +36,12 @@ test('displays what the cleanup action will and will not delete', () => {
 });
 
 test('Check cleanupProviders is called and button is in progress', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean / purge data' });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clear / Purge Data' });
 
   render(TroubleshootingRepairCleanup);
 
   // expect to have the cleanup button
-  const cleanupButton = screen.getByRole('button', { name: 'Cleanup' });
+  const cleanupButton = screen.getByRole('button', { name: 'Clear / Purge Data' });
   expect(cleanupButton).toBeInTheDocument();
 
   // mock the cleanup as waiting for 10ms
@@ -67,10 +67,10 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Clean / purge data', 'Cancel'],
+    buttons: ['Clear / Purge Data', 'Cancel'],
     type: 'danger',
     message: 'This action will delete data and cannot be undone. Proceed?',
-    title: 'Clean / purge data?',
+    title: 'Clear / Purge Data?',
   });
 
   // check that we're calling the vi.mocked(window.cleanupProviders)
@@ -78,12 +78,12 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 });
 
 test('Check errors are displayed with clipboard button', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean / purge data' });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clear / Purge Data' });
 
   render(TroubleshootingRepairCleanup);
 
   // expect to have the cleanup button
-  const cleanupButton = screen.getByRole('button', { name: 'Cleanup' });
+  const cleanupButton = screen.getByRole('button', { name: 'Clear / Purge Data' });
   expect(cleanupButton).toBeInTheDocument();
 
   // mock the cleanup as waiting for 2 seconds
@@ -95,10 +95,10 @@ test('Check errors are displayed with clipboard button', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Clean / purge data', 'Cancel'],
+    buttons: ['Clear / Purge Data', 'Cancel'],
     type: 'danger',
     message: 'This action will delete data and cannot be undone. Proceed?',
-    title: 'Clean / purge data?',
+    title: 'Clear / Purge Data?',
   });
 
   // check that we're calling the vi.mocked(window.cleanupProviders)

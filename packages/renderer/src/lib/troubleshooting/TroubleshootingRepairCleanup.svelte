@@ -21,13 +21,13 @@ async function openCleanupDialog(): Promise<void> {
   let message = 'This action will delete data and cannot be undone. Proceed?';
 
   const result = await window.showMessageBox({
-    title: 'Clean / purge data?',
+    title: 'Clear / Purge Data?',
     type: 'danger',
     message: message,
-    buttons: ['Clean / purge data', 'Cancel'],
+    buttons: ['Clear / Purge Data', 'Cancel'],
   });
 
-  if (result?.response === 'Clean / purge data') {
+  if (result?.response === 'Clear / Purge Data') {
     await cleanup();
   }
 }
@@ -50,9 +50,9 @@ async function cleanup(): Promise<void> {
 }
 </script>
 
-<div class="flex flex-row items-start">
+<div class="flex flex-row items-end">
   <div>
-    <div class="text-[var(--pd-content-header)] flex flex-row items-center">Clean / purge data</div>
+    <div class="text-[var(--pd-content-header)] flex flex-row items-center">Clear / purge data</div>
     <div class="text-sm pt-1">
       <div class="flex flex-row items-center">
         <Icon class="pr-1" size="0.8x" icon={faWarning} />Proceeding with this action will result in data loss.
@@ -75,8 +75,7 @@ async function cleanup(): Promise<void> {
       type="danger"
       on:click={openCleanupDialog}
       inProgress={cleanupInProgress}
-      aria-label="Cleanup"
-      icon={faBroom}>Clean / purge data</Button>
+      icon={faBroom}>Clear / Purge Data</Button>
   </div>
 
   <div>
