@@ -47,6 +47,13 @@ const myContainer: ContainerInfo = {
   ImageBase64RepoTag: '',
 };
 
+const myInfraContainer: ContainerInfo = {
+  ...myContainer,
+  Id: 'myInfraContainer',
+  Names: ['infra0'],
+  IsInfra: true,
+};
+
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-search'));
 
@@ -168,4 +175,55 @@ test('Expect redirect to previous page if container is deleted', async () => {
   // grab updated route
   const afterRoute = window.location;
   expect(afterRoute.href).toBe('http://localhost:3000/last');
+});
+
+test('Expect Terminal tab to be hidden for infra containers', async () => {
+  router.goto('/');
+
+  containersInfos.set([myInfraContainer]);
+
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
+    Config: {
+      Tty: false,
+    },
+  } as unknown as ContainerInspectInfo);
+
+  render(ContainerDetails, { containerID: 'myInfraContainer' });
+
+  while (routerGotoSpy.mock.calls.length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  expect(screen.getByText('Summary')).toBeInTheDocument();
+  expect(screen.getByText('Logs')).toBeInTheDocument();
+  expect(screen.getByText('Inspect')).toBeInTheDocument();
+  expect(screen.queryByText('Terminal')).not.toBeInTheDocument();
+  expect(screen.queryByText('Tty')).not.toBeInTheDocument();
+});
+
+test('Expect Terminal tab to be visible for non-infra containers', async () => {
+  router.goto('/');
+
+  containersInfos.set([myContainer]);
+
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
+    Config: {
+      Tty: false,
+    },
+  } as unknown as ContainerInspectInfo);
+
+  render(ContainerDetails, { containerID: 'myContainer' });
+
+  while (routerGotoSpy.mock.calls.length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  expect(screen.getByText('Summary')).toBeInTheDocument();
+  expect(screen.getByText('Logs')).toBeInTheDocument();
+  expect(screen.getByText('Inspect')).toBeInTheDocument();
+  expect(screen.getByText('Terminal')).toBeInTheDocument();
 });
