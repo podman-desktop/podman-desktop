@@ -49,7 +49,7 @@ describe('Tooltip', () => {
     vi.clearAllMocks();
   });
 
-  test('tooltip is hidden when tooltipHidden is true', async () => {
+  test('tooltip remains hidden after tooltipHidden resets until pointer re-enters', async () => {
     render(TooltipTestComponent, { tip: 'test 1' });
 
     const slot = screen.getByTestId('tooltip-trigger');
@@ -69,6 +69,11 @@ describe('Tooltip', () => {
 
     // Simulate dropdown closing (shows tooltips)
     window.dispatchEvent(new Event('tooltip-show'));
+
+    await waitFor(() => {
+      expect(screen.queryByText('test 1')).not.toBeInTheDocument();
+    });
+
     await fireEvent.mouseEnter(slot);
 
     await waitFor(() => {
