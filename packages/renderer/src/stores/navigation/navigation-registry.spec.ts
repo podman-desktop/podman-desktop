@@ -17,11 +17,16 @@
  ***********************************************************************/
 
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 
-import { fetchNavigationRegistries, navigationRegistry } from './navigation-registry';
+import {
+  fetchNavigationRegistries,
+  findActiveItem,
+  navigationRegistry,
+  type NavigationRegistryEntry,
+} from './navigation-registry';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -67,5 +72,52 @@ test('check update properties', async () => {
   const containersAndPods = hidden.filter(item => item.name === 'Containers' || item.name === 'Pods');
   containersAndPods.forEach(item => {
     expect(item.hidden).toBeTruthy();
+  });
+});
+
+describe('findActiveItem', () => {
+  const entries: NavigationRegistryEntry[] = [
+    { name: 'Pods', link: '/pods', icon: {}, tooltip: '', counter: 0, destinations: [], type: 'entry' },
+    { name: 'Volumes', link: '/volumes', icon: {}, tooltip: '', counter: 0, destinations: [], type: 'entry' },
+  ];
+
+  test('should match exact path', () => {
+    expect(findActiveItem(entries, '/pods')).toBe('Pods');
+  });
+
+  test('should match child path with slash delimiter', () => {
+    expect(findActiveItem(entries, '/pods/details')).toBe('Pods');
+  });
+
+  test('should NOT match path that shares a prefix but is a different route', () => {
+    expect(findActiveItem(entries, '/pods-archive')).toBeUndefined();
+  });
+
+  test('should return Dashboard for root path', () => {
+    expect(findActiveItem(entries, '/')).toBe('Dashboard');
+  });
+
+  test('should return undefined for unmatched path', () => {
+    expect(findActiveItem(entries, '/unknown')).toBeUndefined();
+  });
+
+  test('should match submenu items', () => {
+    const withSubmenu: NavigationRegistryEntry[] = [
+      {
+        name: 'Kubernetes',
+        link: '/kubernetes',
+        icon: {},
+        tooltip: '',
+        counter: 0,
+        destinations: [],
+        type: 'submenu',
+        items: [
+          { name: 'Services', link: '/services', icon: {}, tooltip: '', counter: 0, destinations: [], type: 'entry' },
+        ],
+      },
+    ];
+    expect(findActiveItem(withSubmenu, '/services')).toBe('Services');
+    expect(findActiveItem(withSubmenu, '/services/detail')).toBe('Services');
+    expect(findActiveItem(withSubmenu, '/services-other')).toBeUndefined();
   });
 });

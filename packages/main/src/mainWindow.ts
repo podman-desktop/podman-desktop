@@ -28,11 +28,13 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import type { MessageBox } from './plugin/message-box.js';
 import type { WindowHandler } from './system/window/window-handler.js';
 import { isLinux, isMac, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
+let messageBox: MessageBox | undefined;
 
 // development mode for extensions
 let isExtensionsDevelopmentModeEnabled = false;
@@ -156,10 +158,19 @@ async function createWindow(): Promise<BrowserWindow> {
     });
     developmentModeTracker.init();
 
-    navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry);
+    navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry, options => {
+      if (!messageBox) {
+        throw new Error('MessageBox not available');
+      }
+      return messageBox.showMessageBox(options);
+    });
 
     // open dev tools (if required)
     openDevTools.open(browserWindow, configurationRegistry);
+  });
+
+  ipcMain.on('message-box', (_, data) => {
+    messageBox = data as MessageBox;
   });
 
   let windowHandler: WindowHandler | undefined;
