@@ -26,9 +26,40 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { containerTerminals } from '/@/stores/container-terminal-store';
 
 import ContainerDetailsTerminal from './ContainerDetailsTerminal.svelte';
+import ContainerDetailsTerminalTest from './ContainerDetailsTerminalTest.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 let shellInContainerMock = vi.fn();
+
+/**
+ * Returns the `resize` listeners that were added to `window` and never removed from it.
+ * xterm registers a `resize` listener of its own, so the listeners are matched by identity
+ * instead of being counted.
+ */
+function stillAttachedResizeListeners(
+  addCalls: readonly (readonly unknown[])[],
+  removeCalls: readonly (readonly unknown[])[],
+): EventListener[] {
+  const removed = removeCalls.filter(([type]) => type === 'resize').map(([, listener]) => listener);
+  const attached: EventListener[] = [];
+  for (const [type, listener] of addCalls) {
+    if (type !== 'resize') {
+      continue;
+    }
+    const index = removed.indexOf(listener);
+    if (index === -1) {
+      attached.push(listener as EventListener);
+    } else {
+      removed.splice(index, 1);
+    }
+  }
+  return attached;
+}
+
+/** Returns the `resize` listeners that were added to `window`, in registration order. */
+function registeredResizeListeners(addCalls: readonly (readonly unknown[])[]): EventListener[] {
+  return addCalls.filter(([type]) => type === 'resize').map(([, listener]) => listener as EventListener);
+}
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -415,6 +446,53 @@ test('receiveEndCallback reconnects successfully and resizes terminal', async ()
   expect(window.shellInContainerResize).toHaveBeenCalledTimes(2);
 });
 
+test('does not dispatch resize after it is destroyed during reconnect', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  let onEndCallback: () => void = () => {};
+  let resolveShell: ((id: number) => void) | undefined;
+
+  const sendCallbackId = 12345;
+  shellInContainerMock.mockImplementation(
+    async (
+      _engineId: string,
+      _containerId: string,
+      _onData: (data: Buffer) => void,
+      _onError: (error: string) => void,
+      onEnd: () => void,
+    ) => {
+      onEndCallback = onEnd;
+      return sendCallbackId;
+    },
+  );
+
+  const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(1));
+
+  shellInContainerMock.mockReturnValue(
+    new Promise<number>(resolve => {
+      resolveShell = resolve;
+    }),
+  );
+  const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
+
+  onEndCallback();
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(2));
+  renderObject.unmount();
+
+  resolveShell?.(sendCallbackId);
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  const resizeEvents = dispatchEventSpy.mock.calls.filter(([event]) => event.type === 'resize');
+  expect(resizeEvents).toHaveLength(0);
+
+  dispatchEventSpy.mockRestore();
+});
+
 test('receiveEndCallback reconnect ignores first data chunk to avoid prompt duplication', async () => {
   const container: ContainerInfoUI = {
     id: 'myContainer',
@@ -723,5 +801,143 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
   await waitFor(() => {
     const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
     expect(terminalLinesLiveRegion).toHaveTextContent('prompt$ hello world prompt$');
+  });
+});
+
+test('resize listeners are removed when leaving the terminal tab', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  const sendCallbackId = 12345;
+  shellInContainerMock.mockResolvedValue(sendCallbackId);
+
+  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+  const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+  // enter and leave the terminal tab three times
+  for (let visit = 1; visit <= 3; visit++) {
+    const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+    await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(visit));
+    renderObject.unmount();
+  }
+
+  // no listener of any of the three visits is left behind on window
+  const attached = stillAttachedResizeListeners(addEventListenerSpy.mock.calls, removeEventListenerSpy.mock.calls);
+  expect(attached).toHaveLength(0);
+
+  addEventListenerSpy.mockRestore();
+  removeEventListenerSpy.mockRestore();
+});
+
+test('resize listener does not fail when the container is gone', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  const sendCallbackId = 12345;
+  shellInContainerMock.mockResolvedValue(sendCallbackId);
+
+  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+
+  const renderObject = render(ContainerDetailsTerminalTest, { container });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(1));
+
+  const listeners = registeredResizeListeners(addEventListenerSpy.mock.calls);
+  expect(listeners.length).toBeGreaterThan(0);
+
+  // the container is removed: the parent stops providing it and tears the terminal down
+  await renderObject.rerender({ container: undefined });
+
+  // a resize event delivered after that must not fail with
+  // "TypeError: Cannot read properties of undefined (reading 'id')"
+  for (const listener of listeners) {
+    expect(() => listener(new Event('resize'))).not.toThrow();
+  }
+
+  addEventListenerSpy.mockRestore();
+});
+
+test('does not continue initializing after it is destroyed while loading terminal settings', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  let resolveFontSize: ((value: number | undefined) => void) | undefined;
+  const fontSize = new Promise<number | undefined>(resolve => {
+    resolveFontSize = resolve;
+  });
+  vi.mocked(window.getConfigurationValue).mockReturnValueOnce(fontSize);
+
+  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+  const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+
+  await waitFor(() => expect(window.getConfigurationValue).toHaveBeenCalledOnce());
+  expect(() => renderObject.unmount()).not.toThrow();
+  expect(get(containerTerminals)).toHaveLength(0);
+
+  resolveFontSize?.(undefined);
+  await Promise.resolve();
+  await Promise.resolve();
+
+  expect(window.getConfigurationValue).toHaveBeenCalledOnce();
+  expect(shellInContainerMock).not.toHaveBeenCalled();
+  expect(registeredResizeListeners(addEventListenerSpy.mock.calls)).toHaveLength(0);
+
+  addEventListenerSpy.mockRestore();
+});
+
+test('does not restore an empty terminal when destroyed while opening the shell', async () => {
+  const container: ContainerInfoUI = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as unknown as ContainerInfoUI;
+
+  let resolveFirstShell: ((id: number) => void) | undefined;
+  let onDataCallback: (data: Buffer) => void = () => {};
+  const sendCallbackId = 12345;
+  const firstShell = new Promise<number>(resolve => {
+    resolveFirstShell = resolve;
+  });
+
+  shellInContainerMock
+    .mockReturnValueOnce(firstShell)
+    .mockImplementationOnce(
+      async (
+        _engineId: string,
+        _containerId: string,
+        onData: (data: Buffer) => void,
+        _onError: (error: string) => void,
+        _onEnd: () => void,
+      ) => {
+        onDataCallback = onData;
+        return sendCallbackId;
+      },
+    );
+
+  const firstRender = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledOnce());
+
+  firstRender.unmount();
+  expect(get(containerTerminals)).toHaveLength(0);
+
+  resolveFirstShell?.(sendCallbackId);
+  await Promise.resolve();
+  await Promise.resolve();
+
+  const secondRender = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(2));
+
+  onDataCallback(Buffer.from('first output'));
+  await waitFor(() => {
+    const terminalLinesLiveRegion = secondRender.container.querySelector('div[aria-live="assertive"]');
+    expect(terminalLinesLiveRegion).toHaveTextContent('first output');
   });
 });
