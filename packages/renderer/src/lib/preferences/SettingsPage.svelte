@@ -20,7 +20,7 @@ let { title, subtitle, actions, header, children }: Props = $props();
           class="capitalize text-xl font-bold text-[color:var(--pd-invert-content-header-text)] pt-[3px]"
           role="heading"
           aria-level="1"
-          aria-label="Title">
+          aria-label={title}>
           {title}
         </div>
         <div
