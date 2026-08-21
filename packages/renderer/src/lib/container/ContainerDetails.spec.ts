@@ -182,8 +182,6 @@ test('Expect Terminal tab to be hidden for infra containers', async () => {
 
   containersInfos.set([myInfraContainer]);
 
-  const routerGotoSpy = vi.spyOn(router, 'goto');
-
   vi.mocked(window.getContainerInspect).mockResolvedValue({
     Config: {
       Tty: false,
@@ -192,23 +190,19 @@ test('Expect Terminal tab to be hidden for infra containers', async () => {
 
   render(ContainerDetails, { containerID: 'myInfraContainer' });
 
-  while (routerGotoSpy.mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  expect(screen.getByText('Summary')).toBeInTheDocument();
-  expect(screen.getByText('Logs')).toBeInTheDocument();
-  expect(screen.getByText('Inspect')).toBeInTheDocument();
-  expect(screen.queryByText('Terminal')).not.toBeInTheDocument();
-  expect(screen.queryByText('Tty')).not.toBeInTheDocument();
+  await vi.waitFor(() => {
+    expect(screen.getByText('Summary')).toBeInTheDocument();
+    expect(screen.getByText('Logs')).toBeInTheDocument();
+    expect(screen.getByText('Inspect')).toBeInTheDocument();
+    expect(screen.queryByText('Terminal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tty')).not.toBeInTheDocument();
+  });
 });
 
 test('Expect Terminal tab to be visible for non-infra containers', async () => {
   router.goto('/');
 
   containersInfos.set([myContainer]);
-
-  const routerGotoSpy = vi.spyOn(router, 'goto');
 
   vi.mocked(window.getContainerInspect).mockResolvedValue({
     Config: {
@@ -218,12 +212,10 @@ test('Expect Terminal tab to be visible for non-infra containers', async () => {
 
   render(ContainerDetails, { containerID: 'myContainer' });
 
-  while (routerGotoSpy.mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  expect(screen.getByText('Summary')).toBeInTheDocument();
-  expect(screen.getByText('Logs')).toBeInTheDocument();
-  expect(screen.getByText('Inspect')).toBeInTheDocument();
-  expect(screen.getByText('Terminal')).toBeInTheDocument();
+  await vi.waitFor(() => {
+    expect(screen.getByText('Summary')).toBeInTheDocument();
+    expect(screen.getByText('Logs')).toBeInTheDocument();
+    expect(screen.getByText('Inspect')).toBeInTheDocument();
+    expect(screen.getByText('Terminal')).toBeInTheDocument();
+  });
 });

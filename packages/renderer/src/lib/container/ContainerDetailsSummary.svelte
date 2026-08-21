@@ -41,7 +41,7 @@ function openPort(port: number): void {
       <Link
         class="inline-flex flex-row items-center"
         onclick={(): void => {
-          window.openExternal('https://docs.podman.io/en/v5.4.1/markdown/podman-pod-create.1.html').catch((err: unknown) => console.error('Error opening link', err));
+          window.openExternal('https://docs.podman.io/en/stable/markdown/podman-pod-create.1.html').catch(console.warn);
         }}>
         Learn more <Icon class="ml-1 self-center" icon={faUpRightFromSquare} />
       </Link>
