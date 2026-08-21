@@ -42,6 +42,9 @@ export class DashboardPage extends BasePage {
   readonly openshiftLocalStatusLabel: Locator;
   readonly transitioningState: Locator;
 
+  // enhanced dashboard
+  readonly systemOverview: Locator;
+
   // podman/machine
   readonly podmanProvider: Locator;
   readonly podmanStatusLabel: Locator;
@@ -68,6 +71,7 @@ export class DashboardPage extends BasePage {
     this.heading = page.getByRole('heading', { name: 'Dashboard' });
 
     this.notificationsBox = this.content.getByRole('region', { name: 'Notifications Box' });
+    this.systemOverview = this.content.getByText('System Overview');
     this.featuredExtensions = page.getByRole('region', { name: 'FeaturedExtensions' });
 
     // Dev Sandbox locators

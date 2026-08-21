@@ -81,7 +81,7 @@ export class DashboardService implements IDisposable {
         [ENHANCED_DASHBOARD_CONFIGURATION_KEY]: {
           description: 'Enhanced dashboard with more features and improved user experience',
           type: 'object',
-          default: false,
+          default: true,
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
           },
