@@ -44,6 +44,7 @@ onDestroy(() => {
 </script>
 
 <div
+  data-pd-dropdown-menu=""
   title="Drop Down Menu Items"
   bind:clientHeight={dropDownHeight}
   bind:clientWidth={dropDownWidth}
