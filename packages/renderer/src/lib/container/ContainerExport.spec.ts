@@ -19,7 +19,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { Uri } from '@podman-desktop/api';
-import type { ContainerInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -29,14 +28,17 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { containersInfos } from '/@/stores/containers';
 
 import ContainerExport from './ContainerExport.svelte';
+import type { ContainerInfoUI } from './ContainerInfoUI';
 
-const container: ContainerInfo = {
+// the store holds ContainerInfoUI now
+const container: ContainerInfoUI = {
   engineId: 'engine',
-  Id: 'container-id',
-  Names: ['test'],
-  Image: 'test-image',
-  ImageID: 'test-image-id',
-} as unknown as ContainerInfo;
+  id: 'container-id',
+  name: 'test',
+  names: ['test'],
+  image: 'test-image',
+  imageId: 'test-image-id',
+} as unknown as ContainerInfoUI;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -86,7 +88,7 @@ test('Expect export function called when export button is clicked', async () => 
   await userEvent.click(btnExportcontainer);
 
   expect(window.exportContainer).toBeCalledWith(container.engineId, {
-    id: container.Id,
+    id: container.id,
     outputTarget: '/tmp/my/path',
   });
   expect(goToMock).toBeCalledWith('/containers');
@@ -109,7 +111,7 @@ test('Expect error shown if export function fails', async () => {
   const errorDiv = screen.getByLabelText('Error Message Content');
 
   expect(window.exportContainer).toBeCalledWith(container.engineId, {
-    id: container.Id,
+    id: container.id,
     outputTarget: '/tmp/my/path',
   });
   expect(goToMock).not.toBeCalled();

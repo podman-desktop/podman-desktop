@@ -61,7 +61,7 @@ onMount(async () => {
 
 // Go through all containers and find the matching label to a connection name.
 function resolveKubernetesOwnerEngineId(connectionName: string): string | undefined {
-  return $containersInfos.find(c => c.Labels && Object.values(c.Labels).includes(connectionName))?.engineId;
+  return $containersInfos.find(c => c.labels && Object.values(c.labels).includes(connectionName))?.engineId;
 }
 
 // Go through all containers and find the matching engineName to a connection name.

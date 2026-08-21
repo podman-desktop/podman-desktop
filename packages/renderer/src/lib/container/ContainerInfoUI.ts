@@ -73,6 +73,13 @@ export interface ContainerInfoUI {
   icon?: string | IconDefinition | Component;
   imageBase64RepoTag: string;
   imageHref?: string;
+  // Raw ContainerInfo.ImageID. Kept because image-utils.getInUse() matches an image
+  // against the containers using it, and no other field carries the plain image id.
+  imageId?: string;
+  // Raw, unprocessed ContainerInfo.Names: the leading '/' is kept and the compose
+  // project prefix is not stripped, unlike `name` above. Consumers that match a
+  // container by any of its aliases need this rather than `name`.
+  names?: string[];
 }
 
 export interface ContainerGroupInfoUI extends ContainerGroupPartInfoUI {
