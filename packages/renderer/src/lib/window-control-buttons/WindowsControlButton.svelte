@@ -16,7 +16,7 @@ interface Props {
 let { name, action = (): void => {} }: Props = $props();
 
 let icon = $state<Component>(WindowsMinIcon);
-let state = $state('initial');
+let windowState = $state('initial');
 let titleName = $state<string>();
 
 onMount(() => {
@@ -34,23 +34,23 @@ function executeAction(): void {
   // perform action
   action();
 
-  // update the state
+  // update the window state
   if (name === 'Minimize') {
-    state = 'minimized';
+    windowState = 'minimized';
   } else if (name === 'Maximize') {
-    if (state === 'maximized') {
-      state = 'restored';
+    if (windowState === 'maximized') {
+      windowState = 'restored';
     } else {
-      state = 'maximized';
+      windowState = 'maximized';
     }
   } else if (name === 'Close') {
-    state = 'closed';
+    windowState = 'closed';
   }
 
-  if (state === 'maximized') {
+  if (windowState === 'maximized') {
     icon = WindowsUnmaxIcon;
     titleName = 'Restore';
-  } else if (state === 'restored') {
+  } else if (windowState === 'restored') {
     icon = WindowsMaxIcon;
     titleName = 'Maximize';
   }
