@@ -112,6 +112,7 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SearchResultItemInfo,
   SecretCreateOptions,
   SecretCreateResult,
   SecretInfo,
@@ -169,6 +170,7 @@ import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-regis
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import { SearchResultProviderRegistry } from '/@/plugin/navigation/search-result-provider-registry.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -784,6 +786,7 @@ export class PluginSystem {
     dialogRegistry.init();
 
     container.bind<NavigationManager>(NavigationManager).toSelf().inSingletonScope();
+    container.bind<SearchResultProviderRegistry>(SearchResultProviderRegistry).toSelf().inSingletonScope();
     container.bind<CommandsInit>(CommandsInit).toSelf().inSingletonScope();
     const commandsInit = container.get<CommandsInit>(CommandsInit);
     commandsInit.init();
@@ -3274,6 +3277,18 @@ export class PluginSystem {
     this.ipcHandle('navigation:getSearchableRoutes', async () => {
       return navigationManager.getSearchableRoutes();
     });
+
+    const searchResultProviderRegistry = container.get<SearchResultProviderRegistry>(SearchResultProviderRegistry);
+
+    this.ipcHandle(
+      'navigation:searchDynamicProviders',
+      async (_listener, query: string, maxResults: number): Promise<SearchResultItemInfo[]> => {
+        if (typeof query !== 'string' || !Number.isSafeInteger(maxResults) || maxResults <= 0) {
+          throw new TypeError('Invalid dynamic search arguments');
+        }
+        return searchResultProviderRegistry.search(query, Math.min(maxResults, 10));
+      },
+    );
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();

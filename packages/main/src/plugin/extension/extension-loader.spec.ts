@@ -36,6 +36,7 @@ import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AuthenticationImpl } from '/@/plugin/authentication.js';
+import { CancellationTokenSource } from '/@/plugin/cancellation-token.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { CliToolRegistry } from '/@/plugin/cli-tool-registry.js';
 import type { ColorRegistry } from '/@/plugin/color-registry.js';
@@ -61,6 +62,7 @@ import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js
 import type { MenuRegistry } from '/@/plugin/menu-registry.js';
 import type { MessageBox } from '/@/plugin/message-box.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import type { SearchResultProviderRegistry } from '/@/plugin/navigation/search-result-provider-registry.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import type { Proxy } from '/@/plugin/proxy.js';
@@ -289,6 +291,10 @@ const navigationManager: NavigationManager = new NavigationManager(
   onboardingRegistry,
 );
 
+const searchResultProviderRegistry = {
+  registerProvider: vi.fn(),
+} as unknown as SearchResultProviderRegistry;
+
 const colorRegistry = {
   registerExtensionThemes: vi.fn(),
 } as unknown as ColorRegistry;
@@ -395,6 +401,7 @@ beforeEach(() => {
     imageCheckerImpl,
     imageFilesImpl,
     navigationManager,
+    searchResultProviderRegistry,
     webviewRegistry,
     colorRegistry,
     dialogRegistry,
@@ -1402,6 +1409,53 @@ describe('setContextValue', async () => {
 
     api.context.setValue('key', 'value', 'DockerCompatibility');
     expect(setValueSpy).toBeCalledWith('publisher.extension-name.DockerCompatibility.key', 'value');
+  });
+});
+
+describe('registerSearchResultProvider', () => {
+  test('registers a provider that resolves item icons and adds its disposable to subscriptions', async () => {
+    const subscriptions: { dispose(): unknown }[] = [];
+    const registration = Disposable.create(vi.fn());
+    vi.mocked(searchResultProviderRegistry.registerProvider).mockReturnValue(registration);
+    const updateImage = vi.spyOn(extensionLoader, 'updateImage').mockImplementation(icon => {
+      if (typeof icon === 'string') {
+        return `resolved:${icon}`;
+      }
+      return icon;
+    });
+    const api = createApi(subscriptions);
+    const themedIcon = { light: 'light.png', dark: 'dark.png' };
+    const provider: containerDesktopAPI.SearchResultProvider = {
+      provideItems: vi.fn().mockResolvedValue([
+        { label: 'Item', command: 'extension.open', args: ['item-id'], icon: 'item.png' },
+        { label: 'Themed', command: 'extension.open', icon: themedIcon },
+      ]),
+    };
+
+    const disposable = api.navigation.registerSearchResultProvider(provider, { label: 'Resources' });
+
+    expect(searchResultProviderRegistry.registerProvider).toHaveBeenCalledWith(
+      'publisher.extension-name',
+      'dname',
+      undefined,
+      expect.any(Object),
+      { label: 'Resources' },
+    );
+    expect(disposable).toBe(registration);
+    expect(subscriptions).toContain(registration);
+
+    const registeredProvider = vi.mocked(searchResultProviderRegistry.registerProvider).mock.calls[0]?.[3];
+    const tokenSource = new CancellationTokenSource();
+    const items = await registeredProvider?.provideItems('item', { maxResults: 10 }, tokenSource.token);
+
+    expect(provider.provideItems).toHaveBeenCalledWith('item', { maxResults: 10 }, tokenSource.token);
+    expect(updateImage).toHaveBeenCalledWith('item.png', '/path');
+    expect(updateImage).toHaveBeenCalledWith({ light: 'light.png', dark: 'dark.png' }, '/path');
+    expect(vi.mocked(updateImage).mock.calls[1]?.[0]).not.toBe(themedIcon);
+    expect(items).toEqual([
+      { label: 'Item', command: 'extension.open', args: ['item-id'], icon: 'resolved:item.png' },
+      { label: 'Themed', command: 'extension.open', icon: { light: 'light.png', dark: 'dark.png' } },
+    ]);
   });
 });
 
