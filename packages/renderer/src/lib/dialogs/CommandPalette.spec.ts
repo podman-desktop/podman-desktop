@@ -55,6 +55,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.clearAllMocks();
   navigationSearchEntries.set([]);
+  vi.mocked(window.searchDynamicProviders).mockResolvedValue([]);
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
   vi.mocked(window.getCommandPaletteSearchOptions).mockResolvedValue([
     { category: 'category 1', text: 'Category 1 text', placeholder: 'Enter category 1 item' },
@@ -833,6 +834,140 @@ describe('Command Palette', () => {
     expect(imgIcon).not.toBeInTheDocument();
     const svgIcon = listItem.querySelector('svg');
     expect(svgIcon).toBeInTheDocument();
+  });
+
+  test('Dynamic search results should appear in Go To tab after typing', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      { label: 'dev-cluster (started)', command: 'navigateToResources', providerLabel: 'Kind Clusters' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'dev');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalledWith('dev', 10);
+    });
+
+    const item = await screen.findByRole('listitem', { name: 'dev-cluster (started)' });
+    expect(item).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  test('Clicking dynamic search result should execute its command with args', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      {
+        label: 'test-resource',
+        command: 'my.extension.navigate',
+        args: ['arg1', 'arg2'],
+        providerLabel: 'My Extension',
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'test');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalled();
+    });
+
+    const listItem = await screen.findByRole('listitem', { name: 'test-resource' });
+    const button = listItem.querySelector('button')!;
+    await userEvent.click(button);
+
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my.extension.navigate', 'arg1', 'arg2');
+    vi.useRealTimers();
+  });
+
+  test('Dynamic search results should be cleared when palette is reopened', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      { label: 'stale-result', command: 'test.cmd', providerLabel: 'Provider' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'stale');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalled();
+    });
+
+    await screen.findByRole('listitem', { name: 'stale-result' });
+
+    vi.useRealTimers();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard('{F1}');
+
+    await tick();
+
+    const staleItem = screen.queryByRole('listitem', { name: 'stale-result' });
+    expect(staleItem).not.toBeInTheDocument();
+  });
+
+  test('Dynamic search result with themed icon should render both variants', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const darkIcon = 'data:image/png;base64,dark';
+    const lightIcon = 'data:image/png;base64,light';
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      {
+        label: 'themed-item',
+        command: 'test.cmd',
+        providerLabel: 'Themed Provider',
+        icon: { light: lightIcon, dark: darkIcon },
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'themed');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalled();
+    });
+
+    const listItem = await screen.findByRole('listitem', { name: 'themed-item' });
+    const icons = listItem.querySelectorAll('img');
+    expect(icons).toHaveLength(2);
+    expect(icons[0]).toHaveAttribute('src', lightIcon);
+    expect(icons[1]).toHaveAttribute('src', darkIcon);
+    vi.useRealTimers();
   });
 
   test('Expect hidden navigation entries are excluded from GoTo items', async () => {

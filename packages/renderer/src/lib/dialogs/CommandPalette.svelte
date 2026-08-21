@@ -12,11 +12,13 @@ import type {
   CommandPaletteSearchOption,
   DocumentationInfo,
   GoToInfo,
+  IDisposable,
   NavigationSearchEntryInfo,
+  SearchResultItemInfo,
 } from '@podman-desktop/core-api';
 import { Button, type IconType, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { onMount, tick } from 'svelte';
+import { onDestroy, onMount, tick } from 'svelte';
 
 import ArrowDownIcon from '/@/lib/images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '/@/lib/images/ArrowUpIcon.svelte';
@@ -43,7 +45,7 @@ interface Props {
   onclose?: () => void;
 }
 
-type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo | NavigationSearchEntryInfo;
+type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo | NavigationSearchEntryInfo | SearchResultItemInfo;
 
 let { display = false, onclose }: Props = $props();
 
@@ -116,6 +118,11 @@ let filteredExtensionRouteItems: NavigationSearchEntryInfo[] = $derived(
   ),
 );
 
+const SEARCH_DEBOUNCE_MS = 200;
+const DYNAMIC_MAX_RESULTS = 10;
+let dynamicSearchResults: SearchResultItemInfo[] = $state([]);
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+
 let filteredItems = $derived.by(() => {
   if (searchOptionsSelectedIndex === 1) {
     // Commands mode
@@ -125,23 +132,42 @@ let filteredItems = $derived.by(() => {
     return filteredDocumentationInfoItems;
   } else if (searchOptionsSelectedIndex === 3) {
     // Go to mode
-    return [...filteredGoToItems, ...filteredExtensionRouteItems];
+    return [...filteredGoToItems, ...filteredExtensionRouteItems, ...dynamicSearchResults];
   } else {
     // All mode - combine all
     return [
       ...filteredGoToItems,
       ...filteredExtensionRouteItems,
+      ...dynamicSearchResults,
       ...filteredCommandInfoItems,
       ...filteredDocumentationInfoItems,
     ];
   }
 });
 
+let unsubscribeItemsChanged: IDisposable | undefined;
+
 onMount(async () => {
   const platform = await window.getOsPlatform();
   isMac = platform === 'darwin';
   documentationItems = await window.getDocumentationItems();
   searchOptions = await window.getCommandPaletteSearchOptions();
+
+  unsubscribeItemsChanged = window.events?.receive('navigation-search-provider-items-changed', () => {
+    if (display && inputValue && inputValue.trim().length > 0) {
+      window
+        .searchDynamicProviders(inputValue.trim(), DYNAMIC_MAX_RESULTS)
+        .then(results => {
+          dynamicSearchResults = results;
+        })
+        .catch(console.error);
+    }
+  });
+});
+
+onDestroy(() => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  unsubscribeItemsChanged?.dispose();
 });
 
 // Focus the input when the command palette becomes visible
@@ -160,10 +186,9 @@ $effect(() => {
 let selectedFilteredIndex = $state(0);
 
 function displaySearchBar(): void {
-  // clear the input value
   inputValue = '';
   selectedFilteredIndex = 0;
-  // toggle the display
+  dynamicSearchResults = [];
   display = true;
   window.telemetryTrack('globalSearch.opened').catch(console.error);
 }
@@ -258,7 +283,14 @@ async function executeAction(index: number): Promise<void> {
   let pageLink: string | undefined = undefined;
   let commandHash: string | undefined = undefined;
 
-  if (isDocItem(item)) {
+  if (isDynamicSearchItem(item)) {
+    try {
+      await window.executeCommand(item.command, ...(item.args ?? []));
+    } catch (error) {
+      console.error('Error executing dynamic search result command', error);
+    }
+    itemType = 'DynamicSearchResult';
+  } else if (isDocItem(item)) {
     // Documentation item
     if (item.url) {
       try {
@@ -316,6 +348,7 @@ function handleMousedown(e: MouseEvent): void {
 
 function hideCommandPallete(): void {
   display = false;
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
   onclose?.();
 }
 
@@ -329,8 +362,23 @@ async function clickOnItem(index: number): Promise<void> {
 }
 
 async function onInputChange(): Promise<void> {
-  // in case of quick pick, filter the items
   selectedFilteredIndex = 0;
+
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+  if (inputValue && inputValue.trim().length > 0) {
+    const query = inputValue.trim();
+    searchDebounceTimer = setTimeout(() => {
+      window
+        .searchDynamicProviders(query, DYNAMIC_MAX_RESULTS)
+        .then(results => {
+          dynamicSearchResults = results;
+        })
+        .catch(console.error);
+    }, SEARCH_DEBOUNCE_MS);
+  } else {
+    dynamicSearchResults = [];
+  }
 }
 
 async function onAction(): Promise<void> {
@@ -348,6 +396,10 @@ function isExtensionRouteItem(item: CommandPaletteItem): item is NavigationSearc
   return 'routeId' in item;
 }
 
+function isDynamicSearchItem(item: CommandPaletteItem): item is SearchResultItemInfo {
+  return 'providerLabel' in item;
+}
+
 function isGoToItem(item: CommandPaletteItem): item is GoToInfo {
   return 'page' in item;
 }
@@ -359,6 +411,10 @@ function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
 function getItemKey(item: CommandPaletteItem, index: number): string {
   if (isExtensionRouteItem(item)) {
     return `route:${item.routeId}`;
+  }
+
+  if (isDynamicSearchItem(item)) {
+    return `dynamic:${item.providerLabel}:${item.label}:${item.command}:${index}`;
   }
 
   if (isGoToItem(item)) {
@@ -375,6 +431,8 @@ function getItemKey(item: CommandPaletteItem, index: number): string {
 function getTextToHighlight(item: CommandPaletteItem): string {
   if (isExtensionRouteItem(item)) {
     return item.label;
+  } else if (isDynamicSearchItem(item)) {
+    return `${item.providerLabel}: ${item.label}`;
   } else if (isDocItem(item)) {
     return `${item.category}: ${item.name}`;
   } else if (isGoToItem(item)) {
@@ -385,7 +443,7 @@ function getTextToHighlight(item: CommandPaletteItem): string {
 }
 
 function getIcon(item: CommandPaletteItem): IconType {
-  if (isExtensionRouteItem(item)) {
+  if (isExtensionRouteItem(item) || isDynamicSearchItem(item)) {
     return item.icon ?? faTerminal;
   } else if (isDocItem(item)) {
     return item.category === 'Tutorial' ? faFilePen : faFileLines;
@@ -452,7 +510,7 @@ function getIcon(item: CommandPaletteItem): IconType {
             {@const goToItem = isGoToItem(item)}
             {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}
-            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={extensionRouteItem ? item.label : goToItem ? item.name : (item.id)}>
+            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={extensionRouteItem ? item.label : isDynamicSearchItem(item) ? item.label : goToItem ? item.name : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex
