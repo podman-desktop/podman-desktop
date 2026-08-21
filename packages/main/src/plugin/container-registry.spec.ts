@@ -29,6 +29,7 @@ import type {
   ContainerInspectInfo,
   HostConfig,
   ImageInspectInfo,
+  ImageUpdateStatus,
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -7628,5 +7629,205 @@ describe('imageExist', () => {
 
     const exists = await containerRegistry.imageExist('foo', 'bar', 'localhost/foo:latest');
     expect(exists).toBeTruthy();
+  });
+});
+
+describe('updateImages', () => {
+  const pullMock = vi.fn();
+  const followProgressMock = vi.fn();
+  const fakeDockerode = {
+    pull: pullMock,
+    modem: { followProgress: followProgressMock },
+  } as unknown as Dockerode;
+
+  beforeEach(() => {
+    pullMock.mockReset();
+    followProgressMock.mockReset();
+    telemetryTrackMock.mockReset();
+    followProgressMock.mockImplementation((_s: unknown, f: (err: Error | null) => void) => f(null));
+    containerRegistry.addInternalProvider('testEngine', {
+      name: 'testEngine',
+      id: 'testEngine',
+      connection: { type: 'podman', endpoint: { socketPath: '/test.socket' } },
+      api: fakeDockerode,
+    } as unknown as InternalContainerProvider);
+  });
+
+  test('returns an up-to-date result without pulling the image', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(result).toEqual({ imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' });
+    expect(pullMock).not.toHaveBeenCalled();
+    expect(telemetryTrackMock).toHaveBeenCalledExactlyOnceWith('updateImages', {
+      count: 1,
+      updated: 0,
+      upToDate: 1,
+      skipped: 0,
+      failed: 0,
+    });
+  });
+
+  test('cancels in-progress image pulls through the abort signal', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest: 'sha256:new',
+      message: '',
+    });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+    followProgressMock.mockImplementation((_stream: unknown, onFinished: (error: Error | null) => void): void => {
+      const abortSignal = pullMock.mock.calls[0]?.[1]?.abortSignal as AbortSignal;
+      abortSignal.addEventListener('abort', () => onFinished(new Error('Update canceled')));
+    });
+
+    const abortController = new AbortController();
+    const updatePromise = containerRegistry.updateImages(
+      [{ engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' }],
+      abortController.signal,
+    );
+    await vi.waitFor(() => expect(followProgressMock).toHaveBeenCalledOnce());
+
+    abortController.abort();
+
+    await expect(updatePromise).resolves.toEqual([
+      { imageRef: 'nginx:latest', updated: false, status: 'error', message: 'Update canceled' },
+    ]);
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
+      authconfig: undefined,
+      abortSignal: expect.objectContaining({ aborted: true }),
+    });
+  });
+
+  test('does not pull when the update is skipped', async () => {
+    const mockStatus: ImageUpdateStatus = { status: 'skipped', updateAvailable: false, message: 'Skipped' };
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue(mockStatus);
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(result!.updated).toBe(false);
+    expect(result!.status).toBe(mockStatus.status);
+    expect(pullMock).not.toHaveBeenCalled();
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', expect.objectContaining({ skipped: 1 }));
+  });
+
+  test('checks update status with repository digests when available', async () => {
+    const checkImageUpdateStatusMock = vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    await containerRegistry.updateImages([
+      {
+        engineId: 'testEngine',
+        image: 'nginx:latest',
+        tag: 'latest',
+        digest: 'sha256:configdigest',
+        repoDigests: ['nginx@sha256:manifestdigest'],
+      },
+    ]);
+
+    expect(checkImageUpdateStatusMock).toHaveBeenCalledWith('nginx:latest', 'latest', ['nginx@sha256:manifestdigest']);
+    expect(pullMock).not.toHaveBeenCalled();
+  });
+
+  test('returns error when engine not found', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+    const checkImageUpdateStatusMock = vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus');
+    checkImageUpdateStatusMock.mockClear();
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'nonexistent', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(result!.updated).toBe(false);
+    expect(result!.status).toBe('error');
+    expect(result!.message).toContain('no engine matching this engine');
+    expect(checkImageUpdateStatusMock).not.toHaveBeenCalled();
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error updating image nginx:latest', expect.any(Error));
+    expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', {
+      count: 1,
+      updated: 0,
+      upToDate: 0,
+      skipped: 0,
+      failed: 1,
+    });
+  });
+
+  test('returns every result when one image update rejects', async () => {
+    vi.spyOn(console, 'error').mockReturnValue(undefined);
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'nonexistent', image: 'missing:latest', tag: 'latest', digest: 'sha256:missing' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(results).toEqual([
+      expect.objectContaining({ imageRef: 'missing:latest', updated: false, status: 'error' }),
+      { imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' },
+    ]);
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith(
+      'updateImages',
+      expect.objectContaining({ count: 2, upToDate: 1, failed: 1 }),
+    );
+  });
+
+  test('pulls updated images, skips failures, and tracks one batch event', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus')
+      .mockResolvedValueOnce({
+        status: 'normal',
+        updateAvailable: true,
+        remoteDigest: 'sha256:new',
+        message: '',
+      })
+      .mockResolvedValueOnce({
+        status: 'error',
+        updateAvailable: false,
+        message: 'Registry unavailable',
+      });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+      { engineId: 'testEngine', image: 'redis:latest', tag: 'latest', digest: 'sha256:old2' },
+    ]);
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toEqual(expect.objectContaining({ updated: true, status: 'updated', imageRef: 'nginx:latest' }));
+    expect(results[1]?.updated).toBe(false);
+    expect(results[1]?.status).toBe('error');
+    expect(pullMock).toHaveBeenCalledTimes(1);
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
+      authconfig: undefined,
+      abortSignal: undefined,
+    });
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', {
+      count: 2,
+      updated: 1,
+      upToDate: 0,
+      skipped: 0,
+      failed: 1,
+    });
   });
 });
