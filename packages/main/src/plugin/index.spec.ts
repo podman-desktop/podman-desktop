@@ -46,6 +46,7 @@ import { PluginSystem } from './index.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import type { MessageBox } from './message-box.js';
 import { NavigationManager } from './navigation/navigation-manager.js';
+import { SearchResultProviderRegistry } from './navigation/search-result-provider-registry.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { TaskImpl } from './tasks/task-impl.js';
 import { TaskManager } from './tasks/task-manager.js';
@@ -92,6 +93,9 @@ vi.mock(import('./container-registry.js'), importOriginal =>
 vi.mock(import('./tasks/task-manager.js'), importOriginal => mockOriginalClass(importOriginal, 'TaskManager'));
 vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
   mockOriginalClass(importOriginal, 'NavigationManager'),
+);
+vi.mock(import('./navigation/search-result-provider-registry.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'SearchResultProviderRegistry'),
 );
 vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
@@ -1273,4 +1277,17 @@ test('navigation:getSearchableRoutes handler should delegate to navigationManage
 
   expect(NavigationManager.prototype.getSearchableRoutes).toHaveBeenCalled();
   expect(result).toEqual({ result: mockRoutes });
+});
+
+test('navigation:searchDynamicProviders handler should delegate to searchResultProviderRegistry', async () => {
+  const mockResults = [{ label: 'Test', command: 'test.cmd', providerLabel: 'Provider' }];
+  vi.mocked(SearchResultProviderRegistry.prototype.search).mockResolvedValue(mockResults);
+
+  const handle = getHandler<(listener: undefined, query: string, maxResults: number) => Promise<{ result: unknown }>>(
+    'navigation:searchDynamicProviders',
+  );
+  const result = await handle(undefined, 'test query', 10);
+
+  expect(SearchResultProviderRegistry.prototype.search).toHaveBeenCalledWith('test query', 10);
+  expect(result).toEqual({ result: mockResults });
 });
