@@ -1231,4 +1231,33 @@ describe('declarative env:/file: defaults', () => {
     const property = registerWithDefault('/already/set/path.json');
     expect(property?.default).toBe('/already/set/path.json');
   });
+
+  test('should resolve single env: string default when variable is set', () => {
+    process.env[ENV_VAR] = '/from/env/creds.json';
+
+    const property = registerWithDefault(`env:${ENV_VAR}`);
+
+    expect(property?.default).toBe('/from/env/creds.json');
+  });
+
+  test('should resolve single env: string default to undefined when variable is unset', () => {
+    const property = registerWithDefault(`env:${ENV_VAR}`);
+
+    expect(property?.default).toBeUndefined();
+  });
+
+  test('should resolve single file: string default when file exists', () => {
+    const expectedPath = path.join('/home/testuser', '.config/my-tool/credentials.json');
+    vi.mocked(existsSync).mockImplementation((p: Parameters<typeof existsSync>[0]) => p === expectedPath);
+
+    const property = registerWithDefault('file:~/.config/my-tool/credentials.json');
+
+    expect(property?.default).toBe(expectedPath);
+  });
+
+  test('should resolve single file: string default to undefined when file does not exist', () => {
+    const property = registerWithDefault('file:~/.config/my-tool/credentials.json');
+
+    expect(property?.default).toBeUndefined();
+  });
 });

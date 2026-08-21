@@ -263,11 +263,18 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   }
 
   /**
-   * Resolve declarative default values declared as an ordered list of `env:` / `file:` entries.
+   * Resolve declarative default values declared as `env:` / `file:` entries.
+   * Supports both a single string (`"default": "env:VAR"`) and an ordered
+   * array (`"default": ["env:VAR", "file:~/.path"]`).
    * Returns the first matching value, or `undefined` if none resolve.
    * Non-declarative defaults (literals, object arrays, etc.) are returned unchanged.
    */
   protected resolveDeclarativeDefault(defaultValue: unknown): unknown {
+    // Single string form: "default": "env:VAR" or "default": "file:~/.path"
+    if (typeof defaultValue === 'string' && (defaultValue.startsWith('env:') || defaultValue.startsWith('file:'))) {
+      return this.resolveDeclarativeDefaultEntry(defaultValue);
+    }
+
     if (!Array.isArray(defaultValue) || defaultValue.length === 0) {
       return defaultValue;
     }
