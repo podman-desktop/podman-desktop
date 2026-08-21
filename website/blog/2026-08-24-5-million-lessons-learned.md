@@ -2,7 +2,7 @@
 title: 5 Lessons Learned After 5 Million Downloads
 description: Podman Desktop just crossed 5,000,000 downloads. Here are 5 lessons the team learned along the way.
 slug: 5-million-lessons-learned
-authors: [kyetter]
+authors: [kyetter, slemeur]
 tags: [podman-desktop, 5-million, downloads, celebrate, community]
 image: /img/blog/5million/banner.jpg
 ---
