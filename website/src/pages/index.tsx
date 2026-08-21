@@ -5,6 +5,7 @@ import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
+import Banner from '../components/5MBanner';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import { ExpandableFAQ } from '../components/ExpandableFAQ';
@@ -435,6 +436,7 @@ export default function Home(): JSX.Element {
       title="Podman Desktop - Containers and Kubernetes"
       description="Podman Desktop - An open source graphical tool for developing on containers and Kubernetes">
       <TailWindThemeSelector />
+      <Banner />
       <Hero />
       <MainFeatures />
       <Pods />
