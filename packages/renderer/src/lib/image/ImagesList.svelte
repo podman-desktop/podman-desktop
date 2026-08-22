@@ -1,5 +1,12 @@
 <script lang="ts">
-import { faCircleArrowDown, faCloudDownload, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircleArrowDown,
+  faCloudDownload,
+  faCube,
+  faDownload,
+  faTrash,
+  faUpload,
+} from '@fortawesome/free-solid-svg-icons';
 import type { ContainerInfo, ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
