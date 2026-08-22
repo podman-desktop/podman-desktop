@@ -105,12 +105,37 @@ describe('getPlaybookScriptPath', () => {
     // expect the path to be inside the extension storage path
     expect(playbookPath).toContain(os.tmpdir());
 
-    // we should have written content
+    // we should have written content using the `file` module (state: link) rather than a raw
+    // `command: ln -s ...` string: Ansible's `command` module splits its argument on whitespace,
+    // so any path containing a space (e.g. a Windows username with a space) breaks `ln -s` into
+    // more positional arguments than it expects. `src`/`dest` as separate, quoted module
+    // parameters are not subject to that splitting - see the mustache template's comment.
     expect(vi.mocked(writeFile)).toBeCalledWith(
       expect.stringContaining('playbook-setup-registry-conf-file.yml'),
-      expect.stringContaining(
-        'sudo ln -s /fake/path/inside/vm /etc/containers/registries.conf.d/999-podman-desktop-registries-from-host.conf',
-      ),
+      expect.stringContaining('src: "/fake/path/inside/vm"'),
+      'utf-8',
+    );
+    expect(vi.mocked(writeFile)).toBeCalledWith(
+      expect.stringContaining('playbook-setup-registry-conf-file.yml'),
+      expect.stringContaining('dest: "/etc/containers/registries.conf.d/999-podman-desktop-registries-from-host.conf"'),
+      'utf-8',
+    );
+  });
+
+  test('expect a path containing a space to be quoted rather than split into two ln arguments', async () => {
+    vi.mocked(env).isWindows = true;
+
+    // A Windows username containing a space (e.g. "Ondrej Novak") is a real, reported case:
+    // https://github.com/podman-desktop/podman-desktop/issues/14881
+    vi.spyOn(registryConfiguration, 'getPathToRegistriesConfInsideVM').mockReturnValue(
+      '/mnt/c/Users/Ondrej Novak/.config/containers/registries.conf',
+    );
+
+    await registryConfiguration.getPlaybookScriptPath();
+
+    expect(vi.mocked(writeFile)).toBeCalledWith(
+      expect.stringContaining('playbook-setup-registry-conf-file.yml'),
+      expect.stringContaining('src: "/mnt/c/Users/Ondrej Novak/.config/containers/registries.conf"'),
       'utf-8',
     );
   });
