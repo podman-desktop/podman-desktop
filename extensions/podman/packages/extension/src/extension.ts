@@ -620,7 +620,7 @@ function getLinuxSocketPath(): string {
 }
 
 // on linux, socket is started by the system service on a path like /run/user/1000/podman/podman.sock
-async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> {
+export async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> {
   const socketPath = getLinuxSocketPath();
   if (!fs.existsSync(socketPath)) {
     return;
@@ -635,7 +635,7 @@ async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> 
     },
   };
 
-  monitorPodmanSocket(socketPath).catch((error: unknown) => {
+  monitorPodmanSocket(provider, socketPath).catch((error: unknown) => {
     console.error('Error monitoring podman socket', error);
   });
 
@@ -668,21 +668,25 @@ async function isPodmanSocketAlive(socketPath: string): Promise<boolean> {
   });
 }
 
-async function monitorPodmanSocket(socketPath: string, machineName?: string): Promise<void> {
+export async function monitorPodmanSocket(
+  provider: extensionApi.Provider,
+  socketPath: string,
+  machineName?: string,
+): Promise<void> {
   // call us again
   if (!stopMonitoringPodmanSocket(machineName)) {
     try {
       const alive = await isPodmanSocketAlive(socketPath);
       if (!alive) {
-        updateProviderStatus('stopped', machineName);
+        updateProviderStatus(provider, 'stopped', machineName);
       } else {
-        updateProviderStatus('started', machineName);
+        updateProviderStatus(provider, 'started', machineName);
       }
     } catch (error) {
       // ignore the update of machines
     }
     await timeout(5000);
-    monitorPodmanSocket(socketPath, machineName).catch((error: unknown) => {
+    monitorPodmanSocket(provider, socketPath, machineName).catch((error: unknown) => {
       console.error('Error monitoring podman socket', error);
     });
   }
@@ -695,11 +699,20 @@ function stopMonitoringPodmanSocket(machineName?: string): boolean {
   return stopLoop;
 }
 
-function updateProviderStatus(status: extensionApi.ProviderConnectionStatus, machineName?: string): void {
+export function updateProviderStatus(
+  provider: extensionApi.Provider,
+  status: extensionApi.ProviderConnectionStatus,
+  machineName?: string,
+): void {
   if (machineName) {
     podmanMachinesStatuses.set(machineName, status);
   } else {
+    const previousStatus = podmanProviderStatus;
     podmanProviderStatus = status;
+
+    if (extensionApi.env.isLinux && previousStatus !== status) {
+      provider.updateStatus(status === 'started' ? 'ready' : 'stopped');
+    }
   }
 }
 
@@ -1984,6 +1997,10 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
 export async function getJSONMachineListByProvider(containerMachineProvider?: string): Promise<MachineListOutput> {
   const { stdout, stderr } = await execPodman(['machine', 'list', '--format', 'json'], containerMachineProvider);
   return { stdout, stderr };
+}
+
+export function resetStopLoop(): void {
+  stopLoop = false;
 }
 
 export async function deactivate(): Promise<void> {

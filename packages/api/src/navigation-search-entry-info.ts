@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export enum MenuContext {
-  DASHBOARD_IMAGE = 'dashboard/image',
-  DASHBOARD_CONTAINER = 'dashboard/container',
-  DASHBOARD_POD = 'dashboard/pod',
-  DASHBOARD_VOLUME = 'dashboard/volume',
-  DASHBOARD_COMPOSE = 'dashboard/compose',
-  DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
-  DASHBOARD_SECRET = 'dashboard/secret',
-  DASHBOARD_NETWORK = 'dashboard/network',
+export interface NavigationSearchEntryInfo {
+  routeId: string;
+  label: string;
+  icon?: string | { light: string; dark: string };
 }

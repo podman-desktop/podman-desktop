@@ -19,8 +19,10 @@
 
 import type * as proc from 'node:child_process';
 import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import * as http from 'node:http';
 import { arch } from 'node:os';
 import path from 'node:path';
 
@@ -61,9 +63,13 @@ import * as extension from './extension';
 import {
   getImportNativeCAFromConfig,
   initCheckAndRegisterUpdate,
+  initDefaultLinux,
+  monitorPodmanSocket,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
+  resetStopLoop,
   setWSLEnabled,
+  updateProviderStatus,
 } from './extension';
 import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
@@ -305,6 +311,13 @@ const originalConsoleTrace = console.trace;
 const consoleTraceMock = vi.fn();
 
 vi.mock(import('node:fs'));
+vi.mock(import('node:http'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    get: vi.fn(),
+  };
+});
 vi.mock(import('node:fs/promises'), async importOriginal => {
   const actual = await importOriginal();
   return {
@@ -4466,6 +4479,127 @@ describe('getImportNativeCAFromConfig', () => {
     const configDir = path.join('home', 'user', '.config', 'containers', 'podman', 'machine', 'applehv');
     await getImportNativeCAFromConfig('my-vm', { ConfigDir: { Path: configDir } });
     expect(readFile).toHaveBeenCalledWith(path.join(configDir, 'my-vm.json'), 'utf-8');
+  });
+});
+
+describe('provider status updates on podman socket liveness change', () => {
+  function setupSocketMonitorWithStatus(alive: boolean): void {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    resetStopLoop();
+    if (alive) {
+      vi.mocked(http.get).mockImplementation(((_options: unknown, callback?: (res: http.IncomingMessage) => void) => {
+        const request = new EventEmitter() as http.ClientRequest;
+        const response = new EventEmitter() as http.IncomingMessage;
+        response.statusCode = 200;
+        callback?.(response);
+        response.emit('data', '');
+        response.emit('end');
+        return request;
+      }) as typeof http.get);
+    } else {
+      vi.mocked(http.get).mockImplementation(((_options: unknown, _callback?: (res: http.IncomingMessage) => void) => {
+        const request = new EventEmitter() as http.ClientRequest;
+        queueMicrotask(() => request.emit('error', new Error('connect error')));
+        return request;
+      }) as typeof http.get);
+    }
+  }
+
+  test.each([
+    { from: 'started' as const, to: 'stopped' as const, expectedProviderStatus: 'stopped' },
+    { from: 'stopped' as const, to: 'started' as const, expectedProviderStatus: 'ready' },
+  ])(
+    'sets provider to $expectedProviderStatus when native socket transitions from $from to $to on Linux',
+    ({ from, to, expectedProviderStatus }) => {
+      vi.mocked(extensionApi.env).isLinux = true;
+      updateProviderStatus(provider, from);
+      updateProviderStatus(provider, to);
+
+      expect(provider.updateStatus).toHaveBeenCalledWith(expectedProviderStatus);
+    },
+  );
+
+  test('does not call provider.updateStatus when status has not changed', () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    updateProviderStatus(provider, 'started');
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('does not call provider.updateStatus on non-Linux', () => {
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    updateProviderStatus(provider, 'started');
+
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('updates machine status map when machineName is provided', () => {
+    updateProviderStatus(provider, 'started', 'my-machine');
+
+    expect(extension.podmanMachinesStatuses.get('my-machine')).toBe('started');
+    expect(provider.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('monitorPodmanSocket updates provider to stopped when native socket is not alive', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    setupSocketMonitorWithStatus(false);
+    updateProviderStatus(provider, 'started');
+    vi.mocked(provider.updateStatus).mockClear();
+
+    const promise = monitorPodmanSocket(provider, '/socket');
+    await vi.advanceTimersByTimeAsync(5000);
+    await promise;
+
+    expect(provider.updateStatus).toHaveBeenCalledWith('stopped');
+  });
+
+  test('monitorPodmanSocket updates provider to ready when native socket is alive', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    setupSocketMonitorWithStatus(true);
+    updateProviderStatus(provider, 'stopped');
+    vi.mocked(provider.updateStatus).mockClear();
+
+    const promise = monitorPodmanSocket(provider, '/socket');
+    await vi.advanceTimersByTimeAsync(5000);
+    await promise;
+
+    expect(provider.updateStatus).toHaveBeenCalledWith('ready');
+  });
+
+  test('monitorPodmanSocket sets machine status to started when machine socket is alive', async () => {
+    setupSocketMonitorWithStatus(true);
+    extension.podmanMachinesStatuses.set('test-machine', 'stopped');
+
+    const promise = monitorPodmanSocket(provider, '/socket', 'test-machine');
+    await vi.advanceTimersByTimeAsync(5000);
+    await promise;
+
+    expect(extension.podmanMachinesStatuses.get('test-machine')).toBe('started');
+  });
+
+  test('monitorPodmanSocket sets machine status to stopped when machine socket is not alive', async () => {
+    setupSocketMonitorWithStatus(false);
+    extension.podmanMachinesStatuses.set('test-machine', 'started');
+
+    const promise = monitorPodmanSocket(provider, '/socket', 'test-machine');
+    await vi.advanceTimersByTimeAsync(5000);
+    await promise;
+
+    expect(extension.podmanMachinesStatuses.get('test-machine')).toBe('stopped');
+  });
+
+  test('initDefaultLinux registers container connection when socket exists', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    setupSocketMonitorWithStatus(false);
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    extension.initExtensionContext(getContextMock());
+
+    await initDefaultLinux(provider);
+
+    expect(provider.registerContainerProviderConnection).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Podman', type: 'podman' }),
+    );
   });
 });
 
