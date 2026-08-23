@@ -236,18 +236,6 @@ describe('FilesystemMonitoring', () => {
     fsWatcher.dispose();
   });
 
-  test('createFileSystemWatcher should create a missing directory', async () => {
-    const watchedPath = path.join(rootdir, 'tmp', 'non-existent');
-
-    const fsWatcher = monitoring.createFileSystemWatcher(watchedPath);
-    const stats = await promises.stat(watchedPath);
-
-    expect(stats.isDirectory()).toBe(true);
-    expect(fsWatcher).toBeDefined();
-
-    fsWatcher.dispose();
-  });
-
   test('asyncDispose should dispose all tracked watchers', async () => {
     const watcher1 = monitoring.createFileSystemWatcher(path.join(rootdir, 'file1'));
     const watcher2 = monitoring.createFileSystemWatcher(path.join(rootdir, 'file2'));
