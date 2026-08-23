@@ -225,10 +225,15 @@ describe('FilesystemMonitoring', () => {
     fsWatcher.dispose();
   });
 
-  test('createFileSystemWatcher should not return a FileSystemWatcher for invalid path', () => {
-    expect(() => {
-      monitoring.createFileSystemWatcher(path.join('tmp', 'non-existent', 'somefile'));
-    }).toThrow(`${path.join('tmp', 'non-existent', 'somefile')} does not exist`);
+  test('createFileSystemWatcher should create the path and return FileSystemWatcher for invalid path', async () => {
+    const fsWatcher = monitoring.createFileSystemWatcher(path.join(rootdir, 'tmp', 'non-existent', 'somefile'));
+    await expect(promises.access(path.join(rootdir, 'tmp', 'non-existent', 'somefile'))).resolves.toBeUndefined();
+    expect(fsWatcher).toBeDefined();
+    expect(fsWatcher.dispose).toBeDefined();
+    expect(fsWatcher.onDidCreate).toBeDefined();
+    expect(fsWatcher.onDidChange).toBeDefined();
+    expect(fsWatcher.onDidDelete).toBeDefined();
+    fsWatcher.dispose();
   });
 
   test('asyncDispose should dispose all tracked watchers', async () => {
