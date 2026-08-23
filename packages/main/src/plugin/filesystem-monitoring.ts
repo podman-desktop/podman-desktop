@@ -117,8 +117,7 @@ export class FilesystemMonitoring implements IAsyncDisposable {
 
   createFileSystemWatcher(path: string): containerDesktopAPI.FileSystemWatcher {
     if (!fs.existsSync(path)) {
-      fs.mkdirSync(pathfs.dirname(path), { recursive: true });
-      fs.writeFileSync(path, '');
+      fs.mkdirSync(path, { recursive: true });
     }
     const watcher = new FileSystemWatcherImpl(path);
     this.watchers.push(watcher);
