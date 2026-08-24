@@ -89,8 +89,8 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
   const secretKey = `${prefix}_SECRET`;
   console.debug(`Lookup environment variable ${usernameKey} & ${secretKey}`);
 
-  const usernameValue = process.env[usernameKey] ?? process.env['AUTH_REGISTRY_USER'];
-  const secretValue = process.env[secretKey] ?? process.env['AUTH_REGISTRY_SECRET'];
+  const usernameValue = process.env[usernameKey] ?? process.env['REMOTE_EXTENSIONS_AUTH_USER'];
+  const secretValue = process.env[secretKey] ?? process.env['REMOTE_EXTENSIONS_AUTH_SECRET'];
 
   // if both undefined => ignore
   if (!usernameValue && !secretValue) return undefined;
@@ -98,7 +98,7 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
   // if only one is defined => raise error
   if (!usernameValue || !secretValue) {
     throw new Error(
-      `if one of ${usernameKey}/AUTH_REGISTRY_USER and ${secretKey}/AUTH_REGISTRY_SECRET is specified, both need to be defined.`,
+      `if one of ${usernameKey}/REMOTE_EXTENSIONS_AUTH_USER and ${secretKey}/REMOTE_EXTENSIONS_AUTH_SECRET is specified, both need to be defined.`,
     );
   }
 

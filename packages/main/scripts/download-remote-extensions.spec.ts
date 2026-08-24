@@ -130,9 +130,9 @@ describe('findAuthEnvironment', () => {
     });
   });
 
-  test('should fallback to AUTH_REGISTRY_USER and AUTH_REGISTRY_SECRET when registry-specific env vars are not set', () => {
-    vi.stubEnv('AUTH_REGISTRY_USER', 'fallback-user');
-    vi.stubEnv('AUTH_REGISTRY_SECRET', 'fallback-secret');
+  test('should fallback to REMOTE_EXTENSIONS_AUTH_USER and REMOTE_EXTENSIONS_AUTH_SECRET when registry-specific env vars are not set', () => {
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_USER', 'fallback-user');
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_SECRET', 'fallback-secret');
 
     const result = findAuthEnvironment('quay.io');
     expect(result).toStrictEqual({
@@ -144,8 +144,8 @@ describe('findAuthEnvironment', () => {
   test('registry-specific env vars should take precedence over fallback env vars', () => {
     vi.stubEnv('AUTH_QUAY_IO_USER', 'specific-user');
     vi.stubEnv('AUTH_QUAY_IO_SECRET', 'specific-secret');
-    vi.stubEnv('AUTH_REGISTRY_USER', 'fallback-user');
-    vi.stubEnv('AUTH_REGISTRY_SECRET', 'fallback-secret');
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_USER', 'fallback-user');
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_SECRET', 'fallback-secret');
 
     const result = findAuthEnvironment('quay.io');
     expect(result).toStrictEqual({
@@ -156,7 +156,7 @@ describe('findAuthEnvironment', () => {
 
   test('should mix registry-specific user with fallback secret', () => {
     vi.stubEnv('AUTH_QUAY_IO_USER', 'specific-user');
-    vi.stubEnv('AUTH_REGISTRY_SECRET', 'fallback-secret');
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_SECRET', 'fallback-secret');
 
     const result = findAuthEnvironment('quay.io');
     expect(result).toStrictEqual({
@@ -166,7 +166,7 @@ describe('findAuthEnvironment', () => {
   });
 
   test('should mix fallback user with registry-specific secret', () => {
-    vi.stubEnv('AUTH_REGISTRY_USER', 'fallback-user');
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_USER', 'fallback-user');
     vi.stubEnv('AUTH_QUAY_IO_SECRET', 'specific-secret');
 
     const result = findAuthEnvironment('quay.io');
@@ -184,28 +184,28 @@ describe('findAuthEnvironment', () => {
       expect(() => {
         findAuthEnvironment('quay.io');
       }).toThrowError(
-        'if one of AUTH_QUAY_IO_USER/AUTH_REGISTRY_USER and AUTH_QUAY_IO_SECRET/AUTH_REGISTRY_SECRET is specified, both need to be defined.',
+        'if one of AUTH_QUAY_IO_USER/REMOTE_EXTENSIONS_AUTH_USER and AUTH_QUAY_IO_SECRET/REMOTE_EXTENSIONS_AUTH_SECRET is specified, both need to be defined.',
       );
     },
   );
 
-  test('should throw an error if only AUTH_REGISTRY_USER fallback is defined', () => {
-    vi.stubEnv('AUTH_REGISTRY_USER', 'fallback-user');
+  test('should throw an error if only REMOTE_EXTENSIONS_AUTH_USER fallback is defined', () => {
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_USER', 'fallback-user');
 
     expect(() => {
       findAuthEnvironment('quay.io');
     }).toThrow(
-      'if one of AUTH_QUAY_IO_USER/AUTH_REGISTRY_USER and AUTH_QUAY_IO_SECRET/AUTH_REGISTRY_SECRET is specified, both need to be defined.',
+      'if one of AUTH_QUAY_IO_USER/REMOTE_EXTENSIONS_AUTH_USER and AUTH_QUAY_IO_SECRET/REMOTE_EXTENSIONS_AUTH_SECRET is specified, both need to be defined.',
     );
   });
 
-  test('should throw an error if only AUTH_REGISTRY_SECRET fallback is defined', () => {
-    vi.stubEnv('AUTH_REGISTRY_SECRET', 'fallback-secret');
+  test('should throw an error if only REMOTE_EXTENSIONS_AUTH_SECRET fallback is defined', () => {
+    vi.stubEnv('REMOTE_EXTENSIONS_AUTH_SECRET', 'fallback-secret');
 
     expect(() => {
       findAuthEnvironment('quay.io');
     }).toThrow(
-      'if one of AUTH_QUAY_IO_USER/AUTH_REGISTRY_USER and AUTH_QUAY_IO_SECRET/AUTH_REGISTRY_SECRET is specified, both need to be defined.',
+      'if one of AUTH_QUAY_IO_USER/REMOTE_EXTENSIONS_AUTH_USER and AUTH_QUAY_IO_SECRET/REMOTE_EXTENSIONS_AUTH_SECRET is specified, both need to be defined.',
     );
   });
 });
