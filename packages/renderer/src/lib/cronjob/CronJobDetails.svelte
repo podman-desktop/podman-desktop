@@ -49,6 +49,9 @@ onMount(async () => {
       }
     },
     onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      if (!cronjobUtils.isV1CronJob(resource)) {
+        return;
+      }
       cronjob = cronjobUtils.getCronJobUI(resource);
       if (isExperimental) {
         kubeCronJob = resource;
