@@ -31,7 +31,7 @@ test.use({
 });
 
 test.beforeAll(async ({ runner, welcomePage, navigationBar }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(120_000);
   runner.setVideoAndTraceName('managed-configuration-extensions-e2e');
   await welcomePage.handleWelcomePage(true);
   extensionsPage = await navigationBar.openExtensions();

@@ -70,98 +70,98 @@ test.afterAll(async ({ runner, page }) => {
 
 test.skip(true, 'Temporarily disabled: investigating HTTPS cert bundle failures blocking e2e-main (#17384)');
 
-test.describe
-  .serial('Push image to insecure registry with self-signed certificate', { tag: '@smoke' }, () => {
-    test('Add insecure registry', async ({ page }) => {
-      await createRegistryAndVerify(page, registryUrl, registryUsername, registryPassword, registryUrl, true);
-    });
-
-    test('Pull source image', async ({ navigationBar }) => {
-      let imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      const pullImagePage = await imagesPage.openPullImage();
-      imagesPage = await pullImagePage.pullImage(sourceImage);
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      await imagesPage.waitForRowToExists(sourceImage, 30_000);
-    });
-
-    test('Tag image for insecure registry', async ({ page }) => {
-      let imagesPage = new ImagesPage(page);
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      fullImageName = `${registryUrl}/${registryUsername}/test-image`;
-
-      imagesPage = await imagesPage.renameImage(sourceImage, fullImageName, 'latest');
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      await imagesPage.waitForRowToExists(fullImageName, 30_000);
-    });
-
-    test('Push image to insecure registry', async ({ navigationBar, page, statusBar }) => {
-      test.setTimeout(SYNC_TIMEOUT + 60_000);
-
-      const imagesPage = new ImagesPage(page);
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      const imageDetailsPage = await imagesPage.openImageDetails(fullImageName);
-      await playExpect(imageDetailsPage.heading).toBeVisible();
-
-      if (isLinux) {
-        await imageDetailsPage.pushImage();
-      } else {
-        const errorText = (await pushImageExpectFailure(page, imageDetailsPage.pushButton)).toLowerCase();
-        playExpect(
-          errorText.includes('x509') || errorText.includes('certificate') || errorText.includes('tls'),
-          `Expected TLS/certificate error in push output, got: ${errorText.substring(0, 200)}`,
-        ).toBeTruthy();
-
-        const tasksPage = await statusBar.openTasksPage();
-        await playExpect(tasksPage.heading).toBeVisible();
-
-        const commandPalette = new CommandPalette(page);
-        await commandPalette.executeCommand('Podman: Synchronize certificates to all VMs');
-
-        await playExpect
-          .poll(
-            async () => {
-              try {
-                const status = await tasksPage.getStatusForLatestTask();
-                if (status && !status.includes(TaskState.Success)) {
-                  console.log(`Poll: certificate sync task status = "${status}"`);
-                }
-                return status;
-              } catch (error: unknown) {
-                console.log('Poll: task status not yet available —', error instanceof Error ? error.message : error);
-                return '';
-              }
-            },
-            { timeout: SYNC_TIMEOUT, intervals: [POLL_INTERVAL] },
-          )
-          .toContain(TaskState.Success);
-
-        const imagesPageAfterSync = await navigationBar.openImages();
-        const imageDetailsAfterSync = await imagesPageAfterSync.openImageDetails(fullImageName);
-        await playExpect(imageDetailsAfterSync.heading).toBeVisible();
-        await imageDetailsAfterSync.pushImage();
-      }
-    });
-
-    test('Verify push by re-pulling from insecure registry', async ({ navigationBar, page }) => {
-      await deleteImage(page, fullImageName);
-
-      let imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      const pullImagePage = await imagesPage.openPullImage();
-      imagesPage = await pullImagePage.pullImage(fullImageName, 'latest');
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      await imagesPage.waitForRowToExists(fullImageName, 30_000);
-    });
-
-    test('Remove insecure registry', async ({ page }) => {
-      await deleteRegistry(page, registryUrl);
-    });
+test.describe('Push image to insecure registry with self-signed certificate', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test('Add insecure registry', async ({ page }) => {
+    await createRegistryAndVerify(page, registryUrl, registryUsername, registryPassword, registryUrl, true);
   });
+
+  test('Pull source image', async ({ navigationBar }) => {
+    let imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const pullImagePage = await imagesPage.openPullImage();
+    imagesPage = await pullImagePage.pullImage(sourceImage);
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    await imagesPage.waitForRowToExists(sourceImage, 30_000);
+  });
+
+  test('Tag image for insecure registry', async ({ page }) => {
+    let imagesPage = new ImagesPage(page);
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    fullImageName = `${registryUrl}/${registryUsername}/test-image`;
+
+    imagesPage = await imagesPage.renameImage(sourceImage, fullImageName, 'latest');
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    await imagesPage.waitForRowToExists(fullImageName, 30_000);
+  });
+
+  test('Push image to insecure registry', async ({ navigationBar, page, statusBar }) => {
+    test.setTimeout(SYNC_TIMEOUT + 60_000);
+
+    const imagesPage = new ImagesPage(page);
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const imageDetailsPage = await imagesPage.openImageDetails(fullImageName);
+    await playExpect(imageDetailsPage.heading).toBeVisible();
+
+    if (isLinux) {
+      await imageDetailsPage.pushImage();
+    } else {
+      const errorText = (await pushImageExpectFailure(page, imageDetailsPage.pushButton)).toLowerCase();
+      playExpect(
+        errorText.includes('x509') || errorText.includes('certificate') || errorText.includes('tls'),
+        `Expected TLS/certificate error in push output, got: ${errorText.substring(0, 200)}`,
+      ).toBeTruthy();
+
+      const tasksPage = await statusBar.openTasksPage();
+      await playExpect(tasksPage.heading).toBeVisible();
+
+      const commandPalette = new CommandPalette(page);
+      await commandPalette.executeCommand('Podman: Synchronize certificates to all VMs');
+
+      await playExpect
+        .poll(
+          async () => {
+            try {
+              const status = await tasksPage.getStatusForLatestTask();
+              if (status && !status.includes(TaskState.Success)) {
+                console.log(`Poll: certificate sync task status = "${status}"`);
+              }
+              return status;
+            } catch (error: unknown) {
+              console.log('Poll: task status not yet available —', error instanceof Error ? error.message : error);
+              return '';
+            }
+          },
+          { timeout: SYNC_TIMEOUT, intervals: [POLL_INTERVAL] },
+        )
+        .toContain(TaskState.Success);
+
+      const imagesPageAfterSync = await navigationBar.openImages();
+      const imageDetailsAfterSync = await imagesPageAfterSync.openImageDetails(fullImageName);
+      await playExpect(imageDetailsAfterSync.heading).toBeVisible();
+      await imageDetailsAfterSync.pushImage();
+    }
+  });
+
+  test('Verify push by re-pulling from insecure registry', async ({ navigationBar, page }) => {
+    await deleteImage(page, fullImageName);
+
+    let imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const pullImagePage = await imagesPage.openPullImage();
+    imagesPage = await pullImagePage.pullImage(fullImageName, 'latest');
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    await imagesPage.waitForRowToExists(fullImageName, 30_000);
+  });
+
+  test('Remove insecure registry', async ({ page }) => {
+    await deleteRegistry(page, registryUrl);
+  });
+});

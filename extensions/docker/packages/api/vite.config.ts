@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+/* eslint-env node */
+import { join } from 'node:path';
+import { defineConfig } from 'vite';
+
 const PACKAGE_ROOT = __dirname;
 
-/**
- * Config for extensions tests
- * placed in project root tests folder
- * @type {import('vite').UserConfig}
- * @see https://vitest.dev/config/
- */
-const config = {
+// https://vitejs.dev/config/
+export default defineConfig({
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
-  test: {
-    globals: true,
-    include: ['*.{test,spec}.ts'],
+  base: '',
+  server: {
+    fs: {
+      strict: true,
+    },
   },
-};
-
-export default config;
+  build: {
+    sourcemap: true,
+    outDir: 'dist',
+    assetsDir: '.',
+    emptyOutDir: true,
+    reportCompressedSize: false,
+  },
+});

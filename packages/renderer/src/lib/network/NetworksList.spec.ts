@@ -100,6 +100,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.listNetworks).mockResolvedValue([]);
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   providerInfos.set([]);
   networksListInfo.set([]);
   searchPattern.set('');

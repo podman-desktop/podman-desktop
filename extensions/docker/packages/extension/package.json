@@ -31,8 +31,8 @@
     "@podman-desktop/docker-extension-api": "workspace:*",
     "adm-zip": "^0.6.0",
     "mkdirp": "^3.0.1",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   },
   "contributes": {
     "commands": [

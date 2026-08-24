@@ -29,7 +29,7 @@ on:
     inputs:
       podman_version:
         default: 'latest'
-        description: 'Podman version to install (e.g., "5.5.2", "5.6.0~rc1"). Use "latest" for stable or "nightly" for the latest development build.'
+        description: 'Podman version to install (e.g., "5.5.2", "5.6.0~rc1"). Use "latest" for stable, "nightly" for the latest development build, or "podman6" for the f44-podman6 COPR build (Fedora 44 only).'
         type: string
         required: true
       npm_target:

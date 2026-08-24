@@ -27,12 +27,14 @@ overrides:
   node-forge: ^1.4.0
   config-file-ts>glob: ^10.5.0
   compression>on-headers: ^1.1.0
-  js-yaml@<5: ^4.3.0
+  js-yaml@<5: ^4.3.1
   tmp-promise>tmp: ^0.2.7
   tar: ^7.5.3
   cheerio>undici: ^7.18.2
   minimatch>@isaacs/brace-expansion: ^5.0.1
-  brace-expansion@^1: ^1.1.14
+  brace-expansion@^1: ^1.1.17
+  brace-expansion@^2: ^2.1.4
+  brace-expansion@^5: ^5.0.9
   lodash-es: ^4.18.1
   lodash: ^4.18.1
   '@docusaurus/types>webpack': ^5.105.0
@@ -50,9 +52,9 @@ overrides:
   follow-redirects: ^1.16.0
   uuid: ^14.0.0
   ip-address: '>=10.3.1'
-  fast-uri: '>=4.1.1'
+  fast-uri: '>=4.1.2'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
-  mermaid: '>=11.15.0'
+  mermaid: '>=11.16.1'
   ws@^8: '>=8.20.1'
   concurrently>shell-quote: '>=1.8.5'
   dockerode>@grpc/grpc-js: '>=1.14.4'

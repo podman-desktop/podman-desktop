@@ -17,8 +17,8 @@ if (artifact?.creationTimestamp) {
   artifact.creationTimestamp = new Date(artifact.creationTimestamp);
 }
 
-let internalLabelsDropdownOpen: boolean = false;
-let internalAnnotationsDropdownOpen: boolean = false;
+let internalLabelsDropdownOpen = $state(false);
+let internalAnnotationsDropdownOpen = $state(false);
 
 let labels: [string, string][] = [];
 let internalLabels: [string, string][] = [];

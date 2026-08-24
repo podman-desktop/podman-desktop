@@ -610,6 +610,7 @@ test('Verify extension error leads to failed state', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -641,6 +642,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -676,6 +678,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -708,6 +711,7 @@ test('Verify extension load triggers an onDidChange event', async () => {
     mainPath: '',
     removable: false,
     devMode: false,
+    bundled: false,
     manifest: {} as unknown as ExtensionManifest,
     subscriptions: [],
     readme: '',
@@ -729,6 +733,7 @@ test('Verify extension load', async () => {
     mainPath: '',
     removable: true,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.1',
     } as unknown as ExtensionManifest,
@@ -768,6 +773,7 @@ test('Verify disabled extension skips registering contributions and runtime acti
     mainPath: 'main.js',
     removable: true,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.0',
       contributes: {
@@ -815,6 +821,7 @@ test('Verify enabled extension registers contributions and activates runtime', a
     mainPath: '',
     removable: true,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.0',
       contributes: {
@@ -862,6 +869,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
     mainPath: '',
     removable: false,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.1',
       contributes: {
@@ -897,6 +905,7 @@ test('Verify extension activate registers extension features and the disposable 
     mainPath: '',
     removable: false,
     devMode: false,
+    bundled: false,
     manifest: {
       contributes: {
         features: ['feature1', 'feature2'],
@@ -1475,6 +1484,7 @@ test('Verify extension uri', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -1509,6 +1519,7 @@ test('Verify exports and packageJSON', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {
         foo: 'bar',
       } as unknown as ExtensionManifest,
@@ -2742,6 +2753,36 @@ test('when registering a navigation route, should be pushed to disposables', () 
   expect(disposables.length).toBe(1);
 });
 
+test('when registering a navigation route with searchEntry, the searchEntry should be passed through', () => {
+  const api = createApi();
+
+  const disposable = api.navigation.register('search-route', 'my-command', { label: 'My Label' });
+
+  const routes = navigationManager.getSearchableRoutes();
+  expect(routes).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        routeId: 'publisher.extension-name.search-route',
+        label: 'My Label',
+      }),
+    ]),
+  );
+
+  disposable.dispose();
+});
+
+test('when registering a navigation route with searchEntry without icon and no extension icon, icon should be undefined', () => {
+  const api = createApi();
+
+  const disposable = api.navigation.register('icon-fallback-route', 'my-command', { label: 'My Label' });
+
+  const routes = navigationManager.getSearchableRoutes();
+  const route = routes.find(r => r.routeId === 'publisher.extension-name.icon-fallback-route');
+  expect(route?.icon).toBeUndefined();
+
+  disposable.dispose();
+});
+
 test('withProgress should add the extension id to the routeId', async () => {
   vi.mocked(progress.withProgress).mockResolvedValue(undefined);
   const api = createApi();
@@ -2903,6 +2944,7 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
+      bundled: false,
     },
     {
       activate: activateMock,

@@ -126,9 +126,13 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     // test state of container in summary tab
     const containerState = await containersDetails.getState();
     playExpect(containerState).toContain(ContainerState.Running);
-    // check Logs output — interactive TTY container produces log data (shell prompt)
+    // Logs tab: on Linux the interactive shell prompt appears in logs (terminal visible),
+    // on Windows podman does not capture TTY output so the empty state is shown instead
     await containersDetails.activateTab('Logs');
-    await playExpect(containersDetails.terminalContent).toBeVisible();
+    const noLogsHeading = containersDetails.tabContent.getByRole('heading', { name: 'No Log' });
+    await playExpect
+      .poll(async () => (await containersDetails.terminalContent.isVisible()) || (await noLogsHeading.isVisible()))
+      .toBeTruthy();
     // Switch between various other tabs, no checking of the content
     await containersDetails.activateTab('Inspect');
     await containersDetails.activateTab('Kube');
