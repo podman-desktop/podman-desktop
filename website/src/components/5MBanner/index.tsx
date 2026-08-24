@@ -23,8 +23,7 @@ import { useEffect, useRef } from 'react';
 import { needsParticlePoolRecreation, ParticleSimulation, resolveConfig } from './particle-simulation';
 import { atlasSrcForColorMode, TITLE_DARK_SRC, TITLE_LIGHT_SRC } from './theme-assets';
 
-// TODO: replace with the published blog post URL once it exists.
-const BLOG_POST_URL = 'https://podman-desktop.io/blog';
+const BLOG_POST_URL = '/blog/5-million-lessons-learned';
 
 /**
  * Canvas-based animated banner celebrating 5 million downloads: a pool of particles streams
