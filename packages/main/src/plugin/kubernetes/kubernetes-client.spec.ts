@@ -2600,6 +2600,10 @@ test('Expect readNamespacedCronJob to return the cronjob', async () => {
     metadata: {
       name: 'foobar',
     },
+    spec: {
+      schedule: '*/5 * * * *',
+      jobTemplate: {},
+    },
   };
   makeApiClientMock.mockReturnValue({
     readNamespacedCronJob: () => Promise.resolve(v1CronJob),
