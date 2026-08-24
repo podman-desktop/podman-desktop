@@ -134,6 +134,7 @@ function updateNavigationWidth(): void {
 function scheduleNavigationWidthUpdate(): void {
   void tick()
     .then(() => {
+      if (document.hidden) return;
       // Measure after next paint so newly-shown items have final layout metrics.
       if (typeof window.requestAnimationFrame === 'function') {
         window.requestAnimationFrame(() => {
@@ -190,6 +191,11 @@ onMount(() => {
   const resizeListener = (): void => {
     scheduleNavigationWidthUpdate();
   };
+  const visibilityListener = (): void => {
+    if (!document.hidden) {
+      scheduleNavigationWidthUpdate();
+    }
+  };
 
   let resizeObserver: ResizeObserver | undefined;
   if (navigationElement && typeof ResizeObserver !== 'undefined') {
@@ -203,6 +209,7 @@ onMount(() => {
   if (typeof window.addEventListener === 'function') {
     window.addEventListener('resize', resizeListener);
   }
+  document.addEventListener('visibilitychange', visibilityListener);
 
   onDidChangeRegisteredFeatures.addEventListener(kubernetesContextsManagerFeature, featureListener);
 
@@ -256,6 +263,7 @@ onMount(() => {
     if (typeof window.removeEventListener === 'function') {
       window.removeEventListener('resize', resizeListener);
     }
+    document.removeEventListener('visibilitychange', visibilityListener);
     resizeObserver?.disconnect();
     unsubConfig();
     unsubFeatures();
