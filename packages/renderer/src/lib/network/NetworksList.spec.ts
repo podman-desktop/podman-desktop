@@ -170,6 +170,18 @@ test('Expect networks to be order by name by default', async () => {
   expect(network1Name.compareDocumentPosition(network2Name)).toBe(4);
 });
 
+test('Expect network name before ID in the table', async () => {
+  await init();
+
+  const headers = screen.getAllByRole('columnheader');
+  const nameIndex = headers.findIndex(header => header.textContent?.includes('Name'));
+  const idIndex = headers.findIndex(header => header.textContent?.includes('Id'));
+
+  expect(nameIndex).toBeGreaterThan(-1);
+  expect(idIndex).toBeGreaterThan(-1);
+  expect(nameIndex).toBeLessThan(idIndex);
+});
+
 test('Expect to have edit action for Podman networks', async () => {
   await init();
 

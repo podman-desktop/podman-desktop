@@ -104,8 +104,8 @@ let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
 });
 
 const columns = [
-  idColumn,
   nameColumn,
+  idColumn,
   envColumn,
   driverColumn,
   new TableColumn<NetworkInfoUI>('Actions', { align: 'right', renderer: NetworkActions, overflow: true }),
