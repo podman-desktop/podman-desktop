@@ -5116,6 +5116,11 @@ declare module '@podman-desktop/api' {
     readonly id: string;
   }
 
+  export interface NavigationSearchEntry {
+    label: string;
+    icon?: string | { light: string; dark: string };
+  }
+
   export namespace navigation {
     // Navigate to the Dashboard page
     export function navigateToDashboard(): Promise<void>;
@@ -5229,7 +5234,7 @@ declare module '@podman-desktop/api' {
      * @param routeId a unique string value that could be used in {@link navigation.navigate}
      * @param commandId the command that will be executed on navigate
      */
-    export function register(routeId: string, commandId: string): Disposable;
+    export function register(routeId: string, commandId: string, searchEntry?: NavigationSearchEntry): Disposable;
 
     /**
      * Allow extension to navigate to a custom route.

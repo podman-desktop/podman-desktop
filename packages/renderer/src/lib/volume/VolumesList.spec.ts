@@ -375,7 +375,6 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(checkboxes[0]);
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  (window as any).showMessageBox = vi.fn();
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });

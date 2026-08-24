@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { defineConfig } from 'vite';
+
 import { chrome } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
-import { builtinModules } from 'module';
+import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 
 const PACKAGE_ROOT = __dirname;
 
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
-  mode: process.env.MODE,
+export default defineConfig({
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
@@ -35,20 +33,12 @@ const config = {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  /*plugins: [
-    commonjs({
-      dynamicRequireTargets: [
-        // include using a glob pattern (either a string or an array of strings)
-        'node_modules/ssh2/lib/protocol/crypto/poly1305.js',
-      ]
-      }),
-  ],*/
   build: {
     sourcemap: 'inline',
     target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE !== 'development',
+    minify: process.env['MODE'] !== 'development',
     lib: {
       entry: 'src/index.ts',
       formats: ['cjs'],
@@ -66,8 +56,5 @@ const config = {
   test: {
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    passWithNoTests: true,
   },
-};
-
-export default config;
+});

@@ -6,8 +6,12 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { ServiceUI } from './ServiceUI';
 
-export let service: ServiceUI;
-export let detailed = false;
+interface Props {
+  service: ServiceUI;
+  detailed?: boolean;
+}
+
+let { service, detailed = false }: Props = $props();
 
 async function deleteService(): Promise<void> {
   service.status = 'DELETING';

@@ -20,8 +20,9 @@ import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
@@ -73,13 +74,13 @@ import type {
   ContainerCreatePortMappingOption,
   PodmanDevice,
 } from '@podman-desktop/core-api/libpod';
-import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import { PlayKubeInfo, PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
-import { coerce, gtr } from 'semver';
+import { coerce, gtr, lt } from 'semver';
 import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
@@ -680,7 +681,7 @@ export class ContainerProviderRegistry {
                 Created: moment(podmanContainer.Created).unix(),
                 State: podmanContainer.State,
                 StartedAt,
-                Command: podmanContainer.Command?.length > 0 ? podmanContainer.Command[0] : undefined,
+                Command: podmanContainer.Command?.length > 0 ? podmanContainer.Command.join(' ') : undefined,
                 Labels,
                 Ports,
               };
@@ -1765,7 +1766,17 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
-      return this.getMatchingEngine(engineId).pruneVolumes();
+      // Podman version below 6.0.0 does not support the `all` filter
+      // See https://github.com/containers/podman/pull/28235
+      const provider = this.internalProviders.get(engineId);
+      if (provider?.connection.type === 'podman') {
+        const version = await this.getMatchingEngine(engineId).version();
+        const coerced = coerce(version.Version);
+        if (coerced && lt(coerced, '6.0.0')) {
+          return this.getMatchingEngine(engineId).pruneVolumes();
+        }
+      }
+      return this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
@@ -2704,7 +2715,7 @@ export class ContainerProviderRegistry {
   }
 
   async playKube(
-    kubernetesYamlFilePath: string,
+    input: PlayKubeInput,
     selectedProvider: ProviderContainerConnectionInfo,
     options?: {
       build?: boolean;
@@ -2722,9 +2733,10 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      // if we don't build, we use the file directory
+      // if we don't build, we can pass the input straight through
       if (!options?.build) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       // ensure build support is true, otherwise let's throw a nice user friendly error
@@ -2734,12 +2746,16 @@ export class ContainerProviderRegistry {
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
 
-      const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
+      const kubePlay =
+        input.type === 'path'
+          ? KubePlayContext.fromFile(input.value)
+          : KubePlayContext.fromContent(input.value, tmpdir());
       await kubePlay.init();
 
       // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       return provider.libpodApi.playKube(kubePlay.build(), options);
@@ -2910,14 +2926,23 @@ export class ContainerProviderRegistry {
     }
     if (provider.libpodApi) {
       const podmanInfo = await provider.libpodApi.podmanInfo();
+      const { memTotal, memFree, memAvailable } = podmanInfo.host;
+      let memoryUsed: number;
+      // Podman version >= 6.1.0 expose the memAvailable which is the amount of memory available to the system
+      if (memAvailable !== undefined && memAvailable >= 0) {
+        memoryUsed = memTotal - memAvailable;
+      } else {
+        memoryUsed = memTotal - memFree;
+      }
+
       return {
         engineId: provider.id,
         engineName: provider.name,
         engineType: provider.connection.type,
         cpus: podmanInfo.host.cpus,
         cpuIdle: podmanInfo.host.cpuUtilization.idlePercent,
-        memory: podmanInfo.host.memTotal,
-        memoryUsed: podmanInfo.host.memTotal - podmanInfo.host.memFree,
+        memory: memTotal,
+        memoryUsed,
         diskSize: podmanInfo.store.graphRootAllocated,
         diskUsed: podmanInfo.store.graphRootUsed,
       };

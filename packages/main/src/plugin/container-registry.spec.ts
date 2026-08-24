@@ -53,7 +53,7 @@ import * as util from '/@/util.js';
 
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { LibPod } from './dockerode/libpod-dockerode.js';
+import type { Info, LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import type { EnvfileParser } from './env-file-parser.js';
 import type { ProviderRegistry } from './provider-registry.js';
@@ -1200,6 +1200,68 @@ describe('listContainers', () => {
       maintainer: 'Podman Maintainers',
     });
     expect(container?.State).toBe('running');
+  });
+
+  test('list containers with Podman API and a multi-argument command', async () => {
+    const containersWithPodmanAPI = [
+      {
+        AutoRemove: false,
+        Command: ['ls', '-l', '/etc'],
+        Created: '2023-08-10T15:37:44.555961563+02:00',
+        CreatedAt: '',
+        Exited: true,
+        ExitedAt: 1691674673,
+        ExitCode: 0,
+        Id: '31a4b282691420be2611817f203765402d8da7e13cd530f80a6ddd1bb4aa63b4',
+        Image: 'docker.io/library/httpd:latest',
+        ImageID: '911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a',
+        IsInfra: false,
+        Labels: {},
+        Mounts: [],
+        Names: ['admiring_wing'],
+        Namespaces: {},
+        Networks: ['podman'],
+        Pid: 0,
+        Pod: '',
+        PodName: '',
+        Ports: [],
+        Restarts: 0,
+        Size: null,
+        StartedAt: 1691674664,
+        State: 'running',
+        Status: '',
+      },
+    ];
+
+    const handlers = [
+      http.get('http://localhost/v4.2.0/libpod/containers/json', () => HttpResponse.json(containersWithPodmanAPI)),
+
+      http.get('http://localhost/v4.2.0/libpod/pods/json', () => HttpResponse.json([])),
+    ];
+    server = setupServer(...handlers);
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+    const libpod = new LibpodDockerode();
+    libpod.enhancePrototypeWithLibPod();
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: dockerAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    const containers = await containerRegistry.listContainers();
+
+    // the whole command line, not only the executable: libpod reports Command
+    // as an array and the compatibility shape is a single string
+    expect(containers).toHaveLength(1);
+    expect(containers[0]?.Command).toBe('ls -l /etc');
   });
 });
 
@@ -2557,6 +2619,83 @@ test('updateNetwork', async () => {
   await containerRegistry.updateNetwork('podman1', 'network1', ['1.1.1.1'], []);
 
   expect(libPodApi.updateNetwork).toHaveBeenCalledWith('network1', ['1.1.1.1'], []);
+});
+
+describe('info', () => {
+  function mockPodmanInfo(host: Partial<Info['host']>): LibPod {
+    return {
+      podmanInfo: vi.fn().mockResolvedValue({
+        host: {
+          cpus: 4,
+          cpuUtilization: { idlePercent: 90 },
+          memTotal: 1000,
+          memFree: 100,
+          ...host,
+        },
+        store: {
+          graphRootAllocated: 2000,
+          graphRootUsed: 500,
+        },
+      } as unknown as Info),
+    } as unknown as LibPod;
+  }
+
+  test('memAvailable present and valid computes memoryUsed from memAvailable', async () => {
+    const libPodApi = mockPodmanInfo({ memAvailable: 400 });
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(600);
+  });
+
+  test('memAvailable absent falls back to memTotal - memFree (older Podman)', async () => {
+    const libPodApi = mockPodmanInfo({});
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(900);
+  });
+
+  test('memAvailable equal to -1 (non-Linux sentinel) falls back to memTotal - memFree', async () => {
+    const libPodApi = mockPodmanInfo({ memAvailable: -1 });
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(900);
+  });
 });
 
 describe('createVolume', () => {
@@ -6486,6 +6625,86 @@ describe('prune images', () => {
   });
 });
 
+describe('pruneVolumes', () => {
+  test('prune with Podman >= 6.0 passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '6.0.1' }),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman.new', provider);
+
+    await containerRegistry.pruneVolumes('podman.new');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+  });
+
+  test('prune with Podman < 6.0 skips all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '5.4.2' }),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman.old', provider);
+
+    await containerRegistry.pruneVolumes('podman.old');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith();
+  });
+
+  test('prune with Docker passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'docker',
+      id: 'docker1',
+      api: {
+        pruneVolumes: vi.fn(),
+      } as unknown as Dockerode,
+      libpodApi: undefined,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('docker.test', provider);
+
+    await containerRegistry.pruneVolumes('docker.test');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+  });
+});
+
 describe('kube play', () => {
   const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
     name: 'podman',
@@ -6533,7 +6752,7 @@ describe('kube play', () => {
 
     await expect(async () => {
       await containerRegistry.playKube(
-        'dummy-file',
+        { type: 'path', value: 'dummy-file' },
         {
           name: PODMAN_PROVIDER.name,
           endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6550,7 +6769,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6569,7 +6788,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6589,7 +6808,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6602,6 +6821,55 @@ describe('kube play', () => {
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
       abortSignal: ABORT_SIGNAL,
     });
+  });
+
+  test('content input without build should call playKube with a Readable stream', async () => {
+    const RAW_YAML = 'apiVersion: v1\nkind: Pod\n';
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'content', value: RAW_YAML },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), KUBE_PLAY_OPT);
+    const stream = vi.mocked(PODMAN_PROVIDER.libpodApi.playKube).mock.calls[0]?.[0] as Readable;
+    const chunks: string[] = [];
+    for await (const chunk of stream) {
+      chunks.push(String(chunk));
+    }
+    expect(chunks.join('')).toBe(RAW_YAML);
+  });
+
+  test('content input with build and no build contexts should play kube with a Readable stream', async () => {
+    const RAW_YAML = 'apiVersion: v1\nkind: Pod\n';
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    const fakeKubePlayContext = {
+      init: vi.fn().mockResolvedValue(undefined),
+      getBuildContexts: vi.fn().mockReturnValue([]),
+    } as unknown as KubePlayContext;
+    vi.mocked(KubePlayContext.fromContent).mockReturnValue(fakeKubePlayContext);
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'content', value: RAW_YAML },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      { build: true },
+    );
+
+    expect(KubePlayContext.fromContent).toHaveBeenCalledWith(RAW_YAML, expect.any(String));
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), { build: true });
   });
 });
 

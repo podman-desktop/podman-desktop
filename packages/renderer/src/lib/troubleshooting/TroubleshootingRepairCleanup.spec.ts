@@ -16,20 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
-
-const cleanupProvidersMock = vi.fn();
-
-beforeAll(() => {
-  (window as any).window.cleanupProviders = cleanupProvidersMock;
-});
 
 test('Check cleanupProviders is called and button is in progress', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clean Up' });
@@ -41,7 +33,7 @@ test('Check cleanupProviders is called and button is in progress', async () => {
   expect(cleanupButton).toBeInTheDocument();
 
   // mock the cleanup as waiting for 10ms
-  cleanupProvidersMock.mockResolvedValue(new Promise(resolve => setTimeout(resolve, 10)));
+  vi.mocked(window.cleanupProviders).mockReturnValue(new Promise(resolve => setTimeout(resolve, 10)));
 
   // click on the cleanup button
   expect(cleanupButton).toBeEnabled();
@@ -69,8 +61,8 @@ test('Check cleanupProviders is called and button is in progress', async () => {
     title: 'Clean Up Data?',
   });
 
-  // check that we're calling the cleanupProvidersMock
-  expect(cleanupProvidersMock).toBeCalled();
+  // check that we're calling the vi.mocked(window.cleanupProviders)
+  expect(vi.mocked(window.cleanupProviders)).toBeCalled();
 });
 
 test('Check errors are displayed with clipboard button', async () => {
@@ -83,7 +75,7 @@ test('Check errors are displayed with clipboard button', async () => {
   expect(cleanupButton).toBeInTheDocument();
 
   // mock the cleanup as waiting for 2 seconds
-  cleanupProvidersMock.mockRejectedValue(new Error('test error'));
+  vi.mocked(window.cleanupProviders).mockRejectedValue(new Error('test error'));
 
   // click on the cleanup button
   expect(cleanupButton).toBeEnabled();
@@ -97,8 +89,8 @@ test('Check errors are displayed with clipboard button', async () => {
     title: 'Clean Up Data?',
   });
 
-  // check that we're calling the cleanupProvidersMock
-  expect(cleanupProvidersMock).toBeCalled();
+  // check that we're calling the vi.mocked(window.cleanupProviders)
+  expect(vi.mocked(window.cleanupProviders)).toBeCalled();
 
   // check errors are displayed
   const alterSection = screen.getByRole('alert');

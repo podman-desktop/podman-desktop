@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2026 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+/* eslint-env node */
+import { join } from 'node:path';
+import { defineConfig } from 'vite';
 
-enum ProxyLabels {
-  PROXY_CONFIGURATION = 'Proxy configuration',
-  HTTP = 'Web Proxy (HTTP)',
-  HTTPS = 'Secure Web Proxy (HTTPS)',
-  NO_PROXY = 'Bypass proxy settings for these hosts and domains',
-  MANAGED = 'Managed by your organization',
-}
+const PACKAGE_ROOT = __dirname;
 
-export class Proxy {
-  static readonly Labels = ProxyLabels;
-
-  // Element IDs matching PreferencesProxiesRendering.svelte
-  static readonly TOGGLE_PROXY_ID = 'toggle-proxy';
-  static readonly HTTP_PROXY_ID = 'httpProxy';
-  static readonly HTTPS_PROXY_ID = 'httpsProxy';
-  static readonly NO_PROXY_ID = 'noProxy';
-}
+// https://vitejs.dev/config/
+export default defineConfig({
+  mode: process.env['MODE'],
+  root: PACKAGE_ROOT,
+  base: '',
+  server: {
+    fs: {
+      strict: true,
+    },
+  },
+  build: {
+    sourcemap: true,
+    outDir: 'dist',
+    assetsDir: '.',
+    emptyOutDir: true,
+    reportCompressedSize: false,
+  },
+});

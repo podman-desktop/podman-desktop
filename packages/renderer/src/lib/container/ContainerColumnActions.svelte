@@ -6,17 +6,21 @@ import ContainerColumnActionsPod from './ContainerColumnActionsPod.svelte';
 import type { ContainerGroupInfoUI, ContainerInfoUI } from './ContainerInfoUI';
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
 
-export let object: ContainerInfoUI | ContainerGroupInfoUI;
+interface Props {
+  object: ContainerInfoUI | ContainerGroupInfoUI;
+}
+
+let { object }: Props = $props();
 
 const containerUtils = new ContainerUtils();
 </script>
 
 {#if containerUtils.isContainerGroupInfoUI(object)}
   {#if object.type === ContainerGroupInfoTypeUI.POD}
-    <ContainerColumnActionsPod object={object} on:update />
+    <ContainerColumnActionsPod object={object} />
   {:else if object.type === ContainerGroupInfoTypeUI.COMPOSE}
-    <ContainerColumnActionsCompose object={object} on:update />
+    <ContainerColumnActionsCompose object={object} />
   {/if}
 {:else if containerUtils.isContainerInfoUI(object)}
-  <ContainerColumnActionsContainer object={object} on:update />
+  <ContainerColumnActionsContainer object={object} />
 {/if}

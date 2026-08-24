@@ -23,7 +23,6 @@ import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
-import type { Method } from 'got';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -71,13 +70,12 @@ const apiSender: ApiSenderType = {
 let server: SetupServer | undefined = undefined;
 
 class TestDockerDesktopInstallation extends DockerDesktopInstallation {
-  // transform the method name to a got method
-  override isGotMethod(methodName: string): methodName is Method {
-    return super.isGotMethod(methodName);
+  override isHttpMethod(methodName: string): boolean {
+    return super.isHttpMethod(methodName);
   }
 
-  override asGotMethod(methodName: string): Method {
-    return super.asGotMethod(methodName);
+  override assertHttpMethod(methodName: string): string {
+    return super.assertHttpMethod(methodName);
   }
 
   override async handleExtensionVMServiceRequest(port: string, config: RequestConfig): Promise<unknown> {
@@ -106,22 +104,22 @@ afterEach(() => {
   server?.close();
 });
 
-test('Check isGotMethod', async () => {
-  expect(dockerDesktopInstallation.isGotMethod('GET')).toBeTruthy();
-  expect(dockerDesktopInstallation.isGotMethod('get')).toBeTruthy();
-  expect(dockerDesktopInstallation.isGotMethod('put')).toBeTruthy();
-  expect(dockerDesktopInstallation.isGotMethod('POST')).toBeTruthy();
-  expect(dockerDesktopInstallation.isGotMethod('delete')).toBeTruthy();
+test('Check isHttpMethod', async () => {
+  expect(dockerDesktopInstallation.isHttpMethod('GET')).toBeTruthy();
+  expect(dockerDesktopInstallation.isHttpMethod('get')).toBeTruthy();
+  expect(dockerDesktopInstallation.isHttpMethod('put')).toBeTruthy();
+  expect(dockerDesktopInstallation.isHttpMethod('POST')).toBeTruthy();
+  expect(dockerDesktopInstallation.isHttpMethod('delete')).toBeTruthy();
 
   // invalid
-  expect(dockerDesktopInstallation.isGotMethod('ff')).toBeFalsy();
+  expect(dockerDesktopInstallation.isHttpMethod('ff')).toBeFalsy();
 });
 
-test('Check asGotMethod', async () => {
-  expect(dockerDesktopInstallation.asGotMethod('GET')).toBe('GET');
-  expect(dockerDesktopInstallation.asGotMethod('get')).toBe('get');
+test('Check asHttpMethod', async () => {
+  expect(dockerDesktopInstallation.assertHttpMethod('GET')).toBe('GET');
+  expect(dockerDesktopInstallation.assertHttpMethod('get')).toBe('get');
 
-  expect(() => dockerDesktopInstallation.asGotMethod('foobar')).toThrowError('Invalid method');
+  expect(() => dockerDesktopInstallation.assertHttpMethod('foobar')).toThrowError('Invalid method');
 });
 
 describe('handleExtensionVMServiceRequest', () => {
@@ -268,7 +266,7 @@ describe('handleExtensionVMServiceRequest', () => {
   });
 
   test('Check unknown error ', async () => {
-    vi.spyOn(dockerDesktopInstallation, 'asGotMethod').mockImplementation(() => {
+    vi.spyOn(dockerDesktopInstallation, 'assertHttpMethod').mockImplementation(() => {
       throw new Error('foo error');
     });
 

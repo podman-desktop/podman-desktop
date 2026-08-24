@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -25,24 +23,17 @@ import { configurationProperties } from '/@/stores/configurationProperties';
 
 import { fetchNavigationRegistries, navigationRegistry } from './navigation-registry';
 
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
-const kubernetesGetCurrentContextGeneralStateMock = vi.fn();
-
-const getConfigurationValueMock = vi.fn();
 beforeEach(() => {
   vi.resetAllMocks();
-  (window as any).kubernetesRegisterGetCurrentContextResources = kubernetesRegisterGetCurrentContextResourcesMock;
-  (window as any).getKubernetesPortForwards = vi.fn();
-  (window as any).window.kubernetesGetCurrentContextGeneralState = kubernetesGetCurrentContextGeneralStateMock;
-  (window as any).getConfigurationValue = getConfigurationValueMock;
-  (window as any).sendNavigationItems = vi.fn();
-
   vi.mocked(window.getKubernetesPortForwards).mockResolvedValue([]);
 });
 
 test('check navigation registry items', async () => {
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([]);
-  kubernetesGetCurrentContextGeneralStateMock.mockResolvedValue({});
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([]);
+  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({
+    reachable: true,
+    resources: { pods: 0, deployments: 0 },
+  });
   await fetchNavigationRegistries();
   const registries = get(navigationRegistry);
   // expect 8 items in the registry
@@ -57,7 +48,7 @@ test('check update properties', async () => {
   });
 
   // Say that Containers and Pods are hidden by the configuration
-  getConfigurationValueMock.mockResolvedValue(['Containers', 'Pods']);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(['Containers', 'Pods']);
 
   // do an update to force the update
   configurationProperties.set([]);

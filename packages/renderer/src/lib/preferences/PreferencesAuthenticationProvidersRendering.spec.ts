@@ -16,37 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
 
 import PreferencesAuthenticationProvidersRendering from './PreferencesAuthenticationProvidersRendering.svelte';
 
-class ResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-  unobserve = vi.fn();
-}
-
-const configMock = vi.fn();
-
 vi.mock(import('/@/lib/appearance/appearance-util'));
 
-beforeAll(() => {
-  (window as any).ResizeObserver = ResizeObserver;
-  (window as any).getConfigurationValue = configMock;
-});
-
 beforeEach(() => {
+  vi.resetAllMocks();
   // ensure we mock the config to not block rendering of the component (individual tests can override)
-  configMock.mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -115,10 +100,8 @@ test('Expect Sign Out button click calls window.requestAuthenticationProviderSig
   const signoutButton = await waitFor(() =>
     screen.getByRole('button', { name: `Sign out of ${testProvidersInfo[0].accounts[0].label}` }),
   );
-  const requestSignOutMock = vi.fn().mockImplementation(() => {});
-  (window as any).requestAuthenticationProviderSignOut = requestSignOutMock;
   await fireEvent.click(signoutButton);
-  expect(requestSignOutMock).toBeCalledWith('test', 'test-account');
+  expect(vi.mocked(window.requestAuthenticationProviderSignOut)).toBeCalledWith('test', 'test-account');
 });
 
 const testProvidersInfoWithoutSessionRequests = [
@@ -157,8 +140,6 @@ const testProvidersInfoWithSessionRequests = [
 
 test('Expect Sign In button to be visible when there is only one session request', async () => {
   authenticationProviders.set(testProvidersInfoWithSessionRequests);
-  const requestSignInMock = vi.fn();
-  (window as any).requestAuthenticationProviderSignIn = requestSignInMock;
   render(PreferencesAuthenticationProvidersRendering, {});
   const menuButton = await waitFor(() => screen.getByRole('button', { name: 'Sign in' }));
 
@@ -168,7 +149,7 @@ test('Expect Sign In button to be visible when there is only one session request
   const tooltip = await screen.findByText('Sign in to use Extension Label');
   expect(tooltip).toBeInTheDocument();
   await fireEvent.click(menuButton);
-  expect(requestSignInMock).toBeCalled();
+  expect(vi.mocked(window.requestAuthenticationProviderSignIn)).toBeCalled();
 });
 
 const testProvidersInfoWithMultipleSessionRequests = [
@@ -197,22 +178,19 @@ const testProvidersInfoWithMultipleSessionRequests = [
 
 test('Expect Sign In popup menu to be visible when there is more than one session request', async () => {
   authenticationProviders.set(testProvidersInfoWithMultipleSessionRequests);
-  (window as any).requestAuthenticationProviderSignIn = vi.fn();
   render(PreferencesAuthenticationProvidersRendering, {});
   const menuButton = await waitFor(() => screen.getByRole('button', { name: 'kebab menu' }));
   await fireEvent.click(menuButton);
   // test sign in with extension1
   const menuItem1 = screen.getByText('Sign in to use Extension1 Label');
-  const requestSignInMock = vi.fn();
-  (window as any).requestAuthenticationProviderSignIn = requestSignInMock;
   await fireEvent.click(menuItem1);
-  expect(requestSignInMock).toBeCalledWith('ext:test1');
+  expect(vi.mocked(window.requestAuthenticationProviderSignIn)).toBeCalledWith('ext:test1');
   // test sign in with extension2
-  requestSignInMock.mockReset();
+  vi.mocked(window.requestAuthenticationProviderSignIn).mockReset();
   await fireEvent.click(menuButton);
   const menuItem2 = screen.getByText('Sign in to use Extension2 Label');
   await fireEvent.click(menuItem2);
-  expect(requestSignInMock).toBeCalledWith('ext:test2');
+  expect(vi.mocked(window.requestAuthenticationProviderSignIn)).toBeCalledWith('ext:test2');
 });
 
 test('Expects default icon to be used when provider has no images option', async () => {
@@ -267,7 +245,7 @@ test('Expects images.icon.dark option to be used when theme is dark', async () =
   vi.mocked(AppearanceUtil.prototype.getImage).mockReturnValue('./icon-dark.png');
   authenticationProviders.set(providerWithImageIcon);
 
-  configMock.mockReturnValue('dark');
+  vi.mocked(window.getConfigurationValue).mockResolvedValue('dark');
   render(PreferencesAuthenticationProvidersRendering, {});
 
   const icon = await waitFor(() => {

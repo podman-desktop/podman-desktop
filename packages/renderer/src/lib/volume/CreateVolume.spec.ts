@@ -16,25 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo, VolumeListInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import CreateVolume from './CreateVolume.svelte';
-
-const createVolumeMock = vi.fn();
-
-beforeAll(() => {
-  (window as any).createVolume = createVolumeMock;
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -57,7 +49,7 @@ test('Expect no create button with no providers', async () => {
   expect(emptyScreen).toBeInTheDocument();
 
   // expect that we never call
-  expect(createVolumeMock).not.toBeCalled();
+  expect(window.createVolume).not.toBeCalled();
 });
 
 test('Expect Create button is working', async () => {
@@ -86,7 +78,7 @@ test('Expect Create button is working', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.anything(), { Name: '' });
+  expect(window.createVolume).toHaveBeenCalledWith(expect.anything(), { Name: '' });
 });
 
 test('Expect Create with a custom name', async () => {
@@ -129,14 +121,14 @@ test('Expect Create with a custom name', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
     Name: customVolumeName,
   });
 });
 
 test('Expect error message when volume creation fails', async () => {
   const errorMessage = 'volume name "bad/name" includes invalid characters';
-  createVolumeMock.mockRejectedValueOnce(new Error(errorMessage));
+  vi.mocked(window.createVolume).mockRejectedValueOnce(new Error(errorMessage));
 
   providerInfos.set([
     {
@@ -225,7 +217,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API with the docker provider as we changed the toggle
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
     Name: customVolumeName,
   });
 });
@@ -470,6 +462,58 @@ test('Expect no false positive when providers share connection name', async () =
   await waitFor(() => {
     expect(screen.getByText(/already exists/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  });
+});
+
+test('Expect no duplicate error after successful creation when store updates', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  vi.mocked(window.createVolume).mockResolvedValue(undefined);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'new-volume');
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  await userEvent.click(createButton);
+
+  // Simulate the store updating with the newly created volume
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'new-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  // The "Done" button should appear and no error should be shown
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
   });
 });
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
  ***********************************************************************/
 
 /* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
+import { join } from 'node:path';
+import * as path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 
 let filename = fileURLToPath(import.meta.url);
@@ -30,65 +30,19 @@ const PACKAGE_ROOT = path.dirname(filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [
-    tailwindcss(),
-    svelte({ configFile: '../../svelte.config.js' }),
-    svelteTesting(),
-    {
-      name: 'inject-meta',
-      transformIndexHtml(html) {
-        if (process.env.MODE !== 'production') {
-          return html;
-        }
-
-        const csp = [
-          "default-src 'self'",
-          "script-src 'self'",
-          "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' https: data: blob:",
-          "font-src 'self' data:",
-          "connect-src 'self'",
-          "object-src 'none'",
-        ].join('; ');
-
-        const meta = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
-
-        return html.replace('</head>', `${meta}</head>`);
-      },
-    },
-  ],
-  optimizeDeps: {
-    exclude: ['tinro', '@podman-desktop/api'],
-  },
+  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js' }), svelteTesting()],
   test: {
-    retry: 3, // Retries failing tests up to 3 times
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     globals: true,
     environment: 'jsdom',
-    alias: [
-      { find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' },
-      {
-        find: /^monaco-editor$/,
-        replacement: `${PACKAGE_ROOT}/../../node_modules/monaco-editor/esm/vs/editor/editor.api`,
-      },
-      { find: '@floating-ui/dom', replacement: `${PACKAGE_ROOT}/__mocks__/@floating-ui/dom.ts` },
-    ],
-    server: {
-      deps: {
-        inline: ['@fortawesome/fontawesome-free/css/all.min.css'],
-      },
-    },
-    deps: {
-      inline: ['moment'],
-    },
-    setupFiles: ['./vite.tests.setup.js'],
+    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
   },
   base: '',
   server: {
@@ -100,6 +54,10 @@ export default defineConfig({
     sourcemap: true,
     outDir: 'dist',
     assetsDir: '.',
+    lib: {
+      entry: 'src/lib/index.ts',
+      formats: ['es'],
+    },
 
     emptyOutDir: true,
     reportCompressedSize: false,

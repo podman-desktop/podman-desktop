@@ -25,6 +25,7 @@ import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
 import DropdownMenu from './dropdownMenu';
 import ChevronExpander from './icons/ChevronExpander.svelte';
+import type { IconType, ThemedIconImage } from './icons/Icon';
 import Input from './inputs/Input.svelte';
 import NumberInput from './inputs/NumberInput.svelte';
 import SearchInput from './inputs/SearchInput.svelte';
@@ -52,7 +53,7 @@ import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType, ListOrganizerItem, TablePersistence };
+export type { ButtonType, IconType, ListOrganizerItem, TablePersistence, ThemedIconImage };
 export {
   Button,
   Carousel,

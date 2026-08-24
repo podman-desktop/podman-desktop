@@ -95,6 +95,7 @@ import type {
   MessageBoxOptions,
   MessageBoxReturnValue,
   NavigationRequest,
+  NavigationSearchEntryInfo,
   NetworkCreateOptions,
   NetworkCreateResult,
   NetworkInspectInfo,
@@ -148,6 +149,7 @@ import type { Guide } from '@podman-desktop/core-api/learning-center';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
+  PlayKubeInput,
 } from '@podman-desktop/core-api/libpod';
 import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
@@ -290,6 +292,10 @@ export function initExposure(): void {
       return ipcRenderer.invoke('navigation:navigateToHistoryEntry', extensionId, entryId);
     },
   );
+
+  contextBridge.exposeInMainWorld('getSearchableNavigationRoutes', async (): Promise<NavigationSearchEntryInfo[]> => {
+    return ipcInvoke('navigation:getSearchableRoutes');
+  });
 
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
@@ -449,7 +455,7 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld(
     'playKube',
     async (
-      relativeContainerfilePath: string,
+      input: PlayKubeInput,
       selectedProvider: ProviderContainerConnectionInfo,
       options?: {
         build?: boolean;
@@ -457,17 +463,9 @@ export function initExposure(): void {
         cancellableTokenId?: number;
       },
     ): Promise<PlayKubeInfo> => {
-      return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider, options);
+      return ipcInvoke('container-provider-registry:playKube', input, selectedProvider, options);
     },
   );
-
-  contextBridge.exposeInMainWorld('createTempFile', async (content: string): Promise<string> => {
-    return ipcInvoke('temp-file-service:createTempFile', content);
-  });
-
-  contextBridge.exposeInMainWorld('removeTempFile', async (filePath: string): Promise<void> => {
-    return ipcInvoke('temp-file-service:removeTempFile', filePath);
-  });
 
   contextBridge.exposeInMainWorld('stopPod', async (engine: string, podId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:stopPod', engine, podId);

@@ -13,22 +13,25 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let compose: ComposeInfoUI;
+interface Props {
+  compose: ComposeInfoUI;
+}
 
-let refCompose: ComposeInfoUI;
+let { compose }: Props = $props();
+
+let refCompose: ComposeInfoUI | undefined;
 
 // Log initialization
-let noLogs = true;
-let logsTerminal: Terminal;
+let noLogs = $state(true);
+let logsTerminal: Terminal | undefined = $state(undefined);
 
-$: {
+$effect(() => {
   if (refCompose && refCompose.status !== compose.status) {
     logsTerminal?.clear();
     fetchComposeLogs().catch((err: unknown) => console.error('Error fetching compose logs', err));
   }
-  // eslint-disable-next-line no-useless-assignment
   refCompose = compose;
-}
+});
 
 // Create a map that will store the ANSI 256 colour for each container name
 // if we run out of colours, we'll start from the beginning.

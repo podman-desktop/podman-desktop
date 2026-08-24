@@ -4,11 +4,14 @@ import type { ProviderDetectionCheck } from '@podman-desktop/api';
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 
-export let provider: ProviderInfo;
-export let onDetectionChecks = (_detectionChecks: ProviderDetectionCheck[]): void => {};
-let viewInProgress = false;
+interface Props {
+  provider: ProviderInfo;
+  onDetectionChecks?: (detectionChecks: ProviderDetectionCheck[]) => void;
+}
+let { provider, onDetectionChecks = (_detectionChecks: ProviderDetectionCheck[]): void => {} }: Props = $props();
+let viewInProgress = $state(false);
 
-let mode: 'view' | 'hide' = 'view';
+let mode: 'view' | 'hide' = $state('view');
 
 async function toggleDetectionChecks(provider: ProviderInfo): Promise<void> {
   let detectionChecks: ProviderDetectionCheck[];

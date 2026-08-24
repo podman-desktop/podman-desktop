@@ -140,7 +140,7 @@ jobs:
           repository: podman-desktop/testing-prereleases
           ref: ${{ needs.tag.outputs.githubTag }}
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         name: Install pnpm
         with:
           run_install: false
@@ -166,7 +166,7 @@ jobs:
       - name: Run Windows Build and Compile
         if: runner.os == 'Windows' && env.BUILD_ALL != 'true'
         timeout-minutes: 60
-        run: pnpm compile:next --win --x64 nsis
+        run: pnpm compile:next --win nsis --x64
 
       - name: Run macOS Build and Compile - next
         if: runner.os == 'macOS' && env.BUILD_ALL != 'true'

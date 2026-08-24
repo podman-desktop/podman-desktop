@@ -35,6 +35,7 @@ export class MacOSInstaller extends BaseInstaller {
       progress.report({ increment: 5 });
       const pkgToInstall = path.resolve(getAssetsFolder(), getBundledFileName('darwin', process.arch));
       if (!fs.existsSync(pkgToInstall)) {
+        progress.report({ increment: -1 });
         throw new Error(`Can't find Podman package! Path: ${pkgToInstall} doesn't exist.`);
       }
 
@@ -58,6 +59,8 @@ export class MacOSInstaller extends BaseInstaller {
         console.error(err);
         await window.showErrorMessage('Unexpected error, during Podman installation: ' + err, 'OK');
         return false;
+      } finally {
+        progress.report({ increment: -1 });
       }
     });
   }

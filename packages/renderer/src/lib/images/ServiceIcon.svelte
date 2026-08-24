@@ -1,6 +1,12 @@
 <script lang="ts">
-export let size = '1em';
-export let solid = false;
+interface Props {
+  size?: string;
+  solid?: boolean;
+  class?: string;
+  style?: string;
+}
+
+let { size = '1em', solid = false, class: className, style: styleName }: Props = $props();
 
 let boxStyle = 'fill: currentColor;';
 if (!solid) {
@@ -11,8 +17,8 @@ if (!solid) {
 <svg
   width={size}
   height={size}
-  class={$$props.class}
-  style={$$props.style}
+  class={className}
+  style={styleName}
   version="1.1"
   aria-label="Service"
   xml:space="preserve"

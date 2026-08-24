@@ -156,7 +156,6 @@ beforeEach(async () => {
   ]);
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.mocked(Updater.prototype.init).mockReturnValue(new Disposable(vi.fn()));
-  vi.mocked(ExtensionLoader.prototype.readDevelopmentFolders).mockResolvedValue([]);
   vi.mocked(ExtensionLoader.prototype.listExtensions).mockResolvedValue([]);
 
   vi.mocked(ProviderRegistry.prototype.getProviderInfos).mockReturnValue([]);
@@ -1260,4 +1259,18 @@ describe('container-provider-registry:playKube', () => {
     expect(createdTask.status).toBe('failure');
     expect(createdTask.error).toBe('Error: Dummy Foo');
   });
+});
+
+test('navigation:getSearchableRoutes handler should delegate to navigationManager', async () => {
+  const mockRoutes = [
+    { routeId: 'ext.dashboard', label: 'Dashboard' },
+    { routeId: 'ext.models', label: 'Models', icon: 'icon.png' },
+  ];
+  vi.mocked(NavigationManager.prototype.getSearchableRoutes).mockReturnValue(mockRoutes);
+
+  const handle = getHandler<() => Promise<{ result: unknown }>>('navigation:getSearchableRoutes');
+  const result = await handle();
+
+  expect(NavigationManager.prototype.getSearchableRoutes).toHaveBeenCalled();
+  expect(result).toEqual({ result: mockRoutes });
 });
