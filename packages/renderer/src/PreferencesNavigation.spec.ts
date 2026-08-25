@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2026 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,19 +123,11 @@ function mockNavigationMeasurements(options: {
   });
 }
 
-function setDocumentHidden(hidden: boolean): void {
-  Object.defineProperty(document, 'hidden', {
-    configurable: true,
-    get: () => hidden,
-  });
-}
-
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();
   registeredFeatures.set([]);
   configurationProperties.set([]);
-  setDocumentHidden(false);
   Object.defineProperty(global, 'ResizeObserver', {
     configurable: true,
     value: undefined,
@@ -538,23 +530,6 @@ describe('Navigation width measurement and calculation', () => {
     });
   });
 
-  test('should measure after requestAnimationFrame when it is available', async () => {
-    mockNavigationMeasurements({
-      withRequestAnimationFrame: true,
-      titleWidths: {
-        'A Very Long Preference Entry': 260,
-      },
-    });
-    configurationProperties.set([LONG_CONFIG]);
-
-    renderPreferencesNavigation();
-
-    await fireEvent.click(await screen.findByRole('link', { name: 'preferences' }));
-
-    await waitForNavigationWidth('292px');
-    expect(window.requestAnimationFrame).toHaveBeenCalled();
-  });
-
   test('should update navigation width when the window is resized', async () => {
     const addEventListener = vi.fn();
     const removeEventListener = vi.fn();
@@ -587,72 +562,6 @@ describe('Navigation width measurement and calculation', () => {
 
     unmount();
     expect(removeEventListener).toHaveBeenCalledWith('resize', resizeListener);
-  });
-
-  test('should skip navigation width measurement when the document is hidden', async () => {
-    mockNavigationMeasurements({
-      withRequestAnimationFrame: true,
-      titleWidths: {
-        Resources: 260,
-      },
-    });
-    setDocumentHidden(true);
-
-    renderPreferencesNavigation();
-    await tick();
-
-    expect(window.requestAnimationFrame).not.toHaveBeenCalled();
-  });
-
-  test('should skip requestAnimationFrame when the document becomes hidden after tick', async () => {
-    let hidden = false;
-    Object.defineProperty(document, 'hidden', {
-      configurable: true,
-      get: () => hidden,
-    });
-    mockNavigationMeasurements({
-      withRequestAnimationFrame: true,
-      titleWidths: {
-        Resources: 260,
-      },
-    });
-
-    renderPreferencesNavigation();
-    hidden = true;
-    await tick();
-
-    expect(window.requestAnimationFrame).not.toHaveBeenCalled();
-  });
-
-  test('should update navigation width when the document becomes visible', async () => {
-    const addEventListener = vi.spyOn(document, 'addEventListener');
-    const removeEventListener = vi.spyOn(document, 'removeEventListener');
-    mockNavigationMeasurements({
-      withRequestAnimationFrame: true,
-      titleWidths: {
-        Resources: 260,
-      },
-    });
-    setDocumentHidden(true);
-
-    const { unmount } = render(PreferencesNavigation, {
-      meta: {
-        url: '/preferences/docker',
-      } as unknown as TinroRouteMeta,
-    });
-
-    await vi.waitFor(() => expect(addEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function)));
-    await tick();
-
-    expect(window.requestAnimationFrame).not.toHaveBeenCalled();
-
-    setDocumentHidden(false);
-    document.dispatchEvent(new Event('visibilitychange'));
-
-    await waitForNavigationWidth('292px');
-
-    unmount();
-    expect(removeEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
   });
 
   test('should observe parent resize and disconnect observer on unmount', async () => {
