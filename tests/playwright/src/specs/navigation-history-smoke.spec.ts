@@ -155,8 +155,10 @@ test.describe
       await page.reload();
 
       await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
       const dropdown = await navigationBar.longPressBack();
 
@@ -169,8 +171,10 @@ test.describe
       await page.reload();
 
       await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
       const dropdown = await navigationBar.longPressBack();
       await navigationBar.selectHistoryEntry(dropdown, 'Dashboard');
@@ -183,12 +187,17 @@ test.describe
       await page.evaluate(() => sessionStorage.clear());
       await page.reload();
 
+      const dashboardPage = new DashboardPage(page);
       await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
       await navigationBar.goBack();
+      await playExpect(containersPage.heading).toBeVisible();
       await navigationBar.goBack();
+      await playExpect(dashboardPage.heading).toBeVisible();
 
       const dropdown = await navigationBar.longPressForward();
 
@@ -200,17 +209,21 @@ test.describe
       await page.evaluate(() => sessionStorage.clear());
       await page.reload();
 
+      const dashboardPage = new DashboardPage(page);
       await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
       await navigationBar.goBack();
+      await playExpect(containersPage.heading).toBeVisible();
       await navigationBar.goBack();
+      await playExpect(dashboardPage.heading).toBeVisible();
 
       const dropdown = await navigationBar.longPressForward();
       await navigationBar.selectHistoryEntry(dropdown, 'Images');
 
-      const imagesPage = new ImagesPage(page);
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
   });
