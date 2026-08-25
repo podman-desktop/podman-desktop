@@ -88,7 +88,7 @@ let idColumn = new TableColumn<NetworkInfoUI>('Id', {
 });
 
 let nameColumn = new TableColumn<NetworkInfoUI>('Name', {
-  width: '3fr',
+  width: '2fr',
   renderer: NetworkColumnName,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
