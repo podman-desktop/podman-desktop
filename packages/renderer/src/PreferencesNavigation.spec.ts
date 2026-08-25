@@ -627,10 +627,13 @@ describe('Navigation width measurement and calculation', () => {
   test('should update navigation width when the document becomes visible', async () => {
     const addEventListener = vi.spyOn(document, 'addEventListener');
     const removeEventListener = vi.spyOn(document, 'removeEventListener');
-    const titleWidths: Record<string, number> = {};
     mockNavigationMeasurements({
-      titleWidths,
+      withRequestAnimationFrame: true,
+      titleWidths: {
+        Resources: 260,
+      },
     });
+    setDocumentHidden(true);
 
     const { unmount } = render(PreferencesNavigation, {
       meta: {
@@ -639,8 +642,10 @@ describe('Navigation width measurement and calculation', () => {
     });
 
     await vi.waitFor(() => expect(addEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function)));
+    await tick();
 
-    titleWidths.Resources = 260;
+    expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+
     setDocumentHidden(false);
     document.dispatchEvent(new Event('visibilitychange'));
 
