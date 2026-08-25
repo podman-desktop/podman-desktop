@@ -163,7 +163,7 @@ export class NavigationBar {
   async longPressBack(): Promise<Locator> {
     return test.step('Long press back button to open history dropdown', async () => {
       await playExpect(this.backButton).toBeEnabled({ timeout: 5_000 });
-      await this.backButton.click({ delay: 600 });
+      await this.backButton.click({ delay: 1_000 });
       const dropdown = this.page.getByLabel('Back history');
       await playExpect(dropdown).toBeVisible({ timeout: 5_000 });
       return dropdown;
@@ -173,7 +173,7 @@ export class NavigationBar {
   async longPressForward(): Promise<Locator> {
     return test.step('Long press forward button to open history dropdown', async () => {
       await playExpect(this.forwardButton).toBeEnabled({ timeout: 5_000 });
-      await this.forwardButton.click({ delay: 600 });
+      await this.forwardButton.click({ delay: 1_000 });
       const dropdown = this.page.getByLabel('Forward history');
       await playExpect(dropdown).toBeVisible({ timeout: 5_000 });
       return dropdown;
