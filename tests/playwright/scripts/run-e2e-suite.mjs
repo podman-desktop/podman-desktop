@@ -18,35 +18,79 @@
 
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
-import { delimiter, dirname, resolve } from 'node:path';
+import { basename, delimiter, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const SPECS_DIR = resolve(REPO_ROOT, 'tests/playwright/src/specs');
-const SPECS_DIR_RELATIVE = 'tests/playwright/src/specs';
+const SPECIAL_SPECS_DIR = resolve(REPO_ROOT, 'tests/playwright/src/special-specs');
+const BASE_DIR = resolve(REPO_ROOT, 'tests/playwright/src');
 
-const allSpecs = readdirSync(SPECS_DIR).filter(f => f.endsWith('.spec.ts'));
-
-const suite = process.argv[2];
-if (!suite) {
-  console.error('Usage: pnpm test:e2e:suite <suite-name>\n');
-  console.error('Available suites (substring match):');
-  for (const s of allSpecs.map(f => f.replace('.spec.ts', ''))) {
-    console.error(`  ${s}`);
+function findSpecFiles(dir) {
+  const results = [];
+  try {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        results.push(...findSpecFiles(fullPath));
+      } else if (entry.name.endsWith('.spec.ts')) {
+        results.push(fullPath);
+      }
+    }
+  } catch {
+    return results;
   }
-  process.exit(1);
+  return results;
 }
 
-const normalizedSuite = suite.toLowerCase();
-const matches = allSpecs.filter(f => f.toLowerCase().includes(normalizedSuite));
-
-if (matches.length === 0) {
-  console.error(`No spec file matching "${suite}" found in ${SPECS_DIR_RELATIVE}/`);
-  process.exit(1);
+function printAvailableSuites(specsFiles, specialSpecsFiles) {
+  console.error('Available suites (specs/):');
+  for (const name of specsFiles.map(f => basename(f).replace('.spec.ts', '')).sort()) {
+    console.error(`  ${name}`);
+  }
+  if (specialSpecsFiles.length > 0) {
+    console.error('\nAvailable suites (special-specs/):');
+    for (const name of specialSpecsFiles.map(f => relative(SPECIAL_SPECS_DIR, f).replace('.spec.ts', '')).sort()) {
+      console.error(`  ${name}`);
+    }
+  }
 }
 
-const files = matches.map(f => `${SPECS_DIR_RELATIVE}/${f}`);
-const extraArgs = process.argv.slice(3);
+const specsFiles = findSpecFiles(SPECS_DIR);
+const specialSpecsFiles = findSpecFiles(SPECIAL_SPECS_DIR);
+const allSpecFiles = [...specsFiles, ...specialSpecsFiles];
+
+const firstArg = process.argv[2];
+const isAll = firstArg === '--all';
+const suite = !isAll && firstArg ? firstArg : undefined;
+const extraArgs = process.argv.slice(isAll || suite ? 3 : 2).filter(a => a !== '--');
+
+let files;
+
+if (isAll) {
+  files = [relative(REPO_ROOT, SPECS_DIR) + '/'];
+} else if (suite) {
+  const normalizedSuite = suite.toLowerCase();
+  const matches = allSpecFiles.filter(f => {
+    const relPath = relative(BASE_DIR, f).toLowerCase();
+    return relPath.includes(normalizedSuite);
+  });
+
+  if (matches.length === 0) {
+    console.error(`No spec file matching "${suite}" found.\n`);
+    printAvailableSuites(specsFiles, specialSpecsFiles);
+    process.exit(1);
+  }
+
+  files = matches.map(f => relative(REPO_ROOT, f));
+} else {
+  console.error('Usage: pnpm test:e2e:suite [--all | <suite-name>] [extra-playwright-args...]\n');
+  console.error('Options:');
+  console.error('  --all          Run all spec files from the specs/ directory');
+  console.error('  <suite-name>   Run spec files matching the name (substring match)\n');
+  printAvailableSuites(specsFiles, specialSpecsFiles);
+  process.exit(1);
+}
 
 const xvfbArgs = ['--auto-servernum', '--server-args=-screen 0 1280x960x24', '--'];
 const playwrightArgs = ['playwright', 'test', ...files, ...extraArgs];
