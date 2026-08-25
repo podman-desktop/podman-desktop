@@ -174,12 +174,13 @@ test('Expect network name before ID in the table', async () => {
   await init();
 
   const headers = screen.getAllByRole('columnheader');
-  const nameIndex = headers.findIndex(header => header.textContent?.includes('Name'));
-  const idIndex = headers.findIndex(header => header.textContent?.includes('Id'));
-
-  expect(nameIndex).toBeGreaterThan(-1);
-  expect(idIndex).toBeGreaterThan(-1);
-  expect(nameIndex).toBeLessThan(idIndex);
+  expect(headers.map(({ textContent }) => textContent.trim()).filter(header => !!header)).toStrictEqual([
+    'Name',
+    'Id',
+    'Environment',
+    'Driver',
+    'Actions',
+  ]);
 });
 
 test('Expect to have edit action for Podman networks', async () => {
