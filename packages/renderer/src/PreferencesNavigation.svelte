@@ -133,7 +133,7 @@ function updateNavigationWidth(): void {
 
 function scheduleNavigationWidthUpdate(): void {
   // Measure after next paint so newly-shown items have final layout metrics.
-  void tick().then(updateNavigationWidth).catch(updateNavigationWidth);
+  tick().then(updateNavigationWidth).catch(updateNavigationWidth);
 }
 
 function updateDockerCompatibility(): void {
