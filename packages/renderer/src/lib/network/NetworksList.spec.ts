@@ -174,7 +174,7 @@ test('Expect network name before ID and match resource table width', async () =>
   await init();
 
   const headers = screen.getAllByRole('columnheader');
-  expect(headers.map(({ textContent }) => textContent.trim()).filter(header => !!header)).toStrictEqual([
+  expect(headers.map(({ textContent }) => textContent?.trim() ?? '').filter(header => !!header)).toStrictEqual([
     'Name',
     'Id',
     'Environment',
