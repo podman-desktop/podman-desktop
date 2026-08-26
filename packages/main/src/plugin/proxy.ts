@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -217,7 +217,7 @@ export class Proxy {
 
       const urlObj = asURL(url);
       const isHttps = urlObj.protocol === 'https:';
-      const proxyurl = getProxyUrl(_me, isHttps);
+      const proxyurl = getProxyUrl(_me, isHttps, urlObj.hostname);
       const ca = _me.certificates.getAllCertificates();
       if (proxyurl) {
         opts = {

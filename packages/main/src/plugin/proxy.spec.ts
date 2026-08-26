@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,6 +132,38 @@ test('fetch with http proxy', async () => {
     httpsProxy: `127.0.0.1:${address.port}`,
     httpProxy: undefined,
     noProxy: undefined,
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch(URL);
+  expect(connectDone).toBeTruthy();
+});
+
+test('fetch skips proxy when hostname matches noProxy', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch(URL);
+  expect(connectDone).toBeFalsy();
+});
+
+test('fetch uses proxy when hostname does not match noProxy', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'localhost,example.com',
   });
 
   let connectDone = false;

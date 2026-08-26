@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,39 @@ function createProxyAgent(secure: boolean, proxyUrl: string, certificates: Certi
     : new HttpProxyAgent(options as HttpProxyAgentOptions);
 }
 
-export function getProxyUrl(proxy: Proxy, secure: boolean): string | undefined {
+function isNoProxyHost(hostname: string, noProxy?: string): boolean {
+  if (!hostname || !noProxy) {
+    return false;
+  }
+  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  if (noProxy.trim() === '*') {
+    return true;
+  }
+  for (const raw of noProxy.split(/[,\s]/)) {
+    if (!raw) {
+      continue;
+    }
+    // strip optional port, IPv6 brackets, and leading "*." or "."
+    const entry = raw
+      .replace(/:\d+$/, '')
+      .replace(/^\[|\]$/g, '')
+      .replace(/^\*?\./, '')
+      .toLowerCase();
+    if (!entry) {
+      continue;
+    }
+    if (host === entry || host.endsWith(`.${entry}`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function getProxyUrl(proxy: Proxy, secure: boolean, hostname?: string): string | undefined {
   if (proxy.isEnabled()) {
+    if (hostname && isNoProxyHost(hostname, proxy.proxy?.noProxy)) {
+      return undefined;
+    }
     return secure ? proxy.proxy?.httpsProxy : proxy.proxy?.httpProxy;
   }
   return undefined;

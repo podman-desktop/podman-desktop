@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,24 +57,22 @@ vi.mock(import('hpagent'), () => {
   } as unknown as typeof hpagent;
 });
 
-function createProxy(enabled: boolean, httpsProxy?: string, httpProxy?: string): Proxy {
+function createProxy(enabled: boolean, httpsProxy?: string, httpProxy?: string, noProxy?: string): Proxy {
   const proxy: {
     isEnabled: () => boolean;
     proxy?: {
       httpProxy?: string;
       httpsProxy?: string;
+      noProxy?: string;
     };
   } = {
     isEnabled: () => enabled,
   };
-  if (httpProxy) {
+  if (httpProxy || httpsProxy || noProxy) {
     proxy.proxy = {
       httpProxy,
-    };
-  }
-  if (httpsProxy) {
-    proxy.proxy = {
       httpsProxy,
+      noProxy,
     };
   }
   return proxy as unknown as Proxy;
@@ -109,6 +107,26 @@ test('getOptions return options w/ https.Agent for https proxy', () => {
   const options = ProxyResolver.getOptions(proxy, false, certificates);
   expect(options.agent).not.toBeUndefined();
   expect(options.agent && 'https' in options.agent ? options.agent.https : true).toBeFalsy();
+});
+
+test('getProxyUrl returns undefined when hostname matches noProxy', () => {
+  const proxy = createProxy(true, HttpsProxyUrl, HttpProxyUrl, 'internal.example.com');
+  expect(ProxyResolver.getProxyUrl(proxy, true, 'internal.example.com')).toBeUndefined();
+});
+
+test('getProxyUrl returns proxy url when hostname does not match noProxy', () => {
+  const proxy = createProxy(true, HttpsProxyUrl, HttpProxyUrl, 'internal.example.com');
+  expect(ProxyResolver.getProxyUrl(proxy, true, 'podman-desktop.io')).toBe(HttpsProxyUrl);
+});
+
+test('getProxyUrl returns undefined when hostname is a subdomain of noProxy', () => {
+  const proxy = createProxy(true, HttpsProxyUrl, HttpProxyUrl, '*.example.com');
+  expect(ProxyResolver.getProxyUrl(proxy, true, 'foo.example.com')).toBeUndefined();
+});
+
+test('getProxyUrl returns proxy url when hostname is not provided even if noProxy is set', () => {
+  const proxy = createProxy(true, HttpsProxyUrl, HttpProxyUrl, 'internal.example.com');
+  expect(ProxyResolver.getProxyUrl(proxy, true)).toBe(HttpsProxyUrl);
 });
 
 test('patched http get calls original with the original parameters when proxy is not enabled', () => {
