@@ -54,8 +54,6 @@ jobs:
       contents: read
       # Required for Argos to authenticate via OIDC
       id-token: write
-      # Lets Argos link the build to its pull request
-      pull-requests: read
     runs-on: ubuntu-22.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
@@ -88,5 +86,3 @@ jobs:
         continue-on-error: true
         working-directory: website-argos
         run: pnpm upload
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
