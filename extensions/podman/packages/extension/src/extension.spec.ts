@@ -1691,6 +1691,9 @@ test('ensure running machine clears previous container engine info error', async
 test('ensure machine list error is exposed on known machines', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   extension.podmanMachinesStatuses.set(fakeMachineJSON[0].Name, 'started');
+  // for podman < 6 the per-provider failures are accumulated into the output instead of
+  // being thrown, so pin a version listing all providers at once to get the failure propagated
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' } as InstalledPodman);
   vi.spyOn(extensionApi.process, 'exec').mockRejectedValue({
     message: 'machine list failed',
   });

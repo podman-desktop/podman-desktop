@@ -203,6 +203,13 @@ async function doUpdateMachines(
     }
 
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
+
+    // expose the failure on every known machine, as we cannot tell their state anymore
+    const errorMessage = getErrorMessage(error);
+    for (const machineName of podmanMachinesStatuses.keys()) {
+      podmanMachinesErrors.set(machineName, errorMessage);
+    }
+
     throw error;
   }
 
@@ -270,7 +277,7 @@ async function doUpdateMachines(
     }
 
     const previousStatus = podmanMachinesStatuses.get(machine.Name);
-    updateProviderStatus(status, machine.Name, connectionError);
+    updateProviderStatus(provider, status, machine.Name, connectionError);
     if (previousStatus !== status) {
       // notify status change
       listeners.forEach(listener => listener(machine.Name, status));
@@ -682,12 +689,12 @@ export async function monitorPodmanSocket(
     try {
       const alive = await isPodmanSocketAlive(socketPath);
       if (!alive) {
-        updateProviderStatus(provider, 'stopped', machineName);
+        updateProviderStatus(provider, 'stopped', machineName, `Podman socket ${socketPath} is not reachable`);
       } else {
         updateProviderStatus(provider, 'started', machineName);
       }
     } catch (error) {
-      updateProviderStatus('unknown', machineName, getErrorMessage(error));
+      updateProviderStatus(provider, 'unknown', machineName, getErrorMessage(error));
     }
     await timeout(5000);
     monitorPodmanSocket(provider, socketPath, machineName).catch((error: unknown) => {
@@ -707,6 +714,7 @@ export function updateProviderStatus(
   provider: extensionApi.Provider,
   status: extensionApi.ProviderConnectionStatus,
   machineName?: string,
+  error?: string,
 ): void {
   if (machineName) {
     podmanMachinesStatuses.set(machineName, status);
@@ -718,6 +726,7 @@ export function updateProviderStatus(
   } else {
     const previousStatus = podmanProviderStatus;
     podmanProviderStatus = status;
+    podmanProviderError = error;
 
     if (extensionApi.env.isLinux && previousStatus !== status) {
       provider.updateStatus(status === 'started' ? 'ready' : 'stopped');
