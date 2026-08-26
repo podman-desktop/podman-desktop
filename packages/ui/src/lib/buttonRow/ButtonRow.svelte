@@ -1,19 +1,19 @@
 <script lang="ts">
 import { onMount, type Snippet } from 'svelte';
+import type { HTMLAttributes } from 'svelte/elements';
 
 type InitialFocus = 'first' | 'last' | 'none';
 
-interface Props {
+interface Props extends HTMLAttributes<HTMLDivElement> {
   /**
    * Which enabled action should receive focus when the row is mounted.
    * Use `last` for a primary action and `first` for a cancel action in a destructive dialog.
    */
   initialFocus?: InitialFocus;
-  class?: string;
   children?: Snippet;
 }
 
-let { initialFocus = 'none', class: classNames, children }: Props = $props();
+let { initialFocus = 'none', class: className, children, ...restProps }: Props = $props();
 
 let buttonRow: HTMLDivElement;
 
@@ -32,6 +32,6 @@ function focusInitialAction(): void {
 onMount(focusInitialAction);
 </script>
 
-<div class="flex flex-row flex-wrap justify-end gap-2 {classNames}" bind:this={buttonRow}>
+<div class="flex flex-row flex-wrap justify-end gap-2 {className}" bind:this={buttonRow} {...restProps}>
   {@render children?.()}
 </div>

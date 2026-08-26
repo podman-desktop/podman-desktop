@@ -21,6 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
+import ButtonRow from './ButtonRow.svelte';
 import ButtonRowTest from './ButtonRowTest.svelte';
 
 test('renders actions in DOM order and right-aligns the row', () => {
@@ -34,6 +35,12 @@ test('renders actions in DOM order and right-aligns the row', () => {
   expect(row).toHaveClass('justify-end');
   expect(row).not.toHaveClass('justify-center');
   expect(row).not.toHaveClass('w-full');
+});
+
+test('forwards extra HTML attributes onto the row', () => {
+  const { container } = render(ButtonRow, { 'data-testid': 'dialog-actions' });
+
+  expect(container.firstElementChild).toHaveAttribute('data-testid', 'dialog-actions');
 });
 
 test('does not move focus by default', () => {
