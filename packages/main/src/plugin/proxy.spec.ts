@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,6 +140,38 @@ test('fetch with http proxy', async () => {
   expect(connectDone).toBeTruthy();
 });
 
+test('fetch skips proxy when hostname matches noProxy', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch(URL);
+  expect(connectDone).toBeFalsy();
+});
+
+test('fetch uses proxy when hostname does not match noProxy', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'localhost,example.com',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch(URL);
+  expect(connectDone).toBeTruthy();
+});
+
 test('check change from manual to system without proxy send event', async () => {
   await proxy?.setState(ProxyState.PROXY_MANUAL);
   await proxy?.setProxy({
@@ -246,4 +278,123 @@ test('fetch with caller-provided dispatcher should not be overridden', async () 
   } finally {
     globalThis.fetch = previousFetch;
   }
+});
+
+test('fetch skips proxy when noProxy has port :443 matching default HTTPS port', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io:443',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch('https://podman-desktop.io');
+  expect(connectDone).toBeFalsy();
+});
+
+test('fetch uses proxy when noProxy has port :8080 not matching default HTTPS port', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io:8080',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch('https://podman-desktop.io');
+  expect(connectDone).toBeTruthy();
+});
+
+test('fetch skips proxy when noProxy has port :443 and URL has explicit :443', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io:443',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch('https://podman-desktop.io:443');
+  expect(connectDone).toBeFalsy();
+});
+
+test('isNoProxyMatch reflects updated rules after setProxy', async () => {
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'example.com',
+  });
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(true);
+  expect(proxy?.isNoProxyMatch('internal.corp')).toBe(false);
+
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'example.com,internal.corp',
+  });
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(true);
+  expect(proxy?.isNoProxyMatch('internal.corp')).toBe(true);
+});
+
+test('isNoProxyMatch returns false for all hosts when noProxy is undefined', async () => {
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: undefined,
+  });
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(false);
+});
+
+test('isNoProxyMatch reflects system proxy settings changes', async () => {
+  vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: '10.0.0.0/8,*.internal.corp',
+  });
+  await proxy?.setState(ProxyState.PROXY_SYSTEM);
+  await proxy?.setProxy(undefined);
+
+  expect(proxy?.isNoProxyMatch('10.5.5.5')).toBe(true);
+  expect(proxy?.isNoProxyMatch('app.internal.corp')).toBe(true);
+  expect(proxy?.isNoProxyMatch('external.com')).toBe(false);
+
+  vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'new.domain.com',
+  });
+  await proxy?.setProxy(undefined);
+
+  expect(proxy?.isNoProxyMatch('new.domain.com')).toBe(true);
+  expect(proxy?.isNoProxyMatch('10.5.5.5')).toBe(false);
+});
+
+test('isNoProxyMatch returns false for all hosts when proxy is disabled', async () => {
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'example.com',
+  });
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(true);
+
+  await proxy?.setState(ProxyState.PROXY_DISABLED);
+  await proxy?.updateFromConfiguration();
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(false);
 });
