@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,11 @@ import type { CheckResult, ExtensionContext, TelemetryLogger } from '@podman-des
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { WarningCheck } from '/@/checks/base-check';
 import type { HyperVCheck } from '/@/checks/windows/hyper-v-check';
 import type { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
 import type { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
+import type { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-firmware-check';
 import type { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import type { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import type { WinVersionCheck } from '/@/checks/windows/win-version-check';
@@ -39,6 +41,10 @@ const WIN_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as WinVersionChec
 const WIN_MEMORY_CHECK_MOCK = { execute: vi.fn() } as unknown as WinMemoryCheck;
 const HYPERV_PODMAN_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as HyperVPodmanVersionCheck;
 const HYPERV_CHECK_MOCK = { execute: vi.fn() } as unknown as HyperVCheck;
+const VIRTUALIZATION_FIRMWARE_CHECK_MOCK = {
+  title: 'BIOS Virtualization Enabled',
+  execute: vi.fn(),
+} as unknown as VirtualizationFirmwareCheck;
 const VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK = { execute: vi.fn() } as unknown as VirtualMachinePlatformCheck;
 const WSL_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as WSLVersionCheck;
 const WSL2_CHECK_MOCK = { execute: vi.fn() } as unknown as WSL2Check;
@@ -57,10 +63,18 @@ beforeEach(() => {
     WIN_MEMORY_CHECK_MOCK,
     HYPERV_PODMAN_VERSION_CHECK_MOCK,
     HYPERV_CHECK_MOCK,
+    VIRTUALIZATION_FIRMWARE_CHECK_MOCK,
     VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK,
     WSL_VERSION_CHECK_MOCK,
     WSL2_CHECK_MOCK,
   );
+});
+
+test('getPreflightChecks should include a warning-wrapped BIOS virtualization check', () => {
+  const checks = winPlatform.getPreflightChecks();
+  expect(checks).toHaveLength(6);
+  expect(checks[3]).toBeInstanceOf(WarningCheck);
+  expect(checks[3].title).toEqual('BIOS Virtualization Enabled');
 });
 
 test('isHyperVEnabled should return false if it is not a Windows environment', async () => {
@@ -93,6 +107,19 @@ test('isHyperVEnabled should return true if all Hyper-V checks succeed', async (
   expect(hypervEnabled).toBeTruthy();
 });
 
+test('isHyperVEnabled is independent of BIOS virtualization firmware check', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+
+  vi.mocked(VIRTUALIZATION_FIRMWARE_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+  vi.mocked(HYPERV_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(HYPERV_PODMAN_VERSION_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+
+  const hypervEnabled = await winPlatform.isHyperVEnabled();
+
+  expect(hypervEnabled).toBeTruthy();
+  expect(VIRTUALIZATION_FIRMWARE_CHECK_MOCK.execute).not.toHaveBeenCalled();
+});
+
 test('isWSLEnabled should return false if not on Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = false;
 
@@ -123,6 +150,20 @@ test('isWSLEnabled should return true if all WSL checks succeed', async () => {
   const wslEnabled = await winPlatform.isWSLEnabled();
 
   expect(wslEnabled).toBeTruthy();
+});
+
+test('isWSLEnabled is independent of BIOS virtualization firmware check', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+
+  vi.mocked(VIRTUALIZATION_FIRMWARE_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+  vi.mocked(VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(WSL_VERSION_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(WSL2_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+
+  const wslEnabled = await winPlatform.isWSLEnabled();
+
+  expect(wslEnabled).toBeTruthy();
+  expect(VIRTUALIZATION_FIRMWARE_CHECK_MOCK.execute).not.toHaveBeenCalled();
 });
 
 describe('calcPipeName', () => {

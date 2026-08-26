@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,14 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { expect, test } from 'vitest';
 
-const PROMPT_RE = /^(?:\$ |# |> )/gm;
+import { ATLAS_DARK_SRC, ATLAS_LIGHT_SRC, atlasSrcForColorMode } from './theme-assets';
 
-// Strips a leading shell prompt prefix ('$ ', '# ', '> ') from each start of line of the given commands
-export function stripPrompts(code) {
-  return code.replace(PROMPT_RE, '');
-}
+test('atlasSrcForColorMode returns the light atlas for light mode', () => {
+  expect(atlasSrcForColorMode('light')).toBe(ATLAS_LIGHT_SRC);
+});
+
+test('atlasSrcForColorMode returns the dark atlas for dark mode', () => {
+  expect(atlasSrcForColorMode('dark')).toBe(ATLAS_DARK_SRC);
+});

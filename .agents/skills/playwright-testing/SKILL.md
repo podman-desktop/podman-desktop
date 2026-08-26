@@ -64,10 +64,23 @@ tests/playwright/
 
 ## Imports and Fixtures
 
-**Always** import `test` and `expect` from the project fixtures, not from `@playwright/test`:
+**Spec files** must import `test` and `expect` from the project fixtures:
 
 ```typescript
 import { expect as playExpect, test } from '/@/utility/fixtures';
+```
+
+**Model/POM files** must import from `@playwright/test` directly — **never** from
+`/@/utility/fixtures`. The fixtures module imports `NavigationBar`, which imports
+page models, which extend base classes like `DetailsPage` and `MainPage`. If any
+of those base classes import from fixtures, it creates a circular dependency that
+causes `ReferenceError: Cannot access '<ClassName>' before initialization` at
+runtime. This is a hard crash with no tests running.
+
+```typescript
+// In model/pages/*.ts and model/workbench/*.ts:
+import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
 ```
 
 All source imports use the `/@/` path alias, which Vite resolves to `src/`.
@@ -201,7 +214,7 @@ async pullImage(image: string): Promise<ImagesPage> {
 
 4. **Navigation methods return POM instances** — e.g. `openPullImage()` returns `PullImagePage`
 5. **Use `playExpect`** (aliased from `@playwright/test`) inside POM files for assertions
-6. **Import `test` from `@playwright/test`** in POM files (for `test.step`), but from `/@/utility/fixtures` in spec files
+6. **Import `test` and `playExpect` from `@playwright/test`** in POM files (for `test.step` and assertions). **Never import from `/@/utility/fixtures` in model files** — this creates a circular dependency (fixtures -> NavigationBar -> page models -> fixtures) that crashes at runtime with `ReferenceError: Cannot access '<ClassName>' before initialization`. Only spec files import from fixtures.
 
 ### NavigationBar
 

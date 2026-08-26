@@ -7,14 +7,17 @@ import WindowsMinIcon from '/@/lib/images/WindowsMinIcon.svelte';
 import WindowsUnmaxIcon from '/@/lib/images/WindowsUnmaxIcon.svelte';
 
 const iconSize = '16';
-let icon: Component;
-let state = 'initial';
 
-export let name: string;
+interface Props {
+  name: string;
+  action?: () => void;
+}
 
-export let action: () => void = () => {};
+let { name, action = (): void => {} }: Props = $props();
 
-let titleName: string;
+let icon = $state<Component>(WindowsMinIcon);
+let windowState = $state('initial');
+let titleName = $state<string>();
 
 onMount(() => {
   if (name === 'Minimize') {
@@ -31,23 +34,23 @@ function executeAction(): void {
   // perform action
   action();
 
-  // update the state
+  // update the window state
   if (name === 'Minimize') {
-    state = 'minimized';
+    windowState = 'minimized';
   } else if (name === 'Maximize') {
-    if (state === 'maximized') {
-      state = 'restored';
+    if (windowState === 'maximized') {
+      windowState = 'restored';
     } else {
-      state = 'maximized';
+      windowState = 'maximized';
     }
   } else if (name === 'Close') {
-    state = 'closed';
+    windowState = 'closed';
   }
 
-  if (state === 'maximized') {
+  if (windowState === 'maximized') {
     icon = WindowsUnmaxIcon;
     titleName = 'Restore';
-  } else if (state === 'restored') {
+  } else if (windowState === 'restored') {
     icon = WindowsMaxIcon;
     titleName = 'Maximize';
   }
@@ -55,13 +58,14 @@ function executeAction(): void {
 </script>
 
 <button
-  on:click={executeAction}
+  onclick={executeAction}
   aria-label={name}
   title={titleName}
   class="h-[32px] w-[45px] cursor-pointer {name === 'Close'
     ? 'hover:bg-(--pd-titlebar-windows-hover-exit-bg) hover:text-(--pd-titlebar-windows-hover-exit-text)'
     : 'hover:bg-(--pd-titlebar-windows-hover-bg)'} text-(--pd-titlebar-icon) flex place-items-center justify-center">
   {#if icon}
-    <svelte:component this={icon} size={iconSize} />
+    {@const Icon = icon}
+    <Icon size={iconSize} />
   {/if}
 </button>
