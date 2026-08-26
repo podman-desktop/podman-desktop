@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
+import * as net from 'node:net';
 
 import type { Event, ProxySettings } from '@podman-desktop/api';
 import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
@@ -53,6 +55,164 @@ function asURL(url: unknown): URL {
   return new URL((url as Request).url);
 }
 
+// NO_PROXY matching follows the same algorithm as Go's net/http/httpproxy useProxy():
+// https://github.com/golang/net/blob/master/http/httpproxy/proxy.go
+//
+// Loopback addresses (localhost, 127.0.0.1, ::1) always bypass the proxy,
+// regardless of NO_PROXY contents — same as Go's behaviour.
+//
+// NO_PROXY is a comma-separated list. Each entry can be:
+//   - "*"                → match everything
+//   - IPv4 address       → exact match (e.g. 192.168.1.1)
+//   - IPv6 address       → exact match (e.g. fd00::1, fe80::1)
+//   - IPv4 CIDR          → range match (e.g. 10.0.0.0/8, 172.16.0.0/12)
+//   - IPv6 CIDR          → range match (e.g. fd00::/8, 2001:db8::/32)
+//   - domain             → matches domain and all subdomains (e.g. foo.com matches bar.foo.com)
+//   - .domain            → matches subdomains only (e.g. .foo.com does NOT match foo.com)
+//   - *.domain           → same as .domain
+//   - any:port           → only matches when port also matches (e.g. foo.com:8080)
+
+export type NoProxyRule =
+  | { kind: 'wildcard' }
+  | { kind: 'ip'; ip: string; port?: string }
+  | { kind: 'cidr'; blockList: net.BlockList; family: 'ipv4' | 'ipv6' }
+  | { kind: 'domain'; suffix: string; matchHost: boolean; port?: string };
+
+export function parseNoProxy(noProxy?: string): NoProxyRule[] {
+  if (!noProxy) {
+    return [];
+  }
+  const rules: NoProxyRule[] = [];
+  for (const raw of noProxy.split(',')) {
+    const p = raw.trim().toLowerCase();
+    if (!p) {
+      continue;
+    }
+    if (p === '*') {
+      rules.push({ kind: 'wildcard' });
+      continue;
+    }
+
+    // CIDR entry (e.g. 10.0.0.0/8, fd00::/7)
+    if (p.includes('/')) {
+      try {
+        const slashIdx = p.indexOf('/');
+        const subnet = p.slice(0, slashIdx);
+        const prefix = Number(p.slice(slashIdx + 1));
+        const family = net.isIPv6(subnet) ? 'ipv6' : 'ipv4';
+        const blockList = new net.BlockList();
+        blockList.addSubnet(subnet, prefix, family);
+        rules.push({ kind: 'cidr', blockList, family });
+      } catch {
+        console.error(`Malformed CIDR or family mismatch in NO_PROXY: ${p}`);
+      }
+      continue;
+    }
+
+    // Split off optional port
+    let phost: string;
+    let pport: string | undefined;
+    const portSep = splitHostPort(p);
+    if (portSep) {
+      phost = portSep.host;
+      pport = portSep.port || undefined;
+    } else {
+      phost = p.replace(/^\[|\]$/g, '');
+    }
+
+    if (!phost) {
+      continue;
+    }
+
+    // Exact IP
+    if (net.isIP(phost)) {
+      rules.push({ kind: 'ip', ip: phost, port: pport });
+      continue;
+    }
+
+    // Domain matching (Go algorithm):
+    // "*.foo.com" → strip "*", becomes ".foo.com" → subdomain-only
+    // ".foo.com"  → subdomain-only
+    // "foo.com"   → prepend ".", set matchHost=true → domain + subdomains
+    if (phost.startsWith('*.')) {
+      phost = phost.slice(1);
+    }
+    let matchHost = false;
+    if (!phost.startsWith('.')) {
+      matchHost = true;
+      phost = `.${phost}`;
+    }
+    rules.push({ kind: 'domain', suffix: phost, matchHost, port: pport });
+  }
+  return rules;
+}
+
+export function matchNoProxyRules(hostname: string, port?: string, rules?: NoProxyRule[]): boolean {
+  if (!hostname) {
+    return false;
+  }
+  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+    return true;
+  }
+  if (!rules || rules.length === 0) {
+    return false;
+  }
+
+  const hostIsIp = net.isIP(host);
+  const hostFamily: 'ipv4' | 'ipv6' | undefined = hostIsIp ? (net.isIPv6(host) ? 'ipv6' : 'ipv4') : undefined;
+
+  for (const rule of rules) {
+    switch (rule.kind) {
+      case 'wildcard':
+        return true;
+
+      case 'cidr':
+        if (hostFamily === rule.family && rule.blockList.check(host, rule.family)) {
+          return true;
+        }
+        break;
+
+      case 'ip':
+        if (hostIsIp && rule.ip === host && (!rule.port || rule.port === port)) {
+          return true;
+        }
+        break;
+
+      case 'domain':
+        if (!hostIsIp && (host.endsWith(rule.suffix) || (rule.matchHost && host === rule.suffix.slice(1)))) {
+          if (!rule.port || rule.port === port) {
+            return true;
+          }
+        }
+        break;
+    }
+  }
+  return false;
+}
+
+function splitHostPort(value: string): { host: string; port: string } | undefined {
+  // [IPv6]:port
+  const bracketIdx = value.lastIndexOf(']');
+  if (bracketIdx !== -1) {
+    const colonAfter = value.indexOf(':', bracketIdx);
+    if (colonAfter !== -1) {
+      return {
+        host: value.slice(0, colonAfter).replace(/^\[|\]$/g, ''),
+        port: value.slice(colonAfter + 1),
+      };
+    }
+  } else {
+    // host:port — only if exactly one colon (not IPv6)
+    const first = value.indexOf(':');
+    const last = value.lastIndexOf(':');
+    if (first !== -1 && first === last) {
+      return { host: value.slice(0, first), port: value.slice(first + 1) };
+    }
+  }
+  return undefined;
+}
+
 /**
  * Handle proxy settings for Podman Desktop
  */
@@ -60,6 +220,7 @@ function asURL(url: unknown): URL {
 export class Proxy {
   private proxySettings: ProxySettings | undefined;
   private proxyState: ProxyState = ProxyState.PROXY_SYSTEM;
+  private noProxyRules: NoProxyRule[] = [];
 
   private readonly _onDidUpdateProxy = new Emitter<ProxySettings>();
   public readonly onDidUpdateProxy: Event<ProxySettings> = this._onDidUpdateProxy.event;
@@ -149,6 +310,7 @@ export class Proxy {
     } else {
       this.proxySettings = undefined;
     }
+    this.noProxyRules = parseNoProxy(this.proxySettings?.noProxy);
   }
 
   async setProxy(proxy: ProxySettings | undefined): Promise<void> {
@@ -162,6 +324,7 @@ export class Proxy {
 
     // update
     this.proxySettings = newProxy;
+    this.noProxyRules = parseNoProxy(newProxy?.noProxy);
 
     if (newProxy) {
       // notify
@@ -185,6 +348,10 @@ export class Proxy {
       this.proxySettings !== undefined &&
       (this.proxySettings.httpProxy !== undefined || this.proxySettings.httpsProxy !== undefined)
     );
+  }
+
+  isNoProxyMatch(hostname: string, port?: string): boolean {
+    return matchNoProxyRules(hostname, port, this.noProxyRules);
   }
 
   async setState(state: ProxyState): Promise<void> {
@@ -217,7 +384,7 @@ export class Proxy {
 
       const urlObj = asURL(url);
       const isHttps = urlObj.protocol === 'https:';
-      const proxyurl = getProxyUrl(_me, isHttps);
+      const proxyurl = getProxyUrl(_me, isHttps, urlObj.hostname, urlObj.port);
       const ca = _me.certificates.getAllCertificates();
       if (proxyurl) {
         opts = {

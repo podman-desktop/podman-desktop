@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,11 @@ function createProxyAgent(secure: boolean, proxyUrl: string, certificates: Certi
     : new HttpProxyAgent(options as HttpProxyAgentOptions);
 }
 
-export function getProxyUrl(proxy: Proxy, secure: boolean): string | undefined {
+export function getProxyUrl(proxy: Proxy, secure: boolean, hostname?: string, port?: string): string | undefined {
   if (proxy.isEnabled()) {
+    if (hostname && proxy.isNoProxyMatch(hostname, port)) {
+      return undefined;
+    }
     return secure ? proxy.proxy?.httpsProxy : proxy.proxy?.httpProxy;
   }
   return undefined;
