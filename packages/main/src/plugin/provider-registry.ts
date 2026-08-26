@@ -222,11 +222,11 @@ export class ProviderRegistry {
       title: 'Providers',
       type: 'object',
       properties: {
-        'providers.disableUpdate': {
+        'providers.allowUpdate': {
           description:
-            'List of provider IDs to prevent from registering and displaying engine updates. Use ["*"] to disable updates for all providers.',
+            'List of extension IDs permitted to register provider engine updates. Use ["*"] to allow all extensions (default). Use [] to block all updates.',
           type: 'array',
-          default: [],
+          default: ['*'],
           hidden: true,
         },
       },
@@ -303,10 +303,10 @@ export class ProviderRegistry {
   }
 
   registerUpdate(providerImpl: ProviderImpl, update: ProviderUpdate): Disposable {
-    const disableUpdate = this.configurationRegistry.getConfiguration('providers').get<string[]>('disableUpdate') ?? [];
-    if (disableUpdate.includes('*') || disableUpdate.includes(providerImpl.id)) {
+    const allowUpdate = this.configurationRegistry.getConfiguration('providers').get<string[]>('allowUpdate') ?? ['*'];
+    if (!allowUpdate.includes('*') && !allowUpdate.includes(providerImpl.extensionId)) {
       console.log(
-        `Provider update registration blocked for '${providerImpl.id}' by providers.disableUpdate configuration`,
+        `Provider update registration blocked for extension '${providerImpl.extensionId}' by providers.allowUpdate configuration`,
       );
       return Disposable.create(() => {});
     }
