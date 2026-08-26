@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-const PROMPT_RE = /^(?:\$ |# |> )/gm;
+export const ATLAS_LIGHT_SRC = '/img/banner/5m/atlas-light.svg';
+export const ATLAS_DARK_SRC = '/img/banner/5m/atlas-dark.svg';
+export const TITLE_LIGHT_SRC = '/img/banner/5m/title-light.svg';
+export const TITLE_DARK_SRC = '/img/banner/5m/title-dark.svg';
 
-// Strips a leading shell prompt prefix ('$ ', '# ', '> ') from each start of line of the given commands
-export function stripPrompts(code) {
-  return code.replace(PROMPT_RE, '');
+/** Resolves the particle atlas URL for the active Docusaurus color mode. */
+export function atlasSrcForColorMode(colorMode: 'light' | 'dark'): string {
+  return colorMode === 'dark' ? ATLAS_DARK_SRC : ATLAS_LIGHT_SRC;
 }
