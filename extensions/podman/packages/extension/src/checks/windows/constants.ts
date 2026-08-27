@@ -22,3 +22,8 @@ export const HYPER_V_DOC_LINKS: CheckResultLink = {
   url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
   title: 'Hyper-V Manual Installation Steps',
 };
+
+export const VIRTUALIZATION_FIRMWARE_DOC_LINKS: CheckResultLink = {
+  url: 'https://support.microsoft.com/en-us/windows/experience/enable-virtualization-on-windows',
+  title: 'Enable Virtualization on Windows',
+};

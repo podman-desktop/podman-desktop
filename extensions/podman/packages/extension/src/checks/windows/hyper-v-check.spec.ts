@@ -46,6 +46,8 @@ const POWERSHELL_CLIENT: PowerShellClient = {
   isUserAdmin: vi.fn(),
   isHyperVInstalled: vi.fn(),
   isVirtualMachineAvailable: vi.fn(),
+  isVirtualizationFirmwareEnabled: vi.fn(),
+  isHypervisorPresent: vi.fn(),
   isRunningElevated: vi.fn(),
   isHyperVRunning: vi.fn(),
 };

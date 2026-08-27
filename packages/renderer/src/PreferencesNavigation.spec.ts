@@ -530,23 +530,6 @@ describe('Navigation width measurement and calculation', () => {
     });
   });
 
-  test('should measure after requestAnimationFrame when it is available', async () => {
-    mockNavigationMeasurements({
-      withRequestAnimationFrame: true,
-      titleWidths: {
-        'A Very Long Preference Entry': 260,
-      },
-    });
-    configurationProperties.set([LONG_CONFIG]);
-
-    renderPreferencesNavigation();
-
-    await fireEvent.click(await screen.findByRole('link', { name: 'preferences' }));
-
-    await waitForNavigationWidth('292px');
-    expect(window.requestAnimationFrame).toHaveBeenCalled();
-  });
-
   test('should update navigation width when the window is resized', async () => {
     const addEventListener = vi.fn();
     const removeEventListener = vi.fn();

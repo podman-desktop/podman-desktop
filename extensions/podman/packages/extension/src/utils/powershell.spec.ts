@@ -108,6 +108,14 @@ describe('PowerShellClient PS flags', () => {
       method: 'isVirtualMachineAvailable',
       call: (c: PowerShellClient): Promise<unknown> => c.isVirtualMachineAvailable(),
     },
+    {
+      method: 'isVirtualizationFirmwareEnabled',
+      call: (c: PowerShellClient): Promise<unknown> => c.isVirtualizationFirmwareEnabled(),
+    },
+    {
+      method: 'isHypervisorPresent',
+      call: (c: PowerShellClient): Promise<unknown> => c.isHypervisorPresent(),
+    },
     { method: 'isHyperVInstalled', call: (c: PowerShellClient): Promise<unknown> => c.isHyperVInstalled() },
     { method: 'isHyperVRunning', call: (c: PowerShellClient): Promise<unknown> => c.isHyperVRunning() },
     { method: 'isRunningElevated', call: (c: PowerShellClient): Promise<unknown> => c.isRunningElevated() },
@@ -188,6 +196,173 @@ describe('PowerShellClient#isVirtualMachineAvailable', () => {
     expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledWith(
       'check.isVirtualMachineAvailable',
       expect.objectContaining({ stdout: 'SomeOtherFeature', stderr: 'warn' }),
+    );
+  });
+});
+
+describe('PowerShellClient#isVirtualizationFirmwareEnabled', () => {
+  let client: PowerShellClient;
+
+  beforeEach(async () => {
+    client = await getPowerShellClient(TELEMETRY_LOGGER_MOCK);
+  });
+
+  test('should return true when stdout is True', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({
+      stdout: 'True',
+      stderr: '',
+      command: 'powershell.exe',
+    });
+
+    expect(await client.isVirtualizationFirmwareEnabled()).toBe(true);
+  });
+
+  test('should return true when stdout is True with surrounding whitespace', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({
+      stdout: '\r  True  \n',
+      stderr: '',
+      command: 'powershell.exe',
+    });
+
+    expect(await client.isVirtualizationFirmwareEnabled()).toBe(true);
+  });
+
+  test('should return true when firmware reports False but hypervisor is present', async () => {
+    vi.mocked(processAPI.exec)
+      .mockResolvedValueOnce({ stdout: 'False', stderr: '', command: 'powershell.exe' })
+      .mockResolvedValueOnce({ stdout: 'True', stderr: '', command: 'powershell.exe' });
+
+    expect(await client.isVirtualizationFirmwareEnabled()).toBe(true);
+  });
+
+  test('should return false when firmware reports False and hypervisor is not present', async () => {
+    vi.mocked(processAPI.exec)
+      .mockResolvedValueOnce({ stdout: 'False', stderr: '', command: 'powershell.exe' })
+      .mockResolvedValueOnce({ stdout: 'False', stderr: '', command: 'powershell.exe' });
+
+    expect(await client.isVirtualizationFirmwareEnabled()).toBe(false);
+  });
+
+  test('should return false when firmware throws and hypervisor is not present', async () => {
+    const error = Object.assign(new Error('exec failed'), {
+      exitCode: 1,
+      stdout: '',
+      stderr: 'error output',
+      cancelled: false,
+      killed: false,
+      command: 'powershell.exe',
+    });
+    vi.mocked(processAPI.exec)
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce({ stdout: 'False', stderr: '', command: 'powershell.exe' });
+
+    expect(await client.isVirtualizationFirmwareEnabled()).toBe(false);
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledWith(
+      'check.isVirtualizationFirmwareEnabled',
+      expect.objectContaining({ error }),
+    );
+  });
+
+  test('should return true when firmware throws but hypervisor is present', async () => {
+    vi.mocked(processAPI.exec)
+      .mockRejectedValueOnce(new Error('exec failed'))
+      .mockResolvedValueOnce({ stdout: 'True', stderr: '', command: 'powershell.exe' });
+
+    expect(await client.isVirtualizationFirmwareEnabled()).toBe(true);
+  });
+
+  test('should not log telemetry when firmware virtualization is enabled (early return path)', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({
+      stdout: 'True',
+      stderr: '',
+      command: 'powershell.exe',
+    });
+
+    await client.isVirtualizationFirmwareEnabled();
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).not.toHaveBeenCalled();
+  });
+
+  test('should not log firmware telemetry when hypervisor fallback succeeds', async () => {
+    vi.mocked(processAPI.exec)
+      .mockResolvedValueOnce({ stdout: 'False', stderr: '', command: 'powershell.exe' })
+      .mockResolvedValueOnce({ stdout: 'True', stderr: '', command: 'powershell.exe' });
+
+    await client.isVirtualizationFirmwareEnabled();
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).not.toHaveBeenCalledWith(
+      'check.isVirtualizationFirmwareEnabled',
+      expect.anything(),
+    );
+  });
+
+  test('should log telemetry when both firmware and hypervisor checks fail', async () => {
+    vi.mocked(processAPI.exec)
+      .mockResolvedValueOnce({ stdout: 'False', stderr: 'warn', command: 'powershell.exe' })
+      .mockResolvedValueOnce({ stdout: 'False', stderr: '', command: 'powershell.exe' });
+
+    await client.isVirtualizationFirmwareEnabled();
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledWith(
+      'check.isVirtualizationFirmwareEnabled',
+      expect.objectContaining({ stdout: 'False', stderr: 'warn', hypervisorPresent: false }),
+    );
+  });
+});
+
+describe('PowerShellClient#isHypervisorPresent', () => {
+  let client: PowerShellClient;
+
+  beforeEach(async () => {
+    client = await getPowerShellClient(TELEMETRY_LOGGER_MOCK);
+  });
+
+  test('should return true when hypervisor is present', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({ stdout: 'True', stderr: '', command: 'powershell.exe' });
+
+    expect(await client.isHypervisorPresent()).toBe(true);
+  });
+
+  test('should return false when hypervisor is not present', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({ stdout: 'False', stderr: '', command: 'powershell.exe' });
+
+    expect(await client.isHypervisorPresent()).toBe(false);
+  });
+
+  test('should return false and record telemetry when exec throws', async () => {
+    const error = Object.assign(new Error('exec failed'), {
+      exitCode: 1,
+      stdout: '',
+      stderr: 'error output',
+      cancelled: false,
+      killed: false,
+      command: 'powershell.exe',
+    });
+    vi.mocked(processAPI.exec).mockRejectedValue(error);
+
+    expect(await client.isHypervisorPresent()).toBe(false);
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledWith(
+      'check.isHypervisorPresent',
+      expect.objectContaining({ error }),
+    );
+  });
+
+  test('should not log telemetry when hypervisor is present (early return path)', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({ stdout: 'True', stderr: '', command: 'powershell.exe' });
+
+    await client.isHypervisorPresent();
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).not.toHaveBeenCalled();
+  });
+
+  test('should log telemetry when hypervisor is not present', async () => {
+    vi.mocked(processAPI.exec).mockResolvedValue({ stdout: 'False', stderr: 'warn', command: 'powershell.exe' });
+
+    await client.isHypervisorPresent();
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledWith(
+      'check.isHypervisorPresent',
+      expect.objectContaining({ stdout: 'False', stderr: 'warn' }),
     );
   });
 });

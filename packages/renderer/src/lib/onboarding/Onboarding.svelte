@@ -455,10 +455,6 @@ let globalOnboarding = $derived(global);
       {/if}
 
       {#if !activeStep.step.completionEvents || activeStep.step.completionEvents.length === 0}
-        <!-- fake div used to hide scrollbar shadow  -->
-        {#if !globalOnboarding}
-          <div class="fixed bg-[var(--pd-details-bg)] right-0 bottom-0 h-[70px] w-[30px] z-10 mb-6"></div>
-        {/if}
         <div class="grow"></div>
         {#if activeStep.step.state !== 'failed'}
           <div class="mt-10 mx-auto text-sm min-h-[120px]" aria-label="Next Info Message">
@@ -471,9 +467,7 @@ let globalOnboarding = $derived(global);
           </div>
         {/if}
         <div
-          class="flex flex-row-reverse p-6 bg-[var(--pd-content-bg)] fixed {globalOnboarding
-            ? 'w-full'
-            : 'w-[calc(100%-(var(--spacing-leftnavbar))-(var(--spacing-leftsidebar)))] mb-5'} bottom-0 pr-10 max-h-20 bg-opacity-90 z-20"
+          class="flex flex-row-reverse p-6 bg-[var(--pd-content-bg)] sticky bottom-0 w-full pr-10 max-h-20 bg-opacity-90 z-20"
           role="group"
           aria-label="Step Buttons">
           <Button
