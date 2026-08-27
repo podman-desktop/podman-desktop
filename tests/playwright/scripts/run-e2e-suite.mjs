@@ -18,7 +18,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
-import { basename, delimiter, dirname, join, relative, resolve, sep } from 'node:path';
+import { basename, delimiter, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -28,19 +28,14 @@ const BASE_DIR = resolve(REPO_ROOT, 'tests/playwright/src');
 
 function findSpecFiles(dir) {
   const results = [];
-  try {
-    const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        results.push(...findSpecFiles(fullPath));
-      } else if (entry.name.endsWith('.spec.ts')) {
-        results.push(fullPath);
-      }
+  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...findSpecFiles(fullPath));
+    } else if (entry.name.endsWith('.spec.ts')) {
+      results.push(fullPath);
     }
-  } catch (err) {
-    console.warn(`Warning: could not fully scan ${dir}: ${err.message}`);
-    return results;
   }
   return results;
 }
@@ -52,7 +47,10 @@ function printAvailableSuites(specsFiles, specialSpecsFiles) {
   }
   if (specialSpecsFiles.length > 0) {
     console.error('\nAvailable suites (special-specs/):');
-    for (const name of specialSpecsFiles.map(f => relative(SPECIAL_SPECS_DIR, f).replace('.spec.ts', '')).sort()) {
+    const dirNames = new Set(
+      specialSpecsFiles.map(f => relative(SPECIAL_SPECS_DIR, f).split(/[/\\]/)[0]),
+    );
+    for (const name of [...dirNames].sort()) {
       console.error(`  ${name}`);
     }
   }
@@ -70,7 +68,7 @@ const extraArgs = process.argv.slice(isAll || suite ? 3 : 2).filter(a => a !== '
 let files;
 
 if (isAll) {
-  files = [`${relative(REPO_ROOT, SPECS_DIR)}${sep}`];
+  files = [relative(REPO_ROOT, SPECS_DIR)];
 } else if (suite) {
   const normalizedSuite = suite.toLowerCase();
 
@@ -120,7 +118,7 @@ if (!env[pathKey]?.includes(binDir)) {
 console.log(`Running: npx ${playwrightArgs.join(' ')}\n`);
 const result = spawnSync('xvfb-maybe', [...xvfbArgs, 'npx', ...playwrightArgs], {
   stdio: 'inherit',
-  shell: true,
+  shell: process.platform === 'win32',
   env,
 });
 
