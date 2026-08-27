@@ -170,6 +170,23 @@ test('Expect networks to be order by name by default', async () => {
   expect(network1Name.compareDocumentPosition(network2Name)).toBe(4);
 });
 
+test('Expect network name before ID and match resource table width', async () => {
+  await init();
+
+  const headers = screen.getAllByRole('columnheader');
+  expect(headers.map(({ textContent }) => textContent?.trim() ?? '').filter(header => !!header)).toStrictEqual([
+    'Name',
+    'Id',
+    'Environment',
+    'Driver',
+    'Actions',
+  ]);
+
+  expect(screen.getByRole('table', { name: 'network' })).toHaveStyle({
+    '--table-grid-table-columns': '20px 32px 2fr 100px 1fr 1fr 1fr 32px',
+  });
+});
+
 test('Expect to have edit action for Podman networks', async () => {
   await init();
 
