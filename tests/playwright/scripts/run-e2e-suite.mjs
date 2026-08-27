@@ -26,6 +26,8 @@ const SPECS_DIR = resolve(REPO_ROOT, 'tests/playwright/src/specs');
 const SPECIAL_SPECS_DIR = resolve(REPO_ROOT, 'tests/playwright/src/special-specs');
 const BASE_DIR = resolve(REPO_ROOT, 'tests/playwright/src');
 
+const toPosix = p => p.replace(/\\/g, '/');
+
 function findSpecFiles(dir) {
   const results = [];
   const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
@@ -47,9 +49,7 @@ function printAvailableSuites(specsFiles, specialSpecsFiles) {
   }
   if (specialSpecsFiles.length > 0) {
     console.error('\nAvailable suites (special-specs/):');
-    const dirNames = new Set(
-      specialSpecsFiles.map(f => relative(SPECIAL_SPECS_DIR, f).split(/[/\\]/)[0]),
-    );
+    const dirNames = new Set(specialSpecsFiles.map(f => relative(SPECIAL_SPECS_DIR, f).split(/[/\\]/)[0]));
     for (const name of [...dirNames].sort()) {
       console.error(`  ${name}`);
     }
@@ -68,7 +68,7 @@ const extraArgs = process.argv.slice(isAll || suite ? 3 : 2).filter(a => a !== '
 let files;
 
 if (isAll) {
-  files = [relative(REPO_ROOT, SPECS_DIR)];
+  files = [toPosix(relative(REPO_ROOT, SPECS_DIR))];
 } else if (suite) {
   const normalizedSuite = suite.toLowerCase();
 
@@ -94,7 +94,7 @@ if (isAll) {
     process.exit(1);
   }
 
-  files = matches.map(f => relative(REPO_ROOT, f));
+  files = matches.map(f => toPosix(relative(REPO_ROOT, f)));
 } else {
   console.error('Usage: pnpm test:e2e:suite [--all | <suite-name>] [extra-playwright-args...]\n');
   console.error('Options:');
