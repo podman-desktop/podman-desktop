@@ -42,6 +42,7 @@ export interface ContainerInfo {
   Names: string[];
   Image: string;
   ImageID: string;
+  IsInfra?: boolean;
   ImageBase64RepoTag: string;
   Command?: string;
   Created: number;

@@ -235,7 +235,7 @@ function Banner(): JSX.Element {
   }, [colorMode]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-18 sm:h-21 xl:h-40">
+    <div id="banner-5m" ref={containerRef} className="relative w-full h-18 sm:h-21 xl:h-40">
       <a
         ref={anchorRef}
         href={BLOG_POST_URL}

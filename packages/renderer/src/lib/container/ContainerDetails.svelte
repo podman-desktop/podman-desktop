@@ -105,12 +105,14 @@ function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | 
       {#if container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE}
         <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
       {/if}
-      <Tab
-        title="Terminal"
-        selected={isTabSelected($router.path, 'terminal')}
-        url={getTabUrl($router.path, 'terminal')} />
-      {#if displayTty}
-        <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
+      {#if !container.isInfra}
+        <Tab
+          title="Terminal"
+          selected={isTabSelected($router.path, 'terminal')}
+          url={getTabUrl($router.path, 'terminal')} />
+        {#if displayTty}
+          <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
+        {/if}
       {/if}
     {/snippet}
     {#snippet contentSnippet()}
@@ -126,12 +128,14 @@ function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | 
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <ContainerDetailsKube container={container} />
       </Route>
-      <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
-        <ContainerDetailsTerminal container={container} />
-      </Route>
-      <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
-        <ContainerDetailsTtyTerminal container={container} />
-      </Route>
+      {#if !container.isInfra}
+        <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
+          <ContainerDetailsTerminal container={container} />
+        </Route>
+        <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
+          <ContainerDetailsTtyTerminal container={container} />
+        </Route>
+      {/if}
     {/snippet}
   </DetailsPage>
 {/if}

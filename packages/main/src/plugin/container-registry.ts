@@ -41,6 +41,8 @@ import type {
   ImageInspectInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   LibPodPodInfo,
   ListImagesOptions,
   ManifestCreateOptions,
@@ -629,6 +631,7 @@ export class ContainerProviderRegistry {
             Names: string[];
             Image: string;
             ImageID: string;
+            IsInfra?: boolean;
             Command?: string;
             Created: number;
             Ports: ContainerPortInfo[];
@@ -677,6 +680,7 @@ export class ContainerProviderRegistry {
                 Names: podmanContainer.Names.map(name => `/${name}`),
                 ImageID: `sha256:${podmanContainer.ImageID}`,
                 Image: podmanContainer.Image,
+                IsInfra: podmanContainer.IsInfra,
                 // convert to unix timestamp
                 Created: moment(podmanContainer.Created).unix(),
                 State: podmanContainer.State,
@@ -738,6 +742,7 @@ export class ContainerProviderRegistry {
                 engineType: provider.connection.type,
                 StartedAt: container.StartedAt ?? '',
                 Status: container.Status,
+                IsInfra: container.IsInfra,
                 ImageBase64RepoTag: Buffer.from(container.Image, 'binary').toString('base64'),
               };
               return containerInfo;
@@ -1412,6 +1417,54 @@ export class ContainerProviderRegistry {
 
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
+  }
+
+  async updateImages(images: ImageUpdateInfo[], abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
+    const results = await Promise.all(
+      images.map(async (info): Promise<ImageUpdateResult> => {
+        try {
+          const matchingEngine = this.getMatchingEngine(info.engineId);
+          const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
+          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
+
+          if (status.status === 'error') {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          if (status.status === 'skipped' || !status.updateAvailable) {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+          const pullStream = await matchingEngine.pull(info.image, {
+            authconfig,
+            abortSignal,
+          });
+
+          const { resolve, reject, promise } = Promise.withResolvers<void>();
+          matchingEngine.modem.followProgress(
+            pullStream,
+            (err: Error | null) => (err ? reject(err) : resolve()),
+            () => {},
+          );
+          await promise;
+
+          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
+        } catch (error: unknown) {
+          console.error(`Error updating image ${info.image}`, error);
+          const message = error instanceof Error ? error.message : String(error);
+          return { imageRef: info.image, updated: false, status: 'error', message };
+        }
+      }),
+    );
+    this.telemetryService.track('updateImages', {
+      count: images.length,
+      updated: results.filter(result => result.updated).length,
+      upToDate: results.filter(result => result.status === 'normal' && !result.updated).length,
+      skipped: results.filter(result => result.status === 'skipped').length,
+      failed: results.filter(result => result.status === 'error').length,
+    });
+    return results;
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
