@@ -18,7 +18,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
-import { basename, delimiter, dirname, join, relative, resolve } from 'node:path';
+import { basename, delimiter, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -29,7 +29,8 @@ const BASE_DIR = resolve(REPO_ROOT, 'tests/playwright/src');
 function findSpecFiles(dir) {
   const results = [];
   try {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
       const fullPath = join(dir, entry.name);
       if (entry.isDirectory()) {
         results.push(...findSpecFiles(fullPath));
@@ -69,14 +70,14 @@ const extraArgs = process.argv.slice(isAll || suite ? 3 : 2).filter(a => a !== '
 let files;
 
 if (isAll) {
-  files = [`${relative(REPO_ROOT, SPECS_DIR)}/`];
+  files = [`${relative(REPO_ROOT, SPECS_DIR)}${sep}`];
 } else if (suite) {
   const normalizedSuite = suite.toLowerCase();
 
   // Prefer exact directory-segment matches; fall back to filename substring
   const dirMatches = allSpecFiles.filter(f => {
     const relPath = relative(BASE_DIR, f).toLowerCase();
-    const segments = relPath.split('/');
+    const segments = relPath.split(/[/\\]/);
     segments.pop();
     return segments.some(s => s === normalizedSuite);
   });
