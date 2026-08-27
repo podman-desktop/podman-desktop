@@ -37,7 +37,8 @@ function findSpecFiles(dir) {
         results.push(fullPath);
       }
     }
-  } catch {
+  } catch (err) {
+    console.warn(`Warning: could not fully scan ${dir}: ${err.message}`);
     return results;
   }
   return results;
@@ -68,13 +69,25 @@ const extraArgs = process.argv.slice(isAll || suite ? 3 : 2).filter(a => a !== '
 let files;
 
 if (isAll) {
-  files = [relative(REPO_ROOT, SPECS_DIR) + '/'];
+  files = [`${relative(REPO_ROOT, SPECS_DIR)}/`];
 } else if (suite) {
   const normalizedSuite = suite.toLowerCase();
-  const matches = allSpecFiles.filter(f => {
+
+  // Prefer exact directory-segment matches; fall back to filename substring
+  const dirMatches = allSpecFiles.filter(f => {
     const relPath = relative(BASE_DIR, f).toLowerCase();
-    return relPath.includes(normalizedSuite);
+    const segments = relPath.split('/');
+    segments.pop();
+    return segments.some(s => s === normalizedSuite);
   });
+
+  const matches =
+    dirMatches.length > 0
+      ? dirMatches
+      : allSpecFiles.filter(f => {
+          const fileName = basename(f).replace('.spec.ts', '').toLowerCase();
+          return fileName.includes(normalizedSuite);
+        });
 
   if (matches.length === 0) {
     console.error(`No spec file matching "${suite}" found.\n`);
@@ -87,7 +100,7 @@ if (isAll) {
   console.error('Usage: pnpm test:e2e:suite [--all | <suite-name>] [extra-playwright-args...]\n');
   console.error('Options:');
   console.error('  --all          Run all spec files from the specs/ directory');
-  console.error('  <suite-name>   Run spec files matching the name (substring match)\n');
+  console.error('  <suite-name>   Run spec files matching the name (directory or filename match)\n');
   printAvailableSuites(specsFiles, specialSpecsFiles);
   process.exit(1);
 }
