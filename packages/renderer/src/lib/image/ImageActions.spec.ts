@@ -80,6 +80,9 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(ImageUtils.prototype.deleteImage).mockRejectedValue(new Error('Cannot delete image in test'));
+  vi.mocked(ImageUtils.prototype.updateImages).mockResolvedValue([
+    { imageRef: 'dummy:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
+  ]);
 });
 
 test('Expect error dialog with correct message when image deletion fails', async () => {
@@ -315,5 +318,145 @@ describe('run', () => {
         },
       });
     });
+  });
+});
+
+describe('update', () => {
+  let image: ImageInfoUI;
+
+  beforeEach(() => {
+    image = {
+      id: 'sha256:abc',
+      shortId: 'abc',
+      name: 'image-name',
+      engineId: 'podman',
+      engineName: 'Podman',
+      tag: '1.0',
+      createdAt: 1599888000,
+      age: '1 day',
+      arch: 'amd64',
+      size: 1024,
+      humanSize: '1.02 kB',
+      base64RepoTag: 'aW1hZ2UtbmFtZToxLjA=',
+      selected: true,
+      status: 'UNUSED',
+      badges: [],
+      digest: 'sha256:abc',
+    };
+  });
+
+  test.each([
+    { name: '<none>', status: 'UNUSED' as const, tag: '', expectEnabled: false },
+    { name: 'image-name', status: 'USED' as const, tag: '1.0', expectEnabled: false },
+    { name: 'image-name', status: 'DELETING' as const, tag: '1.0', expectEnabled: false },
+    { name: 'image-name', status: 'UPDATING' as const, tag: '1.0', expectEnabled: false },
+    { name: 'image-name', status: 'UNUSED' as const, tag: '1.0', expectEnabled: true },
+  ])(
+    'Expect Update Image button enabled=$expectEnabled for name=$name status=$status',
+    async ({ name, status, tag, expectEnabled }) => {
+      getContributedMenusMock.mockResolvedValue([]);
+
+      render(ImageActions, {
+        onPushImage: vi.fn(),
+        onRenameImage: vi.fn(),
+        image: { ...image, name, status, tag },
+      });
+
+      const button = screen.getByTitle('Update Image');
+      if (expectEnabled) {
+        expect(button).toBeEnabled();
+      } else {
+        expect(button).toBeDisabled();
+      }
+    },
+  );
+
+  test('Expect Update Image action to bail out when image status changes before confirmation callback', async () => {
+    getContributedMenusMock.mockResolvedValue([]);
+
+    vi.mocked(withConfirmation).mockImplementation(callback => {
+      image.status = 'DELETING';
+      callback();
+    });
+
+    render(ImageActions, {
+      onPushImage: vi.fn(),
+      onRenameImage: vi.fn(),
+      image,
+    });
+
+    await fireEvent.click(screen.getByTitle('Update Image'));
+
+    expect(ImageUtils.prototype.updateImages).not.toHaveBeenCalled();
+    expect(image.status).toBe('DELETING');
+  });
+
+  test('Expect Update Image confirmation and successful update', async () => {
+    getContributedMenusMock.mockResolvedValue([]);
+    vi.mocked(withConfirmation).mockImplementation(callback => callback());
+
+    render(ImageActions, {
+      onPushImage: vi.fn(),
+      onRenameImage: vi.fn(),
+      image,
+    });
+
+    await fireEvent.click(screen.getByTitle('Update Image'));
+
+    expect(withConfirmation).toHaveBeenCalledExactlyOnceWith(
+      expect.any(Function),
+      'update image image-name:1.0 to latest build',
+      { title: 'Update Image?', buttonLabel: 'Update' },
+    );
+    await waitFor(() => expect(ImageUtils.prototype.updateImages).toHaveBeenCalledExactlyOnceWith([image]));
+    expect(image.status).toBe('UNUSED');
+    expect(image.selected).toBe(false);
+  });
+
+  test('Expect unsuccessful Update Image result to be reported and state restored', async () => {
+    getContributedMenusMock.mockResolvedValue([]);
+    vi.mocked(withConfirmation).mockImplementation(callback => callback());
+    vi.mocked(ImageUtils.prototype.updateImages).mockResolvedValue([
+      { imageRef: 'image-name:1.0', updated: false, status: 'normal', message: 'Already up to date' },
+    ]);
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockReturnValue(undefined);
+
+    render(ImageActions, {
+      onPushImage: vi.fn(),
+      onRenameImage: vi.fn(),
+      image,
+    });
+
+    await fireEvent.click(screen.getByTitle('Update Image'));
+
+    await waitFor(() => expect(consoleInfoSpy).toHaveBeenCalledWith('image-name:1.0: Already up to date'));
+    expect(image.status).toBe('UNUSED');
+    expect(image.selected).toBe(false);
+  });
+
+  test('Expect Update Image error dialog and state restoration when update throws', async () => {
+    getContributedMenusMock.mockResolvedValue([]);
+    vi.mocked(withConfirmation).mockImplementation(callback => callback());
+    vi.mocked(ImageUtils.prototype.updateImages).mockRejectedValue(new Error('Registry unavailable'));
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
+
+    render(ImageActions, {
+      onPushImage: vi.fn(),
+      onRenameImage: vi.fn(),
+      image,
+    });
+
+    await fireEvent.click(screen.getByTitle('Update Image'));
+
+    await waitFor(() =>
+      expect(window.showMessageBox).toHaveBeenCalledWith({
+        title: 'Image Operation Failed',
+        message: 'Error while updating image: Error: Registry unavailable',
+        type: 'error',
+        buttons: ['Dismiss'],
+      }),
+    );
+    expect(image.status).toBe('UNUSED');
+    expect(image.selected).toBe(false);
   });
 });
