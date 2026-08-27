@@ -1,7 +1,15 @@
 <script lang="ts">
 import type { Menu } from '@desktop-framework/api';
 import { MenuContext, NavigationPage } from '@desktop-framework/api';
-import { faCircleArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircleArrowUp,
+  faDownload,
+  faEdit,
+  faLayerGroup,
+  faPlay,
+  faSync,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -108,6 +116,44 @@ function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
+
+async function updateImage(): Promise<void> {
+  if (!isUpdateCandidate(image)) {
+    return;
+  }
+
+  const previousStatus = image.status;
+  image.status = 'UPDATING';
+  dispatch('update', image);
+
+  try {
+    const results = await imageUtils.updateImages([image]);
+    for (const result of results) {
+      if (!result.updated) {
+        console.info(`${result.imageRef}: ${result.message}`);
+      }
+    }
+    image.status = previousStatus;
+  } catch (error) {
+    image.status = previousStatus;
+    await onError(`Error while updating image: ${String(error)}`);
+  } finally {
+    image.selected = false;
+    dispatch('update', image);
+  }
+}
+
+function confirmUpdateImage(): void {
+  const imageRef = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
+  withConfirmation(updateImage, `update all tags of image ${imageRef} to latest build`, {
+    title: 'Update Image?',
+    buttonLabel: 'Update',
+  });
+}
+
+function isUpdateCandidate(imageInfo: ImageInfoUI): boolean {
+  return imageInfo.status === 'UNUSED';
+}
 </script>
 
 <ListItemButtonIcon title="Run Image" onClick={runImage} detailed={detailed} icon={faPlay} />
@@ -154,6 +200,15 @@ function saveImage(): void {
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />
+
+  <ListItemButtonIcon
+    title="Update Image"
+    tooltip="Update all tags of this image to the latest build"
+    onClick={confirmUpdateImage}
+    menu={dropdownMenu}
+    detailed={detailed}
+    icon={faSync}
+    enabled={isUpdateCandidate(image)} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions
