@@ -100,14 +100,15 @@ export class PodmanRemoteConnections {
       this.#stopMonitoring = true;
       this.cleanupConnections(Array.from(this.#currentConnections.values()));
       return;
+    } else {
+      this.#stopMonitoring = false;
     }
-    this.#stopMonitoring = false;
 
     // call us again
     if (!this.#stopMonitoring) {
       try {
         await this.refreshRemoteConnections();
-      } catch (_error) {
+      } catch (error) {
         // ignore the update of remote connections
       }
       // wait 5s before checking again
@@ -140,7 +141,7 @@ export class PodmanRemoteConnections {
       try {
         const uri = new URL(connection.URI);
         const host = uri.hostname;
-        const port = uri.port === '' ? 22 : Number.parseInt(uri.port, 10);
+        const port = Number.parseInt(uri.port, 10);
         const username = uri.username;
         const privateKeyFile = connection.Identity;
 
