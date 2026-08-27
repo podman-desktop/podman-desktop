@@ -95,3 +95,28 @@ test('Render container logs ', async () => {
   const clearButton = screen.getByRole('button', { name: 'Clear logs' });
   expect(clearButton).toBeInTheDocument();
 });
+
+test('log data is written as-is, without stripping a multiplexed header', async () => {
+  render(ContainerDetailsLogs, { container });
+
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalled();
+  });
+  const params = vi.mocked(window.logsContainer).mock.calls[0][0];
+
+  // wait for the terminal to be bound before pushing data into the callback
+  await vi.waitFor(() => {
+    expect(Terminal.prototype.open).toHaveBeenCalled();
+  });
+
+  // the main process demuxes the stream, so the renderer never receives frame headers.
+  // a payload that happens to look like one (0x01 0x00 0x00 0x00 + a big-endian size
+  // matching the rest of the line) must not have its first 8 characters cut off.
+  const payload = 'abcdefghij';
+  const fakeHeader = `\u0001\u0000\u0000\u0000\u0000\u0000\u0000${String.fromCharCode(payload.length)}`;
+  params.callback('data', `${fakeHeader}${payload}`);
+
+  await vi.waitFor(() => {
+    expect(Terminal.prototype.write).toHaveBeenCalledWith(`${fakeHeader}${payload}\r`);
+  });
+});

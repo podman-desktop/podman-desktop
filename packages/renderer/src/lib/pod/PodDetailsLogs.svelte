@@ -7,7 +7,6 @@ import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import { ansi256Colours, colourizedANSIContainerName } from '/@/lib/editor/editor-utils';
-import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
@@ -77,14 +76,7 @@ async function fetchPodLogs(): Promise<void> {
       const padding = ' '.repeat(maxNameLength - container.Names.length);
       const colouredName = colourizedContainerName.get(container.Names);
 
-      let content;
-      if (isMultiplexedLog(data)) {
-        content = data.substring(8);
-      } else {
-        content = data;
-      }
-
-      callback(name, `${colouredName} ${padding} | ${content}`);
+      callback(name, `${colouredName} ${padding} | ${data}`);
     };
 
     // Get the logs for the container
