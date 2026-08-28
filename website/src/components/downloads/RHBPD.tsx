@@ -1,7 +1,7 @@
 import { faArrowUpRightFromSquare, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { TelemetryLink } from '../../components/TelemetryLink';
+import { TelemetryLink } from '../TelemetryLink';
 
 export function RHBPDDownload(): JSX.Element {
   return (
