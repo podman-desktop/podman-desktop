@@ -47,28 +47,16 @@ const config = {
       {
         redirects: [
           {
-            to: '/downloads',
+            to: '/downloads/windows',
             from: '/downloads/Windows',
           },
           {
-            to: '/downloads',
+            to: '/downloads/macos',
             from: '/downloads/macOS',
           },
           {
-            to: '/downloads',
+            to: '/downloads/linux',
             from: '/downloads/Linux',
-          },
-          {
-            to: '/downloads',
-            from: '/downloads/windows',
-          },
-          {
-            to: '/downloads',
-            from: '/downloads/macos',
-          },
-          {
-            to: '/downloads',
-            from: '/downloads/linux',
           },
           {
             to: '/docs/intro',
