@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TelemetryLink } from '../components/TelemetryLink';
 
 // Utility to detect platform
-function getClientPlatform(): {
+export function getClientPlatform(): {
   os: string;
   url: string;
   icon: IconProp;
