@@ -10,6 +10,8 @@ import { WindowsDownloads } from '@site/src/pages/downloads/windows';
 import Layout from '@theme/Layout';
 import React from 'react';
 
+import { RHBPDDownload } from './RHBPD';
+
 function DownloadsContent(): JSX.Element {
   const detectedOS = getClientPlatform();
   const [showOtherPlatforms, setShowOtherPlatforms] = React.useState(false);
@@ -108,6 +110,16 @@ function DownloadsContent(): JSX.Element {
             Free and open source Podman Desktop for macOS, Windows, and Linux.
           </p>
           <div className="flex flex-col gap-2.5 w-full">{renderDownloads()}</div>
+          <div className="mt-12 mb-4">
+            <h2 className="text-2xl leading-tight m-0 mb-2 font-bold text-charcoal-300 dark:text-white">
+              Enterprise-supported build
+            </h2>
+            <p className="m-0 mb-6 text-charcoal-300 dark:text-gray-400 max-w-3xl">
+              Prefer a commercially supported build? Download the Red Hat Build of Podman Desktop from
+              developers.redhat.com.
+            </p>
+            {RHBPDDownload()}
+          </div>
         </div>
       </section>
     </div>
