@@ -3,14 +3,14 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getClientPlatform } from '@site/src/components/DownloadButton';
+import { LinuxDownloads } from '@site/src/components/downloads/linux';
+import { MacOSDownloads } from '@site/src/components/downloads/macos';
+import { WindowsDownloads } from '@site/src/components/downloads/windows';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
-import { LinuxDownloads } from '@site/src/pages/downloads/linux';
-import { MacOSDownloads } from '@site/src/pages/downloads/macos';
-import { WindowsDownloads } from '@site/src/pages/downloads/windows';
 import Layout from '@theme/Layout';
 import React from 'react';
 
-import { RHBPDDownload } from './RHBPD';
+import { RHBPDDownload } from '../../components/downloads/RHBPD';
 
 function DownloadsContent(): JSX.Element {
   const detectedOS = getClientPlatform();
