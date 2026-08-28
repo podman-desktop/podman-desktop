@@ -175,7 +175,7 @@
     "@testing-library/svelte": "^5.4.2",
     "@testing-library/user-event": "^14.6.5",
     "@tsconfig/svelte": "^5.0.8",
-    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/eslint-plugin": "^8.68.0",
     "eslint-plugin-svelte": "^3.23.0",
     "jsdom": "^30.0.1",
     "svelte": "^5.56.10",
