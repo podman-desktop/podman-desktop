@@ -822,8 +822,8 @@ importers:
         specifier: ^5.4.2
         version: 5.4.2(svelte@5.56.10(@typescript-eslint/types@8.68.0))(vite@8.2.2(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.12)(yaml@2.9.0))(vitest@4.1.11)
       '@testing-library/user-event':
-        specifier: ^14.6.5
-        version: 14.6.5(@testing-library/dom@10.4.1)
+        specifier: ^14.6.6
+        version: 14.6.6(@testing-library/dom@10.4.1)
       '@tsconfig/svelte':
         specifier: ^5.0.8
         version: 5.0.8
@@ -955,8 +955,8 @@ importers:
         specifier: ^5.4.2
         version: 5.4.2(svelte@5.56.10(@typescript-eslint/types@8.68.0))(vite@8.2.2(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.12)(yaml@2.9.0))(vitest@4.1.11)
       '@testing-library/user-event':
-        specifier: ^14.6.5
-        version: 14.6.5(@testing-library/dom@10.4.1)
+        specifier: ^14.6.6
+        version: 14.6.6(@testing-library/dom@10.4.1)
       '@tsconfig/svelte':
         specifier: ^5.0.8
         version: 5.0.8
@@ -4859,8 +4859,8 @@ packages:
       vitest:
         optional: true
 
-  '@testing-library/user-event@14.6.5':
-    resolution: {integrity: sha512-FhqjldLTpteueBaKflhNFlMT3+PM0O5fiBUivht6b9CZ1eesJyy7+g3Jr7XwJzt/Hip3ZG5hWwK1MX1FuDiE4w==}
+  '@testing-library/user-event@14.6.6':
+    resolution: {integrity: sha512-Jbs9FpkkIDw8FgSc6kOVsOv8JuuqGAL7J4X1oot77JxAoDlkNn2GRkd0aYRVuQ+pVQAiHWVkE4rX/dkF5fBiCw==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
@@ -17166,7 +17166,7 @@ snapshots:
       vite: 8.2.2(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.12)(yaml@2.9.0)
       vitest: 4.1.11(@types/node@26.1.1)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.1.1)(typescript@6.0.3))(vite@8.2.2(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.12)(yaml@2.9.0))
 
-  '@testing-library/user-event@14.6.5(@testing-library/dom@10.4.1)':
+  '@testing-library/user-event@14.6.6(@testing-library/dom@10.4.1)':
     dependencies:
       '@testing-library/dom': 10.4.1
 
@@ -24917,7 +24917,7 @@ snapshots:
       '@storybook/icons': 2.0.2(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@testing-library/dom': 10.4.1
       '@testing-library/jest-dom': 6.9.1
-      '@testing-library/user-event': 14.6.5(@testing-library/dom@10.4.1)
+      '@testing-library/user-event': 14.6.6(@testing-library/dom@10.4.1)
       '@vitest/expect': 3.2.4
       '@vitest/spy': 3.2.4
       '@webcontainer/env': 1.1.1
