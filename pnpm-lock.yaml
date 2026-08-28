@@ -1064,8 +1064,8 @@ importers:
         specifier: 10.1.0
         version: 10.1.0
       eslint-plugin-storybook:
-        specifier: 10.5.8
-        version: 10.5.8(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(storybook@10.5.5(@types/react@18.3.12)(prettier@3.9.6)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(supports-color@8.1.1)(typescript@6.0.3)
+        specifier: 10.5.10
+        version: 10.5.10(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       eslint-plugin-svelte:
         specifier: ^3.23.0
         version: 3.23.0(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(svelte@5.56.10(@typescript-eslint/types@8.68.0))
@@ -7588,11 +7588,10 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0 || ^10.0.0
 
-  eslint-plugin-storybook@10.5.8:
-    resolution: {integrity: sha512-bf9W5nZyWdIaCUZf4aEZnEeD1mn+csNYX8dYUQjAo6L7/DkSLtr65R4zFZ1xeS4m6dOXO6UtUySesCSw4e8w1g==}
+  eslint-plugin-storybook@10.5.10:
+    resolution: {integrity: sha512-NeOu3axmhNZfRuHRciFH0a/OVgvtAJLRHAwiJjcGkPAcElNmwEPp+pqoiwxytx7kHInz7mVVoBfPwVc8kPmOLw==}
     peerDependencies:
       eslint: '>=8'
-      storybook: ^10.5.8
 
   eslint-plugin-svelte@3.23.0:
     resolution: {integrity: sha512-n9jRklDqy0+W834568a4ZIZTK7DHXxvvHHxxGP8nNq7N//pOZMubttskHOquyGgfTR4Z05q2NdGNlsTpIEA48w==}
@@ -20330,12 +20329,11 @@ snapshots:
       typescript: 6.0.3
       yaml: 2.9.0
 
-  eslint-plugin-storybook@10.5.8(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(storybook@10.5.5(@types/react@18.3.12)(prettier@3.9.6)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(supports-color@8.1.1)(typescript@6.0.3):
+  eslint-plugin-storybook@10.5.10(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3):
     dependencies:
-      '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/utils': 8.67.0(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
+      '@typescript-eslint/types': 8.68.0
+      '@typescript-eslint/utils': 8.68.0(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       eslint: 10.9.1(jiti@2.7.0)(supports-color@8.1.1)
-      storybook: 10.5.5(@types/react@18.3.12)(prettier@3.9.6)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
     transitivePeerDependencies:
       - supports-color
       - typescript
