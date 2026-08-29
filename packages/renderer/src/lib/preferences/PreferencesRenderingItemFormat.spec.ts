@@ -20,6 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -28,11 +29,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import { providerInfos } from '/@/stores/providers';
 
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
+  providerInfos.set([]);
 });
 
 async function awaitRender(record: IConfigurationPropertyRecordedSchema, customProperties: any): Promise<void> {
@@ -509,6 +512,71 @@ test('Expect a password input when record is type string and format is password'
   // check that the name is properly set and the value too
   expect(passwordInput).toHaveAttribute('name', 'record');
   expect(passwordInput).toHaveValue('foobar');
+});
+
+test('waits for the saved container connection before selecting a default', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'kind.cluster.creation.provider',
+    title: 'Kind',
+    parentId: 'kind',
+    description: 'Container Connection',
+    type: 'string',
+    format: 'containerConnection',
+  };
+  const podmanSelection = JSON.stringify({ providerId: 'podman', connectionName: 'podman-machine-default' });
+  const dockerSelection = JSON.stringify({ providerId: 'docker', connectionName: 'docker-desktop' });
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'Docker',
+      containerConnections: [
+        {
+          name: 'docker-desktop',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+
+  let resolveInitialValue: (value: unknown) => void = (): void => {};
+  const initialValue = new Promise<unknown>(resolve => {
+    resolveInitialValue = resolve;
+  });
+  const setRecordValue = vi.fn();
+
+  render(PreferencesRenderingItemFormat, { record, initialValue, setRecordValue });
+  await tick();
+
+  expect(screen.queryByLabelText('Container Connection')).not.toBeInTheDocument();
+  expect(setRecordValue).not.toHaveBeenCalled();
+
+  resolveInitialValue(dockerSelection);
+
+  await vi.waitFor(() =>
+    expect(screen.getByLabelText('Container Connection')).toHaveTextContent('Docker Desktop (Docker)'),
+  );
+  await vi.waitFor(() =>
+    expect(setRecordValue).toHaveBeenCalledWith('kind.cluster.creation.provider', dockerSelection),
+  );
+  expect(setRecordValue).not.toHaveBeenCalledWith('kind.cluster.creation.provider', podmanSelection);
 });
 
 describe('experimental configuration update', () => {

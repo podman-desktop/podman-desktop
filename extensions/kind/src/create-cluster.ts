@@ -160,6 +160,12 @@ interface ContainerConnectionSelection {
 
 type ContainerConnectionResolution = { connection: extensionApi.ProviderContainerConnection } | { error: string };
 
+const CONTAINER_CONNECTION_CONFIGURATION_KEY = 'kind.cluster.creation.provider';
+
+function isLegacyProviderSelection(value: unknown): value is 'podman' | 'docker' {
+  return value === 'podman' || value === 'docker';
+}
+
 function parseContainerConnectionSelection(value: unknown): ContainerConnectionSelection | undefined {
   if (typeof value !== 'string') return undefined;
 
@@ -186,17 +192,33 @@ function parseContainerConnectionSelection(value: unknown): ContainerConnectionS
 }
 
 function resolveContainerConnection(items: AuditRequestItems): ContainerConnectionResolution {
-  const selection = parseContainerConnectionSelection(items['kind.cluster.creation.containerConnection']);
+  const configuredValue = items[CONTAINER_CONNECTION_CONFIGURATION_KEY];
+  const connections = extensionApi.provider.getContainerConnections();
+
+  if (isLegacyProviderSelection(configuredValue)) {
+    const legacyConnection =
+      connections.find(
+        connection => connection.connection.type === configuredValue && connection.connection.status() === 'started',
+      ) ?? connections.find(connection => connection.connection.type === configuredValue);
+
+    if (!legacyConnection) {
+      return {
+        error: `The previously selected ${configuredValue === 'podman' ? 'Podman' : 'Docker'} provider is no longer available. Select a running container connection.`,
+      };
+    }
+
+    return { connection: legacyConnection };
+  }
+
+  const selection = parseContainerConnectionSelection(configuredValue);
   if (!selection) {
     return { error: 'Select a running container connection to create a Kind cluster.' };
   }
 
-  const selectedConnection = extensionApi.provider
-    .getContainerConnections()
-    .find(
-      connection =>
-        connection.providerId === selection.providerId && connection.connection.name === selection.connectionName,
-    );
+  const selectedConnection = connections.find(
+    connection =>
+      connection.providerId === selection.providerId && connection.connection.name === selection.connectionName,
+  );
 
   if (!selectedConnection) {
     return {

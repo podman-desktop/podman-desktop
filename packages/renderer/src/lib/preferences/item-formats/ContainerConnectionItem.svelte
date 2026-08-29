@@ -20,6 +20,12 @@ let invalidEntry = $state(false);
 let lastNotifiedValue: string | undefined = $state(undefined);
 let wasSelectedConnectionAvailable: boolean | undefined = $state(undefined);
 
+type ContainerProviderType = 'podman' | 'docker';
+
+function isLegacyProviderValue(value: string | undefined): value is ContainerProviderType {
+  return value === 'podman' || value === 'docker';
+}
+
 const connectionOptions = $derived(
   $providerInfos.flatMap(provider =>
     provider.containerConnections
@@ -28,6 +34,7 @@ const connectionOptions = $derived(
       )
       .map(connection => ({
         label: `${connection.displayName} (${connection.type === 'podman' ? 'Podman' : 'Docker'})`,
+        providerType: connection.type as ContainerProviderType,
         value: JSON.stringify({
           providerId: provider.id,
           connectionName: connection.name,
@@ -49,6 +56,13 @@ const displayedOptions = $derived.by(() => {
 });
 
 $effect(() => {
+  if (isLegacyProviderValue(value)) {
+    const migratedOption = connectionOptions.find(option => option.providerType === value);
+    if (migratedOption) {
+      value = migratedOption.value;
+    }
+  }
+
   if (!value && connectionOptions.length > 0) {
     value = connectionOptions[0].value;
   } else if (value && value !== lastNotifiedValue) {

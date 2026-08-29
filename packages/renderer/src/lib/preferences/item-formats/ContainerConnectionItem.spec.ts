@@ -31,7 +31,7 @@ import ContainerConnectionItem from './ContainerConnectionItem.svelte';
 vi.mock(import('/@/stores/providers'));
 
 const RECORD: IConfigurationPropertyRecordedSchema = {
-  id: 'kind.cluster.creation.containerConnection',
+  id: 'kind.cluster.creation.provider',
   title: 'Kind',
   parentId: 'kind',
   type: 'string',
@@ -83,10 +83,29 @@ test('selects the only running connection by default', async () => {
   expect(dropdown).toHaveTextContent('Podman Machine (Podman)');
   await vi.waitFor(() =>
     expect(onChange).toHaveBeenCalledWith(
-      'kind.cluster.creation.containerConnection',
+      'kind.cluster.creation.provider',
       selection('podman', 'podman-machine-default'),
     ),
   );
+});
+
+test('migrates a legacy provider value to a running connection of the same type', async () => {
+  vi.mocked(providers).providerInfos = writable([
+    provider('docker', 'docker', 'docker-desktop', 'Docker Desktop'),
+    provider('podman', 'podman', 'podman-machine-default', 'Podman Machine'),
+  ]);
+  const onChange = vi.fn().mockResolvedValue(undefined);
+
+  render(ContainerConnectionItem, { record: RECORD, value: 'podman', onChange });
+
+  expect(screen.getByLabelText('Container Connection')).toHaveTextContent('Podman Machine (Podman)');
+  await vi.waitFor(() =>
+    expect(onChange).toHaveBeenCalledWith(
+      'kind.cluster.creation.provider',
+      selection('podman', 'podman-machine-default'),
+    ),
+  );
+  expect(onChange).not.toHaveBeenCalledWith('kind.cluster.creation.provider', selection('docker', 'docker-desktop'));
 });
 
 test('lists running connections and excludes stopped connections', async () => {
@@ -117,10 +136,7 @@ test('duplicate display names select the connection from the chosen provider', a
   await fireEvent.click(screen.getByRole('button'));
   await fireEvent.click(screen.getByRole('button', { name: 'Local (Docker)' }));
 
-  expect(onChange).toHaveBeenLastCalledWith(
-    'kind.cluster.creation.containerConnection',
-    selection('docker', 'shared-name'),
-  );
+  expect(onChange).toHaveBeenLastCalledWith('kind.cluster.creation.provider', selection('docker', 'shared-name'));
 });
 
 test('keeps and revalidates a connection that disappears and recovers', async () => {
@@ -135,13 +151,13 @@ test('keeps and revalidates a connection that disappears and recovers', async ()
   providerStore.set([]);
 
   await vi.waitFor(() => expect(onChange).toHaveBeenCalledTimes(2));
-  expect(onChange).toHaveBeenLastCalledWith('kind.cluster.creation.containerConnection', selection('podman', 'remote'));
+  expect(onChange).toHaveBeenLastCalledWith('kind.cluster.creation.provider', selection('podman', 'remote'));
   expect(screen.getByLabelText('Container Connection')).toHaveTextContent('Selected connection is unavailable');
 
   providerStore.set([remoteProvider]);
 
   await vi.waitFor(() => expect(onChange).toHaveBeenCalledTimes(3));
-  expect(onChange).toHaveBeenLastCalledWith('kind.cluster.creation.containerConnection', selection('podman', 'remote'));
+  expect(onChange).toHaveBeenLastCalledWith('kind.cluster.creation.provider', selection('podman', 'remote'));
   expect(screen.getByLabelText('Container Connection')).toHaveTextContent('Remote (Podman)');
 });
 

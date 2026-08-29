@@ -497,7 +497,7 @@ test('selected container connection is submitted to the provider factory', async
         title: 'Kind',
         parentId: 'kind',
         scope: 'KubernetesProviderConnectionFactory',
-        id: 'kind.cluster.creation.containerConnection',
+        id: 'kind.cluster.creation.provider',
         type: 'string',
         format: 'containerConnection',
         description: 'Container Connection',
@@ -518,7 +518,7 @@ test('selected container connection is submitted to the provider factory', async
   expect(callback).toHaveBeenCalledWith(
     kindProviderInfo.internalId,
     {
-      'kind.cluster.creation.containerConnection': JSON.stringify({
+      'kind.cluster.creation.provider': JSON.stringify({
         providerId: 'docker',
         connectionName: 'shared-name',
       }),

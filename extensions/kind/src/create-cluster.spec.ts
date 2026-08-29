@@ -82,7 +82,7 @@ function withConnection(
   connectionName = 'docker-connection',
 ): Record<string, unknown> {
   return {
-    'kind.cluster.creation.containerConnection': connectionSelection(providerId, connectionName),
+    'kind.cluster.creation.provider': connectionSelection(providerId, connectionName),
     ...params,
   };
 }
@@ -163,6 +163,45 @@ test('expect selected Podman connection and cancellation token in Kind command e
   );
   expect(telemetryLogUsageMock).toHaveBeenCalledWith('createCluster', expect.objectContaining({ provider: 'podman' }));
   expect(telemetryLogUsageMock.mock.calls[0][1]).not.toHaveProperty('containerConnection');
+});
+
+test('expect a legacy provider value to use a running connection of the same type', async () => {
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'docker',
+      connection: {
+        name: 'docker-desktop',
+        type: 'docker',
+        endpoint: { socketPath: 'docker-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-default',
+        type: 'podman',
+        endpoint: { socketPath: 'podman-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
+  vi.mocked(getKindPath).mockReturnValue('/kind/path');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+  await createCluster({ 'kind.cluster.creation.provider': 'podman' }, '/kind', telemetryLoggerMock);
+
+  expect(extensionApi.process.exec).toHaveBeenCalledWith(
+    '/kind',
+    expect.any(Array),
+    expect.objectContaining({
+      env: {
+        CONTAINER_CONNECTION: 'podman-machine-default',
+        KIND_EXPERIMENTAL_PROVIDER: 'podman',
+        PATH: '/kind/path',
+      },
+    }),
+  );
 });
 
 test('expect selected Docker connection to configure its Unix socket', async () => {

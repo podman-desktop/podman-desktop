@@ -47,6 +47,7 @@ let recordUpdateTimeout: NodeJS.Timeout;
 
 let invalidText: string | undefined = $state(undefined);
 let recordValue: unknown = $state(undefined);
+let initialValueResolved = $state(false);
 
 $effect(() => {
   updateResetButtonVisibility?.(recordValue);
@@ -87,6 +88,7 @@ $effect(() => {
 
 $effect(() => {
   if (!isEqual(currentRecord, record)) {
+    initialValueResolved = false;
     initialValue
       .then(value => {
         recordValue = value;
@@ -94,7 +96,10 @@ $effect(() => {
           recordValue = !!value;
         }
       })
-      .catch((err: unknown) => console.error('Error getting initial value', err));
+      .catch((err: unknown) => console.error('Error getting initial value', err))
+      .finally(() => {
+        initialValueResolved = true;
+      });
 
     invalidText = undefined;
     currentRecord = record;
@@ -196,6 +201,13 @@ function numberItemValue(): number {
   }
   return getNormalizedDefaultNumberValue(record);
 }
+
+function containerConnectionValue(): string | undefined {
+  if (typeof givenValue === 'string') {
+    return givenValue;
+  }
+  return typeof recordValue === 'string' ? recordValue : undefined;
+}
 </script>
 
 <div class="flex flex-row mb-1 pt-2 text-start items-center justify-start">
@@ -227,10 +239,12 @@ function numberItemValue(): number {
     {/if}
   {:else if record.type === 'string' && (typeof recordValue === 'string' || recordValue === undefined)}
     {#if record.format === 'containerConnection'}
-      <ContainerConnectionItem
-        record={record}
-        value={typeof givenValue === 'string' ? givenValue : undefined}
-        onChange={onChange} />
+      {#if initialValueResolved}
+        <ContainerConnectionItem
+          record={record}
+          value={containerConnectionValue()}
+          onChange={onChange} />
+      {/if}
     {:else if record.format === 'file' || record.format === 'folder'}
       <FileItem
         record={record}

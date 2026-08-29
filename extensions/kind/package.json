@@ -34,7 +34,7 @@
           "scope": "KubernetesProviderConnectionFactory",
           "description": "Name"
         },
-        "kind.cluster.creation.containerConnection": {
+        "kind.cluster.creation.provider": {
           "type": "string",
           "format": "containerConnection",
           "scope": "KubernetesProviderConnectionFactory",
