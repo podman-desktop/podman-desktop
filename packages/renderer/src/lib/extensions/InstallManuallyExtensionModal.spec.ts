@@ -28,10 +28,14 @@ const closeCallback = vi.fn();
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });
+  Object.defineProperty(window, 'getCancellableTokenSource', { value: vi.fn() });
+  Object.defineProperty(window, 'cancelToken', { value: vi.fn() });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(42);
+  vi.mocked(window.cancelToken).mockResolvedValue();
 });
 
 test('expect invalid field', async () => {
@@ -67,6 +71,8 @@ test('expect able to download an extension', async () => {
     'my-custom-image.io/foo',
     expect.anything(),
     expect.anything(),
+    undefined,
+    42,
   );
 
   // expect button done is there now
@@ -125,6 +131,21 @@ test('install button should always be disable when extensionInstallFromImage is 
 
   // expect button done to be disabled
   expect(installButton).toBeDisabled();
+});
+
+test('cancel should stop an installation before closing the modal', async () => {
+  mockExtensionInstallFromImage();
+
+  render(InstallManuallyExtensionModal, { closeCallback });
+  const input = screen.getByRole('textbox', { name: 'Image name to install custom extension' });
+  await userEvent.type(input, 'localhost/example/extension');
+  await userEvent.click(screen.getByRole('button', { name: 'Install' }));
+
+  await vi.waitFor(() => expect(window.extensionInstallFromImage).toHaveBeenCalled());
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+  expect(window.cancelToken).toHaveBeenCalledWith(42);
+  expect(closeCallback).toHaveBeenCalled();
 });
 
 test('rejected installation should make the button visible', async () => {
