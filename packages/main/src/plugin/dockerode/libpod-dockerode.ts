@@ -261,6 +261,7 @@ export interface LibPod {
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
   podmanRemoveManifest(manifestName: string): Promise<void>;
   updateNetwork(networkId: string, addDNSServer: string[], removeDNSServer: string[]): Promise<void>;
+  renameVolume(volumeName: string, newName: string): Promise<void>;
   /**
    * The compatibility endpoint to delete a secret on the podman service has an issue where the path is not recognised;
    * Therefore, we need to use the official libpod api to be able to remove a secret
@@ -981,6 +982,30 @@ export class LibpodDockerode {
           200: true,
           204: true,
           400: 'bad parameter',
+          500: 'server error',
+        },
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
+        });
+      });
+    };
+
+    prototypeOfDockerode.renameVolume = function (volumeName: string, newName: string): Promise<void> {
+      const encodedVolumeName = encodeURIComponent(volumeName);
+      const optsf = {
+        path: `/v4.2.0/libpod/volumes/${encodedVolumeName}/rename?`,
+        method: 'POST',
+        options: { newName },
+        statusCodes: {
+          204: true,
+          400: 'bad parameter',
+          404: 'no such volume',
+          409: 'volume is in use or new name already exists',
           500: 'server error',
         },
       };

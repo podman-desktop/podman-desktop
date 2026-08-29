@@ -249,6 +249,20 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     expect(result).toEqual(undefined);
   });
 
+  test('renameVolume', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+
+    const renameVolumeExposure = getInMainWorld('renameVolume');
+    await renameVolumeExposure('podman1', 'old-volume', 'new-volume');
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      'container-provider-registry:renameVolume',
+      'podman1',
+      'old-volume',
+      'new-volume',
+    );
+  });
+
   test('getSearchableNavigationRoutes', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({
       result: [{ routeId: 'ext.dashboard', label: 'Dashboard', icon: 'icon.png' }],

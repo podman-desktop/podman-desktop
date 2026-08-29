@@ -19,18 +19,21 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import VolumeActions from './VolumeActions.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
 const removeVolumeMock = vi.fn();
+const renameVolumeMock = vi.fn();
 
 class VolumeInfoUIImpl {
   #status: string;
   constructor(
     public name: string,
     initialStatus: string,
+    public canRename = false,
   ) {
     this.#status = initialStatus;
   }
@@ -41,14 +44,21 @@ class VolumeInfoUIImpl {
   set status(status: string) {
     this.#status = status;
   }
+
+  engineId = 'podman1';
 }
 
 beforeAll(() => {
   Object.defineProperty(window, 'removeVolume', { value: removeVolumeMock });
+  Object.defineProperty(window, 'renameVolume', { value: renameVolumeMock });
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
 });
 
 test('Expect prompt dialog and deletion', async () => {
-  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   // Mock the showMessageBox to return 0 (yes)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
@@ -67,4 +77,28 @@ test('Expect prompt dialog and deletion', async () => {
 
   expect(volume.status).toBe('DELETING');
   expect(removeVolumeMock).toHaveBeenCalled();
+});
+
+test('Expect eligible volume to have a rename action', async () => {
+  const volume: VolumeInfoUI = new VolumeInfoUIImpl('dummy', 'UNUSED', true) as unknown as VolumeInfoUI;
+
+  render(VolumeActions, { volume });
+  await fireEvent.click(screen.getByRole('button', { name: 'Rename Volume' }));
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, 'renamed-volume');
+  await fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
+
+  await waitFor(() => {
+    expect(renameVolumeMock).toHaveBeenCalledWith('podman1', 'dummy', 'renamed-volume');
+  });
+});
+
+test('Expect ineligible volume not to have a rename action', () => {
+  const volume: VolumeInfoUI = new VolumeInfoUIImpl('dummy', 'UNUSED') as unknown as VolumeInfoUI;
+
+  render(VolumeActions, { volume });
+
+  expect(screen.queryByRole('button', { name: 'Rename Volume' })).not.toBeInTheDocument();
 });

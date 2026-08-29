@@ -2036,6 +2036,92 @@ describe('buildImage', () => {
 });
 
 describe('listVolumes', () => {
+  test('marks only eligible Podman 6.1 local volumes as renameable and caches engine support', async () => {
+    const podman61Version = vi.fn().mockResolvedValue({ Version: '6.1.0' });
+    const podman60Version = vi.fn().mockResolvedValue({ Version: '6.0.3' });
+    const listContainers = vi.fn().mockResolvedValue([
+      {
+        Id: 'container1',
+        Names: ['/container1'],
+        Mounts: [{ Name: 'used-local' }],
+      },
+    ]);
+    const listVolumes = vi.fn().mockResolvedValue({
+      Volumes: [
+        { Name: 'unused-local', Driver: 'local' },
+        { Name: 'used-local', Driver: 'local' },
+        { Name: 'plugin-volume', Driver: 'custom' },
+      ],
+      Warnings: [],
+    });
+
+    containerRegistry.addInternalProvider('podman61', {
+      name: 'Podman 6.1',
+      id: 'podman61',
+      api: { version: podman61Version, listContainers, listVolumes } as unknown as Dockerode,
+      libpodApi: {} as LibPod,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+    containerRegistry.addInternalProvider('podman60', {
+      name: 'Podman 6.0',
+      id: 'podman60',
+      api: {
+        version: podman60Version,
+        listContainers: vi.fn().mockResolvedValue([]),
+        listVolumes: vi.fn().mockResolvedValue({
+          Volumes: [{ Name: 'old-podman-volume', Driver: 'local' }],
+          Warnings: [],
+        }),
+      } as unknown as Dockerode,
+      libpodApi: {} as LibPod,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const firstResult = await containerRegistry.listVolumes(false);
+    const podman61Volumes = firstResult.find(result => result.engineId === 'podman61')?.Volumes;
+    const podman60Volumes = firstResult.find(result => result.engineId === 'podman60')?.Volumes;
+
+    expect(podman61Volumes?.find(volume => volume.Name === 'unused-local')?.canRename).toBeTruthy();
+    expect(podman61Volumes?.find(volume => volume.Name === 'used-local')?.canRename).toBeFalsy();
+    expect(podman61Volumes?.find(volume => volume.Name === 'plugin-volume')?.canRename).toBeFalsy();
+    expect(podman61Volumes?.every(volume => volume.engineType === 'podman')).toBeTruthy();
+    expect(podman60Volumes?.[0]?.canRename).toBeFalsy();
+
+    await containerRegistry.listVolumes(false);
+    expect(podman61Version).toHaveBeenCalledOnce();
+    expect(podman60Version).toHaveBeenCalledOnce();
+  });
+
+  test('retries a transient Podman version check failure', async () => {
+    const version = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('temporary connection failure'))
+      .mockResolvedValue({ Version: '6.1.0' });
+    const api = {
+      version,
+      listContainers: vi.fn().mockResolvedValue([]),
+      listVolumes: vi.fn().mockResolvedValue({
+        Volumes: [{ Name: 'local-volume', Driver: 'local' }],
+        Warnings: [],
+      }),
+    } as unknown as Dockerode;
+
+    containerRegistry.addInternalProvider('podman61', {
+      name: 'Podman 6.1',
+      id: 'podman61',
+      api,
+      libpodApi: {} as LibPod,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const firstResult = await containerRegistry.listVolumes(false);
+    expect(firstResult[0]?.Volumes[0]?.canRename).toBeFalsy();
+
+    const secondResult = await containerRegistry.listVolumes(false);
+    expect(secondResult[0]?.Volumes[0]?.canRename).toBeTruthy();
+    expect(version).toHaveBeenCalledTimes(2);
+  });
+
   test('with fetching the volumes size', async () => {
     const volumesDataMock = {
       Volumes: [
@@ -2620,6 +2706,46 @@ test('updateNetwork', async () => {
   await containerRegistry.updateNetwork('podman1', 'network1', ['1.1.1.1'], []);
 
   expect(libPodApi.updateNetwork).toHaveBeenCalledWith('network1', ['1.1.1.1'], []);
+});
+
+test('renameVolume', async () => {
+  const libPodApi = {
+    renameVolume: vi.fn(),
+  } as unknown as LibPod;
+
+  containerRegistry.addInternalProvider('podman1', {
+    name: 'podman1',
+    id: 'podman1',
+    connection: {
+      type: 'podman',
+    },
+    api: {} as Dockerode,
+    libpodApi: libPodApi,
+  } as InternalContainerProvider);
+
+  await containerRegistry.renameVolume('podman1', 'old-volume', 'new-volume');
+
+  expect(libPodApi.renameVolume).toHaveBeenCalledWith('old-volume', 'new-volume');
+});
+
+test('renameVolume reports Podman errors through telemetry', async () => {
+  const renameError = new Error('volume is currently mounted');
+  const libPodApi = {
+    renameVolume: vi.fn().mockRejectedValue(renameError),
+  } as unknown as LibPod;
+  telemetryTrackMock.mockClear();
+
+  containerRegistry.addInternalProvider('podman1', {
+    name: 'podman1',
+    id: 'podman1',
+    connection: { type: 'podman' },
+    api: {} as Dockerode,
+    libpodApi: libPodApi,
+  } as InternalContainerProvider);
+
+  await expect(containerRegistry.renameVolume('podman1', 'old-volume', 'new-volume')).rejects.toThrow(renameError);
+
+  expect(telemetryTrackMock).toHaveBeenCalledWith('renameVolume', { error: renameError });
 });
 
 describe('info', () => {

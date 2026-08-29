@@ -22,6 +22,12 @@ export interface VolumeInfo extends Dockerode.VolumeInspectInfo {
   engineId: string;
   engineName: string;
   engineType: 'podman' | 'docker';
+  /**
+   * Whether this volume meets the eligibility checks Podman Desktop can determine
+   * before asking Podman to rename it. Podman remains authoritative for transient
+   * conditions such as a volume mounted with `podman volume mount`.
+   */
+  canRename?: boolean;
   CreatedAt: string;
   containersUsage: { id: string; names: string[] }[];
 }

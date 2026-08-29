@@ -82,7 +82,7 @@ import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
-import { coerce, gtr, lt } from 'semver';
+import { coerce, gte, gtr, lt } from 'semver';
 import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
@@ -113,6 +113,7 @@ export interface InternalContainerProvider {
   // api not there if status is stopped
   api?: Dockerode;
   libpodApi?: LibPod;
+  volumeRenameSupported?: boolean;
 }
 
 interface JSONEvent {
@@ -349,6 +350,7 @@ export class ContainerProviderRegistry {
     }
 
     internalProvider.api = new Dockerode({ socketPath: containerProviderConnection.endpoint.socketPath });
+    internalProvider.volumeRenameSupported = undefined;
     if (containerProviderConnection.type === 'podman') {
       internalProvider.libpodApi = internalProvider.api as unknown as LibPod;
     }
@@ -1027,6 +1029,22 @@ export class ContainerProviderRegistry {
           // grab containers
           const containers = await provider.api.listContainers({ all: true });
 
+          let volumeRenameSupported = provider.volumeRenameSupported ?? false;
+          if (provider.volumeRenameSupported === undefined) {
+            if (provider.libpodApi) {
+              try {
+                const version = await provider.api.version();
+                const coercedVersion = coerce(version.Version);
+                provider.volumeRenameSupported = !!coercedVersion && gte(coercedVersion, '6.1.0');
+              } catch (error) {
+                this.notifyConsole(`error checking volume rename support in engine ${provider.name} ${error}`);
+              }
+            } else {
+              provider.volumeRenameSupported = false;
+            }
+            volumeRenameSupported = provider.volumeRenameSupported ?? false;
+          }
+
           // any as there is a CreatedAt field missing in the type
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const volumeListInfo: any = await provider.api.listVolumes();
@@ -1044,7 +1062,12 @@ export class ContainerProviderRegistry {
           const engineId = provider.id;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const volumeInfos = volumeListInfo.Volumes.map((volumeList: any) => {
-            const volumeInfo: VolumeInfo = { ...volumeList, engineName, engineId };
+            const volumeInfo: VolumeInfo = {
+              ...volumeList,
+              engineName,
+              engineId,
+              engineType: provider.connection.type,
+            };
 
             // compute containers using this volume
             const containersUsingThisVolume = containers
@@ -1053,6 +1076,10 @@ export class ContainerProviderRegistry {
                 return { id: container.Id, names: container.Names };
               });
             volumeInfo.containersUsage = containersUsingThisVolume;
+            volumeInfo.canRename =
+              volumeRenameSupported &&
+              (volumeInfo.Driver === '' || volumeInfo.Driver === 'local') &&
+              volumeInfo.containersUsage.length === 0;
 
             // no usage data, set to -1 for size and 0 for refCount
             volumeInfo.UsageData ??= {
@@ -1146,6 +1173,18 @@ export class ContainerProviderRegistry {
       throw error;
     } finally {
       this.telemetryService.track('removeVolume', telemetryOptions);
+    }
+  }
+
+  async renameVolume(engineId: string, volumeName: string, newName: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      await this.getMatchingPodmanEngineLibPod(engineId).renameVolume(volumeName, newName);
+    } catch (error) {
+      telemetryOptions = { error };
+      throw error;
+    } finally {
+      this.telemetryService.track('renameVolume', telemetryOptions);
     }
   }
 

@@ -477,6 +477,34 @@ test('Check update network', async () => {
   await (api as unknown as LibPod).updateNetwork('network1', ['1.1.1.1'], []);
 });
 
+describe('volume rename', () => {
+  test('calls the Libpod endpoint with encoded names', async () => {
+    const renameHandler = vi.fn().mockReturnValue(HttpResponse.text('', { status: 204 }));
+    server = setupServer(http.post('http://localhost/v4.2.0/libpod/volumes/old%20name/rename', renameHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await (api as unknown as LibPod).renameVolume('old name', 'new name');
+
+    expect(renameHandler).toHaveBeenCalledOnce();
+    const request = vi.mocked(renameHandler).mock.calls[0]?.[0]?.request;
+    assert(request);
+    expect(new URL(request.url).searchParams.get('newName')).toBe('new name');
+  });
+
+  test('rejects errors returned by Podman', async () => {
+    server = setupServer(
+      http.post('http://localhost/v4.2.0/libpod/volumes/current/rename', () =>
+        HttpResponse.json({ message: 'volume is currently mounted' }, { status: 409 }),
+      ),
+    );
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    await expect((api as unknown as LibPod).renameVolume('current', 'renamed')).rejects.toThrow();
+  });
+});
+
 describe('kube play', () => {
   let tmpDirectory: string;
   beforeAll(async () => {

@@ -335,6 +335,12 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:removeVolume', engine, volumeName);
   });
   contextBridge.exposeInMainWorld(
+    'renameVolume',
+    async (engine: string, volumeName: string, newName: string): Promise<void> => {
+      return ipcInvoke('container-provider-registry:renameVolume', engine, volumeName, newName);
+    },
+  );
+  contextBridge.exposeInMainWorld(
     'getVolumeInspect',
     async (engine: string, volumeName: string): Promise<VolumeInspectInfo> => {
       return ipcInvoke('container-provider-registry:getVolumeInspect', engine, volumeName);
