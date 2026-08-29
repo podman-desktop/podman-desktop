@@ -153,7 +153,73 @@ async function validateAndCheckPort(portName: string, port: number, records: Aud
   }
 }
 
-export async function connectionAuditor(provider: string, items: AuditRequestItems): Promise<AuditResult> {
+interface ContainerConnectionSelection {
+  providerId: string;
+  connectionName: string;
+}
+
+type ContainerConnectionResolution = { connection: extensionApi.ProviderContainerConnection } | { error: string };
+
+function parseContainerConnectionSelection(value: unknown): ContainerConnectionSelection | undefined {
+  if (typeof value !== 'string') return undefined;
+
+  try {
+    const selection: unknown = JSON.parse(value);
+    if (
+      selection &&
+      typeof selection === 'object' &&
+      'providerId' in selection &&
+      typeof selection.providerId === 'string' &&
+      'connectionName' in selection &&
+      typeof selection.connectionName === 'string'
+    ) {
+      return {
+        providerId: selection.providerId,
+        connectionName: selection.connectionName,
+      };
+    }
+  } catch {
+    // The validation error below explains how to recover from malformed input.
+  }
+
+  return undefined;
+}
+
+function resolveContainerConnection(items: AuditRequestItems): ContainerConnectionResolution {
+  const selection = parseContainerConnectionSelection(items['kind.cluster.creation.containerConnection']);
+  if (!selection) {
+    return { error: 'Select a running container connection to create a Kind cluster.' };
+  }
+
+  const selectedConnection = extensionApi.provider
+    .getContainerConnections()
+    .find(
+      connection =>
+        connection.providerId === selection.providerId && connection.connection.name === selection.connectionName,
+    );
+
+  if (!selectedConnection) {
+    return {
+      error: `The selected container connection "${selection.connectionName}" is no longer available. Select another connection.`,
+    };
+  }
+
+  if (selectedConnection.connection.type !== 'podman' && selectedConnection.connection.type !== 'docker') {
+    return {
+      error: `The selected container connection "${selection.connectionName}" uses an unsupported provider type "${selectedConnection.connection.type}". Select a Podman or Docker connection.`,
+    };
+  }
+
+  if (selectedConnection.connection.status() !== 'started') {
+    return {
+      error: `The selected container connection "${selection.connectionName}" is not running. Start it or select another connection.`,
+    };
+  }
+
+  return { connection: selectedConnection };
+}
+
+export async function connectionAuditor(items: AuditRequestItems): Promise<AuditResult> {
   const records: AuditRecord[] = [];
   const auditResult = {
     records: records,
@@ -189,23 +255,14 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     });
   }
 
-  const providerSockets = extensionApi.provider
-    .getContainerConnections()
-    .filter(connection => connection.connection.type === provider);
-
-  if (providerSockets.length === 0) return auditResult;
-
-  // Check if any connection from the list is running
-  const runningConnection = providerSockets.find(connection => connection.connection.status() === 'started');
-
-  if (!runningConnection) {
+  const selectedConnection = resolveContainerConnection(items);
+  if ('error' in selectedConnection) {
     records.push({
       type: 'error',
-      record: `The ${provider} provider is not running. Please start the ${provider} provider to create a Kind cluster.`,
+      record: selectedConnection.error,
     });
   } else {
-    // Only check memory if provider is running
-    const memTotal = await getMemTotalInfo(runningConnection.connection.endpoint.socketPath);
+    const memTotal = await getMemTotalInfo(selectedConnection.connection.connection.endpoint.socketPath);
     // check if configured memory is less than 6GB
     if (memTotal < 6000000000) {
       records.push({
@@ -235,16 +292,22 @@ export async function createCluster(
     clusterName = String(params['kind.cluster.creation.name']);
   }
 
-  // grab provider
-  let provider = 'docker';
-  if (params['kind.cluster.creation.provider']) {
-    provider = String(params['kind.cluster.creation.provider']);
-  }
+  const selectedConnection = resolveContainerConnection(params);
+  if ('error' in selectedConnection) throw new Error(selectedConnection.error);
+
+  const connection = selectedConnection.connection.connection;
+  const provider = connection.type;
 
   const env: { [key: string]: string } = {};
   // add KIND_EXPERIMENTAL_PROVIDER env variable if needed
   if (provider === 'podman') {
     env['KIND_EXPERIMENTAL_PROVIDER'] = 'podman';
+    env['CONTAINER_CONNECTION'] = connection.name;
+  } else {
+    const socketPath = connection.endpoint.socketPath;
+    env['DOCKER_HOST'] = extensionApi.env.isWindows
+      ? socketPath.replace('\\\\.\\pipe\\', 'npipe:////./pipe/')
+      : `unix://${socketPath}`;
   }
 
   // grab http host port

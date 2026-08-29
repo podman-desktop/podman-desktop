@@ -5,6 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import BooleanItem from '/@/lib/preferences/item-formats/BooleanItem.svelte';
+import ContainerConnectionItem from '/@/lib/preferences/item-formats/ContainerConnectionItem.svelte';
 import EnumItem from '/@/lib/preferences/item-formats/EnumItem.svelte';
 import FileItem from '/@/lib/preferences/item-formats/FileItem.svelte';
 import NumberItem from '/@/lib/preferences/item-formats/NumberItem.svelte';
@@ -225,7 +226,12 @@ function numberItemValue(): number {
         invalidRecord={invalidRecord} />
     {/if}
   {:else if record.type === 'string' && (typeof recordValue === 'string' || recordValue === undefined)}
-    {#if record.format === 'file' || record.format === 'folder'}
+    {#if record.format === 'containerConnection'}
+      <ContainerConnectionItem
+        record={record}
+        value={typeof givenValue === 'string' ? givenValue : undefined}
+        onChange={onChange} />
+    {:else if record.format === 'file' || record.format === 'folder'}
       <FileItem
         record={record}
         value={typeof givenValue === 'string' ? givenValue : (recordValue ?? '')}

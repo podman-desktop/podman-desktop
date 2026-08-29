@@ -19,7 +19,7 @@
 import * as fs from 'node:fs';
 
 import { KubeConfig, loadAllYaml } from '@kubernetes/client-node';
-import type { AuditRecord, TelemetryLogger } from '@podman-desktop/api';
+import type { AuditRecord, AuditRequestItems, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -35,6 +35,7 @@ vi.mock(import('node:fs'));
 
 beforeEach(() => {
   vi.resetAllMocks();
+  (extensionApi.env.isWindows as unknown as boolean) = false;
   vi.mocked(extensionApi.kubernetes.getKubeconfig).mockReturnValue({
     path: '/some/path',
   } as unknown as extensionApi.Uri);
@@ -71,11 +72,34 @@ const telemetryLoggerMock = {
   logError: telemetryLogErrorMock,
 } as unknown as TelemetryLogger;
 
+function connectionSelection(providerId: string, connectionName: string): string {
+  return JSON.stringify({ providerId, connectionName });
+}
+
+function withConnection(
+  params: Record<string, unknown> = {},
+  providerId = 'docker',
+  connectionName = 'docker-connection',
+): Record<string, unknown> {
+  return {
+    'kind.cluster.creation.containerConnection': connectionSelection(providerId, connectionName),
+    ...params,
+  };
+}
+
+async function auditConnection(
+  items: AuditRequestItems,
+  providerId = 'docker',
+  connectionName = 'docker-connection',
+): Promise<extensionApi.AuditResult> {
+  return connectionAuditor(withConnection(items, providerId, connectionName));
+}
+
 test('expect error is cli returns non zero exit code', async () => {
   const error = { exitCode: -1, message: 'error' } as extensionApi.RunError;
   try {
     (extensionApi.process.exec as Mock).mockRejectedValue(error);
-    await createCluster({}, '', telemetryLoggerMock);
+    await createCluster(withConnection(), '', telemetryLoggerMock);
   } catch (err) {
     expect(err).to.be.a('Error');
     expect((err as Error).message).equal('Failed to create kind cluster. error');
@@ -87,7 +111,7 @@ test('expect error is cli returns non zero exit code', async () => {
 test('expect cluster to be created', async () => {
   vi.mocked(getKindPath).mockReturnValue('/kind/path');
   vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
-  await createCluster({}, '', telemetryLoggerMock);
+  await createCluster(withConnection(), '', telemetryLoggerMock);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
     1,
     'createCluster',
@@ -98,7 +122,142 @@ test('expect cluster to be created', async () => {
   const props = (extensionApi.process.exec as Mock).mock.calls[0][2];
   expect(props).to.have.property('env');
   const env = props.env;
-  expect(env).toStrictEqual({ PATH: '/kind/path' });
+  expect(env).toStrictEqual({ DOCKER_HOST: 'unix://socket', PATH: '/kind/path' });
+});
+
+test('expect selected Podman connection and cancellation token in Kind command environment', async () => {
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-remote',
+        type: 'podman',
+        endpoint: { socketPath: 'remote-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
+  vi.mocked(getKindPath).mockReturnValue('/kind/path');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+  const token = {} as extensionApi.CancellationToken;
+
+  await createCluster(
+    withConnection({}, 'podman', 'podman-machine-remote'),
+    '/kind',
+    telemetryLoggerMock,
+    undefined,
+    token,
+  );
+
+  expect(extensionApi.process.exec).toHaveBeenCalledWith(
+    '/kind',
+    expect.any(Array),
+    expect.objectContaining({
+      env: {
+        CONTAINER_CONNECTION: 'podman-machine-remote',
+        KIND_EXPERIMENTAL_PROVIDER: 'podman',
+        PATH: '/kind/path',
+      },
+      token,
+    }),
+  );
+  expect(telemetryLogUsageMock).toHaveBeenCalledWith('createCluster', expect.objectContaining({ provider: 'podman' }));
+  expect(telemetryLogUsageMock.mock.calls[0][1]).not.toHaveProperty('containerConnection');
+});
+
+test('expect selected Docker connection to configure its Unix socket', async () => {
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'shared-name',
+        type: 'podman',
+        endpoint: { socketPath: 'podman-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+    {
+      providerId: 'docker',
+      connection: {
+        name: 'shared-name',
+        type: 'docker',
+        endpoint: { socketPath: 'docker-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
+  vi.mocked(getKindPath).mockReturnValue('/kind/path');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+  await createCluster(withConnection({}, 'docker', 'shared-name'), '/kind', telemetryLoggerMock);
+
+  expect(extensionApi.process.exec).toHaveBeenCalledWith(
+    '/kind',
+    expect.any(Array),
+    expect.objectContaining({ env: { DOCKER_HOST: 'unix://docker-socket', PATH: '/kind/path' } }),
+  );
+  expect(telemetryLogUsageMock).toHaveBeenCalledWith('createCluster', expect.objectContaining({ provider: 'docker' }));
+  expect(telemetryLogUsageMock.mock.calls[0][1]).not.toHaveProperty('containerConnection');
+});
+
+test('expect selected Docker connection to configure its Windows named pipe', async () => {
+  (extensionApi.env.isWindows as unknown as boolean) = true;
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'docker',
+      connection: {
+        name: 'docker-desktop',
+        type: 'docker',
+        endpoint: { socketPath: '\\\\.\\pipe\\docker_engine' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
+  vi.mocked(getKindPath).mockReturnValue('C:\\kind');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+  await createCluster(withConnection({}, 'docker', 'docker-desktop'), 'C:\\kind\\kind.exe', telemetryLoggerMock);
+
+  expect(extensionApi.process.exec).toHaveBeenCalledWith(
+    'C:\\kind\\kind.exe',
+    expect.any(Array),
+    expect.objectContaining({
+      env: {
+        DOCKER_HOST: 'npipe:////./pipe/docker_engine',
+        PATH: 'C:\\kind',
+      },
+    }),
+  );
+});
+
+test('expect cluster creation to fail if the selected connection disappears', async () => {
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([]);
+
+  await expect(createCluster(withConnection(), '/kind', telemetryLoggerMock)).rejects.toThrow(
+    'The selected container connection "docker-connection" is no longer available. Select another connection.',
+  );
+  expect(extensionApi.process.exec).not.toHaveBeenCalled();
+});
+
+test('expect cluster creation to reject an unsupported connection type', async () => {
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'custom',
+      connection: {
+        name: 'custom-connection',
+        type: 'custom',
+        endpoint: { socketPath: 'custom-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    } as unknown as extensionApi.ProviderContainerConnection,
+  ]);
+
+  await expect(
+    createCluster(withConnection({}, 'custom', 'custom-connection'), '/kind', telemetryLoggerMock),
+  ).rejects.toThrow(
+    'The selected container connection "custom-connection" uses an unsupported provider type "custom". Select a Podman or Docker connection.',
+  );
+  expect(extensionApi.process.exec).not.toHaveBeenCalled();
 });
 
 describe('fake timers', () => {
@@ -122,7 +281,7 @@ describe('fake timers', () => {
       };
     });
 
-    createCluster({}, '', telemetryLoggerMock).catch((error: unknown) => {
+    createCluster(withConnection(), '', telemetryLoggerMock).catch((error: unknown) => {
       console.error('Error creating cluster', error);
     });
 
@@ -148,7 +307,7 @@ test('expect cluster to be created using config file', async () => {
     error: vi.fn(),
     warn: vi.fn(),
   };
-  await createCluster({ 'kind.cluster.creation.configFile': '/path' }, '', telemetryLoggerMock, logger);
+  await createCluster(withConnection({ 'kind.cluster.creation.configFile': '/path' }), '', telemetryLoggerMock, logger);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
     1,
     'createCluster',
@@ -167,7 +326,7 @@ test('expect cluster to not call setupIngressController function when supplying 
   };
 
   // Supply the configuration file
-  await createCluster({ 'kind.cluster.creation.configFile': '/path' }, '', telemetryLoggerMock, logger);
+  await createCluster(withConnection({ 'kind.cluster.creation.configFile': '/path' }), '', telemetryLoggerMock, logger);
 
   // Expect us to call the exec function as normal
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
@@ -191,7 +350,7 @@ test('expect cluster to call ingress controller setup when ingress is set to yes
 
   // Supply the configuration file
   await createCluster(
-    { 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' },
+    withConnection({ 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' }),
     '',
     telemetryLoggerMock,
     logger,
@@ -235,7 +394,7 @@ test('expect cluster to use "name: foobar" within the yaml file when supplying a
 
   // Supply the configuration file
   await createCluster(
-    { 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' },
+    withConnection({ 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' }),
     '',
     telemetryLoggerMock,
     logger,
@@ -264,7 +423,7 @@ test('expect cluster to be created with ingress', async () => {
     error: vi.fn(),
     warn: vi.fn(),
   };
-  await createCluster({ 'kind.cluster.creation.ingress': 'on' }, '', telemetryLoggerMock, logger);
+  await createCluster(withConnection({ 'kind.cluster.creation.ingress': 'on' }), '', telemetryLoggerMock, logger);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
     1,
     'createCluster',
@@ -281,10 +440,10 @@ test('expect cluster to be created with ports as strings', async () => {
     warn: vi.fn(),
   };
   await createCluster(
-    {
+    withConnection({
       'kind.cluster.creation.http.port': '9091',
       'kind.cluster.creation.https.port': '9444',
-    },
+    }),
     '',
     telemetryLoggerMock,
     logger,
@@ -318,10 +477,10 @@ test('expect cluster to be created with ports as numbers', async () => {
     warn: vi.fn(),
   };
   await createCluster(
-    {
+    withConnection({
       'kind.cluster.creation.http.port': 9091,
       'kind.cluster.creation.https.port': 9444,
-    },
+    }),
     '',
     telemetryLoggerMock,
     logger,
@@ -357,7 +516,7 @@ test('expect error if Kubernetes reports error', async () => {
       warn: vi.fn(),
     };
     (extensionApi.kubernetes.createResources as Mock).mockRejectedValue(error);
-    await createCluster({ 'kind.cluster.creation.ingress': 'on' }, '', telemetryLoggerMock, logger);
+    await createCluster(withConnection({ 'kind.cluster.creation.ingress': 'on' }), '', telemetryLoggerMock, logger);
   } catch (err) {
     expect(extensionApi.kubernetes.createResources).toBeCalled();
     expect(err).to.be.a('Error');
@@ -388,7 +547,7 @@ test('check cluster configuration null string image', async () => {
 test('check that consilience check returns warning message', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
   (getMemTotalInfo as Mock).mockReturnValue(3000000000);
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9443,
   });
@@ -405,7 +564,7 @@ test('check that consilience check returns warning message', async () => {
 test('check that consilience check returns no warning messages', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
   (getMemTotalInfo as Mock).mockReturnValue(6000000001);
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9443,
   });
@@ -417,7 +576,7 @@ test('check that consilience check returns no warning messages', async () => {
 
 test('check that consilience check returns warning message when image has no sha256 digest', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.controlPlaneImage': 'image:tag',
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9443,
@@ -432,7 +591,7 @@ test('check that consilience check returns warning message when image has no sha
 
 test('check that consilience check returns warning message when config file is specified', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.configFile': '/path',
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9443,
@@ -447,7 +606,7 @@ test('check that consilience check returns warning message when config file is s
 
 test('check that auditItems returns error message when HTTP port is not available', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9091).mockResolvedValueOnce(9443);
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9443,
   });
@@ -461,7 +620,7 @@ test('check that auditItems returns error message when HTTP port is not availabl
 
 test('check that auditItems returns error message when HTTPS port is not available', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9444);
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9443,
   });
@@ -471,6 +630,88 @@ test('check that auditItems returns error message when HTTPS port is not availab
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('error');
+});
+
+test('check that auditItems requires a selected connection', async () => {
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+
+  const checks = await connectionAuditor({
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks.records).toContainEqual({
+    type: 'error',
+    record: 'Select a running container connection to create a Kind cluster.',
+  });
+});
+
+test('check that selected provider identity disambiguates duplicate connection names', async () => {
+  vi.spyOn(extensionApi.provider, 'getContainerConnections').mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'shared-name',
+        type: 'podman',
+        endpoint: { socketPath: 'podman-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+    {
+      providerId: 'docker',
+      connection: {
+        name: 'shared-name',
+        type: 'docker',
+        endpoint: { socketPath: 'docker-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+  vi.mocked(getMemTotalInfo).mockResolvedValue(8000000000);
+
+  const checks = await auditConnection(
+    {
+      'kind.cluster.creation.http.port': 9090,
+      'kind.cluster.creation.https.port': 9443,
+    },
+    'docker',
+    'shared-name',
+  );
+
+  expect(checks.records.filter(record => record.type === 'error')).toHaveLength(0);
+  expect(getMemTotalInfo).toHaveBeenCalledWith('docker-socket');
+});
+
+test('check that auditItems rejects an unsupported connection type', async () => {
+  vi.spyOn(extensionApi.provider, 'getContainerConnections').mockReturnValue([
+    {
+      providerId: 'custom',
+      connection: {
+        name: 'custom-connection',
+        type: 'custom',
+        endpoint: { socketPath: 'custom-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    } as unknown as extensionApi.ProviderContainerConnection,
+  ]);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+
+  const checks = await auditConnection(
+    {
+      'kind.cluster.creation.http.port': 9090,
+      'kind.cluster.creation.https.port': 9443,
+    },
+    'custom',
+    'custom-connection',
+  );
+
+  expect(checks.records).toContainEqual({
+    type: 'error',
+    record:
+      'The selected container connection "custom-connection" uses an unsupported provider type "custom". Select a Podman or Docker connection.',
+  });
+  expect(getMemTotalInfo).not.toHaveBeenCalled();
 });
 
 test('check that auditItems returns error message when no provider connections are running', async () => {
@@ -488,22 +729,28 @@ test('check that auditItems returns error message when no provider connections a
   ]);
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
 
-  const checks = await connectionAuditor('podman', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
-  });
+  const checks = await auditConnection(
+    {
+      'kind.cluster.creation.http.port': 9090,
+      'kind.cluster.creation.https.port': 9443,
+    },
+    'podman',
+    'podman-machine-default',
+  );
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('error');
-  expect(checks.records[0].record).toContain('The podman provider is not running');
+  expect(checks.records[0].record).toContain(
+    'The selected container connection "podman-machine-default" is not running',
+  );
 });
 
 test('check that auditItems returns error message when HTTP and HTTPS ports are the same', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 9090,
     'kind.cluster.creation.https.port': 9090,
   });
@@ -522,7 +769,7 @@ test('check that auditItems returns error message when port is invalid (> 65535)
   );
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9443);
 
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 999999,
     'kind.cluster.creation.https.port': 9443,
   });
@@ -540,7 +787,7 @@ test('check that auditItems returns error message when port is invalid (< 1024)'
   vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(new Error('The port must be greater than 1024.'));
   vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9443);
 
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 500,
     'kind.cluster.creation.https.port': 9443,
   });
@@ -562,7 +809,7 @@ test('check that auditItems returns multiple error messages when both ports are 
     new Error('Please enter a port number between 0 and 65535.'),
   );
 
-  const checks = await connectionAuditor('docker', {
+  const checks = await auditConnection({
     'kind.cluster.creation.http.port': 999999,
     'kind.cluster.creation.https.port': 888888,
   });
@@ -606,17 +853,23 @@ test('check that auditItems returns error message when multiple VMs exist but al
   ]);
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
 
-  const checks = await connectionAuditor('podman', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
-  });
+  const checks = await auditConnection(
+    {
+      'kind.cluster.creation.http.port': 9090,
+      'kind.cluster.creation.https.port': 9443,
+    },
+    'podman',
+    'podman-machine-default',
+  );
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('error');
-  expect(checks.records[0].record).toContain('The podman provider is not running');
+  expect(checks.records[0].record).toContain(
+    'The selected container connection "podman-machine-default" is not running',
+  );
 });
 
 test('check that auditItems does not return error when multiple VMs exist and one is running', async () => {
@@ -644,10 +897,14 @@ test('check that auditItems does not return error when multiple VMs exist and on
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
   vi.mocked(getMemTotalInfo).mockResolvedValue(8000000000); // 8GB
 
-  const checks = await connectionAuditor('podman', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
-  });
+  const checks = await auditConnection(
+    {
+      'kind.cluster.creation.http.port': 9090,
+      'kind.cluster.creation.https.port': 9443,
+    },
+    'podman',
+    'podman-machine-custom',
+  );
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');

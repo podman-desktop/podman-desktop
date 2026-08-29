@@ -31,6 +31,7 @@ import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vi
 
 import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
+import { providerInfos } from '/@/stores/providers';
 
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
@@ -95,6 +96,7 @@ function mockCallback(
 
 beforeEach(() => {
   operationConnectionsInfo.set(new Map());
+  providerInfos.set([]);
   vi.resetAllMocks();
 });
 
@@ -444,6 +446,88 @@ test(`Check itemsAudit receive updated values`, async () => {
     'test.factoryProperty': '2',
     'test.fileProperty': 'somefile',
   });
+});
+
+test('selected container connection is submitted to the provider factory', async () => {
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'shared-name',
+          displayName: 'Local',
+          status: 'started',
+          type: 'podman',
+          endpoint: { socketPath: 'podman-socket' },
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'Docker',
+      containerConnections: [
+        {
+          name: 'shared-name',
+          displayName: 'Local',
+          status: 'started',
+          type: 'docker',
+          endpoint: { socketPath: 'docker-socket' },
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+  vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+  const callback = mockCallback(async () => {});
+  const taskId = 5;
+  const kindProviderInfo = {
+    ...providerInfo,
+    id: 'kind',
+    internalId: 'kind',
+    name: 'Kind',
+  } as ProviderInfo;
+
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: [
+      {
+        title: 'Kind',
+        parentId: 'kind',
+        scope: 'KubernetesProviderConnectionFactory',
+        id: 'kind.cluster.creation.containerConnection',
+        type: 'string',
+        format: 'containerConnection',
+        description: 'Container Connection',
+      },
+    ],
+    providerInfo: kindProviderInfo,
+    propertyScope: 'KubernetesProviderConnectionFactory',
+    callback,
+    pageIsLoading: false,
+    taskId,
+  });
+
+  await vi.waitFor(() => expect(screen.getByLabelText('Container Connection')).toHaveTextContent('Local (Podman)'));
+  await fireEvent.click(screen.getByRole('button', { name: /Local \(Podman\)/ }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Local (Docker)' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+  expect(callback).toHaveBeenCalledWith(
+    kindProviderInfo.internalId,
+    {
+      'kind.cluster.creation.containerConnection': JSON.stringify({
+        providerId: 'docker',
+        connectionName: 'shared-name',
+      }),
+    },
+    expect.anything(),
+    eventCollect,
+    undefined,
+    taskId,
+  );
 });
 
 test(`Expect create with unchecked and checked checkboxes`, async () => {

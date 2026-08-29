@@ -34,15 +34,11 @@
           "scope": "KubernetesProviderConnectionFactory",
           "description": "Name"
         },
-        "kind.cluster.creation.provider": {
+        "kind.cluster.creation.containerConnection": {
           "type": "string",
-          "default": "podman",
-          "enum": [
-            "podman",
-            "docker"
-          ],
+          "format": "containerConnection",
           "scope": "KubernetesProviderConnectionFactory",
-          "description": "Provider Type"
+          "description": "Container Connection"
         },
         "kind.cluster.creation.http.port": {
           "type": "number",
