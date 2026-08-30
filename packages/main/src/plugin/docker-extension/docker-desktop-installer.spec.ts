@@ -236,6 +236,7 @@ describe('Check setupContribution', async () => {
     const sendError = vi.fn();
     const metadata = {
       name: 'My Extension',
+      extensionId: 'publisher.my-extension',
       ui: {},
       vm: { composefile: 'docker-compose.yaml' },
     } satisfies DockerExtensionMetadata;
@@ -253,7 +254,15 @@ describe('Check setupContribution', async () => {
     );
 
     expect(contribution).toBeUndefined();
-    expect(contributionManager.stopVM).toHaveBeenCalledWith('My Extension', '/dest/vm-compose/docker-compose.yaml');
+    expect(contributionManager.startVM).toHaveBeenCalledWith(
+      'publisher.my-extension',
+      '/dest/vm-compose/docker-compose.yaml',
+      true,
+    );
+    expect(contributionManager.stopVM).toHaveBeenCalledWith(
+      'publisher.my-extension',
+      '/dest/vm-compose/docker-compose.yaml',
+    );
     expect(sendError).toHaveBeenCalledWith('Error: refresh failed');
   });
 

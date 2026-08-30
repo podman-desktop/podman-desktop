@@ -142,6 +142,7 @@ export class DockerDesktopInstaller {
       metadata.name = title;
       await this.#contributionManager.saveMetadata(destFolderPath, metadata);
     }
+    const composeProjectId = metadata.extensionId ?? metadata.name;
 
     // if there is a VM, need to generate the updated compose file
     let enhancedComposeFile;
@@ -168,11 +169,11 @@ export class DockerDesktopInstaller {
       // try to start the VM
       sendLog('Starting compose project...');
       try {
-        await this.#contributionManager.startVM(metadata.name, enhancedComposeFile, true);
+        await this.#contributionManager.startVM(composeProjectId, enhancedComposeFile, true);
       } catch (error) {
         if (enhancedComposeFile) {
           try {
-            await this.#contributionManager.stopVM(metadata.name, enhancedComposeFile);
+            await this.#contributionManager.stopVM(composeProjectId, enhancedComposeFile);
           } catch (rollbackError) {
             sendError(`Unable to clean up the compose project: ${rollbackError}`);
           }
@@ -189,7 +190,7 @@ export class DockerDesktopInstaller {
     } catch (error) {
       if (enhancedComposeFile) {
         try {
-          await this.#contributionManager.stopVM(metadata.name, enhancedComposeFile);
+          await this.#contributionManager.stopVM(composeProjectId, enhancedComposeFile);
         } catch (rollbackError) {
           sendError(`Unable to clean up the compose project: ${rollbackError}`);
         }
