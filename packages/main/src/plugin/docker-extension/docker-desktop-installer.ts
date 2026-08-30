@@ -19,14 +19,14 @@
 import { cp, readFile, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import type { ContributionManager, DockerExtensionMetadata } from '/@/plugin/contribution-manager.js';
 
 export class DockerDesktopContribution {
   readonly #title: string;
   readonly #extensionPath: string;
-  readonly #metadata: unknown;
+  readonly #metadata: DockerExtensionMetadata;
 
-  constructor(title: string, extensionPath: string, metadata: unknown) {
+  constructor(title: string, extensionPath: string, metadata: DockerExtensionMetadata) {
     this.#title = title;
     this.#extensionPath = extensionPath;
     this.#metadata = metadata;
@@ -40,7 +40,7 @@ export class DockerDesktopContribution {
     return this.#extensionPath;
   }
 
-  get metadata(): unknown {
+  get metadata(): DockerExtensionMetadata {
     return this.#metadata;
   }
 }
@@ -50,6 +50,11 @@ export class DockerDesktopInstaller {
 
   constructor(contributionManager: ContributionManager) {
     this.#contributionManager = contributionManager;
+  }
+
+  async removeContribution(contribution: DockerDesktopContribution): Promise<void> {
+    const extensionId = contribution.metadata.extensionId ?? contribution.metadata.name;
+    await this.#contributionManager.deleteExtension(extensionId);
   }
 
   async extractExtensionFiles(
@@ -162,7 +167,18 @@ export class DockerDesktopInstaller {
 
       // try to start the VM
       sendLog('Starting compose project...');
-      await this.#contributionManager.startVM(metadata.name, enhancedComposeFile, true);
+      try {
+        await this.#contributionManager.startVM(metadata.name, enhancedComposeFile, true);
+      } catch (error) {
+        if (enhancedComposeFile) {
+          try {
+            await this.#contributionManager.stopVM(metadata.name, enhancedComposeFile);
+          } catch (rollbackError) {
+            sendError(`Unable to clean up the compose project: ${rollbackError}`);
+          }
+        }
+        throw error;
+      }
     }
 
     sendLog('Extension Successfully installed.');
@@ -171,6 +187,13 @@ export class DockerDesktopInstaller {
     try {
       await this.#contributionManager.init();
     } catch (error) {
+      if (enhancedComposeFile) {
+        try {
+          await this.#contributionManager.stopVM(metadata.name, enhancedComposeFile);
+        } catch (rollbackError) {
+          sendError(`Unable to clean up the compose project: ${rollbackError}`);
+        }
+      }
       sendError(String(error));
       return;
     }

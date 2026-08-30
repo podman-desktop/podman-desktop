@@ -43,7 +43,7 @@ import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
-import { LocalExtensionImageLoader } from './local-extension-image-loader.js';
+import { type LocalExtensionImage, LocalExtensionImageLoader } from './local-extension-image-loader.js';
 
 function getStringLabels(labels: Record<string, unknown> | undefined): Record<string, string> | undefined {
   if (!labels || !Object.values(labels).every(label => typeof label === 'string')) {
@@ -136,11 +136,11 @@ export class ExtensionInstaller {
     onProgress?: (progress: number) => void,
     token?: CancellationToken,
   ): Promise<AnalyzedExtension | DockerDesktopContribution | undefined> {
-    imageName = imageName.trim();
-    sendLog(`Analyzing image ${imageName}...`);
-    let localImage;
+    const trimmedImageName = imageName.trim();
+    sendLog(`Analyzing image ${trimmedImageName}...`);
+    let localImage: LocalExtensionImage | undefined;
     try {
-      localImage = await this.#localExtensionImageLoader.findLocalImage(imageName, token);
+      localImage = await this.#localExtensionImageLoader.findLocalImage(trimmedImageName, token);
     } catch (error) {
       if (token?.isCancellationRequested) {
         throw new Error('Extension installation canceled');
@@ -152,22 +152,22 @@ export class ExtensionInstaller {
     let imageConfigLabels = getStringLabels(localImage?.labels);
     if (!localImage) {
       try {
-        imageConfigLabels = getStringLabels(await this.imageRegistry.getImageConfigLabels(imageName, token));
+        imageConfigLabels = getStringLabels(await this.imageRegistry.getImageConfigLabels(trimmedImageName, token));
       } catch (error) {
         if (token?.isCancellationRequested) {
           throw new Error('Extension installation canceled');
         }
         sendError(
-          this.#localExtensionImageLoader.isLocalImageReference(imageName)
-            ? `Local image ${imageName} was not found in a running container engine. Registry fallback failed: ${error}`
-            : 'Error while analyzing image: ' + error,
+          this.#localExtensionImageLoader.isLocalImageReference(trimmedImageName)
+            ? `Local image ${trimmedImageName} was not found in a running container engine. Registry fallback failed: ${error}`
+            : `Error while analyzing image: ${error}`,
         );
         return;
       }
     }
 
     if (!imageConfigLabels) {
-      sendError(`Image ${imageName} is not a Podman Desktop Extension. Unable to grab image config labels.`);
+      sendError(`Image ${trimmedImageName} is not a Podman Desktop Extension. Unable to grab image config labels.`);
       return;
     }
 
@@ -178,14 +178,14 @@ export class ExtensionInstaller {
     const apiDDVersion = imageConfigLabels['com.docker.desktop.extension.api.version'];
 
     if (!titleLabel || !descriptionLabel || !vendorLabel || (!apiVersion && !apiDDVersion)) {
-      sendError(`Image ${imageName} is not a Podman Desktop Extension`);
+      sendError(`Image ${trimmedImageName} is not a Podman Desktop Extension`);
       return;
     }
 
-    const isDDExtension = apiDDVersion ? true : false;
-    const isPDExtension = apiVersion ? true : false;
+    const isDDExtension = !!apiDDVersion;
+    const isPDExtension = !!apiVersion;
 
-    let unpackedFolder;
+    let unpackedFolder: string;
     // where to unpack the extension
     if (isPDExtension) {
       unpackedFolder = this.directories.getPluginsDirectory();
@@ -194,9 +194,9 @@ export class ExtensionInstaller {
     }
 
     // strip the digest and tag from the image name
-    let imageNameWithoutTag = imageName.split('@')[0];
+    let imageNameWithoutTag = trimmedImageName.split('@')[0];
     if (!imageNameWithoutTag) {
-      sendError(`Image ${imageName} is not a Podman Desktop Extension`);
+      sendError(`Image ${trimmedImageName} is not a Podman Desktop Extension`);
       return;
     }
     const lastSlash = imageNameWithoutTag.lastIndexOf('/');
@@ -225,14 +225,22 @@ export class ExtensionInstaller {
       }
     }
 
-    if (fs.existsSync(finalFolderPath)) {
-      sendError(`Unable to install image ${imageName}: the target extension directory already exists`);
-      return;
+    try {
+      // Claim the destination atomically so two installs cannot extract into the same directory.
+      await fs.promises.mkdir(finalFolderPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        sendError(
+          `Unable to install image ${trimmedImageName}: the target extension directory ${finalFolderPath} already exists. Remove it if no installed extension uses it, then retry.`,
+        );
+        return;
+      }
+      throw error;
     }
 
-    // tmp folder
-    const tmpFolderPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${imageNameWithoutSpecialChars}-`));
+    let tmpFolderPath: string | undefined;
     try {
+      tmpFolderPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${imageNameWithoutSpecialChars}-`));
       sendLog(localImage ? 'Extracting local image layers...' : 'Downloading and extract layers...');
       const reportProgress = (event: { message: string; progress: number }): void => {
         sendLog(event.message);
@@ -241,13 +249,13 @@ export class ExtensionInstaller {
       if (localImage) {
         await this.#localExtensionImageLoader.downloadAndExtractImage(
           localImage,
-          imageName,
+          trimmedImageName,
           tmpFolderPath,
           reportProgress,
           token,
         );
       } else {
-        await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, reportProgress, token);
+        await this.imageRegistry.downloadAndExtractImage(trimmedImageName, tmpFolderPath, reportProgress, token);
       }
 
       if (token?.isCancellationRequested) {
@@ -269,7 +277,9 @@ export class ExtensionInstaller {
       await fs.promises.rm(finalFolderPath, { recursive: true, force: true });
       throw error;
     } finally {
-      await fs.promises.rm(tmpFolderPath, { recursive: true, force: true });
+      if (tmpFolderPath) {
+        await fs.promises.rm(tmpFolderPath, { recursive: true, force: true });
+      }
     }
 
     if (isPDExtension) {
@@ -307,12 +317,15 @@ export class ExtensionInstaller {
         }
         const contribution = await this.#dockerDesktopInstaller.setupContribution(
           titleLabel,
-          imageName,
+          trimmedImageName,
           finalFolderPath,
           sendLog,
           sendError,
         );
         if (token?.isCancellationRequested) {
+          if (contribution) {
+            await this.#dockerDesktopInstaller.removeContribution(contribution);
+          }
           throw new Error('Extension installation canceled');
         }
         if (!contribution) {
@@ -386,25 +399,26 @@ export class ExtensionInstaller {
       // now analyze all these dependencies
       for (const imageNameToAnalyze of imagesOfExtensionsToAnalyze) {
         try {
-          const imageToAnalyze = token
-            ? await this.analyzeFromImage(sendLog, sendError, imageNameToAnalyze, undefined, undefined, token)
-            : await this.analyzeFromImage(sendLog, sendError, imageNameToAnalyze);
+          const imageToAnalyze = await this.analyzeFromImage(
+            sendLog,
+            sendError,
+            imageNameToAnalyze,
+            undefined,
+            undefined,
+            token,
+          );
 
           if (!imageToAnalyze || imageToAnalyze instanceof DockerDesktopContribution) {
             return false;
           }
-          if (token) {
-            await this.analyzeTransitiveDependencies(
-              imageToAnalyze,
-              analyzedExtensions,
-              errors,
-              sendLog,
-              sendError,
-              token,
-            );
-          } else {
-            await this.analyzeTransitiveDependencies(imageToAnalyze, analyzedExtensions, errors, sendLog, sendError);
-          }
+          await this.analyzeTransitiveDependencies(
+            imageToAnalyze,
+            analyzedExtensions,
+            errors,
+            sendLog,
+            sendError,
+            token,
+          );
         } catch (error) {
           errors.push(`Error while analyzing extension ${imageNameToAnalyze}: ${error}`);
         }
@@ -541,10 +555,30 @@ export class ExtensionInstaller {
       throw new Error('Extension installation canceled');
     }
 
-    // load all extensions
-    analyzedExtensions.forEach(extension => this.extensionLoader.ensureExtensionIsEnabled(extension.id));
+    try {
+      // load all extensions
+      analyzedExtensions.forEach(extension => {
+        this.extensionLoader.ensureExtensionIsEnabled(extension.id);
+      });
 
-    await this.extensionLoader.loadExtensions(analyzedExtensions);
+      await this.extensionLoader.loadExtensions(analyzedExtensions);
+      if (token?.isCancellationRequested) {
+        throw new Error('Extension installation canceled');
+      }
+    } catch (error) {
+      await Promise.allSettled(
+        [...analyzedExtensions].reverse().map(async extension => {
+          try {
+            await this.extensionLoader.removeExtension(extension.id);
+          } finally {
+            if (extension.path) {
+              await fs.promises.rm(extension.path, { recursive: true, force: true });
+            }
+          }
+        }),
+      );
+      throw error;
+    }
 
     sendEnd('Extension Successfully installed.');
     this.apiSender.send('extension-started');

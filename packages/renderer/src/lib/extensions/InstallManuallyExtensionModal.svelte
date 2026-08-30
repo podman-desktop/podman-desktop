@@ -15,9 +15,9 @@ let imageName = $state('');
 let installInProgress = $state(false);
 let inputfieldError: string | undefined = $state('');
 let progressPercent = $state(0);
-let logs: string[] = [];
-let cancellationTokenSourceId: number | undefined;
-let closeRequested = false;
+let logs = $state<string[]>([]);
+let cancellationTokenSourceId = $state<number | undefined>(undefined);
+let closeRequested = $state(false);
 
 const inputAriaLabel = 'Image name to install custom extension';
 
@@ -35,10 +35,9 @@ function validateImageName(event: Event): void {
     if (!name) {
       inputfieldError = 'Missing name';
       return;
-    } else {
-      inputfieldError = undefined;
-      return;
     }
+    inputfieldError = undefined;
+    return;
   }
   inputfieldError = 'Invalid input';
 }
@@ -74,7 +73,7 @@ async function installExtension(): Promise<void> {
         // data Downloading sha256:e8d2c9e5c69499c41ba39b7828c00e55087572884cac466b4d1b47243b085c7d.tar - 11% - (55132/521578)
         const percentageMatch = percentageMatchRegexp.exec(data);
         if (percentageMatch) {
-          progressPercent = parseInt(percentageMatch[1]);
+          progressPercent = Number.parseInt(percentageMatch[1], 10);
         }
       },
       (error: string) => {
