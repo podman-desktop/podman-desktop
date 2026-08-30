@@ -579,6 +579,46 @@ test('waits for the saved container connection before selecting a default', asyn
   expect(setRecordValue).not.toHaveBeenCalledWith('kind.cluster.creation.provider', podmanSelection);
 });
 
+test('does not select a default container connection when the saved value cannot be loaded', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'kind.cluster.creation.provider',
+    title: 'Kind',
+    parentId: 'kind',
+    description: 'Container Connection',
+    type: 'string',
+    format: 'containerConnection',
+  };
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+  const setRecordValue = vi.fn();
+  const consoleError = vi.spyOn(console, 'error').mockReturnValue(undefined);
+
+  render(PreferencesRenderingItemFormat, {
+    record,
+    initialValue: Promise.reject(new Error('settings unavailable')),
+    setRecordValue,
+  });
+
+  await vi.waitFor(() => expect(consoleError).toHaveBeenCalledWith('Error getting initial value', expect.any(Error)));
+  expect(screen.getByTestId('tooltip-trigger')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Container Connection')).not.toBeInTheDocument();
+  expect(setRecordValue).not.toHaveBeenCalled();
+});
+
 describe('experimental configuration update', () => {
   test('Expect updateExperimentalConfigurationValue to be called for experimental records', async () => {
     const record: IConfigurationPropertyRecordedSchema = {

@@ -204,6 +204,27 @@ test('expect a legacy provider value to use a running connection of the same typ
   );
 });
 
+test('expect a legacy provider value to reject stopped connections', async () => {
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-default',
+        type: 'podman',
+        endpoint: { socketPath: 'podman-socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'stopped',
+      },
+    },
+  ]);
+
+  await expect(
+    createCluster({ 'kind.cluster.creation.provider': 'podman' }, '/kind', telemetryLoggerMock),
+  ).rejects.toThrow(
+    'The previously selected Podman provider has no running container connection. Start one or select another connection.',
+  );
+  expect(extensionApi.process.exec).not.toHaveBeenCalled();
+});
+
 test('expect selected Docker connection to configure its Unix socket', async () => {
   vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
     {

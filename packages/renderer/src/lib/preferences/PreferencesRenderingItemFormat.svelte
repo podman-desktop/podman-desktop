@@ -48,6 +48,7 @@ let recordUpdateTimeout: NodeJS.Timeout;
 let invalidText: string | undefined = $state(undefined);
 let recordValue: unknown = $state(undefined);
 let initialValueResolved = $state(false);
+let initialValueError: string | undefined = $state(undefined);
 
 $effect(() => {
   updateResetButtonVisibility?.(recordValue);
@@ -89,6 +90,7 @@ $effect(() => {
 $effect(() => {
   if (!isEqual(currentRecord, record)) {
     initialValueResolved = false;
+    initialValueError = undefined;
     initialValue
       .then(value => {
         recordValue = value;
@@ -96,7 +98,10 @@ $effect(() => {
           recordValue = !!value;
         }
       })
-      .catch((err: unknown) => console.error('Error getting initial value', err))
+      .catch((err: unknown) => {
+        console.error('Error getting initial value', err);
+        initialValueError = 'Unable to load the current configuration value.';
+      })
       .finally(() => {
         initialValueResolved = true;
       });
@@ -214,6 +219,9 @@ function containerConnectionValue(): string | undefined {
   {#if invalidText}
     <ErrorMessage error="{invalidText}." icon={true} class="mr-2" />
   {/if}
+  {#if initialValueError}
+    <ErrorMessage error={initialValueError} icon={true} class="mr-2" />
+  {/if}
   {#if record.type === 'boolean'}
     <BooleanItem
       record={record}
@@ -239,7 +247,7 @@ function containerConnectionValue(): string | undefined {
     {/if}
   {:else if record.type === 'string' && (typeof recordValue === 'string' || recordValue === undefined)}
     {#if record.format === 'containerConnection'}
-      {#if initialValueResolved}
+      {#if initialValueResolved && !initialValueError}
         <ContainerConnectionItem
           record={record}
           value={containerConnectionValue()}

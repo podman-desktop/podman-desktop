@@ -196,14 +196,18 @@ function resolveContainerConnection(items: AuditRequestItems): ContainerConnecti
   const connections = extensionApi.provider.getContainerConnections();
 
   if (isLegacyProviderSelection(configuredValue)) {
-    const legacyConnection =
-      connections.find(
-        connection => connection.connection.type === configuredValue && connection.connection.status() === 'started',
-      ) ?? connections.find(connection => connection.connection.type === configuredValue);
+    const legacyConnections = connections.filter(connection => connection.connection.type === configuredValue);
+    const legacyConnection = legacyConnections.find(connection => connection.connection.status() === 'started');
 
     if (!legacyConnection) {
+      const providerName = configuredValue === 'podman' ? 'Podman' : 'Docker';
+      if (legacyConnections.length > 0) {
+        return {
+          error: `The previously selected ${providerName} provider has no running container connection. Start one or select another connection.`,
+        };
+      }
       return {
-        error: `The previously selected ${configuredValue === 'podman' ? 'Podman' : 'Docker'} provider is no longer available. Select a running container connection.`,
+        error: `The previously selected ${providerName} provider is no longer available. Select a running container connection.`,
       };
     }
 
