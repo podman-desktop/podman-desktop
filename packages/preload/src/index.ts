@@ -1512,12 +1512,9 @@ export function initExposure(): void {
     return ipcInvoke('command-registry:executeCommand', command, ...args);
   });
 
-  contextBridge.exposeInMainWorld(
-    'clipboardWriteText',
-    async (text: string, type?: 'selection' | 'clipboard'): Promise<void> => {
-      return ipcInvoke('clipboard:writeText', text, type);
-    },
-  );
+  contextBridge.exposeInMainWorld('clipboardWriteText', async (text: string): Promise<void> => {
+    return ipcInvoke('clipboard:writeText', text);
+  });
 
   let onDidUpdateProviderStatusId = 0;
   const onDidUpdateProviderStatuses = new Map<number, (providerInfo: ProviderInfo) => void>();
