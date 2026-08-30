@@ -49,6 +49,7 @@ let invalidText: string | undefined = $state(undefined);
 let recordValue: unknown = $state(undefined);
 let initialValueResolved = $state(false);
 let initialValueError: string | undefined = $state(undefined);
+let initialValueRequest = 0;
 
 $effect(() => {
   updateResetButtonVisibility?.(recordValue);
@@ -89,21 +90,31 @@ $effect(() => {
 
 $effect(() => {
   if (!isEqual(currentRecord, record)) {
+    const request = ++initialValueRequest;
+    const requestedRecord = record;
     initialValueResolved = false;
     initialValueError = undefined;
     initialValue
       .then(value => {
+        if (request !== initialValueRequest) {
+          return;
+        }
         recordValue = value;
-        if (record.type === 'boolean' || record.type === 'object') {
+        if (requestedRecord.type === 'boolean' || requestedRecord.type === 'object') {
           recordValue = !!value;
         }
       })
       .catch((err: unknown) => {
+        if (request !== initialValueRequest) {
+          return;
+        }
         console.error('Error getting initial value', err);
         initialValueError = 'Unable to load the current configuration value.';
       })
       .finally(() => {
-        initialValueResolved = true;
+        if (request === initialValueRequest) {
+          initialValueResolved = true;
+        }
       });
 
     invalidText = undefined;

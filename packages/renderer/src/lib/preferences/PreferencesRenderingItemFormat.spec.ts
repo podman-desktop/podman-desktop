@@ -619,6 +619,60 @@ test('does not select a default container connection when the saved value cannot
   expect(setRecordValue).not.toHaveBeenCalled();
 });
 
+test('ignores a stale initial-value rejection after the record changes', async () => {
+  const firstRecord: IConfigurationPropertyRecordedSchema = {
+    id: 'first.connection',
+    title: 'First',
+    parentId: 'kind',
+    description: 'First Connection',
+    type: 'string',
+    format: 'containerConnection',
+  };
+  const secondRecord: IConfigurationPropertyRecordedSchema = {
+    ...firstRecord,
+    id: 'second.connection',
+    title: 'Second',
+    description: 'Second Connection',
+  };
+  const selection = JSON.stringify({ providerId: 'podman', connectionName: 'podman-machine-default' });
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+  let rejectFirst: (reason: Error) => void = (): void => {};
+  const firstInitialValue = new Promise<unknown>((_resolve, reject) => {
+    rejectFirst = reject;
+  });
+  const setRecordValue = vi.fn();
+  const consoleError = vi.spyOn(console, 'error').mockReturnValue(undefined);
+  const { rerender } = render(PreferencesRenderingItemFormat, {
+    record: firstRecord,
+    initialValue: firstInitialValue,
+    setRecordValue,
+  });
+
+  await rerender({ record: secondRecord, initialValue: Promise.resolve(selection), setRecordValue });
+  await vi.waitFor(() => expect(screen.getByLabelText('Second Connection')).toBeInTheDocument());
+
+  rejectFirst(new Error('stale settings failure'));
+  await tick();
+
+  expect(screen.getByLabelText('Second Connection')).toBeInTheDocument();
+  expect(consoleError).not.toHaveBeenCalled();
+});
+
 describe('experimental configuration update', () => {
   test('Expect updateExperimentalConfigurationValue to be called for experimental records', async () => {
     const record: IConfigurationPropertyRecordedSchema = {
