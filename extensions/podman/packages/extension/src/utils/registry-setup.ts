@@ -119,7 +119,12 @@ export class RegistrySetup {
     );
     toBeRemoved.forEach(registry => {
       this.localRegistries.delete(registry.serverUrl);
-      extensionApi.registry.unregisterRegistry(registry);
+      try {
+        extensionApi.registry.unregisterRegistry(registry);
+      } catch (error: unknown) {
+        this.localRegistries.set(registry.serverUrl, registry);
+        console.error('Error unregistering registry', registry.serverUrl, error);
+      }
     });
   }
 
@@ -140,13 +145,24 @@ export class RegistrySetup {
     let authFileGeneration = 0;
     let authFileLocation: string | undefined;
     let authFileListener: fs.StatsListener | undefined;
+    let authFileExists = false;
+    let unregisterRetry: ReturnType<typeof setTimeout> | undefined;
+    let unregisterAttempts = 0;
     const subscriptions: extensionApi.Disposable[] = [];
+    const clearUnregisterRetry = (): void => {
+      if (unregisterRetry) {
+        clearTimeout(unregisterRetry);
+        unregisterRetry = undefined;
+      }
+      unregisterAttempts = 0;
+    };
     const dispose = (): void => {
       if (disposed) {
         return;
       }
       disposed = true;
       authFileGeneration++;
+      clearUnregisterRetry();
       if (authFileLocation && authFileListener) {
         fs.unwatchFile(authFileLocation, authFileListener);
       }
@@ -156,6 +172,31 @@ export class RegistrySetup {
         } catch (error: unknown) {
           console.error('Error disposing registry setup subscription', error);
         }
+      }
+    };
+    const isCurrentGeneration = (generation: number): boolean => !disposed && generation === authFileGeneration;
+    const unregisterWhileAuthFileIsAbsent = (checkForRecreation = false): void => {
+      const authFilePresent = checkForRecreation && authFileLocation !== undefined && fs.existsSync(authFileLocation);
+      if (disposed || authFileExists || authFilePresent || unregisterAttempts >= 3) {
+        if (!disposed && authFilePresent && !authFileExists) {
+          clearUnregisterRetry();
+          authFileExists = true;
+          const generation = ++authFileGeneration;
+          this.updateRegistriesIfCurrent(
+            () => !disposed && generation === authFileGeneration && fs.existsSync(authFileLocation as string),
+          ).catch((error: unknown) => {
+            console.error('Error updating registries', error);
+          });
+        }
+        return;
+      }
+      unregisterAttempts++;
+      this.unregisterLocalRegistries();
+      if (this.localRegistries.size > 0 && unregisterAttempts < 3) {
+        unregisterRetry = setTimeout(() => {
+          unregisterRetry = undefined;
+          unregisterWhileAuthFileIsAbsent(true);
+        }, 1_000);
       }
     };
 
@@ -182,9 +223,10 @@ export class RegistrySetup {
           if (!this.localRegistries.has(registry.serverUrl)) {
             let encode = true;
             this.localRegistries.set(registry.serverUrl, registry);
+            const generation = authFileGeneration;
             // read the file
             const authFile = await this.readAuthFile();
-            if (disposed) {
+            if (!isCurrentGeneration(generation)) {
               return;
             }
             authFile.auths ??= {};
@@ -206,13 +248,19 @@ export class RegistrySetup {
                 podmanDesktopAlias: registry.alias,
               };
 
+              if (!isCurrentGeneration(generation)) {
+                return;
+              }
               await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
-              if (disposed) {
+              if (!isCurrentGeneration(generation)) {
                 return;
               }
             }
 
             // Update registries.conf with the registry configuration
+            if (!isCurrentGeneration(generation)) {
+              return;
+            }
             await this.updateRegistriesConf(registry, true);
           }
         }),
@@ -227,20 +275,27 @@ export class RegistrySetup {
           // external change, update the local registries
           if (this.localRegistries.has(registry.serverUrl)) {
             this.localRegistries.delete(registry.serverUrl);
+            const generation = authFileGeneration;
             // update the file
             const authFile = await this.readAuthFile();
-            if (disposed) {
+            if (!isCurrentGeneration(generation)) {
               return;
             }
             if (authFile.auths) {
               delete authFile.auths[registry.serverUrl];
             }
+            if (!isCurrentGeneration(generation)) {
+              return;
+            }
             await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
-            if (disposed) {
+            if (!isCurrentGeneration(generation)) {
               return;
             }
 
             // Remove from registries.conf
+            if (!isCurrentGeneration(generation)) {
+              return;
+            }
             await this.removeFromRegistriesConf(registry);
           }
         }),
@@ -255,9 +310,10 @@ export class RegistrySetup {
           // external change, update the local registries
           if (this.localRegistries.has(registry.serverUrl)) {
             this.localRegistries.set(registry.serverUrl, registry);
+            const generation = authFileGeneration;
             // update the file
             const authFile = await this.readAuthFile();
-            if (disposed) {
+            if (!isCurrentGeneration(generation)) {
               return;
             }
             authFile.auths ??= {};
@@ -266,19 +322,25 @@ export class RegistrySetup {
               podmanDesktopAlias: registry.alias,
             };
 
+            if (!isCurrentGeneration(generation)) {
+              return;
+            }
             await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
-            if (disposed) {
+            if (!isCurrentGeneration(generation)) {
               return;
             }
 
             // Update registries.conf with the updated registry configuration
+            if (!isCurrentGeneration(generation)) {
+              return;
+            }
             await this.updateRegistriesConf(registry, false);
           }
         }),
       );
 
       authFileLocation = this.getAuthFileLocation();
-      let authFileExists = fs.existsSync(authFileLocation);
+      authFileExists = fs.existsSync(authFileLocation);
       authFileListener = (current): void => {
         if (disposed) {
           return;
@@ -286,12 +348,14 @@ export class RegistrySetup {
         if (current.nlink === 0) {
           authFileGeneration++;
           if (authFileExists) {
-            this.unregisterLocalRegistries();
+            authFileExists = false;
+            unregisterAttempts = 0;
+            unregisterWhileAuthFileIsAbsent();
           }
-          authFileExists = false;
           return;
         }
 
+        clearUnregisterRetry();
         authFileExists = true;
         const generation = ++authFileGeneration;
         this.updateRegistriesIfCurrent(
@@ -320,6 +384,7 @@ export class RegistrySetup {
       }
     } catch (error: unknown) {
       dispose();
+      this.unregisterLocalRegistries();
       throw error;
     }
 
