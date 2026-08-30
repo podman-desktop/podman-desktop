@@ -118,8 +118,12 @@ export class RegistrySetup {
         !inFileRegistries.find(inFileLocalRegistry => inFileLocalRegistry.serverUrl === localRegistry.serverUrl),
     );
     toBeRemoved.forEach(registry => {
-      this.localRegistries.delete(registry.serverUrl);
-      extensionApi.registry.unregisterRegistry(registry);
+      try {
+        extensionApi.registry.unregisterRegistry(registry);
+        this.localRegistries.delete(registry.serverUrl);
+      } catch (error: unknown) {
+        console.error('Error unregistering registry', registry.serverUrl, error);
+      }
     });
   }
 
@@ -320,6 +324,7 @@ export class RegistrySetup {
       }
     } catch (error: unknown) {
       dispose();
+      this.unregisterLocalRegistries();
       throw error;
     }
 

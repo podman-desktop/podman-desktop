@@ -226,6 +226,59 @@ test('should clean up the watcher and registry subscriptions when initial setup 
   }
 });
 
+test('should unregister registries added before initial setup fails', async () => {
+  const authJsonLocation = '/containers/auth.json';
+  vi.spyOn(registrySetup, 'getAuthFileLocation').mockReturnValue(authJsonLocation);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+  vi.mocked(readFile).mockResolvedValue(
+    JSON.stringify({
+      auths: {
+        'first.io': { auth: Buffer.from('user:password').toString('base64') },
+        'second.io': { auth: Buffer.from('user:password').toString('base64') },
+      },
+    }),
+  );
+  const setupError = new Error('Failed to register second registry');
+  vi.mocked(extensionApi.registry.registerRegistry).mockImplementation(registry => {
+    if (registry.serverUrl === 'second.io') {
+      throw setupError;
+    }
+    return extensionApi.Disposable.create(() => undefined);
+  });
+
+  await expect(registrySetup.setup()).rejects.toThrow(setupError);
+
+  expect(extensionApi.registry.unregisterRegistry).toHaveBeenCalledOnce();
+  expect(extensionApi.registry.unregisterRegistry).toHaveBeenCalledWith(
+    expect.objectContaining({ serverUrl: 'first.io' }),
+  );
+});
+
+test('should retain and retry a registry when auth-file removal fails', async () => {
+  const authJsonLocation = '/containers/auth.json';
+  vi.spyOn(registrySetup, 'getAuthFileLocation').mockReturnValue(authJsonLocation);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+  vi.mocked(readFile).mockResolvedValueOnce(
+    JSON.stringify({ auths: { 'first.io': { auth: Buffer.from('user:password').toString('base64') } } }),
+  );
+  await registrySetup.updateRegistries();
+
+  const unregisterError = new Error('Failed to unregister registry');
+  vi.mocked(extensionApi.registry.unregisterRegistry).mockImplementationOnce(() => {
+    throw unregisterError;
+  });
+  vi.mocked(readFile).mockResolvedValue(JSON.stringify({ auths: {} }));
+
+  await expect(registrySetup.updateRegistries()).resolves.toBeUndefined();
+  expect(consoleErroMock).toHaveBeenCalledWith('Error unregistering registry', 'first.io', unregisterError);
+
+  await registrySetup.updateRegistries();
+  expect(extensionApi.registry.unregisterRegistry).toHaveBeenCalledTimes(2);
+  expect(extensionApi.registry.unregisterRegistry).toHaveBeenLastCalledWith(
+    expect.objectContaining({ serverUrl: 'first.io' }),
+  );
+});
+
 test('should unregister registries when auth file is deleted and reload them when it is recreated', async () => {
   const authJsonLocation = '/containers/auth.json';
   vi.spyOn(registrySetup, 'getAuthFileLocation').mockReturnValue(authJsonLocation);
