@@ -70,40 +70,47 @@ test('expect grab 5 releases', async () => {
 });
 
 describe('Grab asset id for a given release id', async () => {
-  test('macOS x86_64', async () => {
-    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'darwin', 'x64');
+  test.each([
+    {
+      platform: 'darwin',
+      arch: 'x64',
+      expectedURL: 'https://dl.k8s.io/release/v1.2.1/bin/darwin/amd64/kubectl',
+      name: 'macOS x86_64',
+    },
+    {
+      platform: 'darwin',
+      arch: 'arm64',
+      expectedURL: 'https://dl.k8s.io/release/v1.2.1/bin/darwin/arm64/kubectl',
+      name: 'macOS arm64',
+    },
+    {
+      platform: 'win32',
+      arch: 'x64',
+      expectedURL: 'https://dl.k8s.io/release/v1.2.1/bin/windows/amd64/kubectl.exe',
+      name: 'windows x86_64',
+    },
+    {
+      platform: 'win32',
+      arch: 'arm64',
+      expectedURL: 'https://dl.k8s.io/release/v1.2.1/bin/windows/arm64/kubectl.exe',
+      name: 'windows arm64',
+    },
+    {
+      platform: 'linux',
+      arch: 'x64',
+      expectedURL: 'https://dl.k8s.io/release/v1.2.1/bin/linux/amd64/kubectl',
+      name: 'linux x86_64',
+    },
+    {
+      platform: 'linux',
+      arch: 'arm64',
+      expectedURL: 'https://dl.k8s.io/release/v1.2.1/bin/linux/arm64/kubectl',
+      name: 'linux arm64',
+    },
+  ])('$name', async ({ platform, arch, expectedURL }) => {
+    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', platform, arch);
     expect(result).toBeDefined();
-    expect(result).toBe('https://dl.k8s.io/release/v1.2.1/bin/darwin/amd64/kubectl');
-  });
-
-  test('macOS arm64', async () => {
-    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'darwin', 'arm64');
-    expect(result).toBeDefined();
-    expect(result).toBe('https://dl.k8s.io/release/v1.2.1/bin/darwin/arm64/kubectl');
-  });
-
-  test('windows x86_64', async () => {
-    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'win32', 'x64');
-    expect(result).toBeDefined();
-    expect(result).toBe('https://dl.k8s.io/release/v1.2.1/bin/windows/amd64/kubectl.exe');
-  });
-
-  test('windows arm64', async () => {
-    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'win32', 'arm64');
-    expect(result).toBeDefined();
-    expect(result).toBe('https://dl.k8s.io/release/v1.2.1/bin/windows/arm64/kubectl.exe');
-  });
-
-  test('linux x86_64', async () => {
-    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'linux', 'x64');
-    expect(result).toBeDefined();
-    expect(result).toBe('https://dl.k8s.io/release/v1.2.1/bin/linux/amd64/kubectl');
-  });
-
-  test('linux arm64', async () => {
-    const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'linux', 'arm64');
-    expect(result).toBeDefined();
-    expect(result).toBe('https://dl.k8s.io/release/v1.2.1/bin/linux/arm64/kubectl');
+    expect(result).toBe(expectedURL);
   });
 });
 
