@@ -23,23 +23,9 @@ import { expect, test } from 'vitest';
 
 import FeedbackFormTest from './FeedbackFormTest.svelte';
 
-test('Expect content is defined', async () => {
+test.each(['Content', 'Validation', 'Buttons'])('Expect %s is defined', async text => {
   render(FeedbackFormTest);
 
-  const element = screen.getByText('Content');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect validation is defined', async () => {
-  render(FeedbackFormTest);
-
-  const element = screen.getByText('Validation');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect buttons is defined', async () => {
-  render(FeedbackFormTest);
-
-  const element = screen.getByText('Buttons');
+  const element = screen.getByText(text);
   expect(element).toBeInTheDocument();
 });
