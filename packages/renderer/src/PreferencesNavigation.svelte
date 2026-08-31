@@ -132,20 +132,8 @@ function updateNavigationWidth(): void {
 }
 
 function scheduleNavigationWidthUpdate(): void {
-  void tick()
-    .then(() => {
-      // Measure after next paint so newly-shown items have final layout metrics.
-      if (typeof window.requestAnimationFrame === 'function') {
-        window.requestAnimationFrame(() => {
-          updateNavigationWidth();
-        });
-      } else {
-        updateNavigationWidth();
-      }
-    })
-    .catch(() => {
-      updateNavigationWidth();
-    });
+  // Measure after next paint so newly-shown items have final layout metrics.
+  tick().then(updateNavigationWidth).catch(updateNavigationWidth);
 }
 
 function updateDockerCompatibility(): void {

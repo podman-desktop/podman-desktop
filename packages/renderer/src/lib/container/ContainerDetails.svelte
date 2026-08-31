@@ -1,7 +1,6 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
-import type { ContainerInfo } from '@podman-desktop/core-api';
 import { ErrorMessage, Link, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
@@ -13,7 +12,6 @@ import Route from '/@/Route.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
-import { ContainerUtils } from './container-utils';
 import ContainerActions from './ContainerActions.svelte';
 import ContainerDetailsInspect from './ContainerDetailsInspect.svelte';
 import ContainerDetailsKube from './ContainerDetailsKube.svelte';
@@ -30,14 +28,12 @@ interface Props {
 
 let { containerID }: Props = $props();
 
-const containerUtils = new ContainerUtils();
-
 let displayTty: boolean = $state(false);
 let hadContainer = false;
 
-let container: ContainerInfoUI | undefined = $derived(
-  getContainerInfoUI($containersInfos.find(c => c.Id === containerID)),
-);
+// copy rather than hand the store's own element to ContainerActions, which writes
+// actionInProgress, actionError and state onto the container it is given
+let container: ContainerInfoUI | undefined = $derived(copyOf($containersInfos.find(c => c.id === containerID)));
 
 $effect(() => {
   if (container) {
@@ -62,8 +58,8 @@ $effect(() => {
   }
 });
 
-function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | undefined {
-  return cont ? containerUtils.getContainerInfoUI(cont) : undefined;
+function copyOf(cont: ContainerInfoUI | undefined): ContainerInfoUI | undefined {
+  return cont ? { ...cont } : undefined;
 }
 </script>
 
@@ -105,12 +101,14 @@ function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | 
       {#if container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE}
         <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
       {/if}
-      <Tab
-        title="Terminal"
-        selected={isTabSelected($router.path, 'terminal')}
-        url={getTabUrl($router.path, 'terminal')} />
-      {#if displayTty}
-        <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
+      {#if !container.isInfra}
+        <Tab
+          title="Terminal"
+          selected={isTabSelected($router.path, 'terminal')}
+          url={getTabUrl($router.path, 'terminal')} />
+        {#if displayTty}
+          <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
+        {/if}
       {/if}
     {/snippet}
     {#snippet contentSnippet()}
@@ -126,12 +124,14 @@ function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | 
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <ContainerDetailsKube container={container} />
       </Route>
-      <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
-        <ContainerDetailsTerminal container={container} />
-      </Route>
-      <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
-        <ContainerDetailsTtyTerminal container={container} />
-      </Route>
+      {#if !container.isInfra}
+        <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
+          <ContainerDetailsTerminal container={container} />
+        </Route>
+        <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
+          <ContainerDetailsTtyTerminal container={container} />
+        </Route>
+      {/if}
     {/snippet}
   </DetailsPage>
 {/if}

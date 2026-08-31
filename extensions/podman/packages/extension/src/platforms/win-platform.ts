@@ -24,6 +24,7 @@ import { SequenceCheck, WarningCheck } from '/@/checks/base-check';
 import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
 import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
+import { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-firmware-check';
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
@@ -53,6 +54,8 @@ export class WinPlatform {
     readonly hyperVPodmanVersionCheck: HyperVPodmanVersionCheck,
     @inject(HyperVCheck)
     readonly hyperVCheck: HyperVCheck,
+    @inject(VirtualizationFirmwareCheck)
+    readonly virtualizationFirmwareCheck: VirtualizationFirmwareCheck,
     @inject(VirtualMachinePlatformCheck)
     readonly virtualMachinePlatformCheck: VirtualMachinePlatformCheck,
     @inject(WSLVersionCheck)
@@ -74,6 +77,7 @@ export class WinPlatform {
       this.winBitCheck,
       this.winVersionCheck,
       this.winMemoryCheck,
+      new WarningCheck(this.virtualizationFirmwareCheck),
       new WarningCheck(this.wslCheck),
       new WarningCheck(this.hyperVSequenceCheck),
     ];

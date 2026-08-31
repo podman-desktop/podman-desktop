@@ -18,12 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo, ImageInfo } from '@podman-desktop/core-api';
+import type { ImageInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import {
   IMAGE_DETAILS_VIEW_BADGES,
   IMAGE_DETAILS_VIEW_ICONS,
@@ -169,8 +170,8 @@ describe('expect display usage of an image', () => {
     const imageID = 'abcd12345';
 
     const containerInfo = {
-      ImageID: imageID,
-    } as unknown as ContainerInfo;
+      imageId: imageID,
+    } as unknown as ContainerInfoUI;
     containersInfos.set([containerInfo]);
 
     const myImage = {
@@ -199,8 +200,8 @@ describe('expect display usage of an image', () => {
 
     // containers but not using the image
     const containerInfo = {
-      ImageID: 'anotherID',
-    } as unknown as ContainerInfo;
+      imageId: 'anotherID',
+    } as unknown as ContainerInfoUI;
     containersInfos.set([containerInfo]);
 
     const myImage = {

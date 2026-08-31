@@ -19,7 +19,9 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInfo, ContainerInspectInfo } from '@podman-desktop/core-api';
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -28,6 +30,8 @@ import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
 import ContainerDetails from './ContainerDetails.svelte';
+import type { ContainerInfoUI } from './ContainerInfoUI';
+import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
 
 const myContainer: ContainerInfo = {
   Id: 'myContainer',
@@ -47,6 +51,58 @@ const myContainer: ContainerInfo = {
   ImageBase64RepoTag: '',
 };
 
+// myContainer above is the raw backend shape returned by window.listContainers.
+// myContainerUI is the same container already shaped the way the store holds it.
+// They describe the same container and must be kept in sync by hand.
+const myContainerUI: ContainerInfoUI = {
+  id: 'myContainer',
+  shortId: 'myContai',
+  name: 'name0',
+  image: '',
+  shortImage: '',
+  engineId: 'engine0',
+  engineName: 'podman',
+  engineType: 'podman',
+  state: '',
+  uptime: '',
+  startedAt: '',
+  ports: [],
+  portsAsString: '',
+  displayPort: '',
+  command: '',
+  hasPublicPort: false,
+  openingUrl: '',
+  groupInfo: {
+    name: 'name0',
+    type: ContainerGroupInfoTypeUI.STANDALONE,
+    status: 'RUNNING',
+    engineId: 'engine0',
+    engineType: 'podman',
+    id: 'myContainer',
+    engineName: 'podman',
+  },
+  selected: false,
+  created: 0,
+  labels: {},
+  icon: ContainerIcon,
+  imageBase64RepoTag: '',
+  imageHref: '/images//engine0',
+  imageId: '',
+  names: ['name0'],
+};
+
+// The store holds ContainerInfoUI, so the infra fixture is a UI object too. Upstream added
+// it as a raw ContainerInfo back when the store still carried the backend shape.
+const myInfraContainerUI: ContainerInfoUI = {
+  ...myContainerUI,
+  id: 'myInfraContainer',
+  shortId: 'myInfraC',
+  name: 'infra0',
+  names: ['infra0'],
+  isInfra: true,
+  groupInfo: { ...myContainerUI.groupInfo, name: 'infra0', id: 'myInfraContainer' },
+};
+
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-search'));
 
@@ -61,7 +117,7 @@ beforeEach(() => {
 test('Expect logs when tty is not enabled', async () => {
   router.goto('/');
 
-  containersInfos.set([myContainer]);
+  containersInfos.set([myContainerUI]);
 
   // spy router.goto
   const routerGotoSpy = vi.spyOn(router, 'goto');
@@ -90,7 +146,7 @@ test('Expect logs when tty is not enabled', async () => {
 test('Expect show tty if container has tty enabled', async () => {
   router.goto('/');
 
-  containersInfos.set([myContainer]);
+  containersInfos.set([myContainerUI]);
 
   // spy router.goto
   const routerGotoSpy = vi.spyOn(router, 'goto');
@@ -133,7 +189,7 @@ test('Expect redirect to previous page if container is deleted', async () => {
   // remove myContainer from the store when we call 'deleteContainer'
   // it will then refresh the store and update ContainerDetails page
   vi.mocked(window.deleteContainer).mockImplementation(async (): Promise<void> => {
-    containersInfos.update(containers => containers.filter(container => container.Id !== myContainer.Id));
+    containersInfos.update(containers => containers.filter(container => container.id !== myContainerUI.id));
   });
 
   // defines a fake lastPage so we can check where we will be redirected
@@ -168,4 +224,77 @@ test('Expect redirect to previous page if container is deleted', async () => {
   // grab updated route
   const afterRoute = window.location;
   expect(afterRoute.href).toBe('http://localhost:3000/last');
+});
+
+test('Expect Terminal tab to be hidden for infra containers', async () => {
+  router.goto('/');
+
+  containersInfos.set([myInfraContainerUI]);
+
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
+    Config: {
+      Tty: false,
+    },
+  } as unknown as ContainerInspectInfo);
+
+  render(ContainerDetails, { containerID: 'myInfraContainer' });
+
+  await vi.waitFor(() => {
+    expect(screen.getByText('Summary')).toBeInTheDocument();
+    expect(screen.getByText('Logs')).toBeInTheDocument();
+    expect(screen.getByText('Inspect')).toBeInTheDocument();
+    expect(screen.queryByText('Terminal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tty')).not.toBeInTheDocument();
+  });
+});
+
+test('Expect Terminal tab to be visible for non-infra containers', async () => {
+  router.goto('/');
+
+  containersInfos.set([myContainerUI]);
+
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
+    Config: {
+      Tty: false,
+    },
+  } as unknown as ContainerInspectInfo);
+
+  render(ContainerDetails, { containerID: 'myContainer' });
+
+  await vi.waitFor(() => {
+    expect(screen.getByText('Summary')).toBeInTheDocument();
+    expect(screen.getByText('Logs')).toBeInTheDocument();
+    expect(screen.getByText('Inspect')).toBeInTheDocument();
+    expect(screen.getByText('Terminal')).toBeInTheDocument();
+  });
+});
+
+test('Expect a failed action not to write through to the store element', async () => {
+  // R13: ContainerActions.handleError writes actionError and state = 'ERROR' straight onto
+  // the container it was given. Before the store held ContainerInfoUI every screen built a
+  // fresh object, so a failed action stayed on screen. Now the screen must copy, or the
+  // failure sticks in the store until the next backend refresh and leaks into the list.
+  router.goto('/');
+  const stopped: ContainerInfoUI = { ...myContainerUI, state: 'STOPPED' };
+  containersInfos.set([stopped]);
+
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
+    Config: {},
+  } as unknown as ContainerInspectInfo);
+  vi.mocked(window.startContainer).mockRejectedValue('cannot bind port');
+
+  render(ContainerDetails, { containerID: 'myContainer' });
+
+  const startButton = await screen.findByRole('button', { name: 'Start Container' });
+  await fireEvent.click(startButton);
+
+  // let the rejected action settle
+  await vi.waitFor(() => expect(window.startContainer).toHaveBeenCalled());
+  await tick();
+  await tick();
+
+  // ...and the store element is untouched by it
+  const inStore = get(containersInfos)[0];
+  expect(inStore.actionError).toBeUndefined();
+  expect(inStore.state).toBe('STOPPED');
 });

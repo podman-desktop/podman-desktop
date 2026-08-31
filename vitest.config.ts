@@ -34,20 +34,20 @@ export default defineConfig({
       '!**/builtin/**',
     ],
     // use GitHub action reporters when running in CI
-    reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
-    outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
+    reporters: process.env['CI'] ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
+    outputFile: process.env['CI'] ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
       clean: true,
       excludeAfterRemap: true,
       provider: 'v8',
-      reporter: process.env.CI ? ['json'] : ['lcov', 'text'],
+      reporter: process.env['CI'] ? ['json'] : ['lcov', 'text'],
       include: [
         // projects with sources in src folder
         '{extensions,packages,tools,storybook}/**/{src,scripts}/**',
         // projects with sources at root
         '{website,scripts}/*',
       ],
-      exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
+      exclude: [...(configDefaults.coverage.exclude ?? []), ...PODMAN_DESKTOP_EXCLUDED],
     },
     exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
   },

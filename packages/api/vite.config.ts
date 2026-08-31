@@ -16,19 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { defineConfig } from 'vite';
+
 import { chrome } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
-import { builtinModules } from 'module';
+import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 import dts from 'vite-plugin-dts';
 
 const PACKAGE_ROOT = __dirname;
 
-/**
- * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
- */
-const config = {
-  mode: process.env.MODE,
+export default defineConfig({
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
@@ -39,7 +37,7 @@ const config = {
   plugins: [
     dts({
       entryRoot: 'src',
-      outDir: 'dist',
+      outDirs: 'dist',
       insertTypesEntry: true,
     }),
   ],
@@ -48,7 +46,7 @@ const config = {
     target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE !== 'development',
+    minify: process.env['MODE'] !== 'development',
     lib: {
       entry: {
         index: 'src/index.ts',
@@ -85,6 +83,4 @@ const config = {
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     passWithNoTests: true,
   },
-};
-
-export default config;
+});

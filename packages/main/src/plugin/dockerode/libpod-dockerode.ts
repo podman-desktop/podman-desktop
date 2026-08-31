@@ -51,6 +51,7 @@ export interface PodmanContainerInfo {
   Names: string[];
   ImageID: string;
   Image: string;
+  IsInfra: boolean;
   Created: string;
   State: string;
   StartedAt: number;

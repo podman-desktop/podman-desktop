@@ -18,16 +18,16 @@ let cleanupInProgress = $state(false);
 let cleanupFailures = $state<string[]>([]);
 
 async function openCleanupDialog(): Promise<void> {
-  let message = 'This action may delete data. Proceed?';
+  let message = 'This action will delete data and cannot be undone. Proceed?';
 
   const result = await window.showMessageBox({
-    title: 'Clean Up Data?',
+    title: 'Clear / Purge Data?',
     type: 'danger',
     message: message,
-    buttons: ['Clean Up', 'Cancel'],
+    buttons: ['Clear / Purge Data', 'Cancel'],
   });
 
-  if (result?.response === 'Clean Up') {
+  if (result?.response === 'Clear / Purge Data') {
     await cleanup();
   }
 }
@@ -50,12 +50,23 @@ async function cleanup(): Promise<void> {
 }
 </script>
 
-<div class="flex flex-row items-center">
+<div class="flex flex-row items-end">
   <div>
-    <div class="text-[var(--pd-content-header)] flex flex-row items-center">Clean / Purge data</div>
-    <div class="text-sm flex flex-row items-center pt-1">
-      <Icon class="pr-1" size="0.8x" icon={faWarning} />Proceeding with this action may result in data loss, including
-      existing volumes, containers, images, etc.
+    <div class="text-[var(--pd-content-header)] flex flex-row items-center">Clear / purge data</div>
+    <div class="text-sm pt-1">
+      <div class="flex flex-row items-center">
+        <Icon class="pr-1" size="0.8x" icon={faWarning} />Proceeding with this action will result in data loss.
+      </div>
+      <p class="pt-2">It will delete:</p>
+      <ul class="list-disc ml-5">
+        <li>The current Podman machine</li>
+        <li>Containers, images, volumes, configuration files</li>
+        <li>SSH keys</li>
+      </ul>
+      <p class="pt-2">It will not delete:</p>
+      <ul class="list-disc ml-5">
+        <li>Podman logs</li>
+      </ul>
     </div>
   </div>
 
@@ -64,8 +75,7 @@ async function cleanup(): Promise<void> {
       type="danger"
       on:click={openCleanupDialog}
       inProgress={cleanupInProgress}
-      aria-label="Cleanup"
-      icon={faBroom}>Cleanup / Purge data</Button>
+      icon={faBroom}>Clear / Purge Data</Button>
   </div>
 
   <div>

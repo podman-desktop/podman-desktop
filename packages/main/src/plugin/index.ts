@@ -146,6 +146,7 @@ import type {
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
+  PlayKubeInput,
 } from '@podman-desktop/core-api/libpod';
 import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
@@ -246,7 +247,6 @@ import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
-import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
@@ -481,7 +481,7 @@ export class PluginSystem {
         await shell.openExternal(url);
         return true;
       } else if (result.response === 'Copy Link') {
-        clipboard.writeText(url);
+        await clipboard.writeText(url);
       }
       return false;
     };
@@ -827,8 +827,6 @@ export class PluginSystem {
     const recommendationsRegistry = container.get<RecommendationsRegistry>(RecommendationsRegistry);
     recommendationsRegistry.init();
 
-    container.bind<TempFileService>(TempFileService).toSelf().inSingletonScope();
-
     container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
     const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
 
@@ -857,7 +855,6 @@ export class PluginSystem {
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);
     const authentication = container.get<AuthenticationImpl>(AuthenticationImpl);
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
-    const tempFileService = container.get<TempFileService>(TempFileService);
 
     container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
     const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
@@ -1137,7 +1134,7 @@ export class PluginSystem {
       'container-provider-registry:playKube',
       async (
         _listener,
-        yamlFilePath: string,
+        input: PlayKubeInput,
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
@@ -1157,7 +1154,7 @@ export class PluginSystem {
         });
 
         try {
-          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, {
+          const result = await containerProviderRegistry.playKube(input, selectedProvider, {
             ...options,
             abortSignal: abortController?.signal,
           });
@@ -1170,14 +1167,6 @@ export class PluginSystem {
         }
       },
     );
-
-    this.ipcHandle('temp-file-service:createTempFile', async (_listener, content: string): Promise<string> => {
-      return tempFileService.createTempFile(content);
-    });
-
-    this.ipcHandle('temp-file-service:removeTempFile', async (_listener, filePath: string): Promise<void> => {
-      return tempFileService.removeTempFile(filePath);
-    });
 
     this.ipcHandle(
       'container-provider-registry:startContainer',
@@ -1977,8 +1966,8 @@ export class PluginSystem {
       },
     );
 
-    this.ipcHandle('clipboard:writeText', async (_, text: string, type?: 'selection' | 'clipboard'): Promise<void> => {
-      return clipboard.writeText(text, type);
+    this.ipcHandle('clipboard:writeText', async (_, text: string): Promise<void> => {
+      return clipboard.writeText(text);
     });
 
     this.ipcHandle(
@@ -3279,6 +3268,10 @@ export class PluginSystem {
         navigationManager.navigateToHistoryEntry(extensionId, entryId);
       },
     );
+
+    this.ipcHandle('navigation:getSearchableRoutes', async () => {
+      return navigationManager.getSearchableRoutes();
+    });
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();

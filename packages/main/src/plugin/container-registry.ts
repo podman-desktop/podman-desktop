@@ -20,8 +20,9 @@ import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
@@ -40,6 +41,8 @@ import type {
   ImageInspectInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   LibPodPodInfo,
   ListImagesOptions,
   ManifestCreateOptions,
@@ -73,7 +76,7 @@ import type {
   ContainerCreatePortMappingOption,
   PodmanDevice,
 } from '@podman-desktop/core-api/libpod';
-import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import { PlayKubeInfo, PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
@@ -628,6 +631,7 @@ export class ContainerProviderRegistry {
             Names: string[];
             Image: string;
             ImageID: string;
+            IsInfra?: boolean;
             Command?: string;
             Created: number;
             Ports: ContainerPortInfo[];
@@ -676,6 +680,7 @@ export class ContainerProviderRegistry {
                 Names: podmanContainer.Names.map(name => `/${name}`),
                 ImageID: `sha256:${podmanContainer.ImageID}`,
                 Image: podmanContainer.Image,
+                IsInfra: podmanContainer.IsInfra,
                 // convert to unix timestamp
                 Created: moment(podmanContainer.Created).unix(),
                 State: podmanContainer.State,
@@ -737,6 +742,7 @@ export class ContainerProviderRegistry {
                 engineType: provider.connection.type,
                 StartedAt: container.StartedAt ?? '',
                 Status: container.Status,
+                IsInfra: container.IsInfra,
                 ImageBase64RepoTag: Buffer.from(container.Image, 'binary').toString('base64'),
               };
               return containerInfo;
@@ -1411,6 +1417,54 @@ export class ContainerProviderRegistry {
 
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
+  }
+
+  async updateImages(images: ImageUpdateInfo[], abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
+    const results = await Promise.all(
+      images.map(async (info): Promise<ImageUpdateResult> => {
+        try {
+          const matchingEngine = this.getMatchingEngine(info.engineId);
+          const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
+          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
+
+          if (status.status === 'error') {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          if (status.status === 'skipped' || !status.updateAvailable) {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+          const pullStream = await matchingEngine.pull(info.image, {
+            authconfig,
+            abortSignal,
+          });
+
+          const { resolve, reject, promise } = Promise.withResolvers<void>();
+          matchingEngine.modem.followProgress(
+            pullStream,
+            (err: Error | null) => (err ? reject(err) : resolve()),
+            () => {},
+          );
+          await promise;
+
+          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
+        } catch (error: unknown) {
+          console.error(`Error updating image ${info.image}`, error);
+          const message = error instanceof Error ? error.message : String(error);
+          return { imageRef: info.image, updated: false, status: 'error', message };
+        }
+      }),
+    );
+    this.telemetryService.track('updateImages', {
+      count: images.length,
+      updated: results.filter(result => result.updated).length,
+      upToDate: results.filter(result => result.status === 'normal' && !result.updated).length,
+      skipped: results.filter(result => result.status === 'skipped').length,
+      failed: results.filter(result => result.status === 'error').length,
+    });
+    return results;
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
@@ -2714,7 +2768,7 @@ export class ContainerProviderRegistry {
   }
 
   async playKube(
-    kubernetesYamlFilePath: string,
+    input: PlayKubeInput,
     selectedProvider: ProviderContainerConnectionInfo,
     options?: {
       build?: boolean;
@@ -2732,9 +2786,10 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      // if we don't build, we use the file directory
+      // if we don't build, we can pass the input straight through
       if (!options?.build) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       // ensure build support is true, otherwise let's throw a nice user friendly error
@@ -2744,12 +2799,16 @@ export class ContainerProviderRegistry {
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
 
-      const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
+      const kubePlay =
+        input.type === 'path'
+          ? KubePlayContext.fromFile(input.value)
+          : KubePlayContext.fromContent(input.value, tmpdir());
       await kubePlay.init();
 
       // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       return provider.libpodApi.playKube(kubePlay.build(), options);

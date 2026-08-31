@@ -9,14 +9,18 @@ import type { Unsubscriber } from 'svelte/store';
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { isDark } from '/@/stores/appearance';
 
+interface Props {
+  content?: string;
+  language?: string;
+  readOnly?: boolean;
+}
+
+let { content = '', language = 'json', readOnly = true }: Props = $props();
+
 let divEl: HTMLDivElement;
 let editor: monaco.editor.IStandaloneCodeEditor;
 let Monaco;
 let isDarkUnsubscribe: Unsubscriber;
-
-export let content = '';
-export let language = 'json';
-export let readOnly = true;
 
 const dispatch = createEventDispatcher<{ contentChange: string }>();
 
@@ -84,7 +88,9 @@ onDestroy(() => {
   }
 });
 
-$: content, editor?.getModel()?.setValue(content);
+$effect(() => {
+  editor?.getModel()?.setValue(content);
+});
 </script>
 
 <div bind:this={divEl} class="h-full"></div>

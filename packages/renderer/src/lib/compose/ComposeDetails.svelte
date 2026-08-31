@@ -4,7 +4,6 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import ComposeIcon from '/@/lib/images/PodIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
@@ -22,7 +21,6 @@ import type { ComposeInfoUI } from './ComposeInfoUI';
 export let composeName: string;
 export let engineId: string;
 
-const containerUtils = new ContainerUtils();
 let composeUnsubscribe: Unsubscriber;
 
 let compose: ComposeInfoUI;
@@ -41,7 +39,7 @@ onMount(() => {
 
     // Get all containers that match the composeName we are looking at
     const containersMatchingProject = containers.filter(container => {
-      return container?.Labels['com.docker.compose.project'] === composeName;
+      return container?.labels['com.docker.compose.project'] === composeName;
     });
 
     // Update our current status
@@ -49,7 +47,8 @@ onMount(() => {
       status = 'STOPPED';
     } else {
       const allRunning = containersMatchingProject.every(container => {
-        return container?.State === 'running';
+        // the UI state is uppercased by ContainerUtils.getState, unlike the raw backend value
+        return container?.state === 'RUNNING';
       });
       if (allRunning) {
         status = 'RUNNING';
@@ -58,9 +57,10 @@ onMount(() => {
       }
     }
 
-    // Convert each matching container to the ComposeInfoContainerUI type and add it to compose.containers
+    // the store already holds ContainerInfoUI; copy so ComposeActions, which writes
+    // actionInProgress, actionError and state, never touches the store's own elements
     convertedContainers = containersMatchingProject.map(container => {
-      return containerUtils.getContainerInfoUI(container);
+      return { ...container };
     });
 
     // Get the engine type from the first container in the list (if it exists)

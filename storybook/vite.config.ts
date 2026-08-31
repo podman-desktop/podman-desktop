@@ -40,7 +40,7 @@ function colorRegistryWatcher() {
   let isRegenerating = false;
   let queuedRegeneration = false;
 
-  async function regenerate(server) {
+  async function regenerate(server: import('vite').ViteDevServer) {
     try {
       await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
       console.log('[color-registry-watcher] themes.css regenerated successfully\n');
@@ -49,15 +49,18 @@ function colorRegistryWatcher() {
         type: 'full-reload',
         path: '*',
       });
-    } catch (error) {
-      console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
+    } catch (error: unknown) {
+      console.error(
+        '[color-registry-watcher] Failed to regenerate themes.css:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
   return {
     name: 'color-registry-watcher',
-    configureServer(server) {
-      if (process.env.VITEST) return;
+    configureServer(server: import('vite').ViteDevServer): void {
+      if (process.env['VITEST']) return;
 
       const filesToWatch = [
         path.join(ROOT_DIR, 'packages/main/src/plugin/color-registry.ts'),
@@ -97,27 +100,19 @@ function colorRegistryWatcher() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  mode: process.env.MODE,
+  mode: process.env['MODE'],
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [
-    tailwindcss(),
-    svelte({ configFile: '../svelte.config.js', hot: true }),
-    svelteTesting(),
-    colorRegistryWatcher(),
-  ],
+  plugins: [tailwindcss(), svelte({ configFile: '../svelte.config.js' }), svelteTesting(), colorRegistryWatcher()],
   test: {
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     globals: true,
     environment: 'jsdom',
     alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
-    deps: {
-      inline: ['moment'],
-    },
   },
   base: '',
   server: {

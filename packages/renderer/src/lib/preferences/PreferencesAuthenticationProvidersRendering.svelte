@@ -8,7 +8,6 @@ import {
 import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
 import KeyIcon from '/@/lib/images/KeyIcon.svelte';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
@@ -38,7 +37,7 @@ import SettingsPage from './SettingsPage.svelte';
             <!-- Icon -->
             <div class="flex">
               {#if provider?.images?.icon}
-                <IconImage image={provider.images.icon} alt={provider.displayName} class="max-w-[40px] h-full" />
+                <Icon icon={provider.images.icon} title={provider.displayName} class="max-w-[40px] h-full" />
               {:else}
                 <svelte:component
                   this={KeyIcon}
