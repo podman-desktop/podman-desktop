@@ -7635,14 +7635,20 @@ describe('imageExist', () => {
 describe('updateImages', () => {
   const pullMock = vi.fn();
   const followProgressMock = vi.fn();
+  const imageInspectMock = vi.fn();
+  const getImageMock = vi.fn(() => ({ inspect: imageInspectMock }));
   const fakeDockerode = {
     pull: pullMock,
     modem: { followProgress: followProgressMock },
+    getImage: getImageMock,
   } as unknown as Dockerode;
 
   beforeEach(() => {
     pullMock.mockReset();
     followProgressMock.mockReset();
+    getImageMock.mockClear();
+    imageInspectMock.mockReset();
+    imageInspectMock.mockResolvedValue({ RepoDigests: ['nginx@sha256:old'] });
     telemetryTrackMock.mockReset();
     followProgressMock.mockImplementation((_s: unknown, f: (err: Error | null) => void) => f(null));
     containerRegistry.addInternalProvider('testEngine', {
@@ -7661,7 +7667,7 @@ describe('updateImages', () => {
     });
 
     const [result] = await containerRegistry.updateImages([
-      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
     ]);
 
     expect(result).toEqual({ imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' });
@@ -7691,7 +7697,7 @@ describe('updateImages', () => {
 
     const abortController = new AbortController();
     const updatePromise = containerRegistry.updateImages(
-      [{ engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' }],
+      [{ engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' }],
       abortController.signal,
     );
     await vi.waitFor(() => expect(followProgressMock).toHaveBeenCalledOnce());
@@ -7712,7 +7718,7 @@ describe('updateImages', () => {
     vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue(mockStatus);
 
     const [result] = await containerRegistry.updateImages([
-      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
     ]);
 
     expect(result!.updated).toBe(false);
@@ -7722,25 +7728,50 @@ describe('updateImages', () => {
     expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', expect.objectContaining({ skipped: 1 }));
   });
 
-  test('checks update status with repository digests when available', async () => {
+  test('checks update status with current repository digests from the backend', async () => {
     const checkImageUpdateStatusMock = vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
       status: 'normal',
       updateAvailable: false,
       message: 'Up to date',
     });
 
-    await containerRegistry.updateImages([
-      {
-        engineId: 'testEngine',
-        image: 'nginx:latest',
-        tag: 'latest',
-        digest: 'sha256:configdigest',
-        repoDigests: ['nginx@sha256:manifestdigest'],
-      },
-    ]);
+    imageInspectMock.mockResolvedValue({ RepoDigests: ['nginx@sha256:manifestdigest'] });
 
+    await containerRegistry.updateImages([{ engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' }]);
+
+    expect(imageInspectMock).toHaveBeenCalledOnce();
     expect(checkImageUpdateStatusMock).toHaveBeenCalledWith('nginx:latest', 'latest', ['nginx@sha256:manifestdigest']);
     expect(pullMock).not.toHaveBeenCalled();
+  });
+
+  test('checks and updates each tag independently when an image has multiple tags', async () => {
+    imageInspectMock.mockResolvedValue({ RepoDigests: ['example.com/app@sha256:old'] });
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus')
+      .mockResolvedValueOnce({ status: 'normal', updateAvailable: false, message: 'Up to date' })
+      .mockResolvedValueOnce({ status: 'normal', updateAvailable: true, message: 'Update available' });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'example.com/app:stable', tag: 'stable' },
+      { engineId: 'testEngine', image: 'example.com/app:latest', tag: 'latest' },
+    ]);
+
+    expect(getImageMock).toHaveBeenCalledWith('example.com/app:stable');
+    expect(getImageMock).toHaveBeenCalledWith('example.com/app:latest');
+    expect(pullMock).toHaveBeenCalledExactlyOnceWith('example.com/app:latest', {
+      authconfig: undefined,
+      abortSignal: undefined,
+    });
+    expect(results).toEqual([
+      { imageRef: 'example.com/app:stable', updated: false, status: 'normal', message: 'Up to date' },
+      {
+        imageRef: 'example.com/app:latest',
+        updated: true,
+        status: 'updated',
+        message: 'Image updated successfully',
+      },
+    ]);
   });
 
   test('returns error when engine not found', async () => {
@@ -7749,7 +7780,7 @@ describe('updateImages', () => {
     checkImageUpdateStatusMock.mockClear();
 
     const [result] = await containerRegistry.updateImages([
-      { engineId: 'nonexistent', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+      { engineId: 'nonexistent', image: 'nginx:latest', tag: 'latest' },
     ]);
 
     expect(result!.updated).toBe(false);
@@ -7776,8 +7807,8 @@ describe('updateImages', () => {
     });
 
     const results = await containerRegistry.updateImages([
-      { engineId: 'nonexistent', image: 'missing:latest', tag: 'latest', digest: 'sha256:missing' },
-      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+      { engineId: 'nonexistent', image: 'missing:latest', tag: 'latest' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
     ]);
 
     expect(results).toEqual([
@@ -7808,8 +7839,8 @@ describe('updateImages', () => {
     pullMock.mockResolvedValue({});
 
     const results = await containerRegistry.updateImages([
-      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
-      { engineId: 'testEngine', image: 'redis:latest', tag: 'latest', digest: 'sha256:old2' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
+      { engineId: 'testEngine', image: 'redis:latest', tag: 'latest' },
     ]);
 
     expect(results).toHaveLength(2);

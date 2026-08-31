@@ -1148,13 +1148,13 @@ describe('updateImages handler', () => {
     const handle = getHandler<
       (
         _event: unknown,
-        images: Array<{ engineId: string; image: string; tag: string; digest: string }>,
+        images: Array<{ engineId: string; image: string; tag: string }>,
       ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
     >('container-provider-registry:updateImages');
 
     const images = [
-      { engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' },
-      { engineId: 'podman', image: 'redis:7', tag: '7', digest: 'sha256:def456' },
+      { engineId: 'podman', image: 'nginx:latest', tag: 'latest' },
+      { engineId: 'podman', image: 'redis:7', tag: '7' },
     ];
     const expectedResults = [
       { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
