@@ -32,9 +32,11 @@ export function createNavigationContainerEntry(): NavigationRegistryEntry {
     destinations = [
       ...containers.map(container => ({
         page: NavigationPage.CONTAINER_SUMMARY as const,
-        parameters: { id: container.Id },
+        parameters: { id: container.id },
         icon: { iconComponent: ContainerIcon },
-        name: `Container: ${container.Names[0].replace(/^\//, '')}`,
+        // deliberately not `container.name`: getName also strips the compose project
+        // prefix, which would relabel navigation entries for every compose container
+        name: `Container: ${container.names?.[0]?.replace(/^\//, '') ?? container.name}`,
       })),
       {
         page: NavigationPage.CONTAINERS as const,

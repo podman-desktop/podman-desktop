@@ -56,9 +56,19 @@ test.each([
   vi.mocked(window.listContainers).mockClear();
 
   // now, setup at least one container
+  // the store converts through ContainerUtils, so the mocked backend object has to be
+  // complete enough for the conversion: getName reads Names, getState reads State, and
+  // an absent field throws inside the updater rather than failing an assertion
   vi.mocked(window.listContainers).mockResolvedValue([
     {
       Id: 'id123',
+      Names: ['/container'],
+      Image: 'docker.io/library/nginx:latest',
+      ImageID: 'sha256:abcdef0123456789',
+      State: 'running',
+      Labels: {},
+      engineId: 'engine',
+      engineName: 'podman',
     } as unknown as ContainerInfo,
   ]);
 
@@ -75,5 +85,5 @@ test.each([
   // now get list
   const containerListResult = get(containersInfos);
   expect(containerListResult.length).toBe(1);
-  expect(containerListResult[0].Id).toEqual('id123');
+  expect(containerListResult[0].id).toEqual('id123');
 });

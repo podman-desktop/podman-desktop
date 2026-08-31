@@ -60,6 +60,8 @@ const fakePodContainer: ContainerInfoUI = {
   created: 1234,
   labels: { label1: 'label1' },
   imageBase64RepoTag: 'fakeRepoTag',
+  imageId: 'fakeImageID1',
+  names: ['/fakePodContainer'],
 };
 
 const fakeStandaloneContainer: ContainerInfoUI = {
@@ -90,6 +92,8 @@ const fakeStandaloneContainer: ContainerInfoUI = {
   created: 1234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
+  imageId: 'fakeImageID2',
+  names: ['/fakeStandaloneContainer'],
 };
 
 // Test render ContainerDetailsSummary with ContainerInfoUI object with a pod group

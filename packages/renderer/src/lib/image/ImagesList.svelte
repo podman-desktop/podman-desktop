@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
-import type { ContainerInfo, ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import type { ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -17,6 +17,7 @@ import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { ContextUI } from '/@/lib/context/context';
 import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
@@ -125,7 +126,7 @@ let imagesUnsubscribe: Unsubscriber;
 let containersUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 let viewsUnsubscribe: Unsubscriber;
-let storeContainers: ContainerInfo[] = [];
+let storeContainers: ContainerInfoUI[] = [];
 let storeImages: ImageInfo[] = [];
 
 onMount(async () => {

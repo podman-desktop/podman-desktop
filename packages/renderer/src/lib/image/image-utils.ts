@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import {
-  type ContainerInfo,
   type ImageInfo,
   isViewContributionBadge,
   isViewContributionIcon,
@@ -30,6 +29,7 @@ import { filesize } from 'filesize';
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
@@ -92,23 +92,26 @@ export class ImageUtils {
     return Buffer.from(name, 'binary').toString('base64');
   }
 
-  getInUse(imageInfo: ImageInfo, repositoryTag?: string, containersInfo?: ContainerInfo[]): boolean {
+  getInUse(imageInfo: ImageInfo, repositoryTag?: string, containersInfo?: ContainerInfoUI[]): boolean {
     if (!containersInfo) {
       return false;
     }
 
     return containersInfo.some(container => {
-      if (container.ImageID !== imageInfo.Id) {
+      // imageId is required on ContainerInfoUI, but a hand-built fixture (e.g. in tests)
+      // may still omit it; an undefined one simply never matches. Falling back to another
+      // field here would report the wrong image as in-use
+      if (container.imageId !== imageInfo.Id) {
         return false;
       }
       if (repositoryTag) {
-        if (container.Image === repositoryTag) {
+        if (container.image === repositoryTag) {
           return true;
         }
         // The container's original tag no longer exists on the image (e.g. image was retagged).
         // All remaining tags should be considered in-use since the underlying image data is referenced.
         const repoTags = imageInfo.RepoTags ?? [];
-        return !repoTags.includes(container.Image);
+        return !repoTags.includes(container.image);
       }
       return (imageInfo.RepoTags ?? []).length === 0;
     });
@@ -171,7 +174,7 @@ export class ImageUtils {
 
   getImagesInfoUI(
     imageInfo: ImageInfo,
-    containersInfo: ContainerInfo[],
+    containersInfo: ContainerInfoUI[],
     context?: ContextUI,
     viewContributions?: ViewInfoUI[],
     imageList?: ImageInfo[],
@@ -255,7 +258,7 @@ export class ImageUtils {
   getImageInfoUI(
     imageInfo: ImageInfo,
     base64RepoTag: string,
-    containersInfo: ContainerInfo[],
+    containersInfo: ContainerInfoUI[],
     context?: ContextUI,
     viewContributions?: ViewInfoUI[],
   ): ImageInfoUI | undefined {

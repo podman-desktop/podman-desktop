@@ -149,11 +149,10 @@ export class ContainerUtils {
     }
   }
 
-  getContainerInfoUI(
-    containerInfo: ContainerInfo,
-    context?: ContextUI,
-    viewContributions?: ViewInfoUI[],
-  ): ContainerInfoUI {
+  // The icon is deliberately not resolved here: extension-contributed icons need the
+  // context and the view contributions, which are component-level stores. The containers
+  // store calls this converter, so the icon is overlaid by ContainerList instead.
+  getContainerInfoUI(containerInfo: ContainerInfo): ContainerInfoUI {
     return {
       id: containerInfo.Id,
       shortId: containerInfo.Id.substring(0, 8),
@@ -177,9 +176,11 @@ export class ContainerUtils {
       created: containerInfo.Created,
       labels: containerInfo.Labels,
       isInfra: containerInfo.IsInfra,
-      icon: this.iconClass(containerInfo, context, viewContributions) ?? ContainerIcon,
+      icon: ContainerIcon,
       imageBase64RepoTag: containerInfo.ImageBase64RepoTag,
       imageHref: this.getImageHref(containerInfo),
+      imageId: containerInfo.ImageID,
+      names: containerInfo.Names,
     };
   }
 
@@ -284,7 +285,7 @@ export class ContainerUtils {
     }
   }
 
-  iconClass(container: ContainerInfo, context?: ContextUI, viewContributions?: ViewInfoUI[]): string | undefined {
+  iconClass(container: ContainerInfoUI, context?: ContextUI, viewContributions?: ViewInfoUI[]): string | undefined {
     if (!context || !viewContributions) {
       return undefined;
     }
@@ -313,9 +314,9 @@ export class ContainerUtils {
     return icon;
   }
 
-  adaptContextOnContainer(context: ContextUI, container: ContainerInfo): void {
-    context.setValue('containerLabelKeys', container.Labels ? Object.keys(container.Labels) : []);
-    context.setValue('containerImageName', container.Image);
+  adaptContextOnContainer(context: ContextUI, container: ContainerInfoUI): void {
+    context.setValue('containerLabelKeys', container.labels ? Object.keys(container.labels) : []);
+    context.setValue('containerImageName', container.image);
   }
 
   filterResetRunning(f: string): string {
