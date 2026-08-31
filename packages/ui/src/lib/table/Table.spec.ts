@@ -1029,30 +1029,33 @@ describe('Table#rowClick', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  test('click inside dropdown menu marker does not call onClick', async () => {
+  test('click on menu item in excluded column does not call onClick', async () => {
     const onClick = vi.fn();
     const ROW = new Row<Item>({ onClick });
 
     const { getByRole } = render(Table<Item>, {
-      kind: 'row-click-dropdown-test',
+      kind: 'row-click-excluded-menu-test',
       data: DATA,
-      columns: [NAME_COLUMN],
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
       row: ROW,
       key: (item: Item): string => item.id,
       label: (item: Item): string => item.name,
     });
 
     const row = getByRole('row', { name: 'Alice' });
-    const nameCell = within(row).getByText('Alice').closest('[role="cell"]');
-    const dropdownMenu = document.createElement('div');
-    dropdownMenu.setAttribute('data-pd-dropdown-menu', '');
-    const menuItem = document.createElement('button');
+    const cells = row.querySelectorAll('[role="cell"]');
+    const actionsCell = cells[cells.length - 1];
+    const menuItem = document.createElement('div');
+    menuItem.setAttribute('role', 'none');
     menuItem.textContent = 'Delete';
-    dropdownMenu.appendChild(menuItem);
-    nameCell?.appendChild(dropdownMenu);
+    actionsCell?.appendChild(menuItem);
+
+    const menuHandler = vi.fn();
+    menuItem.addEventListener('click', menuHandler);
 
     await fireEvent.click(menuItem);
 
+    expect(menuHandler).toHaveBeenCalledOnce();
     expect(onClick).not.toHaveBeenCalled();
   });
 

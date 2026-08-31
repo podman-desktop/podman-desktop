@@ -367,7 +367,7 @@ async function resetColumns(): Promise<void> {
 }
 
 const INTERACTIVE_SELECTOR =
-  'button, a, input, select, textarea, label, [role="button"], [role="menuitem"], [role="checkbox"], [role="switch"], [data-pd-dropdown-menu]';
+  'button, a, input, select, textarea, label, [role="button"], [role="menuitem"], [role="checkbox"], [role="switch"]';
 
 function isRowClickable(object: T): boolean {
   return !!row.info.onClick && (row.info.clickable?.(object) ?? true);
