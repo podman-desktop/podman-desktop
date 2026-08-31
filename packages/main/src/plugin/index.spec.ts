@@ -1164,8 +1164,30 @@ describe('updateImages handler', () => {
 
     const result = await handle(undefined, images);
 
-    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images);
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images, undefined);
     expect(result.result).toEqual(expectedResults);
+  });
+
+  test('should forward an abort signal when a cancellation token id is passed', async () => {
+    const cancellationTokenRegistry = new CancellationTokenRegistry();
+    const tokenId = cancellationTokenRegistry.createCancellationTokenSource();
+
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: Array<{ engineId: string; image: string; tag: string; digest: string }>,
+        cancellableTokenId?: number,
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images = [{ engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' }];
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
+
+    await handle(undefined, images, tokenId);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledOnce();
+    const abortSignal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
+    expect(abortSignal).toBeInstanceOf(AbortSignal);
   });
 });
 

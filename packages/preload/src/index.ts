@@ -640,9 +640,12 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('updateImages', async (images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> => {
-    return ipcInvoke('container-provider-registry:updateImages', images);
-  });
+  contextBridge.exposeInMainWorld(
+    'updateImages',
+    async (images: ImageUpdateInfo[], cancellableTokenId?: number): Promise<ImageUpdateResult[]> => {
+      return ipcInvoke('container-provider-registry:updateImages', images, cancellableTokenId);
+    },
+  );
 
   contextBridge.exposeInMainWorld('loadImages', async (options: ImageLoadOptions): Promise<void> => {
     return ipcInvoke('container-provider-registry:loadImages', options);
