@@ -272,6 +272,35 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'push'
 
+      # Windows Defender real-time scanning can lock/quarantine files under the build,
+      # updater download and install directories, which prevents the Electron renderer
+      # from initializing during the update test. Exclude these paths proactively, before
+      # the app is built and installed, so Defender never scans files written there.
+      - name: Add Windows Defender exclusions for build and install paths
+        run: |
+          Write-Host "Adding Windows Defender exclusions to prevent renderer initialization failures during update tests"
+          $exclusions = @(
+            "$env:GITHUB_WORKSPACE",
+            "$env:LOCALAPPDATA\Programs\podman-desktop",
+            "$env:LOCALAPPDATA\podman-desktop-updater"
+          )
+          foreach ($path in $exclusions) {
+            try {
+              Add-MpPreference -ExclusionPath $path -ErrorAction Stop
+              Write-Host "Added Defender exclusion path: $path"
+            } catch {
+              Write-Warning "Failed to add Defender exclusion for ${path}: $_"
+            }
+          }
+          try {
+            Add-MpPreference -ExclusionProcess "Podman Desktop.exe" -ErrorAction Stop
+            Write-Host "Added Defender exclusion process: Podman Desktop.exe"
+          } catch {
+            Write-Warning "Failed to add Defender process exclusion: $_"
+          }
+          Write-Host "Current Defender path exclusions:"
+          try { (Get-MpPreference).ExclusionPath } catch { Write-Warning "Unable to read current Defender exclusions" }
+
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         name: Install pnpm
         with:
