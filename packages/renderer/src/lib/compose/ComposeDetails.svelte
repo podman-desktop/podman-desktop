@@ -1,11 +1,8 @@
 <script lang="ts">
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
-import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import ComposeIcon from '/@/lib/images/PodIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
@@ -19,71 +16,58 @@ import ComposeDetailsLogs from './ComposeDetailsLogs.svelte';
 import ComposeDetailsSummary from './ComposeDetailsSummary.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let composeName: string;
-export let engineId: string;
+interface Props {
+  composeName: string;
+  engineId: string;
+}
+
+let { composeName, engineId }: Props = $props();
 
 const containerUtils = new ContainerUtils();
-let composeUnsubscribe: Unsubscriber;
 
-let compose: ComposeInfoUI;
+// We will use the containersInfos store to get every container that matches
+// the label com.docker.compose.project={composeName}
+// We only care about the status. Check each containersMatchingProject status and if every container is RUNNING, set status to RUNNING,
+// else let status be 'STOPPED'
+
+// Get all containers that match the composeName we are looking at
+let containersMatchingProject = $derived(
+  $containersInfos.filter(container => {
+    return container?.Labels['com.docker.compose.project'] === composeName;
+  }),
+);
 
 // Assume that the engine type is podman until we find a compose group that is docker
-let engineType: 'docker' | 'podman' = 'podman';
+// Get the engine type from the first container in the list (if it exists)
+let engineType: 'docker' | 'podman' = $derived(
+  containersMatchingProject.length > 0 ? containersMatchingProject[0].engineType : 'podman',
+);
 
-onMount(() => {
-  // We will use the containersInfos store to get every container that matches
-  // the label com.docker.compose.project={composeName}
-  // We only care about the status. Check each containersMatchingProject status and if every container is RUNNING, set status to RUNNING,
-  // else let status be 'STOPPED'
-  composeUnsubscribe = containersInfos.subscribe(containers => {
-    let convertedContainers: ContainerInfoUI[];
-    let status: string;
+// Update our current status
+let status = $derived(
+  containersMatchingProject.length > 0 &&
+    containersMatchingProject.every(container => {
+      return container?.State === 'running';
+    })
+    ? 'RUNNING'
+    : 'STOPPED',
+);
 
-    // Get all containers that match the composeName we are looking at
-    const containersMatchingProject = containers.filter(container => {
-      return container?.Labels['com.docker.compose.project'] === composeName;
-    });
+// Convert each matching container to the ComposeInfoContainerUI type and add it to compose.containers
+let convertedContainers = $derived(
+  containersMatchingProject.map(container => {
+    return containerUtils.getContainerInfoUI(container);
+  }),
+);
 
-    // Update our current status
-    if (containersMatchingProject.length === 0) {
-      status = 'STOPPED';
-    } else {
-      const allRunning = containersMatchingProject.every(container => {
-        return container?.State === 'running';
-      });
-      if (allRunning) {
-        status = 'RUNNING';
-      } else {
-        status = 'STOPPED';
-      }
-    }
-
-    // Convert each matching container to the ComposeInfoContainerUI type and add it to compose.containers
-    convertedContainers = containersMatchingProject.map(container => {
-      return containerUtils.getContainerInfoUI(container);
-    });
-
-    // Get the engine type from the first container in the list (if it exists)
-    if (convertedContainers.length > 0) {
-      engineType = convertedContainers[0].engineType;
-    }
-
-    // Make sure we update the compose object with the name, status, engineID, containers, etc.
-    // or else logging will not appear correctly when loading (it'll see empty containers..)
-    compose = {
-      name: composeName,
-      engineId: engineId,
-      engineType: engineType,
-      status: status,
-      containers: convertedContainers,
-    };
-  });
-});
-
-onDestroy(() => {
-  if (composeUnsubscribe) {
-    composeUnsubscribe();
-  }
+// Make sure we update the compose object with the name, status, engineID, containers, etc.
+// or else logging will not appear correctly when loading (it'll see empty containers..)
+let compose: ComposeInfoUI = $derived({
+  name: composeName,
+  engineId: engineId,
+  engineType: engineType,
+  status: status,
+  containers: convertedContainers,
 });
 </script>
 
