@@ -3,10 +3,12 @@ import type { Snippet } from 'svelte';
 import type { HTMLTdAttributes } from 'svelte/elements';
 
 interface Props extends HTMLTdAttributes {
+  style?: string;
+  onClick?: () => void;
   children?: Snippet;
 }
 
-let { class: className, children, ...restProps }: Props = $props();
+let { class: className, style = '', onClick = (): void => {}, children, ...restProps }: Props = $props();
 </script>
 
 <!-- wrap-anywhere, because a details cell holds values nobody chose the length
@@ -18,6 +20,6 @@ let { class: className, children, ...restProps }: Props = $props();
      Not break-all: that breaks ordinary words too, so prose and hyphenated names
      get chopped mid-word even when they would have fitted. overflow-wrap:
      anywhere breaks only what would otherwise overflow. -->
-<td class="{['pt-1 pl-3 wrap-anywhere', className]}" {...restProps}>
+<td class="pt-1 pl-3 wrap-anywhere {style} {className}" onclick={onClick} {...restProps}>
   {@render children?.()}
 </td>

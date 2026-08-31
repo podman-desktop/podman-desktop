@@ -34,7 +34,7 @@ test('a details cell can wrap a value with nothing to wrap at', async () => {
 });
 
 test('the caller can still add classes of its own', async () => {
-  render(DetailsCell, { class: 'text-right' });
+  render(DetailsCell, { style: 'text-right' });
 
   const cell = screen.getByRole('cell');
   expect(cell).toHaveClass('text-right');

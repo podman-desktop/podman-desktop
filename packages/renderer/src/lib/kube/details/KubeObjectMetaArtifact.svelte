@@ -80,8 +80,8 @@ if (artifact?.annotations) {
   {#if internalLabels.length > 0}
     <tr>
       <Cell
-        class="cursor-pointer flex items-center"
-        onclick={(): boolean => (internalLabelsDropdownOpen = !internalLabelsDropdownOpen)}>
+        style="cursor-pointer flex items-center"
+        onClick={(): boolean => (internalLabelsDropdownOpen = !internalLabelsDropdownOpen)}>
         Internal Labels
         <ChevronExpander expanded={internalLabelsDropdownOpen} size="0.9x" class="ml-1" />
       </Cell>
@@ -112,8 +112,8 @@ if (artifact?.annotations) {
   {#if internalAnnotations.length > 0}
     <tr>
       <Cell
-        class="cursor-pointer flex items-center"
-        onclick={(): boolean => (internalAnnotationsDropdownOpen = !internalAnnotationsDropdownOpen)}>
+        style="cursor-pointer flex items-center"
+        onClick={(): boolean => (internalAnnotationsDropdownOpen = !internalAnnotationsDropdownOpen)}>
         Internal Annotations
         <ChevronExpander expanded={internalAnnotationsDropdownOpen} size="0.9x" class="ml-1" />
       </Cell>
