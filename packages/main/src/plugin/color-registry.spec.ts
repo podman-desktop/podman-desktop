@@ -463,39 +463,23 @@ describe('isDarkTheme', () => {
     ]);
   });
 
-  test('light', async () => {
-    const isDark = colorRegistry.isDarkTheme('light');
-    expect(isDark).toBeFalsy();
+  test.each([
+    { theme: 'light', expected: false },
+    { theme: 'hc-light', expected: false },
+    { theme: 'light-theme1', expected: false },
+  ])('$theme is not dark', async ({ theme, expected }) => {
+    const isDark = colorRegistry.isDarkTheme(theme);
+    expect(isDark).toBe(expected);
   });
 
-  test('dark', async () => {
-    const isDark = colorRegistry.isDarkTheme('dark');
-    expect(isDark).toBeTruthy();
-  });
-
-  test('hc-light is not dark (inherits from light)', async () => {
-    const isDark = colorRegistry.isDarkTheme('hc-light');
-    expect(isDark).toBeFalsy();
-  });
-
-  test('hc-dark is dark (inherits from dark)', async () => {
-    const isDark = colorRegistry.isDarkTheme('hc-dark');
-    expect(isDark).toBeTruthy();
-  });
-
-  test('custom with parent being dark', async () => {
-    const isDark = colorRegistry.isDarkTheme('dark-theme1');
-    expect(isDark).toBeTruthy();
-  });
-
-  test('custom with parent being light', async () => {
-    const isDark = colorRegistry.isDarkTheme('light-theme1');
-    expect(isDark).toBeFalsy();
-  });
-
-  test('unknown theme should be dark', async () => {
-    const isDark = colorRegistry.isDarkTheme('unknown-theme');
-    expect(isDark).toBeTruthy();
+  test.each([
+    { theme: 'dark', expected: true },
+    { theme: 'hc-dark', expected: true },
+    { theme: 'dark-theme1', expected: true },
+    { theme: 'unknown-theme', expected: true },
+  ])('$theme is dark', async ({ theme, expected }) => {
+    const isDark = colorRegistry.isDarkTheme(theme);
+    expect(isDark).toBe(expected);
   });
 });
 
