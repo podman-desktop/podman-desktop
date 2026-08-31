@@ -60,132 +60,102 @@ installer_shasums_name() {
   echo "${name}"
 }
 
+# Resolve a versionRef (e.g. "v6") to its concrete version (e.g. "6.1.0").
+resolve_version() {
+  jq -r --arg r "$1" '.versions[$r].version' "${PODMAN_JSON}" | tr -d '\r'
+}
+
 verify_installer_checksums() {
-  local version="$1"
-  local shasums_url="https://github.com/podman-container-tools/podman/releases/download/v${version}/shasums"
+  local platform_key="$1"
 
-  echo "Fetching shasums from GitHub release v${version}..."
-  local shasums_content
-  if ! shasums_content=$(curl -sL --fail "${shasums_url}" | tr -d '\r'); then
-    echo "FAIL: could not fetch shasums from GitHub (curl failed)"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
+  # Each architecture points at a version group via versionRef; different
+  # architectures may map to different podman versions (e.g. macOS x64 -> v5,
+  # arm64 -> v6), so resolve and fetch shasums per entry.
+  while IFS='|' read -r local_name version_ref; do
+    [ -z "${local_name}" ] && continue
 
-  if [ -z "${shasums_content}" ]; then
-    echo "FAIL: shasums response was empty"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
-
-  local files=()
-  case "${OS}" in
-    Darwin)
-      while IFS= read -r fname; do
-        files+=("${fname}")
-      done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
-      ;;
-    MINGW*|MSYS*|CYGWIN*|Windows_NT)
-      while IFS= read -r fname; do
-        files+=("${fname}")
-      done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
-      ;;
-    *)
-      echo "SKIP: no installer checksums to verify on ${OS}"
-      return
-      ;;
-  esac
-
-  echo "Files to verify: ${files[*]:-none}"
-
-  for local_name in "${files[@]}"; do
     local path="${ASSETS_DIR}/${local_name}"
-    if [ ! -f "${path}" ]; then
+    [ -f "${path}" ] || continue
+
+    local version
+    version=$(resolve_version "${version_ref}")
+    if [ -z "${version}" ] || [ "${version}" = "null" ]; then
+      echo "WARN: could not resolve version for ref '${version_ref}' (${local_name})"
       continue
     fi
 
-    local shasums_name
+    echo "Fetching shasums from GitHub release v${version}..."
+    local shasums_content
+    if ! shasums_content=$(curl -sL --fail \
+      "https://github.com/podman-container-tools/podman/releases/download/v${version}/shasums" | tr -d '\r'); then
+      echo "FAIL: could not fetch shasums from GitHub for v${version} (curl failed)"
+      ERRORS=$((ERRORS + 1))
+      continue
+    fi
+
+    local shasums_name expected
     shasums_name=$(installer_shasums_name "${local_name}")
-
-    local expected
     expected=$(echo "${shasums_content}" | grep -F "${shasums_name}" | awk '{print $1}' || true)
-
     if [ -z "${expected}" ]; then
       echo "WARN: no shasums entry found for ${shasums_name} (local: ${local_name})"
       continue
     fi
 
     verify_checksum "${path}" "${expected}" "${local_name}"
-  done
+  done <<< "$(jq -r --arg p "${platform_key}" \
+    '.platform[$p].arch | to_entries[] | "\(.value.fileName)|\(.value.versionRef)"' \
+    "${PODMAN_JSON}" | tr -d '\r')"
 }
 
 verify_oci_checksums() {
-  local version="$1"
-  local major_minor
-  major_minor=$(echo "${version}" | cut -d. -f1,2)
-
-  local registry_url="https://quay.io/v2/podman/machine-os"
-  local manifest_url="${registry_url}/manifests/${major_minor}"
+  local platform_key="$1"
 
   local disktype
-  case "${OS}" in
-    Darwin)
-      disktype="applehv"
-      ;;
-    MINGW*|MSYS*|CYGWIN*|Windows_NT)
-      disktype="wsl"
-      ;;
-    *)
-      echo "SKIP: no OCI image checksums to verify on ${OS}"
-      return
-      ;;
+  case "${platform_key}" in
+    darwin) disktype="applehv" ;;
+    win32)  disktype="wsl" ;;
+    *) echo "SKIP: no OCI image checksums to verify for platform ${platform_key}"; return ;;
   esac
 
-  echo "Fetching OCI manifest from ${manifest_url} (disktype: ${disktype})..."
-  local index_manifest
-  if ! index_manifest=$(curl -sL --fail \
-    -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
-    "${manifest_url}" | tr -d '\r'); then
-    echo "FAIL: could not fetch OCI manifest index (curl failed)"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
+  local registry_url="https://quay.io/v2/podman/machine-os"
 
-  if [ -z "${index_manifest}" ]; then
-    echo "FAIL: OCI manifest response was empty"
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
+  # Machine-OS images are pulled per architecture using the major.minor of that
+  # architecture's resolved version (mirrors scripts/podman-download.ts).
+  while IFS='|' read -r arch_key version; do
+    [ -z "${arch_key}" ] && continue
 
-  if echo "${index_manifest}" | jq -e '.errors' &>/dev/null; then
-    echo "FAIL: OCI manifest returned errors"
-    echo "${index_manifest}" | jq '.errors' 2>/dev/null || true
-    ERRORS=$((ERRORS + 1))
-    return
-  fi
-
-  local arch_digests
-  arch_digests=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" '.manifests[] | select(.annotations.disktype == $dt) | "\(.platform.architecture) \(.digest)"' || true)
-
-  if [ -z "${arch_digests}" ]; then
-    echo "WARN: no manifests found for disktype ${disktype}"
-    return
-  fi
-
-  echo "Found OCI entries for: $(echo "${arch_digests}" | awk '{printf "%s ", $1}')"
-
-  while IFS=' ' read -r arch digest; do
-    [ -z "${arch}" ] && continue
-
-    local local_name
-    case "${arch}" in
-      aarch64) local_name="podman-image-arm64.zst" ;;
-      x86_64)  local_name="podman-image-x64.zst" ;;
-      *)       local_name="podman-image-${arch}.zst" ;;
+    local oci_arch local_name
+    case "${arch_key}" in
+      x64|amd64)     oci_arch="x86_64";  local_name="podman-image-x64.zst" ;;
+      arm64|aarch64) oci_arch="aarch64"; local_name="podman-image-arm64.zst" ;;
+      *) echo "WARN: unknown architecture key '${arch_key}'"; continue ;;
     esac
 
     local path="${ASSETS_DIR}/${local_name}"
-    if [ ! -f "${path}" ]; then
+    [ -f "${path}" ] || continue
+
+    if [ -z "${version}" ] || [ "${version}" = "null" ]; then
+      echo "WARN: could not resolve version for ${local_name}"
+      continue
+    fi
+    local major_minor="${version%.*}"
+
+    echo "Fetching OCI manifest from ${registry_url}/manifests/${major_minor} (disktype: ${disktype})..."
+    local index_manifest
+    if ! index_manifest=$(curl -sL --fail \
+      -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
+      "${registry_url}/manifests/${major_minor}" | tr -d '\r'); then
+      echo "FAIL: could not fetch OCI manifest index for ${major_minor} (curl failed)"
+      ERRORS=$((ERRORS + 1))
+      continue
+    fi
+
+    local digest
+    digest=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" --arg arch "${oci_arch}" \
+      '.manifests[] | select(.annotations.disktype == $dt and .platform.architecture == $arch) | .digest' \
+      | head -n1 || true)
+    if [ -z "${digest}" ] || [ "${digest}" = "null" ]; then
+      echo "WARN: no OCI manifest found for ${oci_arch}/${disktype} (${local_name})"
       continue
     fi
 
@@ -193,20 +163,21 @@ verify_oci_checksums() {
     if ! arch_manifest=$(curl -sL --fail \
       -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
       "${registry_url}/manifests/${digest}" | tr -d '\r'); then
-      echo "WARN: could not fetch arch manifest for ${arch}"
+      echo "WARN: could not fetch arch manifest for ${oci_arch}"
       continue
     fi
 
     local layer_digest
     layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' 2>/dev/null | sed 's/sha256://' || true)
-
     if [ -z "${layer_digest}" ] || [ "${layer_digest}" = "null" ]; then
-      echo "WARN: could not extract layer digest for ${arch} (${local_name})"
+      echo "WARN: could not extract layer digest for ${oci_arch} (${local_name})"
       continue
     fi
 
     verify_checksum "${path}" "${layer_digest}" "${local_name}"
-  done <<< "${arch_digests}"
+  done <<< "$(jq -r --arg p "${platform_key}" \
+    '.versions as $v | .platform[$p].arch | to_entries[] | "\(.key)|\($v[.value.versionRef].version)"' \
+    "${PODMAN_JSON}" | tr -d '\r')"
 }
 
 validate_file() {
@@ -244,8 +215,8 @@ if [ ! -d "${ASSETS_DIR}" ]; then
   exit 1
 fi
 
-VERSION=$(jq -r '.version' "${PODMAN_JSON}" | tr -d '\r')
-echo "Podman version: ${VERSION}"
+echo "Podman versions:"
+jq -r '.versions | to_entries[] | "  \(.key): \(.value.version)"' "${PODMAN_JSON}" | tr -d '\r'
 
 OS="$(uname -s)"
 ARCH="$(uname -m)"
@@ -256,7 +227,7 @@ echo "--- DEBUG: assets directory listing ---"
 ls -la "${ASSETS_DIR}/" 2>&1 || echo "(empty or inaccessible)"
 echo ""
 
-echo "--- DEBUG: podman5.json platform structure ---"
+echo "--- DEBUG: podman.json platform structure ---"
 jq '.platform' "${PODMAN_JSON}"
 echo ""
 
@@ -295,9 +266,18 @@ esac
 
 echo ""
 echo "--- Checksum verification ---"
-verify_installer_checksums "${VERSION}"
-echo ""
-verify_oci_checksums "${VERSION}"
+case "${OS}" in
+  Darwin)                           PLATFORM_KEY="darwin" ;;
+  MINGW*|MSYS*|CYGWIN*|Windows_NT)  PLATFORM_KEY="win32" ;;
+  *)                                PLATFORM_KEY="" ;;
+esac
+if [ -z "${PLATFORM_KEY}" ]; then
+  echo "SKIP: no checksums to verify on ${OS}"
+else
+  verify_installer_checksums "${PLATFORM_KEY}"
+  echo ""
+  verify_oci_checksums "${PLATFORM_KEY}"
+fi
 
 echo ""
 if [ "${ERRORS}" -gt 0 ]; then
