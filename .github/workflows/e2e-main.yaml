@@ -299,7 +299,9 @@ jobs:
             Write-Warning "Failed to add Defender process exclusion: $_"
           }
           Write-Host "Current Defender path exclusions:"
-          try { (Get-MpPreference).ExclusionPath } catch { Write-Warning "Unable to read current Defender exclusions" }
+          try { (Get-MpPreference).ExclusionPath } catch { Write-Warning "Unable to read current Defender path exclusions" }
+          Write-Host "Current Defender process exclusions:"
+          try { (Get-MpPreference).ExclusionProcess } catch { Write-Warning "Unable to read current Defender process exclusions" }
 
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         name: Install pnpm
