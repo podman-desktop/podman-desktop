@@ -1390,8 +1390,12 @@ export class PluginSystem {
 
     this.ipcHandle(
       'container-provider-registry:updateImages',
-      async (_listener, images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> => {
-        return containerProviderRegistry.updateImages(images);
+      async (_listener, images: ImageUpdateInfo[], cancellableTokenId?: number): Promise<ImageUpdateResult[]> => {
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          cancellableTokenId,
+        );
+        return containerProviderRegistry.updateImages(images, abortController?.signal);
       },
     );
 
