@@ -5,11 +5,9 @@ import GradientButton from './GradientButton';
 
 const DISCUSSION_URL = 'https://github.com/podman-desktop/podman-desktop/discussions';
 
-export function AddVendorCard({ addClass }: Readonly<{ addClass?: string }>): JSX.Element {
-  const divClass = `p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col bg-white/40 dark:bg-charcoal-800/40 ${addClass}`;
-
+export function AddVendorCard(): JSX.Element {
   return (
-    <div className={divClass}>
+    <div className="p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col bg-white/40 dark:bg-charcoal-800/40">
       <div className="mb-4 flex items-center" style={{ height: '48px' }}>
         <div className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500">
           <FontAwesomeIcon icon={faPlus} className="text-xl" />
