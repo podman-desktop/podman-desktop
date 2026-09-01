@@ -1266,7 +1266,22 @@ describe('listContainers', () => {
   });
 });
 
-test('pull unknown image fails with error 403', async () => {
+test.each([
+  {
+    statusCode: 403,
+    expectedMessage: 'access to image "unknown-image" is denied (403 error). Can also be that image does not exist',
+  },
+  {
+    statusCode: 401,
+    expectedMessage:
+      'access to image "unknown-image" is denied (401 error). Can also be that the registry requires authentication.',
+  },
+  {
+    statusCode: 500,
+    expectedMessage:
+      'access to image "unknown-image" is denied (500 error). Can also be that the registry requires authentication.',
+  },
+])('pull unknown image fails with error $statusCode', async ({ statusCode, expectedMessage }) => {
   const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
 
   const pullMock = vi.fn();
@@ -1283,14 +1298,14 @@ test('pull unknown image fails with error 403', async () => {
   const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
 
   // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', 403);
+  const error = new DockerodeTestStatusError('access denied', statusCode);
 
   pullMock.mockRejectedValue(error);
 
   const callback = vi.fn();
   // check that we have a nice error message
   await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    'access to image "unknown-image" is denied (403 error). Can also be that image does not exist',
+    expectedMessage,
   );
 });
 
@@ -1353,62 +1368,6 @@ test('pulling an image with platform linux/arm64 will add platform to pull optio
     authconfig: undefined,
     platform: 'linux/arm64',
   });
-});
-
-test('pull unknown image fails with error 401', async () => {
-  const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
-
-  const pullMock = vi.fn();
-
-  const fakeDockerode = {
-    pull: pullMock,
-    modem: {
-      followProgress: vi.fn(),
-    },
-  } as unknown as Dockerode;
-
-  getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
-
-  const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
-
-  // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', 401);
-
-  pullMock.mockRejectedValue(error);
-
-  const callback = vi.fn();
-  // check that we have a nice error message
-  await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    'access to image "unknown-image" is denied (401 error). Can also be that the registry requires authentication.',
-  );
-});
-
-test('pull unknown image fails with error 500', async () => {
-  const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
-
-  const pullMock = vi.fn();
-
-  const fakeDockerode = {
-    pull: pullMock,
-    modem: {
-      followProgress: vi.fn(),
-    },
-  } as unknown as Dockerode;
-
-  getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
-
-  const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
-
-  // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', 500);
-
-  pullMock.mockRejectedValue(error);
-
-  const callback = vi.fn();
-  // check that we have a nice error message
-  await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    'access to image "unknown-image" is denied (500 error). Can also be that the registry requires authentication.',
-  );
 });
 
 describe('buildImage', () => {

@@ -2897,42 +2897,35 @@ describe('isContextInKubeconfig', () => {
     const exists = client.isContextInKubeconfig(context);
     expect(exists).toBeFalsy();
   });
-  test('return false if cluster on kubeconfig have different server', () => {
-    const context: KubeContext = {
-      name: 'context',
-      cluster: 'cluster',
-      user: 'user',
-      clusterInfo: {
-        server: 'server2',
-        name: 'cluster',
+  test.each([
+    {
+      description: 'cluster server is different',
+      context: {
+        name: 'context',
+        cluster: 'cluster',
+        user: 'user',
+        clusterInfo: { server: 'server2', name: 'cluster' },
       },
-    };
-    const exists = client.isContextInKubeconfig(context);
-    expect(exists).toBeFalsy();
-  });
-  test('return false if user does not exists on kubeconfig', () => {
-    const context: KubeContext = {
-      name: 'context',
-      cluster: 'cluster',
-      user: 'user2',
-      clusterInfo: {
-        server: 'server',
-        name: 'cluster',
+    },
+    {
+      description: 'user does not exist',
+      context: {
+        name: 'context',
+        cluster: 'cluster',
+        user: 'user2',
+        clusterInfo: { server: 'server', name: 'cluster' },
       },
-    };
-    const exists = client.isContextInKubeconfig(context);
-    expect(exists).toBeFalsy();
-  });
-  test('return false if context does not exists on kubeconfig', () => {
-    const context: KubeContext = {
-      name: 'context1',
-      cluster: 'cluster',
-      user: 'user',
-      clusterInfo: {
-        server: 'server',
-        name: 'cluster',
+    },
+    {
+      description: 'context does not exist',
+      context: {
+        name: 'context1',
+        cluster: 'cluster',
+        user: 'user',
+        clusterInfo: { server: 'server', name: 'cluster' },
       },
-    };
+    },
+  ])('return false if $description on kubeconfig', ({ context }) => {
     const exists = client.isContextInKubeconfig(context);
     expect(exists).toBeFalsy();
   });

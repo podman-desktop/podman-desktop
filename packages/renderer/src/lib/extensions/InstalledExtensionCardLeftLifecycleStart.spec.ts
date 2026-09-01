@@ -29,47 +29,22 @@ beforeAll(() => {
   Object.defineProperty(window, 'startExtension', { value: vi.fn() });
 });
 
-test('Expect to start dd Extension if stopped', async () => {
+test.each([
+  { type: 'dd', name: 'foo', state: 'stopped', description: 'Expect to start dd Extension if stopped' },
+  { type: 'pd', name: 'fooName', state: 'stopped', description: 'Expect to start pd Extension if stopped' },
+  { type: 'pd', name: 'fooName', state: 'failed', description: 'Expect to start Extension if failed' },
+])('$description', async ({ type, name, state }) => {
   const extension: CombinedExtensionInfoUI = {
-    type: 'dd',
+    type: type as 'dd' | 'pd',
     id: 'idExtension',
-    name: 'foo',
+    name,
     description: 'my description',
     displayName: '',
     publisher: '',
     removable: true,
     devMode: false,
     version: 'v1.2.3',
-    state: 'stopped',
-    path: '',
-    readme: '',
-  };
-  render(InstalledExtensionCardLeftLifecycleStart, { extension });
-
-  // get button with label 'Start'
-
-  const button = screen.getByRole('button', { name: 'Start' });
-  expect(button).toBeInTheDocument();
-
-  // click the button
-  await fireEvent.click(button);
-
-  // expect the start function to be called
-  expect(vi.mocked(window.startExtension)).toHaveBeenCalledWith('idExtension');
-});
-
-test('Expect to start pd Extension if stopped', async () => {
-  const extension: CombinedExtensionInfoUI = {
-    type: 'pd',
-    id: 'idExtension',
-    name: 'fooName',
-    description: 'my description',
-    displayName: '',
-    publisher: '',
-    removable: true,
-    devMode: false,
-    version: 'v1.2.3',
-    state: 'stopped',
+    state: state as 'stopped' | 'failed',
     path: '',
     readme: '',
   };
@@ -106,32 +81,4 @@ test('Expect unable to start if already started', async () => {
   // get button with label 'Delete Extension foo'
   const button = screen.queryByRole('button', { name: 'Start' });
   expect(button).not.toBeInTheDocument();
-});
-
-test('Expect to start Extension if failed', async () => {
-  const extension: CombinedExtensionInfoUI = {
-    type: 'pd',
-    id: 'idExtension',
-    name: 'fooName',
-    description: 'my description',
-    displayName: '',
-    publisher: '',
-    removable: true,
-    devMode: false,
-    version: 'v1.2.3',
-    state: 'failed',
-    path: '',
-    readme: '',
-  };
-  render(InstalledExtensionCardLeftLifecycleStart, { extension });
-
-  // get button with label 'Start'
-  const button = screen.getByRole('button', { name: 'Start' });
-  expect(button).toBeInTheDocument();
-
-  // click the button
-  await fireEvent.click(button);
-
-  // expect the start function to be called
-  expect(vi.mocked(window.startExtension)).toHaveBeenCalledWith('idExtension');
 });

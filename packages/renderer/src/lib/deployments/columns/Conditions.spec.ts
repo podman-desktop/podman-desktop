@@ -66,88 +66,59 @@ test('Expect column styling unavailable', async () => {
   expect(svg).toHaveClass('text-[var(--pd-status-degraded)]');
 });
 
-test('Expect column styling updated', async () => {
-  const deployment = createDeploymentUI([
-    { type: 'Progressing', message: 'Running fine', reason: 'ReplicaSetUpdated' },
-  ]);
+test.each([
+  {
+    name: 'updated',
+    type: 'Progressing',
+    reason: 'ReplicaSetUpdated',
+    displayText: 'Updated',
+    statusClass: 'text-[var(--pd-status-updated)]',
+  },
+  {
+    name: 'new replica set',
+    type: 'Progressing',
+    reason: 'NewReplicaSetCreated',
+    displayText: 'New Replica Set',
+    statusClass: 'text-[var(--pd-status-updated)]',
+  },
+  {
+    name: 'progressed',
+    type: 'Progressing',
+    reason: 'NewReplicaSetAvailable',
+    displayText: 'Progressed',
+    statusClass: 'text-[var(--pd-status-running)]',
+  },
+  {
+    name: 'scaled up',
+    type: 'Progressing',
+    reason: 'ReplicaSetScaledUp',
+    displayText: 'Scaled Up',
+    statusClass: 'text-[var(--pd-status-updated)]',
+  },
+  {
+    name: 'scaled down',
+    type: 'Progressing',
+    reason: 'ReplicaSetScaledDown',
+    displayText: 'Scaled Down',
+    statusClass: 'text-[var(--pd-status-updated)]',
+  },
+  {
+    name: 'deadline exceeded',
+    type: 'Progressing',
+    reason: 'ProgressDeadlineExceeded',
+    displayText: 'Deadline Exceeded',
+    statusClass: 'text-[var(--pd-status-dead)]',
+  },
+])('Expect column styling $name', async ({ type, reason, displayText, statusClass }) => {
+  const deployment = createDeploymentUI([{ type, message: 'Running fine', reason }]);
   render(Conditions, { object: deployment });
 
-  const text = screen.getByText('Updated');
+  const text = screen.getByText(displayText);
   expect(text).toBeInTheDocument();
 
   const svg = text.parentElement?.querySelector('svg');
   expect(svg).toBeInTheDocument();
-  expect(svg).toHaveClass('text-[var(--pd-status-updated)]');
-});
-
-test('Expect column styling new replica set', async () => {
-  const deployment = createDeploymentUI([
-    { type: 'Progressing', message: 'Running fine', reason: 'NewReplicaSetCreated' },
-  ]);
-  render(Conditions, { object: deployment });
-
-  const text = screen.getByText('New Replica Set');
-  expect(text).toBeInTheDocument();
-
-  const svg = text.parentElement?.querySelector('svg');
-  expect(svg).toBeInTheDocument();
-  expect(svg).toHaveClass('text-[var(--pd-status-updated)]');
-});
-
-test('Expect column styling progressed', async () => {
-  const deployment = createDeploymentUI([
-    { type: 'Progressing', message: 'Running fine', reason: 'NewReplicaSetAvailable' },
-  ]);
-  render(Conditions, { object: deployment });
-
-  const text = screen.getByText('Progressed');
-  expect(text).toBeInTheDocument();
-
-  const svg = text.parentElement?.querySelector('svg');
-  expect(svg).toBeInTheDocument();
-  expect(svg).toHaveClass('text-[var(--pd-status-running)]');
-});
-
-test('Expect column styling scaled up', async () => {
-  const deployment = createDeploymentUI([
-    { type: 'Progressing', message: 'Running fine', reason: 'ReplicaSetScaledUp' },
-  ]);
-  render(Conditions, { object: deployment });
-
-  const text = screen.getByText('Scaled Up');
-  expect(text).toBeInTheDocument();
-
-  const svg = text.parentElement?.querySelector('svg');
-  expect(svg).toBeInTheDocument();
-  expect(svg).toHaveClass('text-[var(--pd-status-updated)]');
-});
-
-test('Expect column styling scaled down', async () => {
-  const deployment = createDeploymentUI([
-    { type: 'Progressing', message: 'Running fine', reason: 'ReplicaSetScaledDown' },
-  ]);
-  render(Conditions, { object: deployment });
-
-  const text = screen.getByText('Scaled Down');
-  expect(text).toBeInTheDocument();
-
-  const svg = text.parentElement?.querySelector('svg');
-  expect(svg).toBeInTheDocument();
-  expect(svg).toHaveClass('text-[var(--pd-status-updated)]');
-});
-
-test('Expect column styling deadline exceeded', async () => {
-  const deployment = createDeploymentUI([
-    { type: 'Progressing', message: 'Running fine', reason: 'ProgressDeadlineExceeded' },
-  ]);
-  render(Conditions, { object: deployment });
-
-  const text = screen.getByText('Deadline Exceeded');
-  expect(text).toBeInTheDocument();
-
-  const svg = text.parentElement?.querySelector('svg');
-  expect(svg).toBeInTheDocument();
-  expect(svg).toHaveClass('text-[var(--pd-status-dead)]');
+  expect(svg).toHaveClass(statusClass);
 });
 
 test('Expect column styling replica failure', async () => {
