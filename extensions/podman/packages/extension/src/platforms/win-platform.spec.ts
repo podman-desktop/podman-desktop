@@ -167,23 +167,23 @@ test('isWSLEnabled is independent of BIOS virtualization firmware check', async 
 });
 
 describe('calcPipeName', () => {
-  test('calcPipeName should prepend "podman-" if machine name does not start with "podman"', () => {
-    const machineName = 'my-machine';
-    const expectedPipeName = '//./pipe/podman-my-machine';
-    const result = winPlatform.calcPipeName(machineName);
-    expect(result).toBe(expectedPipeName);
-  });
-
-  test('calcPipeName should not prepend "podman-" if machine name already starts with "podman"', () => {
-    const machineName = 'podman-machine';
-    const expectedPipeName = '//./pipe/podman-machine';
-    const result = winPlatform.calcPipeName(machineName);
-    expect(result).toBe(expectedPipeName);
-  });
-
-  test('calcPipeName should handle machine name that is just "podman"', () => {
-    const machineName = 'podman';
-    const expectedPipeName = '//./pipe/podman';
+  test.each([
+    {
+      machineName: 'my-machine',
+      expectedPipeName: '//./pipe/podman-my-machine',
+      description: 'should prepend "podman-" if machine name does not start with "podman"',
+    },
+    {
+      machineName: 'podman-machine',
+      expectedPipeName: '//./pipe/podman-machine',
+      description: 'should not prepend "podman-" if machine name already starts with "podman"',
+    },
+    {
+      machineName: 'podman',
+      expectedPipeName: '//./pipe/podman',
+      description: 'should handle machine name that is just "podman"',
+    },
+  ])('$description', ({ machineName, expectedPipeName }) => {
     const result = winPlatform.calcPipeName(machineName);
     expect(result).toBe(expectedPipeName);
   });
