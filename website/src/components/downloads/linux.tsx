@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import Link from '@docusaurus/Link';
 import { usePluginData } from '@docusaurus/useGlobalData';
 import { faLinux } from '@fortawesome/free-brands-svg-icons';
 import { OSDownloadCard } from '@site/src/components/downloads/OSDownloadCard';
@@ -68,14 +69,12 @@ export function LinuxDownloads({ defaultExpanded = false, highlighted = false }:
       installCommand={{
         icon: faLinux,
         label: (
-          <a
+          <Link
             className="underline text-purple-500 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-200"
             href="https://flathub.org/apps/details/io.podman_desktop.PodmanDesktop"
-            target="_blank"
-            rel="noopener noreferrer"
             onClick={event => event.stopPropagation()}>
             Flathub
-          </a>
+          </Link>
         ),
         command: 'flatpak install flathub io.podman_desktop.PodmanDesktop',
       }}
