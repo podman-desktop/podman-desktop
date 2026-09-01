@@ -132,6 +132,25 @@ async function createWindow(): Promise<BrowserWindow> {
     browserWindow.on('ready-to-show', handleWindowShow);
   }
 
+  // Recover from a failed preload script.
+  // On rare cold starts (observed on Windows, especially ARM64) the preload script can fail
+  // to initialize: the contextBridge is never exposed, so the renderer has no backend API
+  // surface and stays stuck on the "Initializing..." screen forever. Electron surfaces this
+  // as a 'preload-error'. Reloading the window once re-runs the preload — by then the file is
+  // warm in the OS cache and initialization reliably succeeds. The guard bounds us to a single
+  // reload so a genuinely broken preload cannot cause an infinite reload loop.
+  let preloadReloadAttempted = false;
+  browserWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error(`Preload script failed to load (${preloadPath}):`, error);
+    if (preloadReloadAttempted) {
+      console.error('Preload failed again after a reload; not reloading to avoid a loop.');
+      return;
+    }
+    preloadReloadAttempted = true;
+    console.warn('Reloading window once to recover from the preload failure.');
+    browserWindow.webContents.reload();
+  });
+
   let configurationRegistry: ConfigurationRegistry;
   ipcMain.on('configuration-registry', (_, data) => {
     configurationRegistry = data;

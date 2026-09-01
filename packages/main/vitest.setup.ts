@@ -31,6 +31,7 @@ vi.mock(import('electron'), async () => {
       send: vi.fn(),
       on: vi.fn(),
       once: vi.fn(),
+      reload: vi.fn(),
     };
   }
 

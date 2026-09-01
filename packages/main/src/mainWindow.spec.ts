@@ -255,6 +255,38 @@ describe('createNewWindow', () => {
     expect(app.quit).toHaveBeenCalled();
   });
 
+  describe('preload failure recovery', () => {
+    test('should reload the window once when the preload script fails', async () => {
+      const { createNewWindow } = await import('./mainWindow.js');
+
+      await createNewWindow();
+
+      const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+      assert(bwInstance);
+
+      const preloadError = getHandler(bwInstance.webContents.on, 'preload-error');
+      preloadError({}, '/path/to/preload.cjs', new Error('boom'));
+
+      expect(bwInstance.webContents.reload).toHaveBeenCalledTimes(1);
+    });
+
+    test('should not reload again if the preload fails a second time (loop guard)', async () => {
+      const { createNewWindow } = await import('./mainWindow.js');
+
+      await createNewWindow();
+
+      const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+      assert(bwInstance);
+
+      const preloadError = getHandler(bwInstance.webContents.on, 'preload-error');
+      preloadError({}, '/path/to/preload.cjs', new Error('boom'));
+      preloadError({}, '/path/to/preload.cjs', new Error('boom again'));
+
+      // Only the first failure triggers a reload; the second is suppressed to avoid a loop.
+      expect(bwInstance.webContents.reload).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('Linux did-finish-load (replaces ready-to-show)', () => {
     beforeEach(() => {
       vi.mocked(util.isLinux).mockReturnValue(true);
