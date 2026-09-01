@@ -117,7 +117,8 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} onclose={onClose}>
+  <!-- for danger MessageBox, the initial focus will be on the cancel button (first one) while in all others types the focus will be on the default button (last one) -->
+  <Dialog title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? 'first' : 'last'}>
     {#snippet icon()}
       
         {#if type === 'error' || type === 'danger'}
