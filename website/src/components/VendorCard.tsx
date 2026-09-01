@@ -16,7 +16,7 @@ type VendorCardProps = {
 };
 
 export const VendorCard = (props: Readonly<VendorCardProps>): JSX.Element => {
-  const logoAlt = `${name} logo`;
+  const logoAlt = `${props.name} logo`;
   const divClass = `p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col bg-white/60 dark:bg-charcoal-800/60 items-start ${props.addClass}`;
 
   return (
