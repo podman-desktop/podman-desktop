@@ -2923,6 +2923,7 @@ test('container logs callback notified when messages arrive', async () => {
   const stream = new EventEmitter();
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
   } as unknown as Dockerode.Container;
 
   vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
@@ -2956,6 +2957,216 @@ test('container logs callback notified when messages arrive', async () => {
   expect(callback).toHaveBeenCalledWith('data', 'log message');
   expect(callback).toHaveBeenCalledWith('end', '');
   expect(telemetry.track).toHaveBeenCalled();
+});
+
+// collects the payloads passed to the logsContainer callback until the stream ends
+function collectContainerLogs(container: Dockerode.Container): {
+  dataChunks: string[];
+  endPromise: Promise<void>;
+} {
+  const dataChunks: string[] = [];
+  const endPromise = new Promise<void>((resolve, reject) => {
+    const callback = (name: string, data: string): void => {
+      if (name === 'data') {
+        dataChunks.push(data);
+      } else if (name === 'end') {
+        resolve();
+      }
+    };
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(container);
+    containerRegistry
+      .logsContainer({ engineId: 'podman', id: 'containerId', callback })
+      .catch((err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
+  });
+  return { dataChunks, endPromise };
+}
+
+test('container logs reassembles multi-byte UTF-8 characters split across chunks', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // "🚀" (U+1F680) is four UTF-8 bytes: F0 9F 9A 80. Split it across two
+  // chunks so neither chunk holds a complete character on its own.
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+  const firstHalf = rocketBytes.subarray(0, 2);
+  const secondHalf = rocketBytes.subarray(2);
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.concat([Buffer.from('start '), firstHalf]));
+    stream.emit('data', Buffer.concat([secondHalf, Buffer.from(' end')]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('start 🚀 end');
+  expect(dataChunks.join('')).not.toContain('\uFFFD');
+});
+
+test('container logs flushes buffered bytes when the stream ends mid-character', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // Emit only the first two bytes of "🚀" then end the stream, leaving an
+  // incomplete sequence buffered inside the decoder.
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.concat([Buffer.from('truncated '), rocketBytes.subarray(0, 2)]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  // The decoder flushes the incomplete sequence on end(), so the buffered bytes
+  // are reported instead of being silently dropped.
+  expect(dataChunks.length).toBe(2);
+  expect(dataChunks[0]).toBe('truncated ');
+  expect(dataChunks[1]).toBe('\uFFFD');
+});
+
+// builds a frame of a multiplexed container stream: 8-byte header (stream type + payload size)
+// followed by the payload itself
+function buildLogFrameFromBytes(body: Buffer, streamType = 1): Buffer {
+  const header = Buffer.alloc(8);
+  header[0] = streamType;
+  header.writeUInt32BE(body.length, 4);
+  return Buffer.concat([header, body]);
+}
+
+function buildLogFrame(payload: string, streamType = 1): Buffer {
+  return buildLogFrameFromBytes(Buffer.from(payload, 'utf-8'), streamType);
+}
+
+test('container logs strips the multiplexed stream header of non-TTY containers', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    stream.emit('data', buildLogFrame('hello\n'));
+    stream.emit('data', buildLogFrame('world\n', 2));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  // the 8-byte header must not leak into the rendered logs
+  expect(dataChunks.join('')).toBe('hello\nworld\n');
+});
+
+test('container logs buffers multiplexed frames split across chunks', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  const frame = buildLogFrame('split payload\n');
+
+  setTimeout(() => {
+    // cut in the middle of the header, then in the middle of the payload
+    stream.emit('data', frame.subarray(0, 3));
+    stream.emit('data', frame.subarray(3, 10));
+    stream.emit('data', frame.subarray(10));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('split payload\n');
+});
+
+test('container logs decodes stdout and stderr with separate decoders', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // "🚀" split over two stdout frames, with a stderr frame emitted in between: a shared decoder
+  // would let the stderr payload complete the pending stdout character and corrupt both streams
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+  const firstHalf = buildLogFrameFromBytes(rocketBytes.subarray(0, 2), 1);
+  const secondHalf = buildLogFrameFromBytes(rocketBytes.subarray(2), 1);
+
+  setTimeout(() => {
+    stream.emit('data', firstHalf);
+    stream.emit('data', buildLogFrame('err\n', 2));
+    stream.emit('data', secondHalf);
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('err\n🚀');
+});
+
+test('container logs forwards the raw stream when the container cannot be inspected', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockRejectedValue(new Error('no such container')),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.from('raw log\n'));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('raw log\n');
+});
+
+test('container logs forwards the since option', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+
+  await containerRegistry.logsContainer({
+    engineId: 'podman',
+    id: 'containerId',
+    callback: vi.fn(),
+    since: '1700000000',
+  });
+
+  expect(vi.mocked(dockerodeContainer.logs).mock.calls[0]?.[0]).toStrictEqual({
+    follow: true,
+    stdout: true,
+    stderr: true,
+    abortSignal: undefined,
+    tail: undefined,
+    timestamps: undefined,
+    since: '1700000000',
+  });
 });
 
 describe('createContainer', () => {
