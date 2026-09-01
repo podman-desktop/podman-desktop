@@ -15,15 +15,43 @@ let loadingSequence: NodeJS.Timeout;
 
 let extensionsStarterChecker: NodeJS.Timeout;
 
+let bridgeWatchdog: NodeJS.Timeout;
+
+// If the preload bridge fails to attach (rare cold-start failure, observed on Windows), none of
+// the window.extensionSystem* functions exist and the app is stuck on "Initializing..." forever.
+// Reloading the page once re-runs the preload from a now-warm file cache and reliably recovers.
+const BRIDGE_WATCHDOG_TIMEOUT_MS = 5000;
+const BRIDGE_RELOAD_FLAG = 'pd-bridge-reload-attempted';
+
 onMount(async () => {
   loadingSequence = setInterval(() => {
     toggle = !toggle;
   }, 100);
+
+  // Watchdog: if the preload bridge is still missing after the grace period, reload the page once
+  // (guarded via sessionStorage so a persistently broken bridge cannot cause an infinite loop).
+  bridgeWatchdog = setTimeout(() => {
+    if (typeof window.extensionSystemIsReady === 'function') {
+      return;
+    }
+    if (window.sessionStorage?.getItem(BRIDGE_RELOAD_FLAG)) {
+      console.error('Preload bridge still missing after a reload; not reloading again.');
+      return;
+    }
+    window.sessionStorage?.setItem(BRIDGE_RELOAD_FLAG, 'true');
+    console.warn('Preload bridge missing; reloading window once to recover.');
+    window.location.reload();
+  }, BRIDGE_WATCHDOG_TIMEOUT_MS);
+
   // check if the server side is ready
   try {
     const isReady = await window.extensionSystemIsReady();
     systemReady = isReady;
     if (systemReady) {
+      // the bridge is present and the backend answered: cancel the watchdog and clear the guard
+      // so a future cold start in this session can self-heal again.
+      clearTimeout(bridgeWatchdog);
+      window.sessionStorage?.removeItem(BRIDGE_RELOAD_FLAG);
       window.dispatchEvent(new CustomEvent('system-ready', {}));
     }
   } catch (error) {
@@ -52,6 +80,10 @@ onDestroy(() => {
 
   if (extensionsStarterChecker) {
     clearInterval(extensionsStarterChecker);
+  }
+
+  if (bridgeWatchdog) {
+    clearTimeout(bridgeWatchdog);
   }
 });
 

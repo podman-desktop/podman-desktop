@@ -24,7 +24,7 @@ import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import Loader from './Loader.svelte';
 import { lastPage } from './stores/breadcrumb';
@@ -39,6 +39,17 @@ const eventEmitter = {
 
 const dispatchEventMock = vi.fn();
 const extensionSystemIsExtensionsStartedMock = vi.fn();
+const locationReloadMock = vi.fn();
+const sessionStore = new Map<string, string>();
+const sessionStorageMock = {
+  getItem: (key: string): string | null => sessionStore.get(key) ?? null,
+  setItem: (key: string, value: string): void => {
+    sessionStore.set(key, value);
+  },
+  removeItem: (key: string): void => {
+    sessionStore.delete(key);
+  },
+};
 
 // mock the router
 vi.mock(import('tinro'));
@@ -52,6 +63,8 @@ Object.defineProperty(global, 'window', {
     extensionSystemIsReady: vi.fn(),
     extensionSystemIsExtensionsStarted: extensionSystemIsExtensionsStartedMock,
     addEventListener: eventEmitter.receive,
+    location: { reload: locationReloadMock },
+    sessionStorage: sessionStorageMock,
   },
   writable: true,
 });
@@ -134,4 +147,65 @@ test('Loader should send extensions-already-started event as soon as possible if
   // check we have received the 'extensions-already-started' event
   expect(dispatchEventMock.mock.calls.length).toBe(1);
   expect(dispatchEventMock.mock.calls[0][0].type).toBe('extensions-already-started');
+});
+
+describe('preload bridge watchdog', () => {
+  const readySpy = window.extensionSystemIsReady;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    // restore a working bridge and clear the reload guard for the next test
+    (window as any).extensionSystemIsReady = readySpy;
+    sessionStore.clear();
+    locationReloadMock.mockClear();
+  });
+
+  test('reloads the page once when the preload bridge never attaches', async () => {
+    vi.useFakeTimers();
+    // simulate a missing preload bridge
+    (window as any).extensionSystemIsReady = undefined;
+
+    const { unmount } = render(Loader, { props: {} });
+
+    // watchdog has not fired yet
+    expect(locationReloadMock).not.toHaveBeenCalled();
+
+    // advance past the watchdog grace period
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(locationReloadMock).toHaveBeenCalledTimes(1);
+    expect(sessionStore.get('pd-bridge-reload-attempted')).toBe('true');
+
+    unmount();
+  });
+
+  test('does not reload a second time when the guard is already set (loop guard)', async () => {
+    vi.useFakeTimers();
+    (window as any).extensionSystemIsReady = undefined;
+    // guard already set by a previous (failed) attempt
+    sessionStore.set('pd-bridge-reload-attempted', 'true');
+
+    const { unmount } = render(Loader, { props: {} });
+
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(locationReloadMock).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  test('does not reload when the preload bridge is present', async () => {
+    vi.useFakeTimers();
+    // bridge is present but backend not yet ready: keeps the Loader on screen (no <App/> mount)
+    // while still proving the watchdog treats a present bridge as healthy and does not reload.
+    (window as any).extensionSystemIsReady = vi.fn().mockResolvedValue(false);
+
+    const { unmount } = render(Loader, { props: {} });
+
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(locationReloadMock).not.toHaveBeenCalled();
+
+    unmount();
+  });
 });
