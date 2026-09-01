@@ -175,7 +175,7 @@ export class PodmanInstall {
       if (answer === 'Yes') {
         for (const machine of machinesRunning) {
           try {
-            await execPodman(['machine', 'stop', machine.Name]);
+            await execPodman(['machine', 'stop', machine.Name], machine.VMType);
           } catch (error) {
             console.error('Error while stopping machine', error);
           }
