@@ -1612,111 +1612,6 @@ test('ensure started machine reports default configuration', async () => {
   expect(config.update).toHaveBeenNthCalledWith(7, 'machine.rootful', true);
 });
 
-test('ensure running machine exposes container engine info error', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
-    (_command, args) =>
-      new Promise<extensionApi.RunResult>(resolve => {
-        if (args?.[0] === 'machine' && args?.[1] === 'list') {
-          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
-        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
-          resolve({
-            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
-          } as extensionApi.RunResult);
-        } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
-          resolve({
-            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
-          } as extensionApi.RunResult);
-        } else if (args?.[0] === '--version') {
-          resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
-        }
-      }),
-  );
-  let registeredConnection: ContainerProviderConnection | undefined;
-  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
-    registeredConnection = connection;
-    return Disposable.from({ dispose: () => {} });
-  });
-  vi.mocked(extensionApi.containerEngine.info).mockRejectedValue(new Error('info failed'));
-
-  await extension.updateMachines(provider, podmanConfiguration);
-
-  expect(extension.podmanMachinesErrors.get(fakeMachineJSON[0].Name)).toBe('info failed');
-  expect(registeredConnection?.error).toBe('info failed');
-});
-
-test('ensure running machine clears previous container engine info error', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
-    (_command, args) =>
-      new Promise<extensionApi.RunResult>(resolve => {
-        if (args?.[0] === 'machine' && args?.[1] === 'list') {
-          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
-        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
-          resolve({
-            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
-          } as extensionApi.RunResult);
-        } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
-          resolve({
-            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
-          } as extensionApi.RunResult);
-        } else if (args?.[0] === '--version') {
-          resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
-        }
-      }),
-  );
-  let registeredConnection: ContainerProviderConnection | undefined;
-  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
-    registeredConnection = connection;
-    return Disposable.from({ dispose: () => {} });
-  });
-  extension.podmanMachinesErrors.set(fakeMachineJSON[0].Name, 'previous error');
-  vi.mocked(extensionApi.containerEngine.info).mockResolvedValue({
-    cpus: 2,
-    cpuIdle: 99,
-    memory: 1048000000,
-    memoryUsed: 524000000,
-    diskSize: 250000000000,
-    diskUsed: 50000000000,
-  } as ContainerEngineInfo);
-
-  await extension.updateMachines(provider, podmanConfiguration);
-
-  expect(extension.podmanMachinesErrors.has(fakeMachineJSON[0].Name)).toBeFalsy();
-  expect(registeredConnection?.error).toBeUndefined();
-});
-
-test('ensure machine list error is exposed on known machines', async () => {
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  extension.podmanMachinesStatuses.set(fakeMachineJSON[0].Name, 'started');
-  // for podman < 6 the per-provider failures are accumulated into the output instead of
-  // being thrown, so pin a version listing all providers at once to get the failure propagated
-  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' } as InstalledPodman);
-  vi.spyOn(extensionApi.process, 'exec').mockRejectedValue({
-    message: 'machine list failed',
-  });
-
-  await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('machine list failed');
-
-  expect(extension.podmanMachinesErrors.get(fakeMachineJSON[0].Name)).toBe('machine list failed');
-});
-
-test('ensure removed machine clears stored error', async () => {
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  extension.podmanMachinesStatuses.set(fakeMachineJSON[0].Name, 'started');
-  extension.podmanMachinesErrors.set(fakeMachineJSON[0].Name, 'previous error');
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: '[]',
-  } as extensionApi.RunResult);
-
-  await extension.updateMachines(provider, podmanConfiguration);
-
-  expect(extension.podmanMachinesStatuses.has(fakeMachineJSON[0].Name)).toBeFalsy();
-  expect(extension.podmanMachinesErrors.has(fakeMachineJSON[0].Name)).toBeFalsy();
-});
-
 test('ensure stopped machine reports stopped provider', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   vi.mocked(extensionApi.env).isLinux = false;
@@ -2467,7 +2362,7 @@ describe('connection error property on lifecycle methods', () => {
     expect(registeredConnection).toBeDefined();
 
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
-    extension.podmanMachinesErrors.set(machineInfo.name, 'previous error');
+    registeredConnection!.error = 'previous error';
     await registeredConnection?.lifecycle?.start?.({} as extensionApi.LifecycleContext);
     expect(registeredConnection!.error).toBeUndefined();
   });
@@ -2492,7 +2387,7 @@ describe('connection error property on lifecycle methods', () => {
     expect(registeredConnection).toBeDefined();
 
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
-    extension.podmanMachinesErrors.set(machineInfo.name, 'previous error');
+    registeredConnection!.error = 'previous error';
     await registeredConnection?.lifecycle?.stop?.({} as extensionApi.LifecycleContext);
     expect(registeredConnection!.error).toBeUndefined();
   });
@@ -2517,7 +2412,7 @@ describe('connection error property on lifecycle methods', () => {
     expect(registeredConnection).toBeDefined();
 
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
-    extension.podmanMachinesErrors.set(machineInfo.name, 'previous error');
+    registeredConnection!.error = 'previous error';
     await registeredConnection?.lifecycle?.delete?.();
     expect(registeredConnection!.error).toBeUndefined();
   });

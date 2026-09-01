@@ -109,9 +109,7 @@ let defaultMachineMonitor = true;
 
 // current status of machines
 export const podmanMachinesStatuses = new Map<string, extensionApi.ProviderConnectionStatus>();
-export const podmanMachinesErrors = new Map<string, string>();
 let podmanProviderStatus: extensionApi.ProviderConnectionStatus = 'started';
-let podmanProviderError: string | undefined;
 const podmanMachinesInfo = new Map<string, MachineInfo>();
 const currentConnections = new Map<string, extensionApi.Disposable>();
 const containerProviderConnections = new Map<string, extensionApi.ContainerProviderConnection>();
@@ -203,13 +201,6 @@ async function doUpdateMachines(
     }
 
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
-
-    // expose the failure on every known machine, as we cannot tell their state anymore
-    const errorMessage = getErrorMessage(error);
-    for (const machineName of podmanMachinesStatuses.keys()) {
-      podmanMachinesErrors.set(machineName, errorMessage);
-    }
-
     throw error;
   }
 
@@ -266,21 +257,19 @@ async function doUpdateMachines(
     }
 
     let machineInfo: ContainerEngineInfo | undefined = undefined;
-    let connectionError: string | undefined;
     if (running) {
       try {
         machineInfo = await extensionApi.containerEngine.info(`podman.${machine.Name}`);
       } catch (err: unknown) {
-        connectionError = getErrorMessage(err);
         console.warn(` Can't get machine ${machine.Name} resource usage error ${err}`);
       }
     }
 
     const previousStatus = podmanMachinesStatuses.get(machine.Name);
-    updateProviderStatus(provider, status, machine.Name, connectionError);
     if (previousStatus !== status) {
       // notify status change
       listeners.forEach(listener => listener(machine.Name, status));
+      podmanMachinesStatuses.set(machine.Name, status);
     }
 
     const userModeNetworking = extensionApi.env.isWindows ? !!machine.UserModeNetworking : true;
@@ -305,6 +294,10 @@ async function doUpdateMachines(
       identityPath: machine.IdentityPath,
     });
 
+    if (!podmanMachinesStatuses.has(machine.Name)) {
+      podmanMachinesStatuses.set(machine.Name, status);
+    }
+
     const containerProviderConnection = containerProviderConnections.get(machine.Name);
     const podmanMachineInfo = podmanMachinesInfo.get(machine.Name);
     if (containerProviderConnection && podmanMachineInfo) {
@@ -318,7 +311,6 @@ async function doUpdateMachines(
   );
   machinesToRemove.forEach(machine => {
     podmanMachinesStatuses.delete(machine);
-    podmanMachinesErrors.delete(machine);
     podmanMachinesInfo.delete(machine);
     containerProviderConnections.delete(machine);
   });
@@ -638,9 +630,6 @@ export async function initDefaultLinux(provider: extensionApi.Provider): Promise
     name: 'Podman',
     type: 'podman',
     status: () => podmanProviderStatus,
-    get error(): string | undefined {
-      return podmanProviderError;
-    },
     endpoint: {
       socketPath,
     },
@@ -689,12 +678,12 @@ export async function monitorPodmanSocket(
     try {
       const alive = await isPodmanSocketAlive(socketPath);
       if (!alive) {
-        updateProviderStatus(provider, 'stopped', machineName, `Podman socket ${socketPath} is not reachable`);
+        updateProviderStatus(provider, 'stopped', machineName);
       } else {
         updateProviderStatus(provider, 'started', machineName);
       }
     } catch (error) {
-      updateProviderStatus(provider, 'unknown', machineName, getErrorMessage(error));
+      // ignore the update of machines
     }
     await timeout(5000);
     monitorPodmanSocket(provider, socketPath, machineName).catch((error: unknown) => {
@@ -714,34 +703,17 @@ export function updateProviderStatus(
   provider: extensionApi.Provider,
   status: extensionApi.ProviderConnectionStatus,
   machineName?: string,
-  error?: string,
 ): void {
   if (machineName) {
     podmanMachinesStatuses.set(machineName, status);
-    if (error) {
-      podmanMachinesErrors.set(machineName, error);
-    } else {
-      podmanMachinesErrors.delete(machineName);
-    }
   } else {
     const previousStatus = podmanProviderStatus;
     podmanProviderStatus = status;
-    podmanProviderError = error;
 
     if (extensionApi.env.isLinux && previousStatus !== status) {
       provider.updateStatus(status === 'started' ? 'ready' : 'stopped');
     }
   }
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'object' && error && 'message' in error) {
-    return String(error.message);
-  }
-  return String(error);
 }
 
 async function timeout(time: number): Promise<void> {
@@ -882,18 +854,18 @@ export async function registerProviderFor(
     start: async (context, logger): Promise<void> => {
       try {
         await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
-        podmanMachinesErrors.delete(machineInfo.name);
+        containerProviderConnection.error = undefined;
       } catch (err) {
-        podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
         throw err;
       }
     },
     stop: async (context, logger): Promise<void> => {
       try {
         await stopMachine(provider, machineInfo, context, logger);
-        podmanMachinesErrors.delete(machineInfo.name);
+        containerProviderConnection.error = undefined;
       } catch (err) {
-        podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
         throw err;
       }
     },
@@ -902,9 +874,9 @@ export async function registerProviderFor(
         await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
           logger,
         });
-        podmanMachinesErrors.delete(machineInfo.name);
+        containerProviderConnection.error = undefined;
       } catch (err) {
-        podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
         throw err;
       }
     },
@@ -949,9 +921,9 @@ export async function registerProviderFor(
           if (isRootful !== undefined) {
             telemetryLogger.logUsage('podman.machine.edit.rootful', { isRootful });
           }
-          podmanMachinesErrors.delete(machineInfo.name);
+          containerProviderConnection.error = undefined;
         } catch (err) {
-          podmanMachinesErrors.set(machineInfo.name, getErrorMessage(err));
+          containerProviderConnection.error = err instanceof Error ? err.message : String(err);
           throw err;
         } finally {
           if (state === 'started') {
@@ -969,9 +941,6 @@ export async function registerProviderFor(
     displayName: prettyMachineName(machineInfo.name),
     type: 'podman',
     status: () => podmanMachinesStatuses.get(machineInfo.name) ?? 'unknown',
-    get error(): string | undefined {
-      return podmanMachinesErrors.get(machineInfo.name);
-    },
     shellAccess: providerConnectionShellAccess,
     lifecycle,
     endpoint: {
@@ -2046,8 +2015,6 @@ export async function deactivate(): Promise<void> {
   // cleanup
   listeners.clear();
   podmanMachinesInfo.clear();
-  podmanMachinesErrors.clear();
-  podmanProviderError = undefined;
   currentConnections.clear();
   containerProviderConnections.clear();
 
