@@ -1,6 +1,7 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getClientPlatform } from '@site/src/components/DownloadButton';
 import { LinuxDownloads } from '@site/src/components/downloads/linux';
@@ -119,6 +120,16 @@ function DownloadsContent(): JSX.Element {
               developers.redhat.com.
             </p>
             {RHBPDDownload()}
+            <p className="mt-4 text-sm text-charcoal-300 dark:text-gray-400 max-w-3xl">
+              To be added as an enterprise-supported download, please{' '}
+              <Link
+                href="https://github.com/podman-desktop/podman-desktop/discussions"
+                className="underline text-purple-500 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-200 inline-flex items-center gap-1">
+                open a discussion
+                <FontAwesomeIcon icon={faUpRightFromSquare} className="text-xs" />
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </section>
