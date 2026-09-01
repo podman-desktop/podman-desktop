@@ -442,7 +442,7 @@ function VendorCards(): JSX.Element {
           for Podman Desktop.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
           <VendorCard
             name="Red Hat"
             description="Red Hat offers the Red Hat Build of Podman Desktop with enterprise support, long-term maintenance, and production-ready builds."

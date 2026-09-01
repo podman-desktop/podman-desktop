@@ -32,9 +32,8 @@ export const VendorCard = (props: Readonly<VendorCardProps>): JSX.Element => {
       <p className="text-charcoal-300 dark:text-gray-400 mb-4 flex-grow">{props.description}</p>
       <div className="mt-auto">
         {props.learnMore && (
-          <GradientButton href={props.learnMore} className="vendor-card-cta">
-            Learn more
-            <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
+          <GradientButton href={props.learnMore} className="hover:no-underline">
+            Learn more <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
           </GradientButton>
         )}
       </div>
