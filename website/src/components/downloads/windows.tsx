@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import Link from '@docusaurus/Link';
 import { usePluginData } from '@docusaurus/useGlobalData';
 import { faMicrosoft, faWindows } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -77,15 +78,13 @@ export function WindowsDownloads({ defaultExpanded = false, highlighted = false 
 
   const additionalContent = (
     <div>
-      <a
+      <Link
         className="underline inline-flex items-center dark:text-white text-purple-500 hover:text-purple-700 dark:hover:text-purple-300 py-1 font-semibold text-sm"
-        href="https://podman-desktop.io/docs/installation/windows-install"
-        target="_blank"
-        rel="noopener noreferrer"
+        href="docs/installation/windows-install"
         onClick={event => event.stopPropagation()}>
         <FontAwesomeIcon size="1x" icon={faWindows} className="mr-2" />
         Package Managers Guide
-      </a>
+      </Link>
     </div>
   );
 
