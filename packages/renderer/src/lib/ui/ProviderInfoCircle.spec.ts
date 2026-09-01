@@ -23,35 +23,18 @@ import { expect, test } from 'vitest';
 
 import ProviderInfoCircle from './ProviderInfoCircle.svelte';
 
-test('Expect podman is purple', async () => {
-  const type = 'podman';
+test.each([
+  { type: 'podman', expectedClass: 'bg-(--pd-provider-podman)', description: 'Expect podman is purple' },
+  { type: 'kubernetes', expectedClass: 'bg-(--pd-provider-kubernetes)', description: 'Expect kubernetes is sky blue' },
+  { type: 'docker', expectedClass: 'bg-(--pd-provider-docker)', description: 'Expect docker is sky blue' },
+] as const)('$description', async ({ type, expectedClass }) => {
   render(ProviderInfoCircle, {
     type,
   });
 
   const circle = screen.getByLabelText('Provider info circle');
   expect(circle).toBeInTheDocument();
-  expect(circle).toHaveClass('bg-(--pd-provider-podman)');
-});
-
-test('Expect kubernetes is sky blue', async () => {
-  const type = 'kubernetes';
-  render(ProviderInfoCircle, {
-    type,
-  });
-  const circle = screen.getByLabelText('Provider info circle');
-  expect(circle).toBeInTheDocument();
-  expect(circle).toHaveClass('bg-(--pd-provider-kubernetes)');
-});
-
-test('Expect docker is sky blue', async () => {
-  const type = 'docker';
-  render(ProviderInfoCircle, {
-    type,
-  });
-  const circle = screen.getByLabelText('Provider info circle');
-  expect(circle).toBeInTheDocument();
-  expect(circle).toHaveClass('bg-(--pd-provider-docker)');
+  expect(circle).toHaveClass(expectedClass);
 });
 
 test('Expect unknown is gray', async () => {
