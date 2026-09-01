@@ -18,9 +18,8 @@ export function AddVendorCard(): JSX.Element {
         Discussion to be added.
       </p>
       <div className="mt-auto">
-        <GradientButton href={DISCUSSION_URL} className="vendor-card-cta">
-          Open a discussion
-          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
+        <GradientButton href={DISCUSSION_URL} className="hover:no-underline">
+          Open a discussion <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
         </GradientButton>
       </div>
     </div>
