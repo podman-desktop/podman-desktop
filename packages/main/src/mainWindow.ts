@@ -102,10 +102,11 @@ async function createWindow(): Promise<BrowserWindow> {
    *
    * @see https://github.com/electron/electron/issues/25012
    */
-  // Track whether the window show is deferred (macOS login item launch).
-  // On macOS, app.setLoginItemSettings() does not support passing CLI args,
-  // so we defer showing the window until the configuration registry is available
-  // to check the preferences.login.minimize setting.
+  // Fallback for a macOS login item launch where ready-to-show wins the race against the
+  // configuration registry. On macOS, app.setLoginItemSettings() does not support passing CLI
+  // args, so the preferences.login.minimize setting is the only way to know whether to show the
+  // window — if it is not available yet, defer the decision to the configuration-registry
+  // handler below. In practice the registry arrives first and this stays false.
   let deferredShow = false;
 
   // Set by the configuration-registry handler below, which index.ts emits once the registry is
@@ -132,8 +133,11 @@ async function createWindow(): Promise<BrowserWindow> {
         app.dock?.hide();
       }
     } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
-      // On macOS login item launch, defer showing until we can check the minimize preference
-      deferredShow = true;
+      if (configurationRegistry) {
+        applyLoginMinimizePreference(configurationRegistry);
+      } else {
+        deferredShow = true;
+      }
     } else {
       browserWindow.show();
     }
