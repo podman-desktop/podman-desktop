@@ -797,3 +797,418 @@ describe('Table collapse state persistence across remounts', () => {
     expect(g2Btn).toHaveAttribute('aria-expanded', 'true');
   });
 });
+
+describe('Table#rowClick', () => {
+  interface Item {
+    id: string;
+    name: string;
+    selected?: boolean;
+  }
+
+  const DATA: Item[] = [{ id: '1', name: 'Alice', selected: false }];
+
+  const NAME_COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name,
+    renderer: SimpleColumn,
+  });
+
+  const ACTIONS_COLUMN = new Column<Item, string>('Actions', {
+    width: '90px',
+    align: 'right',
+    renderMapping: (obj): string => obj.name,
+    renderer: SimpleColumn,
+    excludeFromRowClick: true,
+  });
+
+  test('row click in data cell calls onClick with object and event', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const cell = within(row).getByText('Alice');
+    await fireEvent.click(cell);
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(MouseEvent));
+  });
+
+  test('click directly on row element calls onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-gap-click-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    await fireEvent.click(row);
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(MouseEvent));
+  });
+
+  test('click in empty expander column calls onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-expander-column-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const expanderCell = row.querySelectorAll('[role="cell"]')[0];
+    expect(expanderCell).toBeDefined();
+    await fireEvent.click(expanderCell!);
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(MouseEvent));
+  });
+
+  test('click in excluded column does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-excluded-test',
+      data: DATA,
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const cells = within(row).getAllByText('Alice');
+    await fireEvent.click(cells[1]);
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('clickable callback can disable row click', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({
+      onClick,
+      clickable: (): boolean => false,
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-disabled-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    await fireEvent.click(within(row).getByText('Alice'));
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('non-clickable row does not have cursor-pointer class', async () => {
+    const ROW = new Row<Item>({
+      onClick: vi.fn(),
+      clickable: (): boolean => false,
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-disabled-style-test',
+      data: DATA,
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    expect(row).not.toHaveClass('cursor-pointer');
+    expect(row).not.toHaveClass('opacity-50');
+    expect(row).not.toHaveClass('hover:bg-[var(--pd-content-card-hover-bg)]');
+
+    const cells = row.querySelectorAll('[role="cell"]');
+    const nameCell = cells[1];
+    expect(nameCell).toHaveClass('opacity-50');
+    expect(nameCell).not.toHaveClass('group-hover:bg-[var(--pd-content-card-hover-bg)]');
+
+    const actionsCell = cells[cells.length - 1];
+    expect(actionsCell).not.toHaveClass('opacity-50');
+  });
+
+  test('click on expand button does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({
+      onClick,
+      children: (item): Item[] => [{ id: `${item.id}-child`, name: `${item.name} child` }],
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-expand-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const expandButton = within(row).getByRole('button', { name: 'Collapse Row' });
+    await fireEvent.click(expandButton);
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('click on checkbox does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({
+      onClick,
+      selectable: (): boolean => true,
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-checkbox-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const checkbox = within(row).getByRole('checkbox');
+    await fireEvent.click(checkbox);
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('click on button in data column does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-data-button-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const nameCell = within(row).getByText('Alice').closest('[role="cell"]');
+    const actionButton = document.createElement('button');
+    actionButton.textContent = 'Run';
+    nameCell?.appendChild(actionButton);
+
+    const buttonHandler = vi.fn();
+    actionButton.addEventListener('click', buttonHandler);
+
+    await fireEvent.click(actionButton);
+
+    expect(buttonHandler).toHaveBeenCalledOnce();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('click on menu item in excluded column does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-excluded-menu-test',
+      data: DATA,
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const cells = row.querySelectorAll('[role="cell"]');
+    const actionsCell = cells[cells.length - 1];
+    const menuItem = document.createElement('div');
+    menuItem.setAttribute('role', 'none');
+    menuItem.textContent = 'Delete';
+    actionsCell?.appendChild(menuItem);
+
+    const menuHandler = vi.fn();
+    menuItem.addEventListener('click', menuHandler);
+
+    await fireEvent.click(menuItem);
+
+    expect(menuHandler).toHaveBeenCalledOnce();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('click on button in excluded column does not call onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const ActionsButtonColumn = new Column<Item, string>('Actions', {
+      width: '90px',
+      renderMapping: (obj): string => obj.name,
+      renderer: SimpleColumn,
+      excludeFromRowClick: true,
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-actions-button-test',
+      data: DATA,
+      columns: [NAME_COLUMN, ActionsButtonColumn],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    // Add a button inside the actions cell to simulate row action buttons
+    const row = getByRole('row', { name: 'Alice' });
+    const cells = row.querySelectorAll('[role="cell"]');
+    const actionsCell = cells[cells.length - 1];
+    const actionButton = document.createElement('button');
+    actionButton.textContent = 'Delete';
+    actionsCell?.appendChild(actionButton);
+
+    const buttonHandler = vi.fn();
+    actionButton.addEventListener('click', buttonHandler);
+
+    await fireEvent.click(actionButton);
+
+    expect(buttonHandler).toHaveBeenCalledOnce();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('clickable row has cursor-pointer class', async () => {
+    const ROW = new Row<Item>({ onClick: vi.fn() });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-cursor-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    expect(row).toHaveClass('cursor-pointer');
+    expect(row).toHaveClass('group');
+    expect(row).not.toHaveClass('hover:bg-[var(--pd-content-card-hover-bg)]');
+
+    const nameCell = within(row).getByText('Alice').closest('[role="cell"]');
+    expect(nameCell).toHaveClass('group-hover:bg-[var(--pd-content-card-hover-bg)]');
+  });
+
+  test('clickable row is keyboard focusable', async () => {
+    const ROW = new Row<Item>({ onClick: vi.fn() });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-tabindex-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    expect(row).toHaveAttribute('tabindex', '0');
+  });
+
+  test('non-clickable row is not keyboard focusable', async () => {
+    const ROW = new Row<Item>({
+      onClick: vi.fn(),
+      clickable: (): boolean => false,
+    });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-no-tabindex-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    expect(row).not.toHaveAttribute('tabindex');
+  });
+
+  test('Enter key on focused row calls onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-enter-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    row.focus();
+    await fireEvent.keyDown(row, { key: 'Enter' });
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(KeyboardEvent));
+  });
+
+  test('Space key on focused row calls onClick', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-space-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    row.focus();
+    await fireEvent.keyDown(row, { key: ' ' });
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(KeyboardEvent));
+  });
+
+  test('excluded column cell has cursor-default class', async () => {
+    const ROW = new Row<Item>({ onClick: vi.fn() });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-click-excluded-cursor-test',
+      data: DATA,
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const row = getByRole('row', { name: 'Alice' });
+    const cells = row.querySelectorAll('[role="cell"]');
+    const actionsCell = cells[cells.length - 1];
+    expect(actionsCell).toHaveClass('cursor-default');
+  });
+});

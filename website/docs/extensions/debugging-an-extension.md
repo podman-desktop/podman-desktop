@@ -19,7 +19,7 @@ After developing an extension, you can start and debug the extension from the UI
 
 1. Go to **Settings > Preferences > Extensions**.
 1. Click the toggle button to enable the development mode.
-1. Go to **Extensions** and select the **Local Extensions** tab.
+1. Go to **Extensions** and select the **Local extensions** tab.
 1. Click **Add a local folder extension...**.
 1. Select the folder that contains your extension.
 1. Check the extension is in the `started` state on the same page.
