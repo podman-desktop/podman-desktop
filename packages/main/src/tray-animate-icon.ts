@@ -60,9 +60,9 @@ export class AnimatedTray {
     if (this.trayIconLoopId === 4) {
       this.trayIconLoopId = 0;
     }
-    const imagePath = this.getIconPath(`step${this.trayIconLoopId}`);
+    const image = this.getTrayImage(`step${this.trayIconLoopId}`);
     this.trayIconLoopId++;
-    this.tray?.setImage(imagePath);
+    this.tray?.setImage(image);
   }
 
   public setTray(tray: Tray): void {
@@ -116,6 +116,10 @@ export class AnimatedTray {
     return path.resolve(assetsFolder, `tray-icon${name}${suffix}.png`);
   }
 
+  protected getTrayImage(iconName: string): string | Electron.NativeImage {
+    return this.getIconPath(iconName);
+  }
+
   protected updateIcon(): void {
     // do nothing until we have a tray
     if (!this.tray) {
@@ -128,15 +132,15 @@ export class AnimatedTray {
     }
     switch (this.status) {
       case 'initialized':
-        this.tray.setImage(this.getIconPath('empty'));
+        this.tray.setImage(this.getTrayImage('empty'));
         this.tray.setToolTip(`${product.name} is initialized`);
         break;
       case 'error':
-        this.tray.setImage(this.getIconPath('error'));
+        this.tray.setImage(this.getTrayImage('error'));
         this.tray.setToolTip(`${product.name} has an error`);
         break;
       case 'ready':
-        this.tray.setImage(this.getIconPath('default'));
+        this.tray.setImage(this.getTrayImage('default'));
         this.tray.setToolTip(`${product.name} is ready`);
         break;
       case 'updating':
@@ -147,7 +151,7 @@ export class AnimatedTray {
   }
 
   getDefaultImage(): string | Electron.NativeImage {
-    return this.getIconPath('empty');
+    return this.getTrayImage('empty');
   }
 
   setStatus(status: TrayIconStatus): void {
