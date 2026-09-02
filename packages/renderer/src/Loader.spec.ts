@@ -151,11 +151,13 @@ test('Loader should send extensions-already-started event as soon as possible if
 
 describe('preload bridge watchdog', () => {
   const readySpy = window.extensionSystemIsReady;
+  const eventsBridge = (window as any).events;
 
   afterEach(() => {
     vi.useRealTimers();
     // restore a working bridge and clear the reload guard for the next test
     (window as any).extensionSystemIsReady = readySpy;
+    (window as any).events = eventsBridge;
     sessionStore.clear();
     locationReloadMock.mockClear();
   });
@@ -190,6 +192,24 @@ describe('preload bridge watchdog', () => {
     await vi.advanceTimersByTimeAsync(5000);
 
     expect(locationReloadMock).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  test('does not throw and still reloads when the preload bridge (window.events) is entirely absent', async () => {
+    vi.useFakeTimers();
+    // simulate the whole contextBridge failing to attach: neither window.events nor the
+    // extensionSystem* functions exist. The top-level window.events?.receive(...) calls must not
+    // throw, otherwise onMount never runs and the watchdog can never fire.
+    (window as any).events = undefined;
+    (window as any).extensionSystemIsReady = undefined;
+
+    const { unmount } = render(Loader, { props: {} });
+
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(locationReloadMock).toHaveBeenCalledTimes(1);
+    expect(sessionStore.get('pd-bridge-reload-attempted')).toBe('true');
 
     unmount();
   });

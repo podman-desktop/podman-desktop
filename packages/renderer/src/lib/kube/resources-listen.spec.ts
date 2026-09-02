@@ -37,6 +37,7 @@ const eventEmitter = {
 
 beforeAll(() => {
   Object.defineProperty(window, 'events', {
+    configurable: true,
     value: {
       receive: (message: string, callback: () => void) => {
         eventEmitter.receive(message, callback);
@@ -264,4 +265,27 @@ test('updated resources with filter', async () => {
   await vi.waitFor(() => {
     expect(callbackSpy).toHaveBeenCalledWith([newResource]);
   });
+});
+
+// Regression test for the preload bridge cold-start race (see #18225): on slow/cold Windows starts
+// window.events may not be exposed yet. Without optional chaining, window.events.receive(...) throws
+// a TypeError (rejecting this promise) and disposable.dispose() throws on teardown. The optional
+// chaining must turn both into safe no-ops.
+test('does not throw when the preload bridge (window.events) is not yet exposed', async () => {
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+  vi.mocked(contexts).kubernetesContexts = writable([]);
+  vi.mocked(window.kubernetesGetResources).mockResolvedValue([]);
+
+  const original = window.events;
+  Object.defineProperty(window, 'events', { configurable: true, value: undefined });
+  try {
+    const callbackSpy: Mock<(resources: KubernetesObject[]) => void> = vi.fn();
+    // must resolve, not reject: with `window.events.receive` (no ?.) this line throws
+    const listener = await listenResources('resource1', {}, callbackSpy);
+    expect(listener).not.toBeUndefined();
+    // must not throw: with `disposable.dispose()` (no ?.) this throws since disposable is undefined
+    expect(() => listener?.dispose()).not.toThrow();
+  } finally {
+    Object.defineProperty(window, 'events', { configurable: true, value: original });
+  }
 });

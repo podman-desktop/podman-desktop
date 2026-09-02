@@ -20,10 +20,11 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import ProviderConfigured from '/@/lib/dashboard/ProviderConfigured.svelte';
-import { InitializeOnlyMode } from '/@/lib/dashboard/ProviderInitUtils';
+import { InitializeAndStartMode, InitializeOnlyMode } from '/@/lib/dashboard/ProviderInitUtils';
 import { providerInfos } from '/@/stores/providers';
 
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
@@ -88,4 +89,60 @@ test('Expect configured provider shows multiple installation warnings', async ()
 
   expect(screen.getByRole('list', { name: 'Provider Warnings' })).toBeInTheDocument();
   expect(screen.getByRole('listitem', { name: 'Multiple Podman installations detected' })).toBeInTheDocument();
+});
+
+// Regression test for the preload bridge cold-start race (see #18225): on slow/cold Windows starts
+// window.events may not be exposed yet when runProvider() registers the 'provider-change' listener.
+// Without optional chaining, window.events.receive(...) throws a TypeError inside the Promise
+// executor, which runProvider catches and surfaces as a user-facing error. The guard turns the
+// missing bridge into a no-op so no spurious error is shown.
+test('does not surface an error when the preload bridge (window.events) is not yet exposed', async () => {
+  const provider: ProviderInfo = {
+    containerConnections: [],
+    containerProviderConnectionCreation: false,
+    containerProviderConnectionInitialization: false,
+    detectionChecks: [],
+    id: 'podman',
+    images: {},
+    installationSupport: false,
+    internalId: 'podman-internal',
+    kubernetesConnections: [],
+    kubernetesProviderConnectionCreation: false,
+    kubernetesProviderConnectionInitialization: false,
+    vmConnections: [],
+    vmProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    name: 'Podman',
+    status: 'configured',
+    warnings: [],
+    version: '5.0.0',
+    extensionId: '',
+    cleanupSupport: false,
+    canStart: false,
+    canStop: false,
+  };
+  providerInfos.set([provider]);
+  vi.mocked(window.startProvider).mockResolvedValue([]);
+
+  const originalEvents = window.events;
+  // simulate the preload bridge not being attached yet
+  (window as unknown as { events: unknown }).events = undefined;
+  try {
+    // InitializeAndStartMode makes onMount call runProvider() immediately, exercising the guarded line
+    render(ProviderConfigured, {
+      provider,
+      initializationContext: { mode: InitializeAndStartMode },
+    });
+
+    // let onMount -> runProvider run and any (potential) rejection propagate into the catch
+    await vi.waitFor(() => expect(window.startProvider).toHaveBeenCalledWith('podman-internal'));
+    await tick();
+    await tick();
+
+    // with `window.events.receive` (no ?.) the executor throws -> caught -> this error would render
+    expect(screen.queryByText(/Cannot read properties of undefined/)).toBeNull();
+  } finally {
+    (window as unknown as { events: unknown }).events = originalEvents;
+  }
 });
