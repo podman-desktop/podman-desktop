@@ -18,6 +18,7 @@
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
+import { AppIdentityPlugin } from '/@/plugin/app-ready/app-identity-plugin.js';
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
@@ -58,7 +59,11 @@ export class Main implements IDisposable {
     this.app.name = product.name;
     this.mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
-    this.#plugins = [new DefaultProtocolClient(this.app), new WindowPlugin(this.app, this.mainWindowDeferred.resolve)];
+    this.#plugins = [
+      new AppIdentityPlugin(this.app),
+      new DefaultProtocolClient(this.app),
+      new WindowPlugin(this.app, this.mainWindowDeferred.resolve),
+    ];
   }
 
   main(args: string[]): void {

@@ -33,6 +33,7 @@ vi.mock(import('./development-menu-builder.js'));
 vi.mock(import('./development-mode-tracker.js'));
 vi.mock(import('./navigation-items-menu-builder.js'));
 vi.mock(import('./open-dev-tools.js'));
+vi.mock(import('./plugin/app-ready/app-identity-plugin.js'));
 
 vi.mock(import('./util.js'), async () => ({
   isLinux: vi.fn().mockReturnValue(false),

@@ -24,6 +24,7 @@ import { app, nativeImage, nativeTheme } from 'electron';
 
 import product from '/@product.json' with { type: 'json' };
 
+import { stampTrayDevBadge } from './tray-dev-badge.js';
 import { isMac, isWindows } from './util.js';
 
 export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
@@ -117,7 +118,26 @@ export class AnimatedTray {
   }
 
   protected getTrayImage(iconName: string): string | Electron.NativeImage {
-    return this.getIconPath(iconName);
+    const iconPath = this.getIconPath(iconName);
+    if (!import.meta.env.DEV || !isMac()) {
+      return iconPath;
+    }
+    try {
+      const base = typeof iconPath === 'string' ? nativeImage.createFromPath(iconPath) : iconPath;
+      const stamped = stampTrayDevBadge(base);
+      if (base.getScaleFactors().includes(2)) {
+        const retinaStamped = stampTrayDevBadge(base, 2);
+        stamped.addRepresentation({
+          scaleFactor: 2,
+          dataURL: retinaStamped.toDataURL(),
+        });
+      }
+      stamped.setTemplateImage(true);
+      return stamped;
+    } catch (error) {
+      console.warn('[tray] dev badge could not be stamped; using plain icon', error);
+      return iconPath;
+    }
   }
 
   protected updateIcon(): void {
