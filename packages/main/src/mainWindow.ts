@@ -27,6 +27,7 @@ import { buildDevelopmentMenu } from './development-menu-builder.js';
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
+import { getDevWindowIconPath } from './plugin/app-ready/app-identity-plugin.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import type { WindowHandler } from './system/window/window-handler.js';
 import { isLinux, isMac, stoppedExtensions } from './util.js';
@@ -48,6 +49,8 @@ async function createWindow(): Promise<BrowserWindow> {
   // We use the native theme to determine if we should use a dark background color or not.
   const INITIAL_APP_BACKGROUND_COLOR = nativeTheme.shouldUseDarkColors ? '#18181b' : '#ffffff';
 
+  const devIconPath = getDevWindowIconPath(app);
+
   const browserWindowConstructorOptions: BrowserWindowConstructorOptions = {
     show: false, // Use 'ready-to-show' event to show window
     autoHideMenuBar: true, // This makes Podman Desktop look more like a native app
@@ -56,6 +59,7 @@ async function createWindow(): Promise<BrowserWindow> {
     minHeight: INITIAL_APP_MIN_HEIGHT,
     height: INITIAL_APP_HEIGHT,
     backgroundColor: INITIAL_APP_BACKGROUND_COLOR,
+    ...(devIconPath && { icon: devIconPath }),
     webPreferences: {
       webSecurity: false,
       //nativeWindowOpen: true,
