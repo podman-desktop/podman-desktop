@@ -595,7 +595,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2025", "windows-11-arm"]
+        # windows-arm runner has some issue starting the application, removing unless is resolved: https://github.com/podman-desktop/podman-desktop/issues/18225
+        os: ["windows-2025"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
