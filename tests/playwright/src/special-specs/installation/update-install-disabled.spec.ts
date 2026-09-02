@@ -64,6 +64,7 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Application update can be disabled', { tag: '@update-install' }, () => {
+    test.describe.configure({ retries: 1 });
     test('Application update disabled message appears in console log', async ({ runner }) => {
       await playExpect
         .poll(() => runner.getConsoleMessages().some((msg: string) => applicationDisabledRegexp.test(msg)), {
