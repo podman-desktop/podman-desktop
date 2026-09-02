@@ -44,7 +44,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
-import { ContainerProviderRegistry, startsWithMultiplexedHeader } from '/@/plugin/container-registry.js';
+import { ContainerProviderRegistry, detectMultiplexedHeader } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
@@ -3051,7 +3051,7 @@ test('container logs forwards a stream shorter than a frame header', async () =>
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
 
   setTimeout(() => {
-    // fewer bytes than a header: the decision can only be made when the stream ends
+    // fewer bytes than a header, but they already rule one out: 'h' is not a stream type
     stream.emit('data', Buffer.from('hi\n'));
     stream.emit('end', '');
   });
@@ -3061,16 +3061,40 @@ test('container logs forwards a stream shorter than a frame header', async () =>
   expect(dataChunks.join('')).toBe('hi\n');
 });
 
-describe('startsWithMultiplexedHeader', () => {
+test('container logs forwards a short stream that cannot be ruled out before it ends', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    // a lone 0x02 is still a possible header prefix, so only the end of the stream tells that no
+    // frame is coming
+    stream.emit('data', Buffer.from([2]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('\u0002');
+});
+
+describe('detectMultiplexedHeader', () => {
   test.each([
     ['stdout frame', buildLogFrame('hello\n', 1), true],
     ['stderr frame', buildLogFrame('hello\n', 2), true],
     ['plain log text', Buffer.from('hello world\n'), false],
     ['unknown stream type', Buffer.concat([Buffer.from([7, 0, 0, 0, 0, 0, 0, 1]), Buffer.from('x')]), false],
     ['no reserved zero bytes', Buffer.from([1, 2, 3, 4, 0, 0, 0, 1]), false],
-    ['shorter than a header', Buffer.from([1, 0, 0, 0]), false],
+    // the payload size carries no signal, so the prefix alone is enough to decide
+    ['header prefix only', Buffer.from([1, 0, 0, 0]), true],
+    ['short text ruled out by its first byte', Buffer.from('hi\n'), false],
+    ['empty chunk', Buffer.alloc(0), undefined],
+    ['incomplete prefix', Buffer.from([1, 0]), undefined],
   ])('%s', (_name, chunk, expected) => {
-    expect(startsWithMultiplexedHeader(chunk)).toBe(expected);
+    expect(detectMultiplexedHeader(chunk)).toBe(expected);
   });
 });
 

@@ -122,22 +122,32 @@ interface JSONEvent {
 
 // a multiplexed container stream prefixes every frame with an 8-byte header:
 // 1 byte of stream type, 3 reserved bytes set to zero, then the payload size
-const MULTIPLEXED_HEADER_SIZE = 8;
+// Only the first four bytes of an 8-byte frame header carry a recognizable shape: a stream type
+// followed by three reserved zero bytes. The last four hold the payload size, which can be any
+// value, so they say nothing about whether the stream is multiplexed.
+const MULTIPLEXED_HEADER_PREFIX_SIZE = 4;
 
-// Guesses whether a container log stream is multiplexed by looking at the shape of its first
-// header. Containers started with a TTY stream their output verbatim, so the leading bytes are
-// log text; a multiplexed frame instead starts with a known stream type followed by three zero
-// bytes, a combination that plain UTF-8 log text cannot produce (NUL bytes are not valid there).
-export function startsWithMultiplexedHeader(chunk: Buffer): boolean {
-  if (chunk.length < MULTIPLEXED_HEADER_SIZE) {
-    return false;
+// Guesses whether a container log stream is multiplexed by looking at the beginning of its first
+// header. Containers started with a TTY stream their output verbatim, so the leading bytes are log
+// text; a multiplexed frame instead starts with a known stream type followed by three zero bytes, a
+// combination that plain UTF-8 log text cannot produce (NUL bytes are not valid there).
+//
+// A single byte that does not fit the shape already rules a header out, so the answer is returned as
+// soon as the bytes at hand allow it — in practice on the very first byte for log text. `undefined`
+// means the chunk is still a possible header prefix and more bytes are needed to decide.
+export function detectMultiplexedHeader(chunk: Buffer): boolean | undefined {
+  for (let index = 0; index < MULTIPLEXED_HEADER_PREFIX_SIZE; index++) {
+    const value = chunk[index];
+    if (value === undefined) {
+      return undefined;
+    }
+    // 0: stdin, 1: stdout, 2: stderr, then three reserved zero bytes
+    const matches = index === 0 ? value <= 2 : value === 0;
+    if (!matches) {
+      return false;
+    }
   }
-  const streamType = chunk[0];
-  // 0: stdin, 1: stdout, 2: stderr
-  if (streamType === undefined || streamType > 2) {
-    return false;
-  }
-  return chunk[1] === 0 && chunk[2] === 0 && chunk[3] === 0;
+  return true;
 }
 
 @injectable()
@@ -1889,13 +1899,15 @@ export class ContainerProviderRegistry {
           const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
           if (sniffed) {
             sniffed = Buffer.concat([sniffed, bytes]);
-            // wait until a whole header is available before deciding
-            if (sniffed.length < MULTIPLEXED_HEADER_SIZE) {
+            const multiplexed = detectMultiplexedHeader(sniffed);
+            // the bytes so far are still a possible header prefix: wait for the next ones rather
+            // than guess
+            if (multiplexed === undefined) {
               return;
             }
             const buffered = sniffed;
             sniffed = undefined;
-            if (startsWithMultiplexedHeader(buffered)) {
+            if (multiplexed) {
               forwardDemultiplexed();
             } else {
               forwardVerbatim();
@@ -1908,7 +1920,7 @@ export class ContainerProviderRegistry {
 
         containerStream.on('end', () => {
           if (sniffed) {
-            // fewer bytes than a header arrived: the stream cannot be multiplexed
+            // the stream ended on an incomplete header prefix: it cannot hold a whole frame
             const buffered = sniffed;
             sniffed = undefined;
             forwardVerbatim();
