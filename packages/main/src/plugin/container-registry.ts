@@ -21,7 +21,7 @@ import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { Writable } from 'node:stream';
+import { PassThrough, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { StringDecoder } from 'node:string_decoder';
 
@@ -118,6 +118,26 @@ interface JSONEvent {
   Type?: string;
   Action?: string;
   Actor?: { ID: string };
+}
+
+// a multiplexed container stream prefixes every frame with an 8-byte header:
+// 1 byte of stream type, 3 reserved bytes set to zero, then the payload size
+const MULTIPLEXED_HEADER_SIZE = 8;
+
+// Guesses whether a container log stream is multiplexed by looking at the shape of its first
+// header. Containers started with a TTY stream their output verbatim, so the leading bytes are
+// log text; a multiplexed frame instead starts with a known stream type followed by three zero
+// bytes, a combination that plain UTF-8 log text cannot produce (NUL bytes are not valid there).
+export function startsWithMultiplexedHeader(chunk: Buffer): boolean {
+  if (chunk.length < MULTIPLEXED_HEADER_SIZE) {
+    return false;
+  }
+  const streamType = chunk[0];
+  // 0: stdin, 1: stdout, 2: stderr
+  if (streamType === undefined || streamType > 2) {
+    return false;
+  }
+  return chunk[1] === 0 && chunk[2] === 0 && chunk[3] === 0;
 }
 
 @injectable()
@@ -1820,17 +1840,6 @@ export class ContainerProviderRegistry {
       optionalParams['since'] = logsParams.since;
     }
 
-    // containers started without a TTY return their logs multiplexed: every frame is prefixed
-    // with an 8-byte header (stream type + payload size) that must be stripped, otherwise the
-    // header bytes are decoded as text and pollute the beginning of the log lines
-    let multiplexed = false;
-    try {
-      multiplexed = !(await container.inspect()).Config.Tty;
-    } catch (error: unknown) {
-      // if the container cannot be inspected, fall back to forwarding the stream as-is
-      console.warn(`Unable to read the TTY mode of container ${logsParams.id}`, error);
-    }
-
     container
       .logs({
         follow: true,
@@ -1856,7 +1865,61 @@ export class ContainerProviderRegistry {
           logsParams.callback('data', decoder.write(chunk));
         };
 
+        // the stream is consumed through a pass-through so that its first bytes can be inspected
+        // before deciding how to forward the rest of it
+        const logStream = new PassThrough();
+        let sniffed: Buffer | undefined = Buffer.alloc(0);
+
+        const forwardDemultiplexed = (): void => {
+          const decodeInto = (decoder: StringDecoder): Writable =>
+            new Writable({
+              write(chunk: Buffer, _encoding, done): void {
+                emitData(decoder, chunk);
+                done();
+              },
+            });
+          container.modem.demuxStream(logStream, decodeInto(stdoutDecoder), decodeInto(stderrDecoder));
+        };
+
+        const forwardVerbatim = (): void => {
+          logStream.on('data', (chunk: Buffer) => emitData(stdoutDecoder, chunk));
+        };
+
+        containerStream.on('data', (chunk: Buffer | string) => {
+          const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          if (sniffed) {
+            sniffed = Buffer.concat([sniffed, bytes]);
+            // wait until a whole header is available before deciding
+            if (sniffed.length < MULTIPLEXED_HEADER_SIZE) {
+              return;
+            }
+            const buffered = sniffed;
+            sniffed = undefined;
+            if (startsWithMultiplexedHeader(buffered)) {
+              forwardDemultiplexed();
+            } else {
+              forwardVerbatim();
+            }
+            logStream.write(buffered);
+            return;
+          }
+          logStream.write(bytes);
+        });
+
         containerStream.on('end', () => {
+          if (sniffed) {
+            // fewer bytes than a header arrived: the stream cannot be multiplexed
+            const buffered = sniffed;
+            sniffed = undefined;
+            forwardVerbatim();
+            if (buffered.length > 0) {
+              logStream.write(buffered);
+            }
+          }
+          logStream.end();
+        });
+
+        logStream.on('end', () => {
           for (const decoder of [stdoutDecoder, stderrDecoder]) {
             const remaining = decoder.end();
             if (remaining) {
@@ -1865,19 +1928,6 @@ export class ContainerProviderRegistry {
           }
           logsParams.callback('end', '');
         });
-
-        if (multiplexed) {
-          const decodeInto = (decoder: StringDecoder): Writable =>
-            new Writable({
-              write(chunk: Buffer, _encoding, done): void {
-                emitData(decoder, chunk);
-                done();
-              },
-            });
-          container.modem.demuxStream(containerStream, decodeInto(stdoutDecoder), decodeInto(stderrDecoder));
-        } else {
-          containerStream.on('data', (chunk: Buffer) => emitData(stdoutDecoder, chunk));
-        }
       })
       .catch((error: unknown) => {
         telemetryOptions = { error: error };

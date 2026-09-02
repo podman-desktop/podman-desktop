@@ -44,7 +44,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
-import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import { ContainerProviderRegistry, startsWithMultiplexedHeader } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
@@ -3024,11 +3024,10 @@ test('container logs decodes stdout and stderr with separate decoders', async ()
   expect(dataChunks.join('')).toBe('err\n🚀');
 });
 
-test('container logs forwards the raw stream when the container cannot be inspected', async () => {
+test('container logs forwards the raw stream when the first bytes are not a frame header', async () => {
   const stream = new EventEmitter();
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
-    inspect: vi.fn().mockRejectedValue(new Error('no such container')),
   } as unknown as Dockerode.Container;
 
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
@@ -3041,6 +3040,38 @@ test('container logs forwards the raw stream when the container cannot be inspec
   await endPromise;
 
   expect(dataChunks.join('')).toBe('raw log\n');
+});
+
+test('container logs forwards a stream shorter than a frame header', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    // fewer bytes than a header: the decision can only be made when the stream ends
+    stream.emit('data', Buffer.from('hi\n'));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('hi\n');
+});
+
+describe('startsWithMultiplexedHeader', () => {
+  test.each([
+    ['stdout frame', buildLogFrame('hello\n', 1), true],
+    ['stderr frame', buildLogFrame('hello\n', 2), true],
+    ['plain log text', Buffer.from('hello world\n'), false],
+    ['unknown stream type', Buffer.concat([Buffer.from([7, 0, 0, 0, 0, 0, 0, 1]), Buffer.from('x')]), false],
+    ['no reserved zero bytes', Buffer.from([1, 2, 3, 4, 0, 0, 0, 1]), false],
+    ['shorter than a header', Buffer.from([1, 0, 0, 0]), false],
+  ])('%s', (_name, chunk, expected) => {
+    expect(startsWithMultiplexedHeader(chunk)).toBe(expected);
+  });
 });
 
 test('container logs forwards the since option', async () => {
