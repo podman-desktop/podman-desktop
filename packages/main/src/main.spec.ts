@@ -27,6 +27,7 @@ import product from '/@product.json' with { type: 'json' };
 
 import { Main } from './main.js';
 
+vi.mock(import('/@/plugin/app-ready/app-identity-plugin.js'));
 vi.mock(import('/@/util.js'));
 vi.mock(import('/@/security-restrictions.js'));
 vi.mock(import('electron-context-menu'), () => ({
