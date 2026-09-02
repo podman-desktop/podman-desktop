@@ -272,12 +272,23 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'push'
 
-      # Windows Defender real-time scanning can lock/quarantine files under the build,
-      # updater download and install directories, which prevents the Electron renderer
-      # from initializing during the update test. Exclude these paths proactively, before
-      # the app is built and installed, so Defender never scans files written there.
+      # Windows Defender locks newly-written executables via its behavior-monitoring subsystem
+      # even when the path is listed in ExclusionPath. Path exclusions only suppress
+      # signature-based real-time scanning; behavior monitoring is a separate kernel component
+      # that intercepts new-executable creation and is not affected by ExclusionPath.
+      # The NSIS installer build triggers this, locking dist/ files right before tests run
+      # and preventing the Electron preload bridge from attaching on the first cold start.
+      # DisableBehaviorMonitoring stops those locks; ExclusionPath keeps real-time scanning
+      # off for subsequent file access during the test run.
       - name: Add Windows Defender exclusions for build and install paths
         run: |
+          Write-Host "Disabling Defender behavior monitoring to prevent file locks during build/test"
+          try {
+            Set-MpPreference -DisableBehaviorMonitoring $true -ErrorAction Stop
+            Write-Host "Disabled Defender behavior monitoring"
+          } catch {
+            Write-Warning "Failed to disable Defender behavior monitoring: $_"
+          }
           Write-Host "Adding Windows Defender exclusions to prevent renderer initialization failures during update tests"
           $exclusions = @(
             "$env:GITHUB_WORKSPACE",
@@ -298,6 +309,8 @@ jobs:
           } catch {
             Write-Warning "Failed to add Defender process exclusion: $_"
           }
+          Write-Host "Current Defender behavior monitoring setting:"
+          try { (Get-MpPreference).DisableBehaviorMonitoring } catch { Write-Warning "Unable to read DisableBehaviorMonitoring" }
           Write-Host "Current Defender path exclusions:"
           try { (Get-MpPreference).ExclusionPath } catch { Write-Warning "Unable to read current Defender path exclusions" }
           Write-Host "Current Defender process exclusions:"
