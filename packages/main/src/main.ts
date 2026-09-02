@@ -76,6 +76,10 @@ export class Main implements IDisposable {
   }
 
   protected init(additionalData: AdditionalData): void {
+    this.#plugins.forEach(plugin => {
+      plugin.onBeforeReady?.();
+    });
+
     /**
      * Prevent multiple instances
      */
