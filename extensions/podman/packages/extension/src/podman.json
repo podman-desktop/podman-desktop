@@ -8,10 +8,10 @@
       }
     },
     "v6": {
-      "version": "6.1.0",
-      "tagVersion": "v6.1.0",
+      "version": "6.1.1",
+      "tagVersion": "v6.1.1",
       "releaseNotes": {
-        "href": "https://github.com/podman-container-tools/podman/releases/tag/v6.1.0"
+        "href": "https://github.com/podman-container-tools/podman/releases/tag/v6.1.1"
       }
     }
   },
@@ -36,7 +36,7 @@
         },
         "arm64": {
           "versionRef": "v6",
-          "fileName": "podman-installer-macos-aarch64-v6.1.0.pkg"
+          "fileName": "podman-installer-macos-aarch64-v6.1.1.pkg"
         }
       }
     }
