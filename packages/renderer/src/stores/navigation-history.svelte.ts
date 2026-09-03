@@ -404,6 +404,25 @@ export function goForward(): void {
   }
 }
 
+/**
+ * Navigate to a URL while replacing the current history entry instead of pushing.
+ * Used for auto-redirects (e.g. detail page base path → default tab) so that the
+ * transient redirect URL does not remain in the stack and trap the user in a loop.
+ * @param url - The URL to navigate to
+ * @example
+ * // Stack: ['/', '/containers', '/containers/abc123/'], index 2
+ * replaceCurrentUrl('/containers/abc123/tty')
+ * // Stack: ['/', '/containers', '/containers/abc123/tty'], index 2
+ */
+export function replaceCurrentUrl(url: string): void {
+  if (navigationHistory.index >= 0 && navigationHistory.index < navigationHistory.stack.length) {
+    navigationHistory.stack[navigationHistory.index] = { url };
+    navigationHistory.stack = [...navigationHistory.stack];
+    isNavigatingHistory = true;
+  }
+  router.goto(url);
+}
+
 // In production we are going from 'index.html' to the Dashboard page during startup, so we need to skip this route
 function isValidRoute(url: string): boolean {
   // Must start with '/' for relative routes
