@@ -420,8 +420,9 @@ export function replaceCurrentUrl(url: string): void {
     if (currentEntry?.url === url) {
       return;
     }
-    navigationHistory.stack[navigationHistory.index] = { url };
-    navigationHistory.stack = [...navigationHistory.stack];
+    navigationHistory.stack = navigationHistory.stack.map((entry, i) =>
+      i === navigationHistory.index ? { url } : entry,
+    );
     isNavigatingHistory = true;
   }
   // When the stack is empty (no entry to replace), we intentionally skip setting
