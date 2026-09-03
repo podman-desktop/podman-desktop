@@ -33,9 +33,9 @@ test.each([
   { type: 'dd', name: 'foo', state: 'stopped', description: 'Expect to start dd Extension if stopped' },
   { type: 'pd', name: 'fooName', state: 'stopped', description: 'Expect to start pd Extension if stopped' },
   { type: 'pd', name: 'fooName', state: 'failed', description: 'Expect to start Extension if failed' },
-])('$description', async ({ type, name, state }) => {
+] as const)('$description', async ({ type, name, state }) => {
   const extension: CombinedExtensionInfoUI = {
-    type: type as 'dd' | 'pd',
+    type,
     id: 'idExtension',
     name,
     description: 'my description',
@@ -44,7 +44,7 @@ test.each([
     removable: true,
     devMode: false,
     version: 'v1.2.3',
-    state: state as 'stopped' | 'failed',
+    state,
     path: '',
     readme: '',
   };

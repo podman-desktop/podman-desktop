@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faMinusCircle, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faMinusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
@@ -167,7 +167,7 @@ async function saveImages(): Promise<void> {
           on:click={saveImages}
           inProgress={inProgress}
           class="w-full"
-          icon={faPlay}
+          icon={faDownload}
           aria-label="Save images"
           disabled={saveDisabled}>
           Save Images
