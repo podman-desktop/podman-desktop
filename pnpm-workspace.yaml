@@ -70,6 +70,7 @@ overrides:
   body-parser: '>=2.3.0'
   builder-util-runtime: '>=9.7.0'
   postcss: '>=8.5.18'
+  browserslist: '>=4.28.7'
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
