@@ -11,6 +11,7 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
+import { replaceCurrentUrl } from '/@/stores/navigation-history.svelte';
 
 import ContainerActions from './ContainerActions.svelte';
 import ContainerDetailsInspect from './ContainerDetailsInspect.svelte';
@@ -46,9 +47,9 @@ $effect(() => {
         const currentRouterPath = $router.path;
         if (currentRouterPath.endsWith('/')) {
           if (displayTty) {
-            router.goto(`${currentRouterPath}tty`);
+            replaceCurrentUrl(`${currentRouterPath}tty`);
           } else {
-            router.goto(`${currentRouterPath}logs`);
+            replaceCurrentUrl(`${currentRouterPath}logs`);
           }
         }
       })

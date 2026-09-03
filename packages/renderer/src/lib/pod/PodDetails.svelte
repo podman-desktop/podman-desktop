@@ -8,6 +8,7 @@ import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import StateChange from '/@/lib/ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { replaceCurrentUrl } from '/@/stores/navigation-history.svelte';
 import { podsInfos } from '/@/stores/pods';
 
 import PodActions from './PodActions.svelte';
@@ -39,7 +40,7 @@ onMount(() => {
         pod = matchingPod;
 
         if (currentRouterPath.endsWith('/')) {
-          router.goto(`${currentRouterPath}logs`);
+          replaceCurrentUrl(`${currentRouterPath}logs`);
         }
       } catch (err) {
         console.error(err);

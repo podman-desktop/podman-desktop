@@ -105,6 +105,11 @@ const myInfraContainerUI: ContainerInfoUI = {
 
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-search'));
+vi.mock(import('/@/stores/navigation-history.svelte'), () => ({
+  replaceCurrentUrl: (url: string): void => {
+    router.goto(url);
+  },
+}));
 
 const getConfigurationValueMock = vi.fn().mockReturnValue(12);
 
