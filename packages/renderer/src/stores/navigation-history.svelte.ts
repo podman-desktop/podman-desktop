@@ -416,6 +416,10 @@ export function goForward(): void {
  */
 export function replaceCurrentUrl(url: string): void {
   if (navigationHistory.index >= 0 && navigationHistory.index < navigationHistory.stack.length) {
+    const currentEntry = navigationHistory.stack[navigationHistory.index];
+    if (currentEntry?.url === url) {
+      return;
+    }
     navigationHistory.stack[navigationHistory.index] = { url };
     navigationHistory.stack = [...navigationHistory.stack];
     isNavigatingHistory = true;

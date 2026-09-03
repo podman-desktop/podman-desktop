@@ -280,6 +280,17 @@ describe('replaceCurrentUrl', () => {
     expect(navigationHistory.stack[0]).toEqual({ url: '/containers/abc123/tty' });
     expect(navigationHistory.stack[0].extensionEntry).toBeUndefined();
   });
+
+  test('should no-op when replacement URL matches the current entry', () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/containers/abc123/tty' }];
+    navigationHistory.index = 1;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+
+    expect(navigationHistory.stack).toEqual([{ url: '/containers' }, { url: '/containers/abc123/tty' }]);
+    expect(navigationHistory.index).toBe(1);
+    expect(router.goto).not.toHaveBeenCalled();
+  });
 });
 
 describe('kubernetes dashboard submenu', () => {
