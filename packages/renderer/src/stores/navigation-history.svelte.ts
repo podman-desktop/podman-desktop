@@ -420,6 +420,8 @@ export function replaceCurrentUrl(url: string): void {
     navigationHistory.stack = [...navigationHistory.stack];
     isNavigatingHistory = true;
   }
+  // When the stack is empty (no entry to replace), we intentionally skip setting
+  // isNavigatingHistory so the router subscription pushes the URL as a new entry.
   router.goto(url);
 }
 
