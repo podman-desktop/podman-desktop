@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,6 +90,32 @@ export const withSpacesFakeExtension: CatalogExtension = {
   ],
 };
 
+export const yFakeExtension: CatalogExtension = {
+  id: 'idYInstalled',
+  publisherName: 'BarPublisher',
+  shortDescription: 'this is short Y',
+  publisherDisplayName: 'Bar Publisher',
+  extensionName: 'y-extension',
+  displayName: 'Y Extension',
+  categories: [],
+  keywords: [],
+  unlisted: false,
+  versions: [
+    {
+      version: '1.0.0Y',
+      preview: false,
+      files: [
+        {
+          assetType: 'icon',
+          data: 'iconY',
+        },
+      ],
+      ociUri: 'linkY',
+      lastUpdated: new Date(),
+    },
+  ],
+};
+
 const combined: CombinedExtensionInfoUI[] = [
   {
     id: 'idAInstalled',
@@ -101,6 +127,9 @@ const combined: CombinedExtensionInfoUI[] = [
   {
     id: 'idYInstalled',
     displayName: 'Y installed Extension',
+    name: 'Y extension',
+    removable: true,
+    state: 'started',
   },
 ] as unknown[] as CombinedExtensionInfoUI[];
 
@@ -190,4 +219,24 @@ test('Expect to have details page with id with spaces', async () => {
 
   const heading = screen.getByRole('heading', { name: 'A Extension extension' });
   expect(heading).toBeInTheDocument();
+});
+
+test('Expect details page to update when extensionId prop changes', async () => {
+  catalogExtensionInfos.set([aFakeExtension, yFakeExtension]);
+  extensionInfos.set(combined);
+
+  const { rerender } = render(ExtensionDetails, { extensionId: 'idAInstalled' });
+
+  await vi.waitFor(() =>
+    expect(screen.getByRole('heading', { name: 'A installed Extension extension' })).toBeInTheDocument(),
+  );
+
+  await rerender({ extensionId: 'idYInstalled' });
+
+  await vi.waitFor(() =>
+    expect(screen.getByRole('heading', { name: 'Y installed Extension extension' })).toBeInTheDocument(),
+  );
+  await vi.waitFor(() =>
+    expect(screen.queryByRole('heading', { name: 'A installed Extension extension' })).not.toBeInTheDocument(),
+  );
 });
