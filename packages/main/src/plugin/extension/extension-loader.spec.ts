@@ -61,6 +61,7 @@ import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js
 import type { MenuRegistry } from '/@/plugin/menu-registry.js';
 import type { MessageBox } from '/@/plugin/message-box.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import type { SearchResultProviderRegistry } from '/@/plugin/navigation/search-result-provider-registry.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import type { Proxy } from '/@/plugin/proxy.js';
@@ -289,6 +290,10 @@ const navigationManager: NavigationManager = new NavigationManager(
   onboardingRegistry,
 );
 
+const searchResultProviderRegistry = {
+  registerProvider: vi.fn(),
+} as unknown as SearchResultProviderRegistry;
+
 const colorRegistry = {
   registerExtensionThemes: vi.fn(),
 } as unknown as ColorRegistry;
@@ -394,6 +399,7 @@ beforeEach(() => {
     imageCheckerImpl,
     imageFilesImpl,
     navigationManager,
+    searchResultProviderRegistry,
     webviewRegistry,
     colorRegistry,
     dialogRegistry,
