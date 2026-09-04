@@ -7,8 +7,6 @@ import type {
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
 
 import PreferencesConnectionCreationRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
@@ -17,30 +15,21 @@ import { providerInfos } from '/@/stores/providers';
 
 import { isContainerConnection } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let name: string | undefined = undefined;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  name?: string;
+}
+let { properties = [], providerInternalId, name }: Props = $props();
 
-let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
-let scope: string;
-let providerInfo: ProviderInfo;
-
-let providersUnsubscribe: Unsubscriber;
-onMount(async () => {
-  providersUnsubscribe = providerInfos.subscribe(providerInfosValue => {
-    const providers = providerInfosValue;
-    const connectionName = Buffer.from(name ?? '', 'base64').toString();
-    providerInfo = providers.filter(provider => provider.internalId === providerInternalId)[0];
-    connectionInfo = providerInfo.containerConnections.filter(connection => connection.name === connectionName)[0];
-  });
-  scope = isContainerConnection(connectionInfo) ? 'ContainerConnection' : 'KubernetesConnection';
-});
-
-onDestroy(() => {
-  if (providersUnsubscribe) {
-    providersUnsubscribe();
-  }
-});
+let connectionName = $derived(Buffer.from(name ?? '', 'base64').toString());
+let providerInfo: ProviderInfo = $derived(
+  $providerInfos.filter(provider => provider.internalId === providerInternalId)[0],
+);
+let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo = $derived(
+  providerInfo.containerConnections.filter(connection => connection.name === connectionName)[0],
+);
+let scope: string = $derived(isContainerConnection(connectionInfo) ? 'ContainerConnection' : 'KubernetesConnection');
 
 async function editConnection(
   internalProviderId: string,
