@@ -80,6 +80,8 @@ import type {
   ImageSearchResult,
   ImagesSaveOptions,
   ImageTagsListOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   ImageUpdateStatus,
   ItemInfo,
   KubeContext,
@@ -635,6 +637,13 @@ export function initExposure(): void {
     'checkImageUpdateStatus',
     async (imageReference: string, imageTag: string, localDigests: string[]): Promise<ImageUpdateStatus> => {
       return ipcInvoke('image-registry:checkImageUpdateStatus', imageReference, imageTag, localDigests);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'updateImages',
+    async (images: ImageUpdateInfo[], cancellableTokenId?: number): Promise<ImageUpdateResult[]> => {
+      return ipcInvoke('container-provider-registry:updateImages', images, cancellableTokenId);
     },
   );
 

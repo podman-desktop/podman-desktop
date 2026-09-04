@@ -1424,7 +1424,8 @@ export class ContainerProviderRegistry {
       images.map(async (info): Promise<ImageUpdateResult> => {
         try {
           const matchingEngine = this.getMatchingEngine(info.engineId);
-          const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
+          const imageInspect = await matchingEngine.getImage(info.image).inspect();
+          const localDigests = imageInspect.RepoDigests ?? [];
           const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
 
           if (status.status === 'error') {
