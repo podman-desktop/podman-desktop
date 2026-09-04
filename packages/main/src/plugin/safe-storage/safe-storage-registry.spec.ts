@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { cpSync, existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, rename, writeFile } from 'node:fs/promises';
 
 import type Electron from 'electron';
 import { safeStorage } from 'electron';
@@ -95,10 +95,20 @@ test('should init safe storage', async () => {
     [fullKey]: base64Encrypted,
   };
 
+  // wait for the serialized write chain to flush
+  await vi.waitFor(() => {
+    expect(vi.mocked(rename)).toHaveBeenCalled();
+  });
+
+  // atomic write: data is written to a unique .tmp file, then renamed into place
   expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
-    expect.stringContaining('data.json'),
+    expect.stringMatching(/data\.json\.tmp-/),
     JSON.stringify(expectedData),
     'utf-8',
+  );
+  expect(vi.mocked(rename)).toHaveBeenCalledWith(
+    expect.stringMatching(/data\.json\.tmp-/),
+    expect.stringMatching(/data\.json$/),
   );
 
   // read again the value
@@ -107,8 +117,24 @@ test('should init safe storage', async () => {
 
   // check delete
   events.length = 0;
+  vi.mocked(writeFile).mockClear();
+  vi.mocked(rename).mockClear();
   await extensionSpecificStorage.delete('key1');
-  expect(vi.mocked(writeFile)).toHaveBeenCalledWith(expect.stringContaining('data.json'), JSON.stringify({}), 'utf-8');
+
+  // wait for the serialized write chain to flush
+  await vi.waitFor(() => {
+    expect(vi.mocked(rename)).toHaveBeenCalled();
+  });
+
+  expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
+    expect.stringMatching(/data\.json\.tmp-/),
+    JSON.stringify({}),
+    'utf-8',
+  );
+  expect(vi.mocked(rename)).toHaveBeenCalledWith(
+    expect.stringMatching(/data\.json\.tmp-/),
+    expect.stringMatching(/data\.json$/),
+  );
 
   // check change event
   expect(events).toEqual([{ key: 'key1' }]);
@@ -125,9 +151,18 @@ test('should init safe storage if error', async () => {
   expect(notifications).toBeDefined();
   expect(notifications.length).toBe(1);
 
-  expect(cpSync).toHaveBeenCalledWith(expect.stringContaining('data.json'), expect.stringContaining('.backup-'));
+  expect(cpSync).toHaveBeenCalledWith(expect.stringMatching(/data\.json$/), expect.stringMatching(/\.backup-/));
 
-  expect(writeFile).toHaveBeenCalledWith(expect.stringContaining('data.json'), JSON.stringify({}), 'utf-8');
+  expect(writeFile).toHaveBeenCalledWith(expect.stringMatching(/data\.json$/), JSON.stringify({}), 'utf-8');
+});
+
+test('should return notification when data.json is corrupt', async () => {
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFile).mockResolvedValue('');
+
+  const notifications = await safeStorageRegistry.init();
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]!.title).toBe('Corrupted secure storage');
 });
 
 test('should throw error if not initialized', async () => {
