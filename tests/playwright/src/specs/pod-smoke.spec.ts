@@ -412,6 +412,17 @@ test.describe
       'Test suite requires a second Podman machine and should only run when TEST_PODMAN_MACHINE is true',
     );
 
+    test.beforeAll(async ({ page }) => {
+      // The "set as default?" Podman dialog fires asynchronously when the
+      // second machine finishes starting — potentially in the middle of a
+      // later test. Register a locator handler so Playwright auto-dismisses
+      // it whenever it appears, before it can block any UI interaction.
+      const podmanDialog = page.getByRole('dialog', { name: 'Podman', exact: true });
+      await page.addLocatorHandler(podmanDialog, async () => {
+        await podmanDialog.getByRole('button', { name: 'Ignore' }).click();
+      });
+    });
+
     test.afterAll(async ({ page }) => {
       test.setTimeout(120_000);
 
