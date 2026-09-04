@@ -7,16 +7,27 @@ import { uncertainStringToNumber } from '/@/lib/preferences/Util';
 
 import { checkNumericValueValid } from './NumberItemUtils';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: number | undefined;
-export let onChange = (_id: string, _value: number): void => {};
-export let invalidRecord = (_error: string): void => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value?: number;
+  onChange?: (_id: string, _value: number) => void;
+  invalidRecord?: (_error: string) => void;
+}
+let {
+  record,
+  value,
+  onChange = (_id: string, _value: number): void => {},
+  invalidRecord = (_error: string): void => {},
+}: Props = $props();
 
-let recordValue: string;
-$: recordValue = value?.toString() ?? '0';
+// eslint-disable-next-line svelte/prefer-writable-derived
+let recordValue: string = $state(value?.toString() ?? '0');
+$effect(() => {
+  recordValue = value?.toString() ?? '0';
+});
 
-let numberInputErrorMessage = '';
-let numberInputInvalid = false;
+let numberInputErrorMessage = $state('');
+let numberInputInvalid = $state(false);
 
 onMount(() => {
   if (value && assertNumericValueIsValid(value)) {
@@ -78,8 +89,8 @@ function assertNumericValueIsValid(value: number): boolean {
       class="w-full px-2 outline-hidden focus:outline-hidden text-[var(--pd-input-field-focused-text)] text-sm py-0.5"
       name={record.id}
       bind:value={recordValue}
-      on:keypress={onNumberInputKeyPress}
-      on:input={onInput}
+      onkeypress={onNumberInputKeyPress}
+      oninput={onInput}
       disabled={!!record.readonly}
       aria-label={record.description} />
   </Tooltip>
