@@ -102,11 +102,28 @@ async function createWindow(): Promise<BrowserWindow> {
    *
    * @see https://github.com/electron/electron/issues/25012
    */
-  // Track whether the window show is deferred (macOS login item launch).
-  // On macOS, app.setLoginItemSettings() does not support passing CLI args,
-  // so we defer showing the window until the configuration registry is available
-  // to check the preferences.login.minimize setting.
+  // Fallback for a macOS login item launch where ready-to-show wins the race against the
+  // configuration registry. On macOS, app.setLoginItemSettings() does not support passing CLI
+  // args, so the preferences.login.minimize setting is the only way to know whether to show the
+  // window — if it is not available yet, defer the decision to the configuration-registry
+  // handler below. In practice the registry arrives first and this stays false.
   let deferredShow = false;
+
+  // Set by the configuration-registry handler below, which index.ts emits once the registry is
+  // built during extension init, so this is undefined until then.
+  let configurationRegistry: ConfigurationRegistry | undefined;
+
+  // On macOS login item launch, hide the dock icon when preferences.login.minimize is set,
+  // otherwise show the window.
+  const applyLoginMinimizePreference = (registry: ConfigurationRegistry): void => {
+    const preferencesConfig = registry.getConfiguration('preferences');
+    const minimize = preferencesConfig.get<boolean>('login.minimize');
+    if (minimize) {
+      app.dock?.hide();
+    } else {
+      browserWindow.show();
+    }
+  };
 
   // Shared show logic used by both ready-to-show and the Wayland did-finish-load fallback.
   const handleWindowShow = (): void => {
@@ -116,8 +133,11 @@ async function createWindow(): Promise<BrowserWindow> {
         app.dock?.hide();
       }
     } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
-      // On macOS login item launch, defer showing until we can check the minimize preference
-      deferredShow = true;
+      if (configurationRegistry) {
+        applyLoginMinimizePreference(configurationRegistry);
+      } else {
+        deferredShow = true;
+      }
     } else {
       browserWindow.show();
     }
@@ -132,21 +152,14 @@ async function createWindow(): Promise<BrowserWindow> {
     browserWindow.on('ready-to-show', handleWindowShow);
   }
 
-  let configurationRegistry: ConfigurationRegistry;
-  ipcMain.on('configuration-registry', (_, data) => {
+  ipcMain.on('configuration-registry', (_, data: ConfigurationRegistry) => {
     configurationRegistry = data;
 
     // If the window show was deferred (macOS login item launch),
     // check the minimize preference and show or hide accordingly
     if (deferredShow) {
       deferredShow = false;
-      const preferencesConfig = configurationRegistry.getConfiguration('preferences');
-      const minimize = preferencesConfig.get<boolean>('login.minimize');
-      if (minimize) {
-        app.dock?.hide();
-      } else {
-        browserWindow.show();
-      }
+      applyLoginMinimizePreference(configurationRegistry);
     }
 
     // refresh the value of the development mode config property
