@@ -535,6 +535,28 @@ describe('kubernetes create factory', () => {
     expect(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).not.toHaveBeenCalled();
   });
 
+  test('activate should NOT register factory when only unsupported running connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      {
+        connection: {
+          name: 'unsupported-connection',
+          status: () => 'started',
+          type: 'unsupported',
+        },
+      } as unknown as extensionApi.ProviderContainerConnection,
+    ]);
+
+    await extension.activate(
+      vi.mocked<extensionApi.ExtensionContext>({
+        subscriptions: {
+          push: vi.fn(),
+        },
+      } as unknown as extensionApi.ExtensionContext),
+    );
+
+    expect(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).not.toHaveBeenCalled();
+  });
+
   test('expect info message to be displayed when no binary installed and cluster created called', async () => {
     vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
       {

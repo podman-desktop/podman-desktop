@@ -5,6 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import BooleanItem from '/@/lib/preferences/item-formats/BooleanItem.svelte';
+import ContainerConnectionItem from '/@/lib/preferences/item-formats/ContainerConnectionItem.svelte';
 import EnumItem from '/@/lib/preferences/item-formats/EnumItem.svelte';
 import FileItem from '/@/lib/preferences/item-formats/FileItem.svelte';
 import NumberItem from '/@/lib/preferences/item-formats/NumberItem.svelte';
@@ -46,6 +47,9 @@ let recordUpdateTimeout: NodeJS.Timeout;
 
 let invalidText: string | undefined = $state(undefined);
 let recordValue: unknown = $state(undefined);
+let initialValueResolved = $state(false);
+let initialValueError: string | undefined = $state(undefined);
+let initialValueRequest = 0;
 
 $effect(() => {
   updateResetButtonVisibility?.(recordValue);
@@ -86,14 +90,32 @@ $effect(() => {
 
 $effect(() => {
   if (!isEqual(currentRecord, record)) {
+    const request = ++initialValueRequest;
+    const requestedRecord = record;
+    initialValueResolved = false;
+    initialValueError = undefined;
     initialValue
       .then(value => {
+        if (request !== initialValueRequest) {
+          return;
+        }
         recordValue = value;
-        if (record.type === 'boolean' || record.type === 'object') {
+        if (requestedRecord.type === 'boolean' || requestedRecord.type === 'object') {
           recordValue = !!value;
         }
       })
-      .catch((err: unknown) => console.error('Error getting initial value', err));
+      .catch((err: unknown) => {
+        if (request !== initialValueRequest) {
+          return;
+        }
+        console.error('Error getting initial value', err);
+        initialValueError = 'Unable to load the current configuration value.';
+      })
+      .finally(() => {
+        if (request === initialValueRequest) {
+          initialValueResolved = true;
+        }
+      });
 
     invalidText = undefined;
     currentRecord = record;
@@ -195,11 +217,21 @@ function numberItemValue(): number {
   }
   return getNormalizedDefaultNumberValue(record);
 }
+
+function containerConnectionValue(): string | undefined {
+  if (typeof givenValue === 'string') {
+    return givenValue;
+  }
+  return typeof recordValue === 'string' ? recordValue : undefined;
+}
 </script>
 
 <div class="flex flex-row mb-1 pt-2 text-start items-center justify-start">
   {#if invalidText}
     <ErrorMessage error="{invalidText}." icon={true} class="mr-2" />
+  {/if}
+  {#if initialValueError}
+    <ErrorMessage error={initialValueError} icon={true} class="mr-2" />
   {/if}
   {#if record.type === 'boolean'}
     <BooleanItem
@@ -225,7 +257,14 @@ function numberItemValue(): number {
         invalidRecord={invalidRecord} />
     {/if}
   {:else if record.type === 'string' && (typeof recordValue === 'string' || recordValue === undefined)}
-    {#if record.format === 'file' || record.format === 'folder'}
+    {#if record.format === 'containerConnection'}
+      {#if initialValueResolved && !initialValueError}
+        <ContainerConnectionItem
+          record={record}
+          value={containerConnectionValue()}
+          onChange={onChange} />
+      {/if}
+    {:else if record.format === 'file' || record.format === 'folder'}
       <FileItem
         record={record}
         value={typeof givenValue === 'string' ? givenValue : (recordValue ?? '')}
