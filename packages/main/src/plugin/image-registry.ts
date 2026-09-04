@@ -55,6 +55,28 @@ export interface RegistryAuthInfo {
   scheme: string;
 }
 
+function createCancellationSignal(token?: containerDesktopAPI.CancellationToken): {
+  signal: AbortSignal | undefined;
+  dispose: () => void;
+} {
+  if (!token) {
+    return { signal: undefined, dispose: (): void => {} };
+  }
+
+  const controller = new AbortController();
+  if (token.isCancellationRequested) {
+    controller.abort();
+  }
+  const disposable = token.onCancellationRequested(() => controller.abort());
+  return { signal: controller.signal, dispose: (): void => disposable.dispose() };
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new Error('Operation canceled');
+  }
+}
+
 @injectable()
 export class ImageRegistry {
   private registries: containerDesktopAPI.Registry[] = [];
@@ -497,18 +519,34 @@ export class ImageRegistry {
   }
 
   // Fetch the image Labels from the registry for a given image URL
-  async getImageConfigLabels(imageName: string): Promise<{ [key: string]: unknown }> {
+  async getImageConfigLabels(
+    imageName: string,
+    cancellationToken?: containerDesktopAPI.CancellationToken,
+  ): Promise<{ [key: string]: unknown }> {
+    const { signal, dispose } = createCancellationSignal(cancellationToken);
+    try {
+      return await this.getImageConfigLabelsWithSignal(imageName, signal);
+    } finally {
+      dispose();
+    }
+  }
+
+  private async getImageConfigLabelsWithSignal(
+    imageName: string,
+    signal?: AbortSignal,
+  ): Promise<{ [key: string]: unknown }> {
+    throwIfAborted(signal);
     const imageData = this.extractImageDataFromImageName(imageName);
 
     // grab auth info from the registry
-    const authInfo = await this.getAuthInfo(imageData.registry);
-    const token = await this.getToken(authInfo, imageData);
+    const authInfo = await this.getAuthInfo(imageData.registry, undefined, signal);
+    const token = await this.getToken(authInfo, imageData, signal);
     if (authInfo.scheme.toLowerCase() !== 'bearer') {
       throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
     }
 
     // now, grab manifest for the given image URL
-    const manifest = await this.getManifest(imageData, token);
+    const manifest = await this.getManifest(imageData, token, signal);
 
     // now, search a config manifest
     const configManifest = manifest.config;
@@ -527,7 +565,7 @@ export class ImageRegistry {
     }
 
     // now pull the blob from the registry
-    const config = await this.fetchOciImageConfig(imageData, configManifest.digest, token);
+    const config = await this.fetchOciImageConfig(imageData, configManifest.digest, token, signal);
 
     // get labels from the config
     return config?.config?.Labels;
@@ -537,18 +575,34 @@ export class ImageRegistry {
     imageName: string,
     destFolder: string,
     logger: (event: { message: string; progress: number }) => void,
+    cancellationToken?: containerDesktopAPI.CancellationToken,
   ): Promise<void> {
+    const { signal, dispose } = createCancellationSignal(cancellationToken);
+    try {
+      await this.downloadAndExtractImageWithSignal(imageName, destFolder, logger, signal);
+    } finally {
+      dispose();
+    }
+  }
+
+  private async downloadAndExtractImageWithSignal(
+    imageName: string,
+    destFolder: string,
+    logger: (event: { message: string; progress: number }) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    throwIfAborted(signal);
     const imageData = this.extractImageDataFromImageName(imageName);
 
     // grab auth info from the registry
-    const authInfo = await this.getAuthInfo(imageData.registry);
-    const token = await this.getToken(authInfo, imageData);
+    const authInfo = await this.getAuthInfo(imageData.registry, undefined, signal);
+    const token = await this.getToken(authInfo, imageData, signal);
     if (authInfo.scheme.toLowerCase() !== 'bearer') {
       throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
     }
 
     // now, grab manifest for the given image URL
-    const manifest = await this.getManifest(imageData, token);
+    const manifest = await this.getManifest(imageData, token, signal);
 
     // now, get all layers 'application/vnd.oci.image.layer.v1.tar+gzip' and download and expand them
     const gzipLayers = manifest.layers.filter(
@@ -595,6 +649,7 @@ export class ImageRegistry {
         currentDownloaded,
         totalSize,
         logger,
+        signal,
       );
       currentDownloaded += layer.size;
     }
@@ -609,8 +664,11 @@ export class ImageRegistry {
     currentDownloaded: number,
     totalSize: number,
     logger: (event: { message: string; progress: number }) => void,
+    signal?: AbortSignal,
   ): Promise<void> {
+    throwIfAborted(signal);
     const options = this.getOptions();
+    options.signal = signal;
     options.headers = options.headers ?? {};
 
     // add the Bearer token
@@ -624,44 +682,65 @@ export class ImageRegistry {
     }
 
     const suffix = compressionType === 'gzip' ? '.tar' : '.zst';
-    const tmpFileName = path.resolve(os.tmpdir(), `${digestWithoutSpecialChars}${suffix}`);
-
-    // ensure the folder exists
-    const parentDir = path.dirname(tmpFileName);
-    if (!fs.existsSync(parentDir)) {
-      await fs.promises.mkdir(parentDir, { recursive: true });
-    }
+    const layerTemporaryDirectory = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${digestWithoutSpecialChars}-`));
+    const tmpFileName = path.join(layerTemporaryDirectory, `layer${suffix}`);
 
     const blobURL = `${imageData.registryURL}/${imageData.name}/blobs/${digest}`;
 
-    const readStream = got.stream(blobURL, options);
+    const unpackedFileName = compressionType === 'zstd' ? tmpFileName.replace('.zst', '.tar') : undefined;
+    try {
+      const readStream = got.stream(blobURL, options);
 
-    readStream.on('downloadProgress', ({ transferred }) => {
-      const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
-      logger({
-        message: `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
-        progress: globalPercentage,
+      readStream.on('downloadProgress', ({ transferred }) => {
+        const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
+        logger({
+          message: `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
+          progress: globalPercentage,
+        });
       });
-    });
-    await pipeline(readStream, createWriteStream(tmpFileName));
-    // in case of zstd, we need to unpack the file first
-    if (compressionType === 'zstd') {
-      //use fstd library to extract the file
-      const content = await fs.promises.readFile(tmpFileName);
-      const decompressed = fzstd.decompress(content);
-      const unpackedFileName = tmpFileName.replace('.zst', '.tar');
-      await fs.promises.writeFile(unpackedFileName, decompressed);
-      await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
-    } else {
-      await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
+      await pipeline(readStream, createWriteStream(tmpFileName));
+      throwIfAborted(signal);
+      // in case of zstd, we need to unpack the file first
+      if (compressionType === 'zstd' && unpackedFileName) {
+        //use fstd library to extract the file
+        const content = await fs.promises.readFile(tmpFileName);
+        throwIfAborted(signal);
+        const decompressed = fzstd.decompress(content);
+        throwIfAborted(signal);
+        await fs.promises.writeFile(unpackedFileName, decompressed);
+        await nodeTar.extract({
+          file: unpackedFileName,
+          cwd: destFolder,
+          filter: (): boolean => {
+            throwIfAborted(signal);
+            return true;
+          },
+        });
+      } else {
+        await nodeTar.extract({
+          file: tmpFileName,
+          cwd: destFolder,
+          filter: (): boolean => {
+            throwIfAborted(signal);
+            return true;
+          },
+        });
+      }
+      throwIfAborted(signal);
+    } finally {
+      await fs.promises.rm(layerTemporaryDirectory, { recursive: true, force: true });
     }
-    // remove the temporary file
-    await fs.promises.rm(tmpFileName);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async fetchOciImageConfig(imageData: ImageRegistryNameTag, digest: string, token: string): Promise<any> {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  protected async fetchOciImageConfig(
+    imageData: ImageRegistryNameTag,
+    digest: string,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<any> {
     const options = this.getOptions();
+    options.signal = signal;
     options.headers = options.headers ?? {};
     // add the Bearer token
     options.headers['Authorization'] = `Bearer ${token}`;
@@ -684,6 +763,7 @@ export class ImageRegistry {
     }
     return jsonConfig;
   }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   /**
    * Internal method to fetch and resolve manifests from a registry.
@@ -698,9 +778,11 @@ export class ImageRegistry {
     manifestURL: string,
     imageData: ImageRegistryNameTag,
     token: string,
+    signal?: AbortSignal,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ manifest: unknown; digest: string | undefined; listDigest?: string }> {
     const options = this.getOptions();
+    options.signal = signal;
     options.headers = options.headers ?? {};
 
     // add the Bearer token
@@ -794,6 +876,7 @@ export class ImageRegistry {
           platformManifestURL,
           imageData,
           token,
+          signal,
         );
         return { manifest, digest: platformDigest, listDigest };
       }
@@ -840,9 +923,9 @@ export class ImageRegistry {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getManifest(imageData: ImageRegistryNameTag, token: string): Promise<any> {
+  async getManifest(imageData: ImageRegistryNameTag, token: string, signal?: AbortSignal): Promise<any> {
     const manifestURL = `${imageData.registryURL}/${imageData.name}/manifests/${imageData.tag}`;
-    const { manifest } = await this.getManifestFromURL(manifestURL, imageData, token);
+    const { manifest } = await this.getManifestFromURL(manifestURL, imageData, token, signal);
     return manifest;
   }
 
@@ -960,9 +1043,14 @@ export class ImageRegistry {
     };
   }
 
-  async getAuthInfo(serviceUrl: string, insecure?: boolean): Promise<{ authUrl: string; scheme: string }> {
+  async getAuthInfo(
+    serviceUrl: string,
+    insecure?: boolean,
+    signal?: AbortSignal,
+  ): Promise<{ authUrl: string; scheme: string }> {
     let registryUrl: string;
     const options = this.getOptions(insecure);
+    options.signal = signal;
 
     if (serviceUrl.includes('docker.io')) {
       registryUrl = 'https://index.docker.io/v2/';
@@ -1045,9 +1133,14 @@ export class ImageRegistry {
     }
   }
 
-  async getToken(authInfo: { authUrl: string; scheme: string }, imageData: ImageRegistryNameTag): Promise<string> {
+  async getToken(
+    authInfo: { authUrl: string; scheme: string },
+    imageData: ImageRegistryNameTag,
+    signal?: AbortSignal,
+  ): Promise<string> {
     let rawResponse: string | undefined;
     const options = this.getOptions();
+    options.signal = signal;
 
     // if we have auth for this registry, add basic auth to the headers
     const authServer = this.getAuthconfigForServer(imageData.registry);

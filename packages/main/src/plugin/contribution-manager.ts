@@ -222,23 +222,32 @@ export class ContributionManager {
       return;
     }
     this.startedContributions.set(extensionId, true);
+    try {
+      // need to start the compose file using docker-compose
+      const composeDirectory = path.dirname(vmCustomizedComposeFile);
+      const projectName = this.getComposeProjectNameFromId(extensionId);
 
-    // need to start the compose file using docker-compose
+      // then execute docker-compose in background
+      const composeArgs = ['-p', projectName, 'up', '-d'];
+      await this.execComposeCommand(composeDirectory, composeArgs);
 
-    // first, grab directory where to execute compose
+      if (monitorVM) {
+        // wait that it's in running state (or timeout)
+        await this.waitForRunningState(composeDirectory, projectName);
+      }
+    } catch (error) {
+      this.startedContributions.delete(extensionId);
+      throw error;
+    }
+  }
+
+  async stopVM(extensionId: string, vmCustomizedComposeFile: string): Promise<void> {
     const composeDirectory = path.dirname(vmCustomizedComposeFile);
-
-    const projectName = this.getComposeProjectNameFromId(extensionId);
-
-    // then execute docker-compose in background
-    const composeArgs = ['-p', projectName, 'up', '-d'];
-    await this.execComposeCommand(composeDirectory, composeArgs);
-
-    // if monitorVM is true, we need to monitor the VM
-
-    if (monitorVM) {
-      // wait that it's in running state (or timeout)
-      await this.waitForRunningState(composeDirectory, projectName);
+    const composeArgs = ['-p', this.getComposeProjectNameFromId(extensionId), 'down'];
+    try {
+      await this.execComposeCommand(composeDirectory, composeArgs);
+    } finally {
+      this.startedContributions.delete(extensionId);
     }
   }
 
@@ -462,19 +471,7 @@ export class ContributionManager {
 
     // need to remove all compose containers if any
     if (matching.vmCustomizedComposeFile) {
-      // need to stop the compose file using docker-compose
-
-      // first, grab directory where to execute compose
-      const composeDirectory = path.dirname(matching.vmCustomizedComposeFile);
-
-      // then execute docker-compose
-      const composeArgs = ['-p', this.getComposeProjectNameFromId(matching.extensionId), 'down'];
-
-      // execute the down command
-      await this.execComposeCommand(composeDirectory, composeArgs);
-
-      // flag as not started
-      this.startedContributions.delete(matching.extensionId);
+      await this.stopVM(matching.extensionId, matching.vmCustomizedComposeFile);
     }
 
     const extensionPath = matching.storagePath;

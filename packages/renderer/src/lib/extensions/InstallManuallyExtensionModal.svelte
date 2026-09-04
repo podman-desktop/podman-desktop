@@ -15,7 +15,9 @@ let imageName = $state('');
 let installInProgress = $state(false);
 let inputfieldError: string | undefined = $state('');
 let progressPercent = $state(0);
-let logs: string[] = [];
+let logs = $state<string[]>([]);
+let cancellationTokenSourceId = $state<number | undefined>(undefined);
+let closeRequested = $state(false);
 
 const inputAriaLabel = 'Image name to install custom extension';
 
@@ -33,17 +35,20 @@ function validateImageName(event: Event): void {
     if (!name) {
       inputfieldError = 'Missing name';
       return;
-    } else {
-      inputfieldError = undefined;
-      return;
     }
+    inputfieldError = undefined;
+    return;
   }
   inputfieldError = 'Invalid input';
 }
 
 async function installExtension(): Promise<void> {
+  if (installInProgress) {
+    return;
+  }
   inputfieldError = undefined;
   logs = [];
+  closeRequested = false;
 
   installInProgress = true;
 
@@ -51,6 +56,11 @@ async function installExtension(): Promise<void> {
   const ociImage = imageName?.trim();
 
   try {
+    cancellationTokenSourceId = await window.getCancellableTokenSource();
+    if (closeRequested) {
+      await window.cancelToken(cancellationTokenSourceId);
+      return;
+    }
     const percentageMatchRegexp = RegExp(/(\d+)%/);
     // download image
     await window.extensionInstallFromImage(
@@ -63,7 +73,7 @@ async function installExtension(): Promise<void> {
         // data Downloading sha256:e8d2c9e5c69499c41ba39b7828c00e55087572884cac466b4d1b47243b085c7d.tar - 11% - (55132/521578)
         const percentageMatch = percentageMatchRegexp.exec(data);
         if (percentageMatch) {
-          progressPercent = parseInt(percentageMatch[1]);
+          progressPercent = Number.parseInt(percentageMatch[1], 10);
         }
       },
       (error: string) => {
@@ -71,13 +81,29 @@ async function installExtension(): Promise<void> {
         installInProgress = false;
         inputfieldError = error;
       },
+      undefined,
+      cancellationTokenSourceId,
     );
     logs = [...logs, '☑️ installation finished!'];
     progressPercent = 100;
   } catch (error) {
     console.error('error', error);
+  } finally {
+    cancellationTokenSourceId = undefined;
+    installInProgress = false;
   }
-  installInProgress = false;
+}
+
+async function cancelOrClose(): Promise<void> {
+  closeRequested = true;
+  const tokenSourceId = cancellationTokenSourceId;
+  try {
+    if (installInProgress && tokenSourceId !== undefined) {
+      await window.cancelToken(tokenSourceId);
+    }
+  } finally {
+    closeCallback();
+  }
 }
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
@@ -98,7 +124,7 @@ const showForm = $derived(installInProgress || progressPercent !== 100 || !!inpu
 
 <Dialog
   title="Install Custom Extension"
-  onclose={closeCallback}>
+  onclose={cancelOrClose}>
   {#snippet content()}
     <div  class="flex flex-col leading-5 space-y-5">
       <div>
@@ -142,7 +168,7 @@ const showForm = $derived(installInProgress || progressPercent !== 100 || !!inpu
   
       <Button
         type="link"
-        on:click={closeCallback}>Cancel</Button>
+        on:click={cancelOrClose}>Cancel</Button>
       {#if showForm}
         <Button
           type="primary"

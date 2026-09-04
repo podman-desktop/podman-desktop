@@ -22,7 +22,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContributionManager, DockerExtensionMetadata } from '/@/plugin/contribution-manager.js';
 
-import { DockerDesktopInstaller } from './docker-desktop-installer.js';
+import { DockerDesktopContribution, DockerDesktopInstaller } from './docker-desktop-installer.js';
 
 vi.mock(import('node:fs/promises'));
 
@@ -35,6 +35,8 @@ const contributionManager = {
   findComposeBinary: vi.fn(),
   enhanceComposeFile: vi.fn(),
   startVM: vi.fn(),
+  stopVM: vi.fn(),
+  deleteExtension: vi.fn(),
 } as unknown as ContributionManager;
 
 class TestDockerDesktopInstaller extends DockerDesktopInstaller {}
@@ -227,6 +229,54 @@ describe('Check setupContribution', async () => {
 
     // expect log with binary found
     expect(sendLog).toHaveBeenCalledWith(expect.stringContaining('Compose binary found at'));
+  });
+
+  test('stops the VM when contribution refresh fails', async () => {
+    const sendLog = vi.fn();
+    const sendError = vi.fn();
+    const metadata = {
+      name: 'My Extension',
+      extensionId: 'publisher.my-extension',
+      ui: {},
+      vm: { composefile: 'docker-compose.yaml' },
+    } satisfies DockerExtensionMetadata;
+    vi.mocked(contributionManager.loadMetadata).mockResolvedValueOnce(metadata);
+    vi.mocked(contributionManager.findComposeBinary).mockResolvedValueOnce('found-docker-compose');
+    vi.mocked(contributionManager.enhanceComposeFile).mockResolvedValueOnce('/dest/vm-compose/docker-compose.yaml');
+    vi.mocked(contributionManager.init).mockRejectedValueOnce(new Error('refresh failed'));
+
+    const contribution = await dockerDesktopInstaller.setupContribution(
+      'My Extension',
+      'my-extension:latest',
+      'dest-folder',
+      sendLog,
+      sendError,
+    );
+
+    expect(contribution).toBeUndefined();
+    expect(contributionManager.startVM).toHaveBeenCalledWith(
+      'publisher.my-extension',
+      '/dest/vm-compose/docker-compose.yaml',
+      true,
+    );
+    expect(contributionManager.stopVM).toHaveBeenCalledWith(
+      'publisher.my-extension',
+      '/dest/vm-compose/docker-compose.yaml',
+    );
+    expect(sendError).toHaveBeenCalledWith('Error: refresh failed');
+  });
+
+  test('removes a registered contribution by its extension id', async () => {
+    const metadata = {
+      name: 'My Extension',
+      extensionId: 'publisher.extension',
+      ui: {},
+    } satisfies DockerExtensionMetadata;
+    const contribution = new DockerDesktopContribution('My Extension', 'dest-folder', metadata);
+
+    await dockerDesktopInstaller.removeContribution(contribution);
+
+    expect(contributionManager.deleteExtension).toHaveBeenCalledWith('publisher.extension');
   });
 });
 

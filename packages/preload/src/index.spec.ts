@@ -126,6 +126,52 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     initExposure();
   });
 
+  test('extension installation forwards cancellation and resolves only on completion', async () => {
+    const installExtension = getInMainWorld('extensionInstallFromImage');
+    const logCallback = vi.fn();
+    const errorCallback = vi.fn();
+    const installation = installExtension(
+      'localhost/example/extension:latest',
+      logCallback,
+      errorCallback,
+      undefined,
+      42,
+    ) as Promise<void>;
+
+    expect(ipcRenderer.send).toHaveBeenCalledWith(
+      'extension-installer:install-from-image',
+      'localhost/example/extension:latest',
+      1,
+      undefined,
+      42,
+    );
+    getRendererOn('extension-installer:install-from-image-log')({} as IpcRendererEvent, 1, 'Saving image');
+    expect(logCallback).toHaveBeenCalledWith('Saving image');
+
+    getRendererOn('extension-installer:install-from-image-end')({} as IpcRendererEvent, 1);
+    await expect(installation).resolves.toBeUndefined();
+    expect(errorCallback).not.toHaveBeenCalled();
+  });
+
+  test('extension installation rejects and reports errors', async () => {
+    const installExtension = getInMainWorld('extensionInstallFromImage');
+    const errorCallback = vi.fn();
+    const installation = installExtension(
+      'localhost/example/extension:latest',
+      vi.fn(),
+      errorCallback,
+    ) as Promise<void>;
+
+    getRendererOn('extension-installer:install-from-image-error')(
+      {} as IpcRendererEvent,
+      1,
+      'Extension installation canceled',
+    );
+
+    expect(errorCallback).toHaveBeenCalledWith('Extension installation canceled');
+    await expect(installation).rejects.toThrow('Extension installation canceled');
+  });
+
   test('openDialog', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
