@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import type { GoToInfo } from '@podman-desktop/core-api';
+import type { GoToInfo, NavigationItemInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -51,11 +51,6 @@ export interface NavigationRegistryEntry {
   hidden?: boolean;
 }
 
-interface DisplayItem {
-  name: string;
-  visible: boolean;
-}
-
 const windowEvents: string[] = [];
 const windowListeners = ['extensions-already-started', 'system-ready'];
 
@@ -78,7 +73,7 @@ const init = (): void => {
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
-function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[]): void {
+function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: NavigationItemInfo[]): void {
   if (navigationRegistryEntry.items && navigationRegistryEntry.type === 'group') {
     navigationRegistryEntry.items.forEach(item => {
       collecItem(item, items);
@@ -139,19 +134,42 @@ function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void 
   }
 }
 
+function matchesRoute(pathname: string, link: string): boolean {
+  return pathname === link || pathname.startsWith(link + '/');
+}
+
+export function findActiveItem(entries: NavigationRegistryEntry[], pathname: string): string | undefined {
+  for (const entry of entries) {
+    if (entry.link && entry.link !== '/' && matchesRoute(pathname, entry.link)) {
+      return entry.name;
+    }
+    if (entry.items) {
+      for (const sub of entry.items) {
+        if (sub.link && sub.link !== '/' && matchesRoute(pathname, sub.link)) {
+          return sub.name;
+        }
+      }
+    }
+  }
+  if (pathname === '/') {
+    return 'Dashboard';
+  }
+  return undefined;
+}
+
 async function hideItems(): Promise<void> {
   // for each item, set the hidden property to true
   values.forEach(item => {
     hideSingleItem(item);
   });
 
-  // send to the main side the list of all items, items being displayed or hidden
-  const navItems: DisplayItem[] = [];
+  const navItems: NavigationItemInfo[] = [];
   values.forEach(item => {
     collecItem(item, navItems);
   });
 
-  await window.sendNavigationItems(navItems);
+  const activeItem = findActiveItem(values, window.location.pathname);
+  await window.sendNavigationItems({ items: navItems, activeItem });
   values = [...values];
   navigationRegistry.set(values);
 }

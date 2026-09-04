@@ -52,7 +52,6 @@ let routerSubscribeCallback = vi.hoisted(() => {
 vi.mock(import('tinro'));
 
 vi.mock(import('/@/stores/kubernetes-no-current-context'));
-vi.mock(import('/@/stores/navigation/navigation-registry'));
 
 vi.mock(import('/@/PreferencesNavigation'), () => ({
   settingsNavigationEntries: [],

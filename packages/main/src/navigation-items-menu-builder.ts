@@ -16,29 +16,44 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type {
+  MessageBoxOptions,
+  MessageBoxReturnValue,
+  NavigationItemInfo,
+  NavigationItemsPayload,
+} from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
-// items that can't be hidden
-const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
+const EXCLUDED_ITEMS = ['Accounts', 'Settings', 'Containers', 'Images', 'Dashboard'];
 
 const EXPANDED_WIDTH = 160;
 
-// This class is responsible of creating the items to hide a given selected item of the left navigation bar
-// and also display a list of all items with the ability to toggle the visibility of each item.
+export type ShowMessageBoxFn = (options: MessageBoxOptions) => Promise<MessageBoxReturnValue>;
+
 export class NavigationItemsMenuBuilder {
-  private navigationItems: { name: string; visible: boolean }[] = [];
+  private navigationItems: NavigationItemInfo[] = [];
+  private activeItemName: string | undefined;
 
-  constructor(private configurationRegistry: ConfigurationRegistry) {}
+  constructor(
+    private configurationRegistry: ConfigurationRegistry,
+    private showMessageBox: ShowMessageBoxFn,
+  ) {}
 
-  receiveNavigationItems(data: { name: string; visible: boolean }[]): void {
-    this.navigationItems = data;
+  receiveNavigationItems(data: NavigationItemsPayload): void {
+    this.navigationItems = data.items;
+    this.activeItemName = data.activeItem;
   }
 
   protected async updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
+    // defense-in-depth: prevent hiding protected items
+    if (!visible && (EXCLUDED_ITEMS.includes(itemName) || itemName === this.activeItemName)) {
+      return;
+    }
+
     // grab the disabled items, and add the new one
     const configuration = this.configurationRegistry.getConfiguration('navbar');
     let items = configuration.get<string[]>('disabledItems', []);
@@ -53,6 +68,12 @@ export class NavigationItemsMenuBuilder {
       items,
       CONFIGURATION_DEFAULT_SCOPE,
     );
+
+    // Optimistic local update to keep state in sync before renderer round-trip
+    const item = this.navigationItems.find(i => i.name === itemName);
+    if (item) {
+      item.visible = visible;
+    }
   }
 
   protected escapeLabel(label: string): string {
@@ -68,26 +89,71 @@ export class NavigationItemsMenuBuilder {
     return itemName.split('\n')[0] ?? itemName;
   }
 
+  protected isHideConfirmationDismissed(): boolean {
+    const configuration = this.configurationRegistry.getConfiguration('navbar');
+    return configuration.get<boolean>('hideConfirmationDismissed', false);
+  }
+
+  protected async dismissHideConfirmation(): Promise<void> {
+    await this.configurationRegistry.updateConfigurationValue(
+      'navbar.hideConfirmationDismissed',
+      true,
+      CONFIGURATION_DEFAULT_SCOPE,
+    );
+  }
+
+  protected async showHideConfirmation(itemName: string): Promise<boolean> {
+    if (this.isHideConfirmationDismissed()) {
+      return true;
+    }
+
+    const result = await this.showMessageBox({
+      type: 'question',
+      title: 'Hide From Navigation Bar',
+      message: `Hide "${itemName}" from the navigation bar?`,
+      detail:
+        'You can restore hidden items by right-clicking the navigation bar and selecting "Show Hidden Items", or by using "Reset Navigation Bar".',
+      buttons: ['Hide', `Don't show again`, 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+    });
+
+    if (result.response === 'Cancel') {
+      return false;
+    }
+
+    if (result.response === `Don't show again`) {
+      await this.dismissHideConfirmation();
+    }
+
+    return true;
+  }
+
   protected buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
     const rawItemName = linkText;
-
-    // need to filter any counter from the item name
-    // it's at the end with parenthesis like itemName (2)
     const itemName = this.computeItemName(rawItemName);
 
     if (EXCLUDED_ITEMS.includes(itemName)) {
       return undefined;
     }
 
-    // on electron, need to esccape the & character to show it
+    if (itemName === this.activeItemName) {
+      return undefined;
+    }
+
     const itemDisplayName = this.escapeLabel(itemName);
 
     const item: MenuItemConstructorOptions = {
-      label: `Hide ${itemDisplayName}`,
+      label: `Hide ${itemDisplayName} From Navigation Bar`,
       visible: true,
       click: (): void => {
-        // flag the item as being disabled
-        this.updateNavbarHiddenItem(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
+        this.showHideConfirmation(itemName)
+          .then(async confirmed => {
+            if (confirmed) {
+              await this.updateNavbarHiddenItem(itemName, false);
+            }
+          })
+          .catch((e: unknown) => console.error('error hiding item', e));
       },
     };
     return item;
@@ -97,17 +163,21 @@ export class NavigationItemsMenuBuilder {
     const items: MenuItemConstructorOptions[] = [];
 
     // add all navigation items to be able to show/hide them
-    const menuForNavItems: Electron.MenuItemConstructorOptions[] = this.navigationItems.map(item => ({
-      label: this.escapeLabel(item.name),
-      type: 'checkbox',
-      checked: item.visible,
-      click: (): void => {
-        // send the item to the frontend to show/hide it
-        this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
-          console.error('error disabling item', e),
-        );
-      },
-    }));
+    const menuForNavItems: Electron.MenuItemConstructorOptions[] = this.navigationItems.map(item => {
+      const isProtected = EXCLUDED_ITEMS.includes(item.name) || item.name === this.activeItemName;
+      return {
+        label: this.escapeLabel(item.name),
+        type: 'checkbox',
+        checked: item.visible,
+        enabled: !isProtected,
+        click: (): void => {
+          // send the item to the frontend to show/hide it
+          this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
+            console.error('error disabling item', e),
+          );
+        },
+      };
+    });
     if (menuForNavItems.length > 0) {
       // add separator
       items.push({ type: 'separator' });
@@ -116,6 +186,34 @@ export class NavigationItemsMenuBuilder {
     }
 
     return items;
+  }
+
+  protected buildShowHiddenItemsSubmenu(): MenuItemConstructorOptions | undefined {
+    const hiddenItems = this.navigationItems.filter(item => !item.visible);
+    if (hiddenItems.length === 0) {
+      return undefined;
+    }
+
+    return {
+      label: 'Show Hidden Items',
+      submenu: hiddenItems.map(item => ({
+        label: this.escapeLabel(item.name),
+        click: (): void => {
+          this.updateNavbarHiddenItem(item.name, true).catch((e: unknown) => console.error('error showing item', e));
+        },
+      })),
+    };
+  }
+
+  protected buildResetMenuItem(): MenuItemConstructorOptions {
+    return {
+      label: 'Reset Navigation Bar',
+      click: (): void => {
+        this.configurationRegistry
+          .updateConfigurationValue('navbar.disabledItems', [], CONFIGURATION_DEFAULT_SCOPE)
+          .catch((e: unknown) => console.error('error resetting navigation bar', e));
+      },
+    };
   }
 
   protected getNavWidth(): number {
@@ -127,7 +225,6 @@ export class NavigationItemsMenuBuilder {
     const items: MenuItemConstructorOptions[] = [];
     const navWidth = this.getNavWidth();
 
-    // allow to hide the item being selected
     if (parameters.linkText && parameters.x < navWidth && parameters.y > 76) {
       const menu = this.buildHideMenuItem(parameters.linkText);
       if (menu) {
@@ -136,6 +233,15 @@ export class NavigationItemsMenuBuilder {
     }
     if (parameters.x < navWidth) {
       items.push(...this.buildNavigationToggleMenuItems());
+
+      const showHidden = this.buildShowHiddenItemsSubmenu();
+      if (showHidden) {
+        items.push({ type: 'separator' });
+        items.push(showHidden);
+      }
+
+      items.push({ type: 'separator' });
+      items.push(this.buildResetMenuItem());
     }
     return items;
   }

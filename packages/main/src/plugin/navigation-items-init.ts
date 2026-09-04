@@ -35,6 +35,12 @@ export class NavigationItemsInit {
           default: [],
           hidden: true,
         },
+        ['navbar.hideConfirmationDismissed']: {
+          description: 'Whether the hide confirmation dialog has been dismissed',
+          type: 'boolean',
+          default: false,
+          hidden: true,
+        },
       },
     };
 
