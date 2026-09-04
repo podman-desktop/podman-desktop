@@ -37,6 +37,9 @@ type WindowState = {
 export class ElectronRunner extends Runner {
   protected _app: ElectronApplication | undefined;
 
+  protected static readonly MAX_STARTUP_ATTEMPTS = 3;
+  protected static readonly APP_RENDER_TIMEOUT_MS = 15_000;
+
   public constructor(options?: { runnerOptions?: RunnerOptions }) {
     super(options);
     console.log('ElectronRunner constructor');
@@ -48,43 +51,13 @@ export class ElectronRunner extends Runner {
       return this.getPage();
     }
 
-    try {
-      // start the app with given properties
-      console.log('Starting Podman Desktop');
-      console.log('Electron app launch options: ');
-      Object.keys(this._options).forEach(key => {
-        console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
-      });
-      this._app = await electron.launch({
-        ...this._options,
-      });
-      // setup state
-      this._page = await this.getElectronApp().firstWindow();
-      this._running = true;
-      const exe = this.getElectronApp().evaluate(async ({ app }) => {
-        return app.getPath('exe');
-      });
-      const filePath = await exe;
-      console.log(`The Executable Electron app. file: ${filePath}`);
+    const maxAttempts = ElectronRunner.MAX_STARTUP_ATTEMPTS;
 
-      // Evaluate that the main window is visible
-      // at the same time, the function also makes sure that event 'ready-to-show' was triggered
-      // keeping this call meeses up communication between playwright and electron app on linux
-      // did not have time to investigate why is this occasionally happening
-      // const windowState = await this.getBrowserWindowState();
-    } catch (err) {
-      console.log(`Caught exception in startup: ${err}`);
-      if (this._app) {
-        try {
-          await this._app.close();
-        } catch (closeErr) {
-          console.log(`Failed to close app after startup error: ${closeErr}`);
-        }
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const launched = await this.launchAndVerify(attempt, maxAttempts);
+      if (launched) {
+        break;
       }
-      this._app = undefined;
-      this._page = undefined;
-      this._running = false;
-      throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
     }
 
     // Direct Electron console to Node terminal and collect in buffer.
@@ -97,7 +70,7 @@ export class ElectronRunner extends Runner {
     await this.startTracing();
 
     // Verify video recording is active on the page's context
-    const video = this._page.video();
+    const video = this.getPage().video();
     if (video) {
       const videoPath = await video.path();
       console.log(`Video recording started, will be saved to: ${videoPath}`);
@@ -106,11 +79,114 @@ export class ElectronRunner extends Runner {
     }
 
     // also get stderr from the node process
-    this._app.process().stderr?.on('data', data => {
-      console.log(`STDERR: ${data}`);
-    });
+    this.getElectronApp()
+      .process()
+      .stderr?.on('data', data => {
+        console.log(`STDERR: ${data}`);
+      });
 
-    return this._page;
+    return this.getPage();
+  }
+
+  /**
+   * Attempt a single Electron launch cycle: launch the app, wait for the first
+   * window, and verify the renderer actually painted (Svelte mounted into #app).
+   *
+   * @returns `true` when the app rendered successfully and is ready for use.
+   * @throws when this is the final allowed attempt and the app still failed.
+   */
+  private async launchAndVerify(attempt: number, maxAttempts: number): Promise<boolean> {
+    try {
+      console.log(`Starting Podman Desktop (attempt ${attempt}/${maxAttempts})`);
+      console.log('Electron app launch options: ');
+      Object.keys(this._options).forEach(key => {
+        console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
+      });
+      this._app = await electron.launch({
+        ...this._options,
+      });
+      this._page = await this.getElectronApp().firstWindow();
+      this._running = true;
+
+      const filePath = await this.getElectronApp().evaluate(async ({ app }) => app.getPath('exe'));
+      console.log(`The Executable Electron app. file: ${filePath}`);
+    } catch (err) {
+      console.log(`Caught exception in startup (attempt ${attempt}): ${err}`);
+      await this.closeAfterFailedStart();
+      throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
+    }
+
+    const rendered = await this.waitForAppRendered(ElectronRunner.APP_RENDER_TIMEOUT_MS);
+    if (rendered) {
+      if (attempt > 1) {
+        console.log(`Podman Desktop rendered successfully on attempt ${attempt}`);
+      }
+      return true;
+    }
+
+    console.log(
+      `Blank screen detected on attempt ${attempt}/${maxAttempts} — ` +
+        `app did not render within ${ElectronRunner.APP_RENDER_TIMEOUT_MS}ms`,
+    );
+    await this.closeAfterFailedStart();
+
+    if (attempt >= maxAttempts) {
+      throw new Error(
+        `Podman Desktop started with a blank screen on all ${maxAttempts} attempts. ` +
+          'The Electron renderer never mounted the application UI.',
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Wait for the Svelte application to mount inside the `#app` root element.
+   * Returns `true` when the app has rendered meaningful content, `false` on timeout.
+   */
+  private async waitForAppRendered(timeout: number): Promise<boolean> {
+    if (!this._page) return false;
+    try {
+      await this._page.waitForFunction(
+        () => {
+          const app = document.getElementById('app');
+          return app !== null && app.children.length > 0;
+        },
+        undefined,
+        { timeout },
+      );
+      console.log('Application UI rendered successfully');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Minimal teardown after a failed or blank-screen launch.
+   * Stops the Electron process without saving traces or videos since
+   * they were not yet initialized at this point.
+   */
+  private async closeAfterFailedStart(): Promise<void> {
+    const proc = this._app?.process();
+    const pid = proc?.pid;
+    console.log(`Closing failed Podman Desktop instance (PID: ${pid})`);
+    try {
+      if (this._app) {
+        await this.raceWithTimeout(this._app.close(), 10_000, 'close() after failed start timed out');
+      }
+    } catch (err) {
+      console.log(`Failed to close app cleanly after failed start: ${err}`);
+      this.ensureElectronProcessesStopped(pid);
+    }
+
+    if (proc) {
+      await this.waitForProcessExit(proc, pid, 5_000);
+    }
+
+    this._app = undefined;
+    this._page = undefined;
+    this._running = false;
   }
 
   public getElectronApp(): ElectronApplication {
