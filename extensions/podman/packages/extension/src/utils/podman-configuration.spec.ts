@@ -17,14 +17,26 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 
 import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanConfiguration } from './podman-configuration';
 import { VMTYPE } from './util';
 
 vi.mock(import('node:fs'));
+
+vi.mock(import('node:os'), async () => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  const osActual = await vi.importActual<typeof import('node:os')>('node:os');
+
+  return {
+    ...osActual,
+    arch: vi.fn(),
+  };
+});
 
 const extensionContext: ExtensionContext = {} as unknown as ExtensionContext;
 
@@ -187,6 +199,78 @@ test('if provider is set default one (on CLI) and the file does NOT exist, do no
   await podmanConfiguration.updateMachineProviderSettings(VMTYPE.APPLEHV);
 
   expect(fs.promises.writeFile).not.toHaveBeenCalled();
+});
+
+test('if provider is applehv and persistence is requested, write provider = "applehv" even though it is the default.', async () => {
+  vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+  vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
+  vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+  await podmanConfiguration.updateMachineProviderSettings(VMTYPE.APPLEHV, true);
+
+  expect(fs.promises.writeFile).toHaveBeenCalledWith(
+    podmanConfiguration.getContainersFileLocation(),
+    // should contain provider even though applehv is the default
+    expect.stringContaining('provider = "applehv"'),
+  );
+});
+
+describe('handleRosettaSetting', () => {
+  function mockRosettaConfiguration(useRosetta: boolean | undefined): void {
+    vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+      get: vi.fn().mockReturnValue(useRosetta),
+    } as unknown as extensionApi.Configuration);
+  }
+
+  test('on Apple Silicon, enabling Rosetta pins the applehv provider and syncs the rosetta setting', async () => {
+    vi.mocked(os.arch).mockReturnValue('arm64');
+    mockRosettaConfiguration(true);
+    const updateProvider = vi.spyOn(podmanConfiguration, 'updateMachineProviderSettings').mockResolvedValue();
+    const updateRosetta = vi.spyOn(podmanConfiguration, 'updateRosettaSetting').mockResolvedValue();
+
+    await podmanConfiguration.handleRosettaSetting();
+
+    // applehv must be persisted so it overrides the arm64 libkrun default
+    expect(updateProvider).toHaveBeenCalledWith(VMTYPE.APPLEHV, true);
+    expect(updateRosetta).toHaveBeenCalledWith(true);
+  });
+
+  test('on Apple Silicon, disabling Rosetta falls back to the libkrun provider', async () => {
+    vi.mocked(os.arch).mockReturnValue('arm64');
+    mockRosettaConfiguration(false);
+    const updateProvider = vi.spyOn(podmanConfiguration, 'updateMachineProviderSettings').mockResolvedValue();
+    const updateRosetta = vi.spyOn(podmanConfiguration, 'updateRosettaSetting').mockResolvedValue();
+
+    await podmanConfiguration.handleRosettaSetting();
+
+    expect(updateProvider).toHaveBeenCalledWith(VMTYPE.LIBKRUN, false);
+    expect(updateRosetta).toHaveBeenCalledWith(false);
+  });
+
+  test('when the setting is unset, it defaults to false and falls back to libkrun on Apple Silicon', async () => {
+    vi.mocked(os.arch).mockReturnValue('arm64');
+    mockRosettaConfiguration(undefined);
+    const updateProvider = vi.spyOn(podmanConfiguration, 'updateMachineProviderSettings').mockResolvedValue();
+    const updateRosetta = vi.spyOn(podmanConfiguration, 'updateRosettaSetting').mockResolvedValue();
+
+    await podmanConfiguration.handleRosettaSetting();
+
+    expect(updateProvider).toHaveBeenCalledWith(VMTYPE.LIBKRUN, false);
+    expect(updateRosetta).toHaveBeenCalledWith(false);
+  });
+
+  test('on Intel, the provider is left untouched (applehv is always the default there)', async () => {
+    vi.mocked(os.arch).mockReturnValue('x64');
+    mockRosettaConfiguration(true);
+    const updateProvider = vi.spyOn(podmanConfiguration, 'updateMachineProviderSettings').mockResolvedValue();
+    const updateRosetta = vi.spyOn(podmanConfiguration, 'updateRosettaSetting').mockResolvedValue();
+
+    await podmanConfiguration.handleRosettaSetting();
+
+    expect(updateProvider).not.toHaveBeenCalled();
+    expect(updateRosetta).toHaveBeenCalledWith(true);
+  });
 });
 
 test('doUpdateProxySettings should be called one at the time', async () => {
