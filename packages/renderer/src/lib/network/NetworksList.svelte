@@ -9,13 +9,12 @@ import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScr
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
-import { filtered, searchPattern } from '/@/stores/networks';
+import { filtered, searchPattern, setNetworkStatus } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
 
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
 import NetworkColumnId from './columns/NetworkColumnId.svelte';
 import NetworkColumnName from './columns/NetworkColumnName.svelte';
-import { NetworkUtils } from './network-utils';
 import NetworkActions from './NetworkActions.svelte';
 import NetworkEmptyScreen from './NetworkEmptyScreen.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
@@ -30,11 +29,9 @@ $effect(() => {
   $searchPattern = searchTerm;
 });
 
-let networkUtils = new NetworkUtils();
-
 let selectedEnvironment = $state('');
 
-let networks: NetworkInfoUI[] = $derived($filtered.map(network => networkUtils.toNetworkInfoUI(network)));
+let networks: NetworkInfoUI[] = $derived($filtered.map(network => ({ ...network, selected: false })));
 
 // Filter networks by selected environment
 let filteredNetworks = $derived.by(() => {
@@ -66,11 +63,11 @@ async function deleteSelectedNetworks(): Promise<void> {
     selectedNetworks.map(async network => {
       const oldStatus = network.status;
       try {
-        network.status = 'DELETING';
+        setNetworkStatus(network.engineId, network.id, 'DELETING');
         await window.removeNetwork(network.engineId, network.id);
       } catch (error) {
         console.error(`error while removing network ${network.name}`, error);
-        network.status = oldStatus;
+        setNetworkStatus(network.engineId, network.id, oldStatus);
       }
     }),
   );

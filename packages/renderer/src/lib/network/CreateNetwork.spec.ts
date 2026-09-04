@@ -19,13 +19,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import type { NetworkInspectInfo, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import CreateNetwork from '/@/lib/network/CreateNetwork.svelte';
+import type { NetworkInfoUI } from '/@/lib/network/NetworkInfoUI';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { networksListInfo } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
@@ -286,7 +287,24 @@ test('Expect automatic routing to network details after successful network creat
 
   // Simulate network appearing in store after creation with both matching ID and Name
   setTimeout(() => {
-    networksListInfo.set([{ Id: networkId, Name: 'my-test-network', engineId } as NetworkInspectInfo]);
+    const network: NetworkInfoUI = {
+      id: networkId,
+      shortId: networkId.slice(0, 12),
+      name: 'my-test-network',
+      driver: 'bridge',
+      created: '',
+      engineId,
+      engineName: 'Podman',
+      engineType: 'podman',
+      selected: false,
+      status: 'UNUSED',
+      containers: [],
+      ipv6_enabled: false,
+      labels: {},
+      options: {},
+      subnets: [],
+    };
+    networksListInfo.set([network]);
   }, 100);
 
   await waitFor(

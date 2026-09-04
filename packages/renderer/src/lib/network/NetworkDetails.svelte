@@ -9,7 +9,6 @@ import Route from '/@/Route.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { networksListInfo } from '/@/stores/networks';
 
-import { NetworkUtils } from './network-utils';
 import NetworkActions from './NetworkActions.svelte';
 import NetworkDetailsInspect from './NetworkDetailsInspect.svelte';
 import NetworkDetailsSummary from './NetworkDetailsSummary.svelte';
@@ -22,15 +21,11 @@ interface Props {
 
 let { networkName, engineId }: Props = $props();
 
-const networkUtils = new NetworkUtils();
-
 let matchingNetwork = $derived(
-  $networksListInfo.find(network => network.Name === networkName && network.engineId === engineId),
+  $networksListInfo.find(network => network.name === networkName && network.engineId === engineId),
 );
 
-let network: NetworkInfoUI | undefined = $derived(
-  matchingNetwork ? networkUtils.toNetworkInfoUI(matchingNetwork) : undefined,
-);
+let network: NetworkInfoUI | undefined = $derived(matchingNetwork ? { ...matchingNetwork } : undefined);
 let hadNetwork = false;
 
 $effect(() => {

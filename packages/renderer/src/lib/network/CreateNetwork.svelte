@@ -140,7 +140,7 @@ async function waitForNetworkInStore(networkId: string, engineId: string): Promi
     }, 10000);
 
     const unsubscribe = networksListInfo.subscribe(networks => {
-      if (networks.some(network => network.Id === networkId && network.engineId === engineId)) {
+      if (networks.some(network => network.id === networkId && network.engineId === engineId)) {
         clearTimeout(timeout);
         unsubscribe();
         resolve();
