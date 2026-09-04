@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import type Electron from 'electron';
 import { shell } from 'electron';
@@ -115,9 +116,27 @@ const setTimestampSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototyp
 const disableFeatureSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototype, 'disableFeature');
 
 let feedbackForm: TestExperimentalFeatureFeedbackHandler;
+
+/** Listeners registered through the fake api sender, by channel. */
+let listeners: Map<string, Array<() => void>>;
+const apiSenderDispose = vi.fn();
+const apiSender = {
+  send: vi.fn(),
+  receive: vi.fn((channel: string, func: () => void) => {
+    listeners.set(channel, [...(listeners.get(channel) ?? []), func]);
+    return { dispose: apiSenderDispose };
+  }),
+} as unknown as ApiSenderType;
+
+/** Fire a channel the way the plugin system does once extensions are up. */
+function emit(channel: string): void {
+  for (const listener of listeners.get(channel) ?? []) listener();
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
-  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry, messageBox, telemetry);
+  listeners = new Map();
+  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry, messageBox, telemetry, apiSender);
 
   vi.spyOn(feedbackForm, 'save').mockResolvedValue(undefined);
 });
@@ -167,18 +186,62 @@ describe('init', () => {
     expect(setReminderSpy).not.toBeCalled();
   });
 
-  test('should load existing configurations and show dialog', async () => {
+  test('should load existing configurations without showing the dialog', async () => {
     const conf = { remindAt: 123456, disabled: false };
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     const showFeedbackDialogSpy = vi.spyOn(feedbackForm, 'showFeedbackDialog').mockResolvedValue(undefined);
+
     await feedbackForm.init();
 
     expect(setReminderSpy).not.toHaveBeenCalled();
-
     expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual(conf);
-    expect(showFeedbackDialogSpy).toBeCalled();
+
+    // init() runs while the renderer is still loading: the dialog it would show
+    // has nobody listening for it yet, which is the defect this fixes.
+    expect(showFeedbackDialogSpy).not.toHaveBeenCalled();
+  });
+
+  test('should show the dialog when extensions have started', async () => {
+    const conf = { remindAt: 123456, disabled: false };
+    configurationGetMock.mockReturnValue(conf);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    const showFeedbackDialogSpy = vi.spyOn(feedbackForm, 'showFeedbackDialog').mockResolvedValue(undefined);
+
+    await feedbackForm.init();
+    expect(showFeedbackDialogSpy).not.toHaveBeenCalled();
+
+    emit('extensions-started');
+
+    expect(showFeedbackDialogSpy).toHaveBeenCalledOnce();
+  });
+
+  test('should subscribe to the readiness event rather than to anything of its own', async () => {
+    configurationGetMock.mockReturnValue({});
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+
+    await feedbackForm.init();
+
+    // The channel is the one the plugin system already sends and other main-side
+    // consumers already listen to; nothing feature-specific was invented for it.
+    expect(apiSender.receive).toHaveBeenCalledWith('extensions-started', expect.any(Function));
+  });
+
+  test('should drop the subscription when disposed', async () => {
+    // registerConfigurations is pushed onto the same disposables list, so it has
+    // to return one here — no test disposed this handler before now.
+    registerConfigurationsMock.mockReturnValue({ dispose: vi.fn() });
+    configurationGetMock.mockReturnValue({});
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+
+    await feedbackForm.init();
+    feedbackForm.dispose();
+
+    expect(apiSenderDispose).toHaveBeenCalled();
   });
 
   test(`should skip disabled features with 'false' value`, async () => {
