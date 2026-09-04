@@ -1,8 +1,8 @@
 <script lang="ts">
 import { EditorSettings } from '@podman-desktop/core-api/editor';
 import type monaco from 'monaco-editor';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import editorWorker from 'monaco-editor/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/language/json/json.worker?worker';
 import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
