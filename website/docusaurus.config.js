@@ -453,13 +453,6 @@ const config = {
             position: 'left',
             label: 'Documentation',
           },
-          {
-            type: 'custom-telemetryLink',
-            position: 'left',
-            to: '/downloads',
-            eventPath: '/download',
-            eventTitle: 'navigation-download',
-          },
           { to: '/community', label: 'Community', position: 'left' },
           {
             type: 'dropdown',
