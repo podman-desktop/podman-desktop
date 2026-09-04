@@ -73,7 +73,6 @@ export interface InstallCommandConfig {
 export interface OSDownloadCardProps {
   readonly osName: string;
   readonly osIcon: IconProp;
-  readonly defaultExpanded?: boolean;
   readonly highlighted?: boolean;
   readonly primaryDownload: {
     readonly url: string;
@@ -88,14 +87,13 @@ export interface OSDownloadCardProps {
 export function OSDownloadCard({
   osName,
   osIcon,
-  defaultExpanded = false,
   highlighted = false,
   primaryDownload,
   otherDownloads,
   installCommand,
   additionalContent,
 }: OSDownloadCardProps): JSX.Element {
-  const [expanded, setExpanded] = React.useState(defaultExpanded);
+  const [expanded, setExpanded] = React.useState(false);
 
   const toggleExpanded = (): void => {
     setExpanded(value => !value);
