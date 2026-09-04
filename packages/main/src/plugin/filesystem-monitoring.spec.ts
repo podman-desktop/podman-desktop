@@ -207,12 +207,27 @@ test.runIf(os.platform() === 'darwin')('Watch a directory with a lot of files', 
 describe('FilesystemMonitoring', () => {
   let monitoring: FilesystemMonitoring;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await promises.writeFile(path.join(rootdir, 'somefile'), 'test');
+    await promises.writeFile(path.join(rootdir, 'file'), 'test');
+    await promises.writeFile(path.join(rootdir, 'file1'), 'test');
+    await promises.writeFile(path.join(rootdir, 'file2'), 'test');
     monitoring = new FilesystemMonitoring();
   });
 
-  test('createFileSystemWatcher should return a FileSystemWatcher', () => {
+  test('createFileSystemWatcher should return a FileSystemWatcher for valid path', () => {
     const fsWatcher = monitoring.createFileSystemWatcher(path.join(rootdir, 'somefile'));
+    expect(fsWatcher).toBeDefined();
+    expect(fsWatcher.dispose).toBeDefined();
+    expect(fsWatcher.onDidCreate).toBeDefined();
+    expect(fsWatcher.onDidChange).toBeDefined();
+    expect(fsWatcher.onDidDelete).toBeDefined();
+    fsWatcher.dispose();
+  });
+
+  test('createFileSystemWatcher should create the path and return FileSystemWatcher for invalid path', async () => {
+    const fsWatcher = monitoring.createFileSystemWatcher(path.join(rootdir, 'tmp', 'non-existent', 'somefile'));
+    await expect(promises.access(path.join(rootdir, 'tmp', 'non-existent', 'somefile'))).resolves.toBeUndefined();
     expect(fsWatcher).toBeDefined();
     expect(fsWatcher.dispose).toBeDefined();
     expect(fsWatcher.onDidCreate).toBeDefined();
