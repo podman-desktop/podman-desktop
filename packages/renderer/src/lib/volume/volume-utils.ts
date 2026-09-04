@@ -75,6 +75,7 @@ export class VolumeUtils {
       humanSize: this.getSize(volumeInfo),
       engineId: volumeInfo.engineId,
       engineName: volumeInfo.engineName,
+      canRename: volumeInfo.canRename ?? false,
       selected: false,
       status: (volumeInfo.UsageData?.RefCount ?? 0) > 0 ? 'USED' : 'UNUSED',
       containersUsage: volumeInfo.containersUsage,

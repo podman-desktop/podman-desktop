@@ -178,6 +178,16 @@ afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
 });
 
+test('rename volume IPC delegates to the container provider registry', async () => {
+  const handle = getHandler<(_event: unknown, engine: string, volumeName: string, newName: string) => Promise<void>>(
+    'container-provider-registry:renameVolume',
+  );
+
+  await handle(undefined, 'podman1', 'old-volume', 'new-volume');
+
+  expect(ContainerProviderRegistry.prototype.renameVolume).toHaveBeenCalledWith('podman1', 'old-volume', 'new-volume');
+});
+
 test('Should queue events until we are ready', async () => {
   const apiSender = pluginSystem.getApiSender(webContents);
   expect(apiSender).toBeDefined();

@@ -28,6 +28,7 @@ export interface VolumeInfoUI {
   humanSize: string;
   engineId: string;
   engineName: string;
+  canRename?: boolean;
   selected: boolean;
   status: 'USED' | 'UNUSED' | 'DELETING';
   containersUsage: { id: string; names: string[] }[];

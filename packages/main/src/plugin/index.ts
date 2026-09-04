@@ -1014,6 +1014,12 @@ export class PluginSystem {
         return containerProviderRegistry.removeVolume(engine, volumeName);
       },
     );
+    this.ipcHandle(
+      'container-provider-registry:renameVolume',
+      async (_listener, engine: string, volumeName: string, newName: string): Promise<void> => {
+        return containerProviderRegistry.renameVolume(engine, volumeName, newName);
+      },
+    );
 
     this.ipcHandle(
       'container-provider-registry:replicatePodmanContainer',
