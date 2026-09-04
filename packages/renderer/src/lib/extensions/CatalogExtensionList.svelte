@@ -5,11 +5,20 @@ import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtension from './CatalogExtension.svelte';
 
-export let catalogExtensions: CatalogExtensionInfoUI[];
-export let title: string = 'Available extensions';
-export let showEmptyScreen: boolean = true;
-export let oninstall: (extensionId: string) => void = () => {};
-export let ondetails: (extensionId: string) => void = () => {};
+interface Props {
+  catalogExtensions: CatalogExtensionInfoUI[];
+  title?: string;
+  showEmptyScreen?: boolean;
+  oninstall?: (extensionId: string) => void;
+  ondetails?: (extensionId: string) => void;
+}
+let {
+  catalogExtensions,
+  title = 'Available extensions',
+  showEmptyScreen = true,
+  oninstall = (_extensionId: string): void => {},
+  ondetails = (_extensionId: string): void => {},
+}: Props = $props();
 
 async function fetchCatalog(): Promise<void> {
   try {
