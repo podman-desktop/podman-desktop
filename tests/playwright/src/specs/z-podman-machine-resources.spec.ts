@@ -19,26 +19,32 @@
 import type { Locator } from '@playwright/test';
 
 import { ResourceElementActions } from '/@/model/core/operations';
-import { ResourceElementState } from '/@/model/core/states';
+import { ContainerState, ResourceElementState } from '/@/model/core/states';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model/core/types';
 import { CreateMachinePage } from '/@/model/pages/create-machine-page';
+import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
+  deleteContainer,
   deletePodmanMachine,
   handlePodmanConfirmationDialogs,
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '/@/utility/operations';
-import { isCI, isLinux, isWindows } from '/@/utility/platform';
+import { isCI, isLinux, isMac, isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
 const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
 const RESOURCE_NAME = 'podman';
+const IMAGE_TO_PULL = 'ghcr.io/linuxcontainers/alpine';
+const IMAGE_TAG = 'latest';
+const CONTAINER_START_PARAMS: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 
 // Timeout constants
 const TIMEOUT_SHORT = 30_000;
@@ -206,6 +212,88 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
             (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
           { timeout: TIMEOUT_SHORT, sendError: true },
         );
+      });
+
+      test('container status recovers after editing machine resources', async ({ page, navigationBar }) => {
+        test.setTimeout(TIMEOUT_MACHINE_CREATION);
+        // Editing machine memory is only offered on macOS and Hyper-V: the property carries
+        // `when: podman.podmanMachineEditMemorySupported`, set from `isMac || isHyperVMachine`.
+        // On WSL the Edit form opens but never renders the Memory slider.
+        test.skip(
+          !isMac && getVirtualizationProvider() !== PodmanVirtualizationProviders.HyperV,
+          'Editing machine memory requires macOS or Hyper-V',
+        );
+
+        const containerName = `${PODMAN_MACHINE_NAME}-resource-edit`;
+
+        // The previous test only asserted the machine card reads Running; the container
+        // engine connection attaches asynchronously after that, and pulling before it is
+        // ready fails with "no running provider".
+        await waitForPodmanMachineStartup(page);
+
+        // Start a container so there is something running before the machine is edited.
+        // Pull and run are kept separate, with a wait for the image to register in
+        // between: pullImageAndRun clicks Run as soon as the pull reports done, and on a
+        // machine created seconds ago the Run form is not ready for it yet.
+        let images = await navigationBar.openImages();
+        const pullImagePage = await images.openPullImage();
+        images = await pullImagePage.pullImage(IMAGE_TO_PULL, IMAGE_TAG);
+        await playExpect
+          .poll(async () => await images.waitForImageExists(IMAGE_TO_PULL), { timeout: TIMEOUT_MEDIUM })
+          .toBeTruthy();
+
+        const imageDetails = await images.openImageDetails(IMAGE_TO_PULL);
+        const runImagePage = await imageDetails.openRunImage();
+        await runImagePage.startContainer(containerName, CONTAINER_START_PARAMS);
+
+        let containers = await navigationBar.openContainers();
+        await playExpect(containers.heading).toBeVisible({ timeout: TIMEOUT_SHORT });
+        await playExpect
+          .poll(async () => await containers.containerExists(containerName), { timeout: TIMEOUT_MEDIUM })
+          .toBeTruthy();
+
+        let containerDetails = await containers.openContainersDetails(containerName);
+        await playExpect
+          .poll(async () => await containerDetails.getState(), { timeout: TIMEOUT_SHORT })
+          .toContain(ContainerState.Running);
+
+        // Edit the machine's memory through Settings > Resources > Edit, which restarts the machine
+        const settingsBar = await navigationBar.openSettings();
+        await settingsBar.resourcesTab.click();
+
+        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+        await playExpect(machineCard.resourceElement).toBeVisible({ timeout: TIMEOUT_SHORT });
+        await machineCard.performConnectionAction(ResourceElementActions.Edit);
+
+        const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME);
+        await podmanMachineDetails.editMachineMemory();
+
+        // Wait for the machine to stop and restart
+        await waitUntil(
+          async () =>
+            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+          { timeout: TIMEOUT_LONG, sendError: true },
+        );
+
+        // Start a container and check the Containers page reflects it
+        containers = await navigationBar.openContainers();
+        await playExpect(containers.heading).toBeVisible({ timeout: TIMEOUT_SHORT });
+        await containers.startContainer(containerName);
+
+        containerDetails = await containers.openContainersDetails(containerName);
+        await playExpect
+          .poll(async () => await containerDetails.getState(), { timeout: TIMEOUT_MEDIUM })
+          .toContain(ContainerState.Running);
+
+        // Leave the machine quiet: the next test in this serial block restarts it and
+        // allows TIMEOUT_SHORT to reach Off, which a running container does not fit into.
+        await deleteContainer(page, containerName);
+
+        // Leave the app where this test found it. The tests in this serial block do not
+        // navigate: they build a ResourceConnectionCardPage and act on it, so they only
+        // work while Settings > Resources is still open.
+        const resourcesBar = await navigationBar.openSettings();
+        await resourcesBar.resourcesTab.click();
       });
 
       test('Restart the machine', async ({ page }) => {
