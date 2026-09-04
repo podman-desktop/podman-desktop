@@ -2,18 +2,23 @@
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { NumberInput, Tooltip } from '@podman-desktop/ui-svelte';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: number | undefined;
-export let onChange = (_id: string, _value: number): void => {};
-export let invalidRecord = (_error: string): void => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value?: number;
+  onChange?: (id: string, value: number) => void;
+  invalidRecord?: (error: string) => void;
+}
+let {
+  record,
+  value = $bindable(0),
+  onChange = (_id: string, _value: number): void => {},
+  invalidRecord = (_error: string): void => {},
+}: Props = $props();
 
 let valueUpdateTimeout: NodeJS.Timeout;
 
-let recordValue: number;
 let lastValue: number;
-let error: string | undefined = undefined;
-
-$: recordValue = value ?? 0;
+let error: string | undefined = $state(undefined);
 
 function onValidation(newValue: number, validationError?: string): void {
   if (validationError) {
@@ -38,7 +43,7 @@ function onValidation(newValue: number, validationError?: string): void {
     class="w-24"
     name={record.id}
     onValidation={onValidation}
-    bind:value={recordValue}
+    bind:value={value}
     bind:error={error}
     aria-label={record.description}
     minimum={record.minimum}
