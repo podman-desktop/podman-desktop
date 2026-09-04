@@ -13,23 +13,27 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import type { PodInfoUI } from './PodInfoUI';
 
-export let pod: PodInfoUI;
+interface Props {
+  pod: PodInfoUI;
+}
+
+let { pod }: Props = $props();
 
 // Log
-let refPod: PodInfoUI;
-// Logs has been initialized
-let noLogs = true;
-let logsTerminal: Terminal;
+// save previous pod — need to refresh logs when pod is switched or state changes
+let refPod: PodInfoUI | undefined;
 
-// need to refresh logs when pod is switched or state changes
-$: {
+// Logs has been initialized
+let noLogs = $state(true);
+let logsTerminal: Terminal | undefined = $state();
+
+$effect(() => {
   if (refPod && (refPod.id !== pod.id || (refPod.status !== pod.status && pod.status !== 'EXITED'))) {
     logsTerminal?.clear();
     fetchPodLogs().catch((err: unknown) => console.error(`Error fetching logs for pod ${pod.id}`, err));
   }
-  // eslint-disable-next-line no-useless-assignment
   refPod = pod;
-}
+});
 
 // Create a map that will store the ANSI 256 colour for each container name
 // if we run out of colours, we'll start from the beginning.
