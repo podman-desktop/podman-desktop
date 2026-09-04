@@ -1,6 +1,8 @@
 <script lang="ts">
-import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
+import { ButtonRow, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
+
+type InitialButtonFocus = 'first' | 'last' | 'none';
 
 interface Props {
   title: string;
@@ -9,9 +11,10 @@ interface Props {
   content?: Snippet;
   validation?: Snippet;
   buttons?: Snippet;
+  initialButtonFocus?: InitialButtonFocus;
 }
 
-let { title, onclose, icon, content, validation, buttons }: Props = $props();
+let { title, onclose, icon, content, validation, buttons, initialButtonFocus = 'none' }: Props = $props();
 </script>
 
 <Modal name={title} onclose={onclose}>
@@ -32,6 +35,8 @@ let { title, onclose, icon, content, validation, buttons }: Props = $props();
         {@render validation?.()}
       </div>
     {/if}
-    {@render buttons?.()}
+    <ButtonRow initialFocus={initialButtonFocus} class="w-full">
+      {@render buttons?.()}
+    </ButtonRow>
   </div>
 </Modal>
