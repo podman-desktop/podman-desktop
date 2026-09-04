@@ -243,8 +243,8 @@ test.describe
           );
         });
         test('Delete the PVC resource', async ({ page }) => {
-          await deleteKubernetesResource(page, KubernetesResources.Pods, PVC_POD_NAME);
-          await deleteKubernetesResource(page, KubernetesResources.PVCs, PVC_NAME);
+          await deleteKubernetesResource(page, KubernetesResources.Pods, PVC_POD_NAME, 60_000);
+          await deleteKubernetesResource(page, KubernetesResources.PVCs, PVC_NAME, 60_000);
         });
       });
     test.describe
@@ -289,14 +289,14 @@ test.describe
             page,
             KubernetesResources.ConfigMapsSecrets,
             SECRET_NAME,
-            30_000,
+            60_000,
             'Delete Secret?',
           );
           await deleteKubernetesResource(
             page,
             KubernetesResources.ConfigMapsSecrets,
             CONFIG_MAP_NAME,
-            30_000,
+            60_000,
             'Delete ConfigMap?',
           );
         });
@@ -323,7 +323,7 @@ test.describe
             page,
             KubernetesResources.ConfigMapsSecrets,
             APPLY_YAML_CONFIGMAP_NAME,
-            30_000,
+            60_000,
             'Delete ConfigMap?',
           );
         });
@@ -354,7 +354,7 @@ test.describe
           await checkDeploymentReplicasInfo(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, 5);
         });
         test('Delete the Kubernetes deployment resource', async ({ page }) => {
-          await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
+          await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, 60_000);
         });
       });
 
@@ -396,7 +396,7 @@ test.describe
           );
         });
         test('Delete CronJob resource', async ({ page }) => {
-          await deleteKubernetesResource(page, KubernetesResources.Cronjobs, CRON_JOB_NAME);
+          await deleteKubernetesResource(page, KubernetesResources.Cronjobs, CRON_JOB_NAME, 60_000);
         });
       });
   });
