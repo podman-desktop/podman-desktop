@@ -47,7 +47,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   buttonOrder = Array.from(buttonsType, (value, index) => index);
 
   // use the provided cancel id, otherwise try to find a button labelled 'cancel'
-  if (options?.cancelId) {
+  if (options?.cancelId !== undefined) {
     cancelId = options.cancelId;
   } else {
     cancelId = buttonsType.findIndex(b => {
