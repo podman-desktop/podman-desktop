@@ -18,14 +18,17 @@ import PodDetailsLogs from './PodDetailsLogs.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 import PodmanPodDetailsSummary from './PodmanPodDetailsSummary.svelte';
 
-export let podName: string;
-export let engineId: string;
+interface Props {
+  podName: string;
+  engineId: string;
+}
+let { podName, engineId }: Props = $props();
 
-let pod: PodInfoUI;
-let detailsPage: DetailsPage;
+let pod: PodInfoUI | undefined = $state();
+let detailsPage: DetailsPage | undefined = $state();
 
 // update current route scheme
-let currentRouterPath: string;
+let currentRouterPath: string = $state('');
 
 onMount(() => {
   router.subscribe(route => {
@@ -54,23 +57,24 @@ onMount(() => {
 </script>
 
 {#if pod}
-  <DetailsPage title={pod.name} subtitle={pod.shortId} bind:this={detailsPage}>
+  {@const currentPod = pod}
+  <DetailsPage title={currentPod.name} subtitle={currentPod.shortId} bind:this={detailsPage}>
     {#snippet iconSnippet()}
-      <StatusIcon icon={PodIcon} size={24} status={pod.status} />
+      <StatusIcon icon={PodIcon} size={24} status={currentPod.status} />
     {/snippet}
     {#snippet actionsSnippet()}
       <div class="flex items-center w-5">
-        {#if pod.actionError}
-          <ErrorMessage error={pod.actionError} icon wrapMessage />
+        {#if currentPod.actionError}
+          <ErrorMessage error={currentPod.actionError} icon wrapMessage />
         {:else}
           <div>&nbsp;</div>
         {/if}
       </div>
-      <PodActions pod={pod} detailed={true} />
+      <PodActions pod={currentPod} detailed={true} />
     {/snippet}
     {#snippet detailSnippet()}
       <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-        <StateChange state={pod.status} />
+        <StateChange state={currentPod.status} />
       </div>
     {/snippet}
     {#snippet tabsSnippet()}
@@ -81,16 +85,16 @@ onMount(() => {
     {/snippet}
     {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <PodmanPodDetailsSummary pod={pod} />
+        <PodmanPodDetailsSummary pod={currentPod} />
       </Route>
       <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
-        <PodDetailsLogs pod={pod} />
+        <PodDetailsLogs pod={currentPod} />
       </Route>
       <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-        <PodDetailsInspect pod={pod} />
+        <PodDetailsInspect pod={currentPod} />
       </Route>
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
-        <PodDetailsKube pod={pod} />
+        <PodDetailsKube pod={currentPod} />
       </Route>
     {/snippet}
   </DetailsPage>
