@@ -1,7 +1,6 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import { faChevronDown, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getClientPlatform } from '@site/src/components/DownloadButton';
 import { LinuxDownloads } from '@site/src/components/downloads/linux';
@@ -10,8 +9,6 @@ import { WindowsDownloads } from '@site/src/components/downloads/windows';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import Layout from '@theme/Layout';
 import React from 'react';
-
-import { RHBPDDownload } from '../../components/downloads/RHBPD';
 
 function DownloadsContent(): JSX.Element {
   const detectedOS = getClientPlatform();
@@ -25,7 +22,9 @@ function DownloadsContent(): JSX.Element {
           onClick={() => setShowOtherPlatforms(value => !value)}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-purple-500 text-purple-600 dark:text-purple-400 font-semibold text-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-500 dark:hover:text-white transition-colors duration-200 bg-transparent"
           aria-expanded={showOtherPlatforms}>
-          <span>{showOtherPlatforms ? 'Hide other platforms' : 'Show other platforms'}</span>
+          <span className="min-w-35 text-left">
+            {showOtherPlatforms ? 'Hide other platforms' : 'Show other platforms'}
+          </span>
           <FontAwesomeIcon
             icon={faChevronDown}
             className={`w-3.5 shrink-0 transition-transform ${showOtherPlatforms ? 'rotate-180' : ''}`}
@@ -40,7 +39,7 @@ function DownloadsContent(): JSX.Element {
     if (detectedOS?.os === 'Windows') {
       return (
         <>
-          <WindowsDownloads defaultExpanded highlighted />
+          <WindowsDownloads highlighted />
 
           <ShowOtherPlatformsButton />
 
@@ -55,7 +54,7 @@ function DownloadsContent(): JSX.Element {
     } else if (detectedOS?.os === 'macOS') {
       return (
         <>
-          <MacOSDownloads defaultExpanded highlighted />
+          <MacOSDownloads highlighted />
 
           <ShowOtherPlatformsButton />
 
@@ -70,7 +69,7 @@ function DownloadsContent(): JSX.Element {
     } else if (detectedOS?.os === 'Linux') {
       return (
         <>
-          <LinuxDownloads defaultExpanded highlighted />
+          <LinuxDownloads highlighted />
 
           <ShowOtherPlatformsButton />
 
@@ -111,26 +110,6 @@ function DownloadsContent(): JSX.Element {
             Free and open source Podman Desktop for macOS, Windows, and Linux.
           </p>
           <div className="flex flex-col gap-2.5 w-full">{renderDownloads()}</div>
-          <div className="mt-12 mb-4">
-            <h2 className="text-2xl leading-tight m-0 mb-2 font-bold text-charcoal-300 dark:text-white">
-              Enterprise-supported build
-            </h2>
-            <p className="m-0 mb-6 text-charcoal-300 dark:text-gray-400 max-w-3xl">
-              Prefer a commercially supported build? Download the Red Hat Build of Podman Desktop from
-              developers.redhat.com.
-            </p>
-            {RHBPDDownload()}
-            <p className="mt-4 text-sm text-charcoal-300 dark:text-gray-400 max-w-3xl">
-              To be added as an enterprise-supported download, please{' '}
-              <Link
-                href="https://github.com/podman-desktop/podman-desktop/discussions"
-                className="underline text-purple-500 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-200 inline-flex items-center gap-1">
-                open a discussion
-                <FontAwesomeIcon icon={faUpRightFromSquare} className="text-xs" />
-              </Link>
-              .
-            </p>
-          </div>
         </div>
       </section>
     </div>
