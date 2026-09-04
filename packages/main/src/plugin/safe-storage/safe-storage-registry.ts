@@ -20,22 +20,24 @@ import { cpSync, existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import type { Event, NotificationCardOptions } from '@podman-desktop/core-api';
+import type { Event, IAsyncDisposable, NotificationCardOptions } from '@podman-desktop/core-api';
 import { safeStorage } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
+import { AtomicFileWriter } from '/@/plugin/util/atomic-file-writer.js';
 
 /**
  * Manage the storage of string being encrypted on disk
  * It's only converted to readable content when getting the value
  */
 @injectable()
-export class SafeStorageRegistry {
+export class SafeStorageRegistry implements IAsyncDisposable {
   readonly #directories: Directories;
 
   #extensionStorage: SafeStorage | undefined;
+  #atomicWriter: AtomicFileWriter | undefined;
 
   constructor(@inject(Directories) directories: Directories) {
     this.#directories = directories;
@@ -87,10 +89,13 @@ export class SafeStorageRegistry {
     this.#extensionStorage = new SafeStorage(data);
 
     // in case of an update, persists the new data to the file
-    this.#extensionStorage.onDidChange(async () => {
-      await writeFile(safeStoragePath, JSON.stringify(data), 'utf-8');
-    });
+    this.#atomicWriter = new AtomicFileWriter(safeStoragePath, () => JSON.stringify(data));
+    this.#extensionStorage.onDidChange(() => this.#atomicWriter?.schedule());
     return notifications;
+  }
+
+  async asyncDispose(): Promise<void> {
+    await this.#atomicWriter?.asyncDispose();
   }
 
   getExtensionStorage(extensionId: string): ExtensionSecretStorage {
