@@ -258,8 +258,8 @@
         },
         "podman.setting.rosetta": {
           "type": "boolean",
-          "default": true,
-          "description": "Use macOS Rosetta to run x86_64 Linux binaries on Podman 5.1.0 and above, disabling will use qemu. NOTE: This setting is only applied when creating new machines.",
+          "default": false,
+          "description": "Use macOS Rosetta to run x86_64 Linux binaries on Podman 5.1.0 and above, disabling will use qemu. Enabling this pins the applehv provider for new machines (Rosetta is not supported with libkrun). NOTE: This setting is only applied when creating new machines.",
           "when": "isMac"
         },
         "third-party.docker.tool.compatibility.enabled": {

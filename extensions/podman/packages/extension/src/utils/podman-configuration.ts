@@ -137,9 +137,18 @@ export class PodmanConfiguration {
   }
 
   async handleRosettaSetting(): Promise<void> {
-    // If the configuration does not exist, we will default to true
-    // if true, when we do updateRosettaSetting, if there is no configuration file, it will do nothing.
-    const useRosetta = extensionApi.configuration.getConfiguration('podman').get<boolean>(configurationRosetta) ?? true;
+    // If the configuration does not exist, we default to false to match the machine
+    // default provider (libkrun), which does not support Rosetta.
+    const useRosetta =
+      extensionApi.configuration.getConfiguration('podman').get<boolean>(configurationRosetta) ?? false;
+
+    // Rosetta (and the applehv/libkrun choice it implies) only applies to Apple Silicon. Rosetta
+    // requires the applehv provider, so pin it when enabled; disabling it falls back to the libkrun
+    // default. On Intel the provider is always applehv, so there is nothing to sync.
+    if (os.arch() === 'arm64') {
+      await this.updateMachineProviderSettings(useRosetta ? VMTYPE.APPLEHV : VMTYPE.LIBKRUN, useRosetta);
+    }
+
     await this.updateRosettaSetting(useRosetta);
   }
 
@@ -219,7 +228,7 @@ export class PodmanConfiguration {
     }
   }
 
-  async updateMachineProviderSettings(provider: VMTYPE): Promise<void> {
+  async updateMachineProviderSettings(provider: VMTYPE, persistDefaultProvider = false): Promise<void> {
     // Initialize an empty configuration file for us to use
     const containersConfContent = {
       containers: {},
@@ -232,8 +241,9 @@ export class PodmanConfiguration {
       configmaps: {},
     };
 
-    // If the file does NOT exist we will have to create the file and the provider is not Applehv (default one)
-    if (provider !== VMTYPE.APPLEHV && !fs.existsSync(this.getContainersFileLocation())) {
+    // If the file does NOT exist we will have to create the file and the provider is not Applehv (default one),
+    // or the caller explicitly asked to persist the default provider.
+    if ((provider !== VMTYPE.APPLEHV || persistDefaultProvider) && !fs.existsSync(this.getContainersFileLocation())) {
       containersConfContent['machine'] = {
         provider: provider,
       };
@@ -273,14 +283,16 @@ export class PodmanConfiguration {
       }
 
       // If provider is applehv, edit containersConfContent['machine'] and remove the provider key if found.
-      // this is because provider is applehv by default and we don't need to set it in the file
+      // this is because provider is applehv by default and we don't need to set it in the file, unless the
+      // caller explicitly asked to persist it (e.g. to pin applehv when Rosetta is enabled).
       if (
         provider === VMTYPE.APPLEHV &&
+        !persistDefaultProvider &&
         containersConfContent['machine'] &&
         'provider' in containersConfContent['machine']
       ) {
         delete containersConfContent['machine']['provider'];
-      } else if (provider !== VMTYPE.APPLEHV && containersConfContent['machine']) {
+      } else if ((provider !== VMTYPE.APPLEHV || persistDefaultProvider) && containersConfContent['machine']) {
         // If provider key does not exist, we need to add it
         containersConfContent['machine'] = {
           ...containersConfContent['machine'], // MAKE SURE we copy over the previous configuration
