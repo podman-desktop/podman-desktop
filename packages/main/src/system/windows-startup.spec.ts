@@ -65,8 +65,11 @@ beforeEach(() => {
   minimizeOnStatup.mockReturnValue(true);
   vi.mocked(app.getLoginItemSettings).mockReturnValue({
     openAtLogin: false,
+    wasOpenedAtLogin: false,
+    status: 'not-registered',
     executableWillLaunchAtLogin: false,
-  } as Electron.LoginItemSettings);
+    launchItems: [],
+  });
 });
 
 test('Auto startup should not be enable for not portable installation in temp folder', async () => {
@@ -136,8 +139,19 @@ test('Autostart should remain disabled when disabled in Windows settings', async
   mockFsExists(false);
   vi.mocked(app.getLoginItemSettings).mockReturnValue({
     openAtLogin: true,
+    wasOpenedAtLogin: false,
+    status: 'enabled',
     executableWillLaunchAtLogin: false,
-  } as Electron.LoginItemSettings);
+    launchItems: [
+      {
+        name: 'Podman Desktop',
+        path: appExePath,
+        args: ['--minimized'],
+        scope: 'user',
+        enabled: false,
+      },
+    ],
+  });
   windowsStartup = new WindowsStartup(configurationRegistry);
 
   await windowsStartup.enable();
@@ -146,6 +160,35 @@ test('Autostart should remain disabled when disabled in Windows settings', async
     path: `"${appExePath}"`,
     args: ['--minimized'],
   });
+  expect(app.setLoginItemSettings).toBeCalledWith({
+    openAtLogin: true,
+    path: `"${appExePath}"`,
+    args: ['--minimized'],
+    enabled: false,
+  });
+});
+
+test('Autostart should remain disabled when startup arguments change', async () => {
+  mockFsExists(false);
+  vi.mocked(app.getLoginItemSettings).mockReturnValue({
+    openAtLogin: false,
+    wasOpenedAtLogin: false,
+    status: 'not-registered',
+    executableWillLaunchAtLogin: false,
+    launchItems: [
+      {
+        name: 'Podman Desktop',
+        path: appExePath,
+        args: [],
+        scope: 'user',
+        enabled: false,
+      },
+    ],
+  });
+  windowsStartup = new WindowsStartup(configurationRegistry);
+
+  await windowsStartup.enable();
+
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
     path: `"${appExePath}"`,
