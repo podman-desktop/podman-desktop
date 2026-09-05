@@ -207,7 +207,7 @@ test.runIf(os.platform() === 'darwin')('Watch a directory with a lot of files', 
 describe('FilesystemMonitoring', () => {
   let monitoring: FilesystemMonitoring;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     monitoring = new FilesystemMonitoring();
   });
 
