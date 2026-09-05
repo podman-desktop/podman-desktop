@@ -63,6 +63,10 @@ beforeEach(() => {
   vi.restoreAllMocks();
   mockAppGetPath();
   minimizeOnStatup.mockReturnValue(true);
+  vi.mocked(app.getLoginItemSettings).mockReturnValue({
+    openAtLogin: false,
+    executableWillLaunchAtLogin: false,
+  } as Electron.LoginItemSettings);
 });
 
 test('Auto startup should not be enable for not portable installation in temp folder', async () => {
@@ -85,6 +89,7 @@ test('Autostart should be enabled for portable installation', async () => {
     openAtLogin: true,
     path: `"${portablePath}"`,
     args: ['--minimized'],
+    enabled: true,
   });
 });
 
@@ -98,6 +103,7 @@ test('Autostart should be enabled for updated application when present', async (
     openAtLogin: true,
     path: `"${resolvedUpdatedExecPath}"`,
     args: ['--minimized'],
+    enabled: true,
   });
 });
 
@@ -109,6 +115,7 @@ test('Autostart enable call should setup startup at login for normal installatio
     openAtLogin: true,
     path: `"${appExePath}"`,
     args: ['--minimized'],
+    enabled: true,
   });
 });
 
@@ -121,6 +128,29 @@ test('Autostart enable call should setup startup at login for normal installatio
     openAtLogin: true,
     path: `"${appExePath}"`,
     args: [],
+    enabled: true,
+  });
+});
+
+test('Autostart should remain disabled when disabled in Windows settings', async () => {
+  mockFsExists(false);
+  vi.mocked(app.getLoginItemSettings).mockReturnValue({
+    openAtLogin: true,
+    executableWillLaunchAtLogin: false,
+  } as Electron.LoginItemSettings);
+  windowsStartup = new WindowsStartup(configurationRegistry);
+
+  await windowsStartup.enable();
+
+  expect(app.getLoginItemSettings).toBeCalledWith({
+    path: `"${appExePath}"`,
+    args: ['--minimized'],
+  });
+  expect(app.setLoginItemSettings).toBeCalledWith({
+    openAtLogin: true,
+    path: `"${appExePath}"`,
+    args: ['--minimized'],
+    enabled: false,
   });
 });
 

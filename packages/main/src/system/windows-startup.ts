@@ -83,10 +83,18 @@ export class WindowsStartup {
       this.podmanDesktopBinaryPath = podmanDesktopInPrograms;
     }
 
+    const loginItemPath = `"${this.podmanDesktopBinaryPath}"`;
+    const loginItemSettings = app.getLoginItemSettings({
+      path: loginItemPath,
+      args,
+    });
+    const enabled = !(loginItemSettings.openAtLogin && loginItemSettings.executableWillLaunchAtLogin === false);
+
     app.setLoginItemSettings({
       openAtLogin: true,
-      path: `"${this.podmanDesktopBinaryPath}"`,
+      path: loginItemPath,
       args,
+      enabled,
     });
   }
 
