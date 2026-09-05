@@ -654,7 +654,11 @@ test('creates extension storage before activation', async () => {
   const storagePath = path.resolve('/fake-extensions-storage-directory', id);
   expect(mkdirMock).toHaveBeenCalledWith(storagePath, { recursive: true });
   expect(extensionContext?.storagePath).toBe(storagePath);
-  expect(mkdirMock.mock.invocationCallOrder[0]).toBeLessThan(activateMock.mock.invocationCallOrder[0]);
+  const mkdirInvocation = mkdirMock.mock.invocationCallOrder[0];
+  const activateInvocation = activateMock.mock.invocationCallOrder[0];
+  expect(mkdirInvocation).toBeDefined();
+  expect(activateInvocation).toBeDefined();
+  expect(mkdirInvocation!).toBeLessThan(activateInvocation!);
 });
 
 test('Verify extension subscriptions are disposed when failed state reached', async () => {
