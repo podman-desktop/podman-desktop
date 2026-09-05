@@ -355,6 +355,7 @@ vi.mock(import('node:fs/promises'));
 const readdirMock = vi.mocked(
   fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent<string>[]>,
 );
+const mkdirMock = vi.mocked(fs.promises.mkdir);
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
@@ -623,6 +624,37 @@ test('Verify extension error leads to failed state', async () => {
     },
   );
   expect(extensionLoader.getExtensionState().get(id)).toBe('failed');
+});
+
+test('creates extension storage before activation', async () => {
+  const id = 'extension.id';
+  let extensionContext: containerDesktopAPI.ExtensionContext | undefined;
+  const activateMock = vi.fn((context: containerDesktopAPI.ExtensionContext) => {
+    extensionContext = context;
+  });
+
+  await extensionLoader.activateExtension(
+    {
+      id,
+      name: id,
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      bundled: false,
+      manifest: {} as unknown as ExtensionManifest,
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    { activate: activateMock },
+  );
+
+  const storagePath = path.resolve('/fake-extensions-storage-directory', id);
+  expect(mkdirMock).toHaveBeenCalledWith(storagePath, { recursive: true });
+  expect(extensionContext?.storagePath).toBe(storagePath);
+  expect(mkdirMock.mock.invocationCallOrder[0]).toBeLessThan(activateMock.mock.invocationCallOrder[0]);
 });
 
 test('Verify extension subscriptions are disposed when failed state reached', async () => {
