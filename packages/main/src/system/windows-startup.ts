@@ -88,13 +88,16 @@ export class WindowsStartup {
       path: loginItemPath,
       args,
     });
-    const enabled = !(loginItemSettings.openAtLogin && loginItemSettings.executableWillLaunchAtLogin === false);
+    const startupExecutablePath = path.normalize(this.podmanDesktopBinaryPath).toLowerCase();
+    const matchingLaunchItem = loginItemSettings.launchItems.find(
+      launchItem => path.normalize(launchItem.path).toLowerCase() === startupExecutablePath,
+    );
 
     app.setLoginItemSettings({
       openAtLogin: true,
       path: loginItemPath,
       args,
-      enabled,
+      enabled: matchingLaunchItem?.enabled ?? true,
     });
   }
 
