@@ -29,13 +29,13 @@ let { title, onclose, icon, content, validation, buttons, initialButtonFocus = '
     {@render content?.()}
   </div>
 
-  <div class="px-5 py-5 mt-2 flex flex-row w-full justify-start space-x-5">
+  <div class="px-5 py-5 mt-2 flex flex-col w-full justify-start space-x-5">
     {#if validation}
       <div class="grow">
         {@render validation?.()}
       </div>
     {/if}
-    <ButtonRow initialFocus={initialButtonFocus} class="w-full">
+    <ButtonRow initialFocus={initialButtonFocus}>
       {@render buttons?.()}
     </ButtonRow>
   </div>
