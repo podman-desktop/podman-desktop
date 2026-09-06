@@ -28,10 +28,12 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { LoginMinimizeHandler } from './system/window/login-minimize-handler.js';
 import type { WindowHandler } from './system/window/window-handler.js';
 import { isLinux, isMac, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
+const loginMinimizeHandler = new LoginMinimizeHandler();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
 
 // development mode for extensions
@@ -140,13 +142,7 @@ async function createWindow(): Promise<BrowserWindow> {
     // check the minimize preference and show or hide accordingly
     if (deferredShow) {
       deferredShow = false;
-      const preferencesConfig = configurationRegistry.getConfiguration('preferences');
-      const minimize = preferencesConfig.get<boolean>('login.minimize');
-      if (minimize) {
-        app.dock?.hide();
-      } else {
-        browserWindow.show();
-      }
+      loginMinimizeHandler.apply(browserWindow, configurationRegistry);
     }
 
     // refresh the value of the development mode config property
