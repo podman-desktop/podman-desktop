@@ -19,11 +19,9 @@
 import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { get, writable } from 'svelte/store';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
 import App from './App.svelte';
 import { lastPage } from './stores/breadcrumb';
@@ -34,8 +32,6 @@ const mocks = vi.hoisted(() => ({
   RunImage: vi.fn(),
   ImagesList: vi.fn(),
   SubmenuNavigation: vi.fn(),
-  DeploymentsList: vi.fn(),
-  KubernetesDashboard: vi.fn(),
   SecretsList: vi.fn(),
   SecretDetails: vi.fn(),
   SecretCreate: vi.fn(),
@@ -63,14 +59,6 @@ vi.mock(import('./SubmenuNavigation.svelte'), () => ({
   default: mocks.SubmenuNavigation,
 }));
 
-vi.mock(import('./lib/kube/KubernetesDashboard.svelte'), () => ({
-  default: mocks.KubernetesDashboard,
-}));
-
-vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
-  default: mocks.DeploymentsList,
-}));
-
 vi.mock(import('./lib/secrets/SecretsList.svelte'), () => ({
   default: mocks.SecretsList,
 }));
@@ -81,12 +69,6 @@ vi.mock(import('./lib/secrets/SecretCreate.svelte'), () => ({
 vi.mock(import('./lib/secrets/SecretDetails.svelte'), () => ({
   default: mocks.SecretDetails,
 }));
-
-vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
-  return {};
-});
-
-vi.mock(import('/@/stores/kubernetes-no-current-context'));
 
 const dispatchEventMock = vi.fn();
 const messages = new Map<string, (args: unknown) => void>();
@@ -101,7 +83,6 @@ beforeEach(() => {
   });
   Object.defineProperty(window, 'dispatchEvent', { value: dispatchEventMock });
   (window.getConfigurationValue as unknown) = vi.fn();
-  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
 test('test /images/an-image/an-engine/tag/run/basic route', async () => {
@@ -168,25 +149,6 @@ test('opens submenu when a `submenu` menu is opened', async () => {
   router.goto('/tosubmenu');
   await tick();
   expect(mocks.SubmenuNavigation).toHaveBeenCalled();
-});
-
-test('do not display kubernetes empty screen if current context', async () => {
-  render(App);
-  router.goto('/kubernetes/deployments');
-  await tick();
-  expect(mocks.KubernetesDashboard).not.toHaveBeenCalled();
-  expect(mocks.DeploymentsList).toHaveBeenCalled();
-});
-
-test('displays kubernetes empty screen if no current context, without Kubernetes menu', async () => {
-  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
-
-  render(App);
-  router.goto('/kubernetes/deployments');
-  await tick();
-  expect(mocks.KubernetesDashboard).toHaveBeenCalled();
-  expect(mocks.DeploymentsList).not.toHaveBeenCalled();
-  expect(mocks.SubmenuNavigation).not.toHaveBeenCalled();
 });
 
 test('test /secrets route', async () => {

@@ -2,36 +2,26 @@
 import './app.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-import type { KubernetesNavigationRequest, NavigationRequest } from '@podman-desktop/core-api';
+import type { NavigationRequest } from '@podman-desktop/core-api';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
-import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
 import SecretCreate from '/@/lib/secrets/SecretCreate.svelte';
 import SecretDetails from '/@/lib/secrets/SecretDetails.svelte';
 import SecretsList from '/@/lib/secrets/SecretsList.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
-import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 
 import AppNavigation from './AppNavigation.svelte';
-import { navigateTo } from './kubernetesNavigation';
 import Appearance from './lib/appearance/Appearance.svelte';
 import ComposeDetails from './lib/compose/ComposeDetails.svelte';
-import ConfigMapDetails from './lib/configmaps-secrets/ConfigMapDetails.svelte';
-import ConfigMapSecretList from './lib/configmaps-secrets/ConfigMapSecretList.svelte';
-import KubernetesSecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
 import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
 import CreateContainerFromExistingImage from './lib/container/CreateContainerFromExistingImage.svelte';
 import ContextKey from './lib/context/ContextKey.svelte';
-import CronJobDetails from './lib/cronjob/CronJobDetails.svelte';
-import CronJobList from './lib/cronjob/CronJobList.svelte';
 import DashboardPage from './lib/dashboard/DashboardPage.svelte';
-import DeploymentDetails from './lib/deployments/DeploymentDetails.svelte';
-import DeploymentsList from './lib/deployments/DeploymentsList.svelte';
 import CustomPick from './lib/dialogs/CustomPick.svelte';
 import MessageBox from './lib/dialogs/MessageBox.svelte';
 import QuickPickInput from './lib/dialogs/QuickPickInput.svelte';
@@ -48,32 +38,17 @@ import LoadImages from './lib/image/LoadImages.svelte';
 import PullImage from './lib/image/PullImage.svelte';
 import RunImage from './lib/image/RunImage.svelte';
 import SaveImages from './lib/image/SaveImages.svelte';
-import IngressDetails from './lib/ingresses-routes/IngressDetails.svelte';
-import IngressesRoutesList from './lib/ingresses-routes/IngressesRoutesList.svelte';
-import RouteDetails from './lib/ingresses-routes/RouteDetails.svelte';
-import JobDetails from './lib/job/JobDetails.svelte';
-import JobList from './lib/job/JobList.svelte';
 import KubePlayYAML from './lib/kube/KubePlayYAML.svelte';
-import KubernetesDashboard from './lib/kube/KubernetesDashboard.svelte';
-import KubePodDetails from './lib/kube/pods/PodDetails.svelte';
-import KubePodsList from './lib/kube/pods/PodsList.svelte';
-import PortForwardingList from './lib/kubernetes-port-forward/PortForwardingList.svelte';
 import ManifestDetails from './lib/manifest/ManifestDetails.svelte';
 import CreateNetwork from './lib/network/CreateNetwork.svelte';
 import NetworkDetails from './lib/network/NetworkDetails.svelte';
 import NetworksList from './lib/network/NetworksList.svelte';
-import NodeDetails from './lib/node/NodeDetails.svelte';
-import NodesList from './lib/node/NodesList.svelte';
 import Onboarding from './lib/onboarding/Onboarding.svelte';
 import DeployPodToKube from './lib/pod/DeployPodToKube.svelte';
 import PodCreateFromContainers from './lib/pod/PodCreateFromContainers.svelte';
 import PodDetails from './lib/pod/PodDetails.svelte';
 import PodsList from './lib/pod/PodsList.svelte';
 import PreferencesPage from './lib/preferences/PreferencesPage.svelte';
-import PVCDetails from './lib/pvc/PVCDetails.svelte';
-import PVCList from './lib/pvc/PVCList.svelte';
-import ServiceDetails from './lib/service/ServiceDetails.svelte';
-import ServicesList from './lib/service/ServicesList.svelte';
 import StatusBar from './lib/statusbar/StatusBar.svelte';
 import IconsStyle from './lib/style/IconsStyle.svelte';
 import { PodmanDesktopStoragePersist } from './lib/table/PodmanDesktopStoragePersist';
@@ -155,10 +130,6 @@ window.events?.receive('show-release-notes', () => {
 window.events?.receive('navigate', (navigationRequest: unknown) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleNavigation(navigationRequest as NavigationRequest<any>);
-});
-
-window.events?.receive('kubernetes-navigation', (args: unknown) => {
-  navigateTo(args as KubernetesNavigationRequest);
 });
 
 // Initialize table persistence callbacks immediately
@@ -340,113 +311,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             <SecretDetails secretId={decodeURIComponent(meta.params.secretId)} engineId={decodeURIComponent(meta.params.engineId)} />
           </Route>
         </Route>
-        {#if $kubernetesNoCurrentContext}
-          <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
-            <KubernetesDashboard />
-          </Route>
-        {:else}
-         <Route path="/kubernetes" breadcrumb="Kubernetes" navigationHint="root">
-            <KubernetesRoot />
-          </Route>
-          <Route path="/kubernetes/dashboard" breadcrumb="Dashboard" navigationHint="root">
-            <KubernetesDashboard />
-          </Route>
-          <Route path="/kubernetes/nodes" breadcrumb="Nodes" navigationHint="root">
-            <NodesList />
-          </Route>
-          <Route path="/kubernetes/nodes/:name/*" breadcrumb="Node Details" let:meta navigationHint="details">
-            <NodeDetails name={decodeURI(meta.params.name)} />
-          </Route>
-          <Route path="/kubernetes/pods" breadcrumb="Pods" navigationHint="root">
-            <KubePodsList />
-          </Route>
-          <Route
-            path="/kubernetes/pods/:name/:namespace/*"
-            breadcrumb="Pod Details"
-            let:meta
-            navigationHint="details">
-            <KubePodDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/persistentvolumeclaims" breadcrumb="Persistent Volume Claims" navigationHint="root">
-            <PVCList />
-          </Route>
-          <Route
-            path="/kubernetes/persistentvolumeclaims/:name/:namespace/*"
-            breadcrumb="Persistent Volume Claim Details"
-            let:meta
-            navigationHint="details">
-            <PVCDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/deployments" breadcrumb="Deployments" navigationHint="root">
-            <DeploymentsList />
-          </Route>
-          <Route
-            path="/kubernetes/deployments/:name/:namespace/*"
-            breadcrumb="Deployment Details"
-            let:meta
-            navigationHint="details">
-            <DeploymentDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/services" breadcrumb="Services" navigationHint="root">
-            <ServicesList />
-          </Route>
-          <Route
-            path="/kubernetes/services/:name/:namespace/*"
-            breadcrumb="Service Details"
-            let:meta
-            navigationHint="details">
-            <ServiceDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/ingressesRoutes" breadcrumb="Ingresses & Routes" navigationHint="root">
-            <IngressesRoutesList />
-          </Route>
-          <Route path="/kubernetes/jobs" breadcrumb="Jobs" navigationHint="root">
-            <JobList />
-          </Route>
-          <Route path="/kubernetes/jobs/:name/:namespace/*" breadcrumb="Job Details" let:meta navigationHint="details">
-            <JobDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/cronjobs" breadcrumb="CronJobs" navigationHint="root">
-            <CronJobList />
-          </Route>
-          <Route path="/kubernetes/cronjobs/:name/:namespace/*" breadcrumb="CronJob Details" let:meta navigationHint="details">
-            <CronJobDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route
-            path="/kubernetes/ingressesRoutes/ingress/:name/:namespace/*"
-            breadcrumb="Ingress Details"
-            let:meta
-            navigationHint="details">
-            <IngressDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/configmapsSecrets" breadcrumb="ConfigMaps & Secrets" navigationHint="root">
-            <ConfigMapSecretList />
-          </Route>
-          <Route
-            path="/kubernetes/configmapsSecrets/configmap/:name/:namespace/*"
-            breadcrumb="ConfigMap Details"
-            let:meta
-            navigationHint="details">
-            <ConfigMapDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route
-            path="/kubernetes/configmapsSecrets/secret/:name/:namespace/*"
-            breadcrumb="Secret Details"
-            let:meta
-            navigationHint="details">
-            <KubernetesSecretDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route
-            path="/kubernetes/ingressesRoutes/route/:name/:namespace/*"
-            breadcrumb="Route Details"
-            let:meta
-            navigationHint="details">
-            <RouteDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
-          </Route>
-          <Route path="/kubernetes/portForward" breadcrumb="Port Forwarding" navigationHint="root">
-            <PortForwardingList />
-          </Route>
-        {/if}
         <Route path="/preferences/*" breadcrumb="Settings">
           <PreferencesPage />
         </Route>
