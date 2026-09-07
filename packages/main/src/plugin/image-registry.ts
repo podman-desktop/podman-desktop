@@ -943,7 +943,10 @@ export class ImageRegistry {
     try {
       response = await fetch(registryUrl, this.getOptions({ insecure }));
     } catch (error) {
-      throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${error}`);
+      // fetch reports network failures as a generic `TypeError: fetch failed` and keeps the actual
+      // reason (DNS, TLS, refused connection) in `cause`
+      const reason = error instanceof Error ? (error.cause ?? error) : error;
+      throw new Error(`Unable to find auth info for ${registryUrl}. Error: ${reason}`);
     }
 
     if (!response.ok) {

@@ -246,6 +246,17 @@ describe('extract auth info', () => {
     expect(value?.authUrl).toBe('https://auth.docker.io/token?service=registry.docker.io');
     expect(value?.scheme).toBe('bearer');
   });
+
+  test('getAuthInfo surfaces the underlying network error instead of the generic fetch failure', async () => {
+    // fetch wraps network failures in `TypeError: fetch failed`, keeping the real reason in `cause`
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new TypeError('fetch failed', { cause: new Error('getaddrinfo ENOTFOUND invalidurl') }),
+    );
+
+    await expect(imageRegistry.getAuthInfo('invalidUrl')).rejects.toThrow(
+      'Unable to find auth info for https://invalidUrl/v2/. Error: Error: getaddrinfo ENOTFOUND invalidurl',
+    );
+  });
 });
 
 describe('extractImageDataFromImageName', () => {
