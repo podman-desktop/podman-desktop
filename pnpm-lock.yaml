@@ -468,8 +468,8 @@ importers:
         specifier: ^4.2.6
         version: 4.2.6
       '@types/ssh2':
-        specifier: ^1.15.5
-        version: 1.15.5
+        specifier: ^1.15.6
+        version: 1.15.6
       '@types/sshpk':
         specifier: ^1.17.5
         version: 1.17.5
@@ -5127,8 +5127,8 @@ packages:
   '@types/node@17.0.45':
     resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
 
-  '@types/node@18.19.86':
-    resolution: {integrity: sha512-fifKayi175wLyKyc5qUfyENhQ1dCNI1UNjp653d8kuYcPQN5JhX3dGuP/XmvPTg/xRBn1VTLpbmi+H/Mr7tLfQ==}
+  '@types/node@18.19.130':
+    resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
 
   '@types/node@24.10.11':
     resolution: {integrity: sha512-/Af7O8r1frCVgOz0I62jWUtMohJ0/ZQU/ZoketltOJPZpnb17yoNc9BSoVuV9qlaIXJiPNOpsfq4ByFajSArNQ==}
@@ -5190,8 +5190,8 @@ packages:
   '@types/set-cookie-parser@2.4.10':
     resolution: {integrity: sha512-GGmQVGpQWUe5qglJozEjZV/5dyxbOOZ0LHe/lqyWssB88Y4svNfst0uqBVscdDeIKl5Jy5+aPSvy7mI9tYRguw==}
 
-  '@types/ssh2@1.15.5':
-    resolution: {integrity: sha512-N1ASjp/nXH3ovBHddRJpli4ozpk6UdDYIX4RJWFa9L1YKnzdhTlVmiGHm4DZnj/jLbqZpes4aeR30EFGQtvhQQ==}
+  '@types/ssh2@1.15.6':
+    resolution: {integrity: sha512-oGdxhBqcRTwSTKFm+9EiKzkNVYRLEFkcW44lhguvBalGJbWfGnDt/ezwSUZc+SF9m9bMc3VyklNAtp7zICjS5w==}
 
   '@types/sshpk@1.17.5':
     resolution: {integrity: sha512-khJbOFAOnyLaqOoGIlDCF2ZghIb0jM1K1N0rRoKL0ObqUMwfkicu5zlJ5Wsp+Xn2EUduVwONXwsgbGk+COaCug==}
@@ -17326,13 +17326,13 @@ snapshots:
   '@types/docker-modem@3.0.6':
     dependencies:
       '@types/node': 24.13.3
-      '@types/ssh2': 1.15.5
+      '@types/ssh2': 1.15.6
 
   '@types/dockerode@3.3.47':
     dependencies:
       '@types/docker-modem': 3.0.6
       '@types/node': 24.13.3
-      '@types/ssh2': 1.15.5
+      '@types/ssh2': 1.15.6
 
   '@types/eslint-scope@3.7.7':
     dependencies:
@@ -17436,7 +17436,7 @@ snapshots:
 
   '@types/node@17.0.45': {}
 
-  '@types/node@18.19.86':
+  '@types/node@18.19.130':
     dependencies:
       undici-types: 5.26.5
 
@@ -17514,9 +17514,9 @@ snapshots:
     dependencies:
       '@types/node': 24.13.3
 
-  '@types/ssh2@1.15.5':
+  '@types/ssh2@1.15.6':
     dependencies:
-      '@types/node': 18.19.86
+      '@types/node': 18.19.130
 
   '@types/sshpk@1.17.5':
     dependencies:
