@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2026 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,25 +19,30 @@
 import * as http from 'node:http';
 
 import * as extensionApi from '@podman-desktop/api';
+import type { DockerContextInfo } from '@podman-desktop/docker-extension-api';
 
 import { getDockerInstallation } from './docker-cli';
+import type { DockerContextHandler } from './docker-context-handler';
 
 /**
- * Monitors the default Docker socket and registers a single ContainerProviderConnection
- * while the daemon is reachable (and not a disguised Podman socket).
+ * Monitors Docker CLI contexts and registers one ContainerProviderConnection per local
+ * context. A connection's engine going unreachable only flips its status (kept registered,
+ * mirrors Podman's machine model) so it doesn't disappear just because the engine is
+ * temporarily off. It's only disposed once the context itself is gone from `docker context ls`.
  */
 export class DockerDaemonMonitor {
   #extensionContext: extensionApi.ExtensionContext;
-  #socketPath: string;
+  #dockerContextHandler: DockerContextHandler;
   #stopLoop = false;
   #provider: extensionApi.Provider | undefined;
-  #providerState: extensionApi.ProviderConnectionStatus = 'stopped';
-  #containerProviderConnection: extensionApi.ContainerProviderConnection | undefined;
-  #containerProviderConnectionDisposable: extensionApi.Disposable | undefined;
+  #lastProviderStatus: extensionApi.ProviderStatus | undefined;
+  // one connection per Docker CLI context, keyed by context name
+  #connectionDisposables = new Map<string, extensionApi.Disposable>();
+  #connectionStatuses = new Map<string, extensionApi.ProviderConnectionStatus>();
 
-  constructor(extensionContext: extensionApi.ExtensionContext, socketPath: string) {
+  constructor(extensionContext: extensionApi.ExtensionContext, dockerContextHandler: DockerContextHandler) {
     this.#extensionContext = extensionContext;
-    this.#socketPath = socketPath;
+    this.#dockerContextHandler = dockerContextHandler;
   }
 
   start(): void {
@@ -71,42 +76,93 @@ export class DockerDaemonMonitor {
       // ignore the update
     }
 
-    // check if the daemon is alive
-    const isAlive = await this.isDockerDaemonAlive(this.#socketPath);
+    const contexts = await this.#dockerContextHandler.listContexts();
+    const contextNames = new Set(contexts.map(contextInfo => contextInfo.name));
 
-    // alive
-    if (isAlive) {
-      // but was stopped before, needs to update the provider state
-      if (this.#providerState === 'stopped') {
-        // first we check that it's not podman behind
-        const isPodman = await this.isDisguisedPodman(this.#socketPath);
-        if (!isPodman) {
-          // if no provider, create one
-          if (!this.#provider) {
-            this.initProvider();
-          }
-          this.#providerState = 'started';
-          // register again the connection
-          if (this.#provider && this.#containerProviderConnection) {
-            this.#containerProviderConnectionDisposable = this.#provider.registerContainerProviderConnection(
-              this.#containerProviderConnection,
-            );
-            this.#extensionContext.subscriptions.push(this.#containerProviderConnectionDisposable);
-            this.#provider.updateStatus('started');
-          }
-        }
+    for (const contextInfo of contexts) {
+      const contextSocketPath = this.#dockerContextHandler.parseEndpoint(contextInfo.endpoints.docker.host);
+      if (!contextSocketPath) {
+        console.debug(
+          `Skipping docker context '${contextInfo.name}': unsupported endpoint '${contextInfo.endpoints.docker.host}'`,
+        );
+        continue;
       }
-    } else if (this.#providerState === 'started') {
-      // no longer alive but it was running before so we need to update status
-      // dispose the current connection
-      this.#containerProviderConnectionDisposable?.dispose();
-      this.#providerState = 'stopped';
-      this.#provider?.updateStatus('stopped');
+
+      const isAlive = await this.isDockerDaemonAlive(contextSocketPath);
+      // a context created by the podman-docker-context extension points at a Podman socket, not a Docker one
+      const isPodman = isAlive && (await this.isDisguisedPodman(contextSocketPath));
+      const isRegistered = this.#connectionDisposables.has(contextInfo.name);
+
+      if (isPodman) {
+        // no longer (or never was) a genuine Docker engine behind this context
+        if (isRegistered) {
+          this.disposeConnectionForContext(contextInfo.name);
+        }
+        continue;
+      }
+
+      if (isRegistered) {
+        // keep the connection registered; just reflect whether its engine currently answers
+        this.#connectionStatuses.set(contextInfo.name, isAlive ? 'started' : 'stopped');
+        continue;
+      }
+
+      if (isAlive) {
+        if (!this.#provider) {
+          this.#provider = this.initProvider();
+          this.#extensionContext.subscriptions.push(this.#provider);
+        }
+        const disposable = this.registerConnectionForContext(this.#provider, contextInfo, contextSocketPath);
+        this.#extensionContext.subscriptions.push(disposable);
+        this.#connectionDisposables.set(contextInfo.name, disposable);
+      }
+    }
+
+    // the context itself is gone (e.g. `docker context rm`, or colima removing its own context on stop)
+    for (const name of this.#connectionDisposables.keys()) {
+      if (!contextNames.has(name)) {
+        this.disposeConnectionForContext(name);
+      }
+    }
+
+    if (this.#provider) {
+      const anyStarted = [...this.#connectionStatuses.values()].some(status => status === 'started');
+      const nextStatus: extensionApi.ProviderStatus = anyStarted ? 'started' : 'stopped';
+      if (nextStatus !== this.#lastProviderStatus) {
+        this.#provider.updateStatus(nextStatus);
+        this.#lastProviderStatus = nextStatus;
+      }
     }
   }
 
-  protected initProvider(): void {
-    this.#provider = extensionApi.provider.createProvider({
+  protected registerConnectionForContext(
+    dockerProvider: extensionApi.Provider,
+    contextInfo: DockerContextInfo,
+    contextSocketPath: string,
+  ): extensionApi.Disposable {
+    this.#connectionStatuses.set(contextInfo.name, 'started');
+
+    const containerProviderConnection: extensionApi.ContainerProviderConnection = {
+      name: contextInfo.name,
+      displayName: contextInfo.name === 'default' ? 'Docker' : contextInfo.name,
+      type: 'docker',
+      status: (): extensionApi.ProviderConnectionStatus => this.#connectionStatuses.get(contextInfo.name) ?? 'stopped',
+      endpoint: {
+        socketPath: contextSocketPath,
+      },
+    };
+
+    return dockerProvider.registerContainerProviderConnection(containerProviderConnection);
+  }
+
+  protected disposeConnectionForContext(name: string): void {
+    this.#connectionDisposables.get(name)?.dispose();
+    this.#connectionDisposables.delete(name);
+    this.#connectionStatuses.delete(name);
+  }
+
+  protected initProvider(): extensionApi.Provider {
+    return extensionApi.provider.createProvider({
       name: 'Docker',
       id: 'docker',
       status: 'ready',
@@ -115,19 +171,6 @@ export class DockerDaemonMonitor {
         logo: './logo.png',
       },
     });
-
-    this.#containerProviderConnection = {
-      name: 'Docker',
-      type: 'docker',
-      status: (): extensionApi.ProviderConnectionStatus => this.#providerState,
-      endpoint: {
-        socketPath: this.#socketPath,
-      },
-    };
-
-    // provider is started
-    this.#providerState = 'started';
-    this.#extensionContext.subscriptions.push(this.#provider);
   }
 
   protected async isDockerDaemonAlive(socketPath: string): Promise<boolean> {
@@ -195,7 +238,7 @@ export class DockerDaemonMonitor {
       try {
         await this.updateProvider();
       } catch (error) {
-        // ignore the update of machines
+        // ignore the update of contexts
       }
       await this.timeout(5000);
       this.monitorDaemon().catch((err: unknown) => {

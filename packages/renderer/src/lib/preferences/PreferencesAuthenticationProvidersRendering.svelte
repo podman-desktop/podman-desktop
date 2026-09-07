@@ -42,7 +42,6 @@ import SettingsPage from './SettingsPage.svelte';
                 <svelte:component
                   this={KeyIcon}
                   size="40"
-                  alt={provider.displayName}
                   aria-label="Default icon for {provider.displayName} provider" />
               {/if}
             </div>
