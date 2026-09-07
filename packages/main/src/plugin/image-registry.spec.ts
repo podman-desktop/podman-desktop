@@ -29,6 +29,7 @@ import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import * as nodeTar from 'tar';
+import { ProxyAgent } from 'undici';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import imageRegistryConfigJson from '/@tests/resources/data/plugin/image-registry-config.json' with { type: 'json' };
@@ -1241,6 +1242,25 @@ test('getOptions returns dispatcher for insecure mode', () => {
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
   const options = imageRegistry.getOptions({ insecure: true });
   expect((options as any).dispatcher).toBeDefined();
+});
+
+test('getOptions selects the proxy matching the target protocol', () => {
+  pxoxyIsEnabledMock.mockReturnValue(true);
+  // only an https proxy is configured
+  proxyGetProxyMock.mockReturnValue({
+    httpProxy: undefined,
+    httpsProxy: 'http://127.0.0.1:3128',
+    noProxy: undefined,
+  });
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+
+  // an https target uses the https proxy
+  const secure = imageRegistry.getOptions({ url: 'https://registry.local/v2/', insecure: true });
+  expect((secure as any).dispatcher).toBeInstanceOf(ProxyAgent);
+
+  // an http target must not fall back to the https proxy
+  const insecure = imageRegistry.getOptions({ url: 'http://registry.local/v2/', insecure: true });
+  expect((insecure as any).dispatcher).not.toBeInstanceOf(ProxyAgent);
 });
 
 test('getOptions returns empty for non-insecure mode', () => {

@@ -223,20 +223,27 @@ test('check isEnabled returns true when proxy is system and some proxy is enable
 });
 
 test('fetch with caller-provided dispatcher should not be overridden', async () => {
-  const proxyServer = await buildProxy();
-  const address = proxyServer.address() as AddressInfo;
-  await proxy?.setState(ProxyState.PROXY_MANUAL);
-  await proxy?.setProxy({
-    httpsProxy: `127.0.0.1:${address.port}`,
-    httpProxy: undefined,
-    noProxy: undefined,
-  });
+  // install our own fetch as the one the override will delegate to, so we can assert what it receives
+  const originalFetch = vi.fn().mockResolvedValue(new Response());
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = originalFetch as unknown as typeof globalThis.fetch;
 
-  const customDispatcher = new Agent();
-  const fetchSpy = vi.spyOn(globalThis, 'fetch');
+  try {
+    const localProxy = new Proxy(configurationRegistry, certificates);
+    await localProxy.init();
+    await localProxy.setState(ProxyState.PROXY_MANUAL);
+    await localProxy.setProxy({
+      httpsProxy: '127.0.0.1:8888',
+      httpProxy: undefined,
+      noProxy: undefined,
+    });
 
-  await fetch(URL, { dispatcher: customDispatcher } as RequestInit);
+    const customDispatcher = new Agent();
+    await globalThis.fetch(URL, { dispatcher: customDispatcher } as RequestInit);
 
-  expect(fetchSpy).toHaveBeenCalledWith(URL, expect.objectContaining({ dispatcher: customDispatcher }));
-  fetchSpy.mockRestore();
+    // without the bypass the override would replace the dispatcher with its own ProxyAgent
+    expect(originalFetch).toHaveBeenCalledWith(URL, expect.objectContaining({ dispatcher: customDispatcher }));
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
 });

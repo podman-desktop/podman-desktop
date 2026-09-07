@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
 import { createWriteStream } from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
@@ -343,7 +344,7 @@ export class ImageRegistry {
     return undefined;
   }
 
-  getOptions(options?: { insecure?: boolean; headers?: Record<string, string> }): RequestInit {
+  getOptions(options?: { url?: string; insecure?: boolean; headers?: Record<string, string> }): RequestInit {
     if (!options?.insecure) {
       return {
         headers: options?.headers,
@@ -353,7 +354,9 @@ export class ImageRegistry {
     const ca = this.certificates.getAllCertificates();
 
     if (this.proxyEnabled) {
-      const proxyUrl = this.proxySettings?.httpsProxy ?? this.proxySettings?.httpProxy;
+      // pick the proxy matching the target protocol, like the global fetch override does
+      const secure = options.url ? new URL(options.url).protocol === 'https:' : true;
+      const proxyUrl = secure ? this.proxySettings?.httpsProxy : this.proxySettings?.httpProxy;
       if (proxyUrl) {
         return {
           dispatcher: new ProxyAgent({
@@ -615,11 +618,12 @@ export class ImageRegistry {
       throw new Error(`Failed to fetch blob ${blobURL}: ${response.statusText}`);
     }
 
-    const fileStream = createWriteStream(tmpFileName);
+    const body = response.body;
     let transferred = 0;
 
-    try {
-      for await (const chunk of response.body) {
+    // pipeline handles backpressure, error propagation and stream teardown
+    await pipeline(async function* () {
+      for await (const chunk of body) {
         transferred += chunk.byteLength;
 
         const downloaded = currentDownloaded + transferred;
@@ -630,12 +634,9 @@ export class ImageRegistry {
           progress,
         });
 
-        fileStream.write(chunk);
+        yield chunk;
       }
-    } finally {
-      fileStream.end();
-      await new Promise<void>((resolve, reject) => fileStream.on('finish', resolve).on('error', reject));
-    }
+    }, createWriteStream(tmpFileName));
 
     if (compressionType === 'zstd') {
       //use fstd library to extract the file
@@ -941,7 +942,7 @@ export class ImageRegistry {
 
     let response: Response;
     try {
-      response = await fetch(registryUrl, this.getOptions({ insecure }));
+      response = await fetch(registryUrl, this.getOptions({ url: registryUrl, insecure }));
     } catch (error) {
       // fetch reports network failures as a generic `TypeError: fetch failed` and keeps the actual
       // reason (DNS, TLS, refused connection) in `cause`
@@ -1051,6 +1052,7 @@ export class ImageRegistry {
     const response = await fetch(
       authUrl,
       this.getOptions({
+        url: authUrl,
         insecure,
         headers: {
           Authorization: `Basic ${token}`,
