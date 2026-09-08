@@ -19,7 +19,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faCheck, faChevronDown, faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { TelemetryLink } from '@site/src/components/TelemetryLink';
+import { sendGoatCounterEvent, TelemetryLink } from '@site/src/components/TelemetryLink';
 import React from 'react';
 
 function CopyButton({ onCopy }: { readonly onCopy: () => Promise<void> }): JSX.Element {
@@ -97,6 +97,9 @@ export function OSDownloadCard({
 
   const toggleExpanded = (): void => {
     setExpanded(value => !value);
+    if (expanded) {
+      sendGoatCounterEvent('download', `expand-${osName}`);
+    }
   };
 
   return (
