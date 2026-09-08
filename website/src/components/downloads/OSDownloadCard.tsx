@@ -96,10 +96,10 @@ export function OSDownloadCard({
   const [expanded, setExpanded] = React.useState(false);
 
   const toggleExpanded = (): void => {
-    setExpanded(value => !value);
-    if (expanded) {
+    if (!expanded) {
       sendGoatCounterEvent('download', `expand-${osName}`);
     }
+    setExpanded(value => !value);
   };
 
   return (
