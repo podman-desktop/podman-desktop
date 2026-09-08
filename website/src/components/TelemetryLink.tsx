@@ -1,4 +1,5 @@
 import Link from '@docusaurus/Link';
+import { sendGoatCounterEvent } from '@site/src/components/utils';
 import type { ReactNode } from 'react';
 
 type TelemetryLinkProps = {
@@ -8,14 +9,6 @@ type TelemetryLinkProps = {
   className: string;
   children?: ReactNode[];
   mobile?: boolean;
-};
-
-const sendGoatCounterEvent = (path: string, title: string): void => {
-  window.goatcounter?.count({
-    path: path,
-    title: title,
-    event: true,
-  });
 };
 
 export const TelemetryLink = ({ children, mobile = false, ...props }: TelemetryLinkProps): JSX.Element => {
