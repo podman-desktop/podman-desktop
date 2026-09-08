@@ -37,8 +37,6 @@ import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
-import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
-import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { Uri } from '/@/plugin/types/uri.js';
@@ -63,14 +61,8 @@ const telemetry: Telemetry = {
     // do nothing
   }),
 } as unknown as Telemetry;
-const experimentalConfigurationManager: ExperimentalConfigurationManager = {
-  isExperimentalConfigurationEnabled: vi.fn(),
-} as unknown as ExperimentalConfigurationManager;
 const makeApiClientMock = vi.fn();
 const getContextObjectMock = vi.fn();
-const featureRegistry: FeatureRegistry = {
-  onFeaturesUpdated: vi.fn(),
-} as unknown as FeatureRegistry;
 const podAndDeploymentTestYAML = `apiVersion: v1
 kind: Pod
 metadata:
@@ -110,25 +102,10 @@ class TestKubernetesClient extends KubernetesClient {
   public setInitialNamespace(namespace: string): void {
     this.currentNamespace = namespace;
   }
-
-  public override KubernetesManagerStart(): Promise<void> {
-    return super.KubernetesManagerStart();
-  }
-
-  public override KubernetesManagerStop(): Promise<void> {
-    return super.KubernetesManagerStop();
-  }
 }
 
 function createTestClient(namespace?: string): TestKubernetesClient {
-  const client = new TestKubernetesClient(
-    apiSender,
-    configurationRegistry,
-    fileSystemMonitoring,
-    telemetry,
-    experimentalConfigurationManager,
-    featureRegistry,
-  );
+  const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
   if (namespace) {
     client.setInitialNamespace(namespace);
   }
@@ -319,14 +296,7 @@ describe.each([
 
 test('Check connection to Kubernetes cluster', async () => {
   vi.mocked(clientNode.Health.prototype.readyz).mockResolvedValue(true);
-  const client = new KubernetesClient(
-    {} as ApiSenderType,
-    configurationRegistry,
-    fileSystemMonitoring,
-    telemetry,
-    experimentalConfigurationManager,
-    featureRegistry,
-  );
+  const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
   const result = await client.checkConnection();
   expect(result).toBeTruthy();
 });
@@ -334,14 +304,7 @@ test('Check connection to Kubernetes cluster', async () => {
 test('Check connection to Kubernetes cluster in error', async () => {
   vi.mocked(clientNode.Health.prototype.readyz).mockRejectedValue(undefined);
 
-  const client = new KubernetesClient(
-    {} as ApiSenderType,
-    configurationRegistry,
-    fileSystemMonitoring,
-    telemetry,
-    experimentalConfigurationManager,
-    featureRegistry,
-  );
+  const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
   const result = await client.checkConnection();
   expect(result).toBeFalsy();
 });
@@ -353,14 +316,7 @@ test('Check update with empty kubeconfig file', async () => {
   // provide empty kubeconfig file
   readFileMock.mockResolvedValue('');
 
-  const client = new KubernetesClient(
-    {} as ApiSenderType,
-    configurationRegistry,
-    fileSystemMonitoring,
-    telemetry,
-    experimentalConfigurationManager,
-    featureRegistry,
-  );
+  const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
   await client.refresh();
   expect(consoleErrorSpy).toBeCalledWith(expect.stringContaining('is empty. Skipping'));
 });
@@ -1023,63 +979,4 @@ test('test sync resources was called with no status being passed through', async
     undefined,
     'podman-desktop',
   );
-});
-
-test('the internal monitoring is stopped when a kubernetes-dashboard feature is registered', async () => {
-  const client = createTestClient('default');
-  expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
-
-  await client.init();
-  expect(featureRegistry.onFeaturesUpdated).toHaveBeenCalledOnce();
-  const callback = vi.mocked(featureRegistry.onFeaturesUpdated).mock.calls[0]?.[0];
-  expect(callback).toBeDefined();
-
-  vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
-  await callback!(['kubernetes-dashboard', 'other-feature']);
-  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
-
-  // should prevent stopping it twice before starting it
-  await callback!(['kubernetes-dashboard', 'other-feature']);
-  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
-});
-
-test('the internal monitoring is started when a kubernetes-dashboard feature is unregistered, only once', async () => {
-  const client = createTestClient('default');
-  expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
-
-  await client.init();
-  expect(featureRegistry.onFeaturesUpdated).toHaveBeenCalledOnce();
-  const callback = vi.mocked(featureRegistry.onFeaturesUpdated).mock.calls[0]?.[0];
-  expect(callback).toBeDefined();
-
-  // first stop the monitoring
-  vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
-  await callback!(['other-feature', 'kubernetes-dashboard']);
-  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
-
-  // then start the monitoring
-  vi.spyOn(client, 'KubernetesManagerStart').mockResolvedValue();
-  await callback!(['other-feature']);
-  expect(client.KubernetesManagerStart).toHaveBeenCalledOnce();
-
-  // should prevent starting it twice before stopping it
-  await callback!(['other-feature']);
-  expect(client.KubernetesManagerStart).toHaveBeenCalledOnce();
-});
-
-test('useInternalKubernetes configuration is set to false when internal manager is stopped', async () => {
-  const client = createTestClient('default');
-  await client.init();
-  await client.KubernetesManagerStop();
-  expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
-    'kubernetes.useInternalKubernetes',
-    false,
-  );
-});
-
-test('useInternalKubernetes configuration is set to true when internal manager is started', async () => {
-  const client = createTestClient('default');
-  await client.init();
-  await client.KubernetesManagerStart();
-  expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith('kubernetes.useInternalKubernetes', true);
 });

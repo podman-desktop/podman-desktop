@@ -28,7 +28,6 @@ import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { Context } from '/@/plugin/context/context.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
 import featuresJson from './explore-features.json' with { type: 'json' };
@@ -49,8 +48,6 @@ export class ExploreFeatures {
     private configurationRegistry: ConfigurationRegistry,
     @inject(ProviderRegistry)
     private providerRegistry: ProviderRegistry,
-    @inject(KubernetesClient)
-    private kubernetesClient: KubernetesClient,
     @inject(Context)
     private context: Context,
   ) {}
@@ -72,8 +69,6 @@ export class ExploreFeatures {
     const containerList = await this.containerProviderRegistry.listContainers();
     const installedExtensionList = (await this.extensionLoader.listExtensions()).filter(ext => ext.removable);
     const providerList = this.providerRegistry.getProviderInfos();
-    const contextsStateList = this.kubernetesClient.getContextsGeneralState();
-
     this.context.setValue('containerListLength', containerList.length);
     this.context.setValue(
       'runningContainerConnections',
@@ -86,10 +81,6 @@ export class ExploreFeatures {
     this.context.setValue(
       'kubernetesConnections',
       providerList.some(provider => provider.kubernetesConnections.length > 0),
-    );
-    this.context.setValue(
-      'reachableContexts',
-      contextsStateList.values().some(context => context.reachable),
     );
     this.context.setValue('installedExtensionsNumber', installedExtensionList.length);
     this.context.setValue(

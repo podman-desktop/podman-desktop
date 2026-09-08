@@ -51,18 +51,7 @@ import {
   Watch,
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import type {
-  ContextGeneralState,
-  ContextHealth,
-  ContextPermission,
-  ForwardConfig,
-  KubeContext,
-  KubernetesContextResources,
-  KubernetesTroubleshootingInformation,
-  ResourceCount,
-  ResourceName,
-  V1Route,
-} from '@podman-desktop/core-api';
+import type { ForwardConfig, KubeContext, V1Route } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
@@ -71,34 +60,11 @@ import type { Tags } from 'yaml';
 import { parseAllDocuments } from 'yaml';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
-import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
-import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { Uri } from '/@/plugin/types/uri.js';
-
-import { ContextsManager } from './contexts-manager.js';
-import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
-import { ContextsStatesDispatcher } from './contexts-states-dispatcher.js';
-
-interface ContextsManagerInterface {
-  // indicate to the manager that the kubeconfig has changed
-  update(kubeconfig: KubeConfig): Promise<void>;
-  // get the general state of contexts
-  getContextsGeneralState(): Map<string, ContextGeneralState>;
-  // get the general state of the current context
-  getCurrentContextGeneralState(): ContextGeneralState;
-  // register for `resource` state in current context
-  registerGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[];
-  // unregister from `resource` state in current context
-  unregisterGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[];
-  // dispose resources created by the manager
-  dispose(): void;
-  // force the manager to refresh the state for the given context
-  refreshContextState(contextName: string): Promise<void>;
-}
 
 interface V1ObjectMetaWithName extends V1ObjectMeta {
   name: string;
@@ -160,9 +126,6 @@ export class KubernetesClient {
    */
   private apiResources = new Map<string, Array<V1APIResource>>();
 
-  private contextsState?: ContextsManagerInterface;
-  private contextsStatesDispatcher: ContextsStatesDispatcher | undefined;
-
   private readonly _onDidUpdateKubeconfig = new Emitter<containerDesktopAPI.KubeconfigUpdateEvent>();
   readonly onDidUpdateKubeconfig: containerDesktopAPI.Event<containerDesktopAPI.KubeconfigUpdateEvent> =
     this._onDidUpdateKubeconfig.event;
@@ -170,8 +133,6 @@ export class KubernetesClient {
   static readonly portForwardServiceProvider = new KubernetesPortForwardServiceProvider();
 
   #portForwardService?: KubernetesPortForwardService;
-
-  #managerStarted: boolean = true;
 
   constructor(
     @inject(ApiSenderType)
@@ -182,13 +143,8 @@ export class KubernetesClient {
     private readonly fileSystemMonitoring: FilesystemMonitoring,
     @inject(Telemetry)
     private readonly telemetry: Telemetry,
-    @inject(ExperimentalConfigurationManager)
-    private readonly experimentalConfigurationManager: ExperimentalConfigurationManager,
-    @inject(FeatureRegistry)
-    private readonly featureRegistry: FeatureRegistry,
   ) {
     this.kubeConfig = new KubeConfig();
-    this.contextsState = new ContextsManager(this.apiSender);
   }
 
   async init(): Promise<void> {
@@ -207,17 +163,6 @@ export class KubernetesClient {
           default: defaultKubeconfigPath,
           format: 'file',
           readonly: false,
-        },
-        ['kubernetes.statesExperimental']: {
-          description: 'Use new version of Kubernetes contexts monitoring (needs restart)',
-          type: 'boolean',
-          default: true,
-        },
-        ['kubernetes.useInternalKubernetes']: {
-          description: 'Use internal Kubernetes',
-          hidden: true,
-          type: 'boolean',
-          default: true,
         },
       },
     };
@@ -238,18 +183,6 @@ export class KubernetesClient {
       }
     }
 
-    const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
-      'kubernetes.statesExperimental',
-    );
-    this.telemetry.track('kubernetesExperimentalMode', { enabled: statesExperimental });
-
-    if (statesExperimental) {
-      const manager = new ContextsManagerExperimental();
-      this.contextsState = manager;
-      this.contextsStatesDispatcher = new ContextsStatesDispatcher(manager, this.apiSender);
-      this.contextsStatesDispatcher.init();
-    }
-
     // Update the property on change
     this.configurationRegistry.onDidChangeConfiguration(async e => {
       if (e.key === 'kubernetes.Kubeconfig') {
@@ -259,22 +192,6 @@ export class KubernetesClient {
         }
         await this.setKubeconfig(Uri.file(val));
         this.setupWatcher(val);
-      }
-    });
-
-    this.#managerStarted = true;
-    this.featureRegistry.onFeaturesUpdated(async features => {
-      const kubeDashboardRegistered = features.includes('kubernetes-dashboard');
-      if (kubeDashboardRegistered) {
-        if (this.#managerStarted) {
-          await this.KubernetesManagerStop();
-          this.#managerStarted = false;
-        }
-      } else {
-        if (!this.#managerStarted) {
-          await this.KubernetesManagerStart();
-          this.#managerStarted = true;
-        }
       }
     });
   }
@@ -602,9 +519,6 @@ export class KubernetesClient {
     this.#portForwardService = KubernetesClient.portForwardServiceProvider.getService(this, this.apiSender);
     await this.fetchAPIGroups();
     this.apiSender.send('kubeconfig-update');
-    const configCopy = new KubeConfig();
-    configCopy.loadFromString(this.kubeConfig.exportConfig());
-    await this.contextsState?.update(configCopy);
   }
 
   newError(message: string, cause: Error): Error {
@@ -1028,47 +942,9 @@ export class KubernetesClient {
     }
   }
 
-  public getContextsGeneralState(): Map<string, ContextGeneralState> {
-    return this.contextsState?.getContextsGeneralState() ?? new Map();
-  }
-
-  public getCurrentContextGeneralState(): ContextGeneralState {
-    return (
-      this.contextsState?.getCurrentContextGeneralState() ?? {
-        reachable: false,
-        resources: { pods: 0, deployments: 0 },
-      }
-    );
-  }
-
-  public registerGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[] {
-    return this.contextsState?.registerGetCurrentContextResources(resourceName) ?? [];
-  }
-
-  public unregisterGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[] {
-    return this.contextsState?.unregisterGetCurrentContextResources(resourceName) ?? [];
-  }
-
   public dispose(): void {
     this.kubeConfigWatcher?.dispose();
-    this.contextsState?.dispose();
-    this.contextsStatesDispatcher?.dispose();
     this.#portForwardService?.dispose();
-  }
-
-  /**
-   * Ask for getting the state of the context as soon as possible.
-   *
-   * Because the connection to a context is tested with a backoff,
-   * it can take time to know if a context is reachable or not.
-   * By calling this method, the connection will be tested immediately,
-   * and the result sent as soon as the connection status is known.
-   *
-   * @param context name of the context for which we want to get state ASAP
-   * @returns
-   */
-  public async refreshContextState(context: string): Promise<void> {
-    return this.contextsState?.refreshContextState(context);
   }
 
   protected ensurePortForwardService(): KubernetesPortForwardService {
@@ -1080,63 +956,5 @@ export class KubernetesClient {
 
   public async getPortForwards(): Promise<ForwardConfig[]> {
     return this.ensurePortForwardService().listForwards();
-  }
-
-  public getContextsHealths(): ContextHealth[] {
-    return this.contextsStatesDispatcher?.getContextsHealths() ?? [];
-  }
-
-  public getContextsPermissions(): ContextPermission[] {
-    return this.contextsStatesDispatcher?.getContextsPermissions() ?? [];
-  }
-
-  public getResourcesCount(): ResourceCount[] {
-    return this.contextsStatesDispatcher?.getResourcesCount() ?? [];
-  }
-
-  public getActiveResourcesCount(): ResourceCount[] {
-    return this.contextsStatesDispatcher?.getActiveResourcesCount() ?? [];
-  }
-
-  public getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
-    return this.contextsStatesDispatcher?.getResources(contextNames, resourceName) ?? [];
-  }
-
-  public getTroubleshootingInformation(): KubernetesTroubleshootingInformation {
-    return (
-      this.contextsStatesDispatcher?.getTroubleshootingInformation() ?? {
-        healthCheckers: [],
-        permissionCheckers: [],
-        informers: [],
-      }
-    );
-  }
-
-  // This method is called when an extension providing the Kubernetes feature is enabled
-  protected async KubernetesManagerStop(): Promise<void> {
-    const emptyKubeConfig = new KubeConfig();
-    await this.contextsState?.update(emptyKubeConfig);
-    this.contextsState?.dispose();
-    this.contextsState = undefined;
-    this.contextsStatesDispatcher?.dispose();
-    this.contextsStatesDispatcher = undefined;
-    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', false);
-  }
-
-  // This method is called when an extension providing Kubernetes feature is disabled
-  protected async KubernetesManagerStart(): Promise<void> {
-    const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
-      'kubernetes.statesExperimental',
-    );
-    if (statesExperimental) {
-      const manager = new ContextsManagerExperimental();
-      this.contextsState = manager;
-      this.contextsStatesDispatcher = new ContextsStatesDispatcher(manager, this.apiSender);
-      this.contextsStatesDispatcher.init();
-    } else {
-      this.contextsState = new ContextsManager(this.apiSender);
-    }
-    await this.contextsState?.update(this.kubeConfig);
-    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', true);
   }
 }

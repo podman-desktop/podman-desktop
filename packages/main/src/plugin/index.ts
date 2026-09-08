@@ -47,9 +47,6 @@ import type {
   ContainerInfo,
   ContainerInspectInfo,
   ContainerStatsInfo,
-  ContextGeneralState,
-  ContextHealth,
-  ContextPermission,
   ContributionInfo,
   DockerSocketMappingStatusInfo,
   DocumentationInfo,
@@ -74,8 +71,6 @@ import type {
   ImageTagsListOptions,
   ImageUpdateStatus,
   KubeContext,
-  KubernetesContextResources,
-  KubernetesTroubleshootingInformation,
   ListImagesOptions,
   ListOrganizerItem,
   LogType,
@@ -103,8 +98,6 @@ import type {
   ProxyState,
   PullEvent,
   ReleaseNotesInfo,
-  ResourceCount,
-  ResourceName,
   SecretCreateOptions,
   SecretCreateResult,
   SecretInfo,
@@ -2880,55 +2873,6 @@ export class PluginSystem {
       return kubernetesClient.setContext(contextName);
     });
 
-    this.ipcHandle('kubernetes-client:getContextsGeneralState', async (): Promise<Map<string, ContextGeneralState>> => {
-      return kubernetesClient.getContextsGeneralState();
-    });
-
-    this.ipcHandle('kubernetes-client:getCurrentContextGeneralState', async (): Promise<ContextGeneralState> => {
-      return kubernetesClient.getCurrentContextGeneralState();
-    });
-
-    this.ipcHandle(
-      'kubernetes-client:registerGetCurrentContextResources',
-      async (_listener, resourceName: ResourceName): Promise<KubernetesObject[]> => {
-        return kubernetesClient.registerGetCurrentContextResources(resourceName);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:unregisterGetCurrentContextResources',
-      async (_listener, resourceName: ResourceName): Promise<KubernetesObject[]> => {
-        return kubernetesClient.unregisterGetCurrentContextResources(resourceName);
-      },
-    );
-
-    this.ipcHandle('kubernetes:getContextsHealths', async (_listener): Promise<ContextHealth[]> => {
-      return kubernetesClient.getContextsHealths();
-    });
-
-    this.ipcHandle('kubernetes:getContextsPermissions', async (_listener): Promise<ContextPermission[]> => {
-      return kubernetesClient.getContextsPermissions();
-    });
-
-    this.ipcHandle('kubernetes:getResourcesCount', async (_listener): Promise<ResourceCount[]> => {
-      return kubernetesClient.getResourcesCount();
-    });
-
-    this.ipcHandle('kubernetes:getActiveResourcesCount', async (_listener): Promise<ResourceCount[]> => {
-      return kubernetesClient.getActiveResourcesCount();
-    });
-
-    this.ipcHandle(
-      'kubernetes:getResources',
-      async (_listener, contextNames: string[], resourceName: string): Promise<KubernetesContextResources[]> => {
-        return kubernetesClient.getResources(contextNames, resourceName);
-      },
-    );
-
-    this.ipcHandle('kubernetes-client:refreshContextState', async (_listener, context: string): Promise<void> => {
-      return kubernetesClient.refreshContextState(context);
-    });
-
     this.ipcHandle('feedback:send', async (_listener, feedbackProperties: FeedbackProperties): Promise<void> => {
       return telemetry.sendFeedback(feedbackProperties);
     });
@@ -3252,13 +3196,6 @@ export class PluginSystem {
       'extension-development:getExtensionDevelopmentDocsLink',
       async (_listener): Promise<string | undefined> => {
         return product.extensions.developmentDocumentation;
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes:getTroubleshootingInformation',
-      async (_listener: unknown): Promise<KubernetesTroubleshootingInformation> => {
-        return kubernetesClient.getTroubleshootingInformation();
       },
     );
 
