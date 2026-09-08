@@ -21,8 +21,9 @@ import type { ProviderStatus } from '@podman-desktop/api';
 import type { NotificationCard, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos, providersLoaded } from '/@/stores/providers';
@@ -131,6 +132,36 @@ test('Expect to display the dot if active page is not Dashboard and there is a n
 
   const dot = screen.getByLabelText('New content available');
   expect(dot).toBeInTheDocument();
+});
+
+test('Expect the extensions-started event to mark providers as loaded and enable new-content detection', async () => {
+  const receiveMock = vi.mocked(window.events.receive);
+  const extensionsStartedHandler = receiveMock.mock.calls.findLast(([event]) => event === 'extensions-started')?.[1] as
+    | (() => void)
+    | undefined;
+  expect(extensionsStartedHandler).toBeDefined();
+
+  providersLoaded.set(false);
+  providerInfos.set([]);
+  notificationQueue.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  providerInfos.set([providerInfo]);
+  await tick();
+
+  extensionsStartedHandler?.();
+  await tick();
+  expect(get(providersLoaded)).toBe(true);
+
+  providerInfos.set([providerInfo]);
+  await tick();
+  expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument();
+
+  const providerInfo2 = { ...providerInfo, internalId: 'id2' } as ProviderInfo;
+  providerInfos.set([providerInfo, providerInfo2]);
+  await new Promise(resolve => setTimeout(resolve, 200));
+  expect(screen.getByLabelText('New content available')).toBeInTheDocument();
 });
 
 test('Expect to do not display any dot if the provider was already there but the initial fetch resolves after mount', async () => {
