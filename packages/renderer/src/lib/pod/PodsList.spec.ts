@@ -18,12 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type {
-  ContextGeneralState,
-  PodInfo,
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-} from '@podman-desktop/core-api';
+import type { PodInfo, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
@@ -228,8 +223,6 @@ const ocppod: PodInfo = {
 };
 
 beforeAll(() => {
-  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
-  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
   vi.mocked(window.listContainers).mockResolvedValue([]);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   vi.mocked(window.kubernetesGetDetailedContexts).mockResolvedValue([]);

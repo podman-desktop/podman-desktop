@@ -18,15 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { KubernetesObject } from '@kubernetes/client-node';
-import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@podman-desktop/core-api';
+import type { ContributionInfo } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { render, screen } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
@@ -34,10 +30,6 @@ import { contributions } from './stores/contribs';
 import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
-
-vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
-  return {};
-});
 
 // fake the window object
 beforeAll(() => {
@@ -52,21 +44,6 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
   const meta = {
     url: '/',
   } as unknown as TinroRouteMeta;
-
-  // mock no kubernetes resources
-  vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextRoutes = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextConfigMaps = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextSecrets = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextPersistentVolumeClaims = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextPortForwards = readable<ForwardConfig[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextState = readable<ContextGeneralState>({} as ContextGeneralState);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextJobs = readable<KubernetesObject[]>([]);
 
   // init navigation registry
   await fetchNavigationRegistries();

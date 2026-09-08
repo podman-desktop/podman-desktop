@@ -47,9 +47,6 @@ import type {
   ContainerInfo,
   ContainerInspectInfo,
   ContainerStatsInfo,
-  ContextGeneralState,
-  ContextHealth,
-  ContextPermission,
   ContributionInfo,
   DockerSocketMappingStatusInfo,
   DocumentationInfo,
@@ -76,8 +73,6 @@ import type {
   ImageUpdateStatus,
   ItemInfo,
   KubeContext,
-  KubernetesContextResources,
-  KubernetesTroubleshootingInformation,
   ListImagesOptions,
   ListOrganizerItem,
   LogType,
@@ -108,8 +103,6 @@ import type {
   ProxyState,
   PullEvent,
   ReleaseNotesInfo,
-  ResourceCount,
-  ResourceName,
   SecretCreateOptions,
   SecretCreateResult,
   SecretInfo,
@@ -2099,50 +2092,6 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('kubernetesSetContext', async (contextName: string): Promise<void> => {
     return ipcInvoke('kubernetes-client:setContext', contextName);
   });
-  contextBridge.exposeInMainWorld(
-    'kubernetesGetContextsGeneralState',
-    async (): Promise<Map<string, ContextGeneralState>> => {
-      return ipcInvoke('kubernetes-client:getContextsGeneralState');
-    },
-  );
-  contextBridge.exposeInMainWorld('kubernetesGetCurrentContextGeneralState', async (): Promise<ContextGeneralState> => {
-    return ipcInvoke('kubernetes-client:getCurrentContextGeneralState');
-  });
-  contextBridge.exposeInMainWorld(
-    'kubernetesRegisterGetCurrentContextResources',
-    async (resourceName: ResourceName): Promise<KubernetesObject[]> => {
-      return ipcInvoke('kubernetes-client:registerGetCurrentContextResources', resourceName);
-    },
-  );
-  contextBridge.exposeInMainWorld(
-    'kubernetesUnregisterGetCurrentContextResources',
-    async (resourceName: ResourceName): Promise<KubernetesObject[]> => {
-      return ipcInvoke('kubernetes-client:unregisterGetCurrentContextResources', resourceName);
-    },
-  );
-
-  contextBridge.exposeInMainWorld('kubernetesGetContextsHealths', async (): Promise<ContextHealth[]> => {
-    return ipcInvoke('kubernetes:getContextsHealths');
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesGetContextsPermissions', async (): Promise<ContextPermission[]> => {
-    return ipcInvoke('kubernetes:getContextsPermissions');
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesGetResourcesCount', async (): Promise<ResourceCount[]> => {
-    return ipcInvoke('kubernetes:getResourcesCount');
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesGetActiveResourcesCount', async (): Promise<ResourceCount[]> => {
-    return ipcInvoke('kubernetes:getActiveResourcesCount');
-  });
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesGetResources',
-    async (contextNames: string[], resourceName: string): Promise<KubernetesContextResources[]> => {
-      return ipcInvoke('kubernetes:getResources', contextNames, resourceName);
-    },
-  );
 
   contextBridge.exposeInMainWorld('kubernetesGetClusters', async (): Promise<Cluster[]> => {
     return ipcInvoke('kubernetes-client:getClusters');
@@ -2219,10 +2168,6 @@ export function initExposure(): void {
       return ipcInvoke('kubernetes-client:applyResourcesFromYAML', context, yaml);
     },
   );
-
-  contextBridge.exposeInMainWorld('kubernetesRefreshContextState', async (context: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:refreshContextState', context);
-  });
 
   contextBridge.exposeInMainWorld('getKubernetesPortForwards', async (): Promise<ForwardConfig[]> => {
     return ipcInvoke('kubernetes-client:getPortForwards');
@@ -2561,13 +2506,6 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('getExtensionDevelopmentDocsLink', async (): Promise<string | undefined> => {
     return ipcInvoke('extension-development:getExtensionDevelopmentDocsLink');
   });
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesGetTroubleshootingInformation',
-    async (): Promise<KubernetesTroubleshootingInformation> => {
-      return ipcInvoke('kubernetes:getTroubleshootingInformation');
-    },
-  );
 
   contextBridge.exposeInMainWorld('getStatusBarPinOptions', async (): Promise<Array<PinOption>> => {
     return ipcInvoke('statusbar:pin:get-options');

@@ -12,7 +12,6 @@ import { ensureRestrictedSecurityContext } from '/@/lib/pod/pod-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
-import { registeredFeatures } from '/@/stores/registered-features';
 
 interface Props {
   resourceId: string;
@@ -44,8 +43,6 @@ let ingressPort: number | undefined = $state();
 let containerPortArray: string[] = $state([]);
 
 let createdRoutes: V1Route[] = $state([]);
-
-let kubernetesDashboardActive = $derived($registeredFeatures.includes('kubernetes-dashboard'));
 
 onMount(async () => {
   // If type = compose
@@ -152,18 +149,6 @@ onDestroy(() => {
 
 function goBackToHistory(): void {
   router.goto($lastPage.path);
-}
-
-async function openPodDetails(): Promise<void> {
-  if (!createdPod?.metadata?.name || !createdPod?.metadata?.namespace) {
-    return;
-  }
-
-  await window.navigateToRoute('kubernetes', {
-    kind: 'Pod',
-    name: createdPod.metadata.name,
-    namespace: createdPod.metadata.namespace,
-  });
 }
 
 async function openRoute(route: V1Route): Promise<void> {
@@ -649,12 +634,6 @@ let kubeDetails: string = $derived.by(() => {
     {#if deployFinished}
       <div class="pt-4 flex flex-row space-x-2 justify-end">
         <Button on:click={goBackToHistory} aria-label="Done">Done</Button>
-        {#if !kubernetesDashboardActive}
-          <Button
-            on:click={openPodDetails}
-            disabled={!createdPod?.metadata?.name || !createdPod?.metadata?.namespace}
-            aria-label="Open Pod">Open Pod</Button>
-        {/if}
       </div>
     {/if}
   </div>
