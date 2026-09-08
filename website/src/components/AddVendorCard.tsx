@@ -13,7 +13,7 @@ export function AddVendorCard(): JSX.Element {
           <FontAwesomeIcon icon={faPlus} className="text-xl" />
         </div>
       </div>
-      <p className="text-charcoal-300 dark:text-gray-400 mb-4 flex-grow">
+      <p className="text-charcoal-300 dark:text-gray-400 mb-4 grow">
         If you are a vendor for Podman Desktop and would like to be added to the website, please open a GitHub
         Discussion to be added.
       </p>
