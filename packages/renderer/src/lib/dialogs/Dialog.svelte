@@ -29,7 +29,7 @@ let { title, onclose, icon, content, validation, buttons, initialButtonFocus = '
     {@render content?.()}
   </div>
 
-  <div class="px-5 py-5 mt-2 flex flex-col w-full justify-start gap-5">
+  <div class="px-5 py-5 mt-2 flex flex-col w-full justify-start">
     {#if validation}
       <div class="grow">
         {@render validation?.()}
