@@ -281,6 +281,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       path: extension.path,
       removable: extension.removable,
       devMode: extension.devMode,
+      bundled: extension.bundled,
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
@@ -688,6 +689,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         extensionPath: extension.path,
         removable,
         devMode: extension.devMode,
+        bundled: extension.bundled,
       });
 
       if (!updatedExtension.error) {
@@ -1885,6 +1887,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         extensionPath: extension.path,
         removable: extension.removable,
         devMode: extension.devMode,
+        bundled: extension.bundled,
       });
 
       if (!analyzedExtension.error) {
