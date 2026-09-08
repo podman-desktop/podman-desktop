@@ -140,6 +140,7 @@ const extensionInfoMock: ExtensionInfo = {
   publisher: '',
   removable: false,
   devMode: false,
+  bundled: false,
   version: '',
   state: '',
   path: '',
