@@ -19,8 +19,6 @@
 /* eslint-disable sonarjs/no-unused-collection */
 
 import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
-import type { ForwardConfig } from '@podman-desktop/core-api';
-import { WorkloadKind } from '@podman-desktop/core-api';
 import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -195,58 +193,6 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
 
     // check the result
     expect(result).toEqual([]);
-  });
-
-  test('createKubernetesPortForward', async () => {
-    const userPortForward: ForwardConfig = {
-      id: 'fake-id',
-      namespace: 'kubernetes',
-      name: 'service',
-      kind: WorkloadKind.SERVICE,
-      forward: {
-        localPort: 50_050,
-        remotePort: 88,
-      },
-    };
-
-    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: userPortForward });
-
-    // grab createKubernetesPortForward exposure
-    const createKubernetesPortForwardExposure = getInMainWorld('createKubernetesPortForward');
-
-    const result = await createKubernetesPortForwardExposure(userPortForward);
-
-    // check we invoke ipcRenderer.invoke
-    expect(ipcRenderer.invoke).toBeCalled();
-
-    // check the result
-    expect(result).toEqual(userPortForward);
-  });
-
-  test('deleteKubernetesPortForward', async () => {
-    const userPortForward: ForwardConfig = {
-      id: 'fake-id',
-      namespace: 'kubernetes',
-      name: 'service',
-      kind: WorkloadKind.SERVICE,
-      forward: {
-        localPort: 50_050,
-        remotePort: 88,
-      },
-    };
-
-    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
-
-    // grab createKubernetesPortForward exposure
-    const deleteKubernetesPortForwardExposure = getInMainWorld('deleteKubernetesPortForward');
-
-    const result = await deleteKubernetesPortForwardExposure(userPortForward);
-
-    // check we invoke ipcRenderer.invoke
-    expect(ipcRenderer.invoke).toBeCalled();
-
-    // check the result
-    expect(result).toEqual(undefined);
   });
 
   test('getSearchableNavigationRoutes', async () => {

@@ -29,16 +29,10 @@ import type {
   KubernetesObject,
   User,
   V1ConfigMap,
-  V1CronJob,
-  V1Deployment,
   V1Ingress,
-  V1Job,
   V1NamespaceList,
-  V1Node,
-  V1PersistentVolumeClaim,
   V1Pod,
   V1PodList,
-  V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
@@ -64,7 +58,6 @@ import type {
   FeedbackMessages,
   FeedbackProperties,
   ForwardConfig,
-  ForwardOptions,
   GitHubIssue,
   HistoryInfo,
   IconInfo,
@@ -1055,9 +1048,6 @@ export class PluginSystem {
         return containerProviderRegistry.restartPod(engine, podId);
       },
     );
-    this.ipcHandle('kubernetes-client:restartPod', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.restartPod(name);
-    });
     this.ipcHandle(
       'container-provider-registry:stopPod',
       async (_listener, engine: string, podId: string): Promise<void> => {
@@ -2771,119 +2761,6 @@ export class PluginSystem {
       },
     );
 
-    this.ipcHandle('kubernetes-client:listRoutes', async (): Promise<V1Route[]> => {
-      return kubernetesClient.listRoutes();
-    });
-
-    this.ipcHandle(
-      'kubernetes-client:readPodLog',
-      async (_listener, name: string, container: string, onDataId: number): Promise<void> => {
-        return kubernetesClient.readPodLog(name, container, (name: string, data: string) => {
-          this.getWebContentsSender().send('kubernetes-client:readPodLog-onData', onDataId, name, data);
-        });
-      },
-    );
-
-    this.ipcHandle('kubernetes-client:deletePod', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deletePod(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteDeployment', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteDeployment(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteConfigMap', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteConfigMap(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteCronJob', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteCronJob(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteJob', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteJob(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteSecret', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteSecret(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deletePersistentVolumeClaim', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deletePersistentVolumeClaim(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteIngress', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteIngress(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteRoute', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteRoute(name);
-    });
-
-    this.ipcHandle('kubernetes-client:deleteService', async (_listener, name: string): Promise<void> => {
-      return kubernetesClient.deleteService(name);
-    });
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedSecret',
-      async (_listener, name: string, namespace: string): Promise<V1Secret | undefined> => {
-        return kubernetesClient.readNamespacedSecret(name, namespace);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedCronJob',
-      async (_listener, name: string, namespace: string): Promise<V1CronJob | undefined> => {
-        return kubernetesClient.readNamespacedCronJob(name, namespace);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedJob',
-      async (_listener, name: string, namespace: string): Promise<V1Job | undefined> => {
-        return kubernetesClient.readNamespacedJob(name, namespace);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedPersistentVolumeClaim',
-      async (_listener, name: string, namespace: string): Promise<V1PersistentVolumeClaim | undefined> => {
-        return kubernetesClient.readNamespacedPersistentVolumeClaim(name, namespace);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedDeployment',
-      async (_listener, name: string, namespace: string): Promise<V1Deployment | undefined> => {
-        return kubernetesClient.readNamespacedDeployment(name, namespace);
-      },
-    );
-
-    this.ipcHandle('kubernetes-client:readNode', async (_listener, name: string): Promise<V1Node | undefined> => {
-      return kubernetesClient.readNode(name);
-    });
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedIngress',
-      async (_listener, name: string, namespace: string): Promise<V1Ingress | undefined> => {
-        return kubernetesClient.readNamespacedIngress(name, namespace);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedRoute',
-      async (_listener, name: string, namespace: string): Promise<V1Route | undefined> => {
-        return kubernetesClient.readNamespacedRoute(name, namespace);
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:readNamespacedService',
-      async (_listener, name: string, namespace: string): Promise<V1Service | undefined> => {
-        return kubernetesClient.readNamespacedService(name, namespace);
-      },
-    );
-
     this.ipcHandle(
       'kubernetes-client:createResourcesFromFile',
       async (_listener, context: string, file: string, namespace: string): Promise<void> => {
@@ -2907,17 +2784,6 @@ export class PluginSystem {
 
     this.ipcHandle('kubernetes-client:getPortForwards', async (_listener): Promise<ForwardConfig[]> => {
       return kubernetesClient.getPortForwards();
-    });
-
-    this.ipcHandle(
-      'kubernetes-client:createPortForward',
-      async (_listener, options: ForwardOptions): Promise<ForwardConfig> => {
-        return kubernetesClient.createPortForward(options);
-      },
-    );
-
-    this.ipcHandle('kubernetes-client:deletePortForward', async (_listener, config: ForwardConfig): Promise<void> => {
-      return kubernetesClient.deletePortForward(config);
     });
 
     this.ipcHandle(
@@ -2978,10 +2844,6 @@ export class PluginSystem {
 
     this.ipcHandle('kubernetes-client:getCurrentNamespace', async (): Promise<string | undefined> => {
       return kubernetesClient.getCurrentNamespace();
-    });
-
-    this.ipcHandle('kubernetes-client:setCurrentNamespace', async (_listener, namespace: string): Promise<void> => {
-      return kubernetesClient.setCurrentNamespace(namespace);
     });
 
     this.ipcHandle(
@@ -3060,53 +2922,6 @@ export class PluginSystem {
       'kubernetes:getResources',
       async (_listener, contextNames: string[], resourceName: string): Promise<KubernetesContextResources[]> => {
         return kubernetesClient.getResources(contextNames, resourceName);
-      },
-    );
-
-    const kubernetesExecCallbackMap = new Map<
-      number,
-      { onStdIn: (data: string) => void; onResize: (columns: number, rows: number) => void }
-    >();
-    this.ipcHandle(
-      'kubernetes-client:execIntoContainer',
-      async (_listener, podName: string, containerName: string, onDataId: number): Promise<number> => {
-        const execInvocation = await kubernetesClient.execIntoContainer(
-          podName,
-          containerName,
-          (stdOut: Buffer) => {
-            this.getWebContentsSender().send('kubernetes-client:execIntoContainer-onData', onDataId, stdOut);
-          },
-          (stdErr: Buffer) => {
-            this.getWebContentsSender().send('kubernetes-client:execIntoContainer-onError', onDataId, stdErr);
-          },
-          () => {
-            this.getWebContentsSender().send('kubernetes-client:execIntoContainer-onClose', onDataId);
-            kubernetesExecCallbackMap.delete(onDataId);
-          },
-        );
-        kubernetesExecCallbackMap.set(onDataId, execInvocation);
-
-        return onDataId;
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:execIntoContainerSend',
-      async (_listener, onDataId: number, content: string): Promise<void> => {
-        const callback = kubernetesExecCallbackMap.get(onDataId);
-        if (callback) {
-          callback.onStdIn(content);
-        }
-      },
-    );
-
-    this.ipcHandle(
-      'kubernetes-client:execIntoContainerResize',
-      async (_listener, onDataId: number, width: number, height: number): Promise<void> => {
-        const callback = kubernetesExecCallbackMap.get(onDataId);
-        if (callback) {
-          callback.onResize(width, height);
-        }
       },
     );
 

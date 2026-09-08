@@ -28,16 +28,10 @@ import type {
   KubernetesObject,
   User,
   V1ConfigMap,
-  V1CronJob,
-  V1Deployment,
   V1Ingress,
-  V1Job,
   V1NamespaceList,
-  V1Node,
-  V1PersistentVolumeClaim,
   V1Pod,
   V1PodList,
-  V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
@@ -65,7 +59,6 @@ import type {
   FeedbackMessages,
   FeedbackProperties,
   ForwardConfig,
-  ForwardOptions,
   GitHubIssue,
   HistoryInfo,
   IconInfo,
@@ -2163,10 +2156,6 @@ export function initExposure(): void {
     return ipcInvoke('kubernetes-client:getCurrentNamespace');
   });
 
-  contextBridge.exposeInMainWorld('kubernetesSetCurrentNamespace', async (namespace: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:setCurrentNamespace', namespace);
-  });
-
   contextBridge.exposeInMainWorld(
     'kubernetesListNamespacedPod',
     async (namespace: string, fieldSelector?: string, labelSelector?: string): Promise<V1PodList> => {
@@ -2182,67 +2171,9 @@ export function initExposure(): void {
   );
 
   contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedDeployment',
-    async (name: string, namespace: string): Promise<V1Deployment | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedDeployment', name, namespace);
-    },
-  );
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedPersistentVolumeClaim',
-    async (name: string, namespace: string): Promise<V1PersistentVolumeClaim | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedPersistentVolumeClaim', name, namespace);
-    },
-  );
-
-  contextBridge.exposeInMainWorld('kubernetesReadNode', async (name: string): Promise<V1Node | undefined> => {
-    return ipcInvoke('kubernetes-client:readNode', name);
-  });
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedIngress',
-    async (name: string, namespace: string): Promise<V1Ingress | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedIngress', name, namespace);
-    },
-  );
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedRoute',
-    async (name: string, namespace: string): Promise<V1Route | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedRoute', name, namespace);
-    },
-  );
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedService',
-    async (name: string, namespace: string): Promise<V1Service | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedService', name, namespace);
-    },
-  );
-  contextBridge.exposeInMainWorld(
     'kubernetesReadNamespacedConfigMap',
     async (name: string, namespace: string): Promise<V1ConfigMap | undefined> => {
       return ipcInvoke('kubernetes-client:readNamespacedConfigMap', name, namespace);
-    },
-  );
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedSecret',
-    async (name: string, namespace: string): Promise<V1Secret | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedSecret', name, namespace);
-    },
-  );
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedCronJob',
-    async (name: string, namespace: string): Promise<V1CronJob | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedCronJob', name, namespace);
-    },
-  );
-
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadNamespacedJob',
-    async (name: string, namespace: string): Promise<V1Job | undefined> => {
-      return ipcInvoke('kubernetes-client:readNamespacedJob', name, namespace);
     },
   );
 
@@ -2268,129 +2199,12 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('kubernetesListRoutes', async (): Promise<V1Route[]> => {
-    return ipcInvoke('kubernetes-client:listRoutes');
-  });
-
-  let onDataCallbacksKubernetesPodLogId = 0;
-  const onDataCallbacksKubernetesPodLog = new Map<number, (name: string, data: string) => void>();
-  contextBridge.exposeInMainWorld(
-    'kubernetesReadPodLog',
-    async (name: string, container: string, callback: (name: string, data: string) => void): Promise<void> => {
-      onDataCallbacksKubernetesPodLog.set(onDataCallbacksKubernetesPodLogId, callback);
-      return ipcInvoke('kubernetes-client:readPodLog', name, container, onDataCallbacksKubernetesPodLogId++);
-    },
-  );
-  ipcRenderer.on(
-    'kubernetes-client:readPodLog-onData',
-    (_, onDataCallbacksKubernetesReadPodLogId: number, name: string, data: string) => {
-      // grab callback from the map
-      const callback = onDataCallbacksKubernetesPodLog.get(onDataCallbacksKubernetesReadPodLogId);
-      if (callback) {
-        callback(name, data);
-      }
-    },
-  );
-
-  contextBridge.exposeInMainWorld('kubernetesDeletePod', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deletePod', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteDeployment', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteDeployment', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteConfigMap', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteConfigMap', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteSecret', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteSecret', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteCronJob', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteCronJob', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteJob', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteJob', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeletePersistentVolumeClaim', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deletePersistentVolumeClaim', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteIngress', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteIngress', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteRoute', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteRoute', name);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesDeleteService', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deleteService', name);
-  });
-
   contextBridge.exposeInMainWorld(
     'kubernetesCreateResourcesFromFile',
     async (context: string, file: string, namespace: string): Promise<void> => {
       return ipcInvoke('kubernetes-client:createResourcesFromFile', context, file, namespace);
     },
   );
-
-  // callbacks for shellInContainer
-  let kubernetesCallbackId = 0;
-  const kubernetesCallbackMap = new Map<
-    number,
-    { onStdOut: (data: Buffer) => void; onStdErr: (data: Buffer) => void; onClose: () => void }
-  >();
-  contextBridge.exposeInMainWorld(
-    'kubernetesExec',
-    async (
-      podName: string,
-      containerName: string,
-      onStdOut: (data: Buffer) => void,
-      onStdErr: (data: Buffer) => void,
-      onClose: () => void,
-    ): Promise<number> => {
-      kubernetesCallbackId++;
-      kubernetesCallbackMap.set(kubernetesCallbackId, { onStdOut, onStdErr, onClose });
-      return ipcInvoke('kubernetes-client:execIntoContainer', podName, containerName, kubernetesCallbackId);
-    },
-  );
-
-  contextBridge.exposeInMainWorld('kubernetesExecSend', async (dataId: number, content: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:execIntoContainerSend', dataId, content);
-  });
-
-  contextBridge.exposeInMainWorld('kubernetesExecResize', async (dataId: number, width: number, height: number) => {
-    return ipcInvoke('kubernetes-client:execIntoContainerResize', dataId, width, height);
-  });
-
-  ipcRenderer.on('kubernetes-client:execIntoContainer-onData', (_, kubernetesCallbackId: number, data: Buffer) => {
-    const callback = kubernetesCallbackMap.get(kubernetesCallbackId);
-    if (callback) {
-      callback.onStdOut(data);
-    }
-  });
-  ipcRenderer.on('kubernetes-client:execIntoContainer-onError', (_, kubernetesCallbackId: number, data: Buffer) => {
-    const callback = kubernetesCallbackMap.get(kubernetesCallbackId);
-    if (callback) {
-      callback.onStdErr(data);
-    }
-  });
-  ipcRenderer.on('kubernetes-client:execIntoContainer-onClose', (_, kubernetesCallbackId: number) => {
-    const callback = kubernetesCallbackMap.get(kubernetesCallbackId);
-    if (callback) {
-      callback.onClose();
-      onDataCallbacksShellInContainer.delete(kubernetesCallbackId);
-    }
-  });
-
-  contextBridge.exposeInMainWorld('restartKubernetesPod', async (name: string): Promise<void> => {
-    return ipcInvoke('kubernetes-client:restartPod', name);
-  });
 
   contextBridge.exposeInMainWorld(
     'kubernetesApplyResourcesFromFile',
@@ -2412,17 +2226,6 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('getKubernetesPortForwards', async (): Promise<ForwardConfig[]> => {
     return ipcInvoke('kubernetes-client:getPortForwards');
-  });
-
-  contextBridge.exposeInMainWorld(
-    'createKubernetesPortForward',
-    async (options: ForwardOptions): Promise<ForwardConfig> => {
-      return ipcInvoke('kubernetes-client:createPortForward', options);
-    },
-  );
-
-  contextBridge.exposeInMainWorld('deleteKubernetesPortForward', async (config: ForwardConfig): Promise<void> => {
-    return ipcInvoke('kubernetes-client:deletePortForward', config);
   });
 
   contextBridge.exposeInMainWorld(
