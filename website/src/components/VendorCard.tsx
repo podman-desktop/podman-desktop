@@ -29,7 +29,7 @@ export const VendorCard = (props: Readonly<VendorCardProps>): JSX.Element => {
           dark: useBaseUrl(props.logoDark ?? props.logo),
         }}
       />
-      <p className="text-charcoal-300 dark:text-gray-400 mb-4 flex-grow">{props.description}</p>
+      <p className="text-charcoal-300 dark:text-gray-400 mb-4 grow">{props.description}</p>
       <div className="mt-auto">
         {props.learnMore && (
           <GradientButton href={props.learnMore} className="hover:no-underline">
