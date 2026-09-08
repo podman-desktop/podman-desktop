@@ -3312,6 +3312,24 @@ test('isLibkrunSupported should return false with previous 5.1.2 version', async
   expect(enabled).toBeFalsy();
 });
 
+test('isRosettaSupported should return true on Apple Silicon Mac', () => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue('arm64');
+  expect(extension.isRosettaSupported()).toBeTruthy();
+});
+
+test('isRosettaSupported should return false on Intel Mac', () => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue('x64');
+  expect(extension.isRosettaSupported()).toBeFalsy();
+});
+
+test('isRosettaSupported should return false on non-Mac', () => {
+  vi.mocked(extensionApi.env).isMac = false;
+  vi.mocked(arch).mockReturnValue('arm64');
+  expect(extension.isRosettaSupported()).toBeFalsy();
+});
+
 describe('isPlaybookMachineInitSupported', () => {
   test('isPlaybookMachineInitSupported should return false with 5.3.0', async () => {
     vi.mocked(extensionApi.env).isMac = true;

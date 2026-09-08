@@ -28,7 +28,7 @@ import * as toml from 'smol-toml';
 import type { RegistryConfiguration } from '/@/configuration/registry-configuration';
 import { RegistryConfigurationImpl } from '/@/configuration/registry-configuration';
 
-import { VMTYPE } from './util';
+import { isRosettaSupported, VMTYPE } from './util';
 
 const configurationRosetta = 'setting.rosetta';
 
@@ -137,19 +137,21 @@ export class PodmanConfiguration {
   }
 
   async handleRosettaSetting(): Promise<void> {
-    // If the configuration does not exist, we default to false to match the machine
-    // default provider (libkrun), which does not support Rosetta.
-    const useRosetta =
-      extensionApi.configuration.getConfiguration('podman').get<boolean>(configurationRosetta) ?? false;
+    const release = await this.mutex.acquire();
+    try {
+      // If the configuration does not exist, we default to false to match the machine
+      // default provider (libkrun), which does not support Rosetta.
+      const useRosetta =
+        extensionApi.configuration.getConfiguration('podman').get<boolean>(configurationRosetta) ?? false;
 
-    // Rosetta (and the applehv/libkrun choice it implies) only applies to Apple Silicon. Rosetta
-    // requires the applehv provider, so pin it when enabled; disabling it falls back to the libkrun
-    // default. On Intel the provider is always applehv, so there is nothing to sync.
-    if (os.arch() === 'arm64') {
-      await this.updateMachineProviderSettings(useRosetta ? VMTYPE.APPLEHV : VMTYPE.LIBKRUN, useRosetta);
+      // Rosetta (and the applehv/libkrun choice it implies) only applies on Apple Silicon.
+      if (isRosettaSupported()) {
+        await this.updateMachineProviderSettings(useRosetta ? VMTYPE.APPLEHV : VMTYPE.LIBKRUN, useRosetta);
+      }
+      await this.updateRosettaSetting(useRosetta);
+    } finally {
+      release();
     }
-
-    await this.updateRosettaSetting(useRosetta);
   }
 
   async isRosettaEnabled(): Promise<boolean> {

@@ -223,6 +223,10 @@ describe('handleRosettaSetting', () => {
     } as unknown as extensionApi.Configuration);
   }
 
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isMac = true;
+  });
+
   test('on Apple Silicon, enabling Rosetta pins the applehv provider and syncs the rosetta setting', async () => {
     vi.mocked(os.arch).mockReturnValue('arm64');
     mockRosettaConfiguration(true);

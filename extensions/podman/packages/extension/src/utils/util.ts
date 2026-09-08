@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import * as path from 'node:path';
+import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 
@@ -154,6 +155,11 @@ export const LIBKRUN_LABEL = 'default GPU enabled (LibKrun)';
 export const HYPERV_LABEL = 'Hyper-V';
 export const WSL_LABEL = 'WSL';
 export const QEMU_LABEL = 'QEMU';
+
+/** Rosetta + applehv provider sync applies only on Apple Silicon Macs. */
+export function isRosettaSupported(): boolean {
+  return extensionApi.env.isMac && os.arch() === 'arm64';
+}
 
 export function getProviderLabel(provider: string): string {
   switch (provider) {

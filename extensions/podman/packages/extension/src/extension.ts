@@ -2073,6 +2073,9 @@ export function isLibkrunSupported(podmanVersion: string): boolean {
   );
 }
 
+/** Rosetta + applehv provider sync applies only on Apple Silicon Macs. */
+export { isRosettaSupported } from './utils/util';
+
 // Set wslEnabled. Used for testing purposes
 export function setWSLEnabled(enabled: boolean): void {
   wslEnabled = enabled;
