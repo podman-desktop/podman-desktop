@@ -21,7 +21,7 @@ let displayValue = $derived(value);
 
 const fillPercent = $derived.by(() => {
   const min = record.minimum ?? 0;
-  const max = record.maximum ?? 100;
+  const max = record.maximum === undefined ? 100 : uncertainStringToNumber(record.maximum);
 
   if (max <= min) return 0;
 
