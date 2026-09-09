@@ -16,13 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-// Strips a leading shell prompt prefix ('$ ', '# ', '> ') from code
+const PROMPT_RE = /^(?:\$ |# |> )/gm;
+
+// Strips a leading shell prompt prefix ('$ ', '# ', '> ') from each start of line of the given commands
 export function stripPrompts(code) {
-  if (
-    code?.length > 2 &&
-    (code.substring(0, 2) === '$ ' || code.substring(0, 2) === '# ' || code.substring(0, 2) === '> ')
-  ) {
-    return code.substring(2);
-  }
-  return code;
+  return code.replace(PROMPT_RE, '');
 }

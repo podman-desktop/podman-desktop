@@ -31,6 +31,7 @@ import {
   goForward,
   goToHistoryIndex,
   navigationHistory,
+  replaceCurrentUrl,
 } from '/@/stores/navigation-history.svelte';
 
 // The store registers a `window.events.receive('navigation-history-push', ...)` listener at
@@ -206,6 +207,89 @@ describe('goForward', () => {
     expect(navigationHistory.index).toBe(1);
     expect(router.goto).toHaveBeenCalledWith('/images');
     expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.forward');
+  });
+});
+
+describe('replaceCurrentUrl', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
+  test('should replace current entry and navigate', () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/containers/abc123/' }];
+    navigationHistory.index = 1;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+    routerSubscribeCallback({ url: '/containers/abc123/tty' } as TinroRoute);
+
+    expect(navigationHistory.stack).toEqual([{ url: '/containers' }, { url: '/containers/abc123/tty' }]);
+    expect(navigationHistory.index).toBe(1);
+    expect(router.goto).toHaveBeenCalledWith('/containers/abc123/tty');
+  });
+
+  test('should not push a new entry when router subscription fires after replace', () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/containers/abc123/' }];
+    navigationHistory.index = 1;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+
+    // Simulate router subscription firing for the replaced URL
+    routerSubscribeCallback({ url: '/containers/abc123/tty' } as TinroRoute);
+
+    // Stack should still have only 2 entries — the subscription must skip the push
+    expect(navigationHistory.stack).toEqual([{ url: '/containers' }, { url: '/containers/abc123/tty' }]);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('going back after replace should skip the redirect URL', () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/containers/abc123/' }];
+    navigationHistory.index = 1;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+    routerSubscribeCallback({ url: '/containers/abc123/tty' } as TinroRoute);
+
+    // Now go back — should land on /containers, not on /containers/abc123/
+    goBack();
+    routerSubscribeCallback({ url: '/containers' } as TinroRoute);
+
+    expect(navigationHistory.index).toBe(0);
+    expect(router.goto).toHaveBeenLastCalledWith('/containers');
+  });
+
+  test('should handle replace when stack is empty', () => {
+    navigationHistory.stack = [];
+    navigationHistory.index = -1;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+    routerSubscribeCallback({ url: '/containers/abc123/tty' } as TinroRoute);
+
+    // When stack is empty, nothing is replaced — the URL is pushed normally by the subscription
+    expect(navigationHistory.stack).toEqual([{ url: '/containers/abc123/tty' }]);
+    expect(navigationHistory.index).toBe(0);
+    expect(router.goto).toHaveBeenCalledWith('/containers/abc123/tty');
+  });
+
+  test('should not preserve extensionEntry when replacing', () => {
+    const extensionEntry = { extensionId: 'ext.a', id: 'entry-1', label: 'Entry 1' };
+    navigationHistory.stack = [{ url: '/__extension__/ext.a/entry-1', extensionEntry }];
+    navigationHistory.index = 0;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+    routerSubscribeCallback({ url: '/containers/abc123/tty' } as TinroRoute);
+
+    expect(navigationHistory.stack[0]).toEqual({ url: '/containers/abc123/tty' });
+    expect(navigationHistory.stack[0].extensionEntry).toBeUndefined();
+  });
+
+  test('should no-op when replacement URL matches the current entry', () => {
+    navigationHistory.stack = [{ url: '/containers' }, { url: '/containers/abc123/tty' }];
+    navigationHistory.index = 1;
+
+    replaceCurrentUrl('/containers/abc123/tty');
+
+    expect(navigationHistory.stack).toEqual([{ url: '/containers' }, { url: '/containers/abc123/tty' }]);
+    expect(navigationHistory.index).toBe(1);
+    expect(router.goto).not.toHaveBeenCalled();
   });
 });
 

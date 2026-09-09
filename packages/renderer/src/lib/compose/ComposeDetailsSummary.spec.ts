@@ -54,6 +54,8 @@ const fakeContainer1: ContainerInfoUI = {
   created: 1234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
+  imageId: 'fakeImageID1',
+  names: ['/fakeContainer1'],
 };
 
 const fakeContainer2: ContainerInfoUI = {
@@ -84,6 +86,8 @@ const fakeContainer2: ContainerInfoUI = {
   created: 1234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
+  imageId: 'fakeImageID2',
+  names: ['/fakeContainer2'],
 };
 
 const fakeCompose: ComposeInfoUI = {

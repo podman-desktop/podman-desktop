@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { ContainerInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import {
   Button,
@@ -217,8 +216,14 @@ function createPodFromContainers(): void {
 let currentContainers = $derived.by(() => {
   const viewContributions = $viewsContributions.filter(view => view.viewId === CONTAINER_LIST_VIEW);
 
-  return $containersInfos.map((containerInfo: ContainerInfo) => {
-    return containerUtils.getContainerInfoUI(containerInfo, $context, viewContributions);
+  // the store already holds ContainerInfoUI; only the extension-contributed icon is left
+  // to resolve, because it needs the context and the view contributions, which are
+  // component-level stores the containers store deliberately does not subscribe to
+  return $containersInfos.map((containerInfo: ContainerInfoUI) => {
+    return {
+      ...containerInfo,
+      icon: containerUtils.iconClass(containerInfo, $context, viewContributions) ?? ContainerIcon,
+    };
   });
 });
 
@@ -243,7 +248,13 @@ let containerGroups = $derived.by(() => {
   computedContainerGroups.forEach(group => {
     group.containers = group.containers
       .filter(containerInfo =>
-        findMatchInLeaves(containerInfo, containerUtils.filterSearchTerm(searchTerm).toLowerCase()),
+        // `names` is excluded on purpose: findMatchInLeaves recurses into arrays, so the raw
+        // names would newly make the leading '/', the compose project prefix and every alias
+        // searchable. Search matches on `name` as it always has.
+        findMatchInLeaves(
+          { ...containerInfo, names: undefined },
+          containerUtils.filterSearchTerm(searchTerm).toLowerCase(),
+        ),
       )
       .filter(containerInfo => {
         if (containerUtils.filterIsRunning(searchTerm)) {

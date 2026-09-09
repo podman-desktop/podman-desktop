@@ -85,14 +85,23 @@ test('Timestamps are hidden by default and shown after toggle', async () => {
   // click the toggle timestamps button
   const toggleButton = screen.getByRole('button', { name: 'Toggle Timestamps' });
   expect(toggleButton).toBeInTheDocument();
+  expect(toggleButton).toHaveAttribute('aria-pressed', 'false');
+  expect(toggleButton).toHaveClass('bg-[var(--pd-button-link-bg)]');
+  expect(toggleButton).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
   await fireEvent.click(toggleButton);
 
   // timestamps should now be visible
   expect(logsList.textContent).toContain('14:30:45');
+  expect(toggleButton).toHaveAttribute('aria-pressed', 'true');
+  expect(toggleButton).toHaveClass('bg-[var(--pd-button-link-hover-bg)]');
+  expect(toggleButton).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
   // click again to hide
   await fireEvent.click(toggleButton);
   expect(logsList.textContent).not.toContain('14:30:45');
+  expect(toggleButton).toHaveAttribute('aria-pressed', 'false');
+  expect(toggleButton).toHaveClass('bg-[var(--pd-button-link-bg)]');
+  expect(toggleButton).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 });
 
 test('Toggle persists the setting via updateConfigurationValue', async () => {

@@ -74,7 +74,7 @@ test.describe
     });
 
     test('No update on startup', async ({ page, welcomePage }) => {
-      const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
+      const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop.*/ });
       await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 5_000 });
       await welcomePage.handleWelcomePage(true);
     });

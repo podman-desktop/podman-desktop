@@ -60,6 +60,8 @@ const fakePodContainer: ContainerInfoUI = {
   created: 1234,
   labels: { label1: 'label1' },
   imageBase64RepoTag: 'fakeRepoTag',
+  imageId: 'fakeImageID1',
+  names: ['/fakePodContainer'],
 };
 
 const fakeStandaloneContainer: ContainerInfoUI = {
@@ -90,6 +92,8 @@ const fakeStandaloneContainer: ContainerInfoUI = {
   created: 1234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
+  imageId: 'fakeImageID2',
+  names: ['/fakeStandaloneContainer'],
 };
 
 // Test render ContainerDetailsSummary with ContainerInfoUI object with a pod group
@@ -156,6 +160,31 @@ test('port link shows tooltip with full URL and external link icon', async () =>
 
   const tooltipTrigger = portLink.closest('[data-testid="tooltip-trigger"]');
   expect(tooltipTrigger).toBeInTheDocument();
+});
+
+test('should display infra container banner when isInfra is true', async () => {
+  const infraContainer: ContainerInfoUI = {
+    ...fakePodContainer,
+    isInfra: true,
+  };
+
+  render(ContainerDetailsSummary, { container: infraContainer });
+
+  expect(screen.getByText(/This is an infra container that manages the pod's shared namespaces./)).toBeInTheDocument();
+  expect(screen.getByText('Learn more')).toBeInTheDocument();
+});
+
+test('should not display infra container banner when isInfra is false', async () => {
+  const nonInfraContainer: ContainerInfoUI = {
+    ...fakePodContainer,
+    isInfra: false,
+  };
+
+  render(ContainerDetailsSummary, { container: nonInfraContainer });
+
+  expect(
+    screen.queryByText(/This is an infra container that manages the pod's shared namespaces./),
+  ).not.toBeInTheDocument();
 });
 
 test('renders duplicate public ports on different host IPs without key collision', async () => {

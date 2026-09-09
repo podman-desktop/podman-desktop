@@ -47,8 +47,10 @@ let nodeCount = $derived($kubernetesCurrentContextNodes.length);
 let activeNodeCount = $derived(
   $containersInfos.filter(
     container =>
-      container.State === 'running' &&
-      container.Names?.some(name => $kubernetesCurrentContextNodes.some(node => name === `/${node.metadata?.name}`)),
+      // the UI state is uppercased by ContainerUtils.getState; comparing against the raw
+      // lowercase value would make this count silently zero
+      container.state === 'RUNNING' &&
+      container.names.some(name => $kubernetesCurrentContextNodes.some(node => name === `/${node.metadata?.name}`)),
   ).length,
 );
 let deploymentCount = $derived($kubernetesCurrentContextDeployments.length);

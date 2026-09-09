@@ -19,7 +19,6 @@
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import { isMac } from '/@/utility/platform';
-import { waitUntil } from '/@/utility/wait';
 
 import { BasePage } from './base-page';
 
@@ -57,9 +56,7 @@ export abstract class DetailsPage extends BasePage {
   async activateTab(tabName: string): Promise<this> {
     return test.step(`Activate tab: ${tabName}`, async () => {
       const tabItem = this.tabs.getByRole('link', { name: tabName, exact: true });
-      await waitUntil(async () => await tabItem.isVisible(), {
-        message: `Tab ${tabName} does not exist currently, maybe entry was deleted!`,
-      });
+      await playExpect(tabItem).toBeVisible({ timeout: 5_000 });
       await tabItem.click();
       return this;
     });

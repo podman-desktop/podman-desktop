@@ -31,7 +31,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SystemOverviewProviderCardCompact from './SystemOverviewProviderCardCompact.svelte';
 
 vi.mock(import('tinro'));
-vi.mock(import('/@/lib/appearance/IconImage.svelte'));
 
 const baseProvider: ProviderInfo = {
   internalId: 'podman-internal',

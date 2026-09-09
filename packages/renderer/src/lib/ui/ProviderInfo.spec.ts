@@ -23,46 +23,21 @@ import { expect, test } from 'vitest';
 
 import ProviderInfo from './ProviderInfo.svelte';
 
-test('Expect podman is purple', async () => {
-  const provider = 'podman';
+test.each([
+  { provider: 'podman', expectedClass: 'bg-(--pd-provider-podman)', description: 'Expect podman is purple' },
+  {
+    provider: 'Podman',
+    expectedClass: 'bg-(--pd-provider-podman)',
+    description: 'Expect Podman (different case) is purple',
+  },
+  { provider: 'docker', expectedClass: 'bg-(--pd-provider-docker)', description: 'Expect docker is blue' },
+  { provider: 'Kubernetes', expectedClass: 'bg-(--pd-provider-kubernetes)', description: 'Expect kubernetes is blue' },
+])('$description', async ({ provider, expectedClass }) => {
   render(ProviderInfo, {
     provider,
   });
   const label = screen.getByText(provider);
   expect(label).toBeInTheDocument();
   expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-podman)');
-});
-
-test('Expect Podman (different case) is purple', async () => {
-  const provider = 'Podman';
-  render(ProviderInfo, {
-    provider,
-  });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-podman)');
-});
-
-test('Expect docker is blue', async () => {
-  const provider = 'docker';
-  render(ProviderInfo, {
-    provider,
-  });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-docker)');
-});
-
-test('Expect kubernetes is blue', async () => {
-  const provider = 'Kubernetes';
-  render(ProviderInfo, {
-    provider,
-  });
-  const label = screen.getByText(provider);
-  expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toHaveClass('bg-(--pd-provider-kubernetes)');
+  expect(label.parentElement?.firstChild).toHaveClass(expectedClass);
 });

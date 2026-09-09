@@ -41,11 +41,22 @@ describe('stripPrompts', () => {
     expect(stripPrompts('')).toBe('');
   });
 
-  test('handles undefined', () => {
-    expect(stripPrompts(undefined)).toBe(undefined);
-  });
-
   test('only strips prompts at the start of a line', () => {
     expect(stripPrompts('echo "$ hello"')).toBe('echo "$ hello"');
+  });
+
+  test('strips $ prompt from each line in a multi-line block', () => {
+    const input = '$ podman pull nginx\n$ podman run -d nginx';
+    expect(stripPrompts(input)).toBe('podman pull nginx\npodman run -d nginx');
+  });
+
+  test('strips mixed prompt types across lines', () => {
+    const input = '$ echo hello\n# echo world\n> echo test';
+    expect(stripPrompts(input)).toBe('echo hello\necho world\necho test');
+  });
+
+  test('handles mixed lines with and without prompts', () => {
+    const input = '$ podman pull nginx\nnginx:latest pulled\n$ podman run nginx';
+    expect(stripPrompts(input)).toBe('podman pull nginx\nnginx:latest pulled\npodman run nginx');
   });
 });

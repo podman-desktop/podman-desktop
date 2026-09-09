@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { ProviderInfo } from '@podman-desktop/core-api';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Snippet } from 'svelte';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ProviderStatus from '/@/lib/ui/ProviderStatus.svelte';
 
 import ProviderLinks from './ProviderLinks.svelte';
@@ -22,7 +22,9 @@ let { provider, update, content }: Props = $props();
   aria-label="{provider.name} Provider">
   <div class="flex flex-col xl:flex-row gap-x-4">
     <div class="grid grid-cols-[3rem_1fr] w-full xl:w-1/4 gap-2">
-      <IconImage image={provider?.images?.icon} class="mx-0 max-h-12" alt={provider.name}></IconImage>
+      {#if provider?.images?.icon}
+        <Icon icon={provider.images.icon} class="mx-0 max-h-12" title={provider.name} />
+      {/if}
       <div class="flex flex-col gap-0 text-[var(--pd-content-card-title)] whitespace-nowrap" aria-label="context-name">
         <div class="gap-1 items-center">
           <span class="float-left mr-1 text-lg">{provider.name}</span>

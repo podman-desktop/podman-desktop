@@ -43,11 +43,13 @@ import type {
 import type {
   CheckStatus,
   PreflightChecksCallback,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AutostartEngine } from './autostart-engine.js';
@@ -83,6 +85,9 @@ const telemetry: Telemetry = {
   aggregateTrack: vi.fn(),
 } as unknown as Telemetry;
 
+let configurationRegistry: IConfigurationRegistry;
+const getConfigurationMock = vi.fn();
+
 beforeEach(() => {
   vi.useRealTimers();
   vi.resetAllMocks();
@@ -95,7 +100,12 @@ beforeEach(() => {
     isApiAttached: vi.fn(),
     onApiAttached: vi.fn(),
   } as unknown as ContainerProviderRegistry;
-  providerRegistry = new TestProviderRegistry(apiSender, containerRegistry, telemetry);
+  getConfigurationMock.mockReturnValue({ get: () => ['*'] });
+  configurationRegistry = {
+    registerConfigurations: vi.fn(),
+    getConfiguration: getConfigurationMock,
+  } as unknown as IConfigurationRegistry;
+  providerRegistry = new TestProviderRegistry(apiSender, containerRegistry, telemetry, configurationRegistry);
   autostartEngine = {
     registerProvider: vi.fn(),
   } as unknown as AutostartEngine;
@@ -481,6 +491,182 @@ test('expect isProviderContainerConnection returns false with a ProviderKubernet
   };
   const res = providerRegistry.isProviderContainerConnection(connection);
   expect(res).toBe(false);
+});
+
+describe('getMatchingConnectionFromProvider', () => {
+  test('should return container connection for connectionType: container', async () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    const containerConnection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
+      name: 'test-container',
+      displayName: 'Test Container',
+      type: 'docker',
+      endpoint: { socketPath: '/test.sock' },
+      status: 'started',
+    } as ProviderContainerConnectionInfo;
+
+    provider.registerContainerProviderConnection({
+      name: 'test-container',
+      displayName: 'Test Container',
+      type: 'docker',
+      endpoint: { socketPath: '/test.sock' },
+      status: () => 'started',
+    });
+
+    const connection = providerRegistry.getMatchingConnectionFromProvider(
+      (provider as unknown as { internalId: string }).internalId,
+      containerConnection,
+    );
+    expect(connection).toBeDefined();
+    expect(providerRegistry.isContainerConnection(connection)).toBe(true);
+  });
+
+  test('should return kubernetes connection for connectionType: kubernetes', async () => {
+    const provider = providerRegistry.createProvider('id2', 'name2', {
+      id: 'internal2',
+      name: 'internal2',
+      status: 'installed',
+    });
+
+    const kubernetesConnection: ProviderKubernetesConnectionInfo = {
+      connectionType: 'kubernetes',
+      name: 'test-k8s',
+      endpoint: { apiURL: 'https://localhost:6443' },
+      status: 'started',
+    } as ProviderKubernetesConnectionInfo;
+
+    provider.registerKubernetesProviderConnection({
+      name: 'test-k8s',
+      endpoint: { apiURL: 'https://localhost:6443' },
+      status: () => 'started',
+    });
+
+    const connection = providerRegistry.getMatchingConnectionFromProvider(
+      (provider as unknown as { internalId: string }).internalId,
+      kubernetesConnection,
+    );
+    expect(connection).toBeDefined();
+    expect(providerRegistry.isKubernetesConnection(connection)).toBe(true);
+  });
+
+  test('should return vm connection for connectionType: vm', async () => {
+    const provider = providerRegistry.createProvider('id3', 'name3', {
+      id: 'internal3',
+      name: 'internal3',
+      status: 'installed',
+    });
+
+    const vmConnection: ProviderVmConnectionInfo = {
+      connectionType: 'vm',
+      name: 'test-vm',
+      status: 'started',
+    } as ProviderVmConnectionInfo;
+
+    provider.registerVmProviderConnection({
+      name: 'test-vm',
+      status: () => 'started',
+    });
+
+    const connection = providerRegistry.getMatchingConnectionFromProvider(
+      (provider as unknown as { internalId: string }).internalId,
+      vmConnection,
+    );
+    expect(connection).toBeDefined();
+    expect(providerRegistry.isContainerConnection(connection)).toBe(false);
+    expect(providerRegistry.isKubernetesConnection(connection)).toBe(false);
+  });
+
+  test('should throw error for missing connectionType', async () => {
+    const provider = providerRegistry.createProvider('id4', 'name4', {
+      id: 'internal4',
+      name: 'internal4',
+      status: 'installed',
+    });
+
+    const invalidConnection = {
+      name: 'test-invalid',
+      status: 'started',
+    } as ProviderConnectionInfo;
+
+    expect(() => {
+      providerRegistry.getMatchingConnectionFromProvider(
+        (provider as unknown as { internalId: string }).internalId,
+        invalidConnection,
+      );
+    }).toThrow('Unable to determine connection type');
+  });
+
+  test('should throw error when connection not found', async () => {
+    const provider = providerRegistry.createProvider('id5', 'name5', {
+      id: 'internal5',
+      name: 'internal5',
+      status: 'installed',
+    });
+
+    provider.registerContainerProviderConnection({
+      name: 'existing-container',
+      displayName: 'Existing',
+      type: 'docker',
+      endpoint: { socketPath: '/existing.sock' },
+      status: () => 'started',
+    });
+
+    const nonExistentConnection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
+      name: 'non-existent',
+      displayName: 'Non Existent',
+      type: 'docker',
+      endpoint: { socketPath: '/nonexistent.sock' },
+      status: 'started',
+    } as ProviderContainerConnectionInfo;
+
+    expect(() => {
+      providerRegistry.getMatchingConnectionFromProvider(
+        (provider as unknown as { internalId: string }).internalId,
+        nonExistentConnection,
+      );
+    }).toThrow();
+  });
+});
+describe('isProviderVmConnectionInfo', () => {
+  test('should return true for VM connection info', async () => {
+    const connection: ProviderVmConnectionInfo = {
+      connectionType: 'vm',
+      name: 'test-vm',
+      status: 'started',
+    } as ProviderVmConnectionInfo;
+    const result = providerRegistry.isProviderVmConnectionInfo(connection);
+    expect(result).toBe(true);
+  });
+
+  test('should return false for container connection info', async () => {
+    const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
+      name: 'test-container',
+      displayName: 'Test',
+      type: 'docker',
+      endpoint: { socketPath: '/test.sock' },
+      status: 'started',
+    } as ProviderContainerConnectionInfo;
+    const result = providerRegistry.isProviderVmConnectionInfo(connection);
+    expect(result).toBe(false);
+  });
+
+  test('should return false for kubernetes connection info', async () => {
+    const connection: ProviderKubernetesConnectionInfo = {
+      connectionType: 'kubernetes',
+      name: 'test-k8s',
+      endpoint: { apiURL: 'https://localhost:6443' },
+      status: 'started',
+    } as ProviderKubernetesConnectionInfo;
+    const result = providerRegistry.isProviderVmConnectionInfo(connection);
+    expect(result).toBe(false);
+  });
 });
 
 describe('a Kubernetes provider is registered', async () => {
@@ -2096,6 +2282,135 @@ test('registerUpdate should notify when an update is registered or unregistered'
 
   // check we have been notified
   expect(apiSenderSendMock).toBeCalledWith('provider-change', {});
+});
+
+test('registerUpdate should not store update when providers.allowUpdate is empty', () => {
+  getConfigurationMock.mockReturnValue({ get: () => [] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  const disposable = providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(disposable).toBeDefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo).toBeUndefined();
+});
+
+test('registerUpdate should not store update when extension id is not in providers.allowUpdate', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['podman-desktop.lima'] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  const disposable = providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(disposable).toBeDefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo).toBeUndefined();
+});
+
+test('registerUpdate should store update when extension id is in providers.allowUpdate', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['podman-desktop.podman'] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('registerUpdate should store update when providers.allowUpdate contains wildcard', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['*'] });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('registerUpdate should store update when providers.allowUpdate is undefined', () => {
+  getConfigurationMock.mockReturnValue({ get: () => undefined });
+
+  const provider = providerRegistry.createProvider('podman-desktop.podman', 'Podman Desktop', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('init should register the providers configuration', () => {
+  providerRegistry.init();
+
+  expect(configurationRegistry.registerConfigurations).toHaveBeenCalledWith([
+    expect.objectContaining({
+      id: 'preferences.providers',
+      properties: expect.objectContaining({
+        'providers.allowUpdate': expect.objectContaining({
+          type: 'array',
+          default: ['*'],
+          hidden: true,
+        }),
+      }),
+    }),
+  ]);
 });
 
 describe('runPreflightChecks', () => {

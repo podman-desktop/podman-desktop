@@ -37,6 +37,8 @@ export interface SettingsNavItemConfig {
   href: string;
   visible?: boolean;
   icon?: Component;
+  children?: Omit<SettingsNavItemConfig, 'children'>[];
+  expanded?: boolean;
 }
 
 // Static navigation entries for routes not in the main navigation registry

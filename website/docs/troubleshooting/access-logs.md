@@ -8,7 +8,7 @@ tags: [accessing-podman-desktop-logs, troubleshooting-podman-desktop]
 
 # Access Podman Desktop logs
 
-When you face any connection issues or any other problems with your task execution, you can access the Podman Desktop logs to troubleshoot. In addition, you can also resolve those issues using the **Repair & Connections** and **Stores** tabs.
+When you face any connection issues or any other problems with your task execution, you can access the Podman Desktop logs to troubleshoot. In addition, you can also resolve those issues using the **Repair & connections** and **Stores** tabs.
 
 Stores denote the front-end objects that capture the event logs from the back-end side. For example, if a container is missing from the **Containers** component page, click the **containers** store link to check the event that triggered the last refresh. After comparing the number of containers in the store with those on the **Containers** page, you can identify whether a recent event is captured. If not, use the **Refresh** button to refresh the store data.
 
@@ -19,7 +19,7 @@ If you do not want to track the previous event logs, you can remove them from th
 1. Click the **Troubleshooting** icon in the status bar.
 1. Select the **Logs** tab to view the logs.
    ![accessing logs](img/access-logs.png)
-1. Optional: Select the **Gather Logs** tab to save all the logs into a .zip file.
+1. Optional: Select the **Gather logs** tab to save all the logs into a .zip file.
    1. Click **collect and save logs as .zip**.
    1. Browse the location where you want to save the logs.
    1. Click **Save**. You get a successful operation notification.
@@ -28,7 +28,7 @@ If you do not want to track the previous event logs, you can remove them from th
 
 1. Click the **Troubleshooting** icon in the status bar.
 1. Optional: Click **Cleanup/Purge data** to delete all resources from the engine.
-   ![Repair & Connections tab](img/repair-and-connections-tab.png)
+   ![Repair & connections tab](img/repair-and-connections-tab.png)
 1. Optional: Check container connections:
    1. Click **Ping** to view the response time of the container engine.
    1. Click **Check containers** to view the response time of the available containers.

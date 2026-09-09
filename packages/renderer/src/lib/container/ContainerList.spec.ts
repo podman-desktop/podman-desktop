@@ -28,8 +28,10 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
+import { viewsContributions } from '/@/stores/views';
 
 import ContainerList from './ContainerList.svelte';
 
@@ -37,6 +39,9 @@ vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // vi.resetAllMocks does not touch Svelte stores; a test that sets one would
+  // otherwise leak its contributions into every test declared after it
+  viewsContributions.set([]);
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
@@ -1278,4 +1283,79 @@ test('Expect clicking Existing image button closes dialog', async () => {
   await waitFor(() => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+});
+
+test('Expect contributed icon to be applied to the container row', async () => {
+  // the containers store converts without the context and the view contributions, so this
+  // icon can only appear if ContainerList overlays it after reading the store
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:iconcontainer',
+      Image: 'sha256:123',
+      Names: ['/icon-container'],
+      State: 'RUNNING',
+      ImageID: 'sha256:image-id',
+      engineId: 'podman',
+      engineName: 'podman',
+      Labels: { 'podman-desktop.label': 'true' },
+    } as unknown as ContainerInfo,
+  ]);
+
+  const contribs = [
+    {
+      extensionId: 'foo.bar',
+      viewId: CONTAINER_LIST_VIEW,
+      value: {
+        icon: '${my-custom-icon}',
+        when: 'podman-desktop.label in containerLabelKeys',
+      },
+    },
+  ];
+  vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
+  viewsContributions.set(contribs);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const statusElement = screen.getByRole('status', { name: 'RUNNING' });
+  expect(statusElement.getElementsByClassName('podman-desktop-icon-my-custom-icon')).toHaveLength(1);
+});
+
+test('Expect search not to match the raw compose-prefixed container name', async () => {
+  // `names` carries the raw '/myproject-web-1'; `name` is the compose-stripped 'web-1'.
+  // Search has always matched on `name`, and adding `names` to the object must not
+  // silently widen it — findMatchInLeaves recurses into arrays.
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:composecontainer',
+      Image: 'sha256:123',
+      Names: ['/myproject-web-1'],
+      State: 'RUNNING',
+      ImageID: 'sha256:image-id',
+      engineId: 'podman',
+      engineName: 'podman',
+      Labels: { 'com.docker.compose.project': 'myproject' },
+    } as unknown as ContainerInfo,
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+
+  // the stripped name still matches, as it did before the store held ContainerInfoUI
+  const { unmount } = await waitRender({ searchTerm: 'web-1' });
+  expect(screen.queryByText('web-1')).toBeInTheDocument();
+  unmount();
+
+  // the raw prefixed name must not
+  await waitRender({ searchTerm: 'myproject-web-1' });
+  expect(screen.queryByText('web-1')).not.toBeInTheDocument();
 });

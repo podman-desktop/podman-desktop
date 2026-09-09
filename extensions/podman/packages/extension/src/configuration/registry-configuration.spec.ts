@@ -98,7 +98,9 @@ describe('getPlaybookScriptPath', () => {
     vi.mocked(env).isMac = true;
 
     // mock the config path being usually computed
-    vi.spyOn(registryConfiguration, 'getPathToRegistriesConfInsideVM').mockReturnValue('/fake/path/inside/vm');
+    vi.spyOn(registryConfiguration, 'getPathToRegistriesConfInsideVM').mockReturnValue(
+      '/fake/path with spaces/inside/vm',
+    );
 
     // call the method
     const playbookPath = await registryConfiguration.getPlaybookScriptPath();
@@ -109,7 +111,7 @@ describe('getPlaybookScriptPath', () => {
     expect(vi.mocked(writeFile)).toBeCalledWith(
       expect.stringContaining('playbook-setup-registry-conf-file.yml'),
       expect.stringContaining(
-        'sudo ln -s /fake/path/inside/vm /etc/containers/registries.conf.d/999-podman-desktop-registries-from-host.conf',
+        'ansible.builtin.file:\n        src: "/fake/path with spaces/inside/vm"\n        dest: "/etc/containers/registries.conf.d/999-podman-desktop-registries-from-host.conf"\n        state: link',
       ),
       'utf-8',
     );

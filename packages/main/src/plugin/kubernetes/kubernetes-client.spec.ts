@@ -121,7 +121,7 @@ type ControllerType = 'Deployment' | 'ReplicaSet' | 'StatefulSet';
 class TestKubernetesClient extends KubernetesClient {
   declare kubeConfig;
 
-  public declare currentNamespace: string | undefined;
+  declare public currentNamespace: string | undefined;
 
   public override createWatchObject(): Watch {
     return super.createWatchObject();
@@ -2599,6 +2599,10 @@ test('Expect readNamespacedCronJob to return the cronjob', async () => {
     kind: 'CronJob',
     metadata: {
       name: 'foobar',
+    },
+    spec: {
+      schedule: '*/5 * * * *',
+      jobTemplate: {},
     },
   };
   makeApiClientMock.mockReturnValue({

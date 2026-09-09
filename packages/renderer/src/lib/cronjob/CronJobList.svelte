@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { KubernetesObject } from '@kubernetes/client-node';
 import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
@@ -6,6 +7,7 @@ import CronJobIcon from '/@/lib/images/CronJobIcon.svelte';
 import NameColumn from '/@/lib/kube/column/Name.svelte';
 import StatusColumn from '/@/lib/kube/column/Status.svelte';
 import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
+import type { KubernetesObjectUI } from '/@/lib/objects/KubernetesObjectUI';
 import { capitalize } from '/@/lib/ui/Util';
 import { cronJobSearchPattern, kubernetesCurrentContextCronJobsFiltered } from '/@/stores/kubernetes-contexts-state';
 
@@ -85,7 +87,12 @@ const row = new TableRow<CronJobUI>({ selectable: (_cronjob): boolean => true })
 <KubernetesObjectsList
   kinds={[{
     resource: 'cronjobs',
-    transformer: cronjobUtils.getCronJobUI,
+    transformer: (o: KubernetesObject): KubernetesObjectUI => {
+      if (!cronjobUtils.isV1CronJob(o)) {
+        throw new Error('Expected V1CronJob');
+      }
+      return cronjobUtils.getCronJobUI(o);
+    },
     delete: window.kubernetesDeleteCronJob,
     isResource: (): boolean => true,
     legacySearchPatternStore: cronJobSearchPattern,

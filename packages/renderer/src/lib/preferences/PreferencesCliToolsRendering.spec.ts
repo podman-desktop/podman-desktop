@@ -77,7 +77,7 @@ const cliToolInfoItem3: CliToolInfo = {
     label: 'ext-label3',
   },
   images: {
-    icon: 'encoded-icon',
+    icon: 'encoded-icon.png',
   },
   version: '1.0.3',
   path: 'path/to/tool-name-3',

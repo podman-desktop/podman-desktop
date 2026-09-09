@@ -42,6 +42,32 @@ Control telemetry settings for compliance or privacy requirements.
 }
 ```
 
+## Controlling provider engine updates
+
+Control which extensions are permitted to register provider engine updates on the Resources page. This is useful when your organization manages engine versions centrally and wants to prevent users from upgrading independently.
+
+By default, `providers.allowUpdate` is set to `["*"]`, which allows all extensions to register updates. You can restrict this to specific extension IDs, or use an empty array to block all updates.
+
+```json title="default-settings.json (block all updates)"
+{
+  "providers.allowUpdate": []
+}
+```
+
+```json title="default-settings.json (allow only specific extensions)"
+{
+  "providers.allowUpdate": ["podman-desktop.podman"]
+}
+```
+
+```json title="locked.json"
+{
+  "locked": ["providers.allowUpdate"]
+}
+```
+
+When this setting is enforced, only extensions listed in the array can register updates. The update button will not appear on the Resources page for providers whose extension is not in the list.
+
 ## Configuring default registries and mirrors
 
 Configure default container registries with optional mirrors for your organization. This is useful for directing image pulls through internal registry mirrors or blocking access to specific registries.

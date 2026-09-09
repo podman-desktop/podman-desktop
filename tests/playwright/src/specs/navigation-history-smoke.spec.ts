@@ -149,4 +149,81 @@ test.describe
       const dashboardPage = new DashboardPage(page);
       await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
     });
+
+    test('Long press on back button shows history dropdown', async ({ navigationBar, page }) => {
+      await page.evaluate(() => sessionStorage.clear());
+      await page.reload();
+
+      await navigationBar.openDashboard();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const dropdown = await navigationBar.longPressBack();
+
+      await playExpect(dropdown.getByRole('button', { name: 'Containers' })).toBeVisible();
+      await playExpect(dropdown.getByRole('button', { name: 'Dashboard' })).toBeVisible();
+    });
+
+    test('Selecting entry from back history dropdown navigates to that page', async ({ navigationBar, page }) => {
+      await page.evaluate(() => sessionStorage.clear());
+      await page.reload();
+
+      await navigationBar.openDashboard();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const dropdown = await navigationBar.longPressBack();
+      await navigationBar.selectHistoryEntry(dropdown, 'Dashboard');
+
+      const dashboardPage = new DashboardPage(page);
+      await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
+    });
+
+    test('Long press on forward button shows forward history dropdown', async ({ navigationBar, page }) => {
+      await page.evaluate(() => sessionStorage.clear());
+      await page.reload();
+
+      const dashboardPage = new DashboardPage(page);
+      await navigationBar.openDashboard();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await navigationBar.goBack();
+      await playExpect(containersPage.heading).toBeVisible();
+      await navigationBar.goBack();
+      await playExpect(dashboardPage.heading).toBeVisible();
+
+      const dropdown = await navigationBar.longPressForward();
+
+      await playExpect(dropdown.getByRole('button', { name: 'Containers' })).toBeVisible();
+      await playExpect(dropdown.getByRole('button', { name: 'Images' })).toBeVisible();
+    });
+
+    test('Selecting entry from forward history dropdown navigates to that page', async ({ navigationBar, page }) => {
+      await page.evaluate(() => sessionStorage.clear());
+      await page.reload();
+
+      const dashboardPage = new DashboardPage(page);
+      await navigationBar.openDashboard();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await navigationBar.goBack();
+      await playExpect(containersPage.heading).toBeVisible();
+      await navigationBar.goBack();
+      await playExpect(dashboardPage.heading).toBeVisible();
+
+      const dropdown = await navigationBar.longPressForward();
+      await navigationBar.selectHistoryEntry(dropdown, 'Images');
+
+      await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
+    });
   });

@@ -16,12 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as os from 'node:os';
-
 import type { ExtensionContext } from '@podman-desktop/api';
 import type { DockerExtensionApi } from '@podman-desktop/docker-extension-api';
 
-import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api';
 import { DockerCompatibilitySetup } from './docker-compatibility-setup';
 import { DockerConfig } from './docker-config';
 import { DockerContextHandler } from './docker-context-handler';
@@ -30,8 +27,6 @@ import { DockerDaemonMonitor } from './docker-daemon-monitor';
 let daemonMonitor: DockerDaemonMonitor | undefined;
 
 export async function activate(extensionContext: ExtensionContext): Promise<DockerExtensionApi> {
-  const socketPath = os.platform() === 'win32' ? WINDOWS_NPIPE : UNIX_SOCKET_PATH;
-
   const dockerConfig = new DockerConfig();
   const dockerContextHandler = new DockerContextHandler(dockerConfig);
   const dockerCompatibilitySetup = new DockerCompatibilitySetup(dockerContextHandler);
@@ -39,7 +34,7 @@ export async function activate(extensionContext: ExtensionContext): Promise<Dock
     console.error('Error while initializing docker compatibility setup', err);
   });
 
-  daemonMonitor = new DockerDaemonMonitor(extensionContext, socketPath);
+  daemonMonitor = new DockerDaemonMonitor(extensionContext, dockerContextHandler);
   daemonMonitor.start();
 
   return {

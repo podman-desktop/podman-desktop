@@ -20,6 +20,7 @@ import type { ButtonType } from './button/Button';
 import Button from './button/Button.svelte';
 import CloseButton from './button/CloseButton.svelte';
 import Expandable from './button/Expandable.svelte';
+import ButtonRow from './buttonRow/ButtonRow.svelte';
 import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
@@ -56,6 +57,7 @@ import { isFontAwesomeIcon } from './utils/icon-utils';
 export type { ButtonType, IconType, ListOrganizerItem, TablePersistence, ThemedIconImage };
 export {
   Button,
+  ButtonRow,
   Carousel,
   Checkbox,
   ChevronExpander,

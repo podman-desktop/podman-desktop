@@ -140,6 +140,7 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
 
     await playExpect(containersDetails.terminalContent).toBeVisible();
     await playExpect(containersDetails.terminalContent).toContainText('#');
+    // eslint-disable-next-line sonarjs/no-fixed-wait-in-tests
     await page.waitForTimeout(1_000);
     await containersDetails.terminalInput.pressSequentially('ps', { delay: 15 });
     await containersDetails.terminalInput.press('Enter');
