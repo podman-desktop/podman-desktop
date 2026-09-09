@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import SliderItem from './SliderItem.svelte';
@@ -64,7 +64,7 @@ test('Expect slider to be disabled when record.readonly is true', async () => {
   expect(input).toBeDisabled();
 });
 
-test('Expect track background to be neutral and fill/thumb to use accent color', async () => {
+test('Expect track to render a two-tone gradient reflecting the current value, thumb to use accent color', async () => {
   const record: IConfigurationPropertyRecordedSchema = {
     id: 'record',
     title: 'record',
@@ -77,8 +77,37 @@ test('Expect track background to be neutral and fill/thumb to use accent color',
 
   render(SliderItem, { record, value: 15 });
   const input = screen.getByLabelText('record-description');
-  expect(input).toHaveClass('bg-(--pd-input-slider-track-bg)');
   expect(input).toHaveClass('accent-(--pd-input-toggle-on-bg)');
+
+  // (15 - 4) / (34 - 4) * 100 = 36.67%
+  expect(input).toHaveStyle(
+    'background: linear-gradient(to right, var(--pd-input-toggle-on-bg) 36.67%, var(--pd-input-slider-track-bg) 36.67%)',
+  );
+});
+
+test('Expect track gradient to update live as the slider is dragged', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 0,
+    maximum: 100,
+  };
+
+  const onChange = vi.fn().mockResolvedValue(undefined);
+  render(SliderItem, { record, value: 0, onChange });
+  const input: HTMLInputElement = screen.getByLabelText('record-description');
+
+  await fireEvent.input(input, { target: { value: '75' } });
+
+  await waitFor(() => {
+    expect(input).toHaveStyle(
+      'background: linear-gradient(to right, var(--pd-input-toggle-on-bg) 75.00%, var(--pd-input-slider-track-bg) 75.00%)',
+    );
+  });
+  expect(onChange).toHaveBeenCalledWith('record', 75);
 });
 
 test('Expect slider to be disabled when record.locked is true', async () => {
