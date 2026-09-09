@@ -2354,7 +2354,7 @@ export class ColorRegistry {
 
   protected initBadge(): void {
     const badge = 'badge-';
-    this.registerColor(`${badge}builtin-extension-bg`, {
+    this.registerColor(`${badge}bundled-extension-bg`, {
       dark: sky[200],
       light: sky[200],
     });
