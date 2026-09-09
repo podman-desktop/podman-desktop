@@ -936,13 +936,17 @@ test('Try to run pods in bulk', async () => {
   expect(window.startContainer).toHaveBeenCalledOnce();
 });
 
-test('Try to stop containers and pods in bulk', async () => {
+test.each([false, true])('Try to stop containers and pods in bulk (failure: %s)', async failure => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
   let resolveStopPod: () => void;
   vi.mocked(window.stopPod).mockReturnValue(
-    new Promise(resolve => {
-      resolveStopPod = resolve;
+    new Promise((resolve, reject) => {
+      resolveStopPod = failure ? (): void => reject(new Error('Pod stop failed')) : resolve;
     }),
   );
+  if (failure) {
+    vi.mocked(window.stopContainer).mockRejectedValue(new Error('Container stop failed'));
+  }
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -1006,6 +1010,17 @@ test('Try to stop containers and pods in bulk', async () => {
 
   expect(window.stopPod).toHaveBeenCalledOnce();
   expect(window.stopContainer).toHaveBeenCalledOnce();
+  if (failure) {
+    expect(consoleError).toHaveBeenCalledWith('error while stopping container', new Error('Container stop failed'));
+    expect(consoleError).toHaveBeenCalledWith('error while stopping pod', new Error('Pod stop failed'));
+    // Failed pods return to RUNNING and can be retried without stopping the failed container again.
+    vi.mocked(window.stopPod).mockResolvedValue(undefined);
+    await fireEvent.click(stopBulkButton);
+    await waitFor(() => expect(window.stopPod).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(stopBulkButton).toHaveAttribute('aria-busy', 'false'));
+    expect(window.stopContainer).toHaveBeenCalledOnce();
+  }
+  consoleError.mockRestore();
 });
 
 test('Ensuring the table and empty screen are not visible at the same time', async () => {
