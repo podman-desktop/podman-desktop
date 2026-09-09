@@ -25,7 +25,6 @@ import * as path from 'node:path';
 
 import type { Registry } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import * as nodeTar from 'tar';
@@ -47,6 +46,7 @@ import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';
 import type { EventType, Telemetry } from './telemetry/telemetry.js';
 import type { Disposable } from './types/disposable.js';
+import { decompressZstd } from './util/zstd.js';
 
 let imageRegistry: ImageRegistry;
 let server: SetupServer | undefined = undefined;
@@ -83,11 +83,7 @@ afterEach(() => {
   server?.close();
 });
 
-vi.mock(import('fzstd'), () => {
-  return {
-    decompress: vi.fn(),
-  };
-});
+vi.mock(import('./util/zstd.js'));
 
 vi.mock(import('tar'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -713,7 +709,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
   const destFolder = path.resolve(os.tmpdir(), 'test-folder');
   const logFn = vi.fn();
 
-  vi.mocked(fzstd.decompress).mockReturnValue(Buffer.from('hello'));
+  vi.mocked(decompressZstd).mockResolvedValue();
   const spyExtract = vi.spyOn(nodeTar, 'extract').mockResolvedValue();
 
   try {
@@ -726,6 +722,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
     // expect some traces in the logger
     expect(logFn).toHaveBeenCalled();
 
+    expect(decompressZstd).toHaveBeenCalledWith(expect.stringContaining('.zst'), expect.stringContaining('.tar'));
     expect(spyExtract).toHaveBeenCalledWith({ cwd: destFolder, file: expect.stringContaining('.tar') });
   } finally {
     // remove the folders

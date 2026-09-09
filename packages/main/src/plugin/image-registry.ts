@@ -32,7 +32,6 @@ import type {
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type * as Dockerode from 'dockerode';
-import * as fzstd from 'fzstd';
 import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got, { HTTPError, RequestError } from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
@@ -47,6 +46,7 @@ import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
+import { decompressZstd } from './util/zstd.js';
 
 export interface RegistryAuthInfo {
   authUrl: string;
@@ -646,12 +646,13 @@ export class ImageRegistry {
     await pipeline(readStream, createWriteStream(tmpFileName));
     // in case of zstd, we need to unpack the file first
     if (compressionType === 'zstd') {
-      //use fstd library to extract the file
-      const content = await fs.promises.readFile(tmpFileName);
-      const decompressed = fzstd.decompress(content);
       const unpackedFileName = tmpFileName.replace('.zst', '.tar');
-      await fs.promises.writeFile(unpackedFileName, decompressed);
-      await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
+      try {
+        await decompressZstd(tmpFileName, unpackedFileName);
+        await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
+      } finally {
+        await fs.promises.rm(unpackedFileName, { force: true });
+      }
     } else {
       await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
     }
