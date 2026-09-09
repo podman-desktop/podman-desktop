@@ -22,7 +22,6 @@ import { ContainersPage } from '/@/model/pages/containers-page';
 import { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ExtensionsPage } from '/@/model/pages/extensions-page';
 import { ImagesPage } from '/@/model/pages/images-page';
-import { KubernetesBar } from '/@/model/pages/kubernetes-bar';
 import { NetworksPage } from '/@/model/pages/networks-page';
 import { PodsPage } from '/@/model/pages/pods-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
@@ -38,7 +37,6 @@ export class NavigationBar {
   readonly dashboardLink: Locator;
   readonly settingsLink: Locator;
   readonly extensionsLink: Locator;
-  readonly kubernetesLink: Locator;
   readonly networksLink: Locator;
   readonly backButton: Locator;
   readonly forwardButton: Locator;
@@ -57,9 +55,6 @@ export class NavigationBar {
     this.extensionsLink = this.navigationLocator.getByRole('link', {
       name: 'Extensions',
       exact: true,
-    });
-    this.kubernetesLink = this.navigationLocator.getByRole('link', {
-      name: 'Kubernetes',
     });
     this.networksLink = this.navigationLocator.getByRole('link', {
       name: 'Networks',
@@ -116,17 +111,6 @@ export class NavigationBar {
       await playExpect(this.volumesLink).toBeVisible({ timeout: 10_000 });
       await this.volumesLink.click({ force: true });
       return new VolumesPage(this.page);
-    });
-  }
-
-  async openKubernetes(): Promise<KubernetesBar> {
-    return test.step('Open Kubernetes Page ', async () => {
-      const kubernetesBar = new KubernetesBar(this.page);
-      if (!(await kubernetesBar.kubernetesNavBar.isVisible())) {
-        await playExpect(this.kubernetesLink).toBeVisible({ timeout: 10_000 });
-        await this.kubernetesLink.click({ force: true });
-      }
-      return kubernetesBar;
     });
   }
 

@@ -1,64 +1,21 @@
 <script lang="ts">
-import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import { faCopy, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { KubeContext, SelectedResourceName } from '@podman-desktop/core-api';
-import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
+import type { KubeContext } from '@podman-desktop/core-api';
+import { Button, EmptyScreen, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { clearKubeUIContextErrors, setKubeUIContextError } from '/@/lib/kube/KubeContextUI';
 import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
-import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
-import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
-import { kubernetesContextsCheckingStateDelayed, kubernetesContextsState } from '/@/stores/kubernetes-contexts-state';
-import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 
 import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
-interface KubeContextWithStates extends KubeContext {
-  // some informers have been disconnected, and their caches are still populated with the last seen resources
-  isOffline: boolean;
-  // the context has been marked as reachable (during health check in experimental mode)
-  // the context will still be marked as reachable even if it is offline
-  isReachable: boolean;
-  isKnown: boolean;
-  isBeingChecked: boolean;
-  podsCount?: number;
-  deploymentsCount?: number;
-  podsPermitted: boolean;
-  deploymentsPermitted: boolean;
-  notPermittedHelp?: string;
-  errorMessage?: string;
-}
-
 const currentContextName = $derived($kubernetesContexts.find(c => c.currentContext)?.name);
 
 let kubeconfigFilePath: string = $state('');
-let experimentalStates: boolean = $state(false);
-
-const kubernetesContextsWithStates: KubeContextWithStates[] = $derived(
-  $kubernetesContexts
-    .map(kubeContext => ({
-      ...kubeContext,
-      isReachable: isContextReachable(kubeContext.name, experimentalStates),
-      isOffline: isContextOffline(kubeContext.name, experimentalStates),
-      isKnown: isContextKnown(kubeContext.name, experimentalStates),
-      isBeingChecked: isContextBeingChecked(kubeContext.name, experimentalStates),
-      podsCount: getResourcesCount(kubeContext.name, 'pods', experimentalStates),
-      deploymentsCount: getResourcesCount(kubeContext.name, 'deployments', experimentalStates),
-      podsPermitted: getResourcePermitted(kubeContext.name, 'pods', experimentalStates),
-      deploymentsPermitted: getResourcePermitted(kubeContext.name, 'deployments', experimentalStates),
-      errorMessage: getErrorMessage(kubeContext.name, experimentalStates),
-    }))
-    .map(kubeContext => ({
-      ...kubeContext,
-      notPermittedHelp: getNotPermittedHelp(kubeContext.podsPermitted, kubeContext.deploymentsPermitted),
-    })),
-);
 
 onMount(async () => {
   try {
@@ -70,12 +27,6 @@ onMount(async () => {
     }
   } catch (error) {
     kubeconfigFilePath = 'Default is usually ~/.kube/config';
-  }
-
-  try {
-    experimentalStates = await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');
-  } catch {
-    // keep default value
   }
 });
 
@@ -123,99 +74,9 @@ async function handleDuplicateContext(contextName: string): Promise<void> {
   await window.kubernetesDuplicateContext(contextName);
 }
 
-async function handleEditContext(context: KubeContextWithStates): Promise<void> {
-  contextToEdit = context as KubeContext;
+async function handleEditContext(context: KubeContext): Promise<void> {
+  contextToEdit = context;
   editContextModal = true;
-}
-
-function isContextReachable(contextName: string, experimental: boolean): boolean {
-  if (experimental) {
-    return $kubernetesContextsHealths.some(
-      contextHealth => contextHealth.contextName === contextName && contextHealth.reachable,
-    );
-  }
-  return $kubernetesContextsState.get(contextName)?.reachable ?? false;
-}
-
-function getErrorMessage(contextName: string, experimental: boolean): string | undefined {
-  if (experimental) {
-    return $kubernetesContextsHealths.find(contextHealth => contextHealth.contextName === contextName)?.errorMessage;
-  }
-}
-
-function isContextOffline(contextName: string, experimental: boolean): boolean {
-  if (experimental) {
-    return $kubernetesContextsHealths.some(
-      contextHealth => contextHealth.contextName === contextName && contextHealth.offline,
-    );
-  }
-  return false; // not implement in non-experimental mode
-}
-
-function isContextKnown(contextName: string, experimental: boolean): boolean {
-  if (experimental) {
-    return $kubernetesContextsHealths.some(contextHealth => contextHealth.contextName === contextName);
-  }
-  return !!$kubernetesContextsState.get(contextName);
-}
-
-function isContextBeingChecked(contextName: string, experimental: boolean): boolean {
-  if (experimental) {
-    return $kubernetesContextsHealths.some(
-      contextHealth => contextHealth.contextName === contextName && contextHealth.checking,
-    );
-  }
-  return !!$kubernetesContextsCheckingStateDelayed?.get(contextName);
-}
-
-function getResourcesCount(
-  contextName: string,
-  resourceName: SelectedResourceName,
-  experimental: boolean,
-): number | undefined {
-  if (experimental) {
-    return $kubernetesResourcesCount.find(
-      resourcesCount => resourcesCount.contextName === contextName && resourcesCount.resourceName === resourceName,
-    )?.count;
-  }
-  return $kubernetesContextsState.get(contextName)?.resources[resourceName];
-}
-
-function getResourcePermitted(contextName: string, resourceName: SelectedResourceName, experimental: boolean): boolean {
-  if (experimental) {
-    const permission = $kubernetesContextsPermissions.find(
-      permissions => permissions.contextName === contextName && permissions.resourceName === resourceName,
-    );
-    if (!permission) {
-      return false;
-    }
-    return permission.permitted;
-  }
-  return true;
-}
-
-function getNotPermittedHelp(podsPermitted: boolean, deploymentsPermitted: boolean): string {
-  const notPermitted = [];
-  if (!podsPermitted) {
-    notPermitted.push('Pods');
-  }
-  if (!deploymentsPermitted) {
-    notPermitted.push('Deployments');
-  }
-  if (!notPermitted.length) {
-    return '';
-  }
-  return notPermitted.join(' and ') + ' are not accessible';
-}
-
-async function connect(contextName: string): Promise<void> {
-  await window.telemetryTrack('kubernetes.monitoring.start.non-current');
-  $kubernetesContexts = clearKubeUIContextErrors($kubernetesContexts, contextName);
-  window.kubernetesRefreshContextState(contextName).catch((e: unknown) => {
-    if (e instanceof Error) {
-      $kubernetesContexts = setKubeUIContextError($kubernetesContexts, contextName, e);
-    }
-  });
 }
 </script>
 
@@ -236,7 +97,7 @@ async function connect(contextName: string): Promise<void> {
         Go to Resources
       </Button>
     </EmptyScreen>
-    {#each kubernetesContextsWithStates as context, index (index)}
+    {#each $kubernetesContexts as context, index (index)}
       <!-- If current context, use lighter background -->
       <div
         role="row"
@@ -283,128 +144,39 @@ async function connect(contextName: string): Promise<void> {
           {/if}
         </div>
         <div class="grow flex-column divide-(--pd-invert-content-divider) text-(--pd-invert-content-card-text)">
-          <div class="flex flex-row">
-            <div class="flex-none w-36">
-              {#if context.isReachable || context.isOffline}
-                <div class="flex flex-row pt-2">
-                  {#if context.isOffline}
-                    <Tooltip class="flex flex-row" tip="connection lost, resources may be out of sync">
-                      <div class="w-3 h-3 rounded-full bg-[var(--pd-status-paused)]"></div>
-                      <div
-                        class="ml-1 font-bold text-[9px] text-[var(--pd-status-paused)]"
-                        aria-label="Context connection lost">
-                        CONNECTION LOST
-                      </div>
-                    </Tooltip>
-                  {:else}
-                    <div class="w-3 h-3 rounded-full bg-[var(--pd-status-connected)]"></div>
-                    <div
-                      class="ml-1 font-bold text-[9px] text-[var(--pd-status-connected)]"
-                      aria-label="Context Reachable">
-                      REACHABLE
-                    </div>
-                  {/if}
-                </div>
-                <div class="flex flex-row gap-4 mt-4">
-                  <div class="text-center">
-                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted}>PODS</div>
-                    <div class="text-[16px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted} aria-label="Context Pods Count">
-                      {#if context.podsPermitted}
-                        {#if context.podsCount !== undefined}{context.podsCount}{/if}
-                      {:else}-{/if}
-                    </div>
-                  </div>
-                  <div class="text-center">
-                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.deploymentsPermitted}>DEPLOYMENTS</div>
-                    <div
-                      class="text-[16px] text-[var(--pd-invert-content-card-text)]"
-                      class:opacity-60={!context.deploymentsPermitted}
-                      aria-label="Context Deployments Count">
-                      {#if context.deploymentsPermitted}
-                        {#if context.deploymentsCount !== undefined}{context.deploymentsCount}{/if}
-                      {:else}-{/if}
-                    </div>
-                  </div>
-                </div>
-                {#if context.isOffline}
-                  <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
-                {/if}
-                {#if !context.podsPermitted || !context.deploymentsPermitted}
-                  <Tooltip tip={context.notPermittedHelp}><div><Icon size="1x" icon={faQuestionCircle} /></div></Tooltip>
-                {/if}
-              {:else}
-                <div class="flex flex-col space-y-2">
-                  <div class="flex flex-row pt-2">
-                    {#if context.errorMessage}
-                      <div class="w-3 h-3 rounded-full bg-[var(--pd-status-dead)]"></div>
-                      <div class="ml-1 text-xs text-[var(--pd-status-dead)]" aria-label="Error">
-                        <Tooltip>
-                          <div>ERROR</div>
-                          {#snippet tipSnippet()}
-                          <div class="p-2">
-                            {#if context.errorMessage}
-                              {#each context.errorMessage.split('\n').filter(l => l) as line, index (index)}
-                                <p>{line}</p>
-                              {/each}
-                            {/if}
-                          </div>
-                          {/snippet}
-                        </Tooltip>
-                      </div>
-                    {:else}
-                      <div class="w-3 h-3 rounded-full bg-[var(--pd-status-disconnected)]"></div>
-                      <div class="ml-1 text-xs text-[var(--pd-status-disconnected)]" aria-label="Context Unreachable">
-                        {#if context.isKnown}
-                          UNREACHABLE
-                        {:else}
-                          UNKNOWN
-                        {/if}
-                      </div>
-                    {/if}
-                    {#if context.isBeingChecked}
-                      <div class="ml-1"><Spinner size="12px"></Spinner></div>
-                    {/if}
-                  </div>
-                  {#if !$kubernetesContextsState.get(context.name)}
-                    <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
-                  {/if}
-                </div>
-              {/if}
+          <div class="text-sm">
+            <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
+              <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">CLUSTER</span>
+              <span
+                class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
+                aria-label="Context Cluster">{context.cluster}</span>
             </div>
-            <div class="grow text-sm">
+
+            {#if context.clusterInfo !== undefined}
               <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">CLUSTER</span>
+                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">SERVER</span>
                 <span
                   class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
-                  aria-label="Context Cluster">{context.cluster}</span>
+                  aria-label="Context Server"
+                  >{context.clusterInfo.server}
+                </span>
               </div>
+            {/if}
 
-              {#if context.clusterInfo !== undefined}
-                <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                  <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">SERVER</span>
-                  <span
-                    class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
-                    aria-label="Context Server"
-                    >{context.clusterInfo.server}
-                  </span>
-                </div>
-              {/if}
-
-              <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">USER</span>
-                <span class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis" aria-label="Context User"
-                  >{context.user}</span>
-              </div>
-
-              {#if context.namespace}
-                <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                  <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">NAMESPACE</span>
-                  <span
-                    class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
-                    aria-label="Context Namespace">{context.namespace}</span>
-                </div>
-              {/if}
+            <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
+              <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">USER</span>
+              <span class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis" aria-label="Context User"
+                >{context.user}</span>
             </div>
+
+            {#if context.namespace}
+              <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
+                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">NAMESPACE</span>
+                <span
+                  class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
+                  aria-label="Context Namespace">{context.namespace}</span>
+              </div>
+            {/if}
           </div>
         </div>
       </div>

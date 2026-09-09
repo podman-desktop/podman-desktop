@@ -28,7 +28,6 @@ import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
-import { registeredFeatures } from '/@/stores/registered-features';
 
 import DeployPodToKube from './DeployPodToKube.svelte';
 
@@ -40,7 +39,6 @@ vi.mock(import('tinro'));
 beforeEach(() => {
   vi.resetAllMocks();
   vi.useRealTimers();
-  registeredFeatures.set([]);
 
   // podYaml with volumes
   const podYaml = {
@@ -454,44 +452,6 @@ test('fail to deploy ingress if service is unselected', async () => {
   expect(window.kubernetesCreateIngress).not.toHaveBeenCalled();
 });
 
-test('Should display Open pod button after successful deployment', async () => {
-  vi.mocked(window.kubernetesGetCurrentContextName).mockResolvedValue('default');
-
-  await waitRender({});
-  const createButton = screen.getByRole('button', { name: 'Deploy' });
-  expect(createButton).toBeInTheDocument();
-  expect(createButton).toBeEnabled();
-
-  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
-    metadata: { name: 'my-pod', namespace: 'default' },
-  });
-  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
-    metadata: { name: 'my-pod', namespace: 'default' },
-    status: {
-      phase: 'Running',
-    },
-  });
-
-  vi.useFakeTimers({ shouldAdvanceTime: true });
-  await fireEvent.click(createButton);
-  await vi.runAllTimersAsync();
-
-  const doneButton = screen.getByRole('button', { name: 'Done' });
-  expect(doneButton).toBeInTheDocument();
-  expect(doneButton).toBeEnabled();
-
-  const openPodButton = screen.getByRole('button', { name: 'Open Pod' });
-  expect(openPodButton).toBeInTheDocument();
-  expect(openPodButton).toBeEnabled();
-
-  await fireEvent.click(openPodButton);
-  expect(window.navigateToRoute).toBeCalledWith('kubernetes', {
-    kind: 'Pod',
-    name: 'my-pod',
-    namespace: 'default',
-  });
-});
-
 test('Done button should go back to previous page', async () => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
 
@@ -524,56 +484,6 @@ test('Done button should go back to previous page', async () => {
   lastPage.set({ name: 'perious page', path: '/last' });
   await fireEvent.click(doneButton);
   expect(router.goto).toHaveBeenCalledWith(`/last`);
-});
-
-test('Should hide Open Pod button when kubernetes-dashboard feature is active', async () => {
-  registeredFeatures.set(['kubernetes-dashboard']);
-  vi.mocked(window.kubernetesGetCurrentContextName).mockResolvedValue('default');
-
-  await waitRender({});
-  const createButton = screen.getByRole('button', { name: 'Deploy' });
-
-  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
-    metadata: { name: 'my-pod', namespace: 'default' },
-  });
-  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
-    metadata: { name: 'my-pod', namespace: 'default' },
-    status: { phase: 'Running' },
-  });
-
-  vi.useFakeTimers({ shouldAdvanceTime: true });
-  await fireEvent.click(createButton);
-  await vi.runAllTimersAsync();
-
-  expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Open Pod' })).toBeNull();
-});
-
-test('Should show Open Pod button when kubernetes-dashboard feature becomes inactive', async () => {
-  registeredFeatures.set(['kubernetes-dashboard']);
-  vi.mocked(window.kubernetesGetCurrentContextName).mockResolvedValue('default');
-
-  await waitRender({});
-  const createButton = screen.getByRole('button', { name: 'Deploy' });
-
-  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
-    metadata: { name: 'my-pod', namespace: 'default' },
-  });
-  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
-    metadata: { name: 'my-pod', namespace: 'default' },
-    status: { phase: 'Running' },
-  });
-
-  vi.useFakeTimers({ shouldAdvanceTime: true });
-  await fireEvent.click(createButton);
-  await vi.runAllTimersAsync();
-
-  expect(screen.queryByRole('button', { name: 'Open Pod' })).toBeNull();
-
-  registeredFeatures.set([]);
-  await vi.waitFor(() => {
-    expect(screen.getByRole('button', { name: 'Open Pod' })).toBeInTheDocument();
-  });
 });
 
 test('ImagePullBackOff error should be reported', async () => {

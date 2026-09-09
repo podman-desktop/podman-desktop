@@ -20,31 +20,21 @@ import * as fs from 'node:fs';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
-import { PassThrough } from 'node:stream';
 
 import type {
   Cluster,
   Context,
-  KubernetesListObject,
   KubernetesObject,
-  RequestContext,
-  ResponseContext,
   User,
   V1APIGroup,
   V1APIResource,
   V1ConfigMap,
-  V1CronJob,
   V1Deployment,
   V1Ingress,
-  V1Job,
   V1NamespaceList,
-  V1Node,
   V1ObjectMeta,
-  V1OwnerReference,
-  V1PersistentVolumeClaim,
   V1Pod,
   V1PodList,
-  V1Secret,
   V1Service,
   V1Status,
 } from '@kubernetes/client-node';
@@ -52,76 +42,29 @@ import {
   ApiException,
   ApisApi,
   AppsV1Api,
-  BatchV1Api,
   CoreV1Api,
-  createConfiguration,
   CustomObjectsApi,
-  Exec,
   Health,
   KubeConfig,
   KubernetesObjectApi,
-  Log,
   NetworkingV1Api,
   Watch,
 } from '@kubernetes/client-node';
-import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware.js';
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import type {
-  ContextGeneralState,
-  ContextHealth,
-  ContextPermission,
-  ForwardConfig,
-  ForwardOptions,
-  KubeContext,
-  KubernetesContextResources,
-  KubernetesTroubleshootingInformation,
-  ResourceCount,
-  ResourceName,
-  V1Route,
-} from '@podman-desktop/core-api';
+import type { ForwardConfig, KubeContext, V1Route } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
-import type { WebSocket } from 'ws';
 import type { Tags } from 'yaml';
 import { parseAllDocuments } from 'yaml';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
-import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
-import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { Uri } from '/@/plugin/types/uri.js';
-
-import { ContextsManager } from './contexts-manager.js';
-import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
-import { ContextsStatesDispatcher } from './contexts-states-dispatcher.js';
-import {
-  BufferedStreamWriter,
-  ExecStreamWriter,
-  ResizableTerminalWriter,
-  StringLineReader,
-} from './kubernetes-exec-transmitter.js';
-
-interface ContextsManagerInterface {
-  // indicate to the manager that the kubeconfig has changed
-  update(kubeconfig: KubeConfig): Promise<void>;
-  // get the general state of contexts
-  getContextsGeneralState(): Map<string, ContextGeneralState>;
-  // get the general state of the current context
-  getCurrentContextGeneralState(): ContextGeneralState;
-  // register for `resource` state in current context
-  registerGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[];
-  // unregister from `resource` state in current context
-  unregisterGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[];
-  // dispose resources created by the manager
-  dispose(): void;
-  // force the manager to refresh the state for the given context
-  refreshContextState(contextName: string): Promise<void>;
-}
 
 interface V1ObjectMetaWithName extends V1ObjectMeta {
   name: string;
@@ -149,13 +92,6 @@ const FIELD_MANAGER = 'podman-desktop';
 
 const CHECK_CONNECTION_TIMEOUT_MS = 1_000;
 
-const SCALABLE_CONTROLLER_TYPES = ['Deployment', 'ReplicaSet', 'StatefulSet'];
-export type ScalableControllerType = (typeof SCALABLE_CONTROLLER_TYPES)[number];
-export type ControllerType = ScalableControllerType | 'Job' | 'DaemonSet' | 'CronJob' | undefined;
-function isScalableControllerType(string: unknown): string is ScalableControllerType {
-  return typeof string === 'string' && SCALABLE_CONTROLLER_TYPES.includes(string);
-}
-
 function sanitizeMetadata(spec: KubernetesObjectWithKindAndName): void {
   delete spec.metadata?.resourceVersion;
   delete spec.metadata?.uid;
@@ -163,11 +99,6 @@ function sanitizeMetadata(spec: KubernetesObjectWithKindAndName): void {
   delete spec.metadata?.creationTimestamp;
   delete spec.metadata?.managedFields;
   delete spec.status; // status is usually updated by the system, ignore it
-}
-
-export interface PodCreationSource {
-  isManuallyCreated: boolean;
-  controllerType: ControllerType;
 }
 
 /**
@@ -195,9 +126,6 @@ export class KubernetesClient {
    */
   private apiResources = new Map<string, Array<V1APIResource>>();
 
-  private contextsState?: ContextsManagerInterface;
-  private contextsStatesDispatcher: ContextsStatesDispatcher | undefined;
-
   private readonly _onDidUpdateKubeconfig = new Emitter<containerDesktopAPI.KubeconfigUpdateEvent>();
   readonly onDidUpdateKubeconfig: containerDesktopAPI.Event<containerDesktopAPI.KubeconfigUpdateEvent> =
     this._onDidUpdateKubeconfig.event;
@@ -205,13 +133,6 @@ export class KubernetesClient {
   static readonly portForwardServiceProvider = new KubernetesPortForwardServiceProvider();
 
   #portForwardService?: KubernetesPortForwardService;
-
-  #execs: Map<
-    string,
-    { stdout: ExecStreamWriter; stderr: ExecStreamWriter; stdin: StringLineReader; conn: WebSocket }
-  > = new Map();
-
-  #managerStarted: boolean = true;
 
   constructor(
     @inject(ApiSenderType)
@@ -222,13 +143,8 @@ export class KubernetesClient {
     private readonly fileSystemMonitoring: FilesystemMonitoring,
     @inject(Telemetry)
     private readonly telemetry: Telemetry,
-    @inject(ExperimentalConfigurationManager)
-    private readonly experimentalConfigurationManager: ExperimentalConfigurationManager,
-    @inject(FeatureRegistry)
-    private readonly featureRegistry: FeatureRegistry,
   ) {
     this.kubeConfig = new KubeConfig();
-    this.contextsState = new ContextsManager(this.apiSender);
   }
 
   async init(): Promise<void> {
@@ -247,17 +163,6 @@ export class KubernetesClient {
           default: defaultKubeconfigPath,
           format: 'file',
           readonly: false,
-        },
-        ['kubernetes.statesExperimental']: {
-          description: 'Use new version of Kubernetes contexts monitoring (needs restart)',
-          type: 'boolean',
-          default: true,
-        },
-        ['kubernetes.useInternalKubernetes']: {
-          description: 'Use internal Kubernetes',
-          hidden: true,
-          type: 'boolean',
-          default: true,
         },
       },
     };
@@ -278,18 +183,6 @@ export class KubernetesClient {
       }
     }
 
-    const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
-      'kubernetes.statesExperimental',
-    );
-    this.telemetry.track('kubernetesExperimentalMode', { enabled: statesExperimental });
-
-    if (statesExperimental) {
-      const manager = new ContextsManagerExperimental();
-      this.contextsState = manager;
-      this.contextsStatesDispatcher = new ContextsStatesDispatcher(manager, this.apiSender);
-      this.contextsStatesDispatcher.init();
-    }
-
     // Update the property on change
     this.configurationRegistry.onDidChangeConfiguration(async e => {
       if (e.key === 'kubernetes.Kubeconfig') {
@@ -299,22 +192,6 @@ export class KubernetesClient {
         }
         await this.setKubeconfig(Uri.file(val));
         this.setupWatcher(val);
-      }
-    });
-
-    this.#managerStarted = true;
-    this.featureRegistry.onFeaturesUpdated(async features => {
-      const kubeDashboardRegistered = features.includes('kubernetes-dashboard');
-      if (kubeDashboardRegistered) {
-        if (this.#managerStarted) {
-          await this.KubernetesManagerStop();
-          this.#managerStarted = false;
-        }
-      } else {
-        if (!this.#managerStarted) {
-          await this.KubernetesManagerStart();
-          this.#managerStarted = true;
-        }
       }
     });
   }
@@ -639,14 +516,9 @@ export class KubernetesClient {
     }
     this.apiResources.clear();
     this.#portForwardService?.dispose();
-    this.#execs.forEach(entry => entry.conn.close());
-    this.#execs.clear();
     this.#portForwardService = KubernetesClient.portForwardServiceProvider.getService(this, this.apiSender);
     await this.fetchAPIGroups();
     this.apiSender.send('kubeconfig-update');
-    const configCopy = new KubeConfig();
-    configCopy.loadFromString(this.kubeConfig.exportConfig());
-    await this.contextsState?.update(configCopy);
   }
 
   newError(message: string, cause: Error): Error {
@@ -730,232 +602,6 @@ export class KubernetesClient {
     }
   }
 
-  // List all routes
-  async listRoutes(): Promise<V1Route[]> {
-    const namespace = this.getCurrentNamespace();
-    // Only retrieve routes if valid namespace && valid connection, otherwise we will return an empty array
-    const connected = await this.checkConnection();
-    if (namespace && connected) {
-      try {
-        // Get the routes via the kubernetes api
-        const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
-        const routes = await customObjectsApi.listNamespacedCustomObject({
-          group: 'route.openshift.io',
-          version: 'v1',
-          namespace,
-          plural: 'routes',
-        });
-        const body = routes as KubernetesListObject<V1Route>;
-        return body.items;
-      } catch (_) {
-        // catch 404 error
-        // do nothing
-      }
-    }
-    return [];
-  }
-
-  async readPodLog(name: string, container: string, callback: (name: string, data: string) => void): Promise<void> {
-    this.telemetry.track('kubernetesReadPodLog');
-    const ns = this.currentNamespace;
-    if (ns) {
-      const log = new Log(this.kubeConfig);
-
-      const logStream = new PassThrough();
-
-      logStream.on('data', chunk => {
-        // use write rather than console.log to prevent double line feed
-        callback('data', chunk.toString('utf-8'));
-      });
-
-      await log.log(ns, name, container, logStream, { follow: true });
-    }
-  }
-
-  async deletePod(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.currentNamespace;
-      if (namespace) {
-        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-        await k8sApi.deleteNamespacedPod({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeletePod', telemetryOptions);
-    }
-  }
-
-  async deleteDeployment(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete deployment if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sAppsApi = this.kubeConfig.makeApiClient(AppsV1Api);
-        await k8sAppsApi.deleteNamespacedDeployment({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteDeployment', telemetryOptions);
-    }
-  }
-
-  async deleteConfigMap(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete config map if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-        await k8sApi.deleteNamespacedConfigMap({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteConfigMap', telemetryOptions);
-    }
-  }
-
-  async deleteCronJob(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Delete only if there is a valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sApi = this.kubeConfig.makeApiClient(BatchV1Api);
-        await k8sApi.deleteNamespacedCronJob({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteCronJob', telemetryOptions);
-    }
-  }
-
-  async deleteJob(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Delete only if there is a valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sApi = this.kubeConfig.makeApiClient(BatchV1Api);
-        await k8sApi.deleteNamespacedJob({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteJob', telemetryOptions);
-    }
-  }
-
-  async deleteSecret(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete secret if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-        await k8sApi.deleteNamespacedSecret({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteSecret', telemetryOptions);
-    }
-  }
-
-  async deletePersistentVolumeClaim(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete PVC if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-        await k8sApi.deleteNamespacedPersistentVolumeClaim({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeletePersistentVolumeClaim', telemetryOptions);
-    }
-  }
-
-  async deleteIngress(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete ingress if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const networkingK8sApi = this.kubeConfig.makeApiClient(NetworkingV1Api);
-        await networkingK8sApi.deleteNamespacedIngress({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteingress', telemetryOptions);
-    }
-  }
-
-  async deleteRoute(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete route if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
-        await customObjectsApi.deleteNamespacedCustomObject({
-          group: 'route.openshift.io',
-          version: 'v1',
-          namespace,
-          plural: 'routes',
-          name,
-        });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteRoute', telemetryOptions);
-    }
-  }
-
-  async deleteService(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const namespace = this.getCurrentNamespace();
-      // Only delete service if valid namespace && valid connection
-      const connected = await this.checkConnection();
-      if (namespace && connected) {
-        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-        await k8sApi.deleteNamespacedService({ name, namespace });
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesDeleteService', telemetryOptions);
-    }
-  }
-
   async readNamespacedPod(name: string, namespace: string): Promise<V1Pod> {
     const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
     try {
@@ -979,75 +625,6 @@ export class KubernetesClient {
       return res;
     } catch (error) {
       this.telemetry.track('kubernetesReadNamespacedDeployment.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
-  async readNamespacedPersistentVolumeClaim(
-    name: string,
-    namespace: string,
-  ): Promise<V1PersistentVolumeClaim | undefined> {
-    const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-    try {
-      const res = await k8sApi.readNamespacedPersistentVolumeClaim({ name, namespace });
-      if (res?.metadata?.managedFields) {
-        delete res?.metadata?.managedFields;
-      }
-      return res;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedPersistentVolumeClaim.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
-  async readNode(name: string): Promise<V1Node | undefined> {
-    const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-    try {
-      const res = await k8sApi.readNode({ name });
-      if (res?.metadata?.managedFields) {
-        delete res.metadata.managedFields;
-      }
-      return res;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNode.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
-  async readNamespacedIngress(name: string, namespace: string): Promise<V1Ingress | undefined> {
-    const k8sNetworkingApi = this.kubeConfig.makeApiClient(NetworkingV1Api);
-    try {
-      const res = await k8sNetworkingApi.readNamespacedIngress({ name, namespace });
-      if (res?.metadata?.managedFields) {
-        delete res.metadata.managedFields;
-      }
-      return res;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedIngress.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
-  async readNamespacedRoute(name: string, namespace: string): Promise<V1Route | undefined> {
-    const k8sCustomObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
-    try {
-      const res = await k8sCustomObjectsApi.getNamespacedCustomObject({
-        group: 'route.openshift.io',
-        version: 'v1',
-        namespace,
-        plural: 'routes',
-        name,
-      });
-      const route = res as V1Route;
-      if (route?.metadata?.managedFields) {
-        delete route.metadata.managedFields;
-      }
-      if (Object.keys(route).length === 0) {
-        return undefined;
-      }
-      return route;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedRoute.error', error);
       throw this.wrapK8sClientError(error);
     }
   }
@@ -1080,48 +657,6 @@ export class KubernetesClient {
     }
   }
 
-  async readNamespacedSecret(name: string, namespace: string): Promise<V1Secret | undefined> {
-    const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
-    try {
-      const res = await k8sApi.readNamespacedSecret({ name, namespace });
-      if (res?.metadata?.managedFields) {
-        delete res.metadata.managedFields;
-      }
-      return res;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedSecret.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
-  async readNamespacedCronJob(name: string, namespace: string): Promise<V1CronJob | undefined> {
-    const k8sApi = this.kubeConfig.makeApiClient(BatchV1Api);
-    try {
-      const res = await k8sApi.readNamespacedCronJob({ name, namespace });
-      if (res?.metadata?.managedFields) {
-        delete res.metadata.managedFields;
-      }
-      return res;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedCronJob.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
-  async readNamespacedJob(name: string, namespace: string): Promise<V1Job | undefined> {
-    const k8sApi = this.kubeConfig.makeApiClient(BatchV1Api);
-    try {
-      const res = await k8sApi.readNamespacedJob({ name, namespace });
-      if (res?.metadata?.managedFields) {
-        delete res.metadata.managedFields;
-      }
-      return res;
-    } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedJob.error', error);
-      throw this.wrapK8sClientError(error);
-    }
-  }
-
   async listNamespaces(): Promise<V1NamespaceList> {
     try {
       const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
@@ -1129,35 +664,6 @@ export class KubernetesClient {
     } catch (error) {
       throw this.wrapK8sClientError(error);
     }
-  }
-
-  // setCurrentNamespace changes the current namespace without updating the kubeconfig file
-  async setCurrentNamespace(namespace: string): Promise<void> {
-    // Set the new namespace and clear cached data
-    this.currentNamespace = namespace;
-
-    this.#execs.forEach(entry => entry.conn.close());
-    this.#execs.clear();
-
-    // Update state with a copy of the kubeConfig with only the current namespace changed
-    const newConfig = new KubeConfig();
-    newConfig.loadFromOptions({
-      contexts: this.kubeConfig.contexts.map(ctx =>
-        ctx.name !== this.kubeConfig.currentContext
-          ? ctx
-          : {
-              name: ctx.name,
-              cluster: ctx.cluster,
-              namespace: namespace,
-              user: ctx.user,
-            },
-      ),
-      clusters: this.kubeConfig.clusters,
-      users: this.kubeConfig.users,
-      currentContext: this.kubeConfig.currentContext,
-    });
-    await this.contextsState?.update(newConfig);
-    this.apiSender.send('kubernetes-context-update');
   }
 
   // Check that we can connect to the cluster and return a Promise<boolean> of true or false depending on the result.
@@ -1436,394 +942,9 @@ export class KubernetesClient {
     }
   }
 
-  public getContextsGeneralState(): Map<string, ContextGeneralState> {
-    return this.contextsState?.getContextsGeneralState() ?? new Map();
-  }
-
-  public getCurrentContextGeneralState(): ContextGeneralState {
-    return (
-      this.contextsState?.getCurrentContextGeneralState() ?? {
-        reachable: false,
-        resources: { pods: 0, deployments: 0 },
-      }
-    );
-  }
-
-  public registerGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[] {
-    return this.contextsState?.registerGetCurrentContextResources(resourceName) ?? [];
-  }
-
-  public unregisterGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[] {
-    return this.contextsState?.unregisterGetCurrentContextResources(resourceName) ?? [];
-  }
-
   public dispose(): void {
     this.kubeConfigWatcher?.dispose();
-    this.contextsState?.dispose();
-    this.contextsStatesDispatcher?.dispose();
     this.#portForwardService?.dispose();
-    for (const entry of this.#execs.values()) {
-      entry.conn.close();
-    }
-    this.#execs.clear();
-  }
-
-  async execIntoContainer(
-    podName: string,
-    containerName: string,
-    onStdOut: (data: Buffer) => void,
-    onStdErr: (data: Buffer) => void,
-    onClose: () => void,
-  ): Promise<{ onStdIn: (data: string) => void; onResize: (columns: number, rows: number) => void }> {
-    let stdin: StringLineReader;
-    let stdout: ExecStreamWriter;
-    let stderr: ExecStreamWriter;
-    const entry = this.#execs.get(`${podName}-${containerName}`);
-    if (entry) {
-      stdin = entry.stdin;
-      stdout = entry.stdout;
-      stdout.delegate = new ResizableTerminalWriter(new BufferedStreamWriter(onStdOut));
-      stderr = entry.stderr;
-      stderr.delegate = new ResizableTerminalWriter(new BufferedStreamWriter(onStdErr));
-      entry.conn.on('close', () => {
-        onClose();
-      });
-    } else {
-      try {
-        const ns = this.getCurrentNamespace();
-        const connected = await this.checkConnection();
-        if (!ns) {
-          throw new Error('no active namespace');
-        }
-        if (!connected) {
-          throw new Error('not active connection');
-        }
-
-        stdout = new ExecStreamWriter(new ResizableTerminalWriter(new BufferedStreamWriter(onStdOut)));
-        stderr = new ExecStreamWriter(new ResizableTerminalWriter(new BufferedStreamWriter(onStdErr)));
-        stdin = new StringLineReader();
-
-        const exec = new Exec(this.kubeConfig);
-        const conn = await exec.exec(
-          ns,
-          podName,
-          containerName,
-          ['/bin/sh', '-c', 'if command -v bash >/dev/null 2>&1; then bash; else sh; fi'],
-          stdout,
-          stderr,
-          stdin,
-          true,
-          (_: V1Status) => {
-            // need to think, maybe it would be better to pass exit code to the client, but on the other hand
-            // if connection is idle for 15 minutes, websocket connection closes automatically and this handler
-            // does not call. also need to separate SIGTERM signal (143) and normally exit signals to be able to
-            // proper reconnect client terminal. at this moment we ignore status and rely on websocket close event
-          },
-        );
-
-        //need to handle websocket idling, which causes the connection close which is not passed to the execution status
-        //approx time for idling before closing socket is 15 minutes. code and reason are always undefined here.
-        conn.on('close', () => {
-          onClose();
-          this.#execs.delete(`${podName}-${containerName}`);
-        });
-        this.#execs.set(`${podName}-${containerName}`, { stdin, stdout, stderr, conn });
-      } catch (error) {
-        throw this.wrapK8sClientError(error);
-      }
-    }
-
-    return {
-      onStdIn: (data: string): void => {
-        stdin.readLine(data);
-      },
-      onResize: (columns: number, rows: number): void => {
-        if (columns <= 0 || rows <= 0 || isNaN(columns) || isNaN(rows) || columns === Infinity || rows === Infinity) {
-          throw new Error('resizing must be done using positive cols and rows');
-        }
-
-        ((stdout as ExecStreamWriter).delegate as ResizableTerminalWriter).resize({ width: columns, height: rows });
-      },
-    };
-  }
-
-  async restartPod(name: string): Promise<void> {
-    let telemetryOptions = {};
-    try {
-      const ns = this.currentNamespace;
-      const connected = await this.checkConnection();
-      if (!ns) {
-        throw new Error('no active namespace');
-      }
-      if (!connected) {
-        throw new Error('not active connection');
-      }
-
-      const pod = await this.readNamespacedPod(name, ns);
-      if (!pod?.metadata) {
-        throw new Error('no metadata found');
-      }
-
-      const creationSource = this.checkPodCreationSource(pod.metadata);
-      if (creationSource.isManuallyCreated) {
-        await this.restartManuallyCreatedPod(name, ns, pod);
-      } else {
-        if (!creationSource.controllerType) {
-          throw new Error('unable to restart controlled pod');
-        }
-
-        const controller = this.getPodController(pod.metadata);
-        const controllerName = controller!.name;
-
-        if (isScalableControllerType(creationSource.controllerType)) {
-          await this.scaleControllerToRestartPods(ns, controllerName, creationSource.controllerType);
-        } else if (creationSource.controllerType === 'Job') {
-          await this.restartJob(controllerName, ns);
-        }
-      }
-    } catch (error) {
-      telemetryOptions = { error: error };
-      throw this.wrapK8sClientError(error);
-    } finally {
-      this.telemetry.track('kubernetesRestartPod', telemetryOptions);
-    }
-  }
-
-  protected async restartManuallyCreatedPod(name: string, namespace: string, pod: V1Pod): Promise<void> {
-    const coreApi = this.kubeConfig.makeApiClient(CoreV1Api);
-    await coreApi.deleteNamespacedPod({ name, namespace });
-
-    const isDeleted = await this.waitForPodDeletion(coreApi, name, namespace);
-    if (!isDeleted) {
-      throw new Error(`pod "${name}" in namespace "${namespace}" was not deleted within the expected timeframe`);
-    }
-
-    delete pod.metadata?.resourceVersion;
-    delete pod.metadata?.uid;
-    delete pod.metadata?.selfLink;
-    delete pod.metadata?.creationTimestamp;
-    delete pod.status;
-
-    const newPod: V1Pod = { ...pod };
-    await coreApi.createNamespacedPod({ namespace, body: newPod });
-  }
-
-  protected async waitForPodDeletion(
-    coreApi: CoreV1Api,
-    name: string,
-    namespace: string,
-    timeout: number = 60000,
-  ): Promise<boolean> {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < timeout) {
-      try {
-        await coreApi.readNamespacedPodStatus({ name, namespace });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (e) {
-        const error = e ?? {};
-        if (error instanceof ApiException && error.code === 404) {
-          return true;
-        }
-        throw e;
-      }
-    }
-    return false;
-  }
-
-  protected async scaleControllerToRestartPods(
-    namespace: string,
-    controllerName: string,
-    controllerType: ScalableControllerType,
-    timeout: number = 10000,
-  ): Promise<void> {
-    const appsApi = this.kubeConfig.makeApiClient(AppsV1Api);
-
-    let currentReplicas = 0;
-    if (controllerType === 'Deployment') {
-      const currentDeployment = await appsApi.readNamespacedDeployment({ name: controllerName, namespace });
-      currentReplicas = currentDeployment.spec?.replicas ?? 1;
-    } else if (controllerType === 'ReplicaSet') {
-      const currentReplicaSet = await appsApi.readNamespacedReplicaSet({ name: controllerName, namespace });
-      currentReplicas = currentReplicaSet.spec?.replicas ?? 1;
-    } else if (controllerType === 'StatefulSet') {
-      const currentStatefulSet = await appsApi.readNamespacedStatefulSet({ name: controllerName, namespace });
-      currentReplicas = currentStatefulSet.spec?.replicas ?? 1;
-    }
-
-    await this.scaleController(appsApi, namespace, controllerName, controllerType, 0);
-
-    await new Promise(resolve => setTimeout(resolve, timeout));
-
-    await this.scaleController(appsApi, namespace, controllerName, controllerType, currentReplicas);
-  }
-
-  protected async scaleController(
-    appsApi: AppsV1Api,
-    namespace: string,
-    controllerName: string,
-    controllerType: ScalableControllerType,
-    replicas: number,
-  ): Promise<void> {
-    const headerPatchMiddleware = new PromiseMiddlewareWrapper({
-      pre: async (requestContext: RequestContext): Promise<RequestContext> => {
-        requestContext.setHeaderParam('Content-type', 'application/json-patch+json');
-        return requestContext;
-      },
-      post: async (context: ResponseContext): Promise<ResponseContext> => {
-        return context;
-      },
-    });
-
-    const configuration = createConfiguration({ middleware: [headerPatchMiddleware] });
-
-    if (controllerType === 'Deployment') {
-      await appsApi.patchNamespacedDeploymentScale(
-        { name: controllerName, namespace, body: { spec: { replicas } } },
-        configuration,
-      );
-    } else if (controllerType === 'ReplicaSet') {
-      await appsApi.patchNamespacedReplicaSetScale(
-        {
-          name: controllerName,
-          namespace,
-          body: { spec: { replicas } },
-        },
-        configuration,
-      );
-    } else if (controllerType === 'StatefulSet') {
-      await appsApi.patchNamespacedStatefulSetScale(
-        { name: controllerName, namespace, body: { spec: { replicas } } },
-        configuration,
-      );
-    }
-  }
-
-  protected async restartJob(name: string, namespace: string): Promise<void> {
-    const batchApi = this.kubeConfig.makeApiClient(BatchV1Api);
-    const coreApi = this.kubeConfig.makeApiClient(CoreV1Api);
-
-    const existingJob = await batchApi.readNamespacedJob({ name, namespace });
-    await batchApi.deleteNamespacedJob({
-      name,
-      namespace,
-      pretty: 'true',
-      propagationPolicy: 'Background',
-    });
-
-    const isJobDeleted = await this.waitForJobDeletion(batchApi, name, namespace);
-    if (!isJobDeleted) {
-      throw new Error(`job "${name}" in namespace "${namespace}" was not deleted within the expected timeframe`);
-    }
-
-    const labelSelector = `job-name=${name}`;
-    const isPodsDeleted = await this.waitForPodsDeletion(coreApi, namespace, labelSelector);
-    if (!isPodsDeleted) {
-      throw new Error(
-        `not all pods with selector "${labelSelector}" in namespace "${namespace}" were deleted within the expected timeframe`,
-      );
-    }
-    delete existingJob.metadata!.creationTimestamp;
-    delete existingJob.metadata!.resourceVersion;
-    delete existingJob.metadata!.selfLink;
-    delete existingJob.metadata!.uid;
-    delete existingJob.metadata!.ownerReferences;
-    delete existingJob.status;
-    delete existingJob.spec!.selector;
-    if (existingJob.spec!.template.metadata!.labels) {
-      delete existingJob.spec!.template.metadata!.labels['controller-uid'];
-      delete existingJob.spec!.template.metadata!.labels['batch.kubernetes.io/controller-uid'];
-      delete existingJob.spec!.template.metadata!.labels['batch.kubernetes.io/job-name'];
-      delete existingJob.spec!.template.metadata!.labels['job-name'];
-    }
-    if (existingJob.metadata?.labels) {
-      delete existingJob.metadata.labels['controller-uid'];
-      delete existingJob.metadata.labels['batch.kubernetes.io/controller-uid'];
-      delete existingJob.metadata.labels['batch.kubernetes.io/job-name'];
-      delete existingJob.metadata.labels['job-name'];
-    }
-
-    await batchApi.createNamespacedJob({ namespace, body: existingJob });
-  }
-
-  protected async waitForJobDeletion(
-    batchApi: BatchV1Api,
-    name: string,
-    namespace: string,
-    timeout: number = 60000,
-  ): Promise<boolean> {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < timeout) {
-      try {
-        await batchApi.readNamespacedJobStatus({ name, namespace });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (e) {
-        const error = e ?? {};
-        if (error instanceof ApiException && error.code === 404) {
-          return true;
-        }
-        throw e;
-      }
-    }
-
-    return false;
-  }
-
-  protected async waitForPodsDeletion(
-    coreApi: CoreV1Api,
-    namespace: string,
-    selector: string,
-    timeout: number = 60000,
-  ): Promise<boolean> {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < timeout) {
-      const podList = await coreApi.listNamespacedPod({ namespace, labelSelector: selector });
-      if (podList.items.length === 0) {
-        return true;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
-    return false;
-  }
-
-  protected checkPodCreationSource(podMetadata: V1ObjectMeta): PodCreationSource {
-    const controller = this.getPodController(podMetadata);
-    if (controller) {
-      return {
-        isManuallyCreated: false,
-        controllerType: controller.kind,
-      };
-    }
-
-    return {
-      isManuallyCreated: true,
-      controllerType: undefined,
-    };
-  }
-
-  protected getPodController(podMetadata: V1ObjectMeta): V1OwnerReference | undefined {
-    // possible check is also in pod-template-hash label:
-    // pod.metadata?.labels && 'pod-template-hash' in pod.metadata.labels
-    return podMetadata.ownerReferences?.find((ref: V1OwnerReference) => ref.controller === true);
-  }
-
-  /**
-   * Ask for getting the state of the context as soon as possible.
-   *
-   * Because the connection to a context is tested with a backoff,
-   * it can take time to know if a context is reachable or not.
-   * By calling this method, the connection will be tested immediately,
-   * and the result sent as soon as the connection status is known.
-   *
-   * @param context name of the context for which we want to get state ASAP
-   * @returns
-   */
-  public async refreshContextState(context: string): Promise<void> {
-    return this.contextsState?.refreshContextState(context);
   }
 
   protected ensurePortForwardService(): KubernetesPortForwardService {
@@ -1835,79 +956,5 @@ export class KubernetesClient {
 
   public async getPortForwards(): Promise<ForwardConfig[]> {
     return this.ensurePortForwardService().listForwards();
-  }
-
-  public async createPortForward(config: ForwardOptions): Promise<ForwardConfig> {
-    const service = this.ensurePortForwardService();
-    const newConfig = await service.createForward(config);
-    try {
-      await service.startForward(newConfig);
-      return newConfig;
-    } catch (err: unknown) {
-      await service.deleteForward(newConfig);
-      throw err;
-    }
-  }
-
-  public async deletePortForward(config: ForwardConfig): Promise<void> {
-    return this.ensurePortForwardService().deleteForward(config);
-  }
-
-  public getContextsHealths(): ContextHealth[] {
-    return this.contextsStatesDispatcher?.getContextsHealths() ?? [];
-  }
-
-  public getContextsPermissions(): ContextPermission[] {
-    return this.contextsStatesDispatcher?.getContextsPermissions() ?? [];
-  }
-
-  public getResourcesCount(): ResourceCount[] {
-    return this.contextsStatesDispatcher?.getResourcesCount() ?? [];
-  }
-
-  public getActiveResourcesCount(): ResourceCount[] {
-    return this.contextsStatesDispatcher?.getActiveResourcesCount() ?? [];
-  }
-
-  public getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
-    return this.contextsStatesDispatcher?.getResources(contextNames, resourceName) ?? [];
-  }
-
-  public getTroubleshootingInformation(): KubernetesTroubleshootingInformation {
-    return (
-      this.contextsStatesDispatcher?.getTroubleshootingInformation() ?? {
-        healthCheckers: [],
-        permissionCheckers: [],
-        informers: [],
-      }
-    );
-  }
-
-  // This method is called when an extension providing the Kubernetes feature is enabled
-  protected async KubernetesManagerStop(): Promise<void> {
-    const emptyKubeConfig = new KubeConfig();
-    await this.contextsState?.update(emptyKubeConfig);
-    this.contextsState?.dispose();
-    this.contextsState = undefined;
-    this.contextsStatesDispatcher?.dispose();
-    this.contextsStatesDispatcher = undefined;
-    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', false);
-  }
-
-  // This method is called when an extension providing Kubernetes feature is disabled
-  protected async KubernetesManagerStart(): Promise<void> {
-    const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
-      'kubernetes.statesExperimental',
-    );
-    if (statesExperimental) {
-      const manager = new ContextsManagerExperimental();
-      this.contextsState = manager;
-      this.contextsStatesDispatcher = new ContextsStatesDispatcher(manager, this.apiSender);
-      this.contextsStatesDispatcher.init();
-    } else {
-      this.contextsState = new ContextsManager(this.apiSender);
-    }
-    await this.contextsState?.update(this.kubeConfig);
-    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', true);
   }
 }

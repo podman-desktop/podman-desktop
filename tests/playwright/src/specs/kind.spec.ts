@@ -34,7 +34,6 @@ import {
   resourceConnectionActionDetails,
 } from '/@/utility/cluster-operations';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deployContainerToCluster } from '/@/utility/kubernetes';
 import { deleteContainer, deleteImage, ensureCliInstalled } from '/@/utility/operations';
 import { getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
@@ -51,7 +50,6 @@ const KUBERNETES_CONTEXT: string = `kind-${CLUSTER_NAME}`;
 const IMAGE_TO_PULL: string = 'ghcr.io/linuxcontainers/alpine';
 const IMAGE_TAG: string = 'latest';
 const CONTAINER_NAME: string = 'alpine-container';
-const DEPLOYED_POD_NAME: string = CONTAINER_NAME;
 const CONTAINER_START_PARAMS: ContainerInteractiveParams = {
   attachTerminal: false,
 };
@@ -138,7 +136,7 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         await checkClusterResources(page, KIND_CONTAINER);
       });
 
-      test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
+      test('Deploy a container to the Kind cluster', async ({ navigationBar }) => {
         const imagesPage = await navigationBar.openImages();
         const pullImagePage = await imagesPage.openPullImage();
         await pullImagePage.pullImage(IMAGE_TO_PULL, IMAGE_TAG);
@@ -156,7 +154,8 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         const containerDetails = await containersPage.openContainersDetails(CONTAINER_NAME);
         await playExpect(containerDetails.heading).toBeVisible();
         await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
-        await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
+        const deployToKubernetesPage = await containerDetails.openDeployToKubernetesPage();
+        await deployToKubernetesPage.deployPod(CONTAINER_NAME, { useKubernetesServices: true }, KUBERNETES_CONTEXT);
       });
 
       test.describe

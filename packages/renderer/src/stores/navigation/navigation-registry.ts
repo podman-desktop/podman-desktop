@@ -28,7 +28,6 @@ import { EventStore } from '/@/stores/event-store';
 import { createNavigationContainerEntry } from './navigation-registry-container.svelte';
 import { createNavigationExtensionEntry, createNavigationExtensionGroup } from './navigation-registry-extension.svelte';
 import { createNavigationImageEntry } from './navigation-registry-image.svelte';
-import { createNavigationKubernetesGroup } from './navigation-registry-kubernetes.svelte';
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 import { createNavigationSecretEntry } from './navigation-registry-secret.svelte';
@@ -74,7 +73,6 @@ const init = (): void => {
   values.push(createNavigationSecretEntry());
   values.push(createNavigationExtensionEntry());
   values.push(createNavigationExtensionGroup());
-  handleKubernetesGroup();
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
@@ -168,26 +166,5 @@ configurationProperties.subscribe(() => {
       })
       .then(() => hideItems())
       .catch((err: unknown) => console.error('Error getting configuration value navbar.disabledItems', err));
-
-    handleKubernetesGroup();
   }
 });
-
-function handleKubernetesGroup(): void {
-  window
-    .getConfigurationValue<boolean>('kubernetes.useInternalKubernetes')
-    ?.then(value => {
-      if (value) {
-        if (!values.find(item => item.name === 'Kubernetes')) {
-          const extensionsIndex = values.findIndex(item => item.name === 'Extensions');
-          if (extensionsIndex !== -1) {
-            values.splice(extensionsIndex, 0, createNavigationKubernetesGroup());
-          }
-        }
-      } else {
-        values = values.filter(item => item.name !== 'Kubernetes');
-      }
-    })
-    .then(() => hideItems())
-    .catch((err: unknown) => console.error('Error getting configuration value kubernetes.useInternalKubernetes', err));
-}

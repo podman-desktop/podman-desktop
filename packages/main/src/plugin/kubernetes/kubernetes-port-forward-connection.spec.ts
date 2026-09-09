@@ -35,8 +35,6 @@ import type { WebSocket } from 'isomorphic-ws';
 import { afterEach, beforeEach, describe, expect, type MockedFunction, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
-import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
-import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import {
@@ -49,10 +47,6 @@ const apiSender: ApiSenderType = {} as unknown as ApiSenderType;
 const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;
 const fileSystemMonitoring: FilesystemMonitoring = new FilesystemMonitoring();
 const telemetry: Telemetry = {} as unknown as Telemetry;
-const experimentalConfigurationManager: ExperimentalConfigurationManager = {
-  isExperimentalConfigurationEnabled: vi.fn(),
-} as unknown as ExperimentalConfigurationManager;
-const featureRegistry: FeatureRegistry = {} as unknown as FeatureRegistry;
 
 const mockCoreV1Api = {
   readNamespacedPod: vi.fn(),
@@ -163,14 +157,7 @@ describe('PortForwardConnectionService', () => {
 
   beforeEach(() => {
     service = new TestablePortForwardConnectionService(
-      new KubernetesClient(
-        apiSender,
-        configurationRegistry,
-        fileSystemMonitoring,
-        telemetry,
-        experimentalConfigurationManager,
-        featureRegistry,
-      ),
+      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry),
     );
     global.fetch = vi.fn();
     vi.mocked(KubeConfig.prototype.makeApiClient).mockImplementation(api => {
@@ -242,14 +229,7 @@ describe('PortForwardConnectionService', () => {
     );
 
     service = new TestablePortForwardConnectionService(
-      new KubernetesClient(
-        apiSender,
-        configurationRegistry,
-        fileSystemMonitoring,
-        telemetry,
-        experimentalConfigurationManager,
-        featureRegistry,
-      ),
+      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry),
     );
 
     const createdServer = service.createServer(forwardSetup as never);

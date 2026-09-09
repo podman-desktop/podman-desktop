@@ -177,16 +177,6 @@ test.describe
       await playExpect(containersPage.heading).toBeVisible();
     });
 
-    test('Can go to Kubernetes and back, regression check for #15636', async () => {
-      // Context exists: skip this test scenario
-      test.skip(true, 'Requires K8s context set');
-    });
-
-    test('Kubernetes submenu navigation', async () => {
-      // Context exists: skip this test scenario
-      test.skip(true, 'Requires K8s context set');
-    });
-
     test('Navigating back to deleted container shows error placeholder', async ({ navigationBar, page }) => {
       // Pull alpine image (minimal image for testing)
       const imageName = 'ghcr.io/linuxcontainers/alpine';

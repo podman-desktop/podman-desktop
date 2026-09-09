@@ -29,11 +29,6 @@ beforeEach(() => {
 });
 
 test('check navigation registry items', async () => {
-  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([]);
-  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({
-    reachable: true,
-    resources: { pods: 0, deployments: 0 },
-  });
   await fetchNavigationRegistries();
   const registries = get(navigationRegistry);
   // expect 8 items in the registry

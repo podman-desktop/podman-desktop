@@ -21,8 +21,6 @@ import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
-import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
-import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
@@ -60,10 +58,6 @@ describe('context tests', () => {
   let client: TestKubernetesClient;
 
   const apiSendMock = vi.fn();
-  const experimentalConfigurationManager: ExperimentalConfigurationManager = {
-    isExperimentalConfigurationEnabled: vi.fn(),
-  } as unknown as ExperimentalConfigurationManager;
-  const featureRegistry: FeatureRegistry = {} as unknown as FeatureRegistry;
 
   function createClient(): TestKubernetesClient {
     const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;
@@ -76,14 +70,7 @@ describe('context tests', () => {
       receive: vi.fn(),
     };
 
-    const client = new TestKubernetesClient(
-      apiSender,
-      configurationRegistry,
-      fileSystemMonitoring,
-      telemetry,
-      experimentalConfigurationManager,
-      featureRegistry,
-    );
+    const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
 
     client.setUsers(originalUsers);
     client.setClusters(originalClusters);

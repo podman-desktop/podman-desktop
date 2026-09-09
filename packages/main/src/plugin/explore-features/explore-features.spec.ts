@@ -34,7 +34,6 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { Context } from '/@/plugin/context/context.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
 import { ExploreFeatures } from './explore-features.js';
@@ -65,10 +64,6 @@ const extensionLoaderMock = {
 const providerRegistryMock = {
   getProviderInfos: vi.fn(),
 } as unknown as ProviderRegistry;
-
-const kubernetesClientMock = {
-  getContextsGeneralState: vi.fn(),
-} as unknown as KubernetesClient;
 
 const contextMock = {
   setValue: vi.fn(),
@@ -151,7 +146,6 @@ const exploreFeaturesMock = new ExploreFeatures(
   extensionLoaderMock,
   configurationRegistryMock,
   providerRegistryMock,
-  kubernetesClientMock,
   contextMock,
 );
 
@@ -173,8 +167,6 @@ beforeEach(() => {
   vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([]);
 
   vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([providerInfoMock]);
-
-  vi.mocked(kubernetesClientMock.getContextsGeneralState).mockReturnValue(new Map());
 
   vi.mocked(promises.readFile).mockResolvedValue('some data');
 });
@@ -273,7 +265,6 @@ test.each([
   expect(contextMock.setValue).toHaveBeenCalledWith('containerListLength', 1);
   expect(contextMock.setValue).toHaveBeenCalledWith('runningContainerConnections', 2);
   expect(contextMock.setValue).toHaveBeenCalledWith('kubernetesConnections', true);
-  expect(contextMock.setValue).toHaveBeenCalledWith('reachableContexts', false);
   expect(contextMock.setValue).toHaveBeenCalledWith('installedExtensionsNumber', 1);
   expect(contextMock.setValue).toHaveBeenCalledWith('isDockerCompatibilityEnabled', false);
 });
