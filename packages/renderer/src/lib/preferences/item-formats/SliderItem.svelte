@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 
-import { uncertainStringToNumber } from '/@/lib/preferences/Util';
+import { calcSliderFillPercent, uncertainStringToNumber } from '/@/lib/preferences/Util';
 
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
@@ -19,17 +19,7 @@ let {
 // Writable $derived: reassigning displayValue in onInput overrides it locally until value changes again.
 let displayValue = $derived(value);
 
-const fillPercent = $derived.by(() => {
-  const min = record.minimum ?? 0;
-  const max = record.maximum === undefined ? 100 : uncertainStringToNumber(record.maximum);
-
-  if (max <= min) return 0;
-
-  // matches the native <input type="range"> default: midpoint when no value is set
-  const current = Math.min(Math.max(displayValue ?? (min + max) / 2, min), max);
-
-  return (((current - min) / (max - min)) * 100).toFixed(2);
-});
+const fillPercent = $derived(calcSliderFillPercent(record.minimum, record.maximum, displayValue));
 
 const trackBackground = $derived(
   `linear-gradient(to right, var(--pd-input-toggle-on-bg) ${fillPercent}%, var(--pd-input-slider-track-bg) ${fillPercent}%)`,

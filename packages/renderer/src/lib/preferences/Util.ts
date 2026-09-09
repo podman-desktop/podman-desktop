@@ -169,6 +169,22 @@ export function isContainerConnection(
   return (connection as ProviderContainerConnectionInfo).endpoint.socketPath !== undefined;
 }
 
+// matches the native <input type="range"> default: midpoint when no value is set
+export function calcSliderFillPercent(
+  minimum: number | undefined,
+  maximum: number | string | undefined,
+  current: number | undefined,
+): string {
+  const min = minimum ?? 0;
+  const max = maximum === undefined ? 100 : uncertainStringToNumber(maximum);
+
+  if (max <= min) return '0';
+
+  const clamped = Math.min(Math.max(current ?? (min + max) / 2, min), max);
+
+  return (((clamped - min) / (max - min)) * 100).toFixed(2);
+}
+
 export function calcHalfCpuCores(osCpu: string): number {
   const cores = parseInt(osCpu, 10);
   if (isNaN(cores) || cores <= 0) {
