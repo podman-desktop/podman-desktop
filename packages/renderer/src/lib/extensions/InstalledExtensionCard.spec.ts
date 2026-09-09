@@ -64,7 +64,7 @@ test('Expect to see a div with extension id title', async () => {
     publisher: '',
     removable: false,
     devMode: false,
-    bundled: false,
+    bundled: true,
     version: 'v1.2.3',
     state: 'started',
     path: '',
