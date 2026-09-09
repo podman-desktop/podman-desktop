@@ -25,7 +25,8 @@ const fillPercent = $derived.by(() => {
 
   if (max <= min) return 0;
 
-  const current = Math.min(Math.max(displayValue ?? min, min), max);
+  // matches the native <input type="range"> default: midpoint when no value is set
+  const current = Math.min(Math.max(displayValue ?? (min + max) / 2, min), max);
 
   return (((current - min) / (max - min)) * 100).toFixed(2);
 });

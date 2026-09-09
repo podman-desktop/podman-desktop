@@ -110,6 +110,25 @@ test('Expect track gradient to update live as the slider is dragged', async () =
   expect(onChange).toHaveBeenCalledWith('record', 75);
 });
 
+test('Expect track fill to default to the midpoint when value is omitted, matching the native thumb position', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 0,
+    maximum: 100,
+  };
+
+  render(SliderItem, { record });
+  const input = screen.getByLabelText('record-description');
+
+  expect(input).toHaveStyle(
+    'background: linear-gradient(to right, var(--pd-input-toggle-on-bg) 50.00%, var(--pd-input-slider-track-bg) 50.00%)',
+  );
+});
+
 test('Expect slider to be disabled when record.locked is true', async () => {
   const record: IConfigurationPropertyRecordedSchema = {
     id: 'record',
