@@ -77,6 +77,11 @@ export class WindowsStartup {
     });
   }
 
+  /**
+   * Reflects the matching Windows startup item's enabled state in preferences.
+   * Run before registering preference listeners to preserve external overrides
+   * without changing the Windows startup item. Missing entries leave the preference unchanged.
+   */
   async syncStartupPreference(): Promise<void> {
     const startupExecutablePath = path.normalize(this.resolveBinaryPath()).toLowerCase();
     const matchingLaunchItem = app
@@ -94,6 +99,7 @@ export class WindowsStartup {
     });
   }
 
+  /** Returns the portable or installed executable path used for Windows startup. */
   private resolveBinaryPath(): string {
     // In portable mode, register the portable file rather than the temporary
     // directory where it is expanded.
