@@ -32,7 +32,7 @@ import { http, HttpResponse } from 'msw';
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { Octokit } from 'octokit';
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const mockedPodmanConfig = {
   versions: {
