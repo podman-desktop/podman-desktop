@@ -67,43 +67,48 @@ export class WindowsStartup {
 
     // We pass in "--minimize" so electron can read the flag on first startup.
     const args = minimize ? ['--minimized'] : [];
-    // check if we are using the portable mode.
-    // in that case we need to register the binary path to the portable file
-    // and not where it is being expanded
-    if (process.env['PORTABLE_EXECUTABLE_FILE']) {
-      this.podmanDesktopBinaryPath = process.env['PORTABLE_EXECUTABLE_FILE'];
-    }
-
-    // do we have an updated version of the binary being installed in AppData/Local
-    // if so, we need to update the startup file to point to the new binary
-    // this is the case when we update the app
-    const programsData = path.resolve(app.getPath('appData'), '..', 'local/Programs/podman-desktop');
-    const podmanDesktopInPrograms = path.resolve(programsData, 'Podman Desktop.exe');
-    if (existsSync(podmanDesktopInPrograms)) {
-      this.podmanDesktopBinaryPath = podmanDesktopInPrograms;
-    }
-
-    const loginItemPath = `"${this.podmanDesktopBinaryPath}"`;
-    const loginItemSettings = app.getLoginItemSettings({
-      path: loginItemPath,
-      args,
-    });
-    const startupExecutablePath = path.normalize(this.podmanDesktopBinaryPath).toLowerCase();
-    const matchingLaunchItem = loginItemSettings.launchItems.find(
-      launchItem => path.normalize(launchItem.path).toLowerCase() === startupExecutablePath,
-    );
+    const loginItemPath = `"${this.resolveBinaryPath()}"`;
 
     app.setLoginItemSettings({
       openAtLogin: true,
       path: loginItemPath,
       args,
-      enabled: matchingLaunchItem?.enabled ?? true,
+      enabled: true,
     });
+  }
+
+  async syncStartupPreference(): Promise<void> {
+    const startupExecutablePath = path.normalize(this.resolveBinaryPath()).toLowerCase();
+    const matchingLaunchItem = app
+      .getLoginItemSettings()
+      .launchItems.find(launchItem => path.normalize(launchItem.path).toLowerCase() === startupExecutablePath);
+
+    if (matchingLaunchItem) {
+      await this.configurationRegistry.updateConfigurationValue('preferences.login.start', matchingLaunchItem.enabled);
+    }
   }
 
   async disable(): Promise<void> {
     app.setLoginItemSettings({
       openAtLogin: false,
     });
+  }
+
+  private resolveBinaryPath(): string {
+    // In portable mode, register the portable file rather than the temporary
+    // directory where it is expanded.
+    if (process.env['PORTABLE_EXECUTABLE_FILE']) {
+      this.podmanDesktopBinaryPath = process.env['PORTABLE_EXECUTABLE_FILE'];
+      return this.podmanDesktopBinaryPath;
+    }
+
+    // An update can install a new binary in AppData/Local before it is running.
+    const programsData = path.resolve(app.getPath('appData'), '..', 'local/Programs/podman-desktop');
+    const podmanDesktopInPrograms = path.resolve(programsData, 'Podman Desktop.exe');
+    if (existsSync(podmanDesktopInPrograms)) {
+      this.podmanDesktopBinaryPath = podmanDesktopInPrograms;
+    }
+
+    return this.podmanDesktopBinaryPath;
   }
 }

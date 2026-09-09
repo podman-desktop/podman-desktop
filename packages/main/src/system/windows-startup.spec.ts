@@ -33,6 +33,7 @@ const configurationRegistry = {
   getConfiguration: () => ({
     get: minimizeOnStatup,
   }),
+  updateConfigurationValue: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
 function mockAppGetPath(exe = appExePath, temp = tempPath, appData = appDataPath): void {
@@ -61,6 +62,7 @@ const appDataPath = 'AppData';
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  vi.clearAllMocks();
   mockAppGetPath();
   minimizeOnStatup.mockReturnValue(true);
   vi.mocked(app.getLoginItemSettings).mockReturnValue({
@@ -135,7 +137,7 @@ test('Autostart enable call should setup startup at login for normal installatio
   });
 });
 
-test('Autostart should remain disabled when disabled in Windows settings', async () => {
+test('Autostart should be re-enabled from Podman Desktop settings', async () => {
   mockFsExists(false);
   vi.mocked(app.getLoginItemSettings).mockReturnValue({
     openAtLogin: true,
@@ -156,19 +158,15 @@ test('Autostart should remain disabled when disabled in Windows settings', async
 
   await windowsStartup.enable();
 
-  expect(app.getLoginItemSettings).toBeCalledWith({
-    path: `"${appExePath}"`,
-    args: ['--minimized'],
-  });
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
     path: `"${appExePath}"`,
     args: ['--minimized'],
-    enabled: false,
+    enabled: true,
   });
 });
 
-test('Autostart should remain disabled when startup arguments change', async () => {
+test('Autostart should be re-enabled when startup arguments change', async () => {
   mockFsExists(false);
   vi.mocked(app.getLoginItemSettings).mockReturnValue({
     openAtLogin: false,
@@ -193,8 +191,66 @@ test('Autostart should remain disabled when startup arguments change', async () 
     openAtLogin: true,
     path: `"${appExePath}"`,
     args: ['--minimized'],
-    enabled: false,
+    enabled: true,
   });
+});
+
+test('Autostart preference should reflect a disabled Windows startup item with different arguments', async () => {
+  mockFsExists(false);
+  vi.mocked(app.getLoginItemSettings).mockReturnValue({
+    openAtLogin: true,
+    wasOpenedAtLogin: false,
+    status: 'enabled',
+    executableWillLaunchAtLogin: false,
+    launchItems: [
+      {
+        name: 'Podman Desktop',
+        path: appExePath,
+        args: [],
+        scope: 'user',
+        enabled: false,
+      },
+    ],
+  });
+  windowsStartup = new WindowsStartup(configurationRegistry);
+
+  await windowsStartup.syncStartupPreference();
+
+  expect(configurationRegistry.updateConfigurationValue).toBeCalledWith('preferences.login.start', false);
+  expect(app.setLoginItemSettings).not.toHaveBeenCalled();
+});
+
+test('Autostart preference should reflect an enabled Windows startup item', async () => {
+  mockFsExists(false);
+  vi.mocked(app.getLoginItemSettings).mockReturnValue({
+    openAtLogin: true,
+    wasOpenedAtLogin: false,
+    status: 'enabled',
+    executableWillLaunchAtLogin: true,
+    launchItems: [
+      {
+        name: 'Podman Desktop',
+        path: appExePath,
+        args: [],
+        scope: 'user',
+        enabled: true,
+      },
+    ],
+  });
+  windowsStartup = new WindowsStartup(configurationRegistry);
+
+  await windowsStartup.syncStartupPreference();
+
+  expect(configurationRegistry.updateConfigurationValue).toBeCalledWith('preferences.login.start', true);
+});
+
+test('Autostart preference should not change when no Windows startup item exists', async () => {
+  mockFsExists(false);
+  windowsStartup = new WindowsStartup(configurationRegistry);
+
+  await windowsStartup.syncStartupPreference();
+
+  expect(configurationRegistry.updateConfigurationValue).not.toHaveBeenCalled();
 });
 
 test('Autostart enable call should remove existing startup file when present', async () => {
