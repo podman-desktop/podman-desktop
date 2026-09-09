@@ -16,8 +16,8 @@ export let extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean 
       <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-devmode-extension-bg)]" label="devMode Extension" />
     </Tooltip>
   {:else if !extension.removable}
-    <Tooltip right tip="built-in Extension">
-      <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-builtin-extension-bg)]" label="built-in Extension" />
+    <Tooltip right tip="bundled Extension">
+      <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-bundled-extension-bg)]" label="bundled Extension" />
     </Tooltip>
   {/if}
 </div>
