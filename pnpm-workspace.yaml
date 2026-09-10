@@ -76,6 +76,7 @@ overrides:
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
+  '@swc/core': true
   core-js: true
   core-js-pure: true
   cpu-features: false
