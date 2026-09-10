@@ -731,6 +731,46 @@ test('expect downloadAndExtractImage works with zstd', async () => {
   }
 });
 
+test('expect downloadAndExtractImage to remove the temporary files when decompression fails', async () => {
+  vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+  vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('12345');
+
+  server = setupServer(
+    http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+      HttpResponse.json(imageRegistryManifestMultiArchJson),
+    ),
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+      () => HttpResponse.json(imageRegistryManifestZstdJson),
+    ),
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/:digest',
+      () => new HttpResponse('zstd-content', { headers: { 'content-type': 'application/octet-stream' } }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const destFolder = path.resolve(os.tmpdir(), 'test-folder');
+  // the layer is rejected, as a decompression bomb would be
+  vi.mocked(decompressZstd).mockRejectedValue(new Error('possible decompression bomb'));
+
+  try {
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow('possible decompression bomb');
+
+    // both the downloaded archive and the unpacked file must be gone
+    const tmpFile = path.resolve(
+      os.tmpdir(),
+      'sha256_ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4.zst',
+    );
+    expect(fs.existsSync(tmpFile)).toBeFalsy();
+    expect(fs.existsSync(tmpFile.replace('.zst', '.tar'))).toBeFalsy();
+  } finally {
+    await fs.promises.rm(destFolder, { recursive: true, force: true });
+  }
+});
+
 describe('expect checkCredentials', async () => {
   test('expect checkCredentials works', async () => {
     const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');

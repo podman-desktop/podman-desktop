@@ -643,21 +643,24 @@ export class ImageRegistry {
         progress: globalPercentage,
       });
     });
-    await pipeline(readStream, createWriteStream(tmpFileName));
-    // in case of zstd, we need to unpack the file first
-    if (compressionType === 'zstd') {
-      const unpackedFileName = tmpFileName.replace('.zst', '.tar');
-      try {
+    // in case of zstd, the downloaded file is decompressed to a separate tar file before being extracted
+    const unpackedFileName = compressionType === 'zstd' ? tmpFileName.replace('.zst', '.tar') : undefined;
+
+    try {
+      await pipeline(readStream, createWriteStream(tmpFileName));
+      if (unpackedFileName) {
         await decompressZstd(tmpFileName, unpackedFileName);
         await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
-      } finally {
+      } else {
+        await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
+      }
+    } finally {
+      // remove the temporary files, even if the download, the decompression or the extraction failed
+      await fs.promises.rm(tmpFileName, { force: true });
+      if (unpackedFileName) {
         await fs.promises.rm(unpackedFileName, { force: true });
       }
-    } else {
-      await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
     }
-    // remove the temporary file
-    await fs.promises.rm(tmpFileName);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

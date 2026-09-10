@@ -58,6 +58,15 @@ test('reject a decompression bomb', async () => {
   await expect(decompressZstd(compressedFile, destinationFile)).rejects.toThrow('possible decompression bomb');
 });
 
+test('reject a layer exceeding the maximum decompressed size', async () => {
+  // random data barely compresses, so the ratio stays close to 1 and only the absolute limit can reject it
+  await fs.promises.writeFile(compressedFile, zlib.zstdCompressSync(randomBytes(256 * 1024)));
+
+  await expect(decompressZstd(compressedFile, destinationFile, { maxDecompressedSize: 64 * 1024 })).rejects.toThrow(
+    'exceeds the maximum allowed size',
+  );
+});
+
 test('reject invalid zstd content', async () => {
   await fs.promises.writeFile(compressedFile, 'not a zstd file');
 
