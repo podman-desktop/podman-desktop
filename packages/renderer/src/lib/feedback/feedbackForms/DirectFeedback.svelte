@@ -13,6 +13,7 @@ import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
+import SmileyRatingButton from '/@/lib/feedback/feedbackForms/SmileyRatingButton.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 
 interface Props {
@@ -83,38 +84,30 @@ async function openGitHub(): Promise<void> {
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
       >{feedbackMessages?.experienceLabel}</label>
     <div class="flex space-x-4">
-      <button aria-label="very-sad-smiley" onclick={(): void => selectSmiley(1)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 1
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faFrown} />
-      </button>
-      <button aria-label="sad-smiley" onclick={(): void => selectSmiley(2)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 2
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faMeh} />
-      </button>
-      <button aria-label="happy-smiley" onclick={(): void => selectSmiley(3)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 3
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faSmile} />
-      </button>
-      <button aria-label="very-happy-smiley" onclick={(): void => selectSmiley(4)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 4
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faGrinStars} />
-      </button>
+      <SmileyRatingButton
+        rating={1}
+        selectedRating={smileyRating}
+        icon={faFrown}
+        ariaLabel="very-sad-smiley"
+        onSelect={selectSmiley} />
+      <SmileyRatingButton
+        rating={2}
+        selectedRating={smileyRating}
+        icon={faMeh}
+        ariaLabel="sad-smiley"
+        onSelect={selectSmiley} />
+      <SmileyRatingButton
+        rating={3}
+        selectedRating={smileyRating}
+        icon={faSmile}
+        ariaLabel="happy-smiley"
+        onSelect={selectSmiley} />
+      <SmileyRatingButton
+        rating={4}
+        selectedRating={smileyRating}
+        icon={faGrinStars}
+        ariaLabel="very-happy-smiley"
+        onSelect={selectSmiley} />
     </div>
 
     <label for="tellUsWhyFeedback" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
