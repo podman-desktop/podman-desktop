@@ -1153,8 +1153,8 @@ describe('updateImages handler', () => {
     >('container-provider-registry:updateImages');
 
     const images = [
-      { engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' },
-      { engineId: 'podman', image: 'redis:7', tag: '7', digest: 'sha256:def456' },
+      { engineId: 'podman.podman-machine-default', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' },
+      { engineId: 'podman.podman-machine-default', image: 'redis:7', tag: '7', digest: 'sha256:def456' },
     ];
     const expectedResults = [
       { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Image updated successfully' },
@@ -1169,8 +1169,9 @@ describe('updateImages handler', () => {
   });
 
   test('should forward an abort signal when a cancellation token id is passed', async () => {
-    const cancellationTokenRegistry = new CancellationTokenRegistry();
-    const tokenId = cancellationTokenRegistry.createCancellationTokenSource();
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+    const { result: tokenId } = await createTokenHandler();
 
     const handle = getHandler<
       (
@@ -1180,7 +1181,9 @@ describe('updateImages handler', () => {
       ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
     >('container-provider-registry:updateImages');
 
-    const images = [{ engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' }];
+    const images = [
+      { engineId: 'podman.podman-machine-default', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' },
+    ];
     vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
 
     await handle(undefined, images, tokenId);
@@ -1188,6 +1191,11 @@ describe('updateImages handler', () => {
     expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledOnce();
     const abortSignal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
     expect(abortSignal).toBeInstanceOf(AbortSignal);
+    expect(abortSignal?.aborted).toBe(false);
+
+    await cancelTokenHandler(undefined, tokenId);
+
+    expect(abortSignal?.aborted).toBe(true);
   });
 });
 
