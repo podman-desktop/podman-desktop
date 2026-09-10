@@ -273,7 +273,7 @@ describe('calcSliderFillPercent', () => {
   });
 
   test('should default current to the midpoint when unset, matching the native input', () => {
-    expect(calcSliderFillPercent(0, 100, undefined)).toBe('50.00');
+    expect(calcSliderFillPercent(0, 100)).toBe('50.00');
   });
 
   test('should clamp current below minimum', () => {
