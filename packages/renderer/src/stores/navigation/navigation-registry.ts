@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import type { DisplayItem, GoToInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -30,6 +31,7 @@ import { createNavigationImageEntry } from './navigation-registry-image.svelte';
 import { createNavigationKubernetesGroup } from './navigation-registry-kubernetes.svelte';
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
+import { createNavigationSecretEntry } from './navigation-registry-secret.svelte';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
 
 export interface NavigationRegistryEntry {
@@ -42,15 +44,12 @@ export interface NavigationRegistryEntry {
   tooltip: string;
   link: string;
   counter: number;
+  destinations: Array<GoToInfo>;
   type: 'entry' | 'group' | 'submenu';
   enabled?: boolean;
   items?: NavigationRegistryEntry[];
   hidden?: boolean;
-}
-
-interface DisplayItem {
-  name: string;
-  visible: boolean;
+  index?: number;
 }
 
 const windowEvents: string[] = [];
@@ -68,6 +67,7 @@ const init = (): void => {
   values.push(createNavigationImageEntry());
   values.push(createNavigationVolumeEntry());
   values.push(createNavigationNetworkEntry());
+  values.push(createNavigationSecretEntry());
   values.push(createNavigationExtensionEntry());
   values.push(createNavigationExtensionGroup());
   handleKubernetesGroup();
@@ -89,6 +89,7 @@ function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: Dis
   items.push({
     name: navigationRegistryEntry.name,
     visible: navigationRegistryEntry.hidden ? false : true,
+    index: navigationRegistryEntry.index ?? 0,
   });
 }
 

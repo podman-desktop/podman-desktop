@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderInfo, TelemetryMessages } from '@podman-desktop/core-api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -31,7 +31,6 @@ import { providerInfos } from '/@/stores/providers';
 
 import WelcomePage from './WelcomePage.svelte';
 
-// fake the window.events object
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
@@ -39,11 +38,10 @@ beforeEach(() => {
     getStartedMessage: 'Get started with Podman Desktop',
     welcomeMessage: 'Welcome to Podman Desktop',
   });
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -66,68 +64,12 @@ test('Expect that the close button closes the window', async () => {
   expect(button).not.toBeInTheDocument();
 });
 
-test('Expect that telemetry UI is hidden when telemetry has already been prompted', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue('true');
-  await waitRender({ showWelcome: true, showTelemetry: false });
-  let checkbox;
-  try {
-    checkbox = screen.getByRole('checkbox', { name: 'Enable telemetry' });
-  } catch {
-    // ignore errors
-  }
-  expect(checkbox).toBe(undefined);
-});
-
-test('Expect that telemetry UI is visible when necessary', async () => {
+test('Expect that OnboardingWelcomeTelemetry component is rendered', async () => {
   vi.mocked(window.getTelemetryMessages).mockResolvedValue({ acceptMessage: 'Help improve the product' });
-  await waitRender({ showWelcome: true, showTelemetry: true });
-  const checkbox = screen.getByRole('checkbox', { name: 'Enable telemetry' });
-  expect(checkbox).toBeInTheDocument();
-});
-
-test('Expect that telemetry messages is visible', async () => {
-  const telem: TelemetryMessages = {
-    acceptMessage: 'Help improve the product',
-  };
-  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
-
-  await waitRender({ showWelcome: true, showTelemetry: true });
-
-  const accept = screen.getByText(telem.acceptMessage);
-  expect(accept).toBeInTheDocument();
-});
-
-test('Expect that telemetry link opens url', async () => {
-  const telem: TelemetryMessages = {
-    acceptMessage: 'Help improve the product',
-    info: {
-      link: 'Click here',
-      url: 'info-url',
-    },
-  };
-  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
-
-  await waitRender({ showWelcome: true, showTelemetry: true });
-  const accept = screen.getByText(telem.acceptMessage);
-  expect(accept).toBeInTheDocument();
-
-  const infoLink = screen.getByText(telem.info?.link ?? '');
-  expect(infoLink).toBeInTheDocument();
-
-  await fireEvent.click(infoLink);
-  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.info?.url));
-});
-
-test('Expect that telemetry link is missing when info is not provided', async () => {
-  const telem = {
-    acceptMessage: 'Help improve the product',
-  } as TelemetryMessages;
-  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
-
-  await waitRender({ showWelcome: true, showTelemetry: true });
-
-  const infoLink = screen.queryByRole('link');
-  expect(infoLink).not.toBeInTheDocument();
+  await waitRender({ showWelcome: true });
+  // The telemetry section wrapper is always rendered; detailed behavior is tested in OnboardingWelcomeTelemetry.spec.ts
+  const settingsHint = screen.getByText(/You can always modify this preference later/);
+  expect(settingsHint).toBeInTheDocument();
 });
 
 test('Expect welcome screen to show three checked onboarding providers', async () => {

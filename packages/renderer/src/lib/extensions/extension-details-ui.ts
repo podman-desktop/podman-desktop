@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionError } from '@podman-desktop/core-api';
+import type { ExtensionError, ExtensionInfo } from '@podman-desktop/core-api';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-export interface ExtensionDetailsUI {
+export interface ExtensionDetailsUI extends Pick<ExtensionInfo, 'repository' | 'homepage'> {
   displayName: string;
   description: string;
   type: 'dd' | 'pd';

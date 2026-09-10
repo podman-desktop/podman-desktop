@@ -4,11 +4,12 @@ import { Button } from '@podman-desktop/ui-svelte';
 
 import type { EngineInfoUI } from './EngineInfoUI';
 
-// Imported type for prune (containers, images, pods, volumes)
-export let type: 'containers' | 'images' | 'pods' | 'volumes';
+interface Props {
+  type: 'containers' | 'images' | 'pods' | 'volumes'; // Imported type for prune (containers, images, pods, volumes)
+  engines: EngineInfoUI[]; // List of engines that the prune will work on
+}
 
-// List of engines that the prune will work on
-export let engines: EngineInfoUI[];
+let { type, engines }: Props = $props();
 
 const LABEL_IMAGE_UNUSED = 'All unused images';
 const LABEL_IMAGE_UNTAGGED = 'All untagged images';
@@ -44,9 +45,8 @@ async function openPruneDialog(): Promise<void> {
     buttons,
   });
 
-  const selectedItemLabel = buttons[result.response ?? 0];
-  if (selectedItemLabel !== cancel) {
-    await prune(type, selectedItemLabel);
+  if (result.response !== undefined && result.response !== cancel) {
+    await prune(type, result.response);
   }
 }
 

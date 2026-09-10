@@ -83,6 +83,7 @@ import type {
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
+  ListImagesOptions,
   ListOrganizerItem,
   LogType,
   ManifestCreateOptions,
@@ -100,7 +101,6 @@ import type {
   OnboardingStatus,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   PreflightCheckEvent,
   PreflightChecksCallback,
   ProviderConnectionInfo,
@@ -112,9 +112,13 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
   TelemetryMessages,
+  ThemeInfo,
   V1Route,
   ViewInfoUI,
   VolumeCreateOptions,
@@ -142,6 +146,7 @@ import type {
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
+  PlayKubeInput,
 } from '@podman-desktop/core-api/libpod';
 import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
@@ -157,6 +162,8 @@ import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
+import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
+import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-external.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
@@ -240,7 +247,6 @@ import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
-import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
@@ -471,13 +477,11 @@ export class PluginSystem {
         cancelId: 2,
       });
 
-      if (result.response === 0) {
-        // open externally the URL
+      if (result.response === 'Open') {
         await shell.openExternal(url);
         return true;
-      } else if (result.response === 1) {
-        // copy to clipboard
-        clipboard.writeText(url);
+      } else if (result.response === 'Copy Link') {
+        await clipboard.writeText(url);
       }
       return false;
     };
@@ -665,6 +669,7 @@ export class PluginSystem {
     containerfileParser.init();
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
+    providerRegistry.init();
     providerRegistry.registerAutostartEngine(autoStartEngine);
 
     providerRegistry.addProviderListener((name: string, providerInfo: ProviderInfo) => {
@@ -800,9 +805,11 @@ export class PluginSystem {
     container.bind<ProgressImpl>(ProgressImpl).toSelf().inSingletonScope();
 
     container.bind<ExtensionApiVersion>(ExtensionApiVersion).toSelf().inSingletonScope();
+    container.bind<ExtensionsBundle>(ExtensionsBundle).toSelf().inSingletonScope();
+    container.bind<ExtensionsExternal>(ExtensionsExternal).toSelf().inSingletonScope();
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
-    this.extensionLoader = container.get<ExtensionLoader>(ExtensionLoader);
+    this.extensionLoader = await container.getAsync<ExtensionLoader>(ExtensionLoader);
     await this.extensionLoader.init();
 
     container.bind<FeedbackHandler>(FeedbackHandler).toSelf().inSingletonScope();
@@ -820,8 +827,6 @@ export class PluginSystem {
     container.bind<RecommendationsRegistry>(RecommendationsRegistry).toSelf().inSingletonScope();
     const recommendationsRegistry = container.get<RecommendationsRegistry>(RecommendationsRegistry);
     recommendationsRegistry.init();
-
-    container.bind<TempFileService>(TempFileService).toSelf().inSingletonScope();
 
     container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
     const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
@@ -851,7 +856,6 @@ export class PluginSystem {
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);
     const authentication = container.get<AuthenticationImpl>(AuthenticationImpl);
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
-    const tempFileService = container.get<TempFileService>(TempFileService);
 
     container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
     const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
@@ -877,6 +881,31 @@ export class PluginSystem {
       return containerProviderRegistry.listContainers();
     });
 
+    this.ipcHandle('container-provider-registry:listSecrets', async (): Promise<Array<SecretInfo>> => {
+      return containerProviderRegistry.listSecrets();
+    });
+
+    this.ipcHandle(
+      'container-provider-registry:removeSecret',
+      async (_listener, engineId: string, secretId: string): Promise<void> => {
+        return containerProviderRegistry.removeSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:inspectSecret',
+      async (_listener, engineId: string, secretId: string): Promise<SecretInfo> => {
+        return containerProviderRegistry.inspectSecret(engineId, secretId);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:createSecret',
+      async (_listener, options: SecretCreateOptions): Promise<SecretCreateResult> => {
+        return containerProviderRegistry.createSecret(options);
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:listSimpleContainersByLabel',
       async (_listener, label: string, key: string): Promise<SimpleContainerInfo[]> => {
@@ -889,8 +918,8 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'container-provider-registry:listImages',
-      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
-        return containerProviderRegistry.podmanListImages(options);
+      async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.listImages(options);
       },
     );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
@@ -1015,6 +1044,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:unpausePod',
+      async (_listener, engine: string, podId: string): Promise<void> => {
+        return containerProviderRegistry.unpausePod(engine, podId);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:restartPod',
       async (_listener, engine: string, podId: string): Promise<void> => {
         return containerProviderRegistry.restartPod(engine, podId);
@@ -1100,7 +1135,7 @@ export class PluginSystem {
       'container-provider-registry:playKube',
       async (
         _listener,
-        yamlFilePath: string,
+        input: PlayKubeInput,
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
@@ -1120,7 +1155,7 @@ export class PluginSystem {
         });
 
         try {
-          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, {
+          const result = await containerProviderRegistry.playKube(input, selectedProvider, {
             ...options,
             abortSignal: abortController?.signal,
           });
@@ -1134,18 +1169,16 @@ export class PluginSystem {
       },
     );
 
-    this.ipcHandle('temp-file-service:createTempFile', async (_listener, content: string): Promise<string> => {
-      return tempFileService.createTempFile(content);
-    });
-
-    this.ipcHandle('temp-file-service:removeTempFile', async (_listener, filePath: string): Promise<void> => {
-      return tempFileService.removeTempFile(filePath);
-    });
-
     this.ipcHandle(
       'container-provider-registry:startContainer',
       async (_listener, engine: string, containerId: string): Promise<void> => {
         return containerProviderRegistry.startContainer(engine, containerId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:unpauseContainer',
+      async (_listener, engine: string, containerId: string): Promise<void> => {
+        return containerProviderRegistry.unpauseContainer(engine, containerId);
       },
     );
     this.ipcHandle(
@@ -1934,8 +1967,8 @@ export class PluginSystem {
       },
     );
 
-    this.ipcHandle('clipboard:writeText', async (_, text: string, type?: 'selection' | 'clipboard'): Promise<void> => {
-      return clipboard.writeText(text, type);
+    this.ipcHandle('clipboard:writeText', async (_, text: string): Promise<void> => {
+      return clipboard.writeText(text);
     });
 
     this.ipcHandle(
@@ -3150,8 +3183,8 @@ export class PluginSystem {
       return colorRegistry.listColors(themeId);
     });
 
-    this.ipcHandle('colorRegistry:isDarkTheme', async (_listener, themeId: string): Promise<boolean> => {
-      return colorRegistry.isDarkTheme(themeId);
+    this.ipcHandle('colorRegistry:getThemeInfo', async (_listener, themeId: string): Promise<ThemeInfo> => {
+      return colorRegistry.getThemeInfo(themeId);
     });
 
     this.ipcHandle('viewRegistry:listViewsContributions', async (_listener): Promise<ViewInfoUI[]> => {
@@ -3229,6 +3262,17 @@ export class PluginSystem {
         return navigationManager.navigateToRoute(routeId, ...args);
       },
     );
+
+    this.ipcHandle(
+      'navigation:navigateToHistoryEntry',
+      async (_listener, extensionId: string, entryId: string): Promise<void> => {
+        navigationManager.navigateToHistoryEntry(extensionId, entryId);
+      },
+    );
+
+    this.ipcHandle('navigation:getSearchableRoutes', async () => {
+      return navigationManager.getSearchableRoutes();
+    });
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();
@@ -3386,6 +3430,13 @@ export class PluginSystem {
       'extension-development-folders:removeDevelopmentFolder',
       async (_listener: unknown, path: string): Promise<void> => {
         return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development:getExtensionDevelopmentDocsLink',
+      async (_listener): Promise<string | undefined> => {
+        return product.extensions.developmentDocumentation;
       },
     );
 

@@ -4,7 +4,10 @@ import type { V1NodeSpec } from '@kubernetes/client-node';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
-export let artifact: V1NodeSpec | undefined;
+interface Props {
+  artifact?: V1NodeSpec;
+}
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}

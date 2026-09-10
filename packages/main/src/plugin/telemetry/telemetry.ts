@@ -137,7 +137,7 @@ export class Telemetry {
     // track changes on enablement
     this.listenForTelemetryUpdates();
 
-    // initalize objects
+    // initialize objects
     this.analytics = new Analytics({ writeKey: Telemetry.SEGMENT_KEY });
     this.analytics.on('error', err => {
       console.log(`Telemetry request error: ${err}`);
@@ -524,8 +524,8 @@ export class Telemetry {
   protected async getDistribution(): Promise<string | undefined> {
     if (os.platform() === 'linux') {
       try {
-        const platorm = (await promisify(getos)()) as LinuxOs;
-        return platorm.dist;
+        const platform = (await promisify(getos)()) as LinuxOs;
+        return platform.dist;
       } catch {
         return undefined;
       }

@@ -40,6 +40,8 @@ export interface PlayKubeInfo {
   Volumes: { Name: string }[];
 }
 
+export type PlayKubeInput = { type: 'path'; value: string } | { type: 'content'; value: string };
+
 export interface ContainerCreateMountOption {
   Name?: string;
   Type: string;
@@ -117,4 +119,9 @@ export interface ContainerCreateOptions {
   volumes?: Array<ContainerCreateNamedVolume>;
   selinux_opts?: string[];
   devices?: PodmanDevice[];
+  secrets?: Array<{
+    Source: string;
+    Target: string;
+  }>;
+  secret_env?: Record<string, string>;
 }

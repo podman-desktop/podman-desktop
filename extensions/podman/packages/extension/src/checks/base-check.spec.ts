@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 import type * as extensionApi from '@podman-desktop/api';
 import { describe, expect, test } from 'vitest';
 
-import { BaseCheck, OrCheck, SequenceCheck } from './base-check';
+import { BaseCheck, OrCheck, SequenceCheck, WarningCheck } from './base-check';
 
 class NegativeCheck extends BaseCheck {
   title = 'failed check';
@@ -59,7 +59,7 @@ describe('OrCheck', () => {
     expect(orCheck.title).toBe('orcheck');
     const result = await orCheck.execute();
     expect(result.successful).toBeFalsy();
-    expect(result.description).toBe('check has failed');
+    expect(result.description).toBe('failed check: check has failed\nfailed check: check has failed');
   });
 });
 
@@ -93,5 +93,24 @@ describe('SequenceCheck', () => {
     expect(sequenceCheck.title).toBe('sequence check');
     const result = await sequenceCheck.execute();
     expect(result.successful).toBeTruthy();
+  });
+});
+
+describe('WarningCheck', () => {
+  test('sets severity to warning when delegate fails', async () => {
+    const warningCheck = new WarningCheck(new NegativeCheck());
+    expect(warningCheck.title).toBe('failed check');
+    const result = await warningCheck.execute();
+    expect(result.successful).toBeFalsy();
+    expect(result.severity).toBe('warning');
+    expect(result.description).toBe('check has failed');
+  });
+
+  test('does not set severity when delegate succeeds', async () => {
+    const warningCheck = new WarningCheck(new PositiveCheck());
+    expect(warningCheck.title).toBe('successful check');
+    const result = await warningCheck.execute();
+    expect(result.successful).toBeTruthy();
+    expect(result.severity).toBeUndefined();
   });
 });

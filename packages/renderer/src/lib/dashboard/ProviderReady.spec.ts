@@ -18,19 +18,17 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { beforeAll, test } from 'vitest';
+import { beforeAll, test, vi } from 'vitest';
 
 import ProviderReady from '/@/lib/dashboard/ProviderReady.svelte';
 
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
-// fake the window.events object
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect ready provider shows update button', async () => {

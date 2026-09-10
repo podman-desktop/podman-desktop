@@ -9,9 +9,13 @@ import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.s
 import KubeServiceArtifact from '/@/lib/kube/details/KubeServiceArtifact.svelte';
 import KubeServiceStatusArtifact from '/@/lib/kube/details/KubeServiceStatusArtifact.svelte';
 
-export let service: V1Service | undefined;
-export let kubeError: string | undefined = undefined;
-export let events: EventUI[];
+interface Props {
+  service?: V1Service;
+  kubeError?: string;
+  events: EventUI[];
+}
+
+let { service, kubeError, events }: Props = $props();
 </script>
 
 <!-- Show the kube error if we're unable to retrieve the data correctly, but we still want to show the

@@ -76,6 +76,24 @@ test('expect banner to be visible', async () => {
   expect(screen.getByRole('img')).toHaveAttribute('src', responseJSON.image);
 });
 
+test('expect image to fill full height of parent with object-cover scaling', async () => {
+  render(ReleaseNotesBox);
+
+  const image: HTMLImageElement = await vi.waitFor(() => {
+    const img = screen.getByRole('img', {
+      name: 'Podman Desktop 1.1.0 release image',
+    });
+    expect(img).toBeInTheDocument();
+    return img as HTMLImageElement;
+  });
+
+  expect(image.classList.contains('h-full')).toBe(true);
+  expect(image.classList.contains('object-cover')).toBe(true);
+  expect(image.classList.contains('max-w-[20%]')).toBe(true);
+  expect(image.classList.contains('object-contain')).toBe(false);
+  expect(image.classList.contains('self-start')).toBe(false);
+});
+
 test('expect image to be hidden if there is a loading error', async () => {
   const { getByRole, queryByRole } = render(ReleaseNotesBox);
 

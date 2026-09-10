@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { PodInfo } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -20,7 +19,7 @@ import PodIcon from '/@/lib/images/PodIcon.svelte';
 import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
-import { filtered, podsInfos, searchPattern } from '/@/stores/pods';
+import { filtered, podsInfos, searchPattern, setPodStatus } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 
 import { PodUtils } from './pod-utils';
@@ -70,7 +69,7 @@ const podUtils = new PodUtils();
 
 onMount(() => {
   return filtered.subscribe(value => {
-    const computedPods = value.map((podInfo: PodInfo) => podUtils.getPodInfoUI(podInfo)).flat();
+    const computedPods = value.map((podInfo: PodInfoUI) => podInfo).flat();
 
     // Map engineName, engineId and engineType from currentContainers to EngineInfoUI[]
     const engines = computedPods.map(container => {
@@ -105,8 +104,7 @@ async function deleteSelectedPods(): Promise<void> {
 
   // mark pods for deletion
   bulkDeleteInProgress = true;
-  selectedPods.forEach(pod => (pod.status = 'DELETING'));
-  pods = pods;
+  selectedPods.forEach(pod => setPodStatus(pod.engineId, pod.id, 'DELETING'));
 
   await Promise.all(
     selectedPods.map(async pod => {
@@ -244,7 +242,7 @@ function label(pod: PodInfoUI): string {
   {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full grow">
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
@@ -273,8 +271,7 @@ function label(pod: PodInfoUI): string {
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
         key={key}
-        label={label}
-        on:update={(): PodInfoUI[] => (pods = pods)}>
+        label={label}>
       </Table>
     {/if}
   </div>

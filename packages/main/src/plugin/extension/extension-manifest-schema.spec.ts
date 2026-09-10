@@ -87,6 +87,34 @@ describe('ExtensionManifestSchema', () => {
     expect(result.data.extensionPack).toEqual(['publisher.pack1']);
   });
 
+  test('accepts repository as a string', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      repository: 'https://github.com/example/repository',
+    });
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.repository).toBe('https://github.com/example/repository');
+  });
+
+  test('accepts repository as an object', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      repository: {
+        type: 'git',
+        url: 'git+https://github.com/example/repository.git',
+        directory: 'extensions/example',
+      },
+    });
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.repository).toEqual({
+      type: 'git',
+      url: 'git+https://github.com/example/repository.git',
+      directory: 'extensions/example',
+    });
+  });
+
   test('accepts contributes with features', () => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
@@ -132,20 +160,19 @@ describe('ExtensionManifestSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  test.each([
-    'name',
-    'displayName',
-    'version',
-    'publisher',
-    'description',
-  ] as const)('rejects manifest missing required %s field', field => {
-    const incomplete = { ...minimalValidManifest };
-    delete (incomplete as Record<string, unknown>)[field];
-    const result = ExtensionManifestSchema.safeParse(incomplete);
-    expect(result.success).toBe(false);
-    assert(result.error);
-    expect(z.prettifyError(result.error)).toBe(`✖ Invalid input: expected string, received undefined\n  → at ${field}`);
-  });
+  test.each(['name', 'displayName', 'version', 'publisher', 'description'] as const)(
+    'rejects manifest missing required %s field',
+    field => {
+      const incomplete = { ...minimalValidManifest };
+      delete (incomplete as Record<string, unknown>)[field];
+      const result = ExtensionManifestSchema.safeParse(incomplete);
+      expect(result.success).toBe(false);
+      assert(result.error);
+      expect(z.prettifyError(result.error)).toBe(
+        `✖ Invalid input: expected string, received undefined\n  → at ${field}`,
+      );
+    },
+  );
 
   test('rejects manifest with wrong type for name', () => {
     const result = ExtensionManifestSchema.safeParse({
@@ -165,5 +192,27 @@ describe('ExtensionManifestSchema', () => {
     expect(result.success).toBe(false);
     assert(result.error);
     expect(z.prettifyError(result.error)).toBe('✖ Invalid input\n  → at icon');
+  });
+
+  test('rejects manifest with invalid repository type', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      repository: 42,
+    });
+    expect(result.success).toBe(false);
+    assert(result.error);
+    expect(z.prettifyError(result.error)).toBe('✖ Invalid input\n  → at repository');
+  });
+
+  test('rejects repository object missing required type', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      repository: {
+        url: 'git+https://github.com/example/repository.git',
+      },
+    });
+    expect(result.success).toBe(false);
+    assert(result.error);
+    expect(z.prettifyError(result.error)).toBe('✖ Invalid input\n  → at repository');
   });
 });

@@ -16,12 +16,15 @@ import ProviderCard from './ProviderCard.svelte';
 import { type InitializationContext, InitializationSteps, InitializeAndStartMode } from './ProviderInitUtils';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 
-export let provider: ProviderInfo;
-export let initializationContext: InitializationContext;
+interface Props {
+  provider: ProviderInfo;
+  initializationContext: InitializationContext;
+}
 
-let initializeError: string | undefined = undefined;
+let { provider, initializationContext }: Props = $props();
 
-let preflightChecks: CheckStatus[] = [];
+let initializeError: string | undefined = $state();
+let preflightChecks: CheckStatus[] = $state([]);
 
 let logsXtermDiv: HTMLDivElement;
 let logsTerminal;
@@ -90,7 +93,7 @@ onDestroy(() => {
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     <div class="flex flex-col w-full lg:w-2/3 justify-center items-center">
       {#if initializationContext.mode === InitializeAndStartMode}
         <Steps steps={InitializationSteps} />
@@ -110,10 +113,10 @@ onDestroy(() => {
     </div>
 
     <PreflightChecks preflightChecks={preflightChecks} />
-  </svelte:fragment>
-  <svelte:fragment slot="update">
+  {/snippet}
+  {#snippet update()}
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
       <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </ProviderCard>

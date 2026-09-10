@@ -49,6 +49,33 @@ test('Expect trigger button is visible and has correct title', async () => {
   expect(triggerButton).toHaveAttribute('tabindex', '0');
 });
 
+test('Expect trigger button has aria-label matching the title prop', () => {
+  const title = 'Manage Layout';
+  render(ListOrganizer, {
+    items: mockItems,
+    title,
+  });
+
+  const triggerButton = screen.getByTitle(title);
+  expect(triggerButton).toHaveAttribute('aria-label', title);
+});
+
+test('Expect trigger button aria-expanded reflects dropdown open state', async () => {
+  render(ListOrganizer, {
+    items: mockItems,
+    title: 'Manage Layout',
+  });
+
+  const triggerButton = screen.getByTitle('Manage Layout');
+  expect(triggerButton).toHaveAttribute('aria-expanded', 'false');
+
+  await fireEvent.click(triggerButton);
+  expect(triggerButton).toHaveAttribute('aria-expanded', 'true');
+
+  await fireEvent.click(triggerButton);
+  expect(triggerButton).toHaveAttribute('aria-expanded', 'false');
+});
+
 test('Expect dropdown opens when trigger button is clicked', async () => {
   render(ListOrganizer, {
     items: mockItems,

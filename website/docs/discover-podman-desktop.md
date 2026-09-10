@@ -103,7 +103,7 @@ Docker compatibility is a way to configure an environment in which you can run y
 
 ### Integrate your tools using extensions
 
-![extensions](img/extentions-component.png)
+![extensions](img/extensions-component.png)
 
 Podman Desktop provides a wide range of extensions that can be used to integrate your local tools with Podman Desktop. After installing the required extension, you can do development tasks like creating a Kubernetes cluster, creating an AI application, or creating a bootable container. List of extensions available:
 

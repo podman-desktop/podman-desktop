@@ -107,7 +107,7 @@ export class ExtensionNotifications {
   }
 
   private notifyDisguisedPodmanSocket(): void {
-    // Notification for if Docker Desktop has overriden the socket other tools are using it.
+    // Notification for if Docker Desktop has overridden the socket other tools are using it.
     this._disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification({
       title: 'Docker socket is not disguised correctly',
       body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',

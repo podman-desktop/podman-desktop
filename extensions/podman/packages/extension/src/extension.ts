@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -33,6 +34,8 @@ import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
   PODMAN_DOCKER_COMPAT_ENABLE_KEY,
+  PODMAN_EDIT_IMPORT_NATIVE_CA,
+  PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY,
   PODMAN_MACHINE_CPU_SUPPORTED_KEY,
   PODMAN_MACHINE_DISK_SUPPORTED_KEY,
   PODMAN_MACHINE_EDIT_CPU,
@@ -132,8 +135,10 @@ const updateMachinesMutex = new Mutex();
 let createWSLMachineOptionSelected = false;
 let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
+let wslWarningShown = false;
 
 let extensionNotifications: ExtensionNotifications;
+let podmanRemoteConnections: PodmanRemoteConnections | undefined;
 
 export function isIncompatibleMachineOutput(output: string | undefined): boolean {
   // apple HV v4 to v5 machine config error
@@ -149,6 +154,14 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
   }
 }
 
+export function isWSLServiceError(output: string | undefined): boolean {
+  if (!output) {
+    return false;
+  }
+  const lower = output.toLowerCase();
+  return lower.includes('wsl/service/') || lower.includes('exit status 0xffffffff') || lower.includes('wsl_e_');
+}
+
 export async function updateMachines(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
@@ -161,6 +174,9 @@ async function doUpdateMachines(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
 ): Promise<void> {
+  const hasRemoteConnections = podmanRemoteConnections?.hasConnections() ?? false;
+  extensionApi.context.setValue('podmanRemoteConnectionExists', hasRemoteConnections, 'onboarding');
+
   // init machines available
   let machineListOutput: MachineJSONListOutput;
   try {
@@ -172,9 +188,19 @@ async function doUpdateMachines(
     if (runError.stderr) {
       shouldCleanMachine = isIncompatibleMachineOutput(runError.stderr);
     }
-    extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    extensionNotifications.notifySetupPodmanNotLinux();
+    if (isWSLServiceError(runError.stderr ?? runError.message)) {
+      if (!wslWarningShown) {
+        wslWarningShown = true;
+        await extensionApi.window.showWarningMessage(
+          `Podman machines cannot be listed due to a WSL error. Try running 'wsl --shutdown' in a terminal and restarting the machine from Podman Desktop. Error: ${runError.stderr ?? runError.message}`,
+        );
+      }
+    } else if (!hasRemoteConnections) {
+      extensionNotifications.notifySetupPodmanNotLinux();
+    }
+
+    extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
     throw error;
   }
 
@@ -191,18 +217,31 @@ async function doUpdateMachines(
     shouldCleanMachine = isIncompatibleMachineOutput(machineListOutput.error);
   }
 
+  // check if there are WSL service errors in the accumulated error output
+  if (isWSLServiceError(machineListOutput.error)) {
+    if (!wslWarningShown) {
+      wslWarningShown = true;
+      await extensionApi.window.showWarningMessage(
+        `Some Podman machines may not be visible due to a WSL error. Try running 'wsl --shutdown' in a terminal. Error: ${machineListOutput.error.trim()}`,
+      );
+    }
+  } else {
+    wslWarningShown = false;
+  }
+
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine || machines.length === 0) {
+  // but skip if remote connections exist and no cleanup is needed
+  if (shouldCleanMachine || (machines.length === 0 && !hasRemoteConnections)) {
     // push setup notification
     extensionNotifications.notifySetupPodmanNotLinux();
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-  // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
-  // podman is correctly setup so if there is an old notification asking the user to take action
-  // we dispose it as not needed anymore
-  if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
+  // if there is at least one machine (or remote connection) which does not need to be cleaned
+  // and the OS is not Linux, podman is correctly setup so if there is an old notification
+  // asking the user to take action we dispose it as not needed anymore
+  if (!shouldCleanMachine && (machines.length > 0 || hasRemoteConnections) && !extensionApi.env.isLinux) {
     extensionNotifications.disposeNotification();
   }
 
@@ -335,10 +374,12 @@ async function doUpdateMachines(
   // if we are on Linux, ignore this as podman machine is OPTIONAL and the provider status in Linux is based upon
   // the native podman installation / not machine.
   if (!extensionApi.env.isLinux) {
-    if (machines.length === 0) {
-      if (provider.status !== 'configuring') {
+    if (machines.length === 0 && !hasRemoteConnections) {
+      if (provider.status !== 'configuring' && installedPodman) {
         provider.updateStatus('installed');
       }
+    } else if (machines.length === 0 && hasRemoteConnections) {
+      provider.updateStatus('ready');
     } else {
       /*
        * The machine can have 3 states, based on `Starting` and `Running` fields:
@@ -465,8 +506,9 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
   }
 }
 
-async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Promise<boolean> {
-  let isRootful = false;
+async function getMachineInspect(
+  machineDetails: MachineJSON | MachineInfo,
+): Promise<Record<string, unknown> | undefined> {
   let vmType: string;
   let machineName: string;
   if ('name' in machineDetails) {
@@ -478,14 +520,39 @@ async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Prom
   }
   try {
     const { stdout: machineInspectJson } = await execPodman(['machine', 'inspect', machineName], vmType);
-    const machinesInspect = JSON.parse(machineInspectJson);
-    // find the machine name in the array
-    const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineName);
-    isRootful = machineInspect?.Rootful ?? false;
+    const machinesInspect = JSON.parse(machineInspectJson) as Record<string, unknown>[];
+    return machinesInspect.find((machine: Record<string, unknown>) => machine.Name === machineName);
   } catch (error) {
-    console.error('Error when checking rootful machine: ', error);
+    console.error('Error when inspecting machine: ', error);
   }
-  return isRootful;
+  return undefined;
+}
+
+async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Promise<boolean> {
+  const machineInspect = await getMachineInspect(machineDetails);
+  return (machineInspect?.Rootful as boolean) ?? false;
+}
+
+function isRootfulFromInspect(machineInspect: Record<string, unknown> | undefined): boolean {
+  return (machineInspect?.Rootful as boolean) ?? false;
+}
+
+export async function getImportNativeCAFromConfig(
+  machineName: string,
+  machineInspect: Record<string, unknown> | undefined,
+): Promise<boolean> {
+  const configDir = (machineInspect?.ConfigDir as { Path?: string })?.Path;
+  if (!configDir) {
+    return false;
+  }
+  try {
+    const configFile = path.join(configDir, `${machineName}.json`);
+    const content = JSON.parse(await readFile(configFile, 'utf-8'));
+    return content.ImportNativeCA ?? false;
+  } catch (error) {
+    console.error('Error reading ImportNativeCA from machine config: ', error);
+  }
+  return false;
 }
 
 async function getDefaultConnection(): Promise<ConnectionJSON | undefined> {
@@ -510,7 +577,8 @@ async function updateContainerConfiguration(
 ): Promise<void> {
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const isRootful = await isRootfulMachine(machineInfo);
+  const machineInspect = await getMachineInspect(machineInfo);
+  const isRootful = isRootfulFromInspect(machineInspect);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -521,6 +589,9 @@ async function updateContainerConfiguration(
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
 
   await containerConfiguration.update('machine.rootful', isRootful);
+
+  const importNativeCA = await getImportNativeCAFromConfig(machineInfo.name, machineInspect);
+  await containerConfiguration.update('machine.importNativeCA', importNativeCA);
 }
 
 function calcMacosSocketPath(machineName: string): string {
@@ -549,7 +620,7 @@ function getLinuxSocketPath(): string {
 }
 
 // on linux, socket is started by the system service on a path like /run/user/1000/podman/podman.sock
-async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> {
+export async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> {
   const socketPath = getLinuxSocketPath();
   if (!fs.existsSync(socketPath)) {
     return;
@@ -564,7 +635,7 @@ async function initDefaultLinux(provider: extensionApi.Provider): Promise<void> 
     },
   };
 
-  monitorPodmanSocket(socketPath).catch((error: unknown) => {
+  monitorPodmanSocket(provider, socketPath).catch((error: unknown) => {
     console.error('Error monitoring podman socket', error);
   });
 
@@ -597,21 +668,25 @@ async function isPodmanSocketAlive(socketPath: string): Promise<boolean> {
   });
 }
 
-async function monitorPodmanSocket(socketPath: string, machineName?: string): Promise<void> {
+export async function monitorPodmanSocket(
+  provider: extensionApi.Provider,
+  socketPath: string,
+  machineName?: string,
+): Promise<void> {
   // call us again
   if (!stopMonitoringPodmanSocket(machineName)) {
     try {
       const alive = await isPodmanSocketAlive(socketPath);
       if (!alive) {
-        updateProviderStatus('stopped', machineName);
+        updateProviderStatus(provider, 'stopped', machineName);
       } else {
-        updateProviderStatus('started', machineName);
+        updateProviderStatus(provider, 'started', machineName);
       }
     } catch (error) {
       // ignore the update of machines
     }
     await timeout(5000);
-    monitorPodmanSocket(socketPath, machineName).catch((error: unknown) => {
+    monitorPodmanSocket(provider, socketPath, machineName).catch((error: unknown) => {
       console.error('Error monitoring podman socket', error);
     });
   }
@@ -624,11 +699,20 @@ function stopMonitoringPodmanSocket(machineName?: string): boolean {
   return stopLoop;
 }
 
-function updateProviderStatus(status: extensionApi.ProviderConnectionStatus, machineName?: string): void {
+export function updateProviderStatus(
+  provider: extensionApi.Provider,
+  status: extensionApi.ProviderConnectionStatus,
+  machineName?: string,
+): void {
   if (machineName) {
     podmanMachinesStatuses.set(machineName, status);
   } else {
+    const previousStatus = podmanProviderStatus;
     podmanProviderStatus = status;
+
+    if (extensionApi.env.isLinux && previousStatus !== status) {
+      provider.updateStatus(status === 'started' ? 'ready' : 'stopped');
+    }
   }
 }
 
@@ -647,7 +731,7 @@ export async function monitorMachines(
     try {
       await updateMachines(provider, podmanConfiguration);
     } catch (error) {
-      // ignore the update of machines
+      console.warn('Error updating podman machines', error);
     }
 
     await timeout(5000);
@@ -698,7 +782,7 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       provider.updateStatus('not-installed');
       extensionApi.context.setValue('podmanIsNotInstalled', true, 'onboarding');
       // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)
-      // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existance
+      // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existence
       // and the notification is handled by checking the machine
       if (extensionApi.env.isLinux) {
         // push setup notification
@@ -749,13 +833,22 @@ export async function registerProviderFor(
   const isEditDiskSizeSupported = extensionApi.env.isMac;
   const isEditRootfulSupported = extensionApi.env.isMac || extensionApi.env.isWindows;
 
+  const podmanInstallation = await podmanBinary.getBinaryInfo();
+  const podmanVersion = podmanInstallation?.version;
+  const isEditImportNativeCASupported = podmanVersion ? isPodman6OrLater(podmanVersion) : false;
+
   const isEditSupported =
-    isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported || isEditRootfulSupported;
+    isEditMemorySupported ||
+    isEditCPUSupported ||
+    isEditDiskSizeSupported ||
+    isEditRootfulSupported ||
+    isEditImportNativeCASupported;
 
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_CPU, isEditCPUSupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_DISK_SIZE, isEditDiskSizeSupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_ROOTFUL, isEditRootfulSupported);
+  extensionApi.context.setValue(PODMAN_EDIT_IMPORT_NATIVE_CA, isEditImportNativeCASupported);
 
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
@@ -809,6 +902,9 @@ export async function registerProviderFor(
           args.push(`--rootful=${params[key]}`);
           effective = true;
           isRootful = params[key];
+        } else if (isEditImportNativeCASupported && key === 'podman.machine.importNativeCA') {
+          args.push(`--import-native-ca=${params[key]}`);
+          effective = true;
         }
       }
       if (effective) {
@@ -860,11 +956,14 @@ export async function registerProviderFor(
   containerProviderConnections.set(machineInfo.name, containerProviderConnection);
 
   const disposable = provider.registerContainerProviderConnection(containerProviderConnection);
-  provider.updateStatus('ready');
+  if (!extensionApi.env.isLinux) {
+    provider.updateStatus('ready');
+  }
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const isRootful = await isRootfulMachine(machineInfo);
+  const machineInspect = await getMachineInspect(machineInfo);
+  const isRootful = isRootfulFromInspect(machineInspect);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -875,6 +974,9 @@ export async function registerProviderFor(
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
 
   await containerConfiguration.update('machine.rootful', isRootful);
+
+  const importNativeCA = await getImportNativeCAFromConfig(machineInfo.name, machineInspect);
+  await containerConfiguration.update('machine.importNativeCA', importNativeCA);
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);
@@ -923,7 +1025,9 @@ export async function startMachine(
       );
     }
 
-    provider.updateStatus('started');
+    if (!extensionApi.env.isLinux) {
+      provider.updateStatus('started');
+    }
   } catch (err) {
     telemetryRecords.error = err;
     if (skipHandleError) {
@@ -954,7 +1058,9 @@ export async function stopMachine(
     await execPodman(['machine', 'stop', machineInfo.name], machineInfo.vmType, {
       logger: new LoggerDelegator(context, logger),
     });
-    provider.updateStatus('stopped');
+    if (!extensionApi.env.isLinux) {
+      provider.updateStatus('stopped');
+    }
   } catch (err: unknown) {
     telemetryRecords.error = err;
     throw err;
@@ -1072,6 +1178,10 @@ export function initExtensionContext(extensionContext: extensionApi.ExtensionCon
 
 export function initExtensionNotification(): void {
   extensionNotifications = new ExtensionNotifications(telemetryLogger);
+}
+
+export function initPodmanRemoteConnections(remoteConnections: PodmanRemoteConnections): void {
+  podmanRemoteConnections = remoteConnections;
 }
 
 const currentUpdatesDisposables: extensionApi.Disposable[] = [];
@@ -1342,6 +1452,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionApi.context.setValue(START_NOW_MACHINE_INIT_SUPPORTED_KEY, isStartNowAtMachineInitSupported(version));
     extensionApi.context.setValue(USER_MODE_NETWORKING_SUPPORTED_KEY, isUserModeNetworkingSupported(version));
     extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, isLibkrunSupported(version));
+    extensionApi.context.setValue(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, isPodman6OrLater(version));
     isMovedPodmanSocket = isPodmanSocketLocationMoved(version);
   }
 
@@ -1589,6 +1700,11 @@ export async function start(
     });
   }
 
+  // Initialize remote connections before machine monitoring so hasConnections()
+  // is populated before the first updateMachines() call
+  podmanRemoteConnections = new PodmanRemoteConnections(extensionContext, provider);
+  await podmanRemoteConnections.start();
+
   // Podman Machine support is on macOS, Windows and Linux
   // Despite Linux having native container support, Podman Machine is still supported on Linux
   // so let's monitor for the machines
@@ -1625,6 +1741,7 @@ export async function start(
       const checks = podmanInstall.getInstallChecks() ?? [];
       const result = [];
       let successful = true;
+      let hasBlockingFailure = false;
       for (const check of checks) {
         try {
           const checkResult = await check.execute();
@@ -1640,6 +1757,9 @@ export async function start(
 
           if (!checkResult.successful) {
             successful = false;
+            if (checkResult.severity !== 'warning') {
+              hasBlockingFailure = true;
+            }
           }
         } catch (err) {
           result.push({
@@ -1649,6 +1769,7 @@ export async function start(
               err instanceof Error ? err.message : typeof err === 'object' ? err?.toString() : 'unknown error',
           });
           successful = false;
+          hasBlockingFailure = true;
         }
       }
 
@@ -1670,7 +1791,11 @@ export async function start(
         }
       }
 
-      extensionApi.context.setValue('requirementsStatus', successful ? 'ok' : 'failed', 'onboarding');
+      extensionApi.context.setValue(
+        'requirementsStatus',
+        successful ? 'ok' : hasBlockingFailure ? 'failed' : 'warnings',
+        'onboarding',
+      );
       extensionApi.context.setValue('warningsMarkdown', warnings, 'onboarding');
       telemetryLogger?.logUsage('podman.onboarding.checkRequirementsCommand', telemetryRecords);
     },
@@ -1715,13 +1840,10 @@ export async function start(
   extensionContext.subscriptions.push(syncCertsCommand);
 
   // register the registries
-  const registrySetup = new RegistrySetup();
+  const registrySetup = new RegistrySetup(podmanConfiguration.registryConfiguration);
   await registrySetup.setup();
 
   await calcPodmanMachineSetting();
-
-  const podmanRemoteConnections = new PodmanRemoteConnections(extensionContext, provider);
-  podmanRemoteConnections.start();
 }
 
 export async function connectionAuditor(items: extensionApi.AuditRequestItems): Promise<extensionApi.AuditResult> {
@@ -1819,24 +1941,37 @@ async function stopAutoStartedMachine(): Promise<void> {
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const installedPodman = await podmanBinary.getBinaryInfo();
 
+  let hypervEnabled = false;
+  wslEnabled = await winPlatform.isWSLEnabled();
+  if (await winPlatform.isHyperVEnabled()) {
+    hypervEnabled = true;
+  }
+  updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
+
+  // For Podman >= 6.0, machine list returns all machines across all providers by default,
+  // so a single call without specifying a provider is sufficient.
+  if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {
+    const machineListOutput = await getJSONMachineListByProvider();
+    return {
+      list: JSON.parse(machineListOutput.stdout) as MachineJSON[],
+      error: machineListOutput.stderr,
+    };
+  }
+
+  // For Podman < 6.0, iterate per provider to collect all machines.
   const containerMachineProviders: (string | undefined)[] = [];
   // if libkrun is supported we want to show both applehv and libkrun machines
   if (installedPodman && isLibkrunSupported(installedPodman.version)) {
     containerMachineProviders.push(...['applehv', 'libkrun']);
   }
 
-  let hypervEnabled = false;
-  wslEnabled = await winPlatform.isWSLEnabled();
   if (wslEnabled) {
     containerMachineProviders.push('wsl');
   }
 
-  if (await winPlatform.isHyperVEnabled()) {
-    hypervEnabled = true;
+  if (hypervEnabled) {
     containerMachineProviders.push('hyperv');
   }
-  // update context "wsl-hyperv enabled" value
-  updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
 
   if (containerMachineProviders.length === 0) {
     // in all other cases we set undefined so that it executes normally by using the default container provider
@@ -1846,9 +1981,14 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const list: MachineJSON[] = [];
   let error = '';
   for (const provider of containerMachineProviders) {
-    const machineListOutput = await getJSONMachineListByProvider(provider);
-    list.push(...(JSON.parse(machineListOutput.stdout) as MachineJSON[]));
-    error += machineListOutput.stderr + '\n';
+    try {
+      const machineListOutput = await getJSONMachineListByProvider(provider);
+      list.push(...(JSON.parse(machineListOutput.stdout) as MachineJSON[]));
+      error += machineListOutput.stderr + '\n';
+    } catch (err) {
+      const runError = err as RunError;
+      error += (runError.stderr ?? runError.message ?? String(err)) + '\n';
+    }
   }
 
   return { list, error };
@@ -1857,6 +1997,10 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
 export async function getJSONMachineListByProvider(containerMachineProvider?: string): Promise<MachineListOutput> {
   const { stdout, stderr } = await execPodman(['machine', 'list', '--format', 'json'], containerMachineProvider);
   return { stdout, stderr };
+}
+
+export function resetStopLoop(): void {
+  stopLoop = false;
 }
 
 export async function deactivate(): Promise<void> {
@@ -1936,6 +2080,15 @@ export function setWSLEnabled(enabled: boolean): void {
 
 export function isPodman5OrLater(podmanVersion: string): boolean {
   return compare(podmanVersion, '5.0.0') >= 0;
+}
+
+export function isPodman6OrLater(podmanVersion: string): boolean {
+  return compare(podmanVersion, '6.0.0') >= 0;
+}
+
+// Checks if `podman machine list` returns all machines across all providers without specifying one.
+export function isMachineListAllProvidersSupported(podmanVersion: string): boolean {
+  return isPodman6OrLater(podmanVersion);
 }
 
 export function sendTelemetryRecords(
@@ -2054,7 +2207,7 @@ export async function createMachine(
     telemetryRecords.provider = provider;
   } else {
     if (extensionApi.env.isWindows) {
-      provider = wslEnabled ? 'wsl' : 'hyperv';
+      provider = process.env.CONTAINERS_MACHINE_PROVIDER ?? 'wsl';
       telemetryRecords.provider = provider;
     } else if (extensionApi.env.isMac) {
       if (os.arch() === 'x64') {
@@ -2174,6 +2327,14 @@ export async function createMachine(
     telemetryRecords.userModeNetworking = true;
   }
 
+  const isPodmanV6OrLater = version ? isPodman6OrLater(version) : false;
+  if (params['podman.factory.machine.import-native-ca'] && isPodmanV6OrLater) {
+    parameters.push('--import-native-ca');
+    telemetryRecords.importNativeCA = true;
+  } else {
+    telemetryRecords.importNativeCA = false;
+  }
+
   // name at the end
   const args = [];
   let machineName = '';
@@ -2256,6 +2417,10 @@ export async function createMachine(
 
 export function resetShouldNotifySetup(): void {
   extensionNotifications.shouldNotifySetup = true;
+}
+
+export function resetWSLWarningFlag(): void {
+  wslWarningShown = false;
 }
 
 async function switchCompatibilityMode(enabled: boolean): Promise<void> {

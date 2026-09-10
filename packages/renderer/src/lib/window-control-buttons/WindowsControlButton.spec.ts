@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
@@ -27,7 +25,6 @@ import WindowsControlButton from './WindowsControlButton.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
-  (window as any).windowClose = vi.fn().mockResolvedValue(undefined);
 });
 
 test('Check Maximize/Restore', async () => {

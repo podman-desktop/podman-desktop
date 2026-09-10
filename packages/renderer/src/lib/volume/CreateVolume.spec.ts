@@ -16,26 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo, VolumeListInfo } from '@podman-desktop/core-api';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import CreateVolume from './CreateVolume.svelte';
-
-const createVolumeMock = vi.fn();
-
-// fake the window.events object
-beforeAll(() => {
-  (window as any).createVolume = createVolumeMock;
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -58,7 +49,7 @@ test('Expect no create button with no providers', async () => {
   expect(emptyScreen).toBeInTheDocument();
 
   // expect that we never call
-  expect(createVolumeMock).not.toBeCalled();
+  expect(window.createVolume).not.toBeCalled();
 });
 
 test('Expect Create button is working', async () => {
@@ -87,7 +78,7 @@ test('Expect Create button is working', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.anything(), { Name: '' });
+  expect(window.createVolume).toHaveBeenCalledWith(expect.anything(), { Name: '' });
 });
 
 test('Expect Create with a custom name', async () => {
@@ -130,14 +121,14 @@ test('Expect Create with a custom name', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
     Name: customVolumeName,
   });
 });
 
 test('Expect error message when volume creation fails', async () => {
   const errorMessage = 'volume name "bad/name" includes invalid characters';
-  createVolumeMock.mockRejectedValueOnce(new Error(errorMessage));
+  vi.mocked(window.createVolume).mockRejectedValueOnce(new Error(errorMessage));
 
   providerInfos.set([
     {
@@ -226,7 +217,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API with the docker provider as we changed the toggle
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
     Name: customVolumeName,
   });
 });
@@ -261,11 +252,12 @@ test('Expect error and disabled button when volume name already exists', async (
   const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
   await userEvent.type(nameInput, 'existing-volume');
 
-  const errorMessage = screen.getByText('The name "existing-volume" already exists. Please choose a different name.');
-  expect(errorMessage).toBeInTheDocument();
-
-  const createButton = screen.getByRole('button', { name: createButtonTitle });
-  expect(createButton).toBeDisabled();
+  await waitFor(() => {
+    expect(
+      screen.getByText('The name "existing-volume" already exists. Please choose a different name.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  });
 });
 
 test('Expect no error when volume name is unique', async () => {
@@ -298,11 +290,10 @@ test('Expect no error when volume name is unique', async () => {
   const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
   await userEvent.type(nameInput, 'new-volume');
 
-  const errorMessage = screen.queryByText(/already exists/);
-  expect(errorMessage).not.toBeInTheDocument();
-
-  const createButton = screen.getByRole('button', { name: createButtonTitle });
-  expect(createButton).toBeEnabled();
+  await waitFor(() => {
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  });
 });
 
 test('Expect no error when volume name is empty', async () => {
@@ -335,14 +326,16 @@ test('Expect no error when volume name is empty', async () => {
   const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
   await userEvent.type(nameInput, 'existing-volume');
 
-  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  await waitFor(() => {
+    expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  });
 
   await userEvent.clear(nameInput);
 
-  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
-
-  const createButton = screen.getByRole('button', { name: createButtonTitle });
-  expect(createButton).toBeEnabled();
+  await waitFor(() => {
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  });
 });
 
 test('Expect revalidation when provider changes', async () => {
@@ -393,14 +386,18 @@ test('Expect revalidation when provider changes', async () => {
   const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
   await userEvent.type(nameInput, 'shared-name');
 
-  expect(screen.getByText(/already exists/)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  await waitFor(() => {
+    expect(screen.getByText(/already exists/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  });
 
   const providerSelect = screen.getByRole('combobox', { name: 'Provider Choice' });
   await userEvent.selectOptions(providerSelect, 'docker');
 
-  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  await waitFor(() => {
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  });
 });
 
 test('Expect no false positive when providers share connection name', async () => {
@@ -452,16 +449,72 @@ test('Expect no false positive when providers share connection name', async () =
   await userEvent.type(nameInput, 'my-vol');
 
   // podman.Docker is selected first — no volume named 'my-vol' there
-  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  await waitFor(() => {
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  });
 
   // switch to docker.Docker — 'my-vol' exists there
   const providerSelect = screen.getByRole('combobox', { name: 'Provider Choice' });
   const options = providerSelect.querySelectorAll('option');
   await userEvent.selectOptions(providerSelect, options[1] as HTMLOptionElement);
 
-  expect(screen.getByText(/already exists/)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  await waitFor(() => {
+    expect(screen.getByText(/already exists/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  });
+});
+
+test('Expect no duplicate error after successful creation when store updates', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  vi.mocked(window.createVolume).mockResolvedValue(undefined);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'new-volume');
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  await userEvent.click(createButton);
+
+  // Simulate the store updating with the newly created volume
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'new-volume' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  // The "Done" button should appear and no error should be shown
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  });
 });
 
 test('Expect error clears when name is corrected', async () => {
@@ -494,12 +547,16 @@ test('Expect error clears when name is corrected', async () => {
   const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
   await userEvent.type(nameInput, 'my-volume');
 
-  expect(screen.getByText(/already exists/)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  await waitFor(() => {
+    expect(screen.getByText(/already exists/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+  });
 
   await userEvent.clear(nameInput);
   await userEvent.type(nameInput, 'my-volume-2');
 
-  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  await waitFor(() => {
+    expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+  });
 });

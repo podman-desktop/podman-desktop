@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import {
   faArrowUpRightFromSquare,
   faChevronRight,
@@ -11,34 +10,25 @@ import {
 import type {
   CommandInfo,
   CommandPaletteSearchOption,
-  ContainerInfo,
   DocumentationInfo,
   GoToInfo,
-  ImageInfo,
-  PodInfo,
-  VolumeInfo,
+  NavigationSearchEntryInfo,
 } from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Input } from '@podman-desktop/ui-svelte';
+import { Button, type IconType, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { type Component, onMount, tick } from 'svelte';
-import { router } from 'tinro';
+import { onMount, tick } from 'svelte';
 
 import ArrowDownIcon from '/@/lib/images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '/@/lib/images/ArrowUpIcon.svelte';
 import EnterIcon from '/@/lib/images/EnterIcon.svelte';
 import NotFoundIcon from '/@/lib/images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '/@/lib/preferences/Util';
-import { handleNavigation } from '/@/navigation';
+import { handleNavigation, resolveRoute } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
-import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
-import { imagesInfos } from '/@/stores/images';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
-import { podsInfos } from '/@/stores/pods';
-import { volumeListInfos } from '/@/stores/volumes';
+import { navigationSearchEntries } from '/@/stores/navigation-search-entries';
 
-import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 import TextHighLight from './TextHighLight.svelte';
 
 const ENTER_KEY = 'Enter';
@@ -53,7 +43,7 @@ interface Props {
   onclose?: () => void;
 }
 
-type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo;
+type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo | NavigationSearchEntryInfo;
 
 let { display = false, onclose }: Props = $props();
 
@@ -84,14 +74,18 @@ let searchOptionsWithShortcuts = $derived(
 let searchOptionsSelectedIndex: number = $state(0);
 
 let documentationItems: DocumentationInfo[] = $state([]);
-let containerInfos: ContainerInfo[] = $derived($containersInfos);
-let podInfos: PodInfo[] = $derived($podsInfos);
-let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
-let imageInfos: ImageInfo[] = $derived($imagesInfos);
 let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
-let goToItems: GoToInfo[] = $derived(
-  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
-);
+
+// Recursively extract all destinations from the navigation registry (entries can nest via `items`)
+let goToItems: GoToInfo[] = $derived.by(() => {
+  function extract(entry: NavigationRegistryEntry): GoToInfo[] {
+    if (entry.hidden) {
+      return [];
+    }
+    return [...(entry.destinations ?? []), ...(entry.items ?? []).flatMap(extract)];
+  }
+  return navigationItems.flatMap(extract);
+});
 let helperText = $derived(searchOptionsWithShortcuts[searchOptionsSelectedIndex]?.placeholder);
 
 // Keep backward compatibility with existing variable name
@@ -113,11 +107,12 @@ let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
 );
 
 let filteredGoToItems = $derived(
-  goToItems.filter(item =>
-    inputValue
-      ? getGoToDisplayText(item).toLowerCase().includes(inputValue.toLowerCase()) ||
-        item.type.toLowerCase().includes(inputValue.toLowerCase())
-      : true,
+  goToItems.filter(item => (inputValue ? item.name.toLowerCase().includes(inputValue.toLowerCase()) : true)),
+);
+
+let filteredExtensionRouteItems: NavigationSearchEntryInfo[] = $derived(
+  $navigationSearchEntries.filter(item =>
+    inputValue ? item.label.toLowerCase().includes(inputValue.toLowerCase()) : true,
   ),
 );
 
@@ -129,11 +124,16 @@ let filteredItems = $derived.by(() => {
     // Documentation mode
     return filteredDocumentationInfoItems;
   } else if (searchOptionsSelectedIndex === 3) {
-    // Go to mode (could be different logic later)
-    return filteredGoToItems;
+    // Go to mode
+    return [...filteredGoToItems, ...filteredExtensionRouteItems];
   } else {
-    // All mode - combine both
-    return [...filteredGoToItems, ...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
+    // All mode - combine all
+    return [
+      ...filteredGoToItems,
+      ...filteredExtensionRouteItems,
+      ...filteredCommandInfoItems,
+      ...filteredDocumentationInfoItems,
+    ];
   }
 });
 
@@ -269,40 +269,16 @@ async function executeAction(index: number): Promise<void> {
     }
     itemType = item.category;
     pageLink = item.url;
-  } else if (isGoToItem(item)) {
-    // Go to item
-    if (item.type === 'Image') {
-      const repoTag = item.RepoTags?.[0] ?? item.Id;
-      handleNavigation({
-        page: NavigationPage.IMAGE,
-        parameters: {
-          id: item.Id,
-          engineId: item.engineId,
-          tag: repoTag,
-        },
-      });
-    } else if (item.type === 'Container') {
-      handleNavigation({
-        page: NavigationPage.CONTAINER_SUMMARY,
-        parameters: { id: item.Id },
-      });
-    } else if (item.type === 'Pod') {
-      handleNavigation({
-        page: NavigationPage.PODMAN_POD_SUMMARY,
-        parameters: {
-          name: item.Name,
-          engineId: item.engineId,
-        },
-      });
-    } else if (item.type === 'Volume') {
-      handleNavigation({
-        page: NavigationPage.VOLUME,
-        parameters: { name: item.Name, engineId: item.engineId },
-      });
-    } else if (item.type === 'Navigation') {
-      router.goto(item.link);
+  } else if (isExtensionRouteItem(item)) {
+    try {
+      await window.navigateToRoute(item.routeId);
+    } catch (error) {
+      console.error('Error navigating to extension route', error);
     }
-    itemType = item.type;
+    itemType = 'ExtensionRoute';
+  } else if (isGoToItem(item)) {
+    handleNavigation(item);
+    itemType = item.page;
   } else {
     // Command item
     if (item.id) {
@@ -368,40 +344,56 @@ async function onAction(): Promise<void> {
     });
 }
 
+function isExtensionRouteItem(item: CommandPaletteItem): item is NavigationSearchEntryInfo {
+  return 'routeId' in item;
+}
+
 function isGoToItem(item: CommandPaletteItem): item is GoToInfo {
-  return 'type' in item;
+  return 'page' in item;
 }
 
 function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
   return 'category' in item;
 }
 
-function getTextToHighlight(item: CommandPaletteItem): string {
+function getItemKey(item: CommandPaletteItem, index: number): string {
+  if (isExtensionRouteItem(item)) {
+    return `route:${item.routeId}`;
+  }
+
+  if (isGoToItem(item)) {
+    return `goto:${resolveRoute(item)}`;
+  }
+
   if (isDocItem(item)) {
+    return `doc:${item.category}:${item.name}:${item.url ?? ''}:${index}`;
+  }
+
+  return `command:${item.id ?? ''}:${item.title ?? ''}:${index}`;
+}
+
+function getTextToHighlight(item: CommandPaletteItem): string {
+  if (isExtensionRouteItem(item)) {
+    return item.label;
+  } else if (isDocItem(item)) {
     return `${item.category}: ${item.name}`;
   } else if (isGoToItem(item)) {
-    if (item.type === 'Navigation') {
-      return `${item.name}`;
-    }
-    return `${item.type}: ${getGoToDisplayText(item)}`;
+    return item.name;
   } else {
     return item.title ?? '';
   }
 }
 
-function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefinition | Component | string {
-  if (isDocItem(item)) {
+function getIcon(item: CommandPaletteItem): IconType {
+  if (isExtensionRouteItem(item)) {
+    return item.icon ?? faTerminal;
+  } else if (isDocItem(item)) {
     return item.category === 'Tutorial' ? faFilePen : faFileLines;
   } else if (isGoToItem(item)) {
-    // All goto items now have icons set in Utils
     if (item.icon) {
-      return (item.icon.iconComponent ?? item.icon.faIcon ?? item.icon.iconImage ?? faTerminal) as
-        | IconDefinition
-        | Component
-        | string;
+      return (item.icon.iconComponent ?? item.icon.faIcon ?? item.icon.iconImage ?? faTerminal) as IconType;
     }
   }
-  // Commands and fallback
   return faTerminal;
 }
 </script>
@@ -455,11 +447,12 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
           {/each}
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
-          {#each filteredItems as item, i (i)}
+          {#each filteredItems as item, i (getItemKey(item, i))}
+            {@const extensionRouteItem = isExtensionRouteItem(item)}
             {@const goToItem = isGoToItem(item)}
             {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}
-            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
+            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={extensionRouteItem ? item.label : goToItem ? item.name : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex

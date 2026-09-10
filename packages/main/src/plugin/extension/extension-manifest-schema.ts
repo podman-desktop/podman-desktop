@@ -28,6 +28,15 @@ import { z } from 'zod';
 
 import { RawCommandSchema } from '/@/plugin/command-registry.js';
 
+const ExtensionRepositorySchema = z.union([
+  z.string(),
+  z.object({
+    type: z.string(),
+    url: z.string(),
+    directory: z.string().optional(),
+  }),
+]);
+
 export const ExtensionManifestSchema = z
   .object({
     name: z.string(),
@@ -37,6 +46,8 @@ export const ExtensionManifestSchema = z
     description: z.string(),
     main: z.string().optional(),
     icon: z.union([z.string(), z.object({ light: z.string(), dark: z.string() })]).optional(),
+    repository: ExtensionRepositorySchema.optional(),
+    homepage: z.string().optional(),
     extensionDependencies: z.array(z.string()).optional(),
     extensionPack: z.array(z.string()).optional(),
     engines: z

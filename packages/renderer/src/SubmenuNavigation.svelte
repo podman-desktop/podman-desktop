@@ -5,10 +5,14 @@ import type { TinroRouteMeta } from 'tinro';
 import { lastSubmenuPages } from './stores/breadcrumb';
 import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
-export let title: string;
-export let items: NavigationRegistryEntry[] | undefined;
-export let link: string;
-export let meta: TinroRouteMeta;
+interface Props {
+  title: string;
+  items?: NavigationRegistryEntry[];
+  link: string;
+  meta: TinroRouteMeta;
+}
+
+let { title, items, link, meta }: Props = $props();
 
 let pages = $lastSubmenuPages;
 if (!pages[title]) {

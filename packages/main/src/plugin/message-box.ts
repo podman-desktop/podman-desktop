@@ -19,29 +19,35 @@ import type {
   ButtonsType,
   DialogType,
   DropdownType,
+  IconButtonType,
   MessageBoxOptions,
   MessageBoxReturnValue,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
+interface MessageBoxCallback {
+  deferred: PromiseWithResolvers<MessageBoxReturnValue>;
+  buttons: ButtonsType[];
+}
+
 @injectable()
 export class MessageBox {
   private callbackId = 0;
 
-  private callbacksMessageBox = new Map<number, PromiseWithResolvers<MessageBoxReturnValue>>();
+  private callbacksMessageBox = new Map<number, MessageBoxCallback>();
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   async showMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
-    // keep track of this request
     this.callbackId++;
 
-    // create a promise that will be resolved when the frontend sends the result
     const deferred = Promise.withResolvers<MessageBoxReturnValue>();
 
-    // store the callback that will resolve the promise
-    this.callbacksMessageBox.set(this.callbackId, deferred);
+    this.callbacksMessageBox.set(this.callbackId, {
+      deferred,
+      buttons: options.buttons ?? [],
+    });
 
     const data = {
       id: this.callbackId,
@@ -55,10 +61,8 @@ export class MessageBox {
       footerMarkdownDescription: options.footerMarkdownDescription,
     };
 
-    // need to send the options to the frontend
     this.apiSender.send('showMessageBox:open', data);
 
-    // return the promise
     return deferred.promise;
   }
 
@@ -70,6 +74,13 @@ export class MessageBox {
       'buttons' in response &&
       Array.isArray((response as DropdownType).buttons)
     );
+  }
+
+  private getButtonLabel(button: ButtonsType): string {
+    if (typeof button === 'string') return button;
+    if (button.type === 'dropdownButton') return (button as DropdownType).heading;
+    if (button.type === 'iconButton') return (button as IconButtonType).label;
+    return '';
   }
 
   async showDialog(
@@ -85,34 +96,31 @@ export class MessageBox {
       type: type,
     });
 
-    if (result.response !== undefined && result.response >= 0) {
-      const response = items[result.response];
+    if (result.response !== undefined) {
       if (result.dropdownIndex !== undefined && result.dropdownIndex >= 0) {
-        if (this.isDropdownType(response)) return response.buttons[result.dropdownIndex];
+        const button = items.find(b => this.isDropdownType(b) && b.heading === result.response);
+        if (button && this.isDropdownType(button)) return button.buttons[result.dropdownIndex];
       }
-      if (typeof response === 'string') return response;
+      return result.response;
     }
 
     return undefined;
   }
 
-  // this method is called by the frontend when the user selected a button
   async onDidSelectButton(id: number, selectedIndex?: number, dropdownIndex?: number): Promise<void> {
-    // get the callback
-    const callback = this.callbacksMessageBox.get(id);
+    const entry = this.callbacksMessageBox.get(id);
 
-    // if there is a callback
-    if (callback) {
-      // grab item
-      const val: MessageBoxReturnValue = {
-        response: selectedIndex,
-        dropdownIndex: dropdownIndex,
-      };
-      // resolve the promise
-      callback.resolve(val);
+    if (entry) {
+      let response: string | undefined;
+      if (selectedIndex !== undefined && selectedIndex >= 0 && selectedIndex < entry.buttons.length) {
+        const button = entry.buttons[selectedIndex];
+        if (button !== undefined) {
+          response = this.getButtonLabel(button);
+        }
+      }
+      entry.deferred.resolve({ response, dropdownIndex });
     }
 
-    // remove the callback
     this.callbacksMessageBox.delete(id);
   }
 }

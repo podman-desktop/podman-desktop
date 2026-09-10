@@ -1,7 +1,10 @@
 <script lang="ts">
 import type { IConnectionStatus } from '/@/lib/preferences/Util';
 
-export let status: IConnectionStatus | undefined;
+interface Props {
+  status?: IConnectionStatus;
+}
+let { status }: Props = $props();
 
 async function showTaskManager(): Promise<void> {
   // call the command show-task-manager'
@@ -13,5 +16,5 @@ async function showTaskManager(): Promise<void> {
   <button
     aria-label="{status.action} failed"
     class="ml-3 text-[9px] text-[var(--pd-state-error)] underline"
-    on:click={showTaskManager}>{status.action} failed</button>
+    onclick={showTaskManager}>{status.action} failed</button>
 {/if}

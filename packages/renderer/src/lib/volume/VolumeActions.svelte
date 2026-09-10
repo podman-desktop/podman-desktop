@@ -12,13 +12,17 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-export let volume: VolumeInfoUI;
-export let dropdownMenu = false;
-export let detailed = false;
+interface Props {
+  volume: VolumeInfoUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+}
+
+let { volume, dropdownMenu = false, detailed = false }: Props = $props();
 
 const dispatch = createEventDispatcher<{ update: VolumeInfoUI }>();
 
-let contributions: Menu[] = [];
+let contributions: Menu[] = $state([]);
 onMount(async () => {
   try {
     contributions = await window.getContributedMenus(MenuContext.DASHBOARD_VOLUME);
@@ -36,7 +40,7 @@ async function removeVolume(): Promise<void> {
 
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
 // otherwise, leave blank.
-$: MenuComponent = dropdownMenu ? DropdownMenu : FlatMenu;
+let MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 {#if volume.status === 'UNUSED'}

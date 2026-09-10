@@ -3,10 +3,19 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let checked = false;
-export let onChange = async (_id: string, _value: boolean): Promise<void> => {};
-let invalidEntry = false;
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  checked?: boolean;
+  onChange?: (id: string, value: boolean) => Promise<void>;
+}
+
+let {
+  record,
+  checked = $bindable(false),
+  onChange = async (_id: string, _value: boolean): Promise<void> => {},
+}: Props = $props();
+
+let invalidEntry = $state(false);
 
 function onChecked(state: boolean): void {
   invalidEntry = false;

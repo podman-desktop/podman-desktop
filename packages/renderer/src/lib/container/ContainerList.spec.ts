@@ -28,8 +28,10 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
+import { viewsContributions } from '/@/stores/views';
 
 import ContainerList from './ContainerList.svelte';
 
@@ -37,6 +39,9 @@ vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // vi.resetAllMocks does not touch Svelte stores; a test that sets one would
+  // otherwise leak its contributions into every test declared after it
+  viewsContributions.set([]);
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
@@ -56,12 +61,10 @@ beforeEach(() => {
       ],
     } as ProviderInfo,
   ]);
-  // fake the window.events object
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(
@@ -482,7 +485,7 @@ test('Expect filter empty screen', async () => {
   expect(filterButton).toBeInTheDocument();
 });
 
-test('Expect clear filter in empty screen to clear serach term, except is:...', async () => {
+test('Expect clear filter in empty screen to clear search term, except is:...', async () => {
   vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
@@ -801,7 +804,7 @@ test('Sort containers based on selected parameter', async () => {
 test('Expect user confirmation to pop up when preferences require', async () => {
   vi.mocked(window.listContainers).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -845,7 +848,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.deleteContainer).toHaveBeenCalled());
@@ -983,7 +986,7 @@ test('pods with same name on different engines should have separate group', asyn
     Status: 'Running',
     pod: {
       name: 'my-pod',
-      id: `podman-engine-${index}`, // unique pod id (only pod-id is unique accross all engines)
+      id: `podman-engine-${index}`, // unique pod id (only pod-id is unique across all engines)
       status: 'Running',
       engineId: `podman-${index}`,
     },
@@ -1219,7 +1222,7 @@ test('Expect create container dialog opens when Create button is clicked', async
   });
 });
 
-test('Expect create container dialog has secondary button before primary button', async () => {
+test('Expect create container dialog has both choice buttons styled as secondary', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -1231,12 +1234,15 @@ test('Expect create container dialog has secondary button before primary button'
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const dialogButtons = within(dialog).getAllByRole('button');
-  const existingImageIndex = dialogButtons.findIndex(b => b.textContent?.includes('Existing image'));
-  const containerfileIndex = dialogButtons.findIndex(b => b.textContent?.includes('Containerfile or Dockerfile'));
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
 
-  expect(existingImageIndex).toBeGreaterThanOrEqual(0);
-  expect(containerfileIndex).toBeGreaterThanOrEqual(0);
+  expect(existingImageButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
+  expect(containerfileButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
+
+  const dialogButtons = within(dialog).getAllByRole('button');
+  const existingImageIndex = dialogButtons.indexOf(existingImageButton);
+  const containerfileIndex = dialogButtons.indexOf(containerfileButton);
   expect(existingImageIndex).toBeLessThan(containerfileIndex);
 });
 
@@ -1252,7 +1258,7 @@ test('Expect clicking Containerfile button navigates to build image page', async
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Containerfile or Dockerfile' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
   await fireEvent.click(containerfileButton);
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
@@ -1271,10 +1277,85 @@ test('Expect clicking Existing image button closes dialog', async () => {
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const existingImageButton = within(dialog).getByRole('button', { name: 'Existing image' });
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
   await fireEvent.click(existingImageButton);
 
   await waitFor(() => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+});
+
+test('Expect contributed icon to be applied to the container row', async () => {
+  // the containers store converts without the context and the view contributions, so this
+  // icon can only appear if ContainerList overlays it after reading the store
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:iconcontainer',
+      Image: 'sha256:123',
+      Names: ['/icon-container'],
+      State: 'RUNNING',
+      ImageID: 'sha256:image-id',
+      engineId: 'podman',
+      engineName: 'podman',
+      Labels: { 'podman-desktop.label': 'true' },
+    } as unknown as ContainerInfo,
+  ]);
+
+  const contribs = [
+    {
+      extensionId: 'foo.bar',
+      viewId: CONTAINER_LIST_VIEW,
+      value: {
+        icon: '${my-custom-icon}',
+        when: 'podman-desktop.label in containerLabelKeys',
+      },
+    },
+  ];
+  vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
+  viewsContributions.set(contribs);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const statusElement = screen.getByRole('status', { name: 'RUNNING' });
+  expect(statusElement.getElementsByClassName('podman-desktop-icon-my-custom-icon')).toHaveLength(1);
+});
+
+test('Expect search not to match the raw compose-prefixed container name', async () => {
+  // `names` carries the raw '/myproject-web-1'; `name` is the compose-stripped 'web-1'.
+  // Search has always matched on `name`, and adding `names` to the object must not
+  // silently widen it — findMatchInLeaves recurses into arrays.
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:composecontainer',
+      Image: 'sha256:123',
+      Names: ['/myproject-web-1'],
+      State: 'RUNNING',
+      ImageID: 'sha256:image-id',
+      engineId: 'podman',
+      engineName: 'podman',
+      Labels: { 'com.docker.compose.project': 'myproject' },
+    } as unknown as ContainerInfo,
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+
+  // the stripped name still matches, as it did before the store held ContainerInfoUI
+  const { unmount } = await waitRender({ searchTerm: 'web-1' });
+  expect(screen.queryByText('web-1')).toBeInTheDocument();
+  unmount();
+
+  // the raw prefixed name must not
+  await waitRender({ searchTerm: 'myproject-web-1' });
+  expect(screen.queryByText('web-1')).not.toBeInTheDocument();
 });

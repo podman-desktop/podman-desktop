@@ -18,6 +18,7 @@
 
 // export core modules
 export * from './globalSetup/global-setup';
+export { default as playwrightGlobalSetup } from './globalSetup/playwright-global-setup';
 export * from './runner/chrome-dev-tools-protocol-runner';
 export * from './runner/electron-runner';
 export * from './runner/podman-desktop-runner';
@@ -33,6 +34,7 @@ export * from './utility/kubernetes';
 export * from './utility/operations';
 export * from './utility/platform';
 export * from './utility/provider';
+export * from './utility/registry-auth-config';
 export * from './utility/wait';
 
 // exports Podman Desktop Page Object Module
@@ -55,6 +57,7 @@ export * from './model/pages/compose-onboarding/compose-version-page';
 export * from './model/pages/compose-onboarding/compose-wide-install-page';
 export * from './model/pages/container-details-page';
 export * from './model/pages/containers-page';
+export * from './model/pages/create-dummy-k8s-cluster-page';
 export * from './model/pages/create-kind-cluster-page';
 export * from './model/pages/create-machine-page';
 export * from './model/pages/create-network-page';

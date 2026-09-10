@@ -4,21 +4,27 @@ import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
 
-export let extension: {
+interface Extension {
   id: string;
   fetchLink?: string;
   fetchVersion?: string;
   displayName: string;
   fetchable: boolean;
-};
-export let oninstall: (extensionId: string) => void = () => {};
+}
 
-let installInProgress = false;
+interface Props {
+  extension: Extension;
+  oninstall?: (extensionId: string) => void;
+}
+
+let { extension, oninstall = (): void => {} }: Props = $props();
+
+let installInProgress = $state(false);
 
 let logs: string[] = [];
-let errorInstall = '';
+let errorInstall = $state('');
 
-let percentage = '0%';
+let percentage = $state('0%');
 
 async function installExtension(): Promise<void> {
   oninstall(extension.id);
@@ -74,7 +80,7 @@ async function installExtension(): Promise<void> {
 <ErrorMessage icon wrapMessage class="-top-[15px] right-0 absolute" error={errorInstall}/>
 <button
   aria-label="Install {extension.id} Extension"
-  on:click={installExtension}
+  onclick={installExtension}
   hidden={!extension.fetchable}
   title="Install {extension.displayName} v{extension.fetchVersion} Extension"
   class="border-2 relative rounded-sm border-[var(--pd-button-secondary-border)] text-[var(--pd-button-secondary-text)] hover:bg-[var(--pd-button-secondary-hover-bg)] w-10 p-2 text-center cursor-pointer flex flex-row justify-center">

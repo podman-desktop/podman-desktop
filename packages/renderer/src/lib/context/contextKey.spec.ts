@@ -167,9 +167,7 @@ suite('ContextKeyExpr', () => {
   });
 
   test('false, true', async () => {
-    const getOsPlatformMock = vi.fn();
-    (window as any).getOsPlatform = getOsPlatformMock;
-    getOsPlatformMock.mockResolvedValue('darwin');
+    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
     await initContextKeysPlatform();
 
     function testNormalize(expr: string, expected: string): void {

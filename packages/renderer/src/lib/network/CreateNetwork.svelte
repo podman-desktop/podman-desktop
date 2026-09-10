@@ -202,7 +202,7 @@ function removeDnsServer(index: number): void {
 
 <Route path="/*">
   <EngineFormPage
-    title="Create a Network"
+    title="Create a network"
     showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
     {#snippet icon()}
       <Icon icon={NetworkIcon} class="2x" />
@@ -362,12 +362,11 @@ function removeDnsServer(index: number): void {
           </Route>
         </div>
 
-        <div class="w-full flex flex-row space-x-4 pt-4">
-          <Button type="secondary" class="w-full" onclick={cancelRoute}>Cancel</Button>
+        <div class="flex items-center justify-end gap-3 pt-4">
+          <Button type="secondary" onclick={cancelRoute}>Cancel</Button>
           <Button
             disabled={hasInvalidFields || createNetworkInProgress}
             inProgress={createNetworkInProgress}
-            class="w-full"
             onclick={createNetwork}>
             Create
           </Button>

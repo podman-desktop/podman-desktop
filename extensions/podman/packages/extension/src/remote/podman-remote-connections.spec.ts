@@ -63,10 +63,7 @@ test('should do nothing if the configuration is disabled', async () => {
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
   // start
-  podmanRemoteConnections.start();
-
-  // wait for the getConfiguration being called
-  await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
+  await podmanRemoteConnections.start();
 
   // no connection should be created
   expect(spyCreateTunnel).not.toHaveBeenCalled();
@@ -91,29 +88,170 @@ test('should check connections if configuration is enabled', async () => {
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
   // start
-  podmanRemoteConnections.start();
-
-  // wait for the getConfiguration being called
-  await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
+  await podmanRemoteConnections.start();
 
   // no connection should be created
   expect(spyCreateTunnel).not.toHaveBeenCalled();
   expect(spyRefreshRemoteConnections).toHaveBeenCalled();
 });
 
+test('hasConnections should return false when no connections exist', () => {
+  const remoteConnections = new TestPodmanRemoteConnections(extensionContext, provider);
+  expect(remoteConnections.hasConnections()).toBe(false);
+});
+
+test('hasConnections should return true after remote connections are registered', async () => {
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => true,
+  } as unknown as extensionApi.Configuration);
+
+  const mockProvider = {
+    registerContainerProviderConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as extensionApi.Provider;
+  const mockContext = {
+    subscriptions: [],
+  } as unknown as extensionApi.ExtensionContext;
+
+  const remoteConnections = new TestPodmanRemoteConnections(mockContext, mockProvider);
+
+  vi.spyOn(fs, 'readFileSync').mockReturnValue('fake-key');
+  vi.spyOn(remoteConnections, 'createTunnel').mockReturnValue({
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    status: () => 'started',
+  } as unknown as PodmanRemoteSshTunnel);
+
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'ssh://dummy@192.168.1.100:22/run/podman/podman.sock',
+        Identity: '/tmp/fakepath',
+        Name: 'RemoteConnection1',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+
+  await remoteConnections.refreshRemoteConnections();
+
+  expect(remoteConnections.hasConnections()).toBe(true);
+});
+
+test('should skip broken connection and still register valid ones', async () => {
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => true,
+  } as unknown as extensionApi.Configuration);
+
+  const mockProvider = {
+    registerContainerProviderConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as extensionApi.Provider;
+  const mockContext = {
+    subscriptions: [],
+  } as unknown as extensionApi.ExtensionContext;
+
+  const remoteConnections = new TestPodmanRemoteConnections(mockContext, mockProvider);
+
+  vi.spyOn(fs, 'readFileSync').mockImplementation((path: unknown) => {
+    if (String(path) === '/tmp/broken-key') {
+      throw new Error('ENOENT: no such file');
+    }
+    return 'fake-key';
+  });
+  vi.spyOn(remoteConnections, 'createTunnel').mockReturnValue({
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    status: () => 'started',
+  } as unknown as PodmanRemoteSshTunnel);
+
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'ssh://user@192.168.1.1:22/run/podman/podman.sock',
+        Identity: '/tmp/broken-key',
+        Name: 'BrokenRemote',
+      },
+      {
+        IsMachine: false,
+        URI: 'ssh://user@192.168.1.2:22/run/podman/podman.sock',
+        Identity: '/tmp/valid-key',
+        Name: 'ValidRemote',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+
+  await remoteConnections.refreshRemoteConnections();
+
+  expect(remoteConnections.hasConnections()).toBe(true);
+});
+
+test('should disconnect tunnel if registration fails after connect', async () => {
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => true,
+  } as unknown as extensionApi.Configuration);
+
+  const mockProvider = {
+    registerContainerProviderConnection: vi.fn().mockImplementation(() => {
+      throw new Error('registration failed');
+    }),
+  } as unknown as extensionApi.Provider;
+  const mockContext = {
+    subscriptions: [],
+  } as unknown as extensionApi.ExtensionContext;
+
+  const remoteConnections = new TestPodmanRemoteConnections(mockContext, mockProvider);
+
+  vi.spyOn(fs, 'readFileSync').mockReturnValue('fake-key');
+  const mockDisconnect = vi.fn();
+  vi.spyOn(remoteConnections, 'createTunnel').mockReturnValue({
+    connect: vi.fn(),
+    disconnect: mockDisconnect,
+    status: () => 'started',
+  } as unknown as PodmanRemoteSshTunnel);
+
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'ssh://user@192.168.1.1:22/run/podman/podman.sock',
+        Identity: '/tmp/fakepath',
+        Name: 'FailingRemote',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+
+  await remoteConnections.refreshRemoteConnections();
+
+  expect(mockDisconnect).toHaveBeenCalledOnce();
+  expect(remoteConnections.hasConnections()).toBe(false);
+});
+
 test('should check connections if configuration is enabled and a system connection', async () => {
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     get: () => true,
   } as unknown as extensionApi.Configuration);
-  const podmanRemoteConnections = new TestPodmanRemoteConnections(extensionContext, provider);
+
+  const mockProvider = {
+    registerContainerProviderConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as extensionApi.Provider;
+  const mockContext = {
+    subscriptions: [],
+  } as unknown as extensionApi.ExtensionContext;
+
+  const podmanRemoteConnections = new TestPodmanRemoteConnections(mockContext, mockProvider);
 
   // mock readFileSync
   vi.spyOn(fs, 'readFileSync').mockReturnValue('file');
 
+  // mock createTunnel to return a mock tunnel
+  const spyCreateTunnel = vi.spyOn(podmanRemoteConnections, 'createTunnel').mockReturnValue({
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    status: () => 'started',
+  } as unknown as PodmanRemoteSshTunnel);
+
   // mock exec method for listing podman system connections
-
   // one machine and one remote connection
-
   vi.mocked(extensionApi.process.exec).mockResolvedValue({
     stdout: JSON.stringify([
       {
@@ -122,7 +260,6 @@ test('should check connections if configuration is enabled and a system connecti
         Identity: '/tmp/fakepath',
         Name: 'Machine1',
       },
-
       {
         IsMachine: false,
         URI: 'ssh://dummy@127.0.0.1:1234/run/podman/podman.sock',
@@ -132,19 +269,14 @@ test('should check connections if configuration is enabled and a system connecti
     ]),
   } as unknown as extensionApi.RunResult);
 
-  // spy createTunnel method
-  const spyCreateTunnel = vi.spyOn(podmanRemoteConnections, 'createTunnel');
-
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
   // start
-  podmanRemoteConnections.start();
+  await podmanRemoteConnections.start();
 
-  // wait for the getConfiguration being called
-  await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
-
-  // no connection should be created
-  expect(spyCreateTunnel).not.toHaveBeenCalled();
+  // remote connection should trigger tunnel creation (machine is filtered out)
+  expect(spyCreateTunnel).toHaveBeenCalledOnce();
   expect(spyRefreshRemoteConnections).toHaveBeenCalled();
+  expect(podmanRemoteConnections.hasConnections()).toBe(true);
 });

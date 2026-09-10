@@ -17,8 +17,10 @@
  ***********************************************************************/
 
 // Import to access mocked functionionalities such as using vi.mock (we don't want to actually call node:fs methods)
-import { cpSync, readFileSync, writeFileSync } from 'node:fs';
-import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cpSync, existsSync, readFileSync } from 'node:fs';
+import { access, copyFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import * as path from 'node:path';
 
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -40,15 +42,24 @@ import type { NotificationRegistry } from './tasks/notification-registry.js';
 // mock the fs module
 vi.mock(import('node:fs'), () => ({
   readFileSync: vi.fn(),
-  writeFileSync: vi.fn(),
   cpSync: vi.fn(),
+  existsSync: vi.fn(),
 }));
+
+vi.mock(import('node:os'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    homedir: vi.fn(),
+  };
+});
 
 vi.mock(import('node:fs/promises'), () => ({
   access: vi.fn(),
   mkdir: vi.fn(),
   writeFile: vi.fn(),
   readFile: vi.fn(),
+  rename: vi.fn(),
   copyFile: vi.fn(),
 }));
 
@@ -105,6 +116,7 @@ beforeEach(async () => {
   const writeFileMock = vi.mocked(writeFile);
   const readFileMock = vi.mocked(readFile);
   const cpSyncMock = vi.mocked(cpSync);
+  const existsSyncMock = vi.mocked(existsSync);
 
   readFileSyncMock.mockReturnValue(JSON.stringify({}));
   accessMock.mockResolvedValue(undefined);
@@ -112,6 +124,8 @@ beforeEach(async () => {
   writeFileMock.mockResolvedValue(undefined);
   readFileMock.mockResolvedValue(JSON.stringify({}));
   cpSyncMock.mockReturnValue(undefined);
+  existsSyncMock.mockReturnValue(false);
+  vi.mocked(homedir).mockReturnValue('/home/testuser');
 
   // Setup DefaultConfiguration mock for the new functionality
   getContentMock.mockResolvedValue({});
@@ -399,8 +413,8 @@ describe('should be notified when a configuration is updated', async () => {
 });
 
 test('should remove the object configuration if value is equal to default one', async () => {
-  // Mock fs function needed for this specific test
-  const writeFileSyncMock = vi.mocked(writeFileSync);
+  const writeFileMock = vi.mocked(writeFile);
+  const renameMock = vi.mocked(rename);
 
   const node: IConfigurationNode = {
     id: 'custom',
@@ -440,20 +454,28 @@ test('should remove the object configuration if value is equal to default one', 
     { label: 'bar', value: 2 },
   ]);
 
-  expect(writeFileSyncMock).toHaveBeenNthCalledWith(
+  // wait for the serialized write chain to flush
+  await vi.waitFor(() => {
+    expect(renameMock).toHaveBeenCalledTimes(2);
+  });
+
+  // atomic write: the second call should persist an empty config (value matches default)
+  expect(writeFileMock).toHaveBeenNthCalledWith(
     2,
-    expect.anything(),
+    expect.stringMatching(/settings\.json\.tmp-/),
     expect.stringContaining(JSON.stringify({}, undefined, 2)),
+    'utf-8',
   );
 });
 
 // Tests for applyManagedDefaults method
 describe('applyManagedDefaults function tests', () => {
-  let writeFileSyncMock: ReturnType<typeof vi.mocked<typeof writeFileSync>>;
+  let writeFileMock: ReturnType<typeof vi.mocked<typeof writeFile>>;
+  let renameMock: ReturnType<typeof vi.mocked<typeof rename>>;
 
   beforeEach(() => {
-    writeFileSyncMock = vi.mocked(writeFileSync);
-    writeFileSyncMock.mockClear();
+    writeFileMock = vi.mocked(writeFile);
+    renameMock = vi.mocked(rename);
   });
 
   test('apply default-config.json values to undefined keys in config', async () => {
@@ -613,8 +635,10 @@ describe('applyManagedDefaults function tests', () => {
     const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
     await testRegistry.init();
 
-    // saveDefault should have been called (via writeFileSync)
-    expect(writeFileSync).toHaveBeenCalled();
+    // saveDefault should have been called (via atomic write)
+    await vi.waitFor(() => {
+      expect(renameMock).toHaveBeenCalled();
+    });
   });
 
   test('should NOT write to file when no managed defaults are applied', async () => {
@@ -624,8 +648,8 @@ describe('applyManagedDefaults function tests', () => {
     const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
     await testRegistry.init();
 
-    // saveDefault should NOT have been called
-    expect(writeFileSync).not.toHaveBeenCalled();
+    // saveDefault should NOT have been called (no rename means no atomic write was scheduled)
+    expect(renameMock).not.toHaveBeenCalled();
   });
 
   test('should not persist managed default to settings.json if it matches schema default', async () => {
@@ -656,12 +680,18 @@ describe('applyManagedDefaults function tests', () => {
 
     // Clear previous calls and trigger saveDefault to check what would be written
     // now that configurations are registered
-    writeFileSyncMock.mockClear();
+    writeFileMock.mockClear();
+    renameMock.mockClear();
     testRegistry.saveDefault();
 
+    // wait for the serialized write chain to flush
+    await vi.waitFor(() => {
+      expect(renameMock).toHaveBeenCalled();
+    });
+
     // The value should NOT be in the settings.json since it matches the schema default
-    expect(writeFileSyncMock).toHaveBeenCalled();
-    const writtenContent = JSON.parse(writeFileSyncMock.mock.calls[0]?.[1] as string);
+    expect(writeFileMock).toHaveBeenCalled();
+    const writtenContent = JSON.parse(writeFileMock.mock.calls[0]?.[1] as string);
     expect(writtenContent['my.fake.property']).toBeUndefined();
   });
 
@@ -692,12 +722,18 @@ describe('applyManagedDefaults function tests', () => {
     testRegistry.registerConfigurations([node]);
 
     // Clear previous calls and trigger saveDefault to check what would be written
-    writeFileSyncMock.mockClear();
+    writeFileMock.mockClear();
+    renameMock.mockClear();
     testRegistry.saveDefault();
 
+    // wait for the serialized write chain to flush
+    await vi.waitFor(() => {
+      expect(renameMock).toHaveBeenCalled();
+    });
+
     // The value SHOULD be in the settings.json since it differs from schema default
-    expect(writeFileSyncMock).toHaveBeenCalled();
-    const writtenContent = JSON.parse(writeFileSyncMock.mock.calls[0]?.[1] as string);
+    expect(writeFileMock).toHaveBeenCalled();
+    const writtenContent = JSON.parse(writeFileMock.mock.calls[0]?.[1] as string);
     expect(writtenContent['my.fake.property']).toEqual('customValue');
   });
 });
@@ -1064,5 +1100,186 @@ describe('configuration.override from product.json', () => {
     expect(property?.type).toBe('string');
     expect(property?.default).toBe('myDefault');
     expect(property?.experimental).toBeUndefined();
+  });
+});
+
+describe('declarative env:/file: defaults', () => {
+  const ENV_VAR = 'PD_TEST_CREDENTIALS_PATH';
+  const APPDATA_VAR = 'PD_TEST_APPDATA';
+
+  beforeEach(() => {
+    delete process.env[ENV_VAR];
+    delete process.env[APPDATA_VAR];
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(homedir).mockReturnValue('/home/testuser');
+  });
+
+  function registerWithDefault(defaultValue: unknown): IConfigurationPropertySchema | undefined {
+    const node: IConfigurationNode = {
+      id: 'my-extension',
+      title: 'My Extension',
+      type: 'object',
+      properties: {
+        'my-extension.credentialsFile': {
+          description: 'Path to credentials file',
+          type: 'string',
+          format: 'file',
+          default: defaultValue,
+        },
+      },
+    };
+    configurationRegistry.registerConfigurations([node]);
+    return configurationRegistry.getConfigurationProperties()['my-extension.credentialsFile'];
+  }
+
+  test('should resolve env: entry when environment variable is set', () => {
+    process.env[ENV_VAR] = '/custom/credentials.json';
+
+    const property = registerWithDefault([
+      `env:${ENV_VAR}`,
+      'file:~/.config/my-tool/credentials.json',
+      `file:$${APPDATA_VAR}/my-tool/credentials.json`,
+    ]);
+
+    expect(property?.default).toBe('/custom/credentials.json');
+    expect(configurationRegistry.getConfiguration('my-extension').get('credentialsFile')).toBe(
+      '/custom/credentials.json',
+    );
+  });
+
+  test('should skip empty env: value and fall through to file:', () => {
+    process.env[ENV_VAR] = '';
+    const expectedPath = path.join('/home/testuser', '.config/my-tool/credentials.json');
+    vi.mocked(existsSync).mockImplementation((p: Parameters<typeof existsSync>[0]) => p === expectedPath);
+
+    const property = registerWithDefault([`env:${ENV_VAR}`, 'file:~/.config/my-tool/credentials.json']);
+
+    expect(property?.default).toBe(expectedPath);
+  });
+
+  test('should resolve file: with ~ expansion when file exists', () => {
+    const expectedPath = path.join('/home/testuser', '.config/my-tool/credentials.json');
+    vi.mocked(existsSync).mockImplementation((p: Parameters<typeof existsSync>[0]) => p === expectedPath);
+
+    const property = registerWithDefault([
+      `env:${ENV_VAR}`,
+      'file:~/.config/my-tool/credentials.json',
+      `file:$${APPDATA_VAR}/my-tool/credentials.json`,
+    ]);
+
+    expect(property?.default).toBe(expectedPath);
+  });
+
+  test('should resolve file: with $VAR expansion when file exists', () => {
+    process.env[APPDATA_VAR] = 'C:\\Users\\test\\AppData\\Roaming';
+    const expectedPath = 'C:\\Users\\test\\AppData\\Roaming/my-tool/credentials.json';
+    vi.mocked(existsSync).mockImplementation((p: Parameters<typeof existsSync>[0]) => p === expectedPath);
+
+    const property = registerWithDefault([
+      `env:${ENV_VAR}`,
+      'file:~/.config/my-tool/credentials.json',
+      `file:$${APPDATA_VAR}/my-tool/credentials.json`,
+    ]);
+
+    expect(property?.default).toBe(expectedPath);
+  });
+
+  test('should skip file: entry when $VAR is unset instead of checking a truncated path', () => {
+    const existsSyncMock = vi.mocked(existsSync);
+    // If expandPath incorrectly replaced $VAR with '', this path would be checked
+    existsSyncMock.mockImplementation((p: Parameters<typeof existsSync>[0]) => p === '/my-tool/credentials.json');
+
+    const property = registerWithDefault([`file:$${APPDATA_VAR}/my-tool/credentials.json`]);
+
+    expect(property?.default).toBeUndefined();
+    expect(existsSyncMock).not.toHaveBeenCalled();
+  });
+
+  test('should leave default undefined when no entry resolves', () => {
+    const property = registerWithDefault([
+      `env:${ENV_VAR}`,
+      'file:~/.config/my-tool/credentials.json',
+      `file:$${APPDATA_VAR}/my-tool/credentials.json`,
+    ]);
+
+    expect(property?.default).toBeUndefined();
+    expect(configurationRegistry.getConfiguration('my-extension').get('credentialsFile')).toBeUndefined();
+  });
+
+  test('should not treat literal array defaults as declarative', () => {
+    const literalDefault = [
+      { label: 'foo', value: 1 },
+      { label: 'bar', value: 2 },
+    ];
+    const node: IConfigurationNode = {
+      id: 'custom',
+      title: 'Test Object Property',
+      properties: {
+        'test.literalArray': {
+          description: 'test property',
+          type: 'array',
+          default: literalDefault,
+        },
+      },
+    };
+
+    configurationRegistry.registerConfigurations([node]);
+    const property = configurationRegistry.getConfigurationProperties()['test.literalArray'];
+
+    expect(property?.default).toEqual(literalDefault);
+  });
+
+  test('should not treat string array defaults without env:/file: prefixes as declarative', () => {
+    const literalDefault = ['alpha', 'beta'];
+    const node: IConfigurationNode = {
+      id: 'custom',
+      title: 'Test String Array',
+      properties: {
+        'test.stringArray': {
+          description: 'test property',
+          type: 'array',
+          default: literalDefault,
+        },
+      },
+    };
+
+    configurationRegistry.registerConfigurations([node]);
+    const property = configurationRegistry.getConfigurationProperties()['test.stringArray'];
+
+    expect(property?.default).toEqual(literalDefault);
+  });
+
+  test('should leave scalar defaults unchanged', () => {
+    const property = registerWithDefault('/already/set/path.json');
+    expect(property?.default).toBe('/already/set/path.json');
+  });
+
+  test('should resolve single env: string default when variable is set', () => {
+    process.env[ENV_VAR] = '/from/env/creds.json';
+
+    const property = registerWithDefault(`env:${ENV_VAR}`);
+
+    expect(property?.default).toBe('/from/env/creds.json');
+  });
+
+  test('should resolve single env: string default to undefined when variable is unset', () => {
+    const property = registerWithDefault(`env:${ENV_VAR}`);
+
+    expect(property?.default).toBeUndefined();
+  });
+
+  test('should resolve single file: string default when file exists', () => {
+    const expectedPath = path.join('/home/testuser', '.config/my-tool/credentials.json');
+    vi.mocked(existsSync).mockImplementation((p: Parameters<typeof existsSync>[0]) => p === expectedPath);
+
+    const property = registerWithDefault('file:~/.config/my-tool/credentials.json');
+
+    expect(property?.default).toBe(expectedPath);
+  });
+
+  test('should resolve single file: string default to undefined when file does not exist', () => {
+    const property = registerWithDefault('file:~/.config/my-tool/credentials.json');
+
+    expect(property?.default).toBeUndefined();
   });
 });

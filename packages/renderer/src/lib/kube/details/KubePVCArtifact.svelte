@@ -4,7 +4,11 @@ import type { V1PersistentVolumeClaimSpec } from '@kubernetes/client-node';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
-export let artifact: V1PersistentVolumeClaimSpec | undefined;
+interface Props {
+  artifact?: V1PersistentVolumeClaimSpec;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}

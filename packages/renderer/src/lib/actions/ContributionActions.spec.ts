@@ -29,12 +29,10 @@ beforeAll(() => {
   Object.defineProperty(window, 'executeCommand', { value: executeCommand });
   executeCommand.mockImplementation(() => {});
 
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      // Cast to function before calling
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect no ListItemButtonIcon', async () => {
@@ -267,4 +265,23 @@ test('Expect custom icon on the contributed action', async () => {
   // expect to have the podman desktop icon class
 
   expect(iconItem).toHaveClass('fas fa-podman-desktop-icon-dummyIcon');
+});
+
+test('Expect FontAwesome CSS icon class on the contributed action', async () => {
+  render(ContributionActions, {
+    args: [],
+    contributions: [
+      {
+        command: 'dummy.command',
+        title: 'dummy-title',
+        icon: 'fas fa-circle-arrow-up',
+      },
+    ],
+    onError: () => {},
+    dropdownMenu: true,
+  });
+
+  const iconItem = screen.getByRole('img', { hidden: true });
+  expect(iconItem).toBeInTheDocument();
+  expect(iconItem).toHaveClass('fas fa-circle-arrow-up');
 });

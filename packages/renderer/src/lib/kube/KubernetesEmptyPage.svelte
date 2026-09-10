@@ -1,17 +1,14 @@
 <script lang="ts">
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderInfo } from '@podman-desktop/core-api';
-import { Button, Link } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
-
-const kubernetesExternalDocs = 'https://podman-desktop.io/docs/kubernetes';
 
 async function createNew(provider: ProviderInfo): Promise<void> {
   await window.telemetryTrack('kubernetes.nocontext.createNew', {
@@ -55,7 +52,9 @@ async function ondetails(extensionId: string): Promise<void> {
       <div class="rounded-xl p-5 text-left bg-[var(--pd-content-card-bg)] ">
 
         <div class="flex justify-left text-[var(--pd-details-empty-icon)] py-2 mb-2">
-        <IconImage image={provider?.images?.icon} class="mx-0 max-h-10" alt={provider.name}></IconImage>
+        {#if provider?.images?.icon}
+          <Icon icon={provider.images.icon} class="mx-0 max-h-10" title={provider.name} />
+        {/if}
         </div>
         <h1 class="text-lg font-semibold mb-4">
           {provider.kubernetesProviderConnectionCreationDisplayName ?? provider.name}
@@ -88,9 +87,5 @@ async function ondetails(extensionId: string): Promise<void> {
       category="Kubernetes"
       keywords={['provider']}
       showInstalled={false} />
-
-    <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
-     Want to learn more about Kubernetes on Podman Desktop? <Link on:click={(): Promise<void> => window.openExternal(kubernetesExternalDocs)}>Check out our documentation.</Link>
-    </div>
   </div>
 </div>

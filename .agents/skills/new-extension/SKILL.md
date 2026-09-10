@@ -468,7 +468,7 @@ After building, verify:
 
 1. Open Podman Desktop
 2. Go to **Settings > Preferences > Extensions** and enable **Development mode**
-3. Go to **Extensions > Local Extensions** tab
+3. Go to **Extensions > Local extensions** tab
 4. Click **Add a local folder extension...** and select the folder containing the extension `package.json`:
    - **Multi-package layout:** select `packages/backend/` (not the root)
    - **Minimal layout:** select the repository root
@@ -541,9 +541,7 @@ if (infos.length === 0) {
 }
 const engineId = infos[0].engineId;
 
-await extensionApi.containerEngine.createContainer(engineId, {
-  /* ... */
-});
+await extensionApi.containerEngine.createContainer(engineId, {/* ... */});
 ```
 
 Alternatively, if you already have containers or images from `listContainers()` or `listImages()`, their `engineId` field can be reused directly.

@@ -80,6 +80,22 @@ const placementVariants = [
 // biome-ignore lint/correctness/noUnusedVariables: used in markup
 const longText =
   'This is a very long tooltip message that demonstrates how tooltips handle extended content. It can contain detailed information that users need to understand the context of the UI element.';
+
+// biome-ignore lint/correctness/noUnusedVariables: used in markup
+const i18nVariants = [
+  {
+    lang: 'German',
+    text: 'Dieser Container wurde erfolgreich gestartet und ist jetzt bereit, eingehende Netzwerkanfragen zu verarbeiten.',
+  },
+  {
+    lang: 'Finnish',
+    text: 'Tämä säilö on käynnistetty onnistuneesti ja se on nyt valmis käsittelemään saapuvia verkkopyyntöjä.',
+  },
+  {
+    lang: 'English (long)',
+    text: 'This container engine connection has been successfully established and is currently running with all configured network interfaces active.',
+  },
+];
 </script>
 
 {#snippet template({ ...args })}
@@ -134,6 +150,23 @@ const longText =
         </Tooltip>
       </div>
     </div>
+  {:else if args.kind === 'i18n'}
+    <div class="bg-(--pd-content-card-bg) p-8">
+      <div class="flex flex-col gap-6 text-(--pd-content-text)">
+        <div class="text-sm font-semibold text-(--pd-content-text)">i18n text wrapping</div>
+        {#each i18nVariants as variant (variant.lang)}
+          <div class="flex flex-row items-center gap-2">
+            <span class="w-32 text-xs text-(--pd-content-text)">{variant.lang}</span>
+            <Tooltip top tip={variant.text}>
+              <span
+                class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-(--pd-tooltip-border) text-xs text-(--pd-tooltip-text)">
+                i
+              </span>
+            </Tooltip>
+          </div>
+        {/each}
+      </div>
+    </div>
   {:else if args.kind === 'container'}
     <div class="bg-(--pd-content-card-bg) p-8">
       <div class="flex flex-row items-center gap-2 text-(--pd-content-text)">
@@ -165,4 +198,5 @@ const longText =
 <Story name="Placements" args={{ kind: 'placements' }} />
 <Story name="Long Text" args={{ kind: 'long' }} />
 <Story name="Snippet Content" args={{ kind: 'snippet' }} />
+<Story name="i18n Wrapping" args={{ kind: 'i18n' }} />
 <Story name="Container/Class" args={{ kind: 'container' }} />

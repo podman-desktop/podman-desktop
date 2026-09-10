@@ -68,6 +68,7 @@ import type {
   ProviderVmConnectionInfo,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
 import type { AutostartEngine } from './autostart-engine.js';
@@ -173,6 +174,8 @@ export class ProviderRegistry {
     private containerRegistry: ContainerProviderRegistry,
     @inject(Telemetry)
     private telemetryService: Telemetry,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
   ) {
     this.providers = new Map();
     this.listeners = [];
@@ -181,7 +184,7 @@ export class ProviderRegistry {
 
     // Every 2 seconds, we will check:
     // * The status of the providers
-    // * Any new warnings or informations for each provider
+    // * Any new warnings or information for each provider
     setInterval(() => {
       for (const [providerKey] of this.providers) {
         // Get the provider and its lifecycle
@@ -211,6 +214,25 @@ export class ProviderRegistry {
         }
       }
     }, 2000);
+  }
+
+  init(): void {
+    const providerConfiguration: IConfigurationNode = {
+      id: 'preferences.providers',
+      title: 'Providers',
+      type: 'object',
+      properties: {
+        'providers.allowUpdate': {
+          description:
+            'List of extension IDs permitted to register provider engine updates. Use ["*"] to allow all extensions (default). Use [] to block all updates.',
+          type: 'array',
+          default: ['*'],
+          hidden: true,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([providerConfiguration]);
   }
 
   createProvider(extensionId: string, extensionDisplayName: string, providerOptions: ProviderOptions): Provider {
@@ -281,6 +303,14 @@ export class ProviderRegistry {
   }
 
   registerUpdate(providerImpl: ProviderImpl, update: ProviderUpdate): Disposable {
+    const allowUpdate = this.configurationRegistry.getConfiguration('providers').get<string[]>('allowUpdate') ?? ['*'];
+    if (!allowUpdate.includes('*') && !allowUpdate.includes(providerImpl.extensionId)) {
+      console.log(
+        `Provider update registration blocked for extension '${providerImpl.extensionId}' by providers.allowUpdate configuration`,
+      );
+      return Disposable.create(() => {});
+    }
+
     this.providerUpdates.set(providerImpl.internalId, update);
 
     // need to refresh the provider
@@ -481,12 +511,13 @@ export class ProviderRegistry {
         statusCallback.endCheck({
           name: check.title,
           successful: checkResult.successful,
+          severity: checkResult.severity,
           description: checkResult.description,
           docLinksDescription: checkResult.docLinksDescription,
           docLinks: checkResult.docLinks,
         });
 
-        if (!checkResult.successful) {
+        if (!checkResult.successful && checkResult.severity !== 'warning') {
           return false;
         }
       } catch (err) {
@@ -1097,28 +1128,60 @@ export class ProviderRegistry {
     internalProviderId: string,
     providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
   ): ProviderConnection {
+    // Check if this is a ProviderConnectionInfo with connectionType discriminator
+    if ('connectionType' in providerContainerConnectionInfo) {
+      const info = providerContainerConnectionInfo as ProviderConnectionInfo;
+      switch (info.connectionType) {
+        case 'container':
+          return this.getMatchingContainerConnectionFromProvider(internalProviderId, info);
+        case 'kubernetes':
+          return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, info);
+        case 'vm':
+          return this.getMatchingVmConnectionFromProvider(internalProviderId, info);
+        default: {
+          const _exhaustiveCheck: never = info;
+          throw new Error(`Unknown connection type: ${JSON.stringify(_exhaustiveCheck)}`);
+        }
+      }
+    }
+
+    // Fallback for ContainerProviderConnection (API object without connectionType)
     if (this.isProviderContainerConnection(providerContainerConnectionInfo)) {
       return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else if (this.isProviderKubernetesConnectionInfo(providerContainerConnectionInfo)) {
-      return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else {
-      return this.getMatchingVmConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
     }
+
+    throw new Error(`Unable to determine connection type for provider ${internalProviderId}`);
   }
 
   isProviderContainerConnection(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderContainerConnectionInfo | ContainerProviderConnection {
-    return (connection as ProviderContainerConnectionInfo).endpoint?.socketPath !== undefined;
+    // Check connectionType discriminator first if available
+    if ('connectionType' in connection) {
+      return connection.connectionType === 'container';
+    }
+    // Fallback to structural check for ContainerProviderConnection
+    return (connection as ContainerProviderConnection).endpoint?.socketPath !== undefined;
   }
 
   isProviderKubernetesConnectionInfo(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderKubernetesConnectionInfo {
+    // Check connectionType discriminator first if available
+    if ('connectionType' in connection) {
+      return connection.connectionType === 'kubernetes';
+    }
+    // Fallback to structural check
     return (
       !this.isProviderContainerConnection(connection) &&
       (connection as ProviderKubernetesConnectionInfo).endpoint !== undefined
     );
+  }
+
+  isProviderVmConnectionInfo(
+    connection: ProviderConnectionInfo | ContainerProviderConnection,
+  ): connection is ProviderVmConnectionInfo {
+    return 'connectionType' in connection && connection.connectionType === 'vm';
   }
 
   isContainerConnection(connection: ProviderConnection): connection is ContainerProviderConnection {

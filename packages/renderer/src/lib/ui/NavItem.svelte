@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Tooltip } from '@podman-desktop/ui-svelte';
-import { getContext, onDestroy, onMount, type Snippet } from 'svelte';
+import type { Snippet } from 'svelte';
+import { getContext, onDestroy, onMount } from 'svelte';
 import type { MouseEventHandler } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
@@ -12,10 +13,11 @@ interface Props {
   meta: TinroRouteMeta;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
   counter?: number;
+  expanded?: boolean;
   children?: Snippet;
 }
 
-let { href, tooltip, ariaLabel, meta = $bindable(), onClick, counter, children }: Props = $props();
+let { href, tooltip, ariaLabel, meta = $bindable(), onClick, counter, expanded = false, children }: Props = $props();
 
 const navItems: Writable<number> = getContext('nav-items');
 const inSection = $navItems !== undefined;
@@ -45,20 +47,18 @@ onDestroy(() => {
   aria-label={ariaLabel ?? tooltip}
   onclick={handleClick}>
   <div
-    class="flex py-2 justify-center items-center cursor-pointer min-h-9"
-    class:border-x-[4px]={!inSection}
-    class:px-2={inSection}
+    class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
+    class:border-l-[4px]={!inSection}
     class:border-[var(--pd-global-nav-bg)]={!inSection}
     class:text-[color:var(--pd-global-nav-icon)]={!selected || !inSection}
     class:text-[color:var(--pd-global-nav-icon-selected)]={selected && inSection}
     class:border-l-[var(--pd-global-nav-icon-selected-highlight)]={selected && !inSection}
     class:bg-[var(--pd-global-nav-icon-selected-bg)]={selected && !inSection}
-    class:border-r-[var(--pd-global-nav-icon-selected-bg)]={selected && !inSection}
     class:border-l-[var(--pd-global-nav-bg)]={!selected && !inSection}
     class:hover:text-[color:var(--pd-global-nav-icon-hover)]={!selected || inSection}
     class:hover:bg-[var(--pd-global-nav-icon-hover-bg)]={!selected || inSection}
-    class:hover:border-[var(--pd-global-nav-icon-hover-bg)]={!selected && !inSection}>
-    <Tooltip right tip={tooltipText} class="flex flex-col items-center">
+    class:hover:border-l-[var(--pd-global-nav-icon-hover-bg)]={!selected && !inSection}>
+    <Tooltip right tip={expanded ? undefined : tooltipText} class="flex items-center w-full min-w-0" containerClass="relative w-full min-w-0">
       {@render children?.()}
     </Tooltip>
   </div>

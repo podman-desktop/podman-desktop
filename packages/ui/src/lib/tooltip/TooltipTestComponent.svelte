@@ -14,6 +14,7 @@ interface Props {
   bottomRight?: boolean;
   classStyle?: string;
   containerClass?: string;
+  useButton?: boolean;
 }
 
 let {
@@ -29,6 +30,7 @@ let {
   bottomRight,
   classStyle,
   containerClass,
+  useButton = false,
 }: Props = $props();
 </script>
 
@@ -49,5 +51,9 @@ let {
       {tipSlot}
     {/if}
   {/snippet}
-  <div>Hover me</div>
+  {#if useButton}
+    <button type="button">Hover me</button>
+  {:else}
+    <div>Hover me</div>
+  {/if}
 </Tooltip>

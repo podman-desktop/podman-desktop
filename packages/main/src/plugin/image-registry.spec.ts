@@ -249,80 +249,50 @@ describe('extract auth info', () => {
 });
 
 describe('extractImageDataFromImageName', () => {
-  test('library image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('httpd');
+  test.each([
+    { input: 'httpd', tag: 'latest', name: 'library/httpd' },
+    { input: 'httpd:1.2.3', tag: '1.2.3', name: 'library/httpd' },
+    { input: 'foo/bar', tag: 'latest', name: 'foo/bar' },
+    { input: 'foo/bar:myTag', tag: 'myTag', name: 'foo/bar' },
+  ])('docker hub image: $input', ({ input, tag, name }) => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(input);
     expect(nameAndTag.registry).toBe('index.docker.io');
     expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
-    expect(nameAndTag.tag).toBe('latest');
-    expect(nameAndTag.name).toBe('library/httpd');
+    expect(nameAndTag.tag).toBe(tag);
+    expect(nameAndTag.name).toBe(name);
   });
 
-  test('library image with custom tag', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('httpd:1.2.3');
-    expect(nameAndTag.registry).toBe('index.docker.io');
-    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
-    expect(nameAndTag.tag).toBe('1.2.3');
-    expect(nameAndTag.name).toBe('library/httpd');
+  test.each([
+    { input: 'quay.io/foo/bar', registry: 'quay.io', tag: 'latest', name: 'foo/bar' },
+    {
+      input: 'ghcr.io/redhat-developer/podman-desktop-sandbox-ext:latest',
+      registry: 'ghcr.io',
+      tag: 'latest',
+      name: 'redhat-developer/podman-desktop-sandbox-ext',
+    },
+    {
+      input: 'ghcr.io/redhat-developer/podman-desktop-sandbox-ext:myTag',
+      registry: 'ghcr.io',
+      tag: 'myTag',
+      name: 'redhat-developer/podman-desktop-sandbox-ext',
+    },
+  ])('custom registry image: $input', ({ input, registry, tag, name }) => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(input);
+    expect(nameAndTag.registry).toBe(registry);
+    expect(nameAndTag.registryURL).toBe(`https://${registry}/v2`);
+    expect(nameAndTag.tag).toBe(tag);
+    expect(nameAndTag.name).toBe(name);
   });
 
-  test('simple image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('foo/bar');
-    expect(nameAndTag.registry).toBe('index.docker.io');
-    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
-    expect(nameAndTag.tag).toBe('latest');
-    expect(nameAndTag.name).toBe('foo/bar');
-  });
-
-  test('simple image with custom tag', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('foo/bar:myTag');
-    expect(nameAndTag.registry).toBe('index.docker.io');
-    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
-    expect(nameAndTag.tag).toBe('myTag');
-    expect(nameAndTag.name).toBe('foo/bar');
-  });
-
-  test('quay.io image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('quay.io/foo/bar');
-    expect(nameAndTag.registry).toBe('quay.io');
-    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
-    expect(nameAndTag.tag).toBe('latest');
-    expect(nameAndTag.name).toBe('foo/bar');
-  });
-
-  test('ghcr.io image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName(
-      'ghcr.io/redhat-developer/podman-desktop-sandbox-ext:latest',
-    );
-    expect(nameAndTag.registry).toBe('ghcr.io');
-    expect(nameAndTag.registryURL).toBe('https://ghcr.io/v2');
-    expect(nameAndTag.tag).toBe('latest');
-    expect(nameAndTag.name).toBe('redhat-developer/podman-desktop-sandbox-ext');
-  });
-
-  test('ghcr.io image with tag', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName(
-      'ghcr.io/redhat-developer/podman-desktop-sandbox-ext:myTag',
-    );
-    expect(nameAndTag.registry).toBe('ghcr.io');
-    expect(nameAndTag.registryURL).toBe('https://ghcr.io/v2');
-    expect(nameAndTag.tag).toBe('myTag');
-    expect(nameAndTag.name).toBe('redhat-developer/podman-desktop-sandbox-ext');
-  });
-
-  test('localhost image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('localhost/myimage');
-    expect(nameAndTag.registry).toBe('localhost');
-    expect(nameAndTag.registryURL).toBe('https://localhost/v2');
-    expect(nameAndTag.tag).toBe('latest');
-    expect(nameAndTag.name).toBe('myimage');
-  });
-
-  test('localhost custom port', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName('localhost:5000/myimage');
-    expect(nameAndTag.registry).toBe('localhost:5000');
-    expect(nameAndTag.registryURL).toBe('https://localhost:5000/v2');
-    expect(nameAndTag.tag).toBe('latest');
-    expect(nameAndTag.name).toBe('myimage');
+  test.each([
+    { input: 'localhost/myimage', registry: 'localhost', tag: 'latest', name: 'myimage' },
+    { input: 'localhost:5000/myimage', registry: 'localhost:5000', tag: 'latest', name: 'myimage' },
+  ])('localhost image: $input', ({ input, registry, tag, name }) => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(input);
+    expect(nameAndTag.registry).toBe(registry);
+    expect(nameAndTag.registryURL).toBe(`https://${registry}/v2`);
+    expect(nameAndTag.tag).toBe(tag);
+    expect(nameAndTag.name).toBe(name);
   });
 
   test('invalid image protocol', () => {
@@ -371,44 +341,33 @@ describe('extractImageDataFromImageName', () => {
     expect(nameAndTag.name).toBe('level1/level2/level3/level4/myimage');
   });
 
-  test('digest format on library image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName(
-      'httpd@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-    );
-    expect(nameAndTag.registry).toBe('index.docker.io');
-    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+  test.each([
+    {
+      input: 'httpd@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+      registry: 'index.docker.io',
+      name: 'library/httpd',
+    },
+    {
+      input: 'foo/bar@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+      registry: 'index.docker.io',
+      name: 'foo/bar',
+    },
+    {
+      input: 'quay.io/org/image@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+      registry: 'quay.io',
+      name: 'org/image',
+    },
+    {
+      input: 'localhost:5000/myimage@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+      registry: 'localhost:5000',
+      name: 'myimage',
+    },
+  ])('digest format: $input', ({ input, registry, name }) => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(input);
+    expect(nameAndTag.registry).toBe(registry);
+    expect(nameAndTag.registryURL).toBe(`https://${registry}/v2`);
     expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
-    expect(nameAndTag.name).toBe('library/httpd');
-  });
-
-  test('digest format on namespaced image', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName(
-      'foo/bar@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-    );
-    expect(nameAndTag.registry).toBe('index.docker.io');
-    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
-    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
-    expect(nameAndTag.name).toBe('foo/bar');
-  });
-
-  test('digest format with explicit registry', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName(
-      'quay.io/org/image@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-    );
-    expect(nameAndTag.registry).toBe('quay.io');
-    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
-    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
-    expect(nameAndTag.name).toBe('org/image');
-  });
-
-  test('digest format with localhost and port', () => {
-    const nameAndTag = imageRegistry.extractImageDataFromImageName(
-      'localhost:5000/myimage@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-    );
-    expect(nameAndTag.registry).toBe('localhost:5000');
-    expect(nameAndTag.registryURL).toBe('https://localhost:5000/v2');
-    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
-    expect(nameAndTag.name).toBe('myimage');
+    expect(nameAndTag.name).toBe(name);
   });
 
   test('tag and digest format on library image', () => {
@@ -1329,42 +1288,20 @@ test('searchImages without limit', async () => {
   expect(result).toEqual(list);
 });
 
-test('searchImages with docker.io registry', async () => {
+test.each([
+  { registry: 'docker.io', expectedUrl: 'https://index.docker.io/v1/search' },
+  { registry: 'quay.io', expectedUrl: 'https://quay.io/v1/search' },
+  { registry: 'https://quay.io', expectedUrl: 'https://quay.io/v1/search' },
+])('searchImages with registry $registry', async ({ registry, expectedUrl }) => {
   const list = [
     {
       name: 'image1',
       description: 'desc',
     },
   ];
-  server = setupServer(http.get('https://index.docker.io/v1/search', () => HttpResponse.json({ results: list })));
+  server = setupServer(http.get(expectedUrl, () => HttpResponse.json({ results: list })));
   server.listen({ onUnhandledRequest: 'error' });
-  const result = await imageRegistry.searchImages({ registry: 'docker.io', query: 'http', limit: 10 });
-  expect(result).toEqual(list);
-});
-
-test('searchImages without https', async () => {
-  const list = [
-    {
-      name: 'image1',
-      description: 'desc',
-    },
-  ];
-  server = setupServer(http.get('https://quay.io/v1/search', () => HttpResponse.json({ results: list })));
-  server.listen({ onUnhandledRequest: 'error' });
-  const result = await imageRegistry.searchImages({ registry: 'quay.io', query: 'http', limit: 10 });
-  expect(result).toEqual(list);
-});
-
-test('searchImages with https', async () => {
-  const list = [
-    {
-      name: 'image1',
-      description: 'desc',
-    },
-  ];
-  server = setupServer(http.get('https://quay.io/v1/search', () => HttpResponse.json({ results: list })));
-  server.listen({ onUnhandledRequest: 'error' });
-  const result = await imageRegistry.searchImages({ registry: 'https://quay.io', query: 'http', limit: 10 });
+  const result = await imageRegistry.searchImages({ registry, query: 'http', limit: 10 });
   expect(result).toEqual(list);
 });
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 import { ErrorMessage, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import PodIcon from '/@/lib/images/PodIcon.svelte';
@@ -8,9 +7,9 @@ import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import StateChange from '/@/lib/ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { replaceCurrentUrl } from '/@/stores/navigation-history.svelte';
 import { podsInfos } from '/@/stores/pods';
 
-import { PodUtils } from './pod-utils';
 import PodActions from './PodActions.svelte';
 import PodDetailsInspect from './PodDetailsInspect.svelte';
 import PodDetailsKube from './PodDetailsKube.svelte';
@@ -18,64 +17,59 @@ import PodDetailsLogs from './PodDetailsLogs.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 import PodmanPodDetailsSummary from './PodmanPodDetailsSummary.svelte';
 
-export let podName: string;
-export let engineId: string;
+interface Props {
+  podName: string;
+  engineId: string;
+}
+let { podName, engineId }: Props = $props();
 
-let pod: PodInfoUI;
-let detailsPage: DetailsPage;
+let pod = $state<PodInfoUI>();
+let detailsPage = $state<DetailsPage>();
 
 // update current route scheme
-let currentRouterPath: string;
+let currentRouterPath = $derived<string>($router.path);
 
-onMount(() => {
-  const podUtils = new PodUtils();
+let matchingPod = $derived<PodInfoUI | undefined>(
+  $podsInfos.find(podInPods => podInPods.name === podName && podInPods.engineId === engineId),
+);
 
-  router.subscribe(route => {
-    currentRouterPath = route.path;
-  });
+$effect(() => {
+  if (matchingPod) {
+    try {
+      pod = matchingPod;
 
-  // loading pod info
-  return podsInfos.subscribe(pods => {
-    const matchingPod = pods.find(podInPods => podInPods.Name === podName && podInPods.engineId === engineId);
-    if (matchingPod) {
-      try {
-        pod = podUtils.getPodInfoUI(matchingPod);
-
-        if (currentRouterPath.endsWith('/')) {
-          router.goto(`${currentRouterPath}logs`);
-        }
-      } catch (err) {
-        console.error(err);
+      if (currentRouterPath.endsWith('/')) {
+        replaceCurrentUrl(`${currentRouterPath}logs`);
       }
-    } else if (detailsPage) {
-      // the pod has been deleted
-      detailsPage.close();
+    } catch (err) {
+      console.error(err);
     }
-  });
+  } else if (detailsPage) {
+    // the pod has been deleted
+    detailsPage.close();
+  }
 });
 </script>
 
 {#if pod}
-  <DetailsPage title={pod.name} subtitle={pod.shortId} bind:this={detailsPage}>
+  {@const currentPod = pod}
+  <DetailsPage title={currentPod.name} subtitle={currentPod.shortId} bind:this={detailsPage}>
     {#snippet iconSnippet()}
-      <StatusIcon icon={PodIcon} size={24} status={pod.status} />
+      <StatusIcon icon={PodIcon} size={24} status={currentPod.status} />
     {/snippet}
     {#snippet actionsSnippet()}
       <div class="flex items-center w-5">
-        {#if pod.actionError}
-          <ErrorMessage error={pod.actionError} icon wrapMessage />
+        {#if currentPod.actionError}
+          <ErrorMessage error={currentPod.actionError} icon wrapMessage />
         {:else}
           <div>&nbsp;</div>
         {/if}
       </div>
-      <PodActions pod={pod} detailed={true} on:update={(): PodInfoUI => {
-        pod = pod; // Keep this assignment for svelte 4 - can be safely removed when migrating to svelte 5
-        return pod;
-      }} />
+      <PodActions pod={currentPod} detailed={true} />
     {/snippet}
     {#snippet detailSnippet()}
       <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-        <StateChange state={pod.status} />
+        <StateChange state={currentPod.status} />
       </div>
     {/snippet}
     {#snippet tabsSnippet()}
@@ -86,16 +80,16 @@ onMount(() => {
     {/snippet}
     {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <PodmanPodDetailsSummary pod={pod} />
+        <PodmanPodDetailsSummary pod={currentPod} />
       </Route>
       <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
-        <PodDetailsLogs pod={pod} />
+        <PodDetailsLogs pod={currentPod} />
       </Route>
       <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-        <PodDetailsInspect pod={pod} />
+        <PodDetailsInspect pod={currentPod} />
       </Route>
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
-        <PodDetailsKube pod={pod} />
+        <PodDetailsKube pod={currentPod} />
       </Route>
     {/snippet}
   </DetailsPage>

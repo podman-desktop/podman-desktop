@@ -3,12 +3,12 @@ import type { ProviderConnectionInfo, ProviderContainerConnectionInfo, ProviderI
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Tab } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
@@ -26,22 +26,26 @@ import PreferencesContainerConnectionDetailsSummary from './PreferencesContainer
 import type { IConnectionRestart, IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let connection: string | undefined = undefined;
-export let name: string | undefined = undefined;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  connection?: string;
+  name?: string;
+}
+let { properties = [], providerInternalId, connection, name }: Props = $props();
 
-const connectionName = Buffer.from(name ?? '', 'base64').toString();
-const socketPath: string = Buffer.from(connection ?? '', 'base64').toString();
-let connectionStatus: IConnectionStatus;
-let noLog = true;
-let connectionInfo: ProviderContainerConnectionInfo | undefined;
-let providerInfo: ProviderInfo | undefined;
+const connectionName = $derived(Buffer.from(name ?? '', 'base64').toString());
+const socketPath: string = $derived(Buffer.from(connection ?? '', 'base64').toString());
+let connectionStatus: IConnectionStatus | undefined = $state();
+let noLog = $state(true);
+let connectionInfo: ProviderContainerConnectionInfo | undefined = $state();
+let providerInfo: ProviderInfo | undefined = $state();
 let loggerHandlerKey: symbol | undefined;
-let configurationKeys: IConfigurationPropertyRecordedSchema[];
-$: configurationKeys = properties
-  .filter(property => property.scope === 'ContainerConnection')
-  .toSorted((a, b) => (a.id ?? '').localeCompare(b.id ?? ''));
+let configurationKeys: IConfigurationPropertyRecordedSchema[] = $derived(
+  properties
+    .filter(property => property.scope === 'ContainerConnection')
+    .toSorted((a, b) => (a.id ?? '').localeCompare(b.id ?? '')),
+);
 
 let providersUnsubscribe: Unsubscriber;
 onMount(async () => {
@@ -160,7 +164,9 @@ function setNoLogs(): void {
       {/if}
     {/snippet}
     {#snippet iconSnippet()}
-      <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
+      {#if providerInfo?.images?.icon}
+        <Icon icon={providerInfo.images.icon} title={providerInfo?.name} class="max-h-10" />
+      {/if}
     {/snippet}
     {#snippet tabsSnippet()}
       {#if connectionInfo}

@@ -61,7 +61,7 @@ let {
       </div>
     {/if}
 
-    <div class="flex w-full h-full overflow-auto" role="region" aria-label="content">
+    <div class="flex flex-col w-full h-full overflow-auto" role="region" aria-label="content">
       {@render content?.()}
     </div>
   </div>

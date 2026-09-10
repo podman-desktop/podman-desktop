@@ -18,28 +18,12 @@
 
 import type { ContextPermission } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesContextsPermissions, kubernetesContextsPermissionsStore } from './kubernetes-context-permission';
 
-const callbacks = new Map<string, () => Promise<void>>();
-const eventEmitter = {
-  receive: (message: string, callback: () => Promise<void>): void => {
-    callbacks.set(message, callback);
-  },
-};
-
-beforeAll(() => {
-  Object.defineProperty(global, 'window', {
-    value: {
-      kubernetesGetContextsPermissions: vi.fn(),
-      isExperimentalConfigurationEnabled: vi.fn(),
-      addEventListener: eventEmitter.receive,
-      events: {
-        receive: eventEmitter.receive,
-      },
-    },
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('kubernetesContextsPermissions in experimental states mode', async () => {
@@ -62,9 +46,7 @@ test('kubernetesContextsPermissions in experimental states mode', async () => {
   kubernetesContextsPermissionsStore.setup();
 
   // send 'extensions-already-started' event
-  const callbackExtensionsStarted = callbacks.get('extensions-already-started');
-  expect(callbackExtensionsStarted).toBeDefined();
-  await callbackExtensionsStarted!();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // values are never fetched
   await new Promise(resolve => setTimeout(resolve, 500));

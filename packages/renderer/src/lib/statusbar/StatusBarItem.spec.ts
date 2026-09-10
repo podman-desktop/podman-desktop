@@ -34,34 +34,30 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('check iconClass with font awesome icons', () => {
-  const statusBarEntry: StatusBarEntry = {
-    enabled: true,
+test.each([
+  {
     activeIconClass: 'fas fa-podman',
-  };
-
-  const icon = iconClass(statusBarEntry);
-  expect(icon).toBe('fas fa-podman');
-});
-
-test('check iconClass with custom icon name', () => {
-  const statusBarEntry: StatusBarEntry = {
-    enabled: true,
+    expectedIcon: 'fas fa-podman',
+    description: 'check iconClass with font awesome icons',
+  },
+  {
     activeIconClass: '${podman}',
-  };
-
-  const icon = iconClass(statusBarEntry);
-  expect(icon).toBe('podman-desktop-icon-podman');
-});
-
-test('check iconClass with font awesome icons and spinning', () => {
+    expectedIcon: 'podman-desktop-icon-podman',
+    description: 'check iconClass with custom icon name',
+  },
+  {
+    activeIconClass: 'fas fa-sync~spin',
+    expectedIcon: 'fas fa-sync animate-spin',
+    description: 'check iconClass with font awesome icons and spinning',
+  },
+])('$description', ({ activeIconClass, expectedIcon }) => {
   const statusBarEntry: StatusBarEntry = {
     enabled: true,
-    activeIconClass: 'fas fa-sync~spin',
+    activeIconClass,
   };
 
   const icon = iconClass(statusBarEntry);
-  expect(icon).toBe('fas fa-sync animate-spin');
+  expect(icon).toBe(expectedIcon);
 });
 
 test('expect dot not rendered', async () => {

@@ -4,20 +4,27 @@ import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
 import { providerInfos } from '/@/stores/providers';
 
-export let runningOnly: boolean;
-export let stoppedOnly: boolean;
+interface Props {
+  runningOnly: boolean;
+  stoppedOnly: boolean;
+}
+
+let { runningOnly, stoppedOnly }: Props = $props();
+
 const helloImage: string = 'quay.io/podman/hello:latest';
 
-let inProgress = false;
+let inProgress = $state(false);
 
-$: title = getTitle(runningOnly, stoppedOnly);
-$: messageCommandLine = getMessageCommandLine(stoppedOnly);
-$: messageButton = getMessageButton(stoppedOnly);
-$: commandLine = getCommandLine(stoppedOnly);
-$: selectedProviderConnection = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .find(providerContainerConnection => providerContainerConnection.status === 'started');
+let title = $derived(getTitle(runningOnly, stoppedOnly));
+let messageCommandLine = $derived(getMessageCommandLine(stoppedOnly));
+let messageButton = $derived(getMessageButton(stoppedOnly));
+let commandLine = $derived(getCommandLine(stoppedOnly));
+let selectedProviderConnection = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .find(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 function getTitle(runningOnly: boolean, stoppedOnly: boolean): string {
   // eslint-disable-next-line sonarjs/no-selector-parameter

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,26 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { beforeAll, test, vi } from 'vitest';
+import type { ProviderInfo } from '@podman-desktop/core-api';
+import { render, screen } from '@testing-library/svelte';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import ProviderConfigured from '/@/lib/dashboard/ProviderConfigured.svelte';
+import { InitializeOnlyMode } from '/@/lib/dashboard/ProviderInitUtils';
+import { providerInfos } from '/@/stores/providers';
 
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
 beforeAll(() => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  // fake the window.events object
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
+});
+
+beforeEach(() => {
+  providerInfos.set([]);
 });
 
 test('Expect configured provider shows update button', async () => {
@@ -40,4 +46,46 @@ test('Expect configured provider shows update button', async () => {
 
 test('Expect configured provider does not show update button if version same', async () => {
   await verifyStatus(ProviderConfigured, 'configured', true);
+});
+
+test('Expect configured provider shows multiple installation warnings', async () => {
+  const provider: ProviderInfo = {
+    containerConnections: [],
+    containerProviderConnectionCreation: false,
+    containerProviderConnectionInitialization: false,
+    detectionChecks: [],
+    id: 'podman',
+    images: {},
+    installationSupport: false,
+    internalId: 'podman-internal',
+    kubernetesConnections: [],
+    kubernetesProviderConnectionCreation: false,
+    kubernetesProviderConnectionInitialization: false,
+    vmConnections: [],
+    vmProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    name: 'Podman',
+    status: 'configured',
+    warnings: [
+      {
+        name: 'Multiple Podman installations detected',
+        details: 'You have multiple Podman instances in your PATH.',
+      },
+    ],
+    version: '5.0.0',
+    extensionId: '',
+    cleanupSupport: false,
+    canStart: false,
+    canStop: false,
+  };
+
+  providerInfos.set([provider]);
+  render(ProviderConfigured, {
+    provider,
+    initializationContext: { mode: InitializeOnlyMode },
+  });
+
+  expect(screen.getByRole('list', { name: 'Provider Warnings' })).toBeInTheDocument();
+  expect(screen.getByRole('listitem', { name: 'Multiple Podman installations detected' })).toBeInTheDocument();
 });

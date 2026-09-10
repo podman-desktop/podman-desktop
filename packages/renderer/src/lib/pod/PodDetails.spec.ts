@@ -31,6 +31,11 @@ import PodDetails from './PodDetails.svelte';
 
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-search'));
+vi.mock(import('/@/stores/navigation-history.svelte'), () => ({
+  replaceCurrentUrl: (url: string): void => {
+    router.goto(url);
+  },
+}));
 
 const myPod: PodInfo = {
   Cgroup: '',
@@ -59,7 +64,7 @@ beforeEach(() => {
 
 test('Expect redirect to previous page if pod is deleted', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   const routerGotoSpy = vi.spyOn(router, 'goto');
   vi.mocked(window.listPods).mockResolvedValue([myPod]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
@@ -70,7 +75,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   // remove myPod from the store when we call 'removePod'
   // it will then refresh the store and update PodsDetails page
   vi.mocked(window.removePod).mockImplementation(async () => {
-    podsInfos.update(pods => pods.filter(pod => pod.Id !== myPod.Id));
+    podsInfos.update(pods => pods.filter(pod => pod.id !== myPod.Id));
   });
 
   // defines a fake lastPage so we can check where we will be redirected
@@ -104,7 +109,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
 
 test('Expect redirect to logs', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   const routerGotoSpy = vi.spyOn(router, 'goto');
   const subscribeSpy = vi.spyOn(router, 'subscribe');
   subscribeSpy.mockImplementation(listener => {

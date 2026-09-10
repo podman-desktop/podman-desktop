@@ -47,9 +47,11 @@ test('check stopPodmanProcesses', async () => {
     stderr: '',
   });
 
-  // mock stopProcessesPids
+  // mock stopProcessesPids and removeHyperVMachines
   const getProcessesToStopMock = vi.spyOn(podmanCleanupWindows, 'stopProcessesPids');
   getProcessesToStopMock.mockResolvedValue();
+  const removeHyperVMock = vi.spyOn(podmanCleanupWindows, 'removeHyperVMachines');
+  removeHyperVMock.mockResolvedValue();
 
   await podmanCleanupWindows.stopPodmanProcesses({ logger: { log: vi.fn(), error: vi.fn(), warn: vi.fn() } });
 
@@ -69,6 +71,7 @@ test('check stopPodmanProcesses', async () => {
   expect(process.exec).toHaveBeenNthCalledWith(6, 'wsl', ['--unregister', 'podman-my-machine2'], {
     env: { WSL_UTF8: '1' },
   });
+  expect(removeHyperVMock).toHaveBeenCalled();
 });
 
 test('check stopPodmanProcesses with error', async () => {
@@ -77,6 +80,8 @@ test('check stopPodmanProcesses with error', async () => {
 
   const getProcessesToStopMock = vi.spyOn(podmanCleanupWindows, 'stopProcessesPids');
   getProcessesToStopMock.mockResolvedValue();
+  const removeHyperVMock = vi.spyOn(podmanCleanupWindows, 'removeHyperVMachines');
+  removeHyperVMock.mockResolvedValue();
 
   await podmanCleanupWindows.stopPodmanProcesses({ logger: { log: vi.fn(), error: vi.fn(), warn: vi.fn() } });
 
@@ -84,6 +89,78 @@ test('check stopPodmanProcesses with error', async () => {
 
   // only one call, no call to terminate
   expect(vi.mocked(process.exec).call.length).toBe(1);
+});
+
+test('check removeHyperVMachines removes VMs', async () => {
+  vi.mocked(process.exec)
+    .mockResolvedValueOnce({
+      stdout: 'podman-machine-default\r\npodman-my-machine',
+      command: 'powershell.exe',
+      stderr: '',
+    })
+    .mockResolvedValue({ stdout: '', command: 'powershell.exe', stderr: '' });
+
+  const logger = { log: vi.fn(), error: vi.fn(), warn: vi.fn() };
+  await podmanCleanupWindows.removeHyperVMachines({ logger });
+
+  expect(process.exec).toHaveBeenNthCalledWith(
+    1,
+    'powershell.exe',
+    expect.arrayContaining([expect.stringContaining('Get-VM -Name "podman-*"')]),
+  );
+  expect(process.exec).toHaveBeenCalledWith(
+    'powershell.exe',
+    expect.arrayContaining([expect.stringContaining('Remove-VM -Name "podman-machine-default"')]),
+  );
+  expect(process.exec).toHaveBeenCalledWith(
+    'powershell.exe',
+    expect.arrayContaining([expect.stringContaining('Remove-VM -Name "podman-my-machine"')]),
+  );
+});
+
+test('check removeHyperVMachines with no VMs found', async () => {
+  vi.mocked(process.exec).mockResolvedValueOnce({
+    stdout: '',
+    command: 'powershell.exe',
+    stderr: '',
+  });
+
+  const logger = { log: vi.fn(), error: vi.fn(), warn: vi.fn() };
+  await podmanCleanupWindows.removeHyperVMachines({ logger });
+
+  expect(process.exec).toHaveBeenCalledTimes(1);
+});
+
+test('check removeHyperVMachines handles Get-VM error gracefully', async () => {
+  vi.mocked(process.exec).mockRejectedValueOnce(new Error('powershell not available'));
+
+  const logger = { log: vi.fn(), error: vi.fn(), warn: vi.fn() };
+  await podmanCleanupWindows.removeHyperVMachines({ logger });
+
+  expect(logger.error).toHaveBeenCalledWith('error while listing Hyper-V machines', expect.any(Error));
+});
+
+test('check removeHyperVMachines handles removal failure gracefully', async () => {
+  vi.mocked(process.exec)
+    .mockResolvedValueOnce({
+      stdout: 'podman-machine-default\r\npodman-my-machine',
+      command: 'powershell.exe',
+      stderr: '',
+    })
+    .mockRejectedValueOnce(new Error('remove failed'))
+    .mockResolvedValueOnce({ stdout: '', command: 'powershell.exe', stderr: '' });
+
+  const logger = { log: vi.fn(), error: vi.fn(), warn: vi.fn() };
+  await podmanCleanupWindows.removeHyperVMachines({ logger });
+
+  expect(logger.error).toHaveBeenCalledWith(
+    'unable to remove Hyper-V machine podman-machine-default',
+    expect.any(Error),
+  );
+  expect(process.exec).toHaveBeenCalledWith(
+    'powershell.exe',
+    expect.arrayContaining([expect.stringContaining('Remove-VM -Name "podman-my-machine"')]),
+  );
 });
 
 test('check getContainersConfPath', async () => {

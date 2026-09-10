@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,15 @@
 
 import type { Guide } from '@podman-desktop/core-api/learning-center';
 
+import { rotateArray } from '/@/plugin/util/array-mutation.js';
 import product from '/@product.json' with { type: 'json' };
 
 export function downloadGuideList(): Guide[] {
-  return product.learningCenter.guides;
+  const guides = product.learningCenter.guides;
+  if (guides.length <= 1) {
+    return guides;
+  }
+
+  const startingIndex = new Date().getHours() % guides.length;
+  return rotateArray(guides, startingIndex);
 }

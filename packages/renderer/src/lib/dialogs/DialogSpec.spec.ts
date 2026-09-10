@@ -23,30 +23,9 @@ import { expect, test } from 'vitest';
 
 import DialogSpec from './DialogSpec.svelte';
 
-test('Expect icon is defined', async () => {
+test.each(['icon', 'content', 'validation', 'buttons'])('Expect %s is defined', async label => {
   render(DialogSpec);
 
-  const element = screen.getByLabelText('icon');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect content is defined', async () => {
-  render(DialogSpec);
-
-  const element = screen.getByLabelText('content');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect validation is defined', async () => {
-  render(DialogSpec);
-
-  const element = screen.getByLabelText('validation');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect buttons is defined', async () => {
-  render(DialogSpec);
-
-  const element = screen.getByLabelText('buttons');
+  const element = screen.getByLabelText(label);
   expect(element).toBeInTheDocument();
 });

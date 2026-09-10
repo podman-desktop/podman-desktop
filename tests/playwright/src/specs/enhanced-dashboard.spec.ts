@@ -16,10 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Page } from '@playwright/test';
+
 import { ResourceElementActions } from '/@/model/core/operations';
-import { SystemOverviewState } from '/@/model/core/states';
+import { ResourceElementState, SystemOverviewState } from '/@/model/core/states';
+import { CreateDummyK8sClusterPage } from '/@/model/pages/create-dummy-k8s-cluster-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
+import type { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
@@ -34,6 +38,17 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const PODMAN_MACHINE_NAME: string = 'podman-machine-default';
 const PODMAN_MACHINE_VISIBLE_NAME: string = 'Podman Machine';
+const CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION: string = 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension';
+const DUMMY_K8S_RESOURCE_NAME: string = 'pd-dummy-k8s';
+const DUMMY_K8S_EXTENSION_LABEL: string = 'you.pd-dummy-k8s';
+const DUMMY_K8S_EXTENSION_NAME: string = 'Dummy Resources';
+const DUMMY_CLUSTER_NAME: string = 'dummy-cluster';
+
+const TIMEOUT_SHORT = 10_000;
+const TIMEOUT_STANDARD = 30_000;
+const TIMEOUT_SETUP = 120_000;
+const PODMAN_MACHINE_STARTUP_TIMEOUT = 300_000;
+const TIMEOUT_CREATE_MACHINE_TEST = 320_000;
 
 test.skip(
   isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
@@ -41,7 +56,7 @@ test.skip(
 );
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(TIMEOUT_SETUP);
   runner.setVideoAndTraceName('enhanced-dashboard-e2e');
   await welcomePage.handleWelcomePage(true);
 
@@ -51,10 +66,13 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   }
 });
 
-test.afterAll(async ({ runner, page }) => {
-  test.setTimeout(120_000);
+test.afterAll(async ({ runner, page, navigationBar }) => {
+  test.setTimeout(TIMEOUT_SETUP);
 
   try {
+    await deleteDummyCluster(page, navigationBar);
+    await uninstallDummyClusterExtension(navigationBar);
+
     if (test.info().status === 'failed') {
       await resetPodmanMachinesFromCLI();
       await createPodmanMachineFromCLI();
@@ -62,84 +80,220 @@ test.afterAll(async ({ runner, page }) => {
     }
   } catch (error) {
     console.log('Error during cleanup:', error);
+  } finally {
+    await runner.close();
   }
-
-  await runner.close();
 });
 
-test.describe
-  .serial('Enhanced dashboard experimental feature', { tag: ['@experimental'] }, () => {
-    test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
-      // assert assets state before enabling it (disabled by default for the time being)
+test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
+    await test.step('Verify feature is disabled by default', async () => {
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      let dashboardPage = await waitForDashboardState(navigationBar, false);
+      const dashboardPage = await waitForDashboardState(navigationBar, false);
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
-      await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
+      await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: TIMEOUT_SHORT });
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
-      // enable the feature
+    });
+
+    await test.step('Enable feature and verify system overview appears', async () => {
       await setEnhancedDashboardFeature(page, navigationBar, true);
-      dashboardPage = await waitForDashboardState(navigationBar, true);
-      // assert assets state after enabling it
+      const dashboardPage = await waitForDashboardState(navigationBar, true);
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled();
       await dashboardPage.expandSystemOverview(true);
-      await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
+      await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: TIMEOUT_SHORT });
       await playExpect(dashboardPage.podmanProvider).not.toBeVisible();
-      await playExpect(dashboardPage.statusButton).toBeEnabled();
       await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped);
       await playExpect(dashboardPage.noContainerEngineLabel).toBeVisible();
       await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled();
-      // disable the feature and assert everything went back to the expected state
-      await setEnhancedDashboardFeature(page, navigationBar, false);
-      dashboardPage = await waitForDashboardState(navigationBar, false);
-      await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
-      await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
     });
 
-    test('Create Podman machine from Dashboard', async ({ page, navigationBar }) => {
-      test.setTimeout(320_000);
-
-      await test.step('Open dashboard and initialize Podman machine', async () => {
-        // enable the feature
-        await setEnhancedDashboardFeature(page, navigationBar, true);
-        let dashboardPage = await waitForDashboardState(navigationBar, true);
-        await dashboardPage.createPodmanMachineFromSystemOverview(PODMAN_MACHINE_NAME, {
-          isRootful: false,
-          enableUserNet: false,
-          startNow: true,
-          virtualizationProvider: getVirtualizationProvider(),
-        });
-        // systemOverview button -> starting up; status label -> starting (missing aria-label)
-        dashboardPage = await navigationBar.openDashboard();
-        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
-        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, { timeout: 300_000 });
-        // systemOverview button -> systems operational; status label -> running (missing aria-label)
-        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
-          timeout: 300_000,
-        });
-        // click on 'status' button to go to podman machine in settings/resources
-        await playExpect(dashboardPage.statusButton).toBeEnabled();
-        await dashboardPage.statusButton.click();
-        let resourcesPage = new ResourcesPage(page);
-        await playExpect
-          .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: 30_000 })
-          .toBeTruthy();
-        const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
-        await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
-        // stop machine
-        await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Stop);
-        // come back to dashboard, button -> some systems are stopped
-        await navigationBar.openDashboard();
-        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
-        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, { timeout: 10_000 });
-        // click on 'navigate to...' button, verify it goes to machine details
-        await dashboardPage.checkSystemOverviewResourceDetails(PODMAN_MACHINE_VISIBLE_NAME);
-        // come back to dashboard, click on status button, verify it goes to resources
-        await navigationBar.openDashboard();
-        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
-        await playExpect(dashboardPage.statusButton).toBeEnabled();
-        await dashboardPage.statusButton.click();
-        resourcesPage = new ResourcesPage(page);
-        await playExpect(resourcesPage.header).toBeVisible();
-      });
+    await test.step('Disable feature and verify dashboard reverts', async () => {
+      await setEnhancedDashboardFeature(page, navigationBar, false);
+      const dashboardPage = await waitForDashboardState(navigationBar, false);
+      await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
+      await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: TIMEOUT_SHORT });
     });
   });
+
+  test('Detect Podman machine created from CLI in System Overview', async ({ page, navigationBar }) => {
+    test.setTimeout(620_000);
+
+    await setEnhancedDashboardFeature(page, navigationBar, true);
+    let dashboardPage = await waitForDashboardState(navigationBar, true);
+    await dashboardPage.expandSystemOverview(true);
+
+    await createPodmanMachineFromCLI();
+
+    await test.step('Open dashboard and wait for CLI-created Podman machine', async () => {
+      dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, {
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      });
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      });
+      await playExpect(dashboardPage.statusButton).toBeEnabled();
+      await dashboardPage.statusButton.click();
+      const resourcesPage = new ResourcesPage(page);
+      await playExpect
+        .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: TIMEOUT_STANDARD })
+        .toBeTruthy();
+      const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
+      await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: TIMEOUT_SHORT });
+    });
+
+    await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
+  });
+
+  test('Create Podman machine from Dashboard', async ({ page, navigationBar }) => {
+    test.setTimeout(TIMEOUT_CREATE_MACHINE_TEST);
+
+    await test.step('Create machine from system overview', async () => {
+      await setEnhancedDashboardFeature(page, navigationBar, true);
+      const dashboardPage = await waitForDashboardState(navigationBar, true);
+      await dashboardPage.createPodmanMachineFromSystemOverview(PODMAN_MACHINE_NAME, {
+        isRootful: false,
+        enableUserNet: false,
+        startNow: true,
+        virtualizationProvider: getVirtualizationProvider(),
+      });
+    });
+
+    await test.step('Wait for machine to reach operational state', async () => {
+      const dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, {
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      });
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
+        timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      });
+    });
+
+    await test.step('Navigate to resources via status button', async () => {
+      const dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.statusButton).toBeEnabled();
+      await dashboardPage.statusButton.click();
+      const resourcesPage = new ResourcesPage(page);
+      await playExpect
+        .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: TIMEOUT_STANDARD })
+        .toBeTruthy();
+      const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
+      await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: TIMEOUT_SHORT });
+    });
+
+    await test.step('Stop machine and verify dashboard reflects stopped state', async () => {
+      const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
+      await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Stop);
+      const dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, {
+        timeout: TIMEOUT_SHORT,
+      });
+    });
+
+    await test.step('Verify resource details navigation', async () => {
+      const dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.checkSystemOverviewResourceDetails(PODMAN_MACHINE_VISIBLE_NAME);
+    });
+
+    await test.step('Verify status button navigates to resources page', async () => {
+      const dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.statusButton).toBeEnabled();
+      await dashboardPage.statusButton.click();
+      const resourcesPage = new ResourcesPage(page);
+      await playExpect(resourcesPage.header).toBeVisible();
+    });
+  });
+
+  test('Verify Kubernetes/VM Connections', async ({ page, navigationBar }) => {
+    test.setTimeout(150_000);
+
+    const { dashboardPage, dummyK8sResourceCard } =
+      await test.step('Install dummy K8s extension and open Dummy Resources', async () => {
+        // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
+        const dashboard = await navigationBar.openDashboard();
+        await dashboard.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboard.k8sVmConnectionLabel).not.toBeVisible();
+        // go to extensions, click on 'install custom'
+        // enter 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension' in OCI image field, click 'install'
+        const extensionsPage = await navigationBar.openExtensions();
+        await extensionsPage.installExtensionFromOCIImage(CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION);
+        // go to settings/resources, find 'Dummy Resources' card
+        const settingsBar = await navigationBar.openSettings();
+        await settingsBar.openTabPage(ResourcesPage);
+        const resourceCard = new ResourceConnectionCardPage(page, DUMMY_K8S_RESOURCE_NAME);
+        return { dashboardPage: dashboard, dummyK8sResourceCard: resourceCard };
+      });
+
+    await test.step('Create dummy-cluster', async () => {
+      await playExpect(dummyK8sResourceCard.createButton).toBeVisible();
+      await playExpect(dummyK8sResourceCard.createButton).toBeEnabled();
+      await dummyK8sResourceCard.createButton.scrollIntoViewIfNeeded();
+      await dummyK8sResourceCard.createButton.click();
+      const createDummyK8sClusterPage = new CreateDummyK8sClusterPage(page);
+      await createDummyK8sClusterPage.createDummyK8sCluster(DUMMY_CLUSTER_NAME);
+    });
+
+    await test.step('Verify Kubernetes/VM connection on dashboard', async () => {
+      await navigationBar.openDashboard();
+      await dashboardPage.k8sVmConnectionLabel.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.k8sVmConnectionLabel).toBeVisible();
+      const dummyK8sClusterButton = dashboardPage.getNavigateToConnectionButton(DUMMY_CLUSTER_NAME);
+      await playExpect(dummyK8sClusterButton).toBeVisible();
+      await playExpect(dummyK8sClusterButton).toBeEnabled();
+    });
+  });
+});
+
+async function deleteDummyCluster(page: Page, navigationBar: NavigationBar): Promise<void> {
+  return test.step('Remove dummy-cluster from Dummy Resources', async () => {
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.openTabPage(ResourcesPage);
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: TIMEOUT_SHORT });
+
+    if (!(await resourcesPage.resourceCardIsVisible(DUMMY_K8S_RESOURCE_NAME))) {
+      console.log(`Dummy Resources card [${DUMMY_K8S_RESOURCE_NAME}] not present, skipping deletion.`);
+      return;
+    }
+
+    const dummyK8sResourceCard = new ResourceConnectionCardPage(page, DUMMY_K8S_RESOURCE_NAME, DUMMY_CLUSTER_NAME);
+    if (!(await dummyK8sResourceCard.doesResourceElementExist())) {
+      console.log(`Dummy cluster [${DUMMY_CLUSTER_NAME}] not present, skipping deletion.`);
+      return;
+    }
+
+    await dummyK8sResourceCard.performConnectionAction(ResourceElementActions.Stop);
+    await playExpect(dummyK8sResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
+      timeout: TIMEOUT_STANDARD,
+    });
+    await dummyK8sResourceCard.performConnectionAction(ResourceElementActions.Delete);
+    await playExpect
+      .poll(async () => await dummyK8sResourceCard.doesResourceElementExist(), { timeout: TIMEOUT_STANDARD })
+      .toBeFalsy();
+  });
+}
+
+async function uninstallDummyClusterExtension(navigationBar: NavigationBar): Promise<void> {
+  return test.step('Uninstall Dummy Resources extension', async () => {
+    const extensionsPage = await navigationBar.openExtensions();
+    if (!(await extensionsPage.extensionIsInstalled(DUMMY_K8S_EXTENSION_LABEL))) {
+      console.log(`Extension [${DUMMY_K8S_EXTENSION_LABEL}] not installed, skipping uninstall.`);
+      return;
+    }
+
+    const extensionCard = await extensionsPage.getInstalledExtension(
+      DUMMY_K8S_EXTENSION_NAME,
+      DUMMY_K8S_EXTENSION_LABEL,
+    );
+    await extensionCard.removeExtension();
+    await playExpect
+      .poll(async () => await extensionsPage.extensionIsInstalled(DUMMY_K8S_EXTENSION_LABEL), { timeout: 15_000 })
+      .toBeFalsy();
+  });
+}

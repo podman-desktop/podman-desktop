@@ -91,7 +91,7 @@ export class ImageDetailsPage extends DetailsPage {
     return test.step('Delete image', async () => {
       await playExpect(this.deleteButton).toBeEnabled({ timeout: 30_000 });
       await this.deleteButton.click();
-      await handleConfirmationDialog(this.page, 'Delete Image?', true, 'Delete');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Delete Image?', buttonName: 'Delete' });
       return new ImagesPage(this.page);
     });
   }
@@ -100,7 +100,13 @@ export class ImageDetailsPage extends DetailsPage {
     return test.step('Push image', async () => {
       await playExpect(this.pushButton).toBeEnabled();
       await this.pushButton.click();
-      await handleConfirmationDialog(this.page, 'Push image', true, 'Push image', '', 60_000, true);
+      await handleConfirmationDialog({
+        page: this.page,
+        dialogTitle: 'Push image',
+        buttonName: 'Push image',
+        timeout: 60_000,
+        followUpButton: 'Done',
+      });
     });
   }
 
@@ -137,6 +143,6 @@ export class ImageDetailsPage extends DetailsPage {
     await playExpect(pushToKindButton).toBeVisible();
     await pushToKindButton.click();
 
-    await handleConfirmationDialog(this.page, 'Kind', true, 'Dismiss', '', 80_000);
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Kind', buttonName: 'Dismiss', timeout: 80_000 });
   }
 }

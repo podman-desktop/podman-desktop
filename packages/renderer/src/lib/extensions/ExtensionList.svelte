@@ -119,12 +119,12 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         on:click={(): void => {
           changeScreen('development');
         }}
-        selected={screen === 'development'}>Local Extensions</Button>
+        selected={screen === 'development'}>Local extensions</Button>
     {/if}
  {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full grow">
     {#if screen === 'installed'}
       {#if searchTerm && filteredInstalledExtensions.length === 0}
         <FilteredEmptyScreen

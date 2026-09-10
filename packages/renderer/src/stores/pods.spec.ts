@@ -16,38 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { PodInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
-import { podsEventStore, podsInfos } from './pods';
+import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+import { clearPodActionInProgress, podsEventStore, podsInfos, setPodActionError, setPodStatus } from './pods';
+
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listPodsMock: Mock<() => Promise<PodInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listPods: listPodsMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test.each([
@@ -64,16 +49,16 @@ test.each([
   podsEventStore.setupWithDebounce(10, 10);
 
   // empty list
-  listPodsMock.mockResolvedValue([]);
+  vi.mocked(window.listPods).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('extensions-already-started')();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // clear mock calls
-  listPodsMock.mockClear();
+  vi.mocked(window.listPods).mockClear();
 
   // now, setup at least one container
-  listPodsMock.mockResolvedValue([
+  vi.mocked(window.listPods).mockResolvedValue([
     {
       Id: 'id123',
     } as unknown as PodInfo,
@@ -81,16 +66,67 @@ test.each([
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
+  assert(callback);
   await callback();
 
   // wait listContainersMock is called
-  while (listPodsMock.mock.calls.length === 0) {
+  while (vi.mocked(window.listPods).mock.calls.length === 0) {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 
   // now get list
   const podListResult = get(podsInfos);
   expect(podListResult.length).toBe(1);
-  expect(podListResult[0].Id).toEqual('id123');
+  expect(podListResult[0].id).toEqual('id123');
+});
+
+test('setPodStatus updates the status and sets actionInProgress', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' } as PodInfoUI,
+  ]);
+
+  setPodStatus('engine1', 'pod1', 'STARTING');
+
+  const result = get(podsInfos);
+  expect(result[0].status).toBe('STARTING');
+  expect(result[0].actionInProgress).toBe(true);
+  expect(result[0].actionError).toBe('');
+});
+
+test('clearPodActionInProgress clears the actionInProgress flag', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' } as PodInfoUI,
+  ]);
+
+  clearPodActionInProgress('engine1', 'pod1');
+
+  const result = get(podsInfos);
+  expect(result[0].actionInProgress).toBe(false);
+  expect(result[0].status).toBe('STARTING');
+});
+
+test('setPodActionError sets the error and status to ERROR', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'STARTING', actionInProgress: true, actionError: '' } as PodInfoUI,
+  ]);
+
+  setPodActionError('engine1', 'pod1', 'something went wrong');
+
+  const result = get(podsInfos);
+  expect(result[0].actionError).toBe('something went wrong');
+  expect(result[0].status).toBe('ERROR');
+  expect(result[0].actionInProgress).toBe(false);
+});
+
+test('setPodStatus does not affect other pods', () => {
+  podsInfos.set([
+    { id: 'pod1', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' } as PodInfoUI,
+    { id: 'pod2', engineId: 'engine1', status: 'RUNNING', actionInProgress: false, actionError: '' } as PodInfoUI,
+  ]);
+
+  setPodStatus('engine1', 'pod1', 'STOPPING');
+
+  const result = get(podsInfos);
+  expect(result[0].status).toBe('STOPPING');
+  expect(result[1].status).toBe('RUNNING');
 });

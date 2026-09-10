@@ -16,36 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { IDisposable, NetworkInspectInfo } from '@podman-desktop/core-api';
+import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { networksEventStore, networksListInfo } from './networks';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): IDisposable => {
-    callbacks.set(message, callback);
-    return {} as IDisposable;
-  },
-};
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listNetworks: vi.fn(),
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
+  });
 });
 
 test.each([
@@ -66,7 +51,7 @@ test.each([
   vi.mocked(window.listNetworks).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('extensions-already-started')();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // clear mock calls
   vi.mocked(window.listNetworks).mockClear();
@@ -80,7 +65,7 @@ test.each([
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
+  assert(callback);
   await callback();
 
   await vi.waitFor(() => {

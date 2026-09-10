@@ -25,7 +25,7 @@ beforeEach(() => {
 });
 
 test('expect withConfirmation call callback if result OK', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Continue' });
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
@@ -37,7 +37,7 @@ test('expect withConfirmation call callback if result OK', async () => {
 });
 
 test('expect withConfirmation not to call callback if result not OK', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
@@ -62,7 +62,7 @@ test('expect withConfirmation to propagate error', async () => {
 });
 
 test('expect withConfirmation to use default variant', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Continue' });
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
@@ -78,7 +78,7 @@ test('expect withConfirmation to use default variant', async () => {
 });
 
 test('expect withConfirmation to use explicit title when provided', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Destroy' });
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world', { title: 'Destroy World?', buttonLabel: 'Destroy' });
@@ -95,7 +95,7 @@ test('expect withConfirmation to use explicit title when provided', async () => 
 });
 
 test('expect withConfirmation to use delete variant with Delete button and danger type', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   const callback = vi.fn();
   withConfirmation(callback, 'delete this resource', { title: 'Delete Resource?', variant: 'delete' });
@@ -112,7 +112,7 @@ test('expect withConfirmation to use delete variant with Delete button and dange
 });
 
 test('expect withConfirmation to use default variant explicitly', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Continue' });
 
   const callback = vi.fn();
   withConfirmation(callback, 'continue', { title: 'Continue?', variant: 'default', buttonLabel: 'Continue' });

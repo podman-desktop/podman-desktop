@@ -23,6 +23,7 @@ enum PreferenceLabels {
   ZOOM_LEVEL = 'Zoom Level',
   EXIT_ON_CLOSE = ' Exit On Close',
   LINE_HEIGHT = 'Line Height',
+  APP_UPDATE = 'App Update',
 }
 
 export class Preferences {
@@ -33,4 +34,5 @@ export class Preferences {
     'Quit the app when the close button is clicked instead of minimizing to the tray.';
   static readonly ZOOM_LEVEL_NUMBER_INPUT_LABEL = 'preferences.zoomLevel';
   static readonly TERMINAL_LINE_HEIGHT_INPUT_LABEL = 'terminal.integrated.lineHeight';
+  static readonly APP_UPDATE_TOGGLE_BUTTON_LABEL = 'Check for application updates';
 }

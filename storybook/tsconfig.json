@@ -6,7 +6,6 @@
     "strict": true,
     "resolveJsonModule": true,
     "preserveValueImports": false,
-    "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"]
     },

@@ -121,7 +121,7 @@ type ControllerType = 'Deployment' | 'ReplicaSet' | 'StatefulSet';
 class TestKubernetesClient extends KubernetesClient {
   declare kubeConfig;
 
-  public declare currentNamespace: string | undefined;
+  declare public currentNamespace: string | undefined;
 
   public override createWatchObject(): Watch {
     return super.createWatchObject();
@@ -372,32 +372,31 @@ describe.each([
     namespace: undefined,
     expectedNamespace: 'demons',
   },
-])('Create Kubernetes resources with apps/v1 resource should return ok', ({
-  manifest,
-  namespace,
-  expectedNamespace,
-}) => {
-  test(`should use namespace ${expectedNamespace}`, async () => {
-    const client = createTestClient();
-    const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
-    const createMock = vi.fn().mockReturnValue({});
-    makeApiClientMock.mockReturnValue({
-      read: readMock,
-      create: createMock,
-    });
+])(
+  'Create Kubernetes resources with apps/v1 resource should return ok',
+  ({ manifest, namespace, expectedNamespace }) => {
+    test(`should use namespace ${expectedNamespace}`, async () => {
+      const client = createTestClient();
+      const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
+      const createMock = vi.fn().mockReturnValue({});
+      makeApiClientMock.mockReturnValue({
+        read: readMock,
+        create: createMock,
+      });
 
-    await client.createResources('dummy', [manifest], namespace);
-    expect(readMock).toHaveBeenCalled();
-    expect(createMock).toHaveBeenCalledWith(
-      expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
-    );
-    expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
-      action: 'create',
-      manifestsSize: 1,
-      namespace: namespace,
+      await client.createResources('dummy', [manifest], namespace);
+      expect(readMock).toHaveBeenCalled();
+      expect(createMock).toHaveBeenCalledWith(
+        expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
+      );
+      expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
+        action: 'create',
+        manifestsSize: 1,
+        namespace: namespace,
+      });
     });
-  });
-});
+  },
+);
 
 describe.each([
   {
@@ -415,32 +414,31 @@ describe.each([
     namespace: undefined,
     expectedNamespace: 'demons',
   },
-])('Create Kubernetes resources with networking.k8s.io/v1 resource should return ok', ({
-  manifest,
-  namespace,
-  expectedNamespace,
-}) => {
-  test(`should use namespace ${expectedNamespace}`, async () => {
-    const client = createTestClient();
-    const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
-    const createMock = vi.fn().mockReturnValue({});
-    makeApiClientMock.mockReturnValue({
-      read: readMock,
-      create: createMock,
-    });
+])(
+  'Create Kubernetes resources with networking.k8s.io/v1 resource should return ok',
+  ({ manifest, namespace, expectedNamespace }) => {
+    test(`should use namespace ${expectedNamespace}`, async () => {
+      const client = createTestClient();
+      const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
+      const createMock = vi.fn().mockReturnValue({});
+      makeApiClientMock.mockReturnValue({
+        read: readMock,
+        create: createMock,
+      });
 
-    await client.createResources('dummy', [manifest], namespace);
-    expect(readMock).toHaveBeenCalled();
-    expect(createMock).toHaveBeenCalledWith(
-      expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
-    );
-    expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
-      action: 'create',
-      manifestsSize: 1,
-      namespace: namespace,
+      await client.createResources('dummy', [manifest], namespace);
+      expect(readMock).toHaveBeenCalled();
+      expect(createMock).toHaveBeenCalledWith(
+        expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
+      );
+      expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
+        action: 'create',
+        manifestsSize: 1,
+        namespace: namespace,
+      });
     });
-  });
-});
+  },
+);
 
 describe.each([
   {
@@ -2601,6 +2599,10 @@ test('Expect readNamespacedCronJob to return the cronjob', async () => {
     kind: 'CronJob',
     metadata: {
       name: 'foobar',
+    },
+    spec: {
+      schedule: '*/5 * * * *',
+      jobTemplate: {},
     },
   };
   makeApiClientMock.mockReturnValue({

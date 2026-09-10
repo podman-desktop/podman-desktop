@@ -16,43 +16,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { OnboardingInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { fetchOnboarding, onboardingEventStore, onboardingList } from './onboarding';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listOnboardingMock: Mock<() => Promise<OnboardingInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listOnboarding: listOnboardingMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('onboarding should be updated in case of an extension is stopped', async () => {
   // initial view
-  listOnboardingMock.mockResolvedValue([
+  vi.mocked(window.listOnboarding).mockResolvedValue([
     {
       extension: 'extension',
       title: 'title',
@@ -62,10 +45,8 @@ test('onboarding should be updated in case of an extension is stopped', async ()
   ]);
   onboardingEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch volumes
   await fetchOnboarding();
@@ -76,11 +57,11 @@ test('onboarding should be updated in case of an extension is stopped', async ()
   expect(onboardingList1[0].extension).toEqual('extension');
 
   // ok now mock the listOnboarding function to return an empty list
-  listOnboardingMock.mockResolvedValue([]);
+  vi.mocked(window.listOnboarding).mockResolvedValue([]);
 
   // call 'extension-stopped' event
   const extensionStoppedCallback = callbacks.get('extension-stopped');
-  expect(extensionStoppedCallback).toBeDefined();
+  assert(extensionStoppedCallback);
   await extensionStoppedCallback();
 
   // wait a little
@@ -93,14 +74,12 @@ test('onboarding should be updated in case of an extension is stopped', async ()
 
 test('onboarding should be updated in case of an extension is started', async () => {
   // mock the listOnboarding function to return an empty list
-  listOnboardingMock.mockResolvedValue([]);
+  vi.mocked(window.listOnboarding).mockResolvedValue([]);
 
   onboardingEventStore.setup();
 
-  const callback = callbacks.get('extensions-already-started');
   // send 'extensions-already-started' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // now ready to fetch volumes
   await fetchOnboarding();
@@ -110,7 +89,7 @@ test('onboarding should be updated in case of an extension is started', async ()
   expect(onboardingList1.length).toBe(0);
 
   // now add a new thing
-  listOnboardingMock.mockResolvedValue([
+  vi.mocked(window.listOnboarding).mockResolvedValue([
     {
       extension: 'extension',
       title: 'title',
@@ -121,7 +100,7 @@ test('onboarding should be updated in case of an extension is started', async ()
 
   // call 'extension-started' event
   const extensionStartedCallback = callbacks.get('extension-started');
-  expect(extensionStartedCallback).toBeDefined();
+  assert(extensionStartedCallback);
   await extensionStartedCallback();
 
   // wait that the onboarding is updated

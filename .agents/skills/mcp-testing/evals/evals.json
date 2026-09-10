@@ -1,0 +1,71 @@
+{
+  "skill_name": "mcp-testing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Pull the image ghcr.io/podmandesktop-ci/hello and verify it appears in the Images list",
+      "expected_output": "Agent navigates to Images page, pulls the specified image, waits for completion, and verifies it appears in the image list",
+      "files": [],
+      "scenario_type": "well-structured",
+      "expectations": [
+        "The agent loads navigation.md and images.md references",
+        "The agent connects to the app on the correct CDP port",
+        "The agent handles onboarding/feedback dialogs if present",
+        "The agent navigates to the Images page using a known selector",
+        "The agent clicks the Pull button and enters the image name",
+        "The agent verifies the image appears in the list after pull completes",
+        "The agent uses reference selectors rather than full snapshot() calls",
+        "The agent disconnects from MCP when done"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Navigate through all the main pages and tell me what's on each one",
+      "expected_output": "Agent visits Dashboard, Containers, Pods, Images, Volumes, Networks, Kubernetes, Extensions, and summarizes the content of each page",
+      "files": [],
+      "scenario_type": "exploratory",
+      "expectations": [
+        "The agent loads all or most operation references (exploration scope)",
+        "The agent visits at least 6 of the 8 main navigation pages",
+        "The agent takes snapshots or screenshots to report page contents",
+        "The agent provides a summary of what's visible on each page",
+        "The agent uses compact snapshots rather than full snapshot() for token efficiency",
+        "The agent disconnects from MCP when done"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Check if there are any issues with the settings",
+      "expected_output": "Agent navigates to Settings, explores the various sections (Preferences, Resources, Proxy, Registries, etc.), and reports what it finds",
+      "files": [],
+      "scenario_type": "vague",
+      "expectations": [
+        "The agent loads navigation.md and settings.md references (minimum)",
+        "The agent also loads registries.md (registries is under Settings)",
+        "The agent navigates to Settings page",
+        "The agent explores multiple Settings subsections",
+        "The agent reports on the state of each section it visits",
+        "The agent doesn't just check one section and stop",
+        "The agent disconnects from MCP when done"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Check Docker compatibility — can I run docker-compose and use Docker images?",
+      "expected_output": "Agent checks compose CLI tool status, Docker extension presence, container engine compatibility, and reports Docker compatibility status",
+      "files": [],
+      "scenario_type": "cross-cutting",
+      "expectations": [
+        "The agent loads compose.md reference (docker-compose CLI tool check)",
+        "The agent loads extensions.md reference (Docker extension status)",
+        "The agent loads containers.md and images.md (Docker image/container compatibility)",
+        "The agent loads settings.md reference (CLI tools section)",
+        "The agent checks if docker-compose CLI tool is installed via Settings > CLI Tools",
+        "The agent checks Docker extension status in Extensions page",
+        "The agent reports on Docker socket or compatibility mode availability",
+        "The agent provides a clear summary of Docker compatibility status",
+        "The agent disconnects from MCP when done"
+      ]
+    }
+  ]
+}

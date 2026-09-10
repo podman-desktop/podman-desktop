@@ -33,14 +33,13 @@ import ContainerList from './ContainerList.svelte';
 
 // Mocked window methods
 beforeAll(() => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
-  (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 async function waitRender(customProperties: object): Promise<void> {

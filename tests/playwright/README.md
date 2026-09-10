@@ -5,9 +5,9 @@ This is particularly useful if you want to execute the tests from a Podman Deskt
 
 Prerequisites:
 
-- Have Node.js 22 installed (ideally using `nvm`)
-- Uses pnpm v10, can be installed via `npm install -g pnpm@10` or you can get it [here](https://pnpm.io/installation)
-- Have a clone of the Podman Desktop repo (you can get it [here](https://github.com/containers/podman-desktop/tree/main))
+- Have Node.js 24 or newer installed (ideally using `nvm`)
+- Enable pnpm with `corepack enable`; the required version is pinned in the [root `package.json`](../../package.json)
+- Have a clone of the [Podman Desktop repository](https://github.com/podman-desktop/podman-desktop)
 
 ## Core functionality how the E2E tests works
 

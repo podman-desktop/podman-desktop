@@ -6,18 +6,27 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import FloatNumberItem from './FloatNumberItem.svelte';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: number;
-export let description: string | undefined = undefined;
-export let onSave = (_recordId: string, _value: number): void => {};
-export let onChange = (_recordId: string, _value: number): void => {};
-export let onCancel = (_recordId: string, _originalValue: number): void => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value: number;
+  description?: string;
+  onSave?: (_recordId: string, _value: number) => void;
+  onChange?: (_recordId: string, _value: number) => void;
+  onCancel?: (_recordId: string, _originalValue: number) => void;
+}
 
-let editingInProgress = false;
-let editedValue: number;
-$: editedValue = value;
-let disableSaveButton: boolean;
-$: disableSaveButton = !editingInProgress;
+let {
+  record,
+  value,
+  description = undefined,
+  onSave = (_recordId: string, _value: number): void => {},
+  onChange = (_recordId: string, _value: number): void => {},
+  onCancel = (_recordId: string, _originalValue: number): void => {},
+}: Props = $props();
+
+let editingInProgress = $state(false);
+let editedValue = $derived(value);
+let disableSaveButton = $derived(!editingInProgress);
 let originalValue: number;
 
 function invalidRecord(_error: string): void {

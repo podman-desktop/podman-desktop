@@ -198,6 +198,7 @@ export const extensionsAllExternalList = [...extensionsExternalList, headlampExt
 
 export interface ExtensionInstallConfig {
   ociImageUrl?: string;
+  shaDigestImageUrl?: string;
   navigationBarIconName?: string;
   resourceLabel?: string;
 }
@@ -214,6 +215,8 @@ export const extensionInstallConfigs: Partial<Record<string, ExtensionInstallCon
   },
   [openshiftDockerExtension.extensionName]: {
     ociImageUrl: 'redhatdeveloper/openshift-dd-ext:0.0.1-100',
+    shaDigestImageUrl:
+      'redhatdeveloper/openshift-dd-ext@sha256:5b2ee1e64920201e494cf989e22a98afc2faf88b144172380c155c82629c33bd',
     navigationBarIconName: 'OpenShift',
   },
 };

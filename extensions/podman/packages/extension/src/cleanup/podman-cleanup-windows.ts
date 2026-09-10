@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,8 +78,44 @@ export class PodmanCleanupWindows extends AbsPodmanCleanup {
       options.logger.error('error while listing wsl machines', error);
     }
 
+    // stop and remove Hyper-V podman machines
+    await this.removeHyperVMachines(options);
+
     // stop processes
     await this.stopProcessesPids(options);
+  }
+
+  async removeHyperVMachines(options: ProviderCleanupExecuteOptions): Promise<void> {
+    try {
+      const { stdout } = await process.exec('powershell.exe', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        'Get-VM -Name "podman-*" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name',
+      ]);
+
+      if (!stdout.trim()) {
+        return;
+      }
+
+      const machines = stdout.trim().split(/\r?\n/).filter(Boolean);
+
+      for (const machine of machines) {
+        options.logger.log(`Removing Hyper-V machine ${machine}...`);
+        try {
+          await process.exec('powershell.exe', [
+            '-NoProfile',
+            '-NonInteractive',
+            '-Command',
+            `Remove-VM -Name "${machine}" -Force`,
+          ]);
+        } catch (error) {
+          options.logger.error(`unable to remove Hyper-V machine ${machine}`, error);
+        }
+      }
+    } catch (error) {
+      options.logger.error('error while listing Hyper-V machines', error);
+    }
   }
 
   async getPidProcesses(processNames: string[]): Promise<{ pid: number; name: string }[]> {

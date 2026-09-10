@@ -46,7 +46,7 @@ async function copyLogsToClipboard(): Promise<void> {
     <Icon size="1.875x" class="pr-3" icon={faFileLines} />
     <div class="text-xl">Logs</div>
     <div class="flex flex-1 justify-end items-center gap-1">
-      <Button title="Toggle Timestamps" on:click={async (): Promise<void> => { showTimestamps = !showTimestamps; await window.updateConfigurationValue(TIMESTAMPS_CONFIG_KEY, showTimestamps); }} type="link"
+      <Button title="Toggle Timestamps" pressed={showTimestamps} on:click={async (): Promise<void> => { showTimestamps = !showTimestamps; await window.updateConfigurationValue(TIMESTAMPS_CONFIG_KEY, showTimestamps); }} type="link"
         ><Icon class="h-5 w-5 cursor-pointer text-xl {showTimestamps ? 'text-(--pd-action-button-primary-text)' : 'text-(--pd-content-text)'}" icon={faClock} /></Button>
       <Button title="Copy To Clipboard" on:click={async (): Promise<void> => await copyLogsToClipboard()} type="link"
         ><Icon class="h-5 w-5 cursor-pointer text-xl text-(--pd-action-button-primary-text)" icon={faPaste} /></Button>
@@ -56,7 +56,7 @@ async function copyLogsToClipboard(): Promise<void> {
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)]">
       <ul aria-label="logs">
         {#each logs as log, index (index)}
-          <li class="py-[3px] px-1 rounded-sm {index % 2 === 0 ? 'bg-black/4 dark:bg-white/4' : ''}">
+          <li class="py-[3px] px-1 rounded-sm {index % 2 === 0 ? 'bg-(--pd-invert-content-table-row-stripe)' : ''}">
             <div class="flex flex-row items-start gap-2">
               {#if showTimestamps}
                 <span

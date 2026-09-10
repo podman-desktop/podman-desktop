@@ -20,8 +20,9 @@ import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { PassThrough, Writable } from 'node:stream';
+import { PassThrough, Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { StringDecoder } from 'node:string_decoder';
 
@@ -41,6 +42,8 @@ import type {
   ImageInspectInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   LibPodPodInfo,
   ListImagesOptions,
   ManifestCreateOptions,
@@ -52,9 +55,11 @@ import type {
   PodCreateOptions,
   PodInfo,
   PodInspectInfo,
-  PodmanListImagesOptions,
   ProviderContainerConnectionInfo,
   PullEvent,
+  SecretCreateOptions,
+  SecretCreateResult,
+  SecretInfo,
   SimpleContainerInfo,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
@@ -72,14 +77,14 @@ import type {
   ContainerCreatePortMappingOption,
   PodmanDevice,
 } from '@podman-desktop/core-api/libpod';
-import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import { PlayKubeInfo, PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
-import { coerce, gtr } from 'semver';
-import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
+import { coerce, gtr, lt } from 'semver';
+import streamValues from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
@@ -246,6 +251,12 @@ export class ContainerProviderRegistry {
       } else if (status === 'start' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been started
         this.apiSender.send('container-started-event', id);
+      } else if (status === 'pause' && jsonEvent?.Type === 'container') {
+        // need to notify that a container has been paused
+        this.apiSender.send('container-paused-event', id);
+      } else if (status === 'unpause' && jsonEvent?.Type === 'container') {
+        // need to notify that a container has been unpaused
+        this.apiSender.send('container-unpaused-event', id);
       } else if (status === 'destroy' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been destroyed
         this.apiSender.send('container-stopped-event', id);
@@ -259,6 +270,8 @@ export class ContainerProviderRegistry {
         this.apiSender.send('volume-event');
       } else if (jsonEvent?.Type === 'network') {
         this.apiSender.send('network-event');
+      } else if (jsonEvent?.Type === 'secret') {
+        this.apiSender.send('secret-event');
       } else if (status === 'remove' && jsonEvent?.Type === 'container') {
         this.apiSender.send('container-removed-event', id);
       } else if (status === 'pull' && jsonEvent?.Type === 'image') {
@@ -306,7 +319,7 @@ export class ContainerProviderRegistry {
         errorCallback(new Error('Error in handling events', error));
       });
 
-      const pipeline = stream?.pipe(withParserAsStream());
+      const pipeline = stream?.pipe(streamValues.withParserAsStream());
       pipeline?.on('error', error => {
         console.error('Error while parsing events', error);
         pipeline.destroy();
@@ -467,6 +480,120 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async createSecret(options: SecretCreateOptions): Promise<SecretCreateResult> {
+    if (!options.provider) throw new Error('cannot create secret without selected provider');
+
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const provider = this.getMatchingContainerProvider(options.provider);
+      if (!provider.api) throw new Error(`provider ${provider.name} has no api`);
+      const { id } = await provider.api.createSecret({
+        // The data need to be encoded in base64 url safe
+        // ref https://docs.podman.io/en/latest/_static/api.html?version=latest#tag/secrets-(compat)/operation/SecretCreate
+        Data: Buffer.from(options.data).toString('base64'),
+        Name: options.name,
+        Labels: options.labels,
+      });
+      return {
+        id,
+        engineId: provider.id,
+      };
+    } catch (error: unknown) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('createSecret', telemetryOptions);
+    }
+  }
+
+  async inspectSecret(engineId: string, secretId: string): Promise<SecretInfo> {
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const engine = this.internalProviders.get(engineId);
+      if (!engine?.api) {
+        throw new Error(`internal providers with engineId ${engineId} has no api`);
+      }
+      const secret = await engine.api.getSecret(secretId).inspect();
+
+      return {
+        engineName: engine.name,
+        engineId: engine.id,
+        engineType: engine.connection.type,
+        Name: secret.Spec?.Name ?? secret.ID,
+        Id: secret.ID,
+        CreatedAt: secret.CreatedAt,
+        UpdatedAt: secret.UpdatedAt,
+        Labels: secret.Spec?.Labels,
+      };
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('inspectSecret', telemetryOptions);
+    }
+  }
+
+  async removeSecret(engineId: string, secretId: string): Promise<void> {
+    const telemetryOptions: Record<string, unknown> = {};
+    try {
+      const engine = this.internalProviders.get(engineId);
+      if (engine?.libpodApi) {
+        // we cannot use the /secrets (compact) api to retrieve secret with podman
+        // endpoint is malformed
+        // https://github.com/containers/podman/issues/27548
+        await engine.libpodApi.removeSecret(secretId);
+      } else if (engine?.api) {
+        await engine.api.getSecret(secretId).remove();
+      } else {
+        throw new Error(`internal providers with engineId ${engineId} has no api`);
+      }
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('removeSecret', telemetryOptions);
+    }
+  }
+
+  async listSecrets(): Promise<Array<SecretInfo>> {
+    const telemetryOptions: Record<string, unknown> = {};
+    const providers: Array<InternalContainerProvider> = Array.from(this.internalProviders.values());
+
+    try {
+      const all: SecretInfo[][] = await Promise.all(
+        Array.from(providers).map(async provider => {
+          try {
+            if (!provider.api) {
+              return [];
+            }
+            const secrets = await provider.api.listSecrets();
+            return secrets.map(secret => ({
+              engineName: provider.name,
+              engineId: provider.id,
+              engineType: provider.connection.type,
+              Name: secret.Spec?.Name ?? secret.ID,
+              Id: secret.ID,
+              CreatedAt: secret.CreatedAt,
+              UpdatedAt: secret.UpdatedAt,
+              Labels: secret.Spec?.Labels,
+            }));
+          } catch (error) {
+            this.notifyConsole(`error in engine ${provider.name} ${error}`);
+            return [];
+          }
+        }),
+      );
+      const secrets = all.flat();
+      telemetryOptions['total'] = secrets.length;
+      return secrets;
+    } catch (error) {
+      telemetryOptions['error'] = error;
+      throw error;
+    } finally {
+      this.telemetryService.track('listSecrets', telemetryOptions);
+    }
+  }
+
   // do not use inspect information
   async listSimpleContainers(abortController?: AbortController): Promise<SimpleContainerInfo[]> {
     let telemetryOptions = {};
@@ -535,6 +662,7 @@ export class ContainerProviderRegistry {
             Names: string[];
             Image: string;
             ImageID: string;
+            IsInfra?: boolean;
             Command?: string;
             Created: number;
             Ports: ContainerPortInfo[];
@@ -583,11 +711,12 @@ export class ContainerProviderRegistry {
                 Names: podmanContainer.Names.map(name => `/${name}`),
                 ImageID: `sha256:${podmanContainer.ImageID}`,
                 Image: podmanContainer.Image,
+                IsInfra: podmanContainer.IsInfra,
                 // convert to unix timestamp
                 Created: moment(podmanContainer.Created).unix(),
                 State: podmanContainer.State,
                 StartedAt,
-                Command: podmanContainer.Command?.length > 0 ? podmanContainer.Command[0] : undefined,
+                Command: podmanContainer.Command?.length > 0 ? podmanContainer.Command.join(' ') : undefined,
                 Labels,
                 Ports,
               };
@@ -644,6 +773,7 @@ export class ContainerProviderRegistry {
                 engineType: provider.connection.type,
                 StartedAt: container.StartedAt ?? '',
                 Status: container.Status,
+                IsInfra: container.IsInfra,
                 ImageBase64RepoTag: Buffer.from(container.Image, 'binary').toString('base64'),
               };
               return containerInfo;
@@ -662,48 +792,9 @@ export class ContainerProviderRegistry {
     return flattenedContainers;
   }
 
-  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
-    let telemetryOptions = {};
-
-    let providers: InternalContainerProvider[];
-    if (options?.provider === undefined) {
-      providers = Array.from(this.internalProviders.values());
-    } else {
-      providers = [this.getMatchingContainerProvider(options?.provider)];
-    }
-
-    const images = await Promise.all(
-      Array.from(providers).map(async provider => {
-        try {
-          if (!provider.api) {
-            return [];
-          }
-          const images = await provider.api.listImages({ all: false });
-          return images.map(image => {
-            const imageInfo: ImageInfo = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              Digest: `sha256:${image.Id}`,
-            };
-            return imageInfo;
-          });
-        } catch (error) {
-          this.notifyConsole(`error in engine ${provider.name} ${error}`);
-          telemetryOptions = { error: error };
-          return [];
-        }
-      }),
-    );
-    const flattenedImages = images.flat();
-    this.telemetryService.track('listImages', { total: flattenedImages.length, ...telemetryOptions });
-
-    return flattenedImages;
-  }
-
-  // Podman list images will prefer to use libpod API of the provider
+  // list images will prefer to use libpod API of the provider if podman
   // before falling back to using the regular API
-  async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+  async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
     // Get timeout from configuration
     const timeoutSeconds = this.configurationRegistry
       .getConfiguration(ContainerRegistrySettings.SectionName)
@@ -730,6 +821,7 @@ export class ContainerProviderRegistry {
           // Create list options with explicit defaults
           const listOptions = {
             all: options?.all ?? false,
+            digests: true,
             filters: options?.filters,
           };
 
@@ -762,6 +854,7 @@ export class ContainerProviderRegistry {
                 ...image,
                 engineName: provider.name,
                 engineId: provider.id,
+                engineType: provider.connection.type,
                 isManifest,
                 Id: image.Digest ? `sha256:${image.Id}` : image.Id,
                 Digest: image.Digest ?? `sha256:${image.Id}`,
@@ -1319,12 +1412,8 @@ export class ContainerProviderRegistry {
         platform,
         abortSignal: abortController?.signal,
       });
-      let resolve: () => void;
-      let reject: (err: Error) => void;
-      const promise = new Promise<void>((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
+
+      const { resolve, reject, promise } = Promise.withResolvers<void>();
 
       const onFinished = (err: Error | null): void => {
         if (err) {
@@ -1359,6 +1448,54 @@ export class ContainerProviderRegistry {
 
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
+  }
+
+  async updateImages(images: ImageUpdateInfo[], abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
+    const results = await Promise.all(
+      images.map(async (info): Promise<ImageUpdateResult> => {
+        try {
+          const matchingEngine = this.getMatchingEngine(info.engineId);
+          const localDigests = info.repoDigests?.length ? info.repoDigests : [info.digest];
+          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
+
+          if (status.status === 'error') {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          if (status.status === 'skipped' || !status.updateAvailable) {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+          const pullStream = await matchingEngine.pull(info.image, {
+            authconfig,
+            abortSignal,
+          });
+
+          const { resolve, reject, promise } = Promise.withResolvers<void>();
+          matchingEngine.modem.followProgress(
+            pullStream,
+            (err: Error | null) => (err ? reject(err) : resolve()),
+            () => {},
+          );
+          await promise;
+
+          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
+        } catch (error: unknown) {
+          console.error(`Error updating image ${info.image}`, error);
+          const message = error instanceof Error ? error.message : String(error);
+          return { imageRef: info.image, updated: false, status: 'error', message };
+        }
+      }),
+    );
+    this.telemetryService.track('updateImages', {
+      count: images.length,
+      updated: results.filter(result => result.updated).length,
+      upToDate: results.filter(result => result.status === 'normal' && !result.updated).length,
+      skipped: results.filter(result => result.status === 'skipped').length,
+      failed: results.filter(result => result.status === 'error').length,
+    });
+    return results;
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
@@ -1418,6 +1555,18 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async unpauseContainer(engineId: string, id: string, abortController?: AbortController): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingContainer(engineId, id).unpause({ abortSignal: abortController?.signal });
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpauseContainer', telemetryOptions);
+    }
+  }
+
   async generatePodmanKube(engineId: string, names: string[]): Promise<string> {
     let telemetryOptions = {};
     try {
@@ -1439,6 +1588,18 @@ export class ContainerProviderRegistry {
       throw error;
     } finally {
       this.telemetryService.track('startPod', telemetryOptions);
+    }
+  }
+
+  async unpausePod(engineId: string, podId: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingPodmanEngineLibPod(engineId).unpausePod(podId);
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpausePod', telemetryOptions);
     }
   }
 
@@ -1689,7 +1850,17 @@ export class ContainerProviderRegistry {
   async pruneVolumes(engineId: string): Promise<Dockerode.PruneVolumesInfo> {
     let telemetryOptions = {};
     try {
-      return this.getMatchingEngine(engineId).pruneVolumes();
+      // Podman version below 6.0.0 does not support the `all` filter
+      // See https://github.com/containers/podman/pull/28235
+      const provider = this.internalProviders.get(engineId);
+      if (provider?.connection.type === 'podman') {
+        const version = await this.getMatchingEngine(engineId).version();
+        const coerced = coerce(version.Version);
+        if (coerced && lt(coerced, '6.0.0')) {
+          return this.getMatchingEngine(engineId).pruneVolumes();
+        }
+      }
+      return this.getMatchingEngine(engineId).pruneVolumes({ filters: { all: ['true'] } });
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
@@ -2200,7 +2371,7 @@ export class ContainerProviderRegistry {
     let telemetryOptions = {};
     try {
       let container: Dockerode.Container;
-      let forceLibPod = false;
+      let forceLibPod = (options.Secrets?.length ?? 0) > 0 || Object.entries(options.SecretEnv ?? {}).length > 0;
 
       // the device option requesting an nvidia gpu on linux only works
       // if the LibPod API is used. Check if such a device is requested
@@ -2389,6 +2560,8 @@ export class ContainerProviderRegistry {
       hostadd: options.HostConfig?.ExtraHosts,
       userns: options.HostConfig?.UsernsMode,
       devices: updatedDevices,
+      secrets: options.Secrets,
+      secret_env: options.SecretEnv,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);
@@ -2475,6 +2648,7 @@ export class ContainerProviderRegistry {
       return {
         engineName: provider.name,
         engineId: provider.id,
+        engineType: provider.connection.type,
         ...imageInspect,
       };
     } catch (error) {
@@ -2644,7 +2818,7 @@ export class ContainerProviderRegistry {
         stream = (await containerObject.stats({ stream: true })) as unknown as NodeJS.ReadableStream;
         this.statsConsumer.set(this.statsConsumerId, stream);
 
-        const pipeline = stream?.pipe(withParserAsStream());
+        const pipeline = stream?.pipe(streamValues.withParserAsStream());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pipeline?.on('error', (error: any) => {
           console.error('Error while grabbing stats', error);
@@ -2695,7 +2869,7 @@ export class ContainerProviderRegistry {
   }
 
   async playKube(
-    kubernetesYamlFilePath: string,
+    input: PlayKubeInput,
     selectedProvider: ProviderContainerConnectionInfo,
     options?: {
       build?: boolean;
@@ -2713,9 +2887,10 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      // if we don't build, we use the file directory
+      // if we don't build, we can pass the input straight through
       if (!options?.build) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       // ensure build support is true, otherwise let's throw a nice user friendly error
@@ -2725,12 +2900,16 @@ export class ContainerProviderRegistry {
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
 
-      const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
+      const kubePlay =
+        input.type === 'path'
+          ? KubePlayContext.fromFile(input.value)
+          : KubePlayContext.fromContent(input.value, tmpdir());
       await kubePlay.init();
 
-      // if we have no context let's just use the the yaml
+      // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       return provider.libpodApi.playKube(kubePlay.build(), options);
@@ -2901,14 +3080,23 @@ export class ContainerProviderRegistry {
     }
     if (provider.libpodApi) {
       const podmanInfo = await provider.libpodApi.podmanInfo();
+      const { memTotal, memFree, memAvailable } = podmanInfo.host;
+      let memoryUsed: number;
+      // Podman version >= 6.1.0 expose the memAvailable which is the amount of memory available to the system
+      if (memAvailable !== undefined && memAvailable >= 0) {
+        memoryUsed = memTotal - memAvailable;
+      } else {
+        memoryUsed = memTotal - memFree;
+      }
+
       return {
         engineId: provider.id,
         engineName: provider.name,
         engineType: provider.connection.type,
         cpus: podmanInfo.host.cpus,
         cpuIdle: podmanInfo.host.cpuUtilization.idlePercent,
-        memory: podmanInfo.host.memTotal,
-        memoryUsed: podmanInfo.host.memTotal - podmanInfo.host.memFree,
+        memory: memTotal,
+        memoryUsed,
         diskSize: podmanInfo.store.graphRootAllocated,
         diskUsed: podmanInfo.store.graphRootUsed,
       };
@@ -2961,9 +3149,12 @@ export class ContainerProviderRegistry {
   }
 
   async imageExist(id: string, engineId: string, tag: string): Promise<boolean> {
-    const images = await this.listImages();
-    const imageInfo = images.find(c => c.Id === id && c.engineId === engineId);
-    return imageInfo?.RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    try {
+      const { RepoTags } = await this.getImageInspect(engineId, id);
+      return RepoTags?.some(repoTag => repoTag === tag) ?? false;
+    } catch (_: unknown) {
+      return false;
+    }
   }
 
   async volumeExist(name: string, engineId: string): Promise<boolean> {

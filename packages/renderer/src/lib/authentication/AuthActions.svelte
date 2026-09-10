@@ -6,12 +6,16 @@ import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { handleNavigation } from '/@/navigation';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
 
-export let onBeforeToggle = (): void => {};
-let showMenu = false;
+interface Props {
+  onBeforeToggle?: () => void;
+  outsideWindow: HTMLDivElement;
+}
 
-let clientY: number;
-let clientX: number;
-export let outsideWindow: HTMLDivElement;
+let { onBeforeToggle = (): void => {}, outsideWindow }: Props = $props();
+
+let showMenu = $state(false);
+let clientY = $state(0);
+let clientX = $state(0);
 
 function toggleMenu(): void {
   onBeforeToggle();
@@ -36,7 +40,7 @@ export function onButtonClick(e: MouseEvent): void {
 }
 </script>
 
-<svelte:window on:keyup={handleEscape} on:click={onWindowClick} />
+<svelte:window onkeyup={handleEscape} onclick={onWindowClick} />
 
 {#if showMenu}
   <DropdownMenu.Items clientY={clientY} clientX={clientX}>

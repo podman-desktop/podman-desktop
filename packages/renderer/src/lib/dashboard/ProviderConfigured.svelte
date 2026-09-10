@@ -14,16 +14,20 @@ import {
   InitializeOnlyMode,
 } from './ProviderInitUtils';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
+import ProviderWarnings from './ProviderWarnings.svelte';
 
-export let provider: ProviderInfo;
-export let initializationContext: InitializationContext;
+interface Props {
+  provider: ProviderInfo;
+  initializationContext: InitializationContext;
+}
+let { provider, initializationContext }: Props = $props();
 
-let runAtStart = initializationContext.mode === InitializeAndStartMode;
-let runInProgress = false;
+let runAtStart = $derived(initializationContext.mode === InitializeAndStartMode);
+let runInProgress = $state(false);
 
-let runError: string | undefined = undefined;
+let runError: string | undefined = $state();
 
-let preflightChecks: CheckStatus[] = [];
+let preflightChecks: CheckStatus[] = $state([]);
 
 async function runProvider(): Promise<void> {
   runError = undefined;
@@ -53,7 +57,7 @@ onMount(async () => {
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     {#if !runAtStart && !runInProgress}
       <p class="text-[var(--pd-content-text)] text-center w-2/3">
         To start working with containers, {provider.name}
@@ -61,6 +65,7 @@ onMount(async () => {
           v{provider.version}
         {/if} needs to be started.
       </p>
+      <ProviderWarnings provider={provider} />
       <div class="w-1/3 flex justify-center">
         <Button on:click={runProvider}>
           Run {provider.name}
@@ -86,10 +91,10 @@ onMount(async () => {
     {/if}
 
     <PreflightChecks preflightChecks={preflightChecks} />
-  </svelte:fragment>
-  <svelte:fragment slot="update">
+  {/snippet}
+  {#snippet update()}
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
       <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </ProviderCard>

@@ -160,7 +160,7 @@ export class PodmanConfiguration {
   }
 
   async updateRosettaSetting(useRosetta: boolean): Promise<void> {
-    // Initalize an empty configuration file for us to use
+    // Initialize an empty configuration file for us to use
     const containersConfContent = {
       containers: {},
       engine: {
@@ -220,7 +220,7 @@ export class PodmanConfiguration {
   }
 
   async updateMachineProviderSettings(provider: VMTYPE): Promise<void> {
-    // Initalize an empty configuration file for us to use
+    // Initialize an empty configuration file for us to use
     const containersConfContent = {
       containers: {},
       engine: {

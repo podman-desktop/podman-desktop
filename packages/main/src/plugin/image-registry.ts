@@ -38,7 +38,7 @@ import got, { HTTPError, RequestError } from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
-import validator from 'validator';
+import { isURL } from 'validator';
 
 import { isMac, isWindows } from '/@/util.js';
 
@@ -1021,7 +1021,7 @@ export class ImageRegistry {
       require_tld: false,
     };
     // Validate the URL
-    const isUrl = validator.default.isURL(serviceUrl, urlOptions);
+    const isUrl = isURL(serviceUrl, urlOptions);
 
     // Check if the URL is undefined or not a valid URL
     if (serviceUrl === undefined || !isUrl) {

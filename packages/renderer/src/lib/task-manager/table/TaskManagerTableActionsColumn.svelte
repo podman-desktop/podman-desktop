@@ -3,7 +3,11 @@ import type { TaskInfoUI } from '/@/stores/tasks';
 
 import TaskManagerActions from './action/TaskManagerActions.svelte';
 
-export let object: TaskInfoUI;
+interface Props {
+  object: TaskInfoUI;
+}
+
+let { object }: Props = $props();
 </script>
 
 <TaskManagerActions task={object} />

@@ -9,8 +9,13 @@ import { handleNavigation } from '/@/navigation';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-export let volume: VolumeInfoUI;
-const createdTime: Date = new Date(volume.created);
+interface Props {
+  volume: VolumeInfoUI;
+}
+
+let { volume }: Props = $props();
+
+let createdTime: Date = $derived(new Date(volume.created));
 
 function openContainer(containerID: string): void {
   handleNavigation({

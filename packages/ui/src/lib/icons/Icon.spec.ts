@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,14 @@ describe('font awesome', () => {
     const img = screen.getByRole('img', { hidden: true });
     expect(img).toBeInTheDocument();
     expect(img).not.toHaveAttribute('style');
+  });
+
+  test('icon with ariaHidden should be hidden from screen readers', () => {
+    render(Icon, { icon: faGithub, ariaHidden: true });
+
+    const svg = screen.getByRole('img', { hidden: true });
+    expect(svg).toBeInTheDocument();
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
   });
 
   test('icon should reflect prefered {number}x size', () => {
@@ -84,6 +92,15 @@ describe('class icon', () => {
     expect(img.nodeName).toBe('SPAN');
   });
 
+  test('icon with ariaHidden should not have role img', () => {
+    const { container } = render(Icon, { icon: 'fas fa-icon', ariaHidden: true });
+
+    const span = container.querySelector('span');
+    expect(span).toBeInTheDocument();
+    expect(span).not.toHaveAttribute('role');
+    expect(span).toHaveAttribute('aria-hidden', 'true');
+  });
+
   test('icon should reflect prefered fa-{number}x size', () => {
     render(Icon, { icon: 'fas fa-icon', size: 'fa-2x' });
 
@@ -126,6 +143,15 @@ describe('component icon', () => {
     expect(img).toBeInTheDocument();
   });
 
+  test('icon with ariaHidden should not have role img', () => {
+    const { container } = render(Icon, { icon: ContainerIcon, ariaHidden: true });
+
+    const span = container.querySelector('span');
+    expect(span).toBeInTheDocument();
+    expect(span).not.toHaveAttribute('role');
+    expect(span).toHaveAttribute('aria-hidden', 'true');
+  });
+
   test('icon should reflect prefered {number} size', () => {
     render(Icon, { icon: ContainerIcon, size: '42' });
 
@@ -163,6 +189,17 @@ describe('string icon', () => {
     expect(img).toHaveAttribute('src', icon);
   });
 
+  test('icon with ariaHidden should not have role img', () => {
+    const icon = 'data:image/png;base64,fooBar';
+    const { container } = render(Icon, { icon: icon, ariaHidden: true });
+
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).not.toHaveAttribute('role');
+    expect(img).toHaveAttribute('aria-hidden', 'true');
+    expect(img).toHaveAttribute('alt', '');
+  });
+
   test('icon should reflect prefered {number} size', () => {
     const icon = 'data:image/png;base64,fooBar';
     render(Icon, { icon: icon, size: 42 });
@@ -190,5 +227,38 @@ describe('string icon', () => {
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('alt', 'test title');
     expect(img).toHaveAttribute('src', icon);
+  });
+});
+
+describe('themed image icon', () => {
+  const themedIcon = { light: 'light.png', dark: 'dark.png' };
+
+  test('renders light and dark sources with theme visibility classes', () => {
+    const { container } = render(Icon, { icon: themedIcon, size: 22, class: 'some-class', title: 'themed' });
+
+    const imgs = container.querySelectorAll('img');
+    expect(imgs).toHaveLength(2);
+
+    expect(imgs[0]).toHaveAttribute('src', 'light.png');
+    expect(imgs[0]).toHaveAttribute('alt', 'themed');
+    expect(imgs[0]).toHaveAttribute('title', 'themed');
+    expect(imgs[0]).toHaveAttribute('role', 'img');
+    expect(imgs[0]).toHaveClass('block', 'dark:hidden', 'some-class');
+    expect(imgs[0]).toHaveAttribute('style', 'width: 22px; height: 22px;');
+
+    expect(imgs[1]).toHaveAttribute('src', 'dark.png');
+    expect(imgs[1]).toHaveAttribute('alt', 'themed');
+    expect(imgs[1]).toHaveAttribute('title', 'themed');
+    expect(imgs[1]).toHaveAttribute('role', 'img');
+    expect(imgs[1]).toHaveClass('hidden', 'dark:block', 'some-class');
+    expect(imgs[1]).toHaveAttribute('style', 'width: 22px; height: 22px;');
+  });
+
+  test('renders a plain image path as an img', () => {
+    render(Icon, { icon: 'test.png', title: 'plain path' });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toHaveAttribute('src', 'test.png');
+    expect(img).toHaveAttribute('alt', 'plain path');
   });
 });

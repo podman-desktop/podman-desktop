@@ -16,7 +16,7 @@ The below information outlines details on how to both contribute as well as our 
 Here is a brief description of the folders for the website of Podman Desktop and how they are organized.
 
 - `blog`: All the blog posts published on [https://podman-desktop.io/blog](https://podman-desktop.io/blog).
-- `blog/img`: Store all the images used in the the blog posts.
+- `blog/img`: Store all the images used in the blog posts.
 - `docs`: All documentation published on [https://podman-desktop.io/docs](https://podman-desktop.io/docs).
 - `tutorials`: All tutorials published on [https://podman-desktop.io/tutorial](https://podman-desktop.io/tutorial).
 - `src`: Content for the website.
@@ -193,7 +193,7 @@ Links to further information (could be podman desktop documentation, or outside 
 A "typical" list of troubleshooting scenarios and their solutions.
 
 ```markdown
-# <Title of the troubshooting section>
+# <Title of the troubleshooting section>
 
 ## <Specific issue>
 

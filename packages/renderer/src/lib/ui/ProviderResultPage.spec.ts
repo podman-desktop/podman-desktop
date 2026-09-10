@@ -236,7 +236,11 @@ describe('test ProviderResultPage', async () => {
     });
 
     const criticalButton = screen.getByRole('button', { name: 'Critical (2)' });
+    expect(criticalButton).toHaveAttribute('aria-pressed', 'true');
+
     await fireEvent.click(criticalButton);
+    expect(criticalButton).toHaveAttribute('aria-pressed', 'false');
+
     results.filter(r => r.check.severity === 'critical').forEach(result => checkResultNotDisplayed(result));
     results.filter(r => r.check.severity !== 'critical').forEach(result => checkResultDisplayed(result));
   });

@@ -8,6 +8,7 @@
     "proxy.https",
     "extensions.catalog.enabled",
     "extensions.localExtensions.enabled",
-    "extensions.customExtensions.enabled"
+    "extensions.customExtensions.enabled",
+    "preferences.update.appUpdate"
   ]
 }

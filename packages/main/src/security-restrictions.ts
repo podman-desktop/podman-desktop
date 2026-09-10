@@ -18,42 +18,19 @@
 
 import { URL } from 'node:url';
 
-import type { App as ElectronApp, Event as ElectronEvent, WebContents } from 'electron';
+import type { App as ElectronApp, Event as ElectronEvent, Session, WebContents } from 'electron';
 import { shell } from 'electron';
 
 import { securityRestrictionCurrentHandler } from './security-restrictions-handler.js';
+
+type PermissionRequestPermission = Parameters<NonNullable<Parameters<Session['setPermissionRequestHandler']>[0]>>[1];
 
 /**
  * List of origins that you allow open INSIDE the application and permissions for each of them.
  *
  * In development mode you need allow open `VITE_DEV_SERVER_URL`
  */
-const ALLOWED_ORIGINS_AND_PERMISSIONS = new Map<
-  string,
-  Set<
-    | 'clipboard-read'
-    | 'clipboard-sanitized-write'
-    | 'media'
-    | 'display-capture'
-    | 'keyboardLock'
-    | 'mediaKeySystem'
-    | 'geolocation'
-    | 'notifications'
-    | 'midi'
-    | 'midiSysex'
-    | 'pointerLock'
-    | 'fullscreen'
-    | 'openExternal'
-    | 'window-management'
-    | 'window-placement'
-    | 'idle-detection'
-    | 'speaker-selection'
-    | 'storage-access'
-    | 'top-level-storage-access'
-    | 'fileSystem'
-    | 'unknown'
-  >
->(
+const ALLOWED_ORIGINS_AND_PERMISSIONS = new Map<string, Set<PermissionRequestPermission>>(
   import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL
     ? [[new URL(import.meta.env.VITE_DEV_SERVER_URL).origin, new Set(['clipboard-sanitized-write', 'clipboard-read'])]]
     : [],

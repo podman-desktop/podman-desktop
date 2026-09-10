@@ -1,0 +1,3 @@
+{
+  "composeDescription": "The Compose extension provides optional command line support for [Compose files](https://compose-spec.io/) with Podman.\n\nMore information: [Podman Desktop Documentation](https://podman-desktop.io/docs/tags/compose)"
+}

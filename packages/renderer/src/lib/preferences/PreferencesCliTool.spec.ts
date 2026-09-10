@@ -139,8 +139,11 @@ beforeAll(() => {
   Object.defineProperty(global, 'window', {
     value: {
       updateCliTool: vi.fn(),
+      uninstallCliTool: vi.fn(),
+      showMessageBox: vi.fn(),
       executeCommand: vi.fn(),
       getUrlProtocol: vi.fn().mockResolvedValue('podman-desktop'),
+      selectCliToolVersionToUpdate: vi.fn(),
       navigator: {
         clipboard: {
           writeText: vi.fn(),
@@ -249,8 +252,7 @@ describe('CLI Tool item', () => {
   });
 
   test('check version is sent to updateCliTool', async () => {
-    const selectCliToolVersionToUpdateMock = vi.fn().mockResolvedValue('1.1.1');
-    (window as any).selectCliToolVersionToUpdate = selectCliToolVersionToUpdateMock;
+    vi.mocked(window.selectCliToolVersionToUpdate).mockResolvedValue('1.1.1');
     render(PreferencesCliTool, {
       cliTool: cliToolInfoItem4,
     });
@@ -260,7 +262,7 @@ describe('CLI Tool item', () => {
 
     await userEvent.click(updateAvailableElement);
 
-    expect(selectCliToolVersionToUpdateMock).toBeCalledWith(cliToolInfoItem4.id);
+    expect(vi.mocked(window.selectCliToolVersionToUpdate)).toBeCalledWith(cliToolInfoItem4.id);
     expect(vi.mocked(window.updateCliTool)).toBeCalledWith(
       cliToolInfoItem4.id,
       expect.any(Symbol),
@@ -383,5 +385,19 @@ describe('CLI Tool item', () => {
     expect(updateLoadingButton).toBeEnabled();
     const installLoadingButton = screen.queryByRole('button', { name: 'Install' });
     expect(installLoadingButton).not.toBeInTheDocument();
+  });
+
+  test('cancelling uninstall confirmation should not call uninstallCliTool', async () => {
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
+
+    render(PreferencesCliTool, {
+      cliTool: cliToolInfoItem7,
+    });
+
+    const uninstallButton = screen.getByRole('button', { name: 'Uninstall' });
+    await fireEvent.click(uninstallButton);
+
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
+    expect(window.uninstallCliTool).not.toHaveBeenCalled();
   });
 });

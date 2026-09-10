@@ -85,7 +85,7 @@ export function warnings(this: CompileContext, d: Directive): boolean {
     this.tag('<div class="flex flex-row space-x-3 bg-[var(--pd-invert-content-card-bg)] p-4 rounded-md items-start">');
     // add icon representing the warning status
     this.tag('<div class="mr-2 flex justify-center">');
-    this.tag(item.state === 'successful' ? '✅' : '❌');
+    this.tag(item.state === 'successful' ? '✅' : item.state === 'warning' ? '⚠️' : '❌');
     this.tag('</div>');
     // add the warning description
     if (item.description) {

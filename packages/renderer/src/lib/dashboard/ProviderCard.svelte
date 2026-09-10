@@ -1,12 +1,19 @@
 <script lang="ts">
 import type { ProviderInfo } from '@podman-desktop/core-api';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+import type { Snippet } from 'svelte';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ProviderStatus from '/@/lib/ui/ProviderStatus.svelte';
 
 import ProviderLinks from './ProviderLinks.svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+  update?: Snippet;
+  content?: Snippet;
+}
+
+let { provider, update, content }: Props = $props();
 </script>
 
 <div
@@ -15,7 +22,9 @@ export let provider: ProviderInfo;
   aria-label="{provider.name} Provider">
   <div class="flex flex-col xl:flex-row gap-x-4">
     <div class="grid grid-cols-[3rem_1fr] w-full xl:w-1/4 gap-2">
-      <IconImage image={provider?.images?.icon} class="mx-0 max-h-12" alt={provider.name}></IconImage>
+      {#if provider?.images?.icon}
+        <Icon icon={provider.images.icon} class="mx-0 max-h-12" title={provider.name} />
+      {/if}
       <div class="flex flex-col gap-0 text-[var(--pd-content-card-title)] whitespace-nowrap" aria-label="context-name">
         <div class="gap-1 items-center">
           <span class="float-left mr-1 text-lg">{provider.name}</span>
@@ -29,12 +38,12 @@ export let provider: ProviderInfo;
           <ProviderStatus status={provider.status} />
         </div>
         <div class="my-3 empty:my-0 w-full">
-          <slot name="update" />
+          {@render update?.()}
         </div>
       </div>
     </div>
     <div class="flex items-center flex-row space-x-10 mt-5 w-full xl:mt-0 xl:w-3/4 flex-nowrap">
-      <slot name="content" />
+      {@render content?.()}
     </div>
   </div>
 

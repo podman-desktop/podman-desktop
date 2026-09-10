@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Locator, Page } from 'playwright';
+import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
 
 import { SettingsPage } from './settings-page';
 
@@ -43,6 +44,24 @@ export class ResourcesPage extends SettingsPage {
     await this.resourceCardLocatorGenerator(resourceCardAriaLabel)
       .getByRole('button', { name: `Create new ${buttonName}` })
       .click();
+  }
+
+  public getProviderUpdateButton(providerCardLabel: string): Locator {
+    return this.resourceCardLocatorGenerator(providerCardLabel).getByRole('button', { name: /Update to/ });
+  }
+
+  public async updateProvider(providerCardLabel: string, timeout = 60_000): Promise<this> {
+    return test.step(`Update provider ${providerCardLabel} from Resources page`, async () => {
+      const providerCard = this.resourceCardLocatorGenerator(providerCardLabel);
+      await playExpect(providerCard).toBeVisible({ timeout: 10_000 });
+
+      const updateButton = this.getProviderUpdateButton(providerCardLabel);
+      await playExpect(updateButton).toBeVisible({ timeout: 10_000 });
+      await playExpect(updateButton).toBeEnabled();
+      await updateButton.click();
+      await playExpect(updateButton).toBeHidden({ timeout });
+      return this;
+    });
   }
 
   private resourceCardLocatorGenerator(resourceCardAriaLabel: string): Locator {

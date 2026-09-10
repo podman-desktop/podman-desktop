@@ -5,7 +5,11 @@ import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
-export let artifact: V1PodStatus | undefined;
+interface Props {
+  artifact?: V1PodStatus;
+}
+
+let { artifact }: Props = $props();
 
 if (artifact?.startTime) {
   artifact.startTime = new Date(artifact.startTime);

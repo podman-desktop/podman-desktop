@@ -30,6 +30,14 @@ interface KubeContext {
   name: string;
 }
 
+// js-yaml v5 throws on empty input instead of returning undefined
+function loadKubeConfig(rawContent: string): KubeConfig | undefined {
+  if (rawContent.trim().length === 0) {
+    return undefined;
+  }
+  return jsYaml.load(rawContent) as KubeConfig;
+}
+
 const menuItemsRegistered: extensionApi.Disposable[] = [];
 let kubeconfigFile: string | undefined;
 let statusBarItem: extensionApi.StatusBarItem;
@@ -55,13 +63,13 @@ export async function updateContext(
   const kubeConfigRawContent = await fs.promises.readFile(kubeconfigFile, 'utf-8');
 
   // parse the content using jsYaml
-  const kubeConfig = jsYaml.load(kubeConfigRawContent) as KubeConfig;
+  const kubeConfig = loadKubeConfig(kubeConfigRawContent);
 
   // get the current context
   const currentContext = kubeConfig?.['current-context'];
 
   // get all contexts
-  const contexts: KubeContext[] = kubeConfig?.['contexts'] ? kubeConfig['contexts'] : [];
+  const contexts: KubeContext[] = kubeConfig?.['contexts'] ?? [];
 
   if (contexts.length > 0) {
     // now, add each context
@@ -134,7 +142,7 @@ async function setContext(newContext: string): Promise<void> {
   const kubeConfigRawContent = fs.readFileSync(file, 'utf-8');
 
   // parse the content using jsYaml
-  const kubeConfig = jsYaml.load(kubeConfigRawContent) as KubeConfig;
+  const kubeConfig = loadKubeConfig(kubeConfigRawContent);
 
   // update the context
   if (kubeConfig) {
@@ -144,7 +152,7 @@ async function setContext(newContext: string): Promise<void> {
   // write again the file using promises fs
   await fs.promises.writeFile(
     file,
-    jsYaml.dump(kubeConfig, { noArrayIndent: true, quotingType: '"', lineWidth: -1 }),
+    jsYaml.dump(kubeConfig, { seqNoIndent: true, quoteStyle: 'double', lineWidth: -1 }),
     'utf-8',
   );
 }

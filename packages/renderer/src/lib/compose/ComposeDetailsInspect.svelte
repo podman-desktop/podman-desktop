@@ -6,9 +6,13 @@ import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let compose: ComposeInfoUI;
+interface Props {
+  compose: ComposeInfoUI;
+}
 
-let inspectDetails: string;
+let { compose }: Props = $props();
+
+let inspectDetails: string = $state('');
 
 onMount(async () => {
   // Go through each container and grab the inspect result, add it to inspectDetails / stringify

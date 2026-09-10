@@ -7,14 +7,17 @@ import ProviderCard from './ProviderCard.svelte';
 import ProviderDetectionChecksButton from './ProviderDetectionChecksButton.svelte';
 import ProviderInstallationButton from './ProviderInstallationButton.svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+}
+let { provider }: Props = $props();
 
-let detectionChecks: ProviderDetectionCheck[] = [];
-let preflightChecks: CheckStatus[] = [];
+let detectionChecks: ProviderDetectionCheck[] = $state([]);
+let preflightChecks: CheckStatus[] = $state([]);
 </script>
 
 <ProviderCard provider={provider}>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     <div class="flex flex-col grow">
       <div class="flex flex-row items-center flex-row space-x-10 grow flex-nowrap">
         <p class="text-[var(--pd-content-text)] grow text-center" aria-label="Suggested Actions">
@@ -39,5 +42,5 @@ let preflightChecks: CheckStatus[] = [];
       {/if}
       <PreflightChecks preflightChecks={preflightChecks} />
     </div>
-  </svelte:fragment>
+  {/snippet}
 </ProviderCard>

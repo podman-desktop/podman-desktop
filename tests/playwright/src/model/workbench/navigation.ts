@@ -159,4 +159,32 @@ export class NavigationBar {
       await this.forwardButton.click();
     });
   }
+
+  async longPressBack(): Promise<Locator> {
+    return test.step('Long press back button to open history dropdown', async () => {
+      await playExpect(this.backButton).toBeEnabled({ timeout: 5_000 });
+      await this.backButton.click({ delay: 1_000 });
+      const dropdown = this.page.getByLabel('Back history');
+      await playExpect(dropdown).toBeVisible({ timeout: 5_000 });
+      return dropdown;
+    });
+  }
+
+  async longPressForward(): Promise<Locator> {
+    return test.step('Long press forward button to open history dropdown', async () => {
+      await playExpect(this.forwardButton).toBeEnabled({ timeout: 5_000 });
+      await this.forwardButton.click({ delay: 1_000 });
+      const dropdown = this.page.getByLabel('Forward history');
+      await playExpect(dropdown).toBeVisible({ timeout: 5_000 });
+      return dropdown;
+    });
+  }
+
+  async selectHistoryEntry(dropdown: Locator, name: string): Promise<void> {
+    return test.step(`Select history entry: ${name}`, async () => {
+      const entry = dropdown.getByRole('button', { name, exact: true });
+      await playExpect(entry).toBeVisible({ timeout: 5_000 });
+      await entry.click();
+    });
+  }
 }

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import { extensionsExternalList, podmanExtension } from '/@/model/core/extension
 import { ExtensionCardPage } from '/@/model/pages/extension-card-page';
 import { ExtensionCatalogCardPage } from '/@/model/pages/extension-catalog-card-page';
 import type { StatusBar } from '/@/model/workbench/status-bar';
+import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { handleConfirmationDialog } from '/@/utility/operations';
 import { isLinux, isMac, isWindows } from '/@/utility/platform';
@@ -39,13 +40,35 @@ let updateDownloadedDialog: Locator;
 
 test.skip(isLinux, 'Update is not supported on Linux');
 
+test.use({
+  runnerOptions: new RunnerOptions({
+    /**
+     * For performance reasons, disable extensions which are not necessary for the e2e
+     */
+    customSettings: {
+      'preferences.update.appUpdate': true,
+      'extensions.disabled': installExtensions
+        ? []
+        : [
+            'podman-desktop.compose',
+            'podman-desktop.docker',
+            'podman-desktop.kind',
+            'podman-desktop.kube-context',
+            'podman-desktop.kubectl-cli',
+            'podman-desktop.lima',
+            'podman-desktop.registries',
+          ],
+    },
+  }),
+});
+
 test.beforeAll(async ({ runner, page, statusBar }) => {
   runner.setVideoAndTraceName('update-e2e');
 
   sBar = statusBar;
-  updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
-  updateDialog = page.getByRole('dialog', { name: 'Update Podman Desktop', exact: true });
-  updateDownloadedDialog = page.getByRole('dialog', { name: 'Restart Podman Desktop?', exact: true });
+  updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop\?/ });
+  updateDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop/ });
+  updateDownloadedDialog = page.getByRole('dialog', { name: /Restart .*Podman Desktop\?/ });
 });
 
 test.afterAll(async ({ runner }) => {
@@ -125,7 +148,7 @@ test.describe
     test('User initiated update option is available', async ({ page }) => {
       await playExpect(sBar.updateButtonTitle).toHaveText(await sBar.versionButton.innerText());
       await sBar.updateButtonTitle.click();
-      await handleConfirmationDialog(page, 'Update Podman Desktop?', false, '', 'Cancel');
+      await handleConfirmationDialog({ page, dialogTitle: /Update .*Podman Desktop\?/, buttonName: 'Cancel' });
     });
 
     test('Update can be initiated', async () => {
@@ -145,7 +168,7 @@ test.describe
       // now it takes some time to perform, in case of failure, PD gets closed
       await playExpect(updateDownloadedDialog).toBeVisible({ timeout: 120000 });
       // some buttons
-      await handleConfirmationDialog(page, 'Restart Podman Desktop?', false, 'Restart', 'Cancel');
+      await handleConfirmationDialog({ page, dialogTitle: /Restart .*Podman Desktop\?/, buttonName: 'Cancel' });
       await playExpect(updateDownloadedDialog).not.toBeVisible();
     });
 

@@ -20,6 +20,7 @@ import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
 import { Registries } from '/@/model/core/settings/registries';
+import { handleConfirmationDialog } from '/@/utility/operations';
 import { waitUntil } from '/@/utility/wait';
 
 import { SettingsPage } from './settings-page';
@@ -71,9 +72,25 @@ export class RegistriesPage extends SettingsPage {
     });
   }
 
-  async createRegistry(url: string, username: string, pswd: string): Promise<void> {
+  async createRegistry(url: string, username: string, pswd: string, handleUntrustedCert?: boolean): Promise<void> {
     return test.step('Create a new registry', async () => {
       await this.submitRegistryForm(url, username, pswd);
+
+      if (handleUntrustedCert) {
+        try {
+          await handleConfirmationDialog({
+            page: this.page,
+            dialogTitle: 'Add Untrusted Registry?',
+            buttonName: 'Add',
+            timeout: 5_000,
+          });
+        } catch (err) {
+          if ((err as Error).name !== 'TimeoutError' && !(err as Error).message?.includes('Timeout')) {
+            throw err;
+          }
+        }
+      }
+
       await playExpect(this.addRegistryDialog).toBeHidden({ timeout: 30_000 });
     });
   }
@@ -202,7 +219,7 @@ export class RegistriesPage extends SettingsPage {
         );
         await loginButton.click({ timeout: 3000 });
       } catch (err) {
-        throw Error(`An error occured when trying to log into registry: ${(err as Error).message}`);
+        throw Error(`An error occurred when trying to log into registry: ${(err as Error).message}`);
       }
     });
   }

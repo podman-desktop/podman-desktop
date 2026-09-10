@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@
 
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
+import { homedir } from 'node:os';
 import * as path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import type { Event, IDisposable, NotificationCardOptions } from '@podman-desktop/core-api';
+import type { Event, IAsyncDisposable, IDisposable, NotificationCardOptions } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type {
   ConfigurationScope,
@@ -48,9 +49,10 @@ import { Emitter } from './events/emitter.js';
 import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
+import { AtomicFileWriter } from './util/atomic-file-writer.js';
 
 @injectable()
-export class ConfigurationRegistry implements IConfigurationRegistry {
+export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisposable {
   private readonly configurationContributors: IConfigurationNode[];
   private readonly configurationProperties: Record<string, IConfigurationPropertyRecordedSchema>;
 
@@ -67,6 +69,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   // Contains the value of the current configuration
   private configurationValues: Map<string, { [key: string]: unknown }>;
   private lockedKeys: LockedKeys;
+  #atomicWriter: AtomicFileWriter | undefined;
 
   constructor(
     @inject(ApiSenderType)
@@ -151,6 +154,18 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     // Set the updated configuration data, this doesn't "save-to-disk" yet until we run saveDefault()...
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
 
+    this.#atomicWriter = new AtomicFileWriter(settingsFile, () => {
+      const cloneConfig = { ...this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE) };
+      // for each key being already the default value, remove the entry
+      Object.keys(cloneConfig)
+        .filter(key => isDeepStrictEqual(cloneConfig[key], this.configurationProperties[key]?.default))
+        .filter(key => this.configurationProperties[key]?.type !== 'markdown')
+        .forEach(key => {
+          delete cloneConfig[key];
+        });
+      return JSON.stringify(cloneConfig, undefined, 2);
+    });
+
     // Note: saveDefault() will filter out any keys that match the schema default, so only non-default values will actually be persisted to settings.json
     if (listOfAppliedKeys.length > 0) {
       this.saveDefault();
@@ -226,6 +241,9 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
           configProperty.extension = { id: configuration.extension?.id };
         }
 
+        // Resolve declarative defaults (env:/file: arrays) at registration time
+        configProperty.default = this.resolveDeclarativeDefault(configProperty.default);
+
         // register default if not yet set
         const configurationValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE);
         if (configurationValue !== undefined) {
@@ -256,6 +274,101 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       return true;
     }
     return scope === CONFIGURATION_DEFAULT_SCOPE;
+  }
+
+  /**
+   * Resolve declarative default values declared as `env:` / `file:` entries.
+   * Supports both a single string (`"default": "env:VAR"`) and an ordered
+   * array (`"default": ["env:VAR", "file:~/.path"]`).
+   * Returns the first matching value, or `undefined` if none resolve.
+   * Non-declarative defaults (literals, object arrays, etc.) are returned unchanged.
+   */
+  protected resolveDeclarativeDefault(defaultValue: unknown): unknown {
+    // Single string form: "default": "env:VAR" or "default": "file:~/.path"
+    if (typeof defaultValue === 'string' && (defaultValue.startsWith('env:') || defaultValue.startsWith('file:'))) {
+      return this.resolveDeclarativeDefaultEntry(defaultValue);
+    }
+
+    if (!Array.isArray(defaultValue) || defaultValue.length === 0) {
+      return defaultValue;
+    }
+
+    // Only treat as declarative when every entry is an env: or file: string
+    if (
+      !defaultValue.every(
+        (entry): entry is string =>
+          typeof entry === 'string' && (entry.startsWith('env:') || entry.startsWith('file:')),
+      )
+    ) {
+      return defaultValue;
+    }
+
+    for (const entry of defaultValue) {
+      const resolved = this.resolveDeclarativeDefaultEntry(entry);
+      if (resolved !== undefined) {
+        return resolved;
+      }
+    }
+    return undefined;
+  }
+
+  protected resolveDeclarativeDefaultEntry(entry: string): string | undefined {
+    if (entry.startsWith('env:')) {
+      const varName = entry.slice('env:'.length);
+      if (!varName) {
+        return undefined;
+      }
+      const value = process.env[varName];
+      if (value !== undefined && value !== '') {
+        return value;
+      }
+      return undefined;
+    }
+
+    if (entry.startsWith('file:')) {
+      const pathSpec = entry.slice('file:'.length);
+      if (!pathSpec) {
+        return undefined;
+      }
+      const expanded = this.expandPath(pathSpec);
+      if (expanded && fs.existsSync(expanded)) {
+        return expanded;
+      }
+      return undefined;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Expand `~` (home directory) and `$VAR` environment variables in a path string.
+   * Returns `undefined` if any referenced `$VAR` is unset or empty, so we never
+   * check a truncated path like `/gcloud/creds.json` when `$APPDATA` is missing.
+   */
+  protected expandPath(pathSpec: string): string | undefined {
+    let result = pathSpec;
+
+    if (result === '~') {
+      result = homedir();
+    } else if (result.startsWith('~/') || result.startsWith('~\\')) {
+      result = path.join(homedir(), result.slice(2));
+    }
+
+    let unsetVariable = false;
+    result = result.replace(/\$([A-Za-z_]\w*)/g, (_match, name: string) => {
+      const value = process.env[name];
+      if (value === undefined || value === '') {
+        unsetVariable = true;
+        return '';
+      }
+      return value;
+    });
+
+    if (unsetVariable) {
+      return undefined;
+    }
+
+    return result;
   }
 
   /**
@@ -357,15 +470,11 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   }
 
   public saveDefault(): void {
-    const cloneConfig = { ...this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE) };
-    // for each key being already the default value, remove the entry
-    Object.keys(cloneConfig)
-      .filter(key => isDeepStrictEqual(cloneConfig[key], this.configurationProperties[key]?.default))
-      .filter(key => this.configurationProperties[key]?.type !== 'markdown')
-      .forEach(key => {
-        delete cloneConfig[key];
-      });
-    fs.writeFileSync(this.getSettingsFile(), JSON.stringify(cloneConfig, undefined, 2));
+    this.#atomicWriter?.schedule();
+  }
+
+  async asyncDispose(): Promise<void> {
+    await this.#atomicWriter?.asyncDispose();
   }
 
   /**

@@ -165,6 +165,7 @@ suite('image files module', () => {
       const imageInfo: ImageInfo = {
         engineId: 'eng-id',
         engineName: 'eng-name',
+        engineType: 'podman',
         Id: 'id',
         ParentId: 'parent-id',
         RepoTags: undefined,
@@ -195,6 +196,7 @@ suite('image files module', () => {
       const imageInfo: ImageInfo = {
         engineId: 'eng-id',
         engineName: 'eng-name',
+        engineType: 'podman',
         Id: 'id',
         ParentId: 'parent-id',
         RepoTags: undefined,

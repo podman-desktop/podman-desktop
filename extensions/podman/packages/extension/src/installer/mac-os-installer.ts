@@ -23,7 +23,7 @@ import { process as processAPI, ProgressLocation, window } from '@podman-desktop
 import { injectable } from 'inversify';
 
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '/@/checks/macos-checks';
-import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getBundledFileName } from '/@/utils/podman-bundled';
 import { getAssetsFolder } from '/@/utils/util';
 
 import { BaseInstaller } from './base-installer';
@@ -33,27 +33,10 @@ export class MacOSInstaller extends BaseInstaller {
   install(): Promise<boolean> {
     return window.withProgress({ location: ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
-      const pkgArch = process.arch === 'arm64' ? 'aarch64' : 'amd64';
-
-      const pkgPath = path.resolve(
-        getAssetsFolder(),
-        `podman-installer-macos-${pkgArch}-v${getBundledPodmanVersion()}.pkg`,
-      );
-      const existsPkg = fs.existsSync(pkgPath);
-
-      const pkgUniversalPath = path.resolve(
-        getAssetsFolder(),
-        `podman-installer-macos-universal-v${getBundledPodmanVersion()}.pkg`,
-      );
-      const existsUniversalPkg = fs.existsSync(pkgUniversalPath);
-
-      let pkgToInstall;
-      if (existsPkg) {
-        pkgToInstall = pkgPath;
-      } else if (existsUniversalPkg) {
-        pkgToInstall = pkgUniversalPath;
-      } else {
-        throw new Error(`Can't find Podman package! Path: ${pkgPath} or ${pkgUniversalPath} doesn't exists.`);
+      const pkgToInstall = path.resolve(getAssetsFolder(), getBundledFileName('darwin', process.arch));
+      if (!fs.existsSync(pkgToInstall)) {
+        progress.report({ increment: -1 });
+        throw new Error(`Can't find Podman package! Path: ${pkgToInstall} doesn't exist.`);
       }
 
       try {
@@ -76,6 +59,8 @@ export class MacOSInstaller extends BaseInstaller {
         console.error(err);
         await window.showErrorMessage('Unexpected error, during Podman installation: ' + err, 'OK');
         return false;
+      } finally {
+        progress.report({ increment: -1 });
       }
     });
   }

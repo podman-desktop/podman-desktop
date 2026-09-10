@@ -80,7 +80,7 @@ export class PodmanRemoteConnections {
       .filter(connection => connection.URI.startsWith('ssh:'));
   }
 
-  start(): void {
+  async start(): Promise<void> {
     // need to watch the configuration to enable again the monitoring
     extensionApi.configuration.onDidChangeConfiguration(async e => {
       if (e.affectsConfiguration(PODMAN_CONFIGURATION_REMOTE_ENABLED_KEY)) {
@@ -88,9 +88,7 @@ export class PodmanRemoteConnections {
       }
     });
 
-    this.monitorRemoteConnections().catch((error: unknown) => {
-      console.error('Error starting remote podman system connections', error);
-    });
+    await this.monitorRemoteConnections();
   }
 
   protected async monitorRemoteConnections(): Promise<void> {
@@ -139,58 +137,48 @@ export class PodmanRemoteConnections {
 
     // for each new connection, setup a tunnel and add the provider
     for (const connection of toAdd) {
-      // extract values from the configuration it looks like
-      /*{
-      "Name": "fedora40",
-      "URI": "ssh://username@1.2.3.4:22/run/user/1000/podman/podman.sock",
-      "Identity": "/Users/username/.ssh/id_1234",
-      "Default": false,
-      "ReadWrite": true
-  },*/
+      let sshTunnel: PodmanRemoteSshTunnel | undefined;
+      try {
+        const uri = new URL(connection.URI);
+        const host = uri.hostname;
+        const port = Number.parseInt(uri.port, 10);
+        const username = uri.username;
+        const privateKeyFile = connection.Identity;
 
-      const uri = new URL(connection.URI);
-      const host = uri.hostname;
-      const port = parseInt(uri.port);
-      const username = uri.username;
-      const privateKeyFile = connection.Identity;
+        const privateKey = readFileSync(privateKeyFile, 'utf8');
+        const remotePath = uri.pathname;
 
-      // read the content of the private key
-      const privateKey = readFileSync(privateKeyFile, 'utf8');
-      const remotePath = uri.pathname;
+        let localPath: string;
+        if (extensionApi.env.isWindows) {
+          localPath = `\\\\.\\pipe\\podman-remote-${connection.Name}`;
+        } else {
+          localPath = join(tmpdir(), `podman-remote-${connection.Name}.sock`);
+        }
 
-      let localPath;
-      // on Windows, use npipe
-      if (extensionApi.env.isWindows) {
-        localPath = `\\\\.\\pipe\\podman-remote-${connection.Name}`;
-      } else {
-        // on mac and Linux use socket file
-        localPath = join(tmpdir(), `podman-remote-${connection.Name}.sock`);
+        sshTunnel = this.createTunnel(host, port, username, privateKey, remotePath, localPath);
+        sshTunnel.connect();
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const tunnel = sshTunnel;
+        const connectionDisposable = this.#provider.registerContainerProviderConnection({
+          name: connection.Name,
+          status: () => tunnel.status(),
+          type: 'podman',
+          endpoint: {
+            socketPath: localPath,
+          },
+        });
+        this.#extensionContext.subscriptions.push(connectionDisposable);
+        this.#currentConnections.set(connection.Name, {
+          name: connection.Name,
+          sshTunnel,
+          connectionDisposable,
+        });
+      } catch (error) {
+        sshTunnel?.disconnect();
+        console.warn(`Failed to register remote Podman connection ${connection.Name}`, error);
       }
-
-      const sshTunnel = this.createTunnel(host, port, username, privateKey, remotePath, localPath);
-
-      // connect the tunnel
-      sshTunnel.connect();
-
-      //delay before registering the socket
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // register the socket
-      const connectionDisposable = this.#provider.registerContainerProviderConnection({
-        name: connection.Name,
-        status: () => sshTunnel.status(),
-        type: 'podman',
-        endpoint: {
-          socketPath: localPath,
-        },
-      });
-      this.#extensionContext.subscriptions.push(connectionDisposable);
-      const remoteConnection: RemoteSystemConnection = {
-        name: connection.Name,
-        sshTunnel,
-        connectionDisposable,
-      };
-      this.#currentConnections.set(connection.Name, remoteConnection);
     }
 
     // for each connection to remove, close the tunnel and remove the provider
@@ -218,6 +206,10 @@ export class PodmanRemoteConnections {
     localPath: string,
   ): PodmanRemoteSshTunnel {
     return new PodmanRemoteSshTunnel(host, port, username, privateKey, remotePath, localPath);
+  }
+
+  hasConnections(): boolean {
+    return this.#currentConnections.size > 0;
   }
 
   stop(): void {

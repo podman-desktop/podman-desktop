@@ -19,24 +19,20 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
-// fake the window.events object
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 test('Expect to suggest an extension in case of matching error', async () => {

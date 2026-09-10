@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ImageInfo } from '@podman-desktop/api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -70,9 +71,10 @@ describe('ImageDetailsFiles component', () => {
     ])('$name', async ({ providers, calledExpected }) => {
       getCancellableTokenSourceMock.mockResolvedValue(101010);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
-      const imageInfo = {
+      const imageInfo: ImageInfo = {
         engineId: 'podman.Podman',
         engineName: 'Podman',
+        engineType: 'podman',
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
@@ -101,9 +103,10 @@ describe('ImageDetailsFiles component', () => {
       const TOKEN_ID = 101010;
       getCancellableTokenSourceMock.mockResolvedValue(TOKEN_ID);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
-      const imageInfo = {
+      const imageInfo: ImageInfo = {
         engineId: 'podman.Podman',
         engineName: 'Podman',
+        engineType: 'podman',
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
@@ -129,9 +132,10 @@ describe('ImageDetailsFiles component', () => {
     test('error during imageGetFilesystemLayers', async () => {
       getCancellableTokenSourceMock.mockResolvedValue(101010);
       imageGetFilesystemLayersMock.mockRejectedValue(new Error('an error'));
-      const imageInfo = {
+      const imageInfo: ImageInfo = {
         engineId: 'podman.Podman',
         engineName: 'Podman',
+        engineType: 'podman',
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
@@ -178,9 +182,10 @@ describe('ImageDetailsFiles component', () => {
     ])('$name', async ({ providers, displayedExpected }) => {
       getCancellableTokenSourceMock.mockResolvedValue(101010);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
-      const imageInfo = {
+      const imageInfo: ImageInfo = {
         engineId: 'podman.Podman',
         engineName: 'Podman',
+        engineType: 'podman',
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
@@ -209,9 +214,10 @@ describe('ImageDetailsFiles component', () => {
     test('imageGetFilesystemLayers is called when the fetch button is clicked and button is hidden', async () => {
       getCancellableTokenSourceMock.mockResolvedValue(101010);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
-      const imageInfo = {
+      const imageInfo: ImageInfo = {
         engineId: 'podman.Podman',
         engineName: 'Podman',
+        engineType: 'podman',
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],

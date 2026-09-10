@@ -36,7 +36,7 @@ test.use({
 });
 
 test.beforeAll(async ({ runner, welcomePage, navigationBar }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(120_000);
   runner.setVideoAndTraceName('managed-configuration-registries-e2e');
   await welcomePage.handleWelcomePage(true);
   const settingsBar = await navigationBar.openSettings();

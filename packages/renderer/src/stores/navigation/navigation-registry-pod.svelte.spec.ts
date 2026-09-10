@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 import { podsInfos } from '/@/stores/pods';
 
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
@@ -29,14 +29,33 @@ beforeEach(() => {
 
 test('createNavigationPodEntry', async () => {
   const entry = createNavigationPodEntry();
-  podsInfos.set([
-    {
-      Id: '1234',
-    } as unknown as PodInfo,
-    {
-      Id: '3456',
-    } as unknown as PodInfo,
-  ]);
+  const podA: PodInfoUI = {
+    id: '1234',
+    shortId: '1234',
+    name: 'pod-a',
+    engineId: 'podman',
+    engineName: 'Podman',
+    status: 'RUNNING',
+    age: '1 minute',
+    created: '2026-01-01T00:00:00.000Z',
+    selected: false,
+    containers: [],
+    namespace: '',
+  };
+  const podB: PodInfoUI = {
+    id: '3456',
+    shortId: '3456',
+    name: 'pod-b',
+    engineId: 'podman',
+    engineName: 'Podman',
+    status: 'RUNNING',
+    age: '1 minute',
+    created: '2026-01-01T00:00:00.000Z',
+    selected: false,
+    containers: [],
+    namespace: '',
+  };
+  podsInfos.set([podA, podB]);
 
   expect(entry).toBeDefined();
   expect(entry.name).toBe('Pods');
@@ -44,5 +63,19 @@ test('createNavigationPodEntry', async () => {
   expect(entry.tooltip).toBe('Pods');
   await vi.waitFor(() => {
     expect(entry.counter).toBe(2);
+    expect(entry.destinations).toHaveLength(3);
   });
+
+  const [first, second, listEntry] = entry.destinations;
+
+  expect(first.page).toBe('pod-summary');
+  expect(first).toHaveProperty('parameters', { name: 'pod-a', engineId: 'podman' });
+  expect(first.name).toBe('Pod: pod-a');
+
+  expect(second.page).toBe('pod-summary');
+  expect(second).toHaveProperty('parameters', { name: 'pod-b', engineId: 'podman' });
+  expect(second.name).toBe('Pod: pod-b');
+
+  expect(listEntry.page).toBe('pods');
+  expect(listEntry.name).toBe('Pods (2)');
 });

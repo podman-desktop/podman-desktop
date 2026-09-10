@@ -26,7 +26,7 @@ import { type InitializationContext, InitializeAndStartMode } from '/@/lib/dashb
 
 export async function verifyStatus<
   C extends Component<{ provider: ProviderInfo; initializationContext: InitializationContext }>,
->(component: C, status: ProviderStatus, sameVersions: boolean): Promise<void> {
+>(component: C, status: ProviderStatus, sameVersions: boolean, expectedDisabled?: boolean): Promise<void> {
   const provider: ProviderInfo = {
     containerConnections: [],
     containerProviderConnectionCreation: false,
@@ -68,6 +68,13 @@ export async function verifyStatus<
       expect(updateButton).not.toBeInTheDocument();
     } else {
       expect(updateButton).toBeInTheDocument();
+      if (expectedDisabled !== undefined) {
+        if (expectedDisabled) {
+          expect(updateButton).toBeDisabled();
+        } else {
+          expect(updateButton).toBeEnabled();
+        }
+      }
     }
   });
 }

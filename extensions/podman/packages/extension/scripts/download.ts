@@ -19,7 +19,7 @@
 
 import { PodmanDownload } from './podman-download';
 
-import * as podman5JSON from '../src/podman5.json';
+import * as podmanJSON from '../src/podman.json';
 
-const podman5Download = new PodmanDownload(podman5JSON, true);
-await podman5Download.downloadBinaries();
+const podmanDownload = new PodmanDownload(podmanJSON, true);
+await podmanDownload.downloadBinaries();

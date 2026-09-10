@@ -9,10 +9,15 @@ import { router } from 'tinro';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
 
-export let podName: string;
-export let containerName: string;
+interface Props {
+  podName: string;
+  containerName: string;
+  terminalXtermDiv?: HTMLElement;
+}
 
-// On load, we collect the the original pod and container name,
+let { podName, containerName, terminalXtermDiv = $bindable(document.createElement('div')) }: Props = $props();
+
+// On load, we collect the original pod and container name,
 // and we will use these to correctly save the terminal state when the component is destroyed.
 // Due to the way Svelte works, we need to store the original pod and container name in a separate / safe manner so that
 // the original values are not written over when the component is re-rendered.
@@ -21,7 +26,6 @@ let originalContainerName = containerName;
 let terminalContent: string = '';
 let serializeAddon: SerializeAddon;
 
-export let terminalXtermDiv: HTMLElement = document.createElement('div');
 let curRouterPath: string;
 
 interface State {

@@ -49,6 +49,15 @@ test('Expect correct role and href', async () => {
   expect(element).toHaveAttribute('href', href);
 });
 
+test('Expect tooltip title attribute on truncated labels', async () => {
+  const title = 'Very long settings section label';
+  renderIt(title, '/test');
+
+  const element = screen.getByLabelText(title);
+  expect(element).toHaveAttribute('title', title);
+  expect(screen.getByText(title)).not.toHaveAttribute('title');
+});
+
 test('Expect selection styling', async () => {
   const title = 'Resources';
   const href = '/test';
@@ -147,7 +156,7 @@ describe('icon', () => {
     });
     const svg = getByRole('img', { hidden: true });
     expect(svg).toBeInTheDocument();
-    expect(svg.parentElement).toHaveClass('flex-row');
+    expect(svg.parentElement).toHaveClass('w-4');
   });
 });
 
@@ -163,10 +172,10 @@ describe('iconRight', () => {
     });
     const svgs = getAllByRole('img', { hidden: true });
     expect(svgs).toHaveLength(2);
-    // First icon (left) should be in the title span
-    expect(svgs[0].parentElement).toHaveClass('flex-row');
-    // Second icon (right) should be in the end container with px-2
-    expect(svgs[1].parentElement).toHaveClass('px-2');
+    // First icon (left) should be in the fixed-width left icon gutter.
+    expect(svgs[0].parentElement).toHaveClass('w-4');
+    // Second icon (right) should be in the fixed-width end gutter container.
+    expect(svgs[1].parentElement).toHaveClass('w-3');
   });
 
   test('iconRight with align inline should be next to title', () => {
@@ -180,8 +189,9 @@ describe('iconRight', () => {
     });
     const svgs = getAllByRole('img', { hidden: true });
     expect(svgs).toHaveLength(2);
-    // Both icons should be in the same flex-row container
-    expect(svgs[0].parentElement).toHaveClass('flex-row');
+    // Left icon should be in the fixed-width icon gutter.
+    expect(svgs[0].parentElement).toHaveClass('w-4');
+    // Inline right icon should stay in the title row container.
     expect(svgs[1].parentElement).toHaveClass('flex-row');
   });
 
@@ -194,7 +204,7 @@ describe('iconRight', () => {
     });
     const svgs = getAllByRole('img', { hidden: true });
     expect(svgs).toHaveLength(1);
-    // Icon should be in the end container with px-2
-    expect(svgs[0].parentElement).toHaveClass('px-2');
+    // Icon should be in the fixed-width end gutter container.
+    expect(svgs[0].parentElement).toHaveClass('w-3');
   });
 });

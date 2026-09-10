@@ -4,7 +4,11 @@ import type { V1ServiceStatus } from '@kubernetes/client-node';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
-export let artifact: V1ServiceStatus | undefined;
+interface Props {
+  artifact?: V1ServiceStatus;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 <!-- This artifact is a bit weird as it only contains one object

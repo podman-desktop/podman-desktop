@@ -4,7 +4,11 @@ import { router } from 'tinro';
 import type { ContainerGroupInfoUI } from './ContainerInfoUI';
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
 
-export let object: ContainerGroupInfoUI;
+interface Props {
+  object: ContainerGroupInfoUI;
+}
+
+let { object }: Props = $props();
 
 function displayContainersCount(containerGroup: ContainerGroupInfoUI): string {
   let result = containerGroup.allContainersCount + ' container' + (containerGroup.allContainersCount > 1 ? 's' : '');
@@ -29,7 +33,7 @@ function openGroupDetails(containerGroup: ContainerGroupInfoUI): void {
 <button
   class="flex flex-col text-[var(--pd-table-body-text-highlight)] max-w-full text-left"
   title={object.type}
-  on:click={(): void => openGroupDetails(object)}>
+  onclick={(): void => openGroupDetails(object)}>
   <div class="max-w-full overflow-hidden text-ellipsis">
     {object.name} ({object.type})
   </div>

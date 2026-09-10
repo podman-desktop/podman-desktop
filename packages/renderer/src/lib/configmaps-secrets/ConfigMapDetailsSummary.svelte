@@ -6,8 +6,12 @@ import Table from '/@/lib/details/DetailsTable.svelte';
 import KubeConfigMapArtifact from '/@/lib/kube/details/KubeConfigMapArtifact.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 
-export let configMap: V1ConfigMap | undefined;
-export let kubeError: string | undefined = undefined;
+interface Props {
+  configMap?: V1ConfigMap;
+  kubeError?: string;
+}
+
+let { configMap, kubeError }: Props = $props();
 </script>
 
 <!-- Show the kube error if we're unable to retrieve the data correctly, but we still want to show the

@@ -83,10 +83,15 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   handler.handleConfigurationChanges(extensionContext);
 
   // Create new classes to handle the onboarding sequence
-  const octokit = new Octokit();
   const detect = new Detect(os, extensionContext.storagePath);
 
-  const kubectlGitHubReleases = new KubectlGitHubReleases(octokit);
+  // Create the Octokit factory for GitHub authentication
+  const octokitFactory = async (): Promise<Octokit> => {
+    const auth = await extensionApi.authentication.getSession('github-authentication', []);
+    return new Octokit({ auth: auth?.accessToken });
+  };
+
+  const kubectlGitHubReleases = new KubectlGitHubReleases(octokitFactory);
   const kubectlDownload = new KubectlDownload(extensionContext, kubectlGitHubReleases, os);
 
   // ONBOARDING: Command to check kubectl is downloaded
@@ -159,7 +164,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         downloaded = true;
       } finally {
         // Make sure we log the telemetry even if we encounter an error
-        // If we have downloaded the binary, we can log it as being succcessfully downloaded
+        // If we have downloaded the binary, we can log it as being successfully downloaded
         telemetryLogger?.logUsage('kubectl.onboarding.downloadCommand', {
           successful: downloaded,
           version: kubectlVersionMetadata?.tag,
@@ -172,7 +177,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const onboardingPromptUserForVersionCommand = extensionApi.commands.registerCommand(
     'kubectl.onboarding.promptUserForVersion',
     async () => {
-      // Prompt the user for the verison
+      // Prompt the user for the version
       const kubectlRelease = await kubectlDownload.promptUserForVersion();
 
       // Update the context value that this is the version we are downloading

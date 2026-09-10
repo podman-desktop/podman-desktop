@@ -21,7 +21,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { findMatchInLeaves } from './search-util';
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
 test('should expect valid match with string', async () => {

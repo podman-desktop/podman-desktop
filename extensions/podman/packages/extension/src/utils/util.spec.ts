@@ -29,6 +29,7 @@ import {
   HYPERV_LABEL,
   LIBKRUN_LABEL,
   normalizeWSLOutput,
+  QEMU_LABEL,
   VMTYPE,
   WSL_LABEL,
 } from './util';
@@ -124,6 +125,11 @@ test('expect hyperv label with hyperv provider', async () => {
   expect(label).equals(HYPERV_LABEL);
 });
 
+test('expect qemu label with qemu provider', async () => {
+  const label = getProviderLabel(VMTYPE.QEMU);
+  expect(label).equals(QEMU_LABEL);
+});
+
 test('expect provider name with provider different from libkrun and applehv', async () => {
   const label = getProviderLabel('unknown');
   expect(label).equals('unknown');
@@ -147,6 +153,11 @@ test('expect wsl label with wsl provider wsl label', async () => {
 test('expect hyperv label with hyperv provider wsl label', async () => {
   const provider = getProviderByLabel(HYPERV_LABEL);
   expect(provider).equals(VMTYPE.HYPERV);
+});
+
+test('expect qemu provider with qemu label', async () => {
+  const provider = getProviderByLabel(QEMU_LABEL);
+  expect(provider).equals(VMTYPE.QEMU);
 });
 
 describe('Check multiple Podman installations', () => {

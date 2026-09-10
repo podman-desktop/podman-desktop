@@ -1,5 +1,8 @@
 <script lang="ts">
-export let status: string;
+interface Props {
+  status: string;
+}
+let { status }: Props = $props();
 
 interface ConnectionStatusStyle {
   bgColor: string;
@@ -75,11 +78,13 @@ const statusesStyle = new Map<string, ConnectionStatusStyle>([
     },
   ],
 ]);
-$: statusStyle = statusesStyle.get(status) ?? {
-  bgColor: 'bg-[var(--pd-status-unknown)]',
-  txtColor: 'text-[var(--pd-status-unknown)]',
-  label: status.toUpperCase(),
-};
+let statusStyle = $derived(
+  statusesStyle.get(status) ?? {
+    bgColor: 'bg-[var(--pd-status-unknown)]',
+    txtColor: 'text-[var(--pd-status-unknown)]',
+    label: status.toUpperCase(),
+  },
+);
 </script>
 
 <div aria-label="Connection Status Icon" class="{roundIconStyle} {statusStyle.bgColor}"></div>

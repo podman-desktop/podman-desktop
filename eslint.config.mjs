@@ -53,6 +53,7 @@ const TYPESCRIPT_PROJECTS = [
   './extensions/*/packages/*/tsconfig.json',
   './tests/playwright/tsconfig.json',
   './storybook/tsconfig.json',
+  './tsconfig.json',
 ];
 
 export default [
@@ -62,6 +63,9 @@ export default [
       '*.config.*js',
       '**/*.config.*js',
       '**/*.tests.setup.*js',
+      '*.config.*ts',
+      '**/*.config.*ts',
+      '**/*.tests.setup.*ts',
       '**/dist/**/*',
       '**/test-resources',
       '**/__mocks__/',
@@ -246,6 +250,11 @@ export default [
       'sonarjs/prefer-enum-initializers': 'off',
 
       'sonarjs/no-unused-expressions': 'off',
+      'sonarjs/assertions-in-tests': 'off',
+      'sonarjs/no-skipped-tests': 'off',
+      'sonarjs/prefer-specific-assertions': 'off',
+      'sonarjs/super-linear-regex': 'off',
+      'sonarjs/no-trivial-assertions': 'off',
 
       // redundant-undefined custom rules
       'redundant-undefined/redundant-undefined': 'error',

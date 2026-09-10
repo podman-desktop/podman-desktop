@@ -50,11 +50,10 @@ fakePVC.size = '1Gi';
 
 beforeEach(() => {
   Object.defineProperty(window, 'kubernetesDeletePersistentVolumeClaim', { value: deleteMock });
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 });
 
 afterEach(() => {
@@ -63,7 +62,7 @@ afterEach(() => {
 });
 
 test('Expect no error and status deleting PVC', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(PVCActions, { pvc: fakePVC });
 
   // click on delete buttons

@@ -249,6 +249,20 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     expect(result).toEqual(undefined);
   });
 
+  test('getSearchableNavigationRoutes', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({
+      result: [{ routeId: 'ext.dashboard', label: 'Dashboard', icon: 'icon.png' }],
+    });
+
+    const getSearchableNavigationRoutesExposure = getInMainWorld('getSearchableNavigationRoutes');
+
+    const result = await getSearchableNavigationRoutesExposure();
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith('navigation:getSearchableRoutes');
+
+    expect(result).toEqual([{ routeId: 'ext.dashboard', label: 'Dashboard', icon: 'icon.png' }]);
+  });
+
   test('logger passed to createVmProviderConnection is called during provider-registry:taskConnection-onData', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
     const createVmProviderConnectionExposure = getInMainWorld('createVmProviderConnection');

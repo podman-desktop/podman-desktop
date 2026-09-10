@@ -55,7 +55,7 @@ afterEach(() => {
 });
 
 test('Expect no error when deleting configmap', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(ConfigMapSecretActions, { configMapSecret: fakeConfigMap });
 
   // click on delete button
@@ -67,7 +67,7 @@ test('Expect no error when deleting configmap', async () => {
 });
 
 test('Expect no error when deleting secret', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(ConfigMapSecretActions, { configMapSecret: fakeSecret });
 
   // click on delete button

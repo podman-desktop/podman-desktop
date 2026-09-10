@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,36 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
 
-const cleanupProvidersMock = vi.fn();
+test('displays what the cleanup action will and will not delete', () => {
+  render(TroubleshootingRepairCleanup);
 
-// fake the window.events object
-beforeAll(() => {
-  (window as any).window.cleanupProviders = cleanupProvidersMock;
+  expect(screen.getByText('Proceeding with this action will result in data loss.')).toBeInTheDocument();
+  expect(screen.getByText('It will delete:')).toBeInTheDocument();
+  expect(screen.getByText('The current Podman machine')).toBeInTheDocument();
+  expect(screen.getByText('Containers, images, volumes, configuration files')).toBeInTheDocument();
+  expect(screen.getByText('SSH keys')).toBeInTheDocument();
+  expect(screen.getByText('It will not delete:')).toBeInTheDocument();
+  expect(screen.getByText('Podman logs')).toBeInTheDocument();
 });
 
 test('Check cleanupProviders is called and button is in progress', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clear / Purge Data' });
 
   render(TroubleshootingRepairCleanup);
 
   // expect to have the cleanup button
-  const cleanupButton = screen.getByRole('button', { name: 'Cleanup' });
+  const cleanupButton = screen.getByRole('button', { name: 'Clear / Purge Data' });
   expect(cleanupButton).toBeInTheDocument();
 
   // mock the cleanup as waiting for 10ms
-  cleanupProvidersMock.mockResolvedValue(new Promise(resolve => setTimeout(resolve, 10)));
+  vi.mocked(window.cleanupProviders).mockReturnValue(new Promise(resolve => setTimeout(resolve, 10)));
 
   // click on the cleanup button
   expect(cleanupButton).toBeEnabled();
@@ -64,27 +67,27 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Clean Up', 'Cancel'],
+    buttons: ['Clear / Purge Data', 'Cancel'],
     type: 'danger',
-    message: 'This action may delete data. Proceed?',
-    title: 'Clean Up Data?',
+    message: 'This action will delete data and cannot be undone. Proceed?',
+    title: 'Clear / Purge Data?',
   });
 
-  // check that we're calling the cleanupProvidersMock
-  expect(cleanupProvidersMock).toBeCalled();
+  // check that we're calling the vi.mocked(window.cleanupProviders)
+  expect(vi.mocked(window.cleanupProviders)).toBeCalled();
 });
 
 test('Check errors are displayed with clipboard button', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Clear / Purge Data' });
 
   render(TroubleshootingRepairCleanup);
 
   // expect to have the cleanup button
-  const cleanupButton = screen.getByRole('button', { name: 'Cleanup' });
+  const cleanupButton = screen.getByRole('button', { name: 'Clear / Purge Data' });
   expect(cleanupButton).toBeInTheDocument();
 
   // mock the cleanup as waiting for 2 seconds
-  cleanupProvidersMock.mockRejectedValue(new Error('test error'));
+  vi.mocked(window.cleanupProviders).mockRejectedValue(new Error('test error'));
 
   // click on the cleanup button
   expect(cleanupButton).toBeEnabled();
@@ -92,14 +95,14 @@ test('Check errors are displayed with clipboard button', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Clean Up', 'Cancel'],
+    buttons: ['Clear / Purge Data', 'Cancel'],
     type: 'danger',
-    message: 'This action may delete data. Proceed?',
-    title: 'Clean Up Data?',
+    message: 'This action will delete data and cannot be undone. Proceed?',
+    title: 'Clear / Purge Data?',
   });
 
-  // check that we're calling the cleanupProvidersMock
-  expect(cleanupProvidersMock).toBeCalled();
+  // check that we're calling the vi.mocked(window.cleanupProviders)
+  expect(vi.mocked(window.cleanupProviders)).toBeCalled();
 
   // check errors are displayed
   const alterSection = screen.getByRole('alert');

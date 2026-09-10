@@ -2,7 +2,10 @@
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Link } from '@podman-desktop/ui-svelte';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+}
+let { provider }: Props = $props();
 </script>
 
 {#if provider.links.length > 0}

@@ -44,7 +44,7 @@ beforeEach(() => {
 
 test('Expect no error and status deleting job', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(JobActions, { job, detailed: false });
 
   // click on delete button

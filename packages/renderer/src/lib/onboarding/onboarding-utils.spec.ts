@@ -37,7 +37,6 @@ import {
 
 const deserialize = vi.fn();
 
-// fake the window.events object
 beforeAll(() => {
   const resetOnboarding = vi.fn();
   Object.defineProperty(window, 'resetOnboarding', { value: resetOnboarding });

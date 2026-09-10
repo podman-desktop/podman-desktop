@@ -24,7 +24,7 @@ import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 
@@ -72,16 +72,13 @@ const mockedErroredPlayKubeInfo: PlayKubeInfo = {
 // mock the router
 vi.mock(import('tinro'));
 
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
+
+  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
+    func();
+    return { dispose: vi.fn() };
+  });
 
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
@@ -145,7 +142,7 @@ test('error: When pressing the Play button, expect us to show the errors to the 
   await userEvent.click(playButton);
 
   // Since we error out with the mocked kubePlay function (see very top of tests)
-  // Expect the following error to be in in the document.
+  // Expect the following error to be in the document.
   const error = screen.getByText('The following pods were created but failed to start: error 1, error 2');
   expect(error).toBeInTheDocument();
 });
@@ -336,7 +333,7 @@ describe('Options', () => {
     await userEvent.click(playButton);
 
     expect(window.playKube).toHaveBeenCalledWith(
-      'Containerfile',
+      { type: 'path', value: 'Containerfile' },
       expect.anything(),
       expect.objectContaining({ build: true }),
     );
@@ -358,7 +355,7 @@ describe('Options', () => {
     await userEvent.click(playButton);
 
     expect(window.playKube).toHaveBeenCalledWith(
-      'Containerfile',
+      { type: 'path', value: 'Containerfile' },
       expect.anything(),
       expect.objectContaining({ replace: true }),
     );
@@ -424,7 +421,7 @@ describe('Custom YAML mode', () => {
   });
 });
 
-test('file mode: does not attempt temp file cleanup', async () => {
+test('file mode: playKube is called with a path input', async () => {
   vi.mocked(window.playKube).mockResolvedValue({
     Pods: [],
     RmReport: [],
@@ -444,11 +441,12 @@ test('file mode: does not attempt temp file cleanup', async () => {
   const playButton = screen.getByRole('button', { name: 'Play' });
   await userEvent.click(playButton);
 
-  // Verify playKube was called with the selected file
-  expect(window.playKube).toHaveBeenCalledWith('Containerfile', expect.anything(), expect.anything());
-
-  // Verify no temp file operations occurred
-  expect(window.removeTempFile).not.toHaveBeenCalled();
+  // Verify playKube was called with a path input for the selected file, not raw content
+  expect(window.playKube).toHaveBeenCalledWith(
+    { type: 'path', value: 'Containerfile' },
+    expect.anything(),
+    expect.anything(),
+  );
 });
 
 test('custom YAML mode: button text changes to "Play custom YAML"', async () => {

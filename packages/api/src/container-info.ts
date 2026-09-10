@@ -42,6 +42,7 @@ export interface ContainerInfo {
   Names: string[];
   Image: string;
   ImageID: string;
+  IsInfra?: boolean;
   ImageBase64RepoTag: string;
   Command?: string;
   Created: number;
@@ -273,6 +274,11 @@ export interface ContainerCreateOptions {
   Shell?: string[];
   NetworkConfig?: NetworkingConfig;
   pod?: string;
+  Secrets?: Array<{
+    Source: string;
+    Target: string;
+  }>;
+  SecretEnv?: Record<string, string>;
 }
 
 export type NetworkCreateOptions = Dockerode.NetworkCreateOptions;

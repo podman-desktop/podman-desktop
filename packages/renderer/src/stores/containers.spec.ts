@@ -16,38 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ContainerInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { containersEventStore, containersInfos } from './containers';
 
-// first, path window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+beforeEach(() => {
+  callbacks.clear();
+  vi.resetAllMocks();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const listContainersMock: Mock<() => Promise<ContainerInfo[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    listContainers: listContainersMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
-});
-
-beforeAll(() => {
-  vi.clearAllMocks();
+    return { dispose: vi.fn() };
+  });
 });
 
 test.each([
@@ -64,33 +47,43 @@ test.each([
   containersEventStore.setupWithDebounce(10, 10);
 
   // empty list
-  listContainersMock.mockResolvedValue([]);
+  vi.mocked(window.listContainers).mockResolvedValue([]);
 
   // mark as ready to receive updates
-  callbacks.get('extensions-already-started')();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // clear mock calls
-  listContainersMock.mockClear();
+  vi.mocked(window.listContainers).mockClear();
 
   // now, setup at least one container
-  listContainersMock.mockResolvedValue([
+  // the store converts through ContainerUtils, so the mocked backend object has to be
+  // complete enough for the conversion: getName reads Names, getState reads State, and
+  // an absent field throws inside the updater rather than failing an assertion
+  vi.mocked(window.listContainers).mockResolvedValue([
     {
       Id: 'id123',
+      Names: ['/container'],
+      Image: 'docker.io/library/nginx:latest',
+      ImageID: 'sha256:abcdef0123456789',
+      State: 'running',
+      Labels: {},
+      engineId: 'engine',
+      engineName: 'podman',
     } as unknown as ContainerInfo,
   ]);
 
   // send event
   const callback = callbacks.get(eventName);
-  expect(callback).toBeDefined();
+  assert(callback);
   await callback();
 
-  // wait listContainersMock is called
-  while (listContainersMock.mock.calls.length === 0) {
+  // wait vi.mocked(window.listContainers) is called
+  while (vi.mocked(window.listContainers).mock.calls.length === 0) {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 
   // now get list
   const containerListResult = get(containersInfos);
   expect(containerListResult.length).toBe(1);
-  expect(containerListResult[0].Id).toEqual('id123');
+  expect(containerListResult[0].id).toEqual('id123');
 });

@@ -28,15 +28,13 @@ import {
 } from './registered-features';
 
 const callbacks = new Map<string, (data?: unknown) => void>();
-const eventEmitter = {
-  receive: (message: string, callback: (data?: unknown) => void): void => {
-    callbacks.set(message, callback);
-  },
-};
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.stubGlobal('events', { receive: eventEmitter.receive });
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
+  });
 });
 
 describe('registeredFeaturesEventStore', () => {

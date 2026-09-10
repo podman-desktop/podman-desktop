@@ -25,8 +25,6 @@ export enum AppearanceSettings {
   DarkHCEnumValue = 'hc-dark',
   SystemEnumValue = 'system',
   ZoomLevel = 'zoomLevel',
-  NavigationAppearance = 'navigationBarLayout',
-  Icon = 'icon',
-  IconAndTitle = 'icon + title',
+  NavigationBarWidth = 'navigationBarWidth',
   SearchBar = 'searchBar',
 }

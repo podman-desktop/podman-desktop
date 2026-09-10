@@ -16,8 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
-import type { NavigationRequest } from '@podman-desktop/core-api';
+import type {
+  NavigateToExtensionsCatalogOptions,
+  NavigateToHistoryEvent,
+  NavigationHistoryEntry,
+  NavigationSearchEntry,
+  ProviderContainerConnection,
+} from '@podman-desktop/api';
+import type { DisposableGroup, NavigationRequest, NavigationSearchEntryInfo } from '@podman-desktop/core-api';
 import { IDisposable, NavigationPage } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
@@ -25,6 +31,7 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
@@ -33,11 +40,13 @@ import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 export interface NavigationRoute {
   routeId: string;
   commandId: string;
+  searchEntry?: NavigationSearchEntry;
 }
 
 @injectable()
 export class NavigationManager {
   #registry: Map<string, NavigationRoute>;
+  #historyEmitters = new Map<string, Emitter<NavigateToHistoryEvent>>();
   #disposables: IDisposable[] = [];
 
   constructor(
@@ -98,6 +107,8 @@ export class NavigationManager {
   @preDestroy()
   dispose(): void {
     this.#disposables.forEach(disposable => disposable.dispose());
+    this.#historyEmitters.forEach(emitter => emitter.dispose());
+    this.#historyEmitters.clear();
   }
 
   navigateTo<T extends NavigationPage>(navigateRequest: NavigationRequest<T>): void {
@@ -110,9 +121,26 @@ export class NavigationManager {
     }
     this.#registry.set(route.routeId, route);
 
+    if (route.searchEntry) {
+      this.apiSender.send('navigation-searchable-route-update');
+    }
+
     return Disposable.create(() => {
       this.#registry.delete(route.routeId);
+      if (route.searchEntry) {
+        this.apiSender.send('navigation-searchable-route-update');
+      }
     });
+  }
+
+  getSearchableRoutes(): NavigationSearchEntryInfo[] {
+    return Array.from(this.#registry.values())
+      .filter(route => route.searchEntry !== undefined)
+      .map(route => ({
+        routeId: route.routeId,
+        label: route.searchEntry!.label,
+        icon: route.searchEntry!.icon,
+      }));
   }
 
   hasRoute(routeId: string): boolean {
@@ -130,6 +158,47 @@ export class NavigationManager {
     }
 
     return this.commandRegistry.executeCommand(route.commandId, ...args);
+  }
+
+  pushHistoryEntry(extensionId: string, entry: NavigationHistoryEntry): void {
+    console.log(`[navigation-history] extension ${extensionId} pushed history entry ${entry.id} (${entry.label})`);
+
+    this.apiSender.send('navigation-history-push', {
+      extensionId,
+      id: entry.id,
+      label: entry.label,
+    });
+  }
+
+  onDidNavigateToHistoryEntry(
+    extensionId: string,
+    listener: (e: NavigateToHistoryEvent) => unknown,
+    thisArgs?: unknown,
+    disposables?: DisposableGroup,
+  ): IDisposable {
+    return this.getOrCreateHistoryEmitter(extensionId).event(listener, thisArgs, disposables);
+  }
+
+  navigateToHistoryEntry(extensionId: string, entryId: string): void {
+    const emitter = this.#historyEmitters.get(extensionId);
+    if (!emitter) {
+      console.warn(
+        `[navigation-history] navigated to history entry ${entryId} for extension ${extensionId} but no listener is registered`,
+      );
+      return;
+    }
+
+    console.log(`[navigation-history] navigated to history entry ${entryId} for extension ${extensionId}`);
+    emitter.fire({ id: entryId });
+  }
+
+  private getOrCreateHistoryEmitter(extensionId: string): Emitter<NavigateToHistoryEvent> {
+    let emitter = this.#historyEmitters.get(extensionId);
+    if (!emitter) {
+      emitter = new Emitter<NavigateToHistoryEvent>();
+      this.#historyEmitters.set(extensionId, emitter);
+    }
+    return emitter;
   }
 
   async navigateToProviderTask(internalProviderId: string, taskId?: number): Promise<void> {
@@ -251,6 +320,19 @@ export class NavigationManager {
 
     this.navigateTo({
       page: NavigationPage.IMAGE,
+      parameters: {
+        id: id,
+        engineId: engineId,
+        tag: tag,
+      },
+    });
+  }
+
+  async navigateToImageRun(id: string, engineId: string, tag: string): Promise<void> {
+    await this.assertImageExist(id, engineId, tag);
+
+    this.navigateTo({
+      page: NavigationPage.IMAGE_RUN,
       parameters: {
         id: id,
         engineId: engineId,

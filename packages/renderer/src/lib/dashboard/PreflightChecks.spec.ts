@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,4 +89,69 @@ test('Expect preCheck to be displayed when having all props', async () => {
   await fireEvent.click(docLinks);
   // check openExternal is called
   expect(window.openExternal).toHaveBeenCalledWith('url');
+});
+
+test('Expect success icon to be displayed when check succeeded', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+        successful: true,
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  const svg = title.parentElement?.querySelector('svg');
+  expect(svg).toBeInTheDocument();
+  expect(svg).toHaveClass('text-(--pd-state-success)');
+});
+
+test('Expect error icon to be displayed when check failed', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+        successful: false,
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  const svg = title.parentElement?.querySelector('svg');
+  expect(svg).toBeInTheDocument();
+  expect(svg).toHaveClass('text-(--pd-state-error)');
+});
+
+test('Expect warning icon to be displayed when check has warning severity', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+        successful: false,
+        severity: 'warning',
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  const svg = title.parentElement?.querySelector('svg');
+  expect(svg).toBeInTheDocument();
+  expect(svg).toHaveClass('text-(--pd-state-warning)');
+});
+
+test('Expect spinner to be displayed while check is pending', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'name',
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  expect(title).toBeInTheDocument();
+  // the FA icon is rendered with role="img", the pending Spinner is not
+  const faIcon = title.parentElement?.querySelector('svg[role="img"]');
+  expect(faIcon).not.toBeInTheDocument();
 });

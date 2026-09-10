@@ -20,12 +20,14 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial(
+test.describe(
   'Basic e2e verification of podman desktop start',
   {
     tag: ['@smoke', '@windows_sanity', '@macos_sanity'],
   },
   () => {
+    test.describe.configure({ mode: 'serial' });
+
     test('Check the Welcome page is displayed', async ({ welcomePage }) => {
       await playExpect(welcomePage.welcomeMessage).toBeVisible();
     });
@@ -49,7 +51,7 @@ Key points:
 - `test.use()` for isolated profile
 - `runner.setVideoAndTraceName()` in `beforeAll`
 - `runner.close()` in `afterAll`
-- `test.describe.serial` with tag array
+- `test.describe.configure({ mode: 'serial' })` with tag array on the describe block
 - Destructures `welcomePage` fixture directly
 
 ## Example 2: Full Smoke Test with Podman Machine Setup
@@ -72,8 +74,8 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
-  test.describe.configure({ retries: 1 });
+test.describe('Image workflow verification', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial', retries: 1 });
 
   test('Pull image', async ({ navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
@@ -276,7 +278,8 @@ Key points:
 import { isLinux, isMac, isCI } from '/@/utility/platform';
 
 // Skip at describe level
-test.describe.serial('Compose tests', { tag: '@smoke' }, () => {
+test.describe('Compose tests', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial' });
   test.skip(isCI && isLinux, 'Compose not available on Linux CI');
 
   test('deploy compose file', async ({ navigationBar }) => {

@@ -6,11 +6,11 @@ import NewContentBadge from '/@/lib/ui/NewContentBadge.svelte';
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
 
-let providersId: string[] = [];
-let notificationCount: number = 0;
-let hasNewProviders = false;
-let hasNewNotifications = false;
-$: hasNew = hasNewProviders || hasNewNotifications;
+let providersId: string[] = $state([]);
+let notificationCount: number = $state(0);
+let hasNewProviders = $state(false);
+let hasNewNotifications = $state(false);
+let hasNew = $derived(hasNewProviders || hasNewNotifications);
 
 let providersUnsubscribe: Unsubscriber;
 let notificationsUnsubscribe: Unsubscriber;

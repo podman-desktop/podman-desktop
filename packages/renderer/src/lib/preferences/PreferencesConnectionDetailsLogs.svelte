@@ -13,14 +13,19 @@ import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
 import { writeToTerminal } from './Util';
 
-export let providerInternalId: string | undefined = undefined;
-export let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | undefined = undefined;
-export let setNoLogs: () => void;
-export let noLog: boolean;
+interface Props {
+  providerInternalId?: string;
+  connectionInfo?: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
+  setNoLogs: () => void;
+  noLog: boolean;
+}
+let { providerInternalId, connectionInfo, setNoLogs, noLog }: Props = $props();
 let logsTerminal: Terminal;
 
-$: noLog = !!noLog;
-let noLogs = !!noLog;
+$effect(() => {
+  noLog = !!noLog;
+});
+let noLogs = $state(!!noLog);
 
 // Log
 let logsXtermDiv: HTMLDivElement;

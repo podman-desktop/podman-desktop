@@ -95,7 +95,7 @@ export async function deleteKubernetesResource(
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
     await kubernetesResourcePage.deleteKubernetesResource(resourceName);
     const title = dialogTitle ?? kubernetesResourceDialogTitle(resourceType);
-    await handleConfirmationDialog(page, title, true, 'Delete');
+    await handleConfirmationDialog({ page, dialogTitle: title, buttonName: 'Delete' });
     await playExpect
       .poll(async () => await kubernetesResourcePage.getRowByName(resourceName), { timeout: timeout })
       .not.toBeTruthy();

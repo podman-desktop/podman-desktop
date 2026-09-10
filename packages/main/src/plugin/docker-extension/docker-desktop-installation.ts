@@ -27,8 +27,6 @@ import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
-import type { Method, OptionsOfTextResponseBody } from 'got';
-import got, { RequestError } from 'got';
 import * as tarFs from 'tar-fs';
 
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
@@ -232,8 +230,7 @@ export class DockerDesktopInstallation {
     );
   }
 
-  // transform the method name to a got method
-  protected isGotMethod(methodName: string): methodName is Method {
+  protected isHttpMethod(methodName: string): boolean {
     const allMethods = [
       'GET',
       'POST',
@@ -255,48 +252,37 @@ export class DockerDesktopInstallation {
     return allMethods.includes(methodName);
   }
 
-  protected asGotMethod(methodName: string): Method {
-    if (!this.isGotMethod(methodName)) {
+  protected assertHttpMethod(methodName: string): string {
+    if (!this.isHttpMethod(methodName)) {
       throw Error('Invalid method');
     }
-    return methodName as Method;
+    return methodName;
   }
 
   protected async handleExtensionVMServiceRequest(port: string, config: v1.RequestConfig): Promise<unknown> {
-    // use got library
+    const method = this.assertHttpMethod(config.method);
+
+    const headers: Record<string, string> = { ...config.headers };
+    let body: string | undefined;
+    if (config.data) {
+      body = JSON.stringify(config.data);
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const response = await fetch(`http://localhost:${port}${config.url}`, { method, headers, body });
+
+    if (response.status === 401 || response.status === 403) {
+      throw Error('Unable to get access');
+    }
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
+    const text = await response.text();
     try {
-      const method: Method = this.asGotMethod(config.method);
-
-      const options: OptionsOfTextResponseBody = {
-        method,
-      };
-
-      if (config.data) {
-        options.json = config.data;
-      }
-
-      options.headers = config.headers;
-
-      const response = await got(`http://localhost:${port}${config.url}`, options);
-
-      // try to see if response is json
-      try {
-        return JSON.parse(response.body);
-      } catch (error) {
-        // provides the body as is
-        return response.body;
-      }
-    } catch (requestErr) {
-      if (
-        requestErr instanceof RequestError &&
-        (requestErr.response?.statusCode === 401 || requestErr.response?.statusCode === 403)
-      ) {
-        throw Error('Unable to get access');
-      } else if (requestErr instanceof Error) {
-        throw Error(requestErr.message);
-      } else {
-        throw Error('Unknown error: ' + requestErr);
-      }
+      return JSON.parse(text);
+    } catch {
+      return text;
     }
   }
 

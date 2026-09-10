@@ -8,8 +8,12 @@ import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-export let ingressRoute: IngressUI | RouteUI;
-export let detailed = false;
+interface Props {
+  ingressRoute: IngressUI | RouteUI;
+  detailed?: boolean;
+}
+
+let { ingressRoute, detailed = false }: Props = $props();
 
 const ingressRouteUtils = new IngressRouteUtils();
 

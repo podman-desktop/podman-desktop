@@ -25,10 +25,12 @@ import { configurationProperties } from './configurationProperties';
 
 // mock window.getConfigurationValue
 const getConfigurationValueMock = vi.fn();
+const getThemeInfoMock = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
+  Object.defineProperty(window, 'getThemeInfo', { value: getThemeInfoMock, configurable: true });
 });
 
 test('Expect light mode using system when OS is set to light', async () => {
@@ -40,7 +42,7 @@ test('Expect light mode using system when OS is set to light', async () => {
     }),
   });
 
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.SystemEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.SystemEnumValue);
   configurationProperties.set([]);
 
   // expect to have class being "light" as OS is using light
@@ -56,7 +58,7 @@ test('Expect dark mode using system when OS is set to dark', async () => {
     }),
   });
 
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.SystemEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.SystemEnumValue);
   configurationProperties.set([]);
 
   // expect to have class being "dark" as OS is using dark
@@ -64,57 +66,97 @@ test('Expect dark mode using system when OS is set to dark', async () => {
 });
 
 test('Expect light mode using light configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isDark)).toBe(false));
 });
 
 test('Expect dark mode using dark configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isDark)).toBe(true));
 });
 
 test('Expect light mode using hc-light configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightHCEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightHCEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isDark)).toBe(false));
 });
 
 test('Expect dark mode using hc-dark configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkHCEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkHCEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isDark)).toBe(true));
 });
 
 test('Expect not high contrast using light configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
 });
 
 test('Expect not high contrast using dark configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
 });
 
 test('Expect high contrast using hc-light configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightHCEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightHCEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
 });
 
 test('Expect high contrast using hc-dark configuration', async () => {
-  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkHCEnumValue);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkHCEnumValue);
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+});
+
+test('Expect dark mode for custom theme with dark parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: true, isHighContrast: false });
+  getConfigurationValueMock.mockResolvedValue('zenburn');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(true));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('zenburn');
+});
+
+test('Expect light mode for custom theme with light parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: false, isHighContrast: false });
+  getConfigurationValueMock.mockResolvedValue('solarized-light');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(false));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('solarized-light');
+});
+
+test('Expect high contrast for custom theme with hc-dark parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: true, isHighContrast: true });
+  getConfigurationValueMock.mockResolvedValue('my-hc-dark-theme');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(true));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('my-hc-dark-theme');
+});
+
+test('Expect high contrast for custom theme with hc-light parent', async () => {
+  getThemeInfoMock.mockResolvedValue({ isDark: false, isHighContrast: true });
+  getConfigurationValueMock.mockResolvedValue('my-hc-light-theme');
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(false));
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+  expect(getThemeInfoMock).toHaveBeenCalledWith('my-hc-light-theme');
 });

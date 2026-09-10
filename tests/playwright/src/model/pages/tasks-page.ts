@@ -82,8 +82,8 @@ export class TasksPage extends BasePage {
     const cancelButton = this.taskList.getByRole('button', { name: 'Cancel task' }).first();
     await playExpect(cancelButton).toBeEnabled();
     await cancelButton.click();
-    await handleConfirmationDialog(this.page, 'Cancel Task?', true, 'Cancel Task');
-    await handleConfirmationDialog(this.page, 'Long task example', true, 'Dismiss');
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Cancel Task?', buttonName: 'Cancel Task' });
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Long task example', buttonName: 'Dismiss' });
   }
 
   async getStatusForLatestTask(): Promise<string> {

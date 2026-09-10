@@ -44,8 +44,8 @@ beforeEach(() => {
 });
 
 test('Expect no error and status deleting cronjob', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Delete' (confirmed)
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(CronJobActions, { cronjob, detailed: false });
 
   // click on delete button

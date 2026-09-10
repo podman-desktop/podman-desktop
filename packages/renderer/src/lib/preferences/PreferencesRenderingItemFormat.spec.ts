@@ -17,8 +17,6 @@
  ***********************************************************************/
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
 
 import '@testing-library/jest-dom/vitest';
 
@@ -360,7 +358,7 @@ test('Expect tooltip text shows info when input is less than minimum', async () 
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await userEvent.hover(tooltipTrigger);
 
-  const tooltip = await screen.findByLabelText('tooltip');
+  const tooltip = await screen.findByRole('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toBe('The value cannot be less than 1');
 });
@@ -385,7 +383,7 @@ test('Expect tooltip text shows info when input is higher than maximum', async (
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await userEvent.hover(tooltipTrigger);
 
-  const tooltip = await screen.findByLabelText('tooltip');
+  const tooltip = await screen.findByRole('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toBe('The value cannot be greater than 34');
 });
@@ -429,7 +427,7 @@ test('Expect value is updated from an external change', async () => {
   expect(inputField.value).toBe('1');
 
   // change getConfigurationValue to return 5
-  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(5);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(5);
 
   // now update the configuration value
   onDidChangeConfiguration.dispatchEvent(

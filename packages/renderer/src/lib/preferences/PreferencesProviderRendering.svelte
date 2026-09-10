@@ -3,6 +3,7 @@ import { faHistory, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button, ErrorMessage, Modal } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
@@ -93,12 +94,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
   <FormPage title={title} inProgress={inProgress}>
     {#snippet icon()}
       {#if providerInfo?.images?.icon}
-        {#if typeof providerInfo.images.icon === 'string'}
-          <img src={providerInfo.images.icon} alt={providerInfo.name} class="max-h-10" />
-          <!-- TODO check theme used for image, now use dark by default -->
-        {:else}
-          <img src={providerInfo.images.icon.dark} alt={providerInfo.name} class="max-h-10" />
-        {/if}
+        <Icon icon={providerInfo.images.icon} title={providerInfo.name} class="max-h-10" />
       {/if}
     {/snippet}
 

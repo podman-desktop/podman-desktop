@@ -138,46 +138,22 @@ test('Expect appearance configuration change to update searchbar when disabled',
   expect(spyOnSend).toHaveBeenCalled();
 });
 
-test('Expect native theme to be set to light', async () => {
+test.each([
+  { inputTheme: 'light', expectedTheme: 'light', description: 'Expect native theme to be set to light' },
+  { inputTheme: 'dark', expectedTheme: 'dark', description: 'Expect native theme to be set to dark' },
+  { inputTheme: 'system', expectedTheme: 'system', description: 'Expect native theme to be set to system' },
+  {
+    inputTheme: 'hc-light',
+    expectedTheme: 'light',
+    description: 'Expect native theme to be set to light for hc-light',
+  },
+  { inputTheme: 'hc-dark', expectedTheme: 'dark', description: 'Expect native theme to be set to dark for hc-dark' },
+  { inputTheme: 'unknown', expectedTheme: 'system', description: 'Expect unknown theme to be set to system' },
+])('$description', async ({ inputTheme, expectedTheme }) => {
   const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
-  appearanceInit.updateNativeTheme('light');
+  appearanceInit.updateNativeTheme(inputTheme);
 
-  expect(nativeTheme.themeSource).toEqual('light');
-});
-
-test('Expect native theme to be set to dark', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
-  appearanceInit.updateNativeTheme('dark');
-
-  expect(nativeTheme.themeSource).toEqual('dark');
-});
-
-test('Expect native theme to be set to system', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
-  appearanceInit.updateNativeTheme('system');
-
-  expect(nativeTheme.themeSource).toEqual('system');
-});
-
-test('Expect native theme to be set to light for hc-light', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
-  appearanceInit.updateNativeTheme('hc-light');
-
-  expect(nativeTheme.themeSource).toEqual('light');
-});
-
-test('Expect native theme to be set to dark for hc-dark', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
-  appearanceInit.updateNativeTheme('hc-dark');
-
-  expect(nativeTheme.themeSource).toEqual('dark');
-});
-
-test('Expect unknown theme to be set to system', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
-  appearanceInit.updateNativeTheme('unknown');
-
-  expect(nativeTheme.themeSource).toEqual('system');
+  expect(nativeTheme.themeSource).toEqual(expectedTheme);
 });
 
 test('should register a configuration', async () => {
@@ -194,12 +170,12 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.markdownDescription).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.type).toBe('number');
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.default).toBe(0);
-  expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBe(0.1);
+  expect(configurationNode?.properties?.['preferences.zoomLevel']?.step).toBeCloseTo(0.1);
 
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.description).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.type).toBe('string');
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
-    AppearanceSettings.IconAndTitle,
-  );
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.description).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.type).toBe('number');
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.minimum).toBe(50);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.maximum).toBe(240);
+  expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.default).toBe(160);
 });

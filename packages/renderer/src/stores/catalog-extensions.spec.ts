@@ -16,12 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { get } from 'svelte/store';
-import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { assert, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   catalogExtensionEventStore,
@@ -29,42 +25,32 @@ import {
   catalogExtensionInfos,
 } from './catalog-extensions';
 
-// first, patch window object
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
+
+// setup() registers a real window.addEventListener that is never removed, so it must
+// only run once for the file rather than per test (which would stack duplicate listeners).
+beforeAll(() => {
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
-  },
-};
-
-const getCatalogExtensionsMock: Mock<() => Promise<CatalogExtension[]>> = vi.fn();
-
-Object.defineProperty(global, 'window', {
-  value: {
-    getCatalogExtensions: getCatalogExtensionsMock,
-    events: {
-      receive: eventEmitter.receive,
-    },
-    addEventListener: eventEmitter.receive,
-  },
-  writable: true,
+    return { dispose: vi.fn() };
+  });
+  catalogExtensionEventStore.setup();
 });
 
-beforeAll(() => {
-  vi.clearAllMocks();
-  catalogExtensionEventStore.setup();
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('catalog extension should be updated in case of a container is removed', async () => {
   // initial catalog is empty
-  getCatalogExtensionsMock.mockResolvedValue([]);
+  vi.mocked(window.getCatalogExtensions).mockResolvedValue([]);
 
   // get list and expect nothing there
   const catalogExtensions = get(catalogExtensionInfos);
   expect(catalogExtensions.length).toBe(0);
 
-  getCatalogExtensionsMock.mockReset();
-  getCatalogExtensionsMock.mockResolvedValue([
+  vi.mocked(window.getCatalogExtensions).mockReset();
+  vi.mocked(window.getCatalogExtensions).mockResolvedValue([
     {
       id: 'first.extension1',
       displayName: 'test1',
@@ -107,13 +93,11 @@ test('catalog extension should be updated in case of a container is removed', as
     },
   ]);
 
-  const callback = callbacks.get('system-ready');
   // send 'system-ready' event
-  expect(callback).toBeDefined();
-  await callback();
+  window.dispatchEvent(new CustomEvent('system-ready'));
 
-  // check that getCatalogExtensionsMock is called
-  expect(getCatalogExtensionsMock).toBeCalled();
+  // check that getCatalogExtensions is called
+  await vi.waitFor(() => expect(window.getCatalogExtensions).toBeCalled());
 
   // fetch manually
   await catalogExtensionEventStoreInfo.fetch();
@@ -135,14 +119,14 @@ test('catalog extension should be updated in case of a container is removed', as
 
 test('catalog extension should be updated in refresh event is published', async () => {
   // initial catalog is empty
-  getCatalogExtensionsMock.mockResolvedValue([]);
-  getCatalogExtensionsMock.mockReset();
+  vi.mocked(window.getCatalogExtensions).mockResolvedValue([]);
+  vi.mocked(window.getCatalogExtensions).mockReset();
 
   const callback = callbacks.get('refresh-catalog');
   // send 'refresh-catalog' event
-  expect(callback).toBeDefined();
+  assert(callback);
   await callback();
 
-  // check that getCatalogExtensionsMock is called
-  expect(getCatalogExtensionsMock).toBeCalled();
+  // check that getCatalogExtensions is called
+  expect(window.getCatalogExtensions).toBeCalled();
 });

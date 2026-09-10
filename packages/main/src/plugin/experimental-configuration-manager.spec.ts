@@ -57,32 +57,13 @@ describe('ExperimentalConfigurationManager', () => {
       });
     });
 
-    test('should return empty strings for key without dot', () => {
-      const result = experimentalConfigurationManager.parseKey('kubernetes');
-      expect(result).toEqual({
-        section: '',
-        property: '',
-      });
-    });
-
-    test('should return empty strings for key starting with dot', () => {
-      const result = experimentalConfigurationManager.parseKey('.kubernetes');
-      expect(result).toEqual({
-        section: '',
-        property: '',
-      });
-    });
-
-    test('should return empty strings for key ending with dot', () => {
-      const result = experimentalConfigurationManager.parseKey('kubernetes.');
-      expect(result).toEqual({
-        section: '',
-        property: '',
-      });
-    });
-
-    test('should return empty strings for empty string', () => {
-      const result = experimentalConfigurationManager.parseKey('');
+    test.each([
+      { key: 'kubernetes', description: 'should return empty strings for key without dot' },
+      { key: '.kubernetes', description: 'should return empty strings for key starting with dot' },
+      { key: 'kubernetes.', description: 'should return empty strings for key ending with dot' },
+      { key: '', description: 'should return empty strings for empty string' },
+    ])('$description', ({ key }) => {
+      const result = experimentalConfigurationManager.parseKey(key);
       expect(result).toEqual({
         section: '',
         property: '',

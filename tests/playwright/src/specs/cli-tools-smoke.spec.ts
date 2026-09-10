@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
 import type { SettingsBar } from '/@/model/pages/settings-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { isLinux, isMac } from '/@/utility/platform';
@@ -27,6 +28,11 @@ let cliToolsPage: CLIToolsPage;
 const tools = process.env.CLI_TOOLS;
 const allTools = ['Kind', 'Compose', 'kubectl'];
 const toolsToTest = tools === 'all' ? allTools : tools ? tools.split(',') : ['Kind'];
+
+const toolToProviderCard: Record<string, string> = {
+  Kind: 'kind',
+  Compose: 'Compose',
+};
 
 test.skip(!!isLinux || !!isMac, 'Tests suite should not run on Linux or Mac platform');
 
@@ -41,38 +47,71 @@ test.afterAll(async ({ runner }) => {
 });
 
 toolsToTest.forEach(tool => {
-  test.describe
-    .serial('CLI tools tests', () => {
-      test.beforeAll(async ({ navigationBar, page }) => {
-        settingsBar = await navigationBar.openSettings();
-        await settingsBar.cliToolsTab.click();
+  test.describe('CLI tools tests', () => {
+    test.describe.configure({ mode: 'serial' });
+    test.beforeAll(async ({ navigationBar, page }) => {
+      settingsBar = await navigationBar.openSettings();
+      await settingsBar.cliToolsTab.click();
 
-        cliToolsPage = new CLIToolsPage(page);
-        await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
-        await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
-        await cliToolsPage.uninstallTool(tool);
-        await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
-          .toBeFalsy();
-      });
-
-      test.beforeEach(async () => {
-        if (cliToolsPage.wasRateLimitReached()) {
-          test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
-          test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
-        }
-      });
-
-      test(`Install ${tool} -> downgrade -> upgrade -> uninstall`, async () => {
-        test.setTimeout(180_000);
-
-        await cliToolsPage.installTool(tool);
-        await cliToolsPage.downgradeTool(tool);
-        await cliToolsPage.updateTool(tool);
-        await cliToolsPage.uninstallTool(tool);
-        await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
-          .toBeFalsy();
-      });
+      cliToolsPage = new CLIToolsPage(page);
+      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+      await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+      await cliToolsPage.uninstallTool(tool);
+      await playExpect
+        .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
+        .toBeFalsy();
     });
+
+    test.beforeEach(async () => {
+      if (cliToolsPage.wasRateLimitReached()) {
+        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+        test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
+      }
+    });
+
+    test(`Install ${tool} -> downgrade -> upgrade -> uninstall`, async () => {
+      test.setTimeout(180_000);
+
+      await cliToolsPage.installTool(tool);
+      await cliToolsPage.downgradeTool(tool);
+      await cliToolsPage.updateTool(tool);
+      await cliToolsPage.uninstallTool(tool);
+      await playExpect
+        .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
+        .toBeFalsy();
+    });
+
+    test(`Install ${tool} -> downgrade -> upgrade from Resources page -> uninstall`, async ({ page }) => {
+      test.setTimeout(180_000);
+
+      const providerCardLabel = toolToProviderCard[tool];
+      if (!providerCardLabel) {
+        test.skip(true, `${tool} does not have a provider card on the Resources page`);
+        return;
+      }
+
+      await cliToolsPage.installTool(tool);
+      await cliToolsPage.downgradeTool(tool);
+
+      const currentVersion = await cliToolsPage.getCurrentToolVersion(tool);
+
+      await settingsBar.resourcesTab.click();
+      const resourcesPage = new ResourcesPage(page);
+      await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
+
+      await resourcesPage.updateProvider(providerCardLabel);
+
+      await settingsBar.cliToolsTab.click();
+      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+
+      await playExpect
+        .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
+        .not.toContain(currentVersion);
+
+      await cliToolsPage.uninstallTool(tool);
+      await playExpect
+        .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
+        .toBeFalsy();
+    });
+  });
 });
