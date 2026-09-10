@@ -36,8 +36,8 @@ The dashboard has been redesigned with a new system overview section that shows 
 The new design is currently behind an experimental flag, you can enable it by navigating to `Settings > Experimental Features` and enable `Dashboard enhanced dashboard`. You can share your feedback on the dedicated GitHub discussion [Enhanced Dashboard `#16055`](https://github.com/podman-desktop/podman-desktop/discussions/16055)
 
 <ThemedImage
-alt="Enhanced dashboard with system overview"
-sources={{
+  alt="Enhanced dashboard with system overview"
+  sources={{
     light: require('./img/podman-desktop-release-1.28/system-overview-light.png').default,
     dark: require('./img/podman-desktop-release-1.28/system-overview-dark.png').default,
   }}
@@ -48,8 +48,8 @@ sources={{
 Each mapped port in the container details **Summary** pane is now rendered as a clickable link. Clicking a port opens `http://localhost:<port>` in your default browser, with a tooltip showing the full URL. This removes the need to manually copy port numbers and type URLs.
 
 <ThemedImage
-alt="Clickable mapped ports in container summary"
-sources={{
+  alt="Clickable mapped ports in container summary"
+  sources={{
     light: require('./img/podman-desktop-release-1.28/clickable-ports-light.png').default,
     dark: require('./img/podman-desktop-release-1.28/clickable-ports-dark.png').default,
   }}
@@ -60,11 +60,11 @@ sources={{
 When a provider has locked configuration settings via managed configuration, the **Resources** page now shows a "Managed" indicator with a lock icon. This makes it clear which preferences are centrally managed by IT administrators.
 
 <ThemedImage
-alt="Managed-by indicator on Resources page"
-sources={{
-light: require('./img/podman-desktop-release-1.28/managed-by-light.png').default,
-dark: require('./img/podman-desktop-release-1.28/managed-by-dark.png').default,
-}}
+  alt="Managed-by indicator on Resources page"
+  sources={{
+    light: require('./img/podman-desktop-release-1.28/managed-by-light.png').default,
+    dark: require('./img/podman-desktop-release-1.28/managed-by-dark.png').default,
+  }}
 />
 
 ### Page restoration after reload
@@ -76,11 +76,11 @@ Previously, reloading the application with <kbd>Ctrl</kbd>+<kbd>R</kbd> (or <kbd
 Confirmation dialogs throughout the application have been standardized with action-oriented titles and buttons. Instead of generic "Yes/No" buttons, dialogs now use specific verbs like "Prune", "Delete", "Uninstall", or "Clean Up" making it clearer what action you are confirming.
 
 <ThemedImage
-alt="Confirmation dialog"
-sources={{
-light: require('./img/podman-desktop-release-1.28/delete-confirm-dialog-light.png').default,
-dark: require('./img/podman-desktop-release-1.28/delete-confirm-dialog-dark.png').default,
-}}
+  alt="Confirmation dialog"
+  sources={{
+    light: require('./img/podman-desktop-release-1.28/delete-confirm-dialog-light.png').default,
+    dark: require('./img/podman-desktop-release-1.28/delete-confirm-dialog-dark.png').default,
+  }}
 />
 
 ### Provider lifecycle error propagation
@@ -92,8 +92,8 @@ Kind and Lima provider connections now display lifecycle errors directly in the 
 The Troubleshooting logs page now supports optional timestamps on each log entry. Toggle the clock icon to show or hide timestamps, with the preference persisted across sessions. When enabled, the clipboard copy format includes the timestamp as well.
 
 <ThemedImage
-alt="Troubleshooting logs with timestamps"
-sources={{
+  alt="Troubleshooting logs with timestamps"
+  sources={{
     light: require('./img/podman-desktop-release-1.28/troubleshooting-timestamps-light.png').default,
     dark: require('./img/podman-desktop-release-1.28/troubleshooting-timestamps-dark.png').default,
   }}

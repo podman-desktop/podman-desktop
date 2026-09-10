@@ -7,7 +7,7 @@ tags: [podman-desktop, extension, podman, quadlet, systemd]
 hide_table_of_contents: false
 ---
 
-import ReactPlayer from 'react-player'
+import ReactPlayer from 'react-player';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
 import Tabs from '@theme/Tabs';
@@ -83,19 +83,20 @@ Alternatively, navigate to the Extensions page within Podman Desktop to install 
 On the Podman Quadlet page, you can view all the Quadlets available across your Podman machines. To update the list, click **Refresh**.
 
 <ThemedImage
-alt="Quadlets List"
-sources={{
+  alt="Quadlets List"
+  sources={{
     light: require('./img/podman-quadlet/podman-quadlet-home-light.png').default,
     dark: require('./img/podman-quadlet/podman-quadlet-home-dark.png').default,
   }}
 />
-<br/><br/>
+<br />
+<br />
 
 In Podman Desktop, you can see that a dedicated icon is used for the containers managed by a Quadlet.
 
 <ThemedImage
-alt="Container Quadlet Icon"
-sources={{
+  alt="Container Quadlet Icon"
+  sources={{
     light: require('./img/podman-quadlet/container-icon-quadlet-light.png').default,
     dark: require('./img/podman-quadlet/container-icon-quadlet-dark.png').default,
   }}
@@ -113,36 +114,39 @@ podman run --name nginx-demo -d -p 80:8080 nginx
 3. Click the **overflow menu** icon and select **Generate Quadlet**.
 
 <ThemedImage
-alt="Container actions"
-sources={{
+  alt="Container actions"
+  sources={{
     light: require('./img/podman-quadlet/generate-quadlet-action-light.png').default,
     dark: require('./img/podman-quadlet/generate-quadlet-action-dark.png').default,
   }}
 />
-<br/><br/>
+<br />
+<br />
 
 4. Click **Generate** to finalize the Quadlet.
 
 <ThemedImage
-alt="Quadlet Generate Form"
-sources={{
+  alt="Quadlet Generate Form"
+  sources={{
     light: require('./img/podman-quadlet/generate-form-options-light.png').default,
     dark: require('./img/podman-quadlet/generate-form-options-dark.png').default,
   }}
 />
-<br/><br/>
+<br />
+<br />
 
 5. Optional: Edit the Quadlet configuration details.
 6. Click **Load into machine**.
 
 <ThemedImage
-alt="Quadlet Generate Form"
-sources={{
+  alt="Quadlet Generate Form"
+  sources={{
     light: require('./img/podman-quadlet/generate-form-edit-light.png').default,
     dark: require('./img/podman-quadlet/generate-form-edit-dark.png').default,
   }}
 />
-<br/><br/>
+<br />
+<br />
 
 Congrats 🎉 you created your first Quadlet!
 
@@ -157,8 +161,8 @@ Click the Quadlet **STATUS** icon to view its details page, which has three tabs
 You can make changes to the Quadlet’s source file and apply updates as needed.
 
 <ThemedImage
-alt="Quadlet Details Source"
-sources={{
+  alt="Quadlet Details Source"
+  sources={{
     light: require('./img/podman-quadlet/quadlet-details-source-light.png').default,
     dark: require('./img/podman-quadlet/quadlet-details-source-dark.png').default,
   }}
@@ -169,8 +173,8 @@ sources={{
 Since a Quadlet's corresponding resource is managed by systemd we can access corresponding unit's logs using journalctl.
 
 <ThemedImage
-alt="Quadlet Details Logs"
-sources={{
+  alt="Quadlet Details Logs"
+  sources={{
     light: require('./img/podman-quadlet/quadlet-details-logs-light.png').default,
     dark: require('./img/podman-quadlet/quadlet-details-logs-dark.png').default,
   }}

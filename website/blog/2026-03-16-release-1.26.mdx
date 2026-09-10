@@ -9,7 +9,7 @@ image: /img/blog/podman-desktop-release-1.26/banner.png
 ---
 
 import ThemedImage from '@theme/ThemedImage';
-import ReactPlayer from 'react-player'
+import ReactPlayer from 'react-player';
 
 Podman Desktop 1.26 Release! 🎉
 
@@ -33,23 +33,30 @@ This release brings exciting new features and improvements:
 
 Working behind a corporate proxy or pulling from internal registries? You can now sync your local certificates to running Podman VMs directly from the command palette. Open the command palette with <kbd>F1</kbd> and run the **Podman: Synchronize certificates to all VMs** command.
 
-<ReactPlayer playing playsInline controls src='https://github.com/user-attachments/assets/4ccf00f2-8272-4ba7-aca0-0f4a29bb2809' width='100%' height='100%' />
+<ReactPlayer
+  playing
+  playsInline
+  controls
+  src="https://github.com/user-attachments/assets/4ccf00f2-8272-4ba7-aca0-0f4a29bb2809"
+  width="100%"
+  height="100%"
+/>
 
 ### Extension authentication access control
 
 Extensions can no longer silently access your authentication sessions. When an extension tries to use an existing account or requests a new sign-in, you'll now see a prompt to allow or deny it. This prevents extensions from accessing credentials without your knowledge.
 
 <ThemedImage
-alt="Extension sign in request dialog"
-sources={{
+  alt="Extension sign in request dialog"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/extension-access-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/extension-access-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Extension access control for existing session"
-sources={{
+  alt="Extension access control for existing session"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/extension-access-existing-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/extension-access-existing-dark.png').default,
   }}
@@ -60,16 +67,16 @@ sources={{
 Users can now cancel image pulls in progress and take immediate actions after successful pulls. A new cancel button allows stopping long-running pulls, and new 'Open Details' and 'Run...' buttons appear after pulling an image, eliminating the need to navigate to the Images page to find and work with newly pulled images.
 
 <ThemedImage
-alt="Pull image in progress with cancel button"
-sources={{
+  alt="Pull image in progress with cancel button"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/pull-image-progress-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/pull-image-progress-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Pull image completed with Open Details and Run buttons"
-sources={{
+  alt="Pull image completed with Open Details and Run buttons"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/pull-image-completed-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/pull-image-completed-dark.png').default,
   }}
@@ -80,24 +87,24 @@ sources={{
 In Podman Desktop, you can manage different container environments: Docker, Podman, Apple Container for instance. If you are using Podman Desktop in this situation, you will see a new environment combo box on resource management pages, allowing you to filter containers, pods, images, volumes, and networks by their specific environment. If you have only one environment, this filter will be hidden to keep the screen simple.
 
 <ThemedImage
-alt="Environment filter showing all environments"
-sources={{
+  alt="Environment filter showing all environments"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/environment-filter-all-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/environment-filter-all-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Environment filter showing Podman resources"
-sources={{
+  alt="Environment filter showing Podman resources"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/environment-filter-podman-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/environment-filter-podman-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Environment filter showing Docker resources"
-sources={{
+  alt="Environment filter showing Docker resources"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/environment-filter-docker-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/environment-filter-docker-dark.png').default,
   }}
@@ -117,8 +124,8 @@ These settings can be deployed organization-wide through the [managed configurat
 A new troubleshooting entry has been added to the settings menu, providing quicker access to diagnostic tools and information. This helps users find and resolve issues without having to search through multiple pages.
 
 <ThemedImage
-alt="Troubleshooting section in Settings menu"
-sources={{
+  alt="Troubleshooting section in Settings menu"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/troubleshoot-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/troubleshoot-dark.png').default,
   }}
@@ -129,8 +136,8 @@ sources={{
 Deleting a provider connection now displays a confirmation dialog, preventing accidental removal. This safeguard ensures users must explicitly confirm before a connection is removed, reducing the risk of unintended data loss.
 
 <ThemedImage
-alt="Confirmation dialog when deleting a connection"
-sources={{
+  alt="Confirmation dialog when deleting a connection"
+  sources={{
     light: require('./img/podman-desktop-release-1.26/delete-warning-light.png').default,
     dark: require('./img/podman-desktop-release-1.26/delete-warning-dark.png').default,
   }}

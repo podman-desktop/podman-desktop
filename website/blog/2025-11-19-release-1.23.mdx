@@ -8,7 +8,7 @@ hide_table_of_contents: false
 image: /img/blog/podman-desktop-release-1.23/banner.png
 ---
 
-import ReactPlayer from 'react-player'
+import ReactPlayer from 'react-player';
 import ThemedImage from '@theme/ThemedImage';
 
 Podman Desktop 1.23 Release! 🎉
@@ -41,16 +41,16 @@ This feature is particularly valuable when working with complex multi-container 
 Seet he [`podman network` command](https://docs.podman.io/en/latest/markdown/podman-network.1.html) for more information.
 
 <ThemedImage
-alt="Podman network tab"
-sources={{
+  alt="Podman network tab"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/PodmanNetworkTab-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/PodmanNetworkTab-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Podman network tab"
-sources={{
+  alt="Podman network tab"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/PodmanNetworkDetail-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/PodmanNetworkDetail-dark.png').default,
   }}
@@ -61,16 +61,16 @@ sources={{
 The new layout manager feature allows users to customize their dashboard sections and table columns to match their workflow preferences. Users can now reorder dashboard sections, show or hide specific table columns, and tailor their view to display only the most relevant information for their tasks.
 
 <ThemedImage
-alt="Customizable dashboard sections"
-sources={{
+  alt="Customizable dashboard sections"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/DashboardSections-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/DashboardSections-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Customizable Table Columns"
-sources={{
+  alt="Customizable Table Columns"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/TableColumns-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/TableColumns-dark.png').default,
   }}
@@ -83,8 +83,8 @@ The search bar has been enhanced with algorithmic text highlighting, quick navig
 Share your thoughts on this component on [our GitHub discussion](https://github.com/podman-desktop/podman-desktop/discussions/13674).
 
 <ThemedImage
-alt="Enhanced Search Bar with new features"
-sources={{
+  alt="Enhanced Search Bar with new features"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/SearchBar-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/SearchBar-dark.png').default,
   }}
@@ -103,8 +103,8 @@ A visual indicator now shows whether each Podman machine is running in rootless 
 See how you can enable/disable root privileges by editing your [Podman machine](https://podman-desktop.io/blog/podman-desktop-release-1.22#switching-podman-machines-between-rootless-and-rootful-macos-and-windows-only).
 
 <ThemedImage
-alt="Rootless and Rootful Machine Indicator"
-sources={{
+  alt="Rootless and Rootful Machine Indicator"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/RootfullRootlessMachine-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/RootfullRootlessMachine-dark.png').default,
   }}
@@ -121,15 +121,16 @@ Check out the [Podman 5.7](https://github.com/podman-container-tools/podman/rele
 Podman Desktop now supports managed configuration. Users can add a “managed-by” configuration file to enforce specific settings. This allows system administrators to apply configurations from a global system file. With this release, administrators can deploy a managed settings file to a predefined system location, enabling centralized control over Podman Desktop configurations across an entire organization.
 
 Check out more details in this demo done by [@cdrage](https://github.com/cdrage):
-<ReactPlayer src='https://www.youtube.com/watch?v=HOFpDHMIleQ' controls={true} width="100%" height="500px"  />
+
+<ReactPlayer src="https://www.youtube.com/watch?v=HOFpDHMIleQ" controls={true} width="100%" height="500px" />
 
 ### Created Docker context for Podman machine
 
 Podman Desktop now automatically creates a Docker context for each registered Podman machine, improving interoperability with Docker tooling. Each context is prefixed with `podman-` and derived from the Podman machine name, allowing users to seamlessly switch between contexts using the standard `docker context use` command.
 
 <ThemedImage
-alt="Docker Context for Podman Machine"
-sources={{
+  alt="Docker Context for Podman Machine"
+  sources={{
     light: require('./img/podman-desktop-release-1.23/DockerContextExtension-light.png').default,
     dark: require('./img/podman-desktop-release-1.23/DockerContextExtension-dark.png').default,
   }}

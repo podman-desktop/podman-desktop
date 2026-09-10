@@ -40,8 +40,8 @@ Creating a [podman network](https://docs.podman.io/en/stable/markdown/podman-net
 1. Go to **Networks > Create Network** and create a network named `my-network`.
 
 <ThemedImage
-alt="Podman Desktop Networks > Create Network dialog"
-sources={{
+  alt="Podman Desktop Networks > Create Network dialog"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/network-create-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/network-create-dark.webp').default,
   }}
@@ -50,8 +50,8 @@ sources={{
 2. Go to **Containers > Create**, select **Existing image**, and pick `quay.io/hummingbird/postgresql:18`.
 
 <ThemedImage
-alt="Podman Desktop run existing image hummingbird postgresql"
-sources={{
+  alt="Podman Desktop run existing image hummingbird postgresql"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/run-existing-image-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/run-existing-image-dark.webp').default,
   }}
@@ -60,8 +60,8 @@ sources={{
 3. In the **Networking** tab, select **Container networking**, choose **User-defined network**, then pick `my-network`. Name the container `db`.
 
 <ThemedImage
-alt="Podman Desktop run container dialog with network selection"
-sources={{
+  alt="Podman Desktop run container dialog with network selection"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/run-container-network-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/run-container-network-dark.webp').default,
   }}
@@ -70,8 +70,8 @@ sources={{
 4. Run a second container the same way, same image and network, named `web`, with command `sh -c 'while true; do pg_isready -h db && echo "web: connected to db"; sleep 2; done'`. It checks every couple of seconds that `db` is reachable by name.
 
 <ThemedImage
-alt="Podman Desktop run container dialog with pg_isready loop command and my-network network selected"
-sources={{
+  alt="Podman Desktop run container dialog with pg_isready loop command and my-network network selected"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/run-web-container-config-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/run-web-container-config-dark.webp').default,
   }}
@@ -98,8 +98,8 @@ Check that it works:
 Both containers should show as running on the **Containers** page, and `web`'s **Logs** tab should keep printing `accepting connections` and `web: connected to db`.
 
 <ThemedImage
-alt="Podman Desktop web container logs showing the pg_isready loop connecting to db"
-sources={{
+  alt="Podman Desktop web container logs showing the pg_isready loop connecting to db"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/container-terminal-pgisready-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/container-terminal-pgisready-dark.webp').default,
   }}
@@ -125,8 +125,8 @@ Cleanup:
 Select `db` and `web` in the Containers list and delete them, then delete the `my-network` network from the Networks list.
 
 <ThemedImage
-alt="Podman Desktop Containers list with db and web selected for deletion"
-sources={{
+  alt="Podman Desktop Containers list with db and web selected for deletion"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/delete-containers-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/delete-containers-dark.webp').default,
   }}
@@ -164,8 +164,8 @@ Run both containers first.
 **`db` container**: image `quay.io/hummingbird/postgresql:18`, environment variable `POSTGRES_PASSWORD=secret`.
 
 <ThemedImage
-alt="Podman Desktop run db container with POSTGRES_PASSWORD env variable"
-sources={{
+  alt="Podman Desktop run db container with POSTGRES_PASSWORD env variable"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/run-db-container-config-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/run-db-container-config-dark.webp').default,
   }}
@@ -174,8 +174,8 @@ sources={{
 **`web` container**: same image, command `sh -c 'while true; do pg_isready -h localhost && echo "web: connected to db"; sleep 2; done'`.
 
 <ThemedImage
-alt="Podman Desktop run web container with pg_isready loop command"
-sources={{
+  alt="Podman Desktop run web container with pg_isready loop command"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/run-web-container-config-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/run-web-container-config-dark.webp').default,
   }}
@@ -184,8 +184,8 @@ sources={{
 Then select both containers in the Containers list and click **Create Pod**.
 
 <ThemedImage
-alt="Podman Desktop select containers and Create Pod"
-sources={{
+  alt="Podman Desktop select containers and Create Pod"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/create-pod-from-containers-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/create-pod-from-containers-dark.webp').default,
   }}
@@ -194,8 +194,8 @@ sources={{
 In the Create Pod form, set the pod name to `myapp`, this is the name the rest of this section refers to.
 
 <ThemedImage
-alt="Podman Desktop Create Pod form"
-sources={{
+  alt="Podman Desktop Create Pod form"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/create-pod-from-containers-form-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/create-pod-from-containers-form-dark.webp').default,
   }}
@@ -220,8 +220,8 @@ Check `web`'s logs: this time it reaches `db` over `localhost`, not a network ho
 <TabItem value="desktop" label="Podman Desktop">
 
 <ThemedImage
-alt="Podman Desktop web container logs showing localhost connectivity to db"
-sources={{
+  alt="Podman Desktop web container logs showing localhost connectivity to db"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/pod-terminal-psql-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/pod-terminal-psql-dark.webp').default,
   }}
@@ -260,8 +260,8 @@ Kind needs a rootful Podman machine on WSL, since a rootless machine [can't crea
 1. Go to **Settings > Resources** and [create a Kind cluster](https://podman-desktop.io/docs/kind/creating-a-kind-cluster).
 
 <ThemedImage
-alt="Settings > Resources showing Kind cluster creation"
-sources={{
+  alt="Settings > Resources showing Kind cluster creation"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/kind-cluster-create-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/kind-cluster-create-dark.webp').default,
   }}
@@ -274,8 +274,8 @@ With a cluster now up, the `myapp` pod you built earlier is ready to go. A pod i
 On the **Pods** page, open `myapp`'s overflow menu and select **Deploy to Kubernetes**, pick the `kind-kind-cluster` context, and click **Deploy**. Podman Desktop strips the auto-generated volume names that would otherwise be too long for Kubernetes, so the deploy just works:
 
 <ThemedImage
-alt="Podman Desktop Deploy to Kubernetes dialog for the myapp pod"
-sources={{
+  alt="Podman Desktop Deploy to Kubernetes dialog for the myapp pod"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/deploy-to-kubernetes-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/deploy-to-kubernetes-dark.webp').default,
   }}
@@ -286,8 +286,8 @@ No adaptation needed, develop locally with Podman, then deploy the exact same po
 Once you're done, clean up both the local pod and the one now running on the cluster: delete `myapp` from the **Pods** page, and delete the deployed pod from **Kubernetes > Pods**.
 
 <ThemedImage
-alt="Podman Desktop Pods page with the myapp pod selected for deletion"
-sources={{
+  alt="Podman Desktop Pods page with the myapp pod selected for deletion"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/delete-pod-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/delete-pod-dark.webp').default,
   }}
@@ -311,8 +311,8 @@ The [Hummingbird](https://hummingbird-project.io/docs/using/overview/) images `m
 Start from the generated YAML. On the **Pods** page, open `myapp`'s overflow menu and select **Generate Kube**:
 
 <ThemedImage
-alt="Podman Desktop Generate Kube action on the myapp pod, showing the generated YAML"
-sources={{
+  alt="Podman Desktop Generate Kube action on the myapp pod, showing the generated YAML"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/generate-kube-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/generate-kube-dark.webp').default,
   }}
@@ -400,8 +400,8 @@ spec:
 Save it to a file, then import it from **Kubernetes > Pods > Apply YAML**:
 
 <ThemedImage
-alt="Podman Desktop Kubernetes > Pods > Apply YAML dialog"
-sources={{
+  alt="Podman Desktop Kubernetes > Pods > Apply YAML dialog"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/kubernetes-pods-apply-yaml-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/kubernetes-pods-apply-yaml-dark.webp').default,
   }}
@@ -410,8 +410,8 @@ sources={{
 This time the deploy succeeds. Podman Desktop's **Kubernetes > Pods** view shows `myapp` running on the cluster:
 
 <ThemedImage
-alt="Kubernetes > Pods view showing myapp pod running successfully"
-sources={{
+  alt="Kubernetes > Pods view showing myapp pod running successfully"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/pod-myapp-running-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/pod-myapp-running-dark.webp').default,
   }}
@@ -449,8 +449,8 @@ $ kubectl describe pod nginx-root | grep "Error"
 Same view, but now an error state:
 
 <ThemedImage
-alt="Kubernetes > Pods view showing nginx-root pod in CreateContainerConfigError state"
-sources={{
+  alt="Kubernetes > Pods view showing nginx-root pod in CreateContainerConfigError state"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/pod-nginx-root-error-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/pod-nginx-root-error-dark.webp').default,
   }}
@@ -494,8 +494,8 @@ Podman skips the daemon entirely. On Linux, each `podman run` is a direct [fork/
 You can see that infra container yourself. Open the `myapp` pod on the **Containers** page, and next to `db` and `web` there's a third one, usually named `myapp-infra`, sitting quietly and holding the shared namespace open:
 
 <ThemedImage
-alt="Podman Desktop Containers page showing the myapp-infra container alongside db and web inside the pod"
-sources={{
+  alt="Podman Desktop Containers page showing the myapp-infra container alongside db and web inside the pod"
+  sources={{
     light: require('./img/docker-to-podman-pods-socket-rootless/pod-infra-container-light.webp').default,
     dark: require('./img/docker-to-podman-pods-socket-rootless/pod-infra-container-dark.webp').default,
   }}

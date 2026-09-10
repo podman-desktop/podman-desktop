@@ -34,8 +34,8 @@ This release brings exciting new features and improvements:
 Dashboard notifications now follow the same design as the latest extensions (e.g., AI Lab). This enhancement ensures consistency in the user interface by implementing the updated notification design. The change addresses the visual inconsistency between dashboard notifications and newer extension notifications, providing a more cohesive and polished user experience.
 
 <ThemedImage
-alt="Updated dashboard notification design"
-sources={{
+  alt="Updated dashboard notification design"
+  sources={{
     light: require('./img/podman-desktop-release-1.21/release-note-13106-light.png').default,
     dark: require('./img/podman-desktop-release-1.21/release-note-13106-dark.png').default,
   }}
@@ -46,8 +46,8 @@ sources={{
 Added a notification system to detect and warn users when they have multiple Podman installations (e.g., one installed through the website download and another through Homebrew). This enhancement addresses the issue where duplicate installations can lead to unexpected behavior, such as the UI displaying outdated version information even after running brew update. The notification informs users of the duplicate installation situation, allowing them to uninstall one version to resolve potential conflicts.
 
 <ThemedImage
-alt="Updated dashboard notification design"
-sources={{
+  alt="Updated dashboard notification design"
+  sources={{
     light: require('./img/podman-desktop-release-1.21/release-note-12011-light.png').default,
     dark: require('./img/podman-desktop-release-1.21/release-note-12011-dark.png').default,
   }}
@@ -90,7 +90,7 @@ Changed the default provider from AppleHV to libkrun when creating new Podman ma
 - **When creating a kind cluster with default values, http port should be detected dynamically**: Fixed port conflict detection for Kind cluster creation ([#12405](https://github.com/podman-desktop/podman-desktop/issues/12405))
 - **Update button for particular CLI tool not removed after uninstallation**: Fixed CLI tool update button persistence after removal ([#13128](https://github.com/podman-desktop/podman-desktop/issues/13128))
 
-<br/>
+<br />
 
 ---
 

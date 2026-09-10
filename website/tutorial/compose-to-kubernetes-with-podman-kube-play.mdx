@@ -60,8 +60,8 @@ $ podman compose -f compose.yaml up -d --build
 ```
 
 <ThemedImage
-alt="Step 1 podman compose terminal output"
-sources={{
+  alt="Step 1 podman compose terminal output"
+  sources={{
     light: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-1-compose-output.png').default,
     dark: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-1-compose-output.png').default,
   }}
@@ -72,16 +72,16 @@ Open the guestbook UI:
 - [http://localhost:8080](http://localhost:8080)
 
 <ThemedImage
-alt="Step 1 in Podman Desktop: containers list"
-sources={{
+  alt="Step 1 in Podman Desktop: containers list"
+  sources={{
     light: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-1-podman-desktop-light.png').default,
     dark: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-1-podman-desktop-dark.png').default,
   }}
 />
 
 <ThemedImage
-alt="Step 1 guestbook app"
-sources={{
+  alt="Step 1 guestbook app"
+  sources={{
     light: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-1-grocery-app.png').default,
     dark: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-1-grocery-app.png').default,
   }}
@@ -106,8 +106,8 @@ WARN Service "redis-replica" won't be created because 'ports' is not specified
 This is expected for this sample. `redis-replica` is internal-only, so it does not publish host ports. Kompose can still generate the workload resources needed for local validation with `podman kube play`.
 
 <ThemedImage
-alt="Step 2 generated Kubernetes YAML"
-sources={{
+  alt="Step 2 generated Kubernetes YAML"
+  sources={{
     light: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-2-generated-yaml.png').default,
     dark: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-2-generated-yaml.png').default,
   }}
@@ -142,10 +142,12 @@ Verify the app:
 - [http://localhost:8080](http://localhost:8080)
 
 <ThemedImage
-alt="Step 3 containers after kube play"
-sources={{
-    light: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-light.png').default,
-    dark: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-dark.png').default,
+  alt="Step 3 containers after kube play"
+  sources={{
+    light: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-light.png')
+      .default,
+    dark: require('./img/from-compose-to-kubernetes-with-podman-kube-play/step-3-containers-kube-play-dark.png')
+      .default,
   }}
 />
 
