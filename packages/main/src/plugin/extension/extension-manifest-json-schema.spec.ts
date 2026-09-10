@@ -62,6 +62,18 @@ describe('generateExtensionManifestJsonSchema', () => {
     expect(extensionSchema['additionalProperties']).not.toBe(false);
   });
 
+  test('generates an optional nonblank configuration displayName', () => {
+    const schema = getExtensionSchema();
+    const path = 'properties.contributes.properties.configuration.properties.properties.additionalProperties';
+
+    expect(schema).toHaveProperty(`${path}.properties.displayName`, {
+      type: 'string',
+      minLength: 1,
+      pattern: '\\S',
+    });
+    expect(schema).not.toHaveProperty(`${path}.required`);
+  });
+
   test('requires mandatory extension fields', () => {
     const extensionSchema = getExtensionSchema();
     const required = extensionSchema['required'] as string[];
