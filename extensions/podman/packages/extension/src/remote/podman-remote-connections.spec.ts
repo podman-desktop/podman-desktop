@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteConnections } from './podman-remote-connections';
 import type { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
@@ -28,6 +28,10 @@ const provider = {} as extensionApi.Provider;
 
 beforeEach(() => {
   vi.resetAllMocks();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 class TestPodmanRemoteConnections extends PodmanRemoteConnections {
   createTunnel(
@@ -62,14 +66,17 @@ test('should do nothing if the configuration is disabled', async () => {
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
-  // start
-  await podmanRemoteConnections.start();
+  try {
+    // start
+    await podmanRemoteConnections.start();
 
-  // no connection should be created
-  expect(spyCreateTunnel).not.toHaveBeenCalled();
-  expect(spyRefreshRemoteConnections).not.toHaveBeenCalled();
-
-  podmanRemoteConnections.stop();
+    // no connection should be created
+    expect(spyCreateTunnel).not.toHaveBeenCalled();
+    expect(spyRefreshRemoteConnections).not.toHaveBeenCalled();
+  } finally {
+    // clear the recurring monitoring timer so it cannot fire in a later test
+    podmanRemoteConnections.stop();
+  }
 });
 
 test('should check connections if configuration is enabled', async () => {
@@ -89,14 +96,17 @@ test('should check connections if configuration is enabled', async () => {
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
-  // start
-  await podmanRemoteConnections.start();
+  try {
+    // start
+    await podmanRemoteConnections.start();
 
-  // no connection should be created
-  expect(spyCreateTunnel).not.toHaveBeenCalled();
-  expect(spyRefreshRemoteConnections).toHaveBeenCalled();
-
-  podmanRemoteConnections.stop();
+    // no connection should be created
+    expect(spyCreateTunnel).not.toHaveBeenCalled();
+    expect(spyRefreshRemoteConnections).toHaveBeenCalled();
+  } finally {
+    // clear the recurring monitoring timer so it cannot fire in a later test
+    podmanRemoteConnections.stop();
+  }
 });
 
 test('hasConnections should return false when no connections exist', () => {
@@ -327,44 +337,44 @@ test('should check connections if configuration is enabled and a system connecti
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
-  // start
-  await podmanRemoteConnections.start();
+  try {
+    // start
+    await podmanRemoteConnections.start();
 
-  // remote connection should trigger tunnel creation (machine is filtered out)
-  expect(spyCreateTunnel).toHaveBeenCalledOnce();
-  expect(spyRefreshRemoteConnections).toHaveBeenCalled();
-  expect(podmanRemoteConnections.hasConnections()).toBe(true);
-
-  podmanRemoteConnections.stop();
+    // remote connection should trigger tunnel creation (machine is filtered out)
+    expect(spyCreateTunnel).toHaveBeenCalledOnce();
+    expect(spyRefreshRemoteConnections).toHaveBeenCalled();
+    expect(podmanRemoteConnections.hasConnections()).toBe(true);
+  } finally {
+    // clear the recurring monitoring timer so it cannot fire in a later test
+    podmanRemoteConnections.stop();
+  }
 });
 
 test('stop should cancel the recurring monitoring timer', async () => {
+  // fake timers are restored by the afterEach hook (vi.useRealTimers)
   vi.useFakeTimers();
-  try {
-    vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
-      get: () => true,
-    } as unknown as extensionApi.Configuration);
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => true,
+  } as unknown as extensionApi.Configuration);
 
-    const podmanRemoteConnections = new TestPodmanRemoteConnections(extensionContext, provider);
+  const podmanRemoteConnections = new TestPodmanRemoteConnections(extensionContext, provider);
 
-    // no remote connections, so start() completes without creating any tunnel
-    vi.mocked(extensionApi.process.exec).mockResolvedValue({
-      stdout: JSON.stringify([]),
-    } as unknown as extensionApi.RunResult);
+  // no remote connections, so start() completes without creating any tunnel
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([]),
+  } as unknown as extensionApi.RunResult);
 
-    const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
+  const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
 
-    await podmanRemoteConnections.start();
-    expect(spyRefreshRemoteConnections).toHaveBeenCalledTimes(1);
+  await podmanRemoteConnections.start();
+  expect(spyRefreshRemoteConnections).toHaveBeenCalledTimes(1);
 
-    // stop() must clear the pending 5s timer
-    podmanRemoteConnections.stop();
-    spyRefreshRemoteConnections.mockClear();
+  // stop() must clear the pending 5s timer
+  podmanRemoteConnections.stop();
+  spyRefreshRemoteConnections.mockClear();
 
-    // advancing well past the interval must not trigger any further monitoring
-    await vi.advanceTimersByTimeAsync(15000);
-    expect(spyRefreshRemoteConnections).not.toHaveBeenCalled();
-  } finally {
-    vi.useRealTimers();
-  }
+  // advancing well past the interval must not trigger any further monitoring
+  await vi.advanceTimersByTimeAsync(15000);
+  expect(spyRefreshRemoteConnections).not.toHaveBeenCalled();
 });

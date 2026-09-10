@@ -34,6 +34,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
@@ -169,47 +170,31 @@ test('should use the provided private key over the ssh-agent', () => {
 });
 
 test('should fall back to the ssh-agent when no private key is provided', () => {
-  const previous = process.env['SSH_AUTH_SOCK'];
-  process.env['SSH_AUTH_SOCK'] = '/tmp/agent.sock';
-  try {
-    const tunnel = new TestPodmanRemoteSshTunnel(
-      'localhost',
-      22,
-      'foo',
-      undefined,
-      '/tmp/remote.sock',
-      '/tmp/local.sock',
-    );
-    const config = tunnel.getSshConfig();
-    expect(config.privateKey).toBeUndefined();
-    expect(config.agent).toBe('/tmp/agent.sock');
-  } finally {
-    if (previous === undefined) {
-      delete process.env['SSH_AUTH_SOCK'];
-    } else {
-      process.env['SSH_AUTH_SOCK'] = previous;
-    }
-  }
+  vi.stubEnv('SSH_AUTH_SOCK', '/tmp/agent.sock');
+  const tunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    undefined,
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+  const config = tunnel.getSshConfig();
+  expect(config.privateKey).toBeUndefined();
+  expect(config.agent).toBe('/tmp/agent.sock');
 });
 
 test('should not set an agent when no private key and no ssh-agent are available', () => {
-  const previous = process.env['SSH_AUTH_SOCK'];
-  delete process.env['SSH_AUTH_SOCK'];
-  try {
-    const tunnel = new TestPodmanRemoteSshTunnel(
-      'localhost',
-      22,
-      'foo',
-      undefined,
-      '/tmp/remote.sock',
-      '/tmp/local.sock',
-    );
-    const config = tunnel.getSshConfig();
-    expect(config.privateKey).toBeUndefined();
-    expect(config.agent).toBeUndefined();
-  } finally {
-    if (previous !== undefined) {
-      process.env['SSH_AUTH_SOCK'] = previous;
-    }
-  }
+  vi.stubEnv('SSH_AUTH_SOCK', undefined);
+  const tunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    undefined,
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+  const config = tunnel.getSshConfig();
+  expect(config.privateKey).toBeUndefined();
+  expect(config.agent).toBeUndefined();
 });
