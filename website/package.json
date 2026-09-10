@@ -13,10 +13,10 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "format:check": "biome format && prettier --cache --check '**/*.md'",
-    "format:fix": "biome format --write && prettier --cache --write --check '**/*.md'",
-    "markdownlint:check": "markdownlint-cli2 --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\" \"#api\" ",
-    "markdownlint:fix": "markdownlint-cli2 --fix --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\"",
+    "format:check": "biome format && prettier --cache --check '**/*.{md,mdx}'",
+    "format:fix": "biome format --write && prettier --cache --write --check '**/*.{md,mdx}'",
+    "markdownlint:check": "markdownlint-cli2 --config ../.markdownlint.yaml \"**/*.{md,mdx}\" \"#node_modules\" \"#api\" ",
+    "markdownlint:fix": "markdownlint-cli2 --fix --config ../.markdownlint.yaml \"**/*.{md,mdx}\" \"#node_modules\"",
     "lint:check": "cd .. && eslint --cache --cache-location website/.eslintcache website --ext js,ts,tsx",
     "lint:fix": "cd .. && eslint --cache --cache-location website/.eslintcache website --fix --ext js,ts,tsx",
     "lint:clean": "rimraf .eslintcache"
@@ -57,7 +57,7 @@
     "typedoc-plugin-markdown": "^4.13.0",
     "typescript": "^6.0.3",
     "vite": "^8.2.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.0"
   },
   "browserslist": {
     "production": [

@@ -249,7 +249,7 @@ test('Expect Terminal tab to be hidden for infra containers', async () => {
     expect(screen.getByText('Logs')).toBeInTheDocument();
     expect(screen.getByText('Inspect')).toBeInTheDocument();
     expect(screen.queryByText('Terminal')).not.toBeInTheDocument();
-    expect(screen.queryByText('Tty')).not.toBeInTheDocument();
+    expect(screen.queryByText('TTY')).not.toBeInTheDocument();
   });
 });
 
