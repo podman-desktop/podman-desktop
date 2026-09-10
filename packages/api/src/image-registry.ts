@@ -70,10 +70,6 @@ export interface ImageUpdateInfo {
   image: string;
   /** Image tag, e.g. "latest" */
   tag: string;
-  /** Current local digest of the image */
-  digest: string;
-  /** Current local repository digests of the image */
-  repoDigests?: string[];
 }
 
 /**
