@@ -16,9 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ContainerInfo } from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { type Writable, writable } from 'svelte/store';
+
+import { ContainerUtils } from '/@/lib/container/container-utils';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 
 import { EventStore } from './event-store';
 
@@ -51,14 +53,16 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const containersInfos: Writable<ContainerInfo[]> = writable([]);
+export const containersInfos: Writable<ContainerInfoUI[]> = writable([]);
+
+const containerUtils = new ContainerUtils();
 
 // use helper here as window methods are initialized after the store in tests
-const listContainers = (): Promise<ContainerInfo[]> => {
-  return window.listContainers();
+const listContainers = async (): Promise<ContainerInfoUI[]> => {
+  return (await window.listContainers()).map(containerInfo => containerUtils.getContainerInfoUI(containerInfo));
 };
 
-export const containersEventStore = new EventStore<ContainerInfo[]>(
+export const containersEventStore = new EventStore<ContainerInfoUI[]>(
   'containers',
   containersInfos,
   checkForUpdate,

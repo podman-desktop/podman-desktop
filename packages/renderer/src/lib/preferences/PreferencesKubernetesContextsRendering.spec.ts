@@ -415,11 +415,7 @@ describe.each([
     }
   });
 
-  test('Connect button is displayed on offline contexts', async () => {
-    if (!implemented.offline) {
-      return;
-    }
-
+  test.runIf(implemented.offline)('Connect button is displayed on offline contexts', async () => {
     initMocks();
     render(PreferencesKubernetesContextsRendering, {});
 

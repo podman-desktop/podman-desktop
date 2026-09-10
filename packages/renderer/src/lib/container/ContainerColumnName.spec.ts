@@ -54,6 +54,8 @@ const container: ContainerInfoUI = {
   created: 0,
   labels: {},
   imageBase64RepoTag: '',
+  imageId: 'sha256:123',
+  names: ['/my-container'],
 };
 
 const pod: ContainerGroupInfoUI = {

@@ -142,12 +142,7 @@ function dragMe(node: HTMLElement): void {
       <div class="flex flex-col items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-content-card-text)]">
         {#if icon}
           <div class="mb-2">
-            {#if typeof icon === 'string'}
-              <img src={icon} alt={title ? title : 'icon'} class="max-h-12" />
-            {:else}
-              <!-- TODO check theme used for image, now use dark by default -->
-              <img src={icon.dark} alt={title ? title : 'icon'} class="max-h-12" />
-            {/if}
+            <Icon icon={icon} title={title ? title : 'icon'} class="max-h-12" />
           </div>
         {/if}
         {#if title}

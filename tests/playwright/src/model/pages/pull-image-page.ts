@@ -93,6 +93,16 @@ export class PullImagePage extends BasePage {
     });
   }
 
+  /**
+   * Starts a pull without waiting for it to complete. Useful when the pull is expected to
+   * never finish (e.g. a stub proxy that never forwards traffic to the real registry).
+   */
+  async startPullOnly(imageName: string, tag = ''): Promise<void> {
+    return test.step(`Starting pull of image ${imageName}:${tag} without waiting for completion`, async () => {
+      await this.startPull(imageName, tag);
+    });
+  }
+
   async cancelPullImage(imageName: string, tag = ''): Promise<PullImagePage> {
     return test.step(`Cancel pulling image ${imageName}:${tag}`, async () => {
       await this.startPull(imageName, tag);

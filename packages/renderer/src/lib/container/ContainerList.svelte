@@ -1,6 +1,5 @@
 <script lang="ts">
-import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { ContainerInfo } from '@podman-desktop/core-api';
+import { faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { NavigationPage } from '@podman-desktop/core-api';
 import {
   Button,
@@ -192,6 +191,60 @@ async function runSelectedContainers(): Promise<void> {
   bulkRunInProgress = false;
 }
 
+// stop the items selected in the list
+let bulkStopInProgress = $state(false);
+async function stopSelectedContainers(): Promise<void> {
+  const podGroups = filterContainersByGroupTypePod();
+  const selectedContainers = filterContainersByGroupTypeNotPod();
+  if (podGroups.length + selectedContainers.length === 0) {
+    return;
+  }
+
+  const podGroupsToStop = podGroups.filter(
+    podGroup => podGroup.engineId && podGroup.id && podGroup.status === 'RUNNING',
+  );
+  const containersToStop = selectedContainers.filter(container => container.state === 'RUNNING');
+
+  bulkStopInProgress = true;
+  try {
+    podGroupsToStop.forEach(podGroup => (podGroup.status = 'STOPPING'));
+    containersToStop.forEach(container => {
+      container.state = 'STOPPING';
+      container.actionInProgress = true;
+      container.actionError = '';
+    });
+    containerGroups = [...containerGroups];
+
+    const podStopPromises = podGroupsToStop.map(podGroup => window.stopPod(podGroup.engineId, podGroup.id));
+    const containerStopPromises = containersToStop.map(async container => {
+      try {
+        await window.stopContainer(container.engineId, container.id);
+      } catch (reason) {
+        console.error('error while stopping container', reason);
+        container.actionError = String(reason);
+        container.state = 'ERROR';
+      } finally {
+        container.actionInProgress = false;
+        containerGroups = [...containerGroups];
+      }
+    });
+
+    const [podResults] = await Promise.all([
+      Promise.allSettled(podStopPromises),
+      Promise.allSettled(containerStopPromises),
+    ]);
+
+    podResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error('error while stopping pod', result.reason);
+        podGroupsToStop[index].status = 'RUNNING';
+      }
+    });
+  } finally {
+    bulkStopInProgress = false;
+  }
+}
+
 function createPodFromContainers(): void {
   const selectedContainers = containerGroups
     .map(group => group.containers)
@@ -217,8 +270,14 @@ function createPodFromContainers(): void {
 let currentContainers = $derived.by(() => {
   const viewContributions = $viewsContributions.filter(view => view.viewId === CONTAINER_LIST_VIEW);
 
-  return $containersInfos.map((containerInfo: ContainerInfo) => {
-    return containerUtils.getContainerInfoUI(containerInfo, $context, viewContributions);
+  // the store already holds ContainerInfoUI; only the extension-contributed icon is left
+  // to resolve, because it needs the context and the view contributions, which are
+  // component-level stores the containers store deliberately does not subscribe to
+  return $containersInfos.map((containerInfo: ContainerInfoUI) => {
+    return {
+      ...containerInfo,
+      icon: containerUtils.iconClass(containerInfo, $context, viewContributions) ?? ContainerIcon,
+    };
   });
 });
 
@@ -243,7 +302,13 @@ let containerGroups = $derived.by(() => {
   computedContainerGroups.forEach(group => {
     group.containers = group.containers
       .filter(containerInfo =>
-        findMatchInLeaves(containerInfo, containerUtils.filterSearchTerm(searchTerm).toLowerCase()),
+        // `names` is excluded on purpose: findMatchInLeaves recurses into arrays, so the raw
+        // names would newly make the leading '/', the compose project prefix and every alias
+        // searchable. Search matches on `name` as it always has.
+        findMatchInLeaves(
+          { ...containerInfo, names: undefined },
+          containerUtils.filterSearchTerm(searchTerm).toLowerCase(),
+        ),
       )
       .filter(containerInfo => {
         if (containerUtils.filterIsRunning(searchTerm)) {
@@ -409,6 +474,13 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           title="Run {selectedItemsNumber} selected items"
           inProgress={bulkRunInProgress}
           icon={faPlay}>
+        </Button>
+        <Button
+          on:click={stopSelectedContainers}
+          aria-label="Stop selected containers and pods"
+          title="Stop {selectedItemsNumber} selected items"
+          inProgress={bulkStopInProgress}
+          icon={faStop}>
         </Button>
         <Button
           on:click={(): void => {

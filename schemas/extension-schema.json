@@ -163,14 +163,7 @@
                         "type": "number"
                       },
                       "maximum": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
+                        "type": ["number", "string"]
                       },
                       "format": {
                         "type": "string"

@@ -22,8 +22,9 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { settingsNavigationEntries } from './PreferencesNavigation';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import { configurationProperties } from './stores/configurationProperties';
 import { onDidChangeRegisteredFeatures, registeredFeatures } from './stores/registered-features';
@@ -588,5 +589,114 @@ describe('Navigation width measurement and calculation', () => {
 
     unmount();
     expect(disconnect).toHaveBeenCalled();
+  });
+});
+
+describe('Static navigation entry children', () => {
+  let originalLength: number;
+
+  beforeEach(() => {
+    originalLength = settingsNavigationEntries.length;
+    settingsNavigationEntries.push({
+      title: 'Test Parent',
+      href: '/preferences/test-parent',
+      visible: true,
+      children: [
+        { title: 'Child One', href: '/preferences/test-parent/child-one', visible: true },
+        { title: 'Child Two', href: '/preferences/test-parent/child-two', visible: true },
+        { title: 'Hidden Child', href: '/preferences/test-parent/hidden', visible: false },
+      ],
+    });
+  });
+
+  afterEach(() => {
+    settingsNavigationEntries.length = originalLength;
+  });
+
+  test('should start expanded when entry has expanded set to true', async () => {
+    settingsNavigationEntries.push({
+      title: 'Auto Expanded',
+      href: '/preferences/auto-expanded',
+      visible: true,
+      expanded: true,
+      children: [{ title: 'Auto Child', href: '/preferences/auto-expanded/child', visible: true }],
+    });
+
+    renderPreferencesNavigation();
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Auto Expanded' })).toBeVisible();
+      expect(screen.getByRole('link', { name: 'Auto Child' })).toBeVisible();
+    });
+  });
+
+  test('should render parent entry with children as a link', async () => {
+    renderPreferencesNavigation();
+
+    const parentLink = await screen.findByRole('link', { name: 'Test Parent' });
+    expect(parentLink).toBeVisible();
+  });
+
+  test('should not show children before parent is expanded', async () => {
+    renderPreferencesNavigation();
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Test Parent' })).toBeVisible();
+    });
+
+    expect(screen.queryByRole('link', { name: 'Child One' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Child Two' })).toBeNull();
+  });
+
+  test('should show visible children when parent section is expanded', async () => {
+    renderPreferencesNavigation();
+
+    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+
+    expect(await screen.findByRole('link', { name: 'Child One' })).toBeVisible();
+    expect(await screen.findByRole('link', { name: 'Child Two' })).toBeVisible();
+  });
+
+  test('should filter out children with visible set to false', async () => {
+    renderPreferencesNavigation();
+
+    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Child One' })).toBeVisible();
+      expect(screen.queryByRole('link', { name: 'Hidden Child' })).toBeNull();
+    });
+  });
+
+  test('should not select parent when current URL matches a child href', async () => {
+    render(PreferencesNavigation, {
+      meta: { url: '/preferences/test-parent/child-one' } as unknown as TinroRouteMeta,
+    });
+
+    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+
+    await vi.waitFor(() => {
+      const parentRow = screen.getByRole('link', { name: 'Test Parent' }).querySelector('[data-settings-nav-row]');
+      expect(parentRow).not.toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
+
+      const childRow = screen.getByRole('link', { name: 'Child One' }).querySelector('[data-settings-nav-row]');
+      expect(childRow).toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
+    });
+  });
+
+  test('should select parent when URL matches parent href and no child matches', async () => {
+    render(PreferencesNavigation, {
+      meta: { url: '/preferences/test-parent' } as unknown as TinroRouteMeta,
+    });
+
+    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+
+    await vi.waitFor(() => {
+      const parentRow = screen.getByRole('link', { name: 'Test Parent' }).querySelector('[data-settings-nav-row]');
+      expect(parentRow).toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
+
+      const childRow = screen.getByRole('link', { name: 'Child One' }).querySelector('[data-settings-nav-row]');
+      expect(childRow).not.toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
+    });
   });
 });

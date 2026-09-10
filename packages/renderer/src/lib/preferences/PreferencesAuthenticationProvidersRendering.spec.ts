@@ -21,7 +21,6 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
 
 import PreferencesAuthenticationProvidersRendering from './PreferencesAuthenticationProvidersRendering.svelte';
@@ -36,6 +35,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  document.documentElement.classList.remove('dark');
 });
 
 test('Expect that page shows icon and message when no auth providers registered', async () => {
@@ -215,7 +215,6 @@ test('Expects images.icon option to be used when no themes are present', async (
       sessionRequests: [],
     },
   ];
-  vi.mocked(AppearanceUtil.prototype.getImage).mockReturnValue('./icon.png');
   authenticationProviders.set(providerWithImageIcon);
   render(PreferencesAuthenticationProvidersRendering, {});
 
@@ -223,11 +222,11 @@ test('Expects images.icon option to be used when no themes are present', async (
     return screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
   });
 
-  expect(icon).toBeInTheDocument();
   expect(icon).toHaveAttribute('src', './icon.png');
 });
 
 test('Expects images.icon.dark option to be used when theme is dark', async () => {
+  document.documentElement.classList.add('dark');
   const providerWithImageIcon = [
     {
       id: 'test',
@@ -242,15 +241,14 @@ test('Expects images.icon.dark option to be used when theme is dark', async () =
       sessionRequests: [],
     },
   ];
-  vi.mocked(AppearanceUtil.prototype.getImage).mockReturnValue('./icon-dark.png');
   authenticationProviders.set(providerWithImageIcon);
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue('dark');
   render(PreferencesAuthenticationProvidersRendering, {});
 
-  const icon = await waitFor(() => {
-    return screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
+  const icons = await waitFor(() => {
+    return screen.getAllByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
   });
-  expect(icon).toBeInTheDocument();
-  expect(icon).toHaveAttribute('src', './icon-dark.png');
+  expect(icons[1]).toHaveAttribute('src', './icon-dark.png');
+  document.documentElement.classList.remove('dark');
 });

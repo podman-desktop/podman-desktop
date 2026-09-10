@@ -28,8 +28,10 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
+import { viewsContributions } from '/@/stores/views';
 
 import ContainerList from './ContainerList.svelte';
 
@@ -37,6 +39,9 @@ vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // vi.resetAllMocks does not touch Svelte stores; a test that sets one would
+  // otherwise leak its contributions into every test declared after it
+  viewsContributions.set([]);
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
@@ -931,6 +936,93 @@ test('Try to run pods in bulk', async () => {
   expect(window.startContainer).toHaveBeenCalledOnce();
 });
 
+test.each([false, true])('Try to stop containers and pods in bulk (failure: %s)', async failure => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  let resolveStopPod: () => void;
+  vi.mocked(window.stopPod).mockReturnValue(
+    new Promise((resolve, reject) => {
+      resolveStopPod = failure ? (): void => reject(new Error('Pod stop failed')) : resolve;
+    }),
+  );
+  if (failure) {
+    vi.mocked(window.stopContainer).mockRejectedValue(new Error('Container stop failed'));
+  }
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).toHaveLength(0));
+
+  const podId = 'pod-id4';
+  const containerId = 'sha256:67890123456';
+  const mockedContainers = [
+    {
+      Id: containerId,
+      Image: 'sha256:678',
+      Names: ['standalone-container'],
+      Status: 'Running',
+      State: 'running',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'dummy-image-id',
+    } as ContainerInfo,
+    {
+      Id: 'sha256:8908901234567890123',
+      Image: 'sha256:890',
+      Names: ['container-in-pod'],
+      Status: 'Running',
+      State: 'running',
+      pod: {
+        name: 'my-pod4',
+        id: podId,
+        status: 'Running',
+        engineId: 'podman',
+      },
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'dummy-image-id',
+    } as ContainerInfo,
+  ];
+
+  vi.mocked(window.listContainers).mockResolvedValue(mockedContainers);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const selectAll = screen.getByRole('checkbox', { name: 'Toggle all' });
+  await fireEvent.click(selectAll);
+
+  const stopBulkButton = screen.getByRole('button', { name: 'Stop selected containers and pods' });
+  await fireEvent.click(stopBulkButton);
+
+  await waitFor(() => expect(window.stopPod).toHaveBeenCalledWith('podman', podId));
+  // the standalone container should be stopped without waiting for the pod operation to finish
+  await waitFor(() => expect(window.stopContainer).toHaveBeenCalledWith('podman', containerId));
+  expect(stopBulkButton).toHaveAttribute('aria-busy', 'true');
+
+  resolveStopPod!();
+  await waitFor(() => expect(stopBulkButton).toHaveAttribute('aria-busy', 'false'));
+
+  expect(window.stopPod).toHaveBeenCalledOnce();
+  expect(window.stopContainer).toHaveBeenCalledOnce();
+  if (failure) {
+    expect(consoleError).toHaveBeenCalledWith('error while stopping container', new Error('Container stop failed'));
+    expect(consoleError).toHaveBeenCalledWith('error while stopping pod', new Error('Pod stop failed'));
+    // Failed pods return to RUNNING and can be retried without stopping the failed container again.
+    vi.mocked(window.stopPod).mockResolvedValue(undefined);
+    await fireEvent.click(stopBulkButton);
+    await waitFor(() => expect(window.stopPod).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(stopBulkButton).toHaveAttribute('aria-busy', 'false'));
+    expect(window.stopContainer).toHaveBeenCalledOnce();
+  }
+  consoleError.mockRestore();
+});
+
 test('Ensuring the table and empty screen are not visible at the same time', async () => {
   // mock one container
   vi.mocked(window.listContainers).mockResolvedValue([
@@ -1278,4 +1370,79 @@ test('Expect clicking Existing image button closes dialog', async () => {
   await waitFor(() => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+});
+
+test('Expect contributed icon to be applied to the container row', async () => {
+  // the containers store converts without the context and the view contributions, so this
+  // icon can only appear if ContainerList overlays it after reading the store
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:iconcontainer',
+      Image: 'sha256:123',
+      Names: ['/icon-container'],
+      State: 'RUNNING',
+      ImageID: 'sha256:image-id',
+      engineId: 'podman',
+      engineName: 'podman',
+      Labels: { 'podman-desktop.label': 'true' },
+    } as unknown as ContainerInfo,
+  ]);
+
+  const contribs = [
+    {
+      extensionId: 'foo.bar',
+      viewId: CONTAINER_LIST_VIEW,
+      value: {
+        icon: '${my-custom-icon}',
+        when: 'podman-desktop.label in containerLabelKeys',
+      },
+    },
+  ];
+  vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
+  viewsContributions.set(contribs);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const statusElement = screen.getByRole('status', { name: 'RUNNING' });
+  expect(statusElement.getElementsByClassName('podman-desktop-icon-my-custom-icon')).toHaveLength(1);
+});
+
+test('Expect search not to match the raw compose-prefixed container name', async () => {
+  // `names` carries the raw '/myproject-web-1'; `name` is the compose-stripped 'web-1'.
+  // Search has always matched on `name`, and adding `names` to the object must not
+  // silently widen it — findMatchInLeaves recurses into arrays.
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:composecontainer',
+      Image: 'sha256:123',
+      Names: ['/myproject-web-1'],
+      State: 'RUNNING',
+      ImageID: 'sha256:image-id',
+      engineId: 'podman',
+      engineName: 'podman',
+      Labels: { 'com.docker.compose.project': 'myproject' },
+    } as unknown as ContainerInfo,
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+
+  // the stripped name still matches, as it did before the store held ContainerInfoUI
+  const { unmount } = await waitRender({ searchTerm: 'web-1' });
+  expect(screen.queryByText('web-1')).toBeInTheDocument();
+  unmount();
+
+  // the raw prefixed name must not
+  await waitRender({ searchTerm: 'myproject-web-1' });
+  expect(screen.queryByText('web-1')).not.toBeInTheDocument();
 });

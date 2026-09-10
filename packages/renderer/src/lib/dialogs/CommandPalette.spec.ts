@@ -18,12 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { type ContainerInfo, NavigationPage } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
@@ -37,9 +38,10 @@ const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
 vi.mock(import('tinro'));
 
 const mockContainerInfo = {
-  Id: 'test-container-id',
-  Names: ['test-container'],
-} as unknown as ContainerInfo;
+  id: 'test-container-id',
+  name: 'test-container',
+  names: ['/test-container'],
+} as unknown as ContainerInfoUI;
 
 beforeAll(() => {
   vi.mocked(window.executeCommand).mockResolvedValue(undefined);

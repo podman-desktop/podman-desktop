@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -30,7 +30,9 @@ interface ConnectionListFormatJson {
   Name: string;
   IsMachine?: boolean;
   URI: string;
-  Identity: string;
+  // podman >= 5.x omits this field entirely when a connection was added
+  // without --identity, so it may be undefined
+  Identity?: string;
 }
 
 interface RemoteSystemConnection {
@@ -143,9 +145,7 @@ export class PodmanRemoteConnections {
         const host = uri.hostname;
         const port = Number.parseInt(uri.port, 10);
         const username = uri.username;
-        const privateKeyFile = connection.Identity;
-
-        const privateKey = readFileSync(privateKeyFile, 'utf8');
+        const privateKey = await this.readPrivateKey(connection.Identity);
         const remotePath = uri.pathname;
 
         let localPath: string;
@@ -200,11 +200,26 @@ export class PodmanRemoteConnections {
     }
   }
 
+  // Resolve the SSH private key for a connection. When the connection has no
+  // Identity, return undefined so the tunnel falls back to the ssh-agent,
+  // mirroring the podman CLI (containers/common pkg/ssh/connection_golang.go
+  // ValidateAndConfigure, which uses SSH_AUTH_SOCK when no identity is set:
+  // https://github.com/containers/common/blob/main/pkg/ssh/connection_golang.go#L249-L300).
+  // podman >= 5.x omits the Identity field entirely when a connection was added
+  // without --identity; reading it unconditionally previously threw and the
+  // connection was silently dropped from the UI (see issue #13286).
+  protected async readPrivateKey(identity?: string): Promise<string | undefined> {
+    if (!identity) {
+      return undefined;
+    }
+    return readFile(identity, 'utf8');
+  }
+
   protected createTunnel(
     host: string,
     port: number,
     username: string,
-    privateKey: string,
+    privateKey: string | undefined,
     remotePath: string,
     localPath: string,
   ): PodmanRemoteSshTunnel {
@@ -217,5 +232,11 @@ export class PodmanRemoteConnections {
 
   stop(): void {
     this.#stopMonitoring = true;
+    // clear any pending monitoring cycle, otherwise the already-scheduled
+    // setTimeout keeps firing (and re-arming itself) after stop()
+    if (this.#timeout) {
+      clearTimeout(this.#timeout);
+      this.#timeout = undefined;
+    }
   }
 }

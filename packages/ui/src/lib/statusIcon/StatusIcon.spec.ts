@@ -23,36 +23,17 @@ import { expect, test } from 'vitest';
 
 import StatusIcon from './StatusIcon.svelte';
 
-test('Expect starting styling', async () => {
-  const status = 'STARTING';
+test.each([
+  { status: 'STARTING', expectedClass: 'bg-[var(--pd-status-starting)]' },
+  { status: 'RUNNING', expectedClass: 'bg-[var(--pd-status-running)]' },
+  { status: 'DEGRADED', expectedClass: 'bg-[var(--pd-status-degraded)]' },
+])('Expect $status styling', async ({ status, expectedClass }) => {
   render(StatusIcon, { status });
   const icon = screen.getByRole('status');
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveAttribute('title', status);
 
-  expect(icon).toHaveClass('bg-[var(--pd-status-starting)]');
-  expect(icon).toHaveClass('text-[var(--pd-status-contrast)]');
-});
-
-test('Expect running styling', async () => {
-  const status = 'RUNNING';
-  render(StatusIcon, { status });
-  const icon = screen.getByRole('status');
-  expect(icon).toBeInTheDocument();
-  expect(icon).toHaveAttribute('title', status);
-
-  expect(icon).toHaveClass('bg-[var(--pd-status-running)]');
-  expect(icon).toHaveClass('text-[var(--pd-status-contrast)]');
-});
-
-test('Expect degraded styling', async () => {
-  const status = 'DEGRADED';
-  render(StatusIcon, { status });
-  const icon = screen.getByRole('status');
-  expect(icon).toBeInTheDocument();
-  expect(icon).toHaveAttribute('title', status);
-
-  expect(icon).toHaveClass('bg-[var(--pd-status-degraded)]');
+  expect(icon).toHaveClass(expectedClass);
   expect(icon).toHaveClass('text-[var(--pd-status-contrast)]');
 });
 

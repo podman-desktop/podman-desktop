@@ -82,8 +82,10 @@ test('Expect monaco editor component to be called with inspectNetwork info', asy
   delete inspectInfo.engineId;
   delete inspectInfo.engineName;
 
-  expect(MonacoEditor).toHaveBeenCalledWith(expect.anything(), {
-    content: JSON.stringify(inspectInfo, undefined, 2),
-    language: 'json',
+  await vi.waitFor(() => {
+    expect(MonacoEditor).toHaveBeenCalledWith(expect.anything(), {
+      content: JSON.stringify(inspectInfo, undefined, 2),
+      language: 'json',
+    });
   });
 });

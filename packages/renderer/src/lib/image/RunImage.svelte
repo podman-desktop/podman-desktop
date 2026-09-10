@@ -94,7 +94,9 @@ let containerNameError: string | undefined = $derived.by(() => {
   const containerAlreadyExists = $containersInfos.find(
     container =>
       container.engineId === imageInspectInfo.engineId &&
-      container.Names.some(iteratingContainerName => iteratingContainerName === `/${options.basic.containerName}`),
+      // `names` keeps the raw aliases with their leading slash; `name` is a single
+      // compose-stripped string and cannot answer a multi-alias match
+      container.names.some(iteratingContainerName => iteratingContainerName === `/${options.basic.containerName}`),
   );
   if (containerAlreadyExists) {
     return `The name ${options.basic.containerName} already exists. Please choose another name or leave blank to generate a name.`;

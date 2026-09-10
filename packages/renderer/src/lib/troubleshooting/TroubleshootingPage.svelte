@@ -33,12 +33,12 @@ onMount(async () => {
   {#snippet tabs()}
   <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
     <Tab
-      title="Repair & Connections"
+      title="Repair & connections"
       selected={isTabSelected($router.path, 'repair-connections')}
       url={getTabUrl($router.path, 'repair-connections')} />
     <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
     <Tab
-      title="Gather Logs"
+      title="Gather logs"
       selected={isTabSelected($router.path, 'gatherlogs')}
       url={getTabUrl($router.path, 'gatherlogs')} />
     <Tab title="Stores" selected={isTabSelected($router.path, 'stores')} url={getTabUrl($router.path, 'stores')} />
@@ -49,7 +49,7 @@ onMount(async () => {
   {/snippet}
   {#snippet content()}
   <div class="flex w-full h-full overflow-auto">
-    <Route path="/repair-connections" breadcrumb="Repair & Connections" navigationHint="tab">
+    <Route path="/repair-connections" breadcrumb="Repair & connections" navigationHint="tab">
       <TroubleshootingPageProviders />
     </Route>
 
@@ -57,7 +57,7 @@ onMount(async () => {
       <TroubleshootingDevToolsConsoleLogs />
     </Route>
 
-    <Route path="/gatherlogs" breadcrumb="GatherLogs" navigationHint="tab">
+    <Route path="/gatherlogs" breadcrumb="Gather logs" navigationHint="tab">
       <TroubleshootingGatherLogs />
     </Route>
 

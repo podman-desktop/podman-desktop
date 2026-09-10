@@ -98,6 +98,48 @@ test.describe('Appearance theme switching', { tag: ['@smoke', '@windows_sanity',
     playExpect(theme.colorScheme).toBe('light');
   });
 
+  test('Switching to hc-dark mode applies dark theme with high contrast', async ({ page, statusBar }) => {
+    await preferencesPage.setPreferenceDropdownValue(Preferences.Labels.APPEARANCE, 'hc-dark');
+
+    const dropdownValue = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
+    playExpect(dropdownValue).toBe('hc-dark');
+
+    await playExpect
+      .poll(async () => (await getThemeState(page)).hasDarkClass, {
+        timeout: 15_000,
+        message: 'Expected dark class on document element after switching to hc-dark mode',
+      })
+      .toBe(true);
+
+    const theme = await getThemeState(page);
+    playExpect(theme.colorScheme).toBe('dark');
+
+    // the status bar exposes the high-contrast flag via data-pd-force-theme
+    await playExpect(statusBar.content).toHaveAttribute('data-pd-force-theme', 'hc-dark');
+  });
+
+  test('Switching to hc-light mode applies light theme with high contrast', async ({ page, statusBar }) => {
+    await preferencesPage.setPreferenceDropdownValue(Preferences.Labels.APPEARANCE, 'hc-light');
+
+    const dropdownValue = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
+    playExpect(dropdownValue).toBe('hc-light');
+
+    await playExpect
+      .poll(async () => (await getThemeState(page)).hasDarkClass, {
+        timeout: 15_000,
+        message: 'Expected dark class removed from document element after switching to hc-light mode',
+      })
+      .toBe(false);
+
+    const theme = await getThemeState(page);
+    playExpect(theme.colorScheme).toBe('light');
+
+    // the status bar is always rendered with a dark palette, but still switches
+    // to its high-contrast variant when a high-contrast appearance is active,
+    // even though the rest of the app is in light mode
+    await playExpect(statusBar.content).toHaveAttribute('data-pd-force-theme', 'hc-dark');
+  });
+
   test('Switching back to dark mode re-applies dark theme', async ({ page }) => {
     await preferencesPage.setPreferenceDropdownValue(Preferences.Labels.APPEARANCE, 'dark');
 

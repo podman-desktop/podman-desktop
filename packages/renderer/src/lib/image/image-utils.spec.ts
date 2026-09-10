@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ContainerInfo, ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import type { ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { ContextUI } from '/@/lib/context/context';
 
 import { ImageUtils } from './image-utils';
@@ -151,16 +152,16 @@ describe('inUse', () => {
 
   const containerInfo = {
     Id: 'container1',
-    Image: 'quay.io/podman/hello:latest',
-    ImageID: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
-  } as unknown as ContainerInfo;
+    image: 'quay.io/podman/hello:latest',
+    imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+  } as unknown as ContainerInfoUI;
 
   test('should expect inUse with an untagged image', async () => {
     const containerInfo = {
       Id: 'container1',
-      Image: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
-      ImageID: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
-    } as unknown as ContainerInfo;
+      image: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+      imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+    } as unknown as ContainerInfoUI;
 
     const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerInfo]);
     expect(isUsed).toBeTruthy();
@@ -183,9 +184,9 @@ describe('inUse', () => {
   test('should expect inUse for untagged image when container references it by original tag name', async () => {
     const containerWithTag = {
       Id: 'container1',
-      Image: 'quay.io/podman/hello:latest',
-      ImageID: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
-    } as unknown as ContainerInfo;
+      image: 'quay.io/podman/hello:latest',
+      imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+    } as unknown as ContainerInfoUI;
 
     const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerWithTag]);
     expect(isUsed).toBeTruthy();
@@ -204,9 +205,9 @@ describe('inUse', () => {
   test('should not expect inUse when no container matches the ImageID', async () => {
     const differentContainer = {
       Id: 'container2',
-      Image: 'quay.io/podman/hello:latest',
-      ImageID: 'sha256:different_image_id',
-    } as unknown as ContainerInfo;
+      image: 'quay.io/podman/hello:latest',
+      imageId: 'sha256:different_image_id',
+    } as unknown as ContainerInfoUI;
 
     const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', [differentContainer]);
     expect(isUsed).toBeFalsy();
@@ -223,7 +224,7 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
   let imageUtils: ImageUtils;
   let manifestImage: ImageInfo;
   let imageList: ImageInfo[];
-  let containerInfoList: ContainerInfo[];
+  let containerInfoList: ContainerInfoUI[];
   let contextUI: ContextUI;
   let viewContributions: ViewInfoUI[];
 
@@ -250,8 +251,8 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     ] as unknown as ImageInfo[];
 
     containerInfoList = [
-      { Id: 'container1', Image: 'my.registry:1234/manifest:latest', ImageID: 'manifest1' },
-    ] as unknown as ContainerInfo[];
+      { id: 'container1', image: 'my.registry:1234/manifest:latest', imageId: 'manifest1' },
+    ] as unknown as ContainerInfoUI[];
 
     contextUI = new ContextUI();
     viewContributions = [{ extensionId: 'extension', viewId: 'id', value: {} }] as unknown as ViewInfoUI[];
@@ -279,4 +280,21 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     expect(imageInfoUIs.length).toBe(1);
     expect(imageInfoUIs[0].id).toBe('manifest1');
   });
+});
+
+test('should not expect inUse when the container carries no imageId', async () => {
+  // imageId is required on ContainerInfoUI, but this fixture is hand-built and omits it:
+  // a container without one must never be reported as using an image, rather than
+  // falling back to some other field
+  const imageInfo = {
+    Id: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+    RepoTags: ['quay.io/podman/hello:latest'],
+  } as unknown as ImageInfo;
+
+  const containerWithoutImageId = {
+    id: 'container1',
+    image: 'quay.io/podman/hello:latest',
+  } as unknown as ContainerInfoUI;
+
+  expect(imageUtils.getInUse(imageInfo, 'quay.io/podman/hello:latest', [containerWithoutImageId])).toBeFalsy();
 });

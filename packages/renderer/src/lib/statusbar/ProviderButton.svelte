@@ -1,8 +1,7 @@
 <script lang="ts">
 import type { ProviderInfo } from '@podman-desktop/core-api';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Snippet } from 'svelte';
-
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 
 import ProviderButtonStatus from './ProviderButtonStatus.svelte';
 
@@ -44,11 +43,9 @@ let classes = $derived(`max-h-[15px] grayscale ${providerStatus === 'stopped' ? 
   {#if provider.images.icon}
     <div class="relative flex h-full items-center">
     {#if typeof provider.images.icon !== 'string' && provider.images.icon.fontId}
-      <IconImage class={classes} alt={provider.name}>
-        <span role="img" class="podman-desktop-icon-{provider.images.icon.fontId}"></span>
-      </IconImage>
+      <span role="img" aria-label={provider.name} class="podman-desktop-icon-{provider.images.icon.fontId} {classes}"></span>
     {:else if provider.images.icon}
-      <IconImage image={provider.images.icon} class={classes} alt={provider.name}></IconImage>
+      <Icon icon={provider.images.icon} class={classes} title={provider.name} />
     {/if}
     <ProviderButtonStatus status={providerStatus} />
     </div>

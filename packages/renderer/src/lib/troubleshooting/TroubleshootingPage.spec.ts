@@ -28,7 +28,7 @@ test('Check Troubleshooting Page', async () => {
   render(TroubleshootingPage, {});
 
   // click on the first tab
-  const repairConnectionsLink = screen.getByRole('link', { name: 'Repair & Connections' });
+  const repairConnectionsLink = screen.getByRole('link', { name: 'Repair & connections' });
   expect(repairConnectionsLink).toBeInTheDocument();
   await fireEvent.click(repairConnectionsLink);
 

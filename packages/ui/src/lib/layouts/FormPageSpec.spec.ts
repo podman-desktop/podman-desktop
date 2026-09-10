@@ -23,23 +23,9 @@ import { expect, test } from 'vitest';
 
 import FormPageSpec from './FormPageSpec.svelte';
 
-test('Expect icon slot is defined', async () => {
+test.each(['icon', 'actions', 'content'])('Expect %s slot is defined', async label => {
   render(FormPageSpec);
 
-  const element = screen.getByLabelText('icon');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect actions slot is defined', async () => {
-  render(FormPageSpec);
-
-  const element = screen.getByLabelText('actions');
-  expect(element).toBeInTheDocument();
-});
-
-test('Expect content slot is defined', async () => {
-  render(FormPageSpec);
-
-  const element = screen.getByLabelText('content');
+  const element = screen.getByLabelText(label);
   expect(element).toBeInTheDocument();
 });

@@ -40,6 +40,10 @@ const cronjob: V1CronJob = {
     name: 'my-cronjob',
     namespace: 'default',
   },
+  spec: {
+    schedule: '*/5 * * * *',
+    jobTemplate: {},
+  },
 } as V1CronJob;
 
 vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {

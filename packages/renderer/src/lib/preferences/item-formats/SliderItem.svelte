@@ -32,4 +32,4 @@ async function onInput(event: Event): Promise<void> {
   aria-label={record.description}
   oninput={onInput}
   disabled={!!record.readonly || !!record.locked}
-  class="w-full h-1 bg-[var(--pd-input-toggle-on-bg)] rounded-lg appearance-none accent-[var(--pd-input-toggle-on-bg)] cursor-pointer range-xs mt-2" />
+  class="w-full h-1 bg-(--pd-input-slider-track-bg) rounded-lg appearance-none accent-(--pd-input-toggle-on-bg) cursor-pointer range-xs mt-2" />

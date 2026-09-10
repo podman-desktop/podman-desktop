@@ -218,33 +218,26 @@ describe('delete', () => {
   });
 });
 
-test('if kubernetes connection has start lifecycle method, start button has to be visible', () => {
-  const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'kube' };
+test.each([
+  { buttonName: 'Start', lifecycle: 'start' },
+  { buttonName: 'Stop', lifecycle: 'stop' },
+  { buttonName: 'Delete', lifecycle: 'delete' },
+])(
+  'if kubernetes connection has $lifecycle lifecycle method, $buttonName button has to be visible',
+  ({ buttonName }) => {
+    const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'kube' };
 
-  render(PreferencesConnectionActions, {
-    connectionStatus,
-    provider: customProviderInfo,
-    connection: kubernetesConnection,
-    updateConnectionStatus,
-    addConnectionToRestartingQueue,
-  });
-  const button = screen.getByRole('button', { name: 'Start' });
-  expect(button).toBeInTheDocument();
-});
-
-test('if kubernetes connection has stop lifecycle method, stop button has to be visible', () => {
-  const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'kube' };
-
-  render(PreferencesConnectionActions, {
-    connectionStatus,
-    provider: customProviderInfo,
-    connection: kubernetesConnection,
-    updateConnectionStatus,
-    addConnectionToRestartingQueue,
-  });
-  const button = screen.getByRole('button', { name: 'Stop' });
-  expect(button).toBeInTheDocument();
-});
+    render(PreferencesConnectionActions, {
+      connectionStatus,
+      provider: customProviderInfo,
+      connection: kubernetesConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue,
+    });
+    const button = screen.getByRole('button', { name: buttonName });
+    expect(button).toBeInTheDocument();
+  },
+);
 
 test('if kubernetes connection has start and stop lifecycle methods, restart button has to be visible', () => {
   const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'kube' };
@@ -262,18 +255,4 @@ test('if kubernetes connection has start and stop lifecycle methods, restart but
   expect(stopButton).toBeInTheDocument();
   const restartButton = screen.getByRole('button', { name: 'Restart' });
   expect(restartButton).toBeInTheDocument();
-});
-
-test('if kubernetes connection has delete lifecycle method, delete button has to be visible', () => {
-  const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'kube' };
-
-  render(PreferencesConnectionActions, {
-    connectionStatus,
-    provider: customProviderInfo,
-    connection: kubernetesConnection,
-    updateConnectionStatus,
-    addConnectionToRestartingQueue,
-  });
-  const button = screen.getByRole('button', { name: 'Delete' });
-  expect(button).toBeInTheDocument();
 });

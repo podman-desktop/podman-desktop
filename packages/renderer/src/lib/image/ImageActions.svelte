@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCircleArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { createEventDispatcher, onMount } from 'svelte';
@@ -130,7 +130,7 @@ function saveImage(): void {
     onClick={(): Promise<void> => pushImage(image)}
     menu={dropdownMenu}
     detailed={detailed}
-    icon={faArrowUp} />
+    icon={faCircleArrowUp} />
 
   <ListItemButtonIcon
     title="Edit Image"

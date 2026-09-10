@@ -16,5 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+export const UNIX_SCHEME = 'unix://';
+export const NPIPE_SCHEME = 'npipe://';
 export const WINDOWS_NPIPE = '//./pipe/docker_engine';
 export const UNIX_SOCKET_PATH = '/var/run/docker.sock';

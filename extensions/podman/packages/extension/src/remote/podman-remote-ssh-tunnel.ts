@@ -46,7 +46,7 @@ export class PodmanRemoteSshTunnel {
     private host: string,
     private port: number,
     private username: string,
-    private privateKey: string,
+    private privateKey: string | undefined,
     private remotePath: string,
     private localPath: string,
   ) {
@@ -54,11 +54,26 @@ export class PodmanRemoteSshTunnel {
       host: this.host,
       port: this.port,
       username: this.username,
-      privateKey: this.privateKey,
     };
+    if (this.privateKey) {
+      this.#sshConfig.privateKey = this.privateKey;
+    } else {
+      // No identity/private key for this connection. Mirror the podman CLI,
+      // which falls back to the ssh-agent when no identity is set: see
+      // containers/common pkg/ssh/connection_golang.go ValidateAndConfigure
+      // https://github.com/containers/common/blob/main/pkg/ssh/connection_golang.go#L249-L300
+      const sshAuthSock = process.env['SSH_AUTH_SOCK'];
+      if (sshAuthSock) {
+        this.#sshConfig.agent = sshAuthSock;
+      }
+    }
     this.#connected = new Promise<boolean>((resolve, _reject) => {
       this.#resolveConnected = resolve;
     });
+  }
+
+  protected getSshConfig(): ConnectConfig {
+    return this.#sshConfig;
   }
 
   dispose(): void {

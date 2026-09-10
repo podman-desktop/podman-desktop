@@ -3,8 +3,6 @@ import { faSquare as faOutlineSquare } from '@fortawesome/free-regular-svg-icons
 import { faCheckSquare } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
-
 interface Props {
   icon?: string | { readonly light: string; readonly dark: string };
   displayName: string;
@@ -50,7 +48,7 @@ function handleKeydown(event: KeyboardEvent): void {
 
   {#if icon}
     <div aria-hidden="true" class="shrink-0">
-      <IconImage image={icon} class="h-10 w-10" alt="" />
+      <Icon icon={icon} class="h-10 w-10" />
     </div>
   {/if}
 

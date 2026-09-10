@@ -85,6 +85,7 @@
         {
           "command": "kind.image.move",
           "title": "Push image to Kind cluster",
+          "icon": "fas fa-circle-arrow-up",
           "disabled": "selectedImageId in imagesPushInProgressToKind"
         }
       ]
@@ -117,7 +118,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^22.0.1",
-    "@kubernetes/client-node": "^1.4.0",
+    "@kubernetes/client-node": "^2.0.0",
     "@podman-desktop/api": "workspace:*",
     "mustache": "^4.2.0",
     "yaml": "^2.9.0"
@@ -126,6 +127,6 @@
     "adm-zip": "^0.6.0",
     "mkdirp": "^3.0.1",
     "vite": "^8.2.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.0"
   }
 }

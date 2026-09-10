@@ -64,6 +64,23 @@ test('Expect slider to be disabled when record.readonly is true', async () => {
   expect(input).toBeDisabled();
 });
 
+test('Expect track background to be neutral and fill/thumb to use accent color', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 4,
+    maximum: 34,
+  };
+
+  render(SliderItem, { record, value: 15 });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toHaveClass('bg-(--pd-input-slider-track-bg)');
+  expect(input).toHaveClass('accent-(--pd-input-toggle-on-bg)');
+});
+
 test('Expect slider to be disabled when record.locked is true', async () => {
   const record: IConfigurationPropertyRecordedSchema = {
     id: 'record',

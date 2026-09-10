@@ -196,7 +196,7 @@ describe('update checks', () => {
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
 
     // check we called the stop command
-    expect(utils.execPodman).toHaveBeenCalledWith(['machine', 'stop', 'test']);
+    expect(utils.execPodman).toHaveBeenCalledWith(['machine', 'stop', 'test'], 'libkrun');
   });
 
   test('wipeAllDataBeforeMajorUpdate with podman 4.9 -> 5.0', async () => {

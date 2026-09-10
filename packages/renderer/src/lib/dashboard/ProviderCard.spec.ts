@@ -117,7 +117,7 @@ test('Expect provider icon', async () => {
 
   const { findByRole } = render(ProviderCard, { provider });
 
-  // allow IconImage to render
+  // allow Icon to render
   await tick();
 
   const logo = await findByRole('img');

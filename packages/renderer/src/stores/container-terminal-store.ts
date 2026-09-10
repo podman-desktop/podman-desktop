@@ -46,7 +46,7 @@ containersInfos.subscribe(containers => {
   const toRemove: TerminalOfContainer[] = [];
   terminals.forEach(terminal => {
     const found = containers.find(
-      container => container.Id === terminal.containerId && container.engineId === terminal.engineId,
+      container => container.id === terminal.containerId && container.engineId === terminal.engineId,
     );
     if (!found) {
       toRemove.push(terminal);
