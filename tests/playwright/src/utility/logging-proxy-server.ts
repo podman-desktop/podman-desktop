@@ -62,16 +62,23 @@ export class LoggingProxyServer {
     return [...this.#hits];
   }
 
+  clearHits(): void {
+    this.#hits.length = 0;
+  }
+
   async waitForHost(hostSubstring: string, timeoutMs = 15_000): Promise<void> {
     const start = Date.now();
-    while (!this.#hits.some(hit => hit.host.includes(hostSubstring))) {
+    let matchingHit = this.#hits.find(hit => hit.host.includes(hostSubstring));
+    while (!matchingHit) {
       if (Date.now() - start > timeoutMs) {
         throw new Error(
           `Timed out waiting for a proxy hit matching "${hostSubstring}". Hits so far: ${JSON.stringify(this.#hits)}`,
         );
       }
       await new Promise(resolve => setTimeout(resolve, 250));
+      matchingHit = this.#hits.find(hit => hit.host.includes(hostSubstring));
     }
+    console.log(`[LoggingProxyServer] matched hit for "${hostSubstring}": ${JSON.stringify(matchingHit)}`);
   }
 
   async stop(): Promise<void> {

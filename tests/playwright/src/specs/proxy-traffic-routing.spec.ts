@@ -80,118 +80,120 @@ test.afterAll(async ({ navigationBar, runner }) => {
   }
 });
 
-test.describe
-  .serial('Proxied requests hit the configured proxy', () => {
-    test('Manual proxy points at the local stub proxy', async ({ navigationBar }) => {
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.proxyTab.click();
-      await playExpect(proxyPage.heading).toBeVisible();
+test.describe('Proxied requests hit the configured proxy', {
+  tag: ['@smoke', '@windows_sanity', '@macos_sanity'],
+}, () => {
+  test.describe.configure({ mode: 'serial' });
 
-      await proxyPage.selectProxy(ProxyTypes.Manual);
-      await proxyPage.fillHttpProxy(`http://127.0.0.1:${stubProxyPort}`);
-      await proxyPage.fillHttpsProxy(`http://127.0.0.1:${stubProxyPort}`);
-      await proxyPage.updateProxySettings();
-    });
-
-    test('Extension catalog fetch goes through the proxy', async ({ navigationBar }) => {
-      const extensionsPage = await navigationBar.openExtensions();
-      await extensionsPage.openCatalogTab();
-      // Force a fresh fetch: the catalog is cached for the process lifetime and may already have
-      // been fetched (unproxied) at app startup, before this test configured the proxy.
-      await extensionsPage.refreshCatalog();
-      await stubProxy.waitForHost(CATALOG_HOST);
-    });
-
-    test('CLI tool version check goes through the proxy', async ({ navigationBar }) => {
-      // the "Settings" nav link isn't a real route (href="#top") - going through Dashboard first
-      // avoids relying on it working from an arbitrary previous page, matching proxy-smoke.spec.ts
-      await navigationBar.openDashboard();
-      const settingsBar = await navigationBar.openSettings();
-      const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
-      await playExpect(cliToolsPage.toolsTable).toBeVisible();
-
-      const updateButton = cliToolsPage.toolsTable.getByText('Update available', { exact: true }).first();
-      const downgradeButton = cliToolsPage.toolsTable.getByText('Upgrade/Downgrade', { exact: true }).first();
-      if ((await updateButton.count()) > 0) {
-        await updateButton.click();
-      } else if ((await downgradeButton.count()) > 0) {
-        await downgradeButton.click();
-      } else {
-        test.skip(true, 'No CLI tool exposes an update/downgrade action to verify against the proxy');
-      }
-
-      await stubProxy.waitForHost(GITHUB_API_HOST);
-    });
-
-    // Bug found via this test: https://github.com/podman-desktop/podman-desktop/issues/19171
-    test('Add registry goes through the proxy', async ({ navigationBar }) => {
-      test.skip(true, 'Skipped because of bug: https://github.com/podman-desktop/podman-desktop/issues/19171');
-      await navigationBar.openDashboard();
-      const settingsBar = await navigationBar.openSettings();
-      const registriesPage = await settingsBar.openTabPage(RegistriesPage);
-      await playExpect(registriesPage.heading).toBeVisible();
-
-      await registriesPage.submitRegistryForm(
-        `https://${FAKE_REGISTRY_HOST}`,
-        'proxy-test-user',
-        'proxy-test-password',
-      );
-      try {
-        await stubProxy.waitForHost(FAKE_REGISTRY_HOST);
-      } finally {
-        // the credential check can never succeed against a non-forwarding stub proxy - dismiss the dialog
-        await registriesPage.cancelDialogButton.click().catch(() => {
-          /* dialog may already have closed on its own after the failed check */
-        });
-      }
-    });
-
-    // Will be skipped when https://github.com/podman-desktop/podman-desktop/issues/17249 is addressed.
-    test('Image pull goes through the proxy', async ({ navigationBar }) => {
-      test.skip(
-        true,
-        'Test cannot be run unless https://github.com/podman-desktop/podman-desktop/issues/17249 is implemented',
-      );
-      const imagesPage = await navigationBar.openImages();
-      const pullImagePage = await imagesPage.openPullImage();
-      await playExpect(pullImagePage.heading).toBeVisible();
-
-      await pullImagePage.startPullOnly(PULL_IMAGE_NAME);
-      try {
-        await stubProxy.waitForHost(REGISTRY_HOST);
-      } finally {
-        // the pull can never complete against a non-forwarding stub proxy - clean it up
-        await pullImagePage.cancelButton.click().catch(() => {
-          /* pull may already have failed on its own */
-        });
-      }
-    });
-
-    // Confirmed via a live run: @kubernetes/client-node's requests fail with a direct DNS lookup
-    // error (`getaddrinfo ENOTFOUND ...`) rather than a proxy CONNECT, so they bypass the proxy
-    // entirely - there is no proxy wiring anywhere under packages/main/src/plugin/kubernetes/. Left
-    // as a documented gap, same as the image-pull scenario above, rather than a product code change.
-    test('Kubernetes API connectivity check goes through the proxy', async ({ navigationBar }) => {
-      test.skip(
-        true,
-        'Kubernetes API calls are not routed via proxy, yet: https://github.com/podman-desktop/extension-kubernetes-dashboard/issues/1349',
-      );
-      await navigationBar.openDashboard();
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.expandPreferencesTab();
-      const preferencesPage = await settingsBar.openTabPage(PreferencesPage);
-      await playExpect(preferencesPage.heading).toBeVisible();
-      await preferencesPage.selectKubeFile(FAKE_KUBECONFIG_PATH);
-
-      const kubeSettingsBar = await navigationBar.openSettings();
-      const kubePage = await kubeSettingsBar.openTabPage(KubeContextPage);
-      await playExpect(kubePage.heading).toBeVisible();
-      await playExpect.poll(async () => await kubePage.pageIsEmpty(), { timeout: 30_000 }).toBeFalsy();
-
-      if (!(await kubePage.isContextDefault(FAKE_CONTEXT_NAME))) {
-        await kubePage.setDefaultContext(FAKE_CONTEXT_NAME);
-      }
-
-      await stubProxy.waitForHost(FAKE_CLUSTER_HOST);
-    });
+  test.afterEach(() => {
+    // Force a fresh fetch: the catalog is cached for the process lifetime and may already have
+    // been fetched (unproxied) at app startup, before this test configured the proxy.
+    stubProxy.clearHits();
   });
+
+  test('Manual proxy points at the local stub proxy', async ({ navigationBar }) => {
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.proxyTab.click();
+    await playExpect(proxyPage.heading).toBeVisible();
+
+    await proxyPage.selectProxy(ProxyTypes.Manual);
+    await proxyPage.fillHttpProxy(`http://127.0.0.1:${stubProxyPort}`);
+    await proxyPage.fillHttpsProxy(`http://127.0.0.1:${stubProxyPort}`);
+    await proxyPage.updateProxySettings();
+  });
+
+  test('Extension catalog fetch goes through the proxy', async ({ navigationBar }) => {
+    const extensionsPage = await navigationBar.openExtensions();
+    await extensionsPage.openCatalogTab();
+    await extensionsPage.refreshCatalog();
+    await stubProxy.waitForHost(CATALOG_HOST);
+  });
+
+  test('CLI tool version check goes through the proxy', async ({ navigationBar }) => {
+    // the "Settings" nav link isn't a real route (href="#top") - going through Dashboard first
+    // avoids relying on it working from an arbitrary previous page, matching proxy-smoke.spec.ts
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
+    await playExpect(cliToolsPage.toolsTable).toBeVisible();
+    const updateButton = cliToolsPage.toolsTable.getByText('Update available', { exact: true }).first();
+    const downgradeButton = cliToolsPage.toolsTable.getByText('Upgrade/Downgrade', { exact: true }).first();
+    if ((await updateButton.count()) > 0) {
+      await updateButton.click();
+    } else if ((await downgradeButton.count()) > 0) {
+      await downgradeButton.click();
+    } else {
+      test.skip(true, 'No CLI tool exposes an update/downgrade action to verify against the proxy');
+    }
+
+    await stubProxy.waitForHost(GITHUB_API_HOST);
+  });
+
+  // Bug found via this test: https://github.com/podman-desktop/podman-desktop/issues/19171
+  test('Add registry goes through the proxy', async ({ navigationBar }) => {
+    test.skip(true, 'Skipped because of bug: https://github.com/podman-desktop/podman-desktop/issues/19171');
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    const registriesPage = await settingsBar.openTabPage(RegistriesPage);
+    await playExpect(registriesPage.heading).toBeVisible();
+
+    await registriesPage.submitRegistryForm(`https://${FAKE_REGISTRY_HOST}`, 'proxy-test-user', 'proxy-test-password');
+    try {
+      await stubProxy.waitForHost(FAKE_REGISTRY_HOST);
+    } finally {
+      // the credential check can never succeed against a non-forwarding stub proxy - dismiss the dialog
+      await registriesPage.cancelDialogButton.click().catch(() => {
+        /* dialog may already have closed on its own after the failed check */
+      });
+    }
+  });
+
+  // Will be skipped when https://github.com/podman-desktop/podman-desktop/issues/17249 is addressed.
+  test('Image pull goes through the proxy', async ({ navigationBar }) => {
+    test.skip(
+      true,
+      'Test cannot be run unless https://github.com/podman-desktop/podman-desktop/issues/17249 is implemented',
+    );
+    const imagesPage = await navigationBar.openImages();
+    const pullImagePage = await imagesPage.openPullImage();
+    await playExpect(pullImagePage.heading).toBeVisible();
+
+    await pullImagePage.startPullOnly(PULL_IMAGE_NAME);
+    try {
+      await stubProxy.waitForHost(REGISTRY_HOST);
+    } finally {
+      // the pull can never complete against a non-forwarding stub proxy - clean it up
+      await pullImagePage.cancelButton.click().catch(() => {
+        /* pull may already have failed on its own */
+      });
+    }
+  });
+
+  // Confirmed via a live run: @kubernetes/client-node's requests fail with a direct DNS lookup
+  // error (`getaddrinfo ENOTFOUND ...`) rather than a proxy CONNECT, so they bypass the proxy
+  // entirely - there is no proxy wiring anywhere under packages/main/src/plugin/kubernetes/. Left
+  // as a documented gap, same as the image-pull scenario above, rather than a product code change.
+  test('Kubernetes API connectivity check goes through the proxy', async ({ navigationBar }) => {
+    test.skip(
+      true,
+      'Kubernetes API calls are not routed via proxy, yet: https://github.com/podman-desktop/extension-kubernetes-dashboard/issues/1349',
+    );
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.expandPreferencesTab();
+    const preferencesPage = await settingsBar.openTabPage(PreferencesPage);
+    await playExpect(preferencesPage.heading).toBeVisible();
+    await preferencesPage.selectKubeFile(FAKE_KUBECONFIG_PATH);
+
+    const kubeSettingsBar = await navigationBar.openSettings();
+    const kubePage = await kubeSettingsBar.openTabPage(KubeContextPage);
+    await playExpect(kubePage.heading).toBeVisible();
+    await playExpect.poll(async () => await kubePage.pageIsEmpty(), { timeout: 30_000 }).toBeFalsy();
+
+    if (!(await kubePage.isContextDefault(FAKE_CONTEXT_NAME))) {
+      await kubePage.setDefaultContext(FAKE_CONTEXT_NAME);
+    }
+
+    await stubProxy.waitForHost(FAKE_CLUSTER_HOST);
+  });
+});
