@@ -170,11 +170,7 @@ export function isContainerConnection(
 }
 
 // matches the native <input type="range"> default: midpoint when no value is set
-export function calcSliderFillPercent(
-  minimum: number | undefined,
-  maximum: number | string | undefined,
-  current: number | undefined,
-): string {
+export function calcSliderFillPercent(minimum?: number, maximum?: number | string, current?: number): string {
   const min = minimum ?? 0;
   const max = maximum === undefined ? 100 : uncertainStringToNumber(maximum);
 
