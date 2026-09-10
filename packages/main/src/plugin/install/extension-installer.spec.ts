@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { rmSync } from 'node:fs';
+import { promises } from 'node:fs';
 import * as path from 'node:path';
 
 import type { ExtensionInfo } from '@podman-desktop/core-api';
@@ -25,8 +25,14 @@ import type { CatalogFetchableExtension } from '@podman-desktop/core-api/extensi
 import type { IpcMain, IpcMainEvent } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { CancellationTokenRegistry } from '/@/plugin/cancellation-token-registry.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { Directories } from '/@/plugin/directories.js';
+import {
+  DockerDesktopContribution,
+  DockerDesktopInstaller,
+} from '/@/plugin/docker-extension/docker-desktop-installer.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -35,6 +41,7 @@ import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 import { ExtensionInstaller } from './extension-installer.js';
+import { LocalExtensionImageLoader } from './local-extension-image-loader.js';
 
 let extensionInstaller: ExtensionInstaller;
 
@@ -50,12 +57,14 @@ const listExtensionsMock = vi.fn();
 const loadExtensionMock = vi.fn();
 const analyzeExtensionMock = vi.fn();
 const loadExtensionsMock = vi.fn();
+const removeExtensionMock = vi.fn();
 const ensureExtensionsMock = vi.fn();
 const extensionLoader: ExtensionLoader = {
   getPluginsDirectory: getPluginsDirectoryMock,
   listExtensions: listExtensionsMock,
   loadExtension: loadExtensionMock,
   loadExtensions: loadExtensionsMock,
+  removeExtension: removeExtensionMock,
   analyzeExtension: analyzeExtensionMock,
   ensureExtensionIsEnabled: ensureExtensionsMock,
 } as unknown as ExtensionLoader;
@@ -84,10 +93,23 @@ const directories = {
 const contributionManager = {} as unknown as ContributionManager;
 const ipcMainOnMock = vi.fn();
 
+const containerRegistry = {
+  listImages: vi.fn(),
+} as unknown as ContainerProviderRegistry;
+
+const cancellationTokenRegistry = {
+  getCancellationTokenSource: vi.fn(),
+} as unknown as CancellationTokenRegistry;
+
 const createTaskMock = vi.fn();
 const taskManager = {
   createTask: createTaskMock,
 } as unknown as TaskManager;
+
+const findLocalImageMock = vi.spyOn(LocalExtensionImageLoader.prototype, 'findLocalImage');
+const downloadAndExtractLocalImageMock = vi.spyOn(LocalExtensionImageLoader.prototype, 'downloadAndExtractImage');
+const setupContributionMock = vi.spyOn(DockerDesktopInstaller.prototype, 'setupContribution');
+const removeContributionMock = vi.spyOn(DockerDesktopInstaller.prototype, 'removeContribution');
 
 vi.mock(import('node:fs'));
 vi.mock(import('/@/plugin/docker-extension/docker-desktop-installer.js'));
@@ -95,18 +117,26 @@ vi.mock(import('/@/plugin/docker-extension/docker-desktop-installer.js'));
 beforeEach(() => {
   vi.resetAllMocks();
 
+  findLocalImageMock.mockResolvedValue(undefined);
+  downloadAndExtractLocalImageMock.mockResolvedValue(undefined);
+  setupContributionMock.mockResolvedValue(undefined);
+  removeContributionMock.mockResolvedValue(undefined);
+
   createTaskMock.mockReturnValue({
     status: 'in-progress',
     progress: undefined,
     error: undefined,
   });
 
-  vi.mocked(rmSync).mockReturnValue(undefined);
+  vi.mocked(promises.rm).mockResolvedValue(undefined);
+  vi.mocked(promises.mkdir).mockResolvedValue(undefined);
+  vi.mocked(promises.mkdtemp).mockResolvedValue('/fake/tmp/directory');
   vi.mocked(directories.getPluginsDirectory).mockReturnValue('/fake/plugins/directory');
   vi.mocked(directories.getContributionStorageDir).mockReturnValue('/fake/dd/directory');
   extensionInstaller = new ExtensionInstaller(
     apiSender,
     extensionLoader,
+    containerRegistry,
     imageRegistry,
     extensionsCatalog,
     telemetryMock,
@@ -114,6 +144,7 @@ beforeEach(() => {
     contributionManager,
     ipcMainOnMock,
     taskManager,
+    cancellationTokenRegistry,
   );
 });
 
@@ -170,6 +201,198 @@ describe('installFromImage task lifecycle', () => {
     expect(createTaskMock).toHaveBeenCalledWith({ title: `Installing extension ${imageToPull}` });
     const task = createTaskMock.mock.results[0]?.value;
     expect(task.error).toBe('Error while analyzing image: Error: network failure');
+  });
+
+  test('should create a cancellable task and mark it canceled', async () => {
+    const token = { isCancellationRequested: true };
+    vi.mocked(cancellationTokenRegistry.getCancellationTokenSource).mockReturnValue({ token } as never);
+    findLocalImageMock.mockRejectedValueOnce(new Error('Extension installation canceled'));
+
+    await expect(
+      extensionInstaller.installFromImage(
+        vi.fn(),
+        vi.fn(),
+        vi.fn(),
+        'localhost/example/extension:latest',
+        undefined,
+        undefined,
+        42,
+      ),
+    ).rejects.toThrow('Extension installation canceled');
+
+    expect(createTaskMock).toHaveBeenCalledWith({
+      title: 'Installing extension localhost/example/extension:latest',
+      cancellable: true,
+      cancellationTokenSourceId: 42,
+    });
+    expect(createTaskMock.mock.results[0]?.value.status).toBe('canceled');
+  });
+
+  test('passes cancellation through remote label lookup and layer extraction', async () => {
+    const token = { isCancellationRequested: false };
+    vi.mocked(cancellationTokenRegistry.getCancellationTokenSource).mockReturnValue({ token } as never);
+    getImageConfigLabelsMock.mockResolvedValueOnce({
+      'org.opencontainers.image.title': 'title',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'io.podman-desktop.api.version': '1.0.0',
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull, undefined, undefined, 42);
+
+    expect(getImageConfigLabelsMock).toHaveBeenCalledWith(imageToPull, token);
+    expect(downloadAndExtractImageMock).toHaveBeenCalledWith(
+      imageToPull,
+      '/fake/tmp/directory',
+      expect.any(Function),
+      token,
+    );
+  });
+});
+
+describe('local image installation', () => {
+  const imageName = 'localhost/example/extension:latest';
+  const labels = {
+    'org.opencontainers.image.title': 'Local extension',
+    'org.opencontainers.image.description': 'Local extension description',
+    'org.opencontainers.image.vendor': 'Example',
+    'io.podman-desktop.api.version': '1.0.0',
+  };
+
+  test('uses the local engine for labels and layer extraction', async () => {
+    const localImage = {
+      engineId: 'podman-machine',
+      engineName: 'Podman Machine',
+      id: 'sha256:image',
+      labels,
+    };
+    findLocalImageMock.mockResolvedValueOnce(localImage);
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ id: 'example.extension', manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageName);
+
+    expect(downloadAndExtractLocalImageMock).toHaveBeenCalledWith(
+      localImage,
+      imageName,
+      '/fake/tmp/directory',
+      expect.any(Function),
+      undefined,
+    );
+    expect(getImageConfigLabelsMock).not.toHaveBeenCalled();
+    expect(downloadAndExtractImageMock).not.toHaveBeenCalled();
+  });
+
+  test('preserves registry fallback when the localhost image is absent', async () => {
+    getImageConfigLabelsMock.mockResolvedValueOnce(labels);
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ id: 'example.extension', manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageName);
+
+    expect(getImageConfigLabelsMock).toHaveBeenCalledWith(imageName, undefined);
+    expect(downloadAndExtractImageMock).toHaveBeenCalledWith(
+      imageName,
+      '/fake/tmp/directory',
+      expect.any(Function),
+      undefined,
+    );
+    expect(downloadAndExtractLocalImageMock).not.toHaveBeenCalled();
+  });
+
+  test('reports missing labels without contacting a registry', async () => {
+    findLocalImageMock.mockResolvedValueOnce({
+      engineId: 'podman-machine',
+      engineName: 'Podman Machine',
+      id: 'sha256:image',
+      labels: undefined,
+    });
+    const sendError = vi.fn();
+
+    await extensionInstaller.installFromImage(vi.fn(), sendError, vi.fn(), imageName);
+
+    expect(sendError).toHaveBeenCalledWith(
+      `Image ${imageName} is not a Podman Desktop Extension. Unable to grab image config labels.`,
+    );
+    expect(getImageConfigLabelsMock).not.toHaveBeenCalled();
+  });
+
+  test('reports local lookup ambiguity without contacting a registry', async () => {
+    findLocalImageMock.mockRejectedValueOnce(new Error('image exists in multiple running container engines'));
+    const sendError = vi.fn();
+
+    await extensionInstaller.installFromImage(vi.fn(), sendError, vi.fn(), imageName);
+
+    expect(sendError).toHaveBeenCalledWith(
+      'Error while analyzing image: Error: image exists in multiple running container engines',
+    );
+    expect(getImageConfigLabelsMock).not.toHaveBeenCalled();
+  });
+
+  test('removes temporary and partial final directories after extraction fails', async () => {
+    findLocalImageMock.mockResolvedValueOnce({
+      engineId: 'podman-machine',
+      engineName: 'Podman Machine',
+      id: 'sha256:image',
+      labels,
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    downloadAndExtractLocalImageMock.mockRejectedValueOnce(new Error('malformed saved image'));
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageName)).rejects.toThrow(
+      'malformed saved image',
+    );
+
+    expect(promises.rm).toHaveBeenCalledWith('/fake/plugins/directory/localhostexampleextension', {
+      recursive: true,
+      force: true,
+    });
+    expect(promises.rm).toHaveBeenCalledWith('/fake/tmp/directory', { recursive: true, force: true });
+  });
+
+  test('reports the reserved destination when another install already claimed it', async () => {
+    findLocalImageMock.mockResolvedValueOnce({
+      engineId: 'podman-machine',
+      engineName: 'Podman Machine',
+      id: 'sha256:image',
+      labels,
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.mocked(promises.mkdir).mockRejectedValueOnce(Object.assign(new Error('already exists'), { code: 'EEXIST' }));
+    const sendError = vi.fn();
+
+    await extensionInstaller.installFromImage(vi.fn(), sendError, vi.fn(), imageName);
+
+    expect(sendError).toHaveBeenCalledWith(
+      `Unable to install image ${imageName}: the target extension directory /fake/plugins/directory/localhostexampleextension already exists. Remove it if no installed extension uses it, then retry.`,
+    );
+    expect(downloadAndExtractLocalImageMock).not.toHaveBeenCalled();
+  });
+
+  test('removes extracted files when extension analysis returns no metadata', async () => {
+    findLocalImageMock.mockResolvedValueOnce({
+      engineId: 'podman-machine',
+      engineName: 'Podman Machine',
+      id: 'sha256:image',
+      labels,
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce(undefined);
+    const sendError = vi.fn();
+
+    await extensionInstaller.installFromImage(vi.fn(), sendError, vi.fn(), imageName);
+
+    expect(sendError).toHaveBeenCalledWith('Error while analyzing extension: no extension metadata was returned');
+    expect(promises.rm).toHaveBeenCalledWith('/fake/plugins/directory/localhostexampleextension', {
+      recursive: true,
+      force: true,
+    });
   });
 });
 
@@ -233,6 +456,107 @@ test('should install an image (dd extensions) if labels are correct', async () =
   expect(sendError).not.toHaveBeenCalled();
 
   expect(spyExtractExtensionFiles).not.toHaveBeenCalled();
+});
+
+describe('Docker Desktop contribution cleanup', () => {
+  const imageName = 'fake.io/fake-image:fake-tag';
+  const finalFolderPath = '/fake/dd/directory/fakeiofakeimage';
+  const labels = {
+    'org.opencontainers.image.title': 'fake-title',
+    'org.opencontainers.image.description': 'fake-description',
+    'org.opencontainers.image.vendor': 'fake-vendor',
+    'com.docker.desktop.extension.api.version': '1.0.0',
+  };
+
+  test('removes an incomplete contribution and allows a retry when setup returns undefined', async () => {
+    getImageConfigLabelsMock.mockResolvedValue(labels);
+    const installed = new DockerDesktopContribution('fake-title', finalFolderPath, {
+      name: 'fake-title',
+      ui: {},
+    });
+    setupContributionMock.mockResolvedValueOnce(undefined).mockResolvedValueOnce(installed);
+
+    await expect(extensionInstaller.analyzeFromImage(vi.fn(), vi.fn(), imageName)).resolves.toBeUndefined();
+    expect(promises.rm).toHaveBeenCalledWith(finalFolderPath, { recursive: true, force: true });
+
+    await expect(extensionInstaller.analyzeFromImage(vi.fn(), vi.fn(), imageName)).resolves.toBe(installed);
+    expect(setupContributionMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('removes an incomplete contribution when setup throws', async () => {
+    getImageConfigLabelsMock.mockResolvedValue(labels);
+    setupContributionMock.mockRejectedValueOnce(new Error('setup failed'));
+
+    await expect(extensionInstaller.analyzeFromImage(vi.fn(), vi.fn(), imageName)).rejects.toThrow('setup failed');
+    expect(promises.rm).toHaveBeenCalledWith(finalFolderPath, { recursive: true, force: true });
+  });
+
+  test('removes an incomplete contribution when cancellation is requested during setup', async () => {
+    getImageConfigLabelsMock.mockResolvedValue(labels);
+    let canceled = false;
+    const token = {
+      get isCancellationRequested(): boolean {
+        return canceled;
+      },
+    } as never;
+    setupContributionMock.mockImplementationOnce(async () => {
+      canceled = true;
+      return new DockerDesktopContribution('fake-title', finalFolderPath, {
+        name: 'fake-title',
+        ui: {},
+      });
+    });
+
+    await expect(
+      extensionInstaller.analyzeFromImage(vi.fn(), vi.fn(), imageName, undefined, undefined, token),
+    ).rejects.toThrow('Extension installation canceled');
+    expect(removeContributionMock).toHaveBeenCalledOnce();
+    expect(promises.rm).toHaveBeenCalledWith(finalFolderPath, { recursive: true, force: true });
+  });
+});
+
+describe('extension loading rollback', () => {
+  const imageName = 'fake.io/fake-image:fake-tag';
+  const analyzedExtension = {
+    id: 'example.extension',
+    path: '/fake/plugins/directory/example',
+    manifest: {},
+  } as AnalyzedExtension;
+
+  test('removes analyzed extensions when loading fails', async () => {
+    vi.spyOn(extensionInstaller, 'analyzeFromImage').mockResolvedValueOnce(analyzedExtension);
+    loadExtensionsMock.mockRejectedValueOnce(new Error('load failed'));
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageName)).rejects.toThrow(
+      'load failed',
+    );
+
+    expect(removeExtensionMock).toHaveBeenCalledWith(analyzedExtension.id);
+    expect(promises.rm).toHaveBeenCalledWith(analyzedExtension.path, { recursive: true, force: true });
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('extension-started');
+  });
+
+  test('removes a loaded extension when cancellation is requested during loading', async () => {
+    let canceled = false;
+    const token = {
+      get isCancellationRequested(): boolean {
+        return canceled;
+      },
+    };
+    vi.mocked(cancellationTokenRegistry.getCancellationTokenSource).mockReturnValue({ token } as never);
+    vi.spyOn(extensionInstaller, 'analyzeFromImage').mockResolvedValueOnce(analyzedExtension);
+    loadExtensionsMock.mockImplementationOnce(async () => {
+      canceled = true;
+    });
+
+    await expect(
+      extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageName, undefined, undefined, 42),
+    ).rejects.toThrow('Extension installation canceled');
+
+    expect(removeExtensionMock).toHaveBeenCalledWith(analyzedExtension.id);
+    expect(promises.rm).toHaveBeenCalledWith(analyzedExtension.path, { recursive: true, force: true });
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('extension-started');
+  });
 });
 
 test('should fail if extension with same id is already installed', async () => {
@@ -596,6 +920,9 @@ test('should install an image with extension pack with an existing dependency al
     expect.any(Function),
     expect.any(Function),
     'my-other-extension-link',
+    undefined,
+    undefined,
+    undefined,
   );
 
   // this extension is already installed, so we should not analyze it
@@ -603,5 +930,8 @@ test('should install an image with extension pack with an existing dependency al
     expect.any(Function),
     expect.any(Function),
     'my-another-extension-link',
+    undefined,
+    undefined,
+    undefined,
   );
 });

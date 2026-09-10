@@ -464,6 +464,24 @@ describe('startVM', () => {
 
     expect(waitForRunningStateSpy).toBeCalled();
   });
+
+  test('clears the started marker when compose startup fails', async () => {
+    vi.spyOn(contributionManager, 'execComposeCommand').mockRejectedValueOnce(new Error('compose failed'));
+
+    await expect(contributionManager.startVM('contrib1', '/path/to/compose.yaml')).rejects.toThrow('compose failed');
+
+    expect(contributionManager.hasStartedContribution('contrib1')).toBeFalsy();
+  });
+
+  test('stops a VM and clears its started marker', async () => {
+    const execComposeCommand = vi.spyOn(contributionManager, 'execComposeCommand').mockResolvedValue({} as RunResult);
+    contributionManager.setStartedContribution('contrib1', true);
+
+    await contributionManager.stopVM('contrib1', '/path/to/compose.yaml');
+
+    expect(execComposeCommand).toHaveBeenCalledWith('/path/to', ['-p', 'podman-desktop-ext-contrib1', 'down']);
+    expect(contributionManager.hasStartedContribution('contrib1')).toBeFalsy();
+  });
 });
 
 describe('isPodmanDesktopServiceAlive', () => {

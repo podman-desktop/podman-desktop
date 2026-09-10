@@ -2521,6 +2521,14 @@ export function initExposure(): void {
   const onDataCallbacksShellInContainerExtension = new Map<number, (data: string) => void>();
   const onDataCallbacksShellInContainerExtensionError = new Map<number, (data: string) => void>();
   const onDataCallbacksShellInContainerExtensionResolve = new Map<number, (value: void | PromiseLike<void>) => void>();
+  const onDataCallbacksShellInContainerExtensionReject = new Map<number, (reason?: unknown) => void>();
+
+  function clearExtensionInstallCallbacks(callbackId: number): void {
+    onDataCallbacksShellInContainerExtension.delete(callbackId);
+    onDataCallbacksShellInContainerExtensionError.delete(callbackId);
+    onDataCallbacksShellInContainerExtensionResolve.delete(callbackId);
+    onDataCallbacksShellInContainerExtensionReject.delete(callbackId);
+  }
 
   contextBridge.exposeInMainWorld(
     'extensionInstallFromImage',
@@ -2529,6 +2537,7 @@ export function initExposure(): void {
       logCallback: (data: string) => void,
       errorCallback: (data: string) => void,
       catalogExtensionId?: string,
+      cancellationTokenSourceId?: number,
     ): Promise<void> => {
       onDataCallbacksShellInContainerExtensionInstallId++;
       onDataCallbacksShellInContainerExtension.set(onDataCallbacksShellInContainerExtensionInstallId, logCallback);
@@ -2541,10 +2550,12 @@ export function initExposure(): void {
         imageName,
         onDataCallbacksShellInContainerExtensionInstallId,
         catalogExtensionId,
+        cancellationTokenSourceId,
       );
 
-      return new Promise(resolve => {
+      return new Promise((resolve, reject) => {
         onDataCallbacksShellInContainerExtensionResolve.set(onDataCallbacksShellInContainerExtensionInstallId, resolve);
+        onDataCallbacksShellInContainerExtensionReject.set(onDataCallbacksShellInContainerExtensionInstallId, reject);
       });
     },
   );
@@ -2561,6 +2572,9 @@ export function initExposure(): void {
     if (callback) {
       callback(data);
     }
+    const rejectCallback = onDataCallbacksShellInContainerExtensionReject.get(callbackId);
+    rejectCallback?.(new Error(data));
+    clearExtensionInstallCallbacks(callbackId);
   });
 
   ipcRenderer.on('extension-installer:install-from-image-end', (_, callbackId: number) => {
@@ -2568,6 +2582,7 @@ export function initExposure(): void {
     if (resolveCallback) {
       resolveCallback();
     }
+    clearExtensionInstallCallbacks(callbackId);
   });
 
   contextBridge.exposeInMainWorld('getPodmanDesktopVersion', async (): Promise<string> => {

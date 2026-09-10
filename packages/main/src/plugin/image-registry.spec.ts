@@ -23,10 +23,10 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { Registry } from '@podman-desktop/api';
+import type { CancellationToken, Registry } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as fzstd from 'fzstd';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import * as nodeTar from 'tar';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
@@ -645,6 +645,66 @@ test('expect downloadAndExtractImage works', async () => {
   }
 });
 
+test('downloadAndExtractImage aborts an in-flight layer download and removes its temporary file', async () => {
+  vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+  vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('12345');
+
+  let notifyBlobStarted!: () => void;
+  const blobStarted = new Promise<void>(resolve => (notifyBlobStarted = resolve));
+  const handlers = [
+    http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+      HttpResponse.json(imageRegistryManifestMultiArchJson),
+    ),
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+      () => HttpResponse.json(imageRegistryManifestJson),
+    ),
+    http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/*', async () => {
+      notifyBlobStarted();
+      await delay('infinite');
+      return new HttpResponse();
+    }),
+  ];
+  server = setupServer(...handlers);
+  server.listen({ onUnhandledRequest: 'error' });
+
+  let cancellationListener!: () => void;
+  let canceled = false;
+  const dispose = vi.fn();
+  const cancellationToken = {
+    get isCancellationRequested() {
+      return canceled;
+    },
+    onCancellationRequested: vi.fn(listener => {
+      cancellationListener = listener;
+      return { dispose };
+    }),
+  } as unknown as CancellationToken;
+  const destination = path.resolve(os.tmpdir(), 'canceled-registry-extraction');
+  const temporaryDirectoryPrefix = 'sha256_ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4-';
+  const temporaryDirectoriesBefore = (await fs.promises.readdir(os.tmpdir())).filter(entry =>
+    entry.startsWith(temporaryDirectoryPrefix),
+  );
+
+  const download = imageRegistry.downloadAndExtractImage(
+    'my-podman-desktop-fake-registry.io/my/extension',
+    destination,
+    vi.fn(),
+    cancellationToken,
+  );
+  await blobStarted;
+  canceled = true;
+  cancellationListener();
+
+  await expect(download).rejects.toThrow();
+  expect(dispose).toHaveBeenCalledOnce();
+  const temporaryDirectoriesAfter = (await fs.promises.readdir(os.tmpdir())).filter(entry =>
+    entry.startsWith(temporaryDirectoryPrefix),
+  );
+  expect(temporaryDirectoriesAfter).toEqual(temporaryDirectoriesBefore);
+  await fs.promises.rm(destination, { recursive: true, force: true });
+});
+
 test('expect downloadAndExtractImage works with zstd', async () => {
   // need to mock the http request
   const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');
@@ -726,7 +786,9 @@ test('expect downloadAndExtractImage works with zstd', async () => {
     // expect some traces in the logger
     expect(logFn).toHaveBeenCalled();
 
-    expect(spyExtract).toHaveBeenCalledWith({ cwd: destFolder, file: expect.stringContaining('.tar') });
+    expect(spyExtract).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: destFolder, file: expect.stringContaining('.tar') }),
+    );
   } finally {
     // remove the folders
     await fs.promises.rm(tmpTarFolder, { recursive: true });
