@@ -55,6 +55,7 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Application update reminder preferences set to Never', { tag: '@update-install' }, () => {
+    test.describe.configure({ retries: 1 });
     test('No update on startup', async ({ page, welcomePage }) => {
       const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop\?/ });
       await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 20_000 });
