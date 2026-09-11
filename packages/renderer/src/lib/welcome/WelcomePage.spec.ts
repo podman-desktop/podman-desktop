@@ -166,6 +166,39 @@ test('Expect welcome screen to show three checked onboarding providers', async (
   expect(checkbox3).toBeChecked();
 });
 
+test('Expect unchecking an onboarding provider to survive a providerInfos refresh', async () => {
+  onboardingList.set([
+    {
+      extension: 'id',
+      removable: true,
+      title: 'onboarding',
+      name: 'foobar1',
+      displayName: 'FooBar1',
+      icon: 'data:image/png;base64,foobar1',
+      steps: [],
+      enablement: 'true',
+    },
+  ]);
+  providerInfos.set([]);
+
+  await waitRender({ showWelcome: true });
+
+  const checkbox = screen.getByRole('checkbox', { name: 'FooBar1 checkbox' });
+  expect(checkbox).toBeChecked();
+
+  await fireEvent.click(checkbox);
+  expect(checkbox).not.toBeChecked();
+  expect(screen.queryByRole('button', { name: 'Start onboarding' })).not.toBeInTheDocument();
+
+  // providers emit whenever a provider status changes or an extension starts/stops, which
+  // recomputes the sorted list; the user's choice must not be reset
+  providerInfos.set([]);
+  await tick();
+
+  expect(checkbox).not.toBeChecked();
+  expect(screen.queryByRole('button', { name: 'Start onboarding' })).not.toBeInTheDocument();
+});
+
 test('Make sure the provider with name podman appears first even if its 2nd in the list', async () => {
   providerInfos.set([
     {
