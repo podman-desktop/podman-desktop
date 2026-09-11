@@ -26,6 +26,22 @@ let display = $state(false);
 
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
+  // A new box replaces the one on screen, which is what callers such as the
+  // updater rely on: it shows "an update is being downloaded" and then swaps in
+  // "restart now?" without anyone dismissing the first one.
+  //
+  // What was wrong was replacing it *silently*: currentId was overwritten, so
+  // the deferred promise held in the main process for the replaced box was
+  // never settled and its caller waited forever. Answer it on the way out.
+  if (display) {
+    window
+      .sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined)
+      .catch((err: unknown) => console.error('Error answering the replaced message box', err));
+  }
+  showMessageBox(options);
+};
+
+function showMessageBox(options: MessageBoxOptions): void {
   currentId = options?.id || 0;
   title = options?.title || '';
   message = options?.message || '';
@@ -77,7 +93,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   });
 
   display = true;
-};
+}
 
 onMount(() => {
   // handle the showMessageBox event
@@ -95,13 +111,16 @@ function cleanup(): void {
 }
 
 async function clickButton(index?: number, dropdownIndex?: number): Promise<void> {
+  const answeredId = currentId;
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, index, dropdownIndex);
+  await window.sendShowMessageBoxOnSelect(answeredId, index, dropdownIndex);
 }
 
 async function onClose(): Promise<void> {
+  const answeredId = currentId;
+  const answeredCancelId = cancelId >= 0 ? cancelId : undefined;
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
+  await window.sendShowMessageBoxOnSelect(answeredId, answeredCancelId);
 }
 
 function getButtonType(b: boolean): ButtonType {
