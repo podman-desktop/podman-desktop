@@ -125,36 +125,6 @@ interface JSONEvent {
   Actor?: { ID: string };
 }
 
-// a multiplexed container stream prefixes every frame with an 8-byte header:
-// 1 byte of stream type, 3 reserved bytes set to zero, then the payload size
-// Only the first four bytes of an 8-byte frame header carry a recognizable shape: a stream type
-// followed by three reserved zero bytes. The last four hold the payload size, which can be any
-// value, so they say nothing about whether the stream is multiplexed.
-const MULTIPLEXED_HEADER_PREFIX_SIZE = 4;
-
-// Guesses whether a container log stream is multiplexed by looking at the beginning of its first
-// header. Containers started with a TTY stream their output verbatim, so the leading bytes are log
-// text; a multiplexed frame instead starts with a known stream type followed by three zero bytes, a
-// combination that plain UTF-8 log text cannot produce (NUL bytes are not valid there).
-//
-// A single byte that does not fit the shape already rules a header out, so the answer is returned as
-// soon as the bytes at hand allow it — in practice on the very first byte for log text. `undefined`
-// means the chunk is still a possible header prefix and more bytes are needed to decide.
-export function detectMultiplexedHeader(chunk: Buffer): boolean | undefined {
-  for (let index = 0; index < MULTIPLEXED_HEADER_PREFIX_SIZE; index++) {
-    const value = chunk[index];
-    if (value === undefined) {
-      return undefined;
-    }
-    // 0: stdin, 1: stdout, 2: stderr, then three reserved zero bytes
-    const matches = index === 0 ? value <= 2 : value === 0;
-    if (!matches) {
-      return false;
-    }
-  }
-  return true;
-}
-
 @injectable()
 export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
@@ -2021,6 +1991,19 @@ export class ContainerProviderRegistry {
       optionalParams['since'] = logsParams.since;
     }
 
+    // containers started without a TTY return their logs multiplexed: every frame is prefixed
+    // with an 8-byte header (stream type + payload size) that must be stripped, otherwise the
+    // header bytes are decoded as text and pollute the beginning of the log lines. This mirrors
+    // what the podman and docker CLIs do: they read Config.Tty from an inspect and demultiplex
+    // accordingly, rather than guessing from the stream content.
+    let multiplexed = false;
+    try {
+      multiplexed = !(await container.inspect()).Config.Tty;
+    } catch (error: unknown) {
+      // if the container cannot be inspected, fall back to forwarding the stream as-is
+      console.warn(`Unable to read the TTY mode of container ${logsParams.id}`, error);
+    }
+
     container
       .logs({
         follow: true,
@@ -2046,12 +2029,11 @@ export class ContainerProviderRegistry {
           logsParams.callback('data', decoder.write(chunk));
         };
 
-        // the stream is consumed through a pass-through so that its first bytes can be inspected
-        // before deciding how to forward the rest of it
+        // the stream is consumed through a pass-through so that a single `end` handler flushes the
+        // decoders whichever path forwards the data, including once demuxStream has drained
         const logStream = new PassThrough();
-        let sniffed: Buffer | undefined = Buffer.alloc(0);
 
-        const forwardDemultiplexed = (): void => {
+        if (multiplexed) {
           const decodeInto = (decoder: StringDecoder): Writable =>
             new Writable({
               write(chunk: Buffer, _encoding, done): void {
@@ -2060,45 +2042,15 @@ export class ContainerProviderRegistry {
               },
             });
           container.modem.demuxStream(logStream, decodeInto(stdoutDecoder), decodeInto(stderrDecoder));
-        };
-
-        const forwardVerbatim = (): void => {
+        } else {
           logStream.on('data', (chunk: Buffer) => emitData(stdoutDecoder, chunk));
-        };
+        }
 
         containerStream.on('data', (chunk: Buffer | string) => {
-          const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-          if (sniffed) {
-            sniffed = Buffer.concat([sniffed, bytes]);
-            const multiplexed = detectMultiplexedHeader(sniffed);
-            // the bytes so far are still a possible header prefix: wait for the next ones rather
-            // than guess
-            if (multiplexed === undefined) {
-              return;
-            }
-            const buffered = sniffed;
-            sniffed = undefined;
-            if (multiplexed) {
-              forwardDemultiplexed();
-            } else {
-              forwardVerbatim();
-            }
-            logStream.write(buffered);
-            return;
-          }
-          logStream.write(bytes);
+          logStream.write(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
         });
 
         containerStream.on('end', () => {
-          if (sniffed) {
-            // the stream ended on an incomplete header prefix: it cannot hold a whole frame
-            const buffered = sniffed;
-            sniffed = undefined;
-            forwardVerbatim();
-            if (buffered.length > 0) {
-              logStream.write(buffered);
-            }
-          }
           logStream.end();
         });
 

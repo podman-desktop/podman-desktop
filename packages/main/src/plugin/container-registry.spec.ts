@@ -45,7 +45,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
-import { ContainerProviderRegistry, detectMultiplexedHeader } from '/@/plugin/container-registry.js';
+import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
@@ -3123,10 +3123,11 @@ test('container logs decodes stdout and stderr with separate decoders', async ()
   expect(dataChunks.join('')).toBe('err\n🚀');
 });
 
-test('container logs forwards the raw stream when the first bytes are not a frame header', async () => {
+test('container logs forwards the raw stream of a TTY container', async () => {
   const stream = new EventEmitter();
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
   } as unknown as Dockerode.Container;
 
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
@@ -3141,60 +3142,24 @@ test('container logs forwards the raw stream when the first bytes are not a fram
   expect(dataChunks.join('')).toBe('raw log\n');
 });
 
-test('container logs forwards a stream shorter than a frame header', async () => {
+test('container logs forwards the raw stream when the container cannot be inspected', async () => {
   const stream = new EventEmitter();
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockRejectedValue(new Error('no such container')),
   } as unknown as Dockerode.Container;
 
   const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
 
   setTimeout(() => {
-    // fewer bytes than a header, but they already rule one out: 'h' is not a stream type
-    stream.emit('data', Buffer.from('hi\n'));
+    stream.emit('data', Buffer.from('raw log\n'));
     stream.emit('end', '');
   });
 
   await endPromise;
 
-  expect(dataChunks.join('')).toBe('hi\n');
-});
-
-test('container logs forwards a short stream that cannot be ruled out before it ends', async () => {
-  const stream = new EventEmitter();
-  const dockerodeContainer = {
-    logs: vi.fn().mockResolvedValue(stream),
-  } as unknown as Dockerode.Container;
-
-  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
-
-  setTimeout(() => {
-    // a lone 0x02 is still a possible header prefix, so only the end of the stream tells that no
-    // frame is coming
-    stream.emit('data', Buffer.from([2]));
-    stream.emit('end', '');
-  });
-
-  await endPromise;
-
-  expect(dataChunks.join('')).toBe('\u0002');
-});
-
-describe('detectMultiplexedHeader', () => {
-  test.each([
-    ['stdout frame', buildLogFrame('hello\n', 1), true],
-    ['stderr frame', buildLogFrame('hello\n', 2), true],
-    ['plain log text', Buffer.from('hello world\n'), false],
-    ['unknown stream type', Buffer.concat([Buffer.from([7, 0, 0, 0, 0, 0, 0, 1]), Buffer.from('x')]), false],
-    ['no reserved zero bytes', Buffer.from([1, 2, 3, 4, 0, 0, 0, 1]), false],
-    // the payload size carries no signal, so the prefix alone is enough to decide
-    ['header prefix only', Buffer.from([1, 0, 0, 0]), true],
-    ['short text ruled out by its first byte', Buffer.from('hi\n'), false],
-    ['empty chunk', Buffer.alloc(0), undefined],
-    ['incomplete prefix', Buffer.from([1, 0]), undefined],
-  ])('%s', (_name, chunk, expected) => {
-    expect(detectMultiplexedHeader(chunk)).toBe(expected);
-  });
+  // an unreadable TTY mode must not break the logs: the stream is forwarded as-is
+  expect(dataChunks.join('')).toBe('raw log\n');
 });
 
 test('container logs forwards the since option', async () => {
