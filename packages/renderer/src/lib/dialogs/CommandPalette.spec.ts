@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { NavigationPage } from '@podman-desktop/core-api';
+import { NavigationPage, type SearchResultItemInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -57,6 +57,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.clearAllMocks();
   navigationSearchEntries.set([]);
+  vi.mocked(window.searchDynamicProviders).mockResolvedValue([]);
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
   vi.mocked(window.getCommandPaletteSearchOptions).mockResolvedValue([
     { category: 'category 1', text: 'Category 1 text', placeholder: 'Enter category 1 item' },
@@ -835,6 +836,241 @@ describe('Command Palette', () => {
     expect(imgIcon).not.toBeInTheDocument();
     const svgIcon = listItem.querySelector('svg');
     expect(svgIcon).toBeInTheDocument();
+  });
+
+  test('Dynamic search results should appear in Go To tab after typing', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      { label: 'dev-cluster (started)', command: 'navigateToResources', providerLabel: 'Kind Clusters' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'dev');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalledWith('dev', 10);
+    });
+
+    const item = await screen.findByRole('listitem', { name: 'Kind Clusters: dev-cluster (started)' });
+    expect(item).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  test('Clicking dynamic search result should execute its command with args', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      {
+        label: 'test-resource',
+        command: 'my.extension.navigate',
+        args: ['arg1', 'arg2'],
+        providerLabel: 'My Extension',
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'test');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalled();
+    });
+
+    const listItem = await screen.findByRole('listitem', { name: 'My Extension: test-resource' });
+    const button = listItem.querySelector('button')!;
+    await userEvent.click(button);
+
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my.extension.navigate', 'arg1', 'arg2');
+    vi.useRealTimers();
+  });
+
+  test('Dynamic search results should be cleared when palette is reopened', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      { label: 'stale-result', command: 'test.cmd', providerLabel: 'Provider' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'stale');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalled();
+    });
+
+    await screen.findByRole('listitem', { name: 'Provider: stale-result' });
+
+    vi.useRealTimers();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard('{F1}');
+
+    await tick();
+
+    const staleItem = screen.queryByRole('listitem', { name: 'Provider: stale-result' });
+    expect(staleItem).not.toBeInTheDocument();
+  });
+
+  test('Dynamic search result with themed icon should render both variants', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const darkIcon = 'data:image/png;base64,dark';
+    const lightIcon = 'data:image/png;base64,light';
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      {
+        label: 'themed-item',
+        command: 'test.cmd',
+        providerLabel: 'Themed Provider',
+        icon: { light: lightIcon, dark: darkIcon },
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'themed');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalled();
+    });
+
+    const listItem = await screen.findByRole('listitem', { name: 'Themed Provider: themed-item' });
+    const icons = listItem.querySelectorAll('img');
+    expect(icons).toHaveLength(2);
+    expect(icons[0]).toHaveAttribute('src', lightIcon);
+    expect(icons[1]).toHaveAttribute('src', darkIcon);
+    vi.useRealTimers();
+  });
+
+  test('Dynamic providers are not queried in Commands or Documentation tabs', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    // Commands tab (index 1) does not render dynamic results
+    const commandsTab = screen.getByRole('button', { name: /Category 2/ });
+    await userEvent.click(commandsTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'anything');
+    await vi.advanceTimersByTimeAsync(250);
+
+    expect(window.searchDynamicProviders).not.toHaveBeenCalled();
+
+    // Documentation tab (index 2) also does not render dynamic results
+    const docTab = screen.getByRole('button', { name: /Category 3/ });
+    await userEvent.click(docTab);
+    await vi.advanceTimersByTimeAsync(250);
+
+    expect(window.searchDynamicProviders).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  test('Switching into a dynamic tab with an existing query triggers a provider search', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(window.searchDynamicProviders).mockResolvedValue([
+      { label: 'late-result', command: 'test.cmd', providerLabel: 'Provider' },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    // Type while in the Commands tab (no provider query happens)
+    const commandsTab = screen.getByRole('button', { name: /Category 2/ });
+    await userEvent.click(commandsTab);
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.type(input, 'late');
+    await vi.advanceTimersByTimeAsync(250);
+    expect(window.searchDynamicProviders).not.toHaveBeenCalled();
+
+    // Switching to the Go to tab (index 3) should query providers with the existing query
+    const gotoTab = screen.getByRole('button', { name: /Category 4/ });
+    await userEvent.click(gotoTab);
+
+    await waitFor(() => {
+      expect(window.searchDynamicProviders).toHaveBeenCalledWith('late', 10);
+    });
+
+    const item = await screen.findByRole('listitem', { name: 'Provider: late-result' });
+    expect(item).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  test('Stale dynamic-search responses do not overwrite the current query results', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    // First query resolves slowly, second query resolves quickly with different data
+    let resolveFirst: ((value: SearchResultItemInfo[]) => void) | undefined;
+    const slowFirstResponse = new Promise<SearchResultItemInfo[]>(resolve => {
+      resolveFirst = resolve;
+    });
+    vi.mocked(window.searchDynamicProviders)
+      .mockReturnValueOnce(slowFirstResponse)
+      .mockResolvedValueOnce([{ label: 'fresh-result', command: 'test.cmd', providerLabel: 'Provider' }]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+
+    // First keystroke fires the slow (stale) request
+    await userEvent.type(input, 'sta');
+    await vi.advanceTimersByTimeAsync(250);
+
+    // Second keystroke fires the fast request that resolves first
+    await userEvent.type(input, 'le');
+    await vi.advanceTimersByTimeAsync(250);
+
+    await screen.findByRole('listitem', { name: 'Provider: fresh-result' });
+
+    // Now the stale first request resolves — it must be ignored
+    resolveFirst?.([{ label: 'stale-result', command: 'test.cmd', providerLabel: 'Provider' }]);
+    await tick();
+
+    expect(screen.queryByRole('listitem', { name: 'Provider: stale-result' })).not.toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Provider: fresh-result' })).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   test('Expect hidden navigation entries are excluded from GoTo items', async () => {
