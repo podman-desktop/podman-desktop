@@ -9,6 +9,6 @@ interface Props extends HTMLTdAttributes {
 let { class: className, children, ...restProps }: Props = $props();
 </script>
 
-<td class={['pl-2 text-md font-semibold text-[var(--pd-table-body-text-sub-secondary)]', className]} {...restProps}>
+<td class="pl-2 text-md font-semibold text-[var(--pd-table-body-text-sub-secondary)] {className}" {...restProps}>
   {@render children?.()}
 </td>
