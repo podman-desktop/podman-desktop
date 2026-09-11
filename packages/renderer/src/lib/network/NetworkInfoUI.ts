@@ -29,6 +29,10 @@ export interface NetworkInfoUI {
   status: string;
   containers: NetworkContainer[];
   ipv6_enabled: boolean;
+  // --- retained so list search keeps matching these; not rendered ---
+  labels?: { [key: string]: string };
+  options?: { [key: string]: string };
+  subnets?: string[];
 }
 
 export interface NetworkContainer {

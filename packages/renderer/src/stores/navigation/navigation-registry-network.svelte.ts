@@ -32,9 +32,9 @@ export function createNavigationNetworkEntry(): NavigationRegistryEntry {
     destinations = [
       ...networks.map(network => ({
         page: NavigationPage.NETWORK as const,
-        parameters: { name: network.Name, engineId: network.engineId },
+        parameters: { name: network.name, engineId: network.engineId },
         icon: { iconComponent: NetworkIcon },
-        name: `Network: ${network.Name}`,
+        name: `Network: ${network.name}`,
       })),
       {
         page: NavigationPage.NETWORKS as const,
