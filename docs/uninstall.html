@@ -14,8 +14,8 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.cf0f4de8.css">
-<script src="/assets/js/runtime~main.7f10802f.js" defer="defer"></script>
-<script src="/assets/js/main.033e1871.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.4134cb37.js" defer="defer"></script>
+<script src="/assets/js/main.4a825fee.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -74,10 +74,7 @@
 <li class="">To remove all Podman machines, run the <code>podman machine reset -f</code> command.</li>
 </ul></div></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="uninstall-podman-desktop-1">Uninstall Podman Desktop<a href="#uninstall-podman-desktop-1" class="hash-link" aria-label="Direct link to Uninstall Podman Desktop" title="Direct link to Uninstall Podman Desktop" translate="no">​</a></h2>
-<div class="theme-tabs-container tabs-container tabList_J5MA"><ul role="tablist" aria-orientation="horizontal" class="tabs"><li role="tab" tabindex="0" aria-selected="true" class="tabs__item tabItem_l0OV tabs__item--active">Windows</li><li role="tab" tabindex="-1" aria-selected="false" class="tabs__item tabItem_l0OV">macOS</li><li role="tab" tabindex="-1" aria-selected="false" class="tabs__item tabItem_l0OV">Linux</li></ul><div class="margin-top--md"><div role="tabpanel" class="tabItem_wHwb markdown"><ol>
-<li class="">
-<p>Choose an uninstall method based on how Podman Desktop was installed and perform the necessary step:</p>
-<details class="details_IpIu alert alert--info details_jERq" data-collapsed="true"><summary><p>uninstall methods:</p><ul>
+<div class="theme-tabs-container tabs-container tabList_J5MA"><ul role="tablist" aria-orientation="horizontal" class="tabs"><li role="tab" tabindex="0" aria-selected="true" class="tabs__item tabItem_l0OV tabs__item--active">Windows</li><li role="tab" tabindex="-1" aria-selected="false" class="tabs__item tabItem_l0OV">macOS</li><li role="tab" tabindex="-1" aria-selected="false" class="tabs__item tabItem_l0OV">Linux</li></ul><div class="margin-top--md"><div role="tabpanel" class="tabItem_wHwb markdown"><ol><li><p>Choose an uninstall method based on how Podman Desktop was installed and perform the necessary step:</p><details class="details_IpIu alert alert--info details_jERq" data-collapsed="true"><summary><p>uninstall methods:</p><ul>
 <li class="">Installer</li>
 <li class="">Chocolatey</li>
 <li class="">Scoop</li>
@@ -99,17 +96,7 @@
 <p>Run the following command:</p>
 <div class="language-shell-session codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-shell-session codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token output">&gt; winget uninstall -e --id RedHat.Podman-Desktop</span><br></div></code></pre></div></div>
 </li>
-</ul></div></div></details>
-</li>
-<li class="">
-<p>Remove the Podman Desktop configuration files:</p>
-<div class="language-powershell codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-powershell codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ rm -Recurse -Force ~/.local/share/containers/podman-desktop/</span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop</span><br></div></code></pre></div></div>
-</li>
-<li class="">
-<p>Remove temporary files, caches, and blobs:</p>
-<div class="language-powershell codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-powershell codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop</span><br></div></code></pre></div></div>
-</li>
-</ol></div><div role="tabpanel" class="tabItem_wHwb markdown" hidden=""><ol>
+</ul></div></div></details></li><li><p>Remove the Podman Desktop configuration files:</p><div class="language-powershell codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-powershell codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ rm -Recurse -Force ~/.local/share/containers/podman-desktop/</span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop</span><br></div></code></pre></div></div></li><li><p>Remove temporary files, caches, and blobs:</p><div class="language-powershell codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-powershell codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token plain">$ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop</span><br></div></code></pre></div></div></li></ol></div><div role="tabpanel" class="tabItem_wHwb markdown" hidden=""><ol>
 <li class="">
 <p>Perform one of the following steps based on your installation:</p>
 <ul>
