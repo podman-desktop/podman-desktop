@@ -129,6 +129,80 @@ describe('createNewWindow', () => {
     expect(app.dock?.hide).toHaveBeenCalled();
   });
 
+  test('should show window on macOS login item launch when config registry arrives before ready-to-show and minimize is false', async () => {
+    vi.mocked(util.isMac).mockReturnValue(true);
+    vi.mocked(app.getLoginItemSettings).mockReturnValue({
+      wasOpenedAtLogin: true,
+    } as Electron.LoginItemSettings);
+
+    const { createNewWindow } = await import('./mainWindow.js');
+
+    await createNewWindow();
+
+    const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+    assert(bwInstance);
+
+    // Fire configuration-registry BEFORE ready-to-show (matches real startup order)
+    const configHandler = getHandler(vi.mocked(ipcMain.on), 'configuration-registry');
+
+    const mockConfigRegistry = {
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn().mockReturnValue(false),
+      } as unknown as Configuration),
+    } as unknown as ConfigurationRegistry;
+
+    configHandler({}, mockConfigRegistry);
+
+    // Nothing should happen yet: acting here would show the window before the first paint,
+    // which is exactly what the `show: false` window option exists to avoid
+    expect(bwInstance.show).not.toHaveBeenCalled();
+    expect(app.dock?.hide).not.toHaveBeenCalled();
+
+    // Now fire ready-to-show — config registry is already available
+    const readyToShow = getHandler(bwInstance.on, 'ready-to-show');
+    readyToShow();
+
+    expect(bwInstance.show).toHaveBeenCalledTimes(1);
+    expect(app.dock?.hide).not.toHaveBeenCalled();
+  });
+
+  test('should hide dock on macOS login item launch when config registry arrives before ready-to-show and minimize is true', async () => {
+    vi.mocked(util.isMac).mockReturnValue(true);
+    vi.mocked(app.getLoginItemSettings).mockReturnValue({
+      wasOpenedAtLogin: true,
+    } as Electron.LoginItemSettings);
+
+    const { createNewWindow } = await import('./mainWindow.js');
+
+    await createNewWindow();
+
+    const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+    assert(bwInstance);
+
+    // Fire configuration-registry BEFORE ready-to-show (matches real startup order)
+    const configHandler = getHandler(vi.mocked(ipcMain.on), 'configuration-registry');
+
+    const mockConfigRegistry = {
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn().mockReturnValue(true),
+      } as unknown as Configuration),
+    } as unknown as ConfigurationRegistry;
+
+    configHandler({}, mockConfigRegistry);
+
+    // Nothing should happen yet: acting here would show the window before the first paint,
+    // which is exactly what the `show: false` window option exists to avoid
+    expect(bwInstance.show).not.toHaveBeenCalled();
+    expect(app.dock?.hide).not.toHaveBeenCalled();
+
+    // Now fire ready-to-show — config registry is already available
+    const readyToShow = getHandler(bwInstance.on, 'ready-to-show');
+    readyToShow();
+
+    expect(bwInstance.show).not.toHaveBeenCalled();
+    expect(app.dock?.hide).toHaveBeenCalledTimes(1);
+  });
+
   test('should defer window show on macOS login item launch and show when minimize is false', async () => {
     vi.mocked(util.isMac).mockReturnValue(true);
     vi.mocked(app.getLoginItemSettings).mockReturnValue({
@@ -160,7 +234,7 @@ describe('createNewWindow', () => {
     configHandler({}, mockConfigRegistry);
 
     // Now window should be shown
-    expect(bwInstance.show).toHaveBeenCalled();
+    expect(bwInstance.show).toHaveBeenCalledTimes(1);
     expect(app.dock?.hide).not.toHaveBeenCalled();
   });
 
@@ -196,7 +270,7 @@ describe('createNewWindow', () => {
 
     // Window should remain hidden, dock should be hidden
     expect(bwInstance.show).not.toHaveBeenCalled();
-    expect(app.dock?.hide).toHaveBeenCalled();
+    expect(app.dock?.hide).toHaveBeenCalledTimes(1);
   });
 
   test('should not defer on non-macOS even if wasOpenedAtLogin is true', async () => {
