@@ -24,13 +24,19 @@ In foldable details, you can find alternative steps for least common contexts:
 
 ## Configuring your WSL distribution
 
-1. Start a session in your WSL distribution:
+<ol>
+<li>
+
+Start a session in your WSL distribution:
 
    ```shell-session
    > wsl --distribution your-distribution-name
    ```
 
-1. To communicate with the remote Podman Machine, you need a Podman client.
+</li>
+<li>
+
+To communicate with the remote Podman Machine, you need a Podman client.
 
    To benefit from the latest features, such as `podman kube` subcommands, use a recent Podman version rather than the `podman` package from the distribution.
 
@@ -54,7 +60,10 @@ In foldable details, you can find alternative steps for least common contexts:
    $ alias podman='podman-remote-static-linux_amd64'
    ```
 
-1. Configure the Podman client in your WSL distribution to communicate with the remote Podman machine defined by Podman Desktop.
+</li>
+<li>
+
+Configure the Podman client in your WSL distribution to communicate with the remote Podman machine defined by Podman Desktop.
 
    This will ensure consistency when you are working with Podman from all your different environments
 
@@ -64,7 +73,7 @@ In foldable details, you can find alternative steps for least common contexts:
    $ podman system connection add --default podman-machine-default-root unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
    ```
 
-   <details>
+<details>
    <summary>
 
    On a custom Podman Machine, the remote Podman Machine destination might be different.
@@ -76,8 +85,12 @@ In foldable details, you can find alternative steps for least common contexts:
    Find your Podman Machine name and connection path:
 
    </summary>
-   <div>
-   1. Identify the sockets available in your WSL distribution.
+<div>
+
+<ol>
+<li>
+
+   Identify the sockets available in your WSL distribution.
 
    The Podman machine shares sockets in a `/mnt/wsl/podman-sockets/` subdirectory named after the Podman machine name.
 
@@ -98,7 +111,9 @@ In foldable details, you can find alternative steps for least common contexts:
    /mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
    ```
 
-   1. Identify the socket that Podman Desktop uses.
+</li>
+<li>
+   Identify the socket that Podman Desktop uses.
 
       Podman Desktop defaults to rootful Podman.
       However, consider identifying the active socket.
@@ -125,17 +140,22 @@ In foldable details, you can find alternative steps for least common contexts:
       podman-machine-default ssh://user@127.0.0.1:59292/run/user/1000/podman/podman.sock C:\Users\Podman Desktop User\.ssh\podman-machine-default false
       podman-machine-default-root ssh://root@127.0.0.1:59292/run/podman/podman.sock C:\Users\Podman Desktop User\.ssh\podman-machine-default true
       ```
-
-   1. To define the Podman machine remote destination, prepend with `unix://` the socket path that is available in your WSL, and corresponds to the Podman Desktop active socket:
+</li>
+<li>
+   To define the Podman machine remote destination, prepend with `unix://` the socket path that is available in your WSL, and corresponds to the Podman Desktop active socket:
 
       For the default Podman machine:
       - Rootful Podman: `unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock`
       - Rootless Podman: `unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock`
+</li>
+</ol>
+</div>
+</details>
 
-   </div>
-   </details>
+</li>
+<li>
 
-1. The communication channel between your WSL distribution and the Podman Machine is a special file (a socket).
+The communication channel between your WSL distribution and the Podman Machine is a special file (a socket).
    The Podman Machine creates this file with specific permissions.
    To communicate with the Podman Machine from your WSL distribution your user must have write permissions for the socket.
 
@@ -146,17 +166,26 @@ In foldable details, you can find alternative steps for least common contexts:
    $ exit
    ```
 
+</li>
+</ol>
+
 ## Testing the connection
 
 Verify that, on your WSL distribution, the Podman CLI communicates with your Podman machine.
 
-1. Start a session in your WSL distribution:
+<ol>
+<li>
+
+Start a session in your WSL distribution:
 
    ```shell-session
    > wsl
    ```
 
-1. Verify that your user is member of the group delivering access to the remote Podman Machine socket:
+</li>
+<li>
+
+Verify that your user is member of the group delivering access to the remote Podman Machine socket:
 
    ```shell-session
    $ groups
@@ -164,14 +193,15 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
 
    On the default Ubuntu WSL, the list contains the `uucp` group.
 
-   <details>
-   <summary>
-   On a custom WSL distribution, the group name might be different.
+<details>
+<summary>
+On a custom WSL distribution, the group name might be different.
 
    Find the required group name:
+
    </summary>
-   <div>
-   The required group id is the same on any WSL distribution.
+<div>
+The required group id is the same on any WSL distribution.
 
    However, the group name might be different on a custom WSL distribution.
 
@@ -197,15 +227,21 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
      ```
 
    </div>
-   </details>
+</details>
 
-1. Verify that Podman default system connections is set to your remote Podman machine:
+</li>
+<li>
+
+Verify that Podman default system connections is set to your remote Podman machine:
 
    ```shell-session
    $ podman system connection list
    ```
 
-1. Verify that Podman has a `Server` version corresponding to your Podman Machine version:
+</li>
+<li>
+
+Verify that Podman has a `Server` version corresponding to your Podman Machine version:
 
    ```shell-session
    $ podman version
@@ -235,7 +271,10 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
 
    :::
 
-1. Verify that you can list running containers.
+</li>
+<li>
+
+Verify that you can list running containers.
 
    On your WSL distribution, start a container such as `quay.io/podman/hello`, and list the name of the last running container:
 
@@ -245,6 +284,9 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
    ```
 
    On **Podman Desktop > Containers**, the output lists the same container (same name, same image).
+
+</li>
+</ol>
 
 ## Changing the connection
 

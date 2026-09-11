@@ -76,13 +76,13 @@ However, it does not contain additional utilities, such as Compose or Kind.
    <details>
    <summary>
 
-   Optionally, when you are using a VPN, consider enabling user mode networking:
+      Optionally, when you are using a VPN, consider enabling user mode networking:
 
-   </summary>
+      </summary>
    <div>
    - When you are using a VPN, you might have problems to access, from your host, resources that the Podman Machine exposes.
 
-   To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
+      To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
 
    </div>
    </details>
@@ -160,9 +160,9 @@ Requirements:
    <details>
    <summary>
 
-   Optionally, to use a proxy requiring a custom Certificate Authorities:
+      Optionally, to use a proxy requiring a custom Certificate Authorities:
 
-   </summary>
+      </summary>
    <div>
    1. Store your proxy Certificate Authorities (CA), in Privacy-Enhanced Mail (PEM) format, in the `proxy_ca.pem` file.
    2. Copy the certificate to the Podman machine:
@@ -187,12 +187,12 @@ Requirements:
    </div>
    </details>
 
-   <details>
+      <details>
    <summary>
 
-   Optionally, to use a proxy in your containers:
+      Optionally, to use a proxy in your containers:
 
-   </summary>
+      </summary>
    <div>
    1. Open a shell prompt on the Podman machine:
 
@@ -231,15 +231,15 @@ Requirements:
 1. Click **OK**.
    ![Proxy update notification](img/proxy-update-notification.png)
 
-   <details>
-   <summary>
+<details>
+<summary>
 
    Optionally, to use a proxy requiring a custom Certificate Authorities:
 
    </summary>
-   <div>
-   1. Store your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format, in your home directory, in the `proxy_ca.pem` file.
-   2. Copy the certificate to the Podman machine:
+<div>
+1. Store your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format, in your home directory, in the `proxy_ca.pem` file.
+2. Copy the certificate to the Podman machine:
 
    ```shell-session
    $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
@@ -258,17 +258,17 @@ Requirements:
       $ sudo update-ca-trust
       ```
 
-   </div>
-   </details>
+</div>
+</details>
 
    <details>
-   <summary>
+<summary>
 
    Optionally, to use a proxy in your containers:
 
    </summary>
-   <div>
-   1. Open a shell prompt on the Podman machine:
+<div>
+1. Open a shell prompt on the Podman machine:
 
    ```shell-session
    $ podman machine ssh
@@ -289,8 +289,8 @@ Requirements:
       env = ["http_proxy=<your.proxy.tld:port>", "https_proxy=<your.proxy.tld:port>"]
       ```
 
-   </div>
-   </details>
+</div>
+</details>
 
 1. Go to **Settings > Resources** and restart the Podman machine.
 

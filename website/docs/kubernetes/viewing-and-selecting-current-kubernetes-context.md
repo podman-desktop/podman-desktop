@@ -46,9 +46,12 @@ When you select a Kubernetes context, you can access all the namespaces associat
 
 #### Procedure: Using the tray menu
 
-1. Open the **Podman Desktop tray** menu.
+<ol>
+<li>
 
-   <Tabs groupId="operating-systems">
+Open the **Podman Desktop tray** menu.
+
+<Tabs groupId="operating-systems">
    <TabItem value="win" label="Windows">
 
    In the task bar, click **Show hidden icons**.
@@ -60,12 +63,12 @@ When you select a Kubernetes context, you can access all the namespaces associat
    ![Podman Desktop tray](img/tray-main-menu-on-windows-10.png)
 
    </TabItem>
-   <TabItem value="mac" label="macOS">
+<TabItem value="mac" label="macOS">
 
    ![Podman Desktop tray](img/tray-main-menu-on-macos.png)
 
    </TabItem>
-   <TabItem value="linux" label="Linux">
+<TabItem value="linux" label="Linux">
 
    ![Podman Desktop tray](img/tray-main-menu-on-linux.png)
 
@@ -73,20 +76,23 @@ When you select a Kubernetes context, you can access all the namespaces associat
 
    </Tabs>
 
-1. Click **Kubernetes** to see your current Kubernetes context.
+</li>
+<li>
 
-   <Tabs groupId="operating-systems">
-   <TabItem value="win" label="Windows">
+Click **Kubernetes** to see your current Kubernetes context.
+
+<Tabs groupId="operating-systems">
+<TabItem value="win" label="Windows">
 
    ![Podman Desktop tray](img/tray-kubernetes-on-windows-10.png)
 
    </TabItem>
-   <TabItem value="mac" label="macOS">
+<TabItem value="mac" label="macOS">
 
    ![Podman Desktop tray](img/tray-kubernetes-on-macos.png)
 
    </TabItem>
-   <TabItem value="linux" label="Linux">
+<TabItem value="linux" label="Linux">
 
    ![Podman Desktop tray](img/tray-kubernetes-on-linux.png)
 
@@ -94,4 +100,10 @@ When you select a Kubernetes context, you can access all the namespaces associat
 
    </Tabs>
 
-1. (Optionally) To change your Kubernetes context, click on the context name to activate.
+</li>
+<li>
+
+(Optionally) To change your Kubernetes context, click on the context name to activate.
+
+</li>
+</ol>

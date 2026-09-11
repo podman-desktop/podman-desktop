@@ -93,16 +93,20 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
 <Tabs groupId="operating-systems">
 <TabItem value="win" label="Windows" className="markdown">
 
-1. Choose an uninstall method based on how Podman Desktop was installed and perform the necessary step:
 
-   <details>
-   <summary>
-   uninstall methods:
-   - Installer
-   - Chocolatey
-   - Scoop
-   - Winget
-   </summary>
+<ol>
+<li>
+
+Choose an uninstall method based on how Podman Desktop was installed and perform the necessary step:
+
+<details>
+<summary>
+uninstall methods:
+- Installer
+- Chocolatey
+- Scoop
+- Winget
+</summary>
 
    #### Installer
    - Uninstall Podman Desktop from the Start menu, Settings, or Control Panel. For more details, see the [resource](https://support.microsoft.com/en-us/windows/uninstall-or-remove-apps-and-programs-in-windows-4b55f974-2cc6-2d2b-d092-5905080eaf98).
@@ -128,17 +132,26 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
      > winget uninstall -e --id RedHat.Podman-Desktop
      ```
 
-   </details>
+    </details>
+</li>
+<li>
 
-1. Remove the Podman Desktop configuration files:
+Remove the Podman Desktop configuration files:
    ```powershell
    $ rm -Recurse -Force ~/.local/share/containers/podman-desktop/
    $ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop
    ```
-1. Remove temporary files, caches, and blobs:
+
+</li>
+<li>
+
+Remove temporary files, caches, and blobs:
    ```powershell
    $ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop
    ```
+
+</li>
+</ol>
 
 </TabItem>
 <TabItem value="macOS" label="macOS" className="markdown">

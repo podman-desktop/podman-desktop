@@ -23,32 +23,32 @@ With Podman Desktop, you can manage multi-container applications defined in a Co
   ```
 
   <details>
-  <summary>
+    <summary>
 
-  (Alternatively) With an older Podman version, run `docker-compose`:
+    (Alternatively) With an older Podman version, run `docker-compose`:
 
-  </summary>
+    </summary>
   1. [Set the DOCKER_HOST variable](/docs/migrating-from-docker/using-the-docker_host-environment-variable).
   1. Run `docker-compose` rather than `podman compose`:
 
-  ```shell-session
-  $ docker-compose --file compose.yaml up --detach
-  ```
+    ```shell-session
+    $ docker-compose --file compose.yaml up --detach
+    ```
 
-  </details>
+    </details>
 
-  <details>
+    <details>
   <summary>
 
-  (Optionally) Learn about Compose commands:
+    (Optionally) Learn about Compose commands:
 
-  </summary>
+    </summary>
 
-  ```shell-session
-  $ podman compose --help
-  ```
+    ```shell-session
+    $ podman compose --help
+    ```
 
-  </details>
+    </details>
 
 #### Verification
 
