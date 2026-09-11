@@ -186,6 +186,23 @@ Check that your environment meets the following requirements:
   > Get-Service vmcompute
   ```
 
+### Optional: prepare Hyper-V (Podman 6+)
+
+With Podman 6 or later, you can optionally prepare the host for Hyper-V machines. This is not required if you continue running Podman Desktop as administrator.
+
+Go to **Settings > Resources**. In the Podman provider section, click the **Prepare Hyper-V** button.
+
+This executes the `podman system hyperv-prep` command with administrator privileges (UAC), which:
+
+- Adds the current user to the **Hyper-V Administrators** group, allowing you to manage Hyper-V virtual machines without running Podman Desktop as administrator.
+- Configures the required Hyper-V socket (vsock) registry entries for communication between the host and the virtual machine.
+
+:::note
+
+Sign out of Windows and sign back in (or restart your machine) for the Hyper-V Administrators group membership to take effect.
+
+:::
+
 ### Install Podman Desktop dependencies
 
 When the Podman Desktop installation completes, the **Get started with Podman Desktop** screen opens. This screen helps you to start the onboarding process. Alternatively, you can completely skip this onboarding setup. You can always complete the setup later by using one of the following ways:
