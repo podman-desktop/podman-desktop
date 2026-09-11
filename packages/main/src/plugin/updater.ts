@@ -18,7 +18,7 @@
 
 import * as https from 'node:https';
 
-import type { ReleaseNotesInfo } from '@podman-desktop/core-api';
+import type { ButtonsType, ReleaseNotesInfo } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { app, shell } from 'electron';
 import {
@@ -250,9 +250,10 @@ export class Updater {
       // Get the version of the update
       const updateVersion = this.#nextVersion ?? '';
 
-      let buttons: string[];
+      const laterOptions = ['Remind me later', `Don't show again`];
+      let buttons: ButtonsType[];
       if (context === 'startup') {
-        buttons = ['Update now', `What's new`, 'Remind me later', `Don't show again`];
+        buttons = ['Update now', `What's new`, { type: 'dropdownButton', heading: 'Later', buttons: laterOptions }];
       } else {
         buttons = ['Update now', `What's new`, 'Cancel'];
       }
@@ -262,9 +263,14 @@ export class Updater {
         title: `Update ${product.name}?`,
         message: `A new version ${updateVersion} of ${product.name} is available. Do you want to update your current version ${this.#currentVersion}?`,
         buttons: buttons,
-        cancelId: 2,
+        // a dropdown cannot be the cancel button, so the startup dialog is dismissed via Escape or the close button
+        cancelId: context === 'startup' ? undefined : 2,
       });
-      if (result.response === `Don't show again`) {
+      if (
+        result.response === 'Later' &&
+        result.dropdownIndex !== undefined &&
+        laterOptions[result.dropdownIndex] === `Don't show again`
+      ) {
         this.updateConfigurationValue('never');
       } else if (result.response === `What's new`) {
         await this.openReleaseNotes(updateVersion);
