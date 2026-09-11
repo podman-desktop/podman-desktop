@@ -82,11 +82,15 @@ test.describe
       await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
       const updateNowButton = updateAvailableDialog.getByRole('button', { name: 'Update Now' });
       await playExpect(updateNowButton).toBeVisible();
-      const doNotshowButton = updateAvailableDialog.getByRole('button', { name: `Don't show again` });
-      await playExpect(doNotshowButton).toBeVisible();
-      const cancelButton = updateAvailableDialog.getByRole('button', { name: 'Cancel' });
-      await playExpect(cancelButton).toBeVisible();
-      await cancelButton.click();
+      const laterDropdownButton = updateAvailableDialog.getByRole('button', { name: 'Later' });
+      await playExpect(laterDropdownButton).toBeVisible();
+      await laterDropdownButton.click();
+      const remindTomorrowOption = updateAvailableDialog.getByRole('button', { name: 'Remind me tomorrow' });
+      await playExpect(remindTomorrowOption).toBeVisible();
+      const doNotShowAgainOption = updateAvailableDialog.getByRole('button', { name: `Don't show again` });
+      await playExpect(doNotShowAgainOption).toBeVisible();
+      const closeButton = updateAvailableDialog.getByRole('button', { name: 'Close' });
+      await closeButton.click();
       await playExpect(updateAvailableDialog).not.toBeVisible();
       // handle welcome page now
       await welcomePage.handleWelcomePage(true);
