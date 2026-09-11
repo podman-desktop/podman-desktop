@@ -366,6 +366,20 @@ Legal name must be used (no pseudonyms or anonymous contributions)
 If you set your `user.name` and `user.email` git configs, you can sign your
 commit automatically with `git commit -s`.
 
+### PR Splitting Guidelines
+
+Establishing rigid, blanket rules for when a pull request should be split is difficult, since expectations vary by domain and by change type. Because of this, domain owners have the final say on whether a PR should be split.
+
+The recommendation to break large PRs into smaller, reviewable chunks remains a guideline, not a strict mandate. A few patterns generally make a PR easier to review and merge:
+
+- A PR should represent one conceptual change, something a single reviewer can reasonably understand and review in one sitting.
+- A formatting or cosmetic change should not be mixed with a behavioral or feature change in the same PR, since it makes the actual change harder to isolate and review.
+- When a PR spans multiple domains, such as frontend and backend, it is often better to split it per domain. This reduces review friction and improves the odds of each part merging on its own timeline, rather than being held up by the slowest reviewer.
+- High-conflict or fast-moving files, such as dependency bumps or lockfile changes are often worth pulling into their own PR, so that an unrelated large PR does not need to be constantly rebased while it waits for review.
+- When a PR is difficult to split cleanly, such as introducing a new API alongside its first consumer, using separate, well-scoped commits, combined with rebase-and-merge rather than squash-and-merge, can preserve reviewability without requiring a full split.
+
+None of the above are hard rules. If reviewers and the domain owner agree that a large PR is still reasonably reviewable as is, it does not need to be split.
+
 ### Skipping Jobs for Draft Pull Requests on GitHub
 
 When creating a pull request in **draft mode** on GitHub, all CI/CD jobs are **skipped by default**. This behavior is intentional to avoid triggering unnecessary workflows while the pull request is still in progress.
@@ -394,6 +408,8 @@ This ensures that CI resources are used efficiently while still providing flexib
 1. Submit your PR
 2. Reviewers are assigned by GitHub to two Podman Desktop developers
 3. PR's require 1 LGTM / Approval (2 if it's a large code change)
+
+> **_NOTE:_** See [PR Splitting Guidelines](#pr-splitting-guidelines) if you are asked to split a PR, or if you are reviewing one and are unsure whether it should be split.
 
 > **_NOTE:_** Confirm that your PR works on macOS, Windows and Linux if it's a significant change (not a UI improvement)
 
