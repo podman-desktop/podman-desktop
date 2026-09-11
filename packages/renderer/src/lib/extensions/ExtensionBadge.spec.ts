@@ -23,7 +23,7 @@ import { beforeEach, expect, test } from 'vitest';
 
 import ExtensionBadge from './ExtensionBadge.svelte';
 
-type ExtensionType = { type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
+type ExtensionType = { type: 'dd' | 'pd'; removable: boolean; devMode: boolean; bundled: boolean };
 
 beforeEach(() => {});
 
@@ -32,6 +32,7 @@ test('Expect to have badge for dd Extension', async () => {
     type: 'dd',
     removable: true,
     devMode: false,
+    bundled: false,
   };
   render(ExtensionBadge, { extension });
 
@@ -52,6 +53,7 @@ test('Expect to have badge for pd  bundled Extension', async () => {
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: true,
   };
   render(ExtensionBadge, { extension });
 
@@ -72,6 +74,7 @@ test('Expect to have badge for devMode Extension', async () => {
     type: 'pd',
     removable: false,
     devMode: true,
+    bundled: false,
   };
   render(ExtensionBadge, { extension });
 

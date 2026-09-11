@@ -41,6 +41,7 @@ test('Expect to see icon, link, badge and actions', async () => {
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: true,
     version: 'v1.2.3',
     state: 'started',
     path: '',

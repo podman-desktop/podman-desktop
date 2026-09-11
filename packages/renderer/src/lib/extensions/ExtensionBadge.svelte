@@ -5,7 +5,7 @@ import type { HTMLAttributes } from 'svelte/elements';
 import Badge from '/@/lib/ui/Badge.svelte';
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
-  extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
+  extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean; bundled: boolean };
 }
 
 let { extension, class: className = '', ...restProps }: Props = $props();
@@ -20,7 +20,7 @@ let { extension, class: className = '', ...restProps }: Props = $props();
     <Tooltip right tip="In Development Mode Extension">
       <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-devmode-extension-bg)]" label="devMode Extension" />
     </Tooltip>
-  {:else if !extension.removable}
+  {:else if extension.bundled}
     <Tooltip right tip="bundled Extension">
       <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-bundled-extension-bg)]" label="bundled Extension" />
     </Tooltip>
