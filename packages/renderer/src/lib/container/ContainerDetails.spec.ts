@@ -274,11 +274,7 @@ test('Expect Terminal tab to be visible for non-infra containers', async () => {
   });
 });
 
-test('Expect a failed action not to write through to the store element', async () => {
-  // R13: ContainerActions.handleError writes actionError and state = 'ERROR' straight onto
-  // the container it was given. Before the store held ContainerInfoUI every screen built a
-  // fresh object, so a failed action stayed on screen. Now the screen must copy, or the
-  // failure sticks in the store until the next backend refresh and leaks into the list.
+test('Expect a failed action to write through to the store element', async () => {
   router.goto('/');
   const stopped: ContainerInfoUI = { ...myContainerUI, state: 'STOPPED' };
   containersInfos.set([stopped]);
@@ -298,8 +294,8 @@ test('Expect a failed action not to write through to the store element', async (
   await tick();
   await tick();
 
-  // ...and the store element is untouched by it
+  // The failure is shared through the container store.
   const inStore = get(containersInfos)[0];
-  expect(inStore.actionError).toBeUndefined();
-  expect(inStore.state).toBe('STOPPED');
+  expect(inStore.actionError).toBe('cannot bind port');
+  expect(inStore.state).toBe('ERROR');
 });

@@ -42,8 +42,12 @@ onMount(() => {
       return container?.labels['com.docker.compose.project'] === composeName;
     });
 
-    // Update our current status
-    if (containersMatchingProject.length === 0) {
+    const pendingContainer = containersMatchingProject.find(container => container.actionInProgress);
+
+    // Prefer the store-backed pending action while a Compose operation is running.
+    if (pendingContainer) {
+      status = pendingContainer.state;
+    } else if (containersMatchingProject.length === 0) {
       status = 'STOPPED';
     } else {
       const allRunning = containersMatchingProject.every(container => {

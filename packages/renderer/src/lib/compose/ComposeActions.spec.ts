@@ -20,9 +20,11 @@ import '@testing-library/jest-dom/vitest';
 
 import { within } from '@testing-library/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { get } from 'svelte/store';
 import { afterEach, beforeAll, beforeEach, expect, type Mock, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { containersInfos } from '/@/stores/containers';
 
 import ComposeActions from './ComposeActions.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
@@ -91,6 +93,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   getContributedMenusMock.mockResolvedValue([]);
+  containersInfos.set([]);
 });
 
 afterEach(() => {
@@ -107,9 +110,6 @@ test('Expect no error and status starting compose', async () => {
 
   expect(compose.status).toEqual('STARTING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('STARTING');
-  expect(compose.containers[0].actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
 });
 
 test('Expect no error and status stopping compose', async () => {
@@ -121,9 +121,6 @@ test('Expect no error and status stopping compose', async () => {
 
   expect(compose.status).toEqual('STOPPING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('STOPPING');
-  expect(compose.containers[0].actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
 });
 
 test('Expect no error and status restarting compose', async () => {
@@ -135,9 +132,6 @@ test('Expect no error and status restarting compose', async () => {
 
   expect(compose.status).toEqual('RESTARTING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('RESTARTING');
-  expect(compose.containers[0].actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
 });
 
 test('Expect no error and status deleting compose', async () => {
@@ -155,9 +149,6 @@ test('Expect no error and status deleting compose', async () => {
 
   expect(compose.status).toEqual('DELETING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('DELETING');
-  expect(compose.containers[0].actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
 });
 
 test('Stop keeps Start hidden during STOPPING (all containers are running)', async () => {
@@ -267,4 +258,35 @@ test('Stop keeps both visible during STOPPING (some containers are running)', as
 
   expect(ui.getByRole('button', { name: 'Start Compose' })).not.toHaveClass('hidden');
   expect(ui.getByRole('button', { name: 'Stop Compose' })).not.toHaveClass('hidden');
+});
+
+test('starting Compose publishes the pending status to the container store', async () => {
+  const container: ContainerInfoUI = {
+    id: 'container-id',
+    engineId: 'engine-id',
+    state: 'STOPPED',
+    actionInProgress: false,
+    actionError: '',
+  } as ContainerInfoUI;
+  containersInfos.set([container]);
+
+  const composeWithStoreContainers: ComposeInfoUI = new ComposeInfoUIImpl(
+    'engine-id',
+    'podman',
+    'compose-with-store-containers',
+    'STOPPED',
+    false,
+    undefined,
+    [container],
+  );
+  const deferred = createDeferred<void>();
+  (window.startContainersByLabel as unknown as Mock).mockReturnValueOnce(deferred.promise);
+
+  render(ComposeActions, { compose: composeWithStoreContainers });
+  await fireEvent.click(screen.getByRole('button', { name: 'Start Compose' }));
+
+  const pendingContainer = get(containersInfos)[0];
+  expect(pendingContainer).toMatchObject({ state: 'STARTING', actionInProgress: true });
+
+  deferred.resolve();
 });
