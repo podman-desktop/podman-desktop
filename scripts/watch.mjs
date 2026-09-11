@@ -25,7 +25,9 @@ import { generateAsync } from 'dts-for-context-bridge';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { readdirSync, existsSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { join } from 'node:path';
+import { watch as watchUiPackage } from '../node_modules/@sveltejs/package/src/index.js';
+import { load_config as loadUiPackageConfig } from '../node_modules/@sveltejs/package/src/config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -222,44 +224,36 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
   });
 };
 
-const setupUiPackageWatcher = () => {
-  const logger = createLogger(LOG_LEVEL, {
-    prefix: '[ui]',
+/**
+ * Start `packages/ui`'s incremental watcher and wait for its first build to complete.
+ *
+ * The renderer's Vite dev server resolves bare imports of `@podman-desktop/ui-svelte`
+ * against `packages/ui/dist`. Vite's dependency optimizer can scan for these as soon as
+ * `createServer`/`listen` runs — independent of when the page is actually requested — and
+ * a failed resolution there is cached for the rest of the dev server's life (reloading the
+ * page does not clear it). This must be awaited before `createServer` is called.
+ *
+ * `@sveltejs/package`'s `watch()` performs and awaits its first build before returning,
+ * so awaiting it here is a direct signal that `dist` is ready — no subprocess or stdout
+ * pattern matching needed.
+ * @returns {Promise<void>} resolves once the first build has produced `dist`
+ */
+const setupUiPackageWatcher = async () => {
+  const cwd = join(__dirname, '..', 'packages/ui');
+  const config = await loadUiPackageConfig({ cwd });
+
+  const { watcher, ready, settled } = await watchUiPackage({
+    cwd,
+    input: 'src/lib',
+    output: 'dist',
+    preserve_output: false,
+    types: true,
+    config,
   });
 
-  /** @type {ChildProcessWithoutNullStreams | null} */
-  let spawnProcess = null;
+  await ready;
 
-  if (spawnProcess !== null) {
-    spawnProcess.off('exit', process.exit);
-    spawnProcess.kill('SIGINT');
-    spawnProcess = null;
-  }
-
-  const dirname = join(__dirname, '..', 'node_modules', '.bin');
-  const exe = 'svelte-package'.concat(process.platform === 'win32' ? '.cmd' : '');
-  const newPath = `${process.env.PATH}${delimiter}${dirname}`;
-  spawnProcess = spawn(exe, ['-w'], {
-    cwd: './packages/ui/',
-    env: { PATH: newPath, ...process.env },
-    shell: process.platform === 'win32',
-    detached: process.platform !== 'win32',
-  });
-
-  spawnProcess.stdout.on('data', d => d.toString().trim() && logger.warn(d.toString(), { timestamp: true }));
-  spawnProcess.stderr.on('data', d => {
-    const data = d.toString().trim();
-    if (!data) return;
-    const mayIgnore = stderrFilterPatterns.some(r => r.test(data));
-    if (mayIgnore) return;
-    logger.error(data, { timestamp: true });
-  });
-
-  // Stops the watch script when the application has been quit
-  spawnProcess.on('exit', cleanupOnChildExit);
-
-  trackChildProcess(spawnProcess);
-  spawnProcess.unref();
+  process.once('exit', () => watcher.close());
 };
 
 /**
@@ -377,6 +371,8 @@ const setupExtensionApiWatcher = name => {
         extensions.push(resolve(process.argv[++index]));
       }
     }
+    await setupUiPackageWatcher();
+
     const viteDevServer = await createServer({
       ...sharedConfig,
       configFile: 'packages/renderer/vite.config.js',
@@ -415,7 +411,6 @@ const setupExtensionApiWatcher = name => {
     await setupPreloadPackageWatcher(viteDevServer);
     await setupPreloadDockerExtensionPackageWatcher(viteDevServer);
     await setupPreloadWebviewPackageWatcher(viteDevServer);
-    await setupUiPackageWatcher();
     await setupMainPackageWatcher(viteDevServer);
   } catch (e) {
     console.error(e);
