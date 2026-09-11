@@ -1,13 +1,13 @@
 <script lang="ts">
 import type { WelcomeMessages } from '@podman-desktop/core-api';
-import { Button, Checkbox, Tooltip } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { Button } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import OnboardingWelcomeTelemetry from '/@/lib/onboarding/OnboardingWelcomeTelemetry.svelte';
+import OnboardingExtensionCard from '/@/lib/onboarding/wizard/OnboardingExtensionCard.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 
@@ -86,31 +86,12 @@ function startOnboardingQueue(): void {
             </div>
             <div aria-label="providerList" class="grid grid-cols-3 gap-3">
               {#each onboardingProviders as onboarding, index (index)}
-                <div
-                  class="rounded-md bg-[var(--pd-content-card-bg)] flex flex-row justify-between border-2 p-4 {onboarding.selected
-                    ? 'border-[var(--pd-content-card-border-selected)]'
-                    : 'border-[var(--pd-content-card-border)]'}">
-                  <div class="place-items-top flex flex-col flex-1">
-                    <div class="flex flex-row place-items-left flex-1">
-                      {#if onboarding.icon}
-                        <Icon icon={onboarding.icon} class="max-h-12 h-auto w-auto" title="{onboarding.name} logo" />
-                      {/if}
-                      <div
-                        class="flex flex-1 mx-2 underline decoration-2 decoration-dotted underline-offset-2 cursor-default justify-left text-capitalize">
-                        <Tooltip top tip={onboarding.description}>
-                          {onboarding.displayName}
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Checkbox
-                    title="{onboarding.displayName} checkbox"
-                    name="{onboarding.displayName} checkbox"
-                    checked={onboarding.selected}
-                    on:click={(): void => toggleOnboardingSelection(onboarding.name)}
-                    class="text-xl" />
-                </div>
+                <OnboardingExtensionCard
+                  icon={onboarding.icon}
+                  displayName={onboarding.displayName}
+                  description={onboarding.description}
+                  checked={onboarding.selected ?? true}
+                  onToggle={(): void => toggleOnboardingSelection(onboarding.name)} />
               {/each}
             </div>
           </div>
