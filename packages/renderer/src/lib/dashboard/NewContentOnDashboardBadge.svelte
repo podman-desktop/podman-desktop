@@ -4,9 +4,10 @@ import type { Unsubscriber } from 'svelte/store';
 
 import NewContentBadge from '/@/lib/ui/NewContentBadge.svelte';
 import { notificationQueue } from '/@/stores/notifications';
-import { providerInfos } from '/@/stores/providers';
+import { providerInfos, providersLoaded } from '/@/stores/providers';
 
-let providersId: string[] = $state([]);
+let providersId: string[] = [];
+let providersBaselineSet = false;
 let notificationCount: number = $state(0);
 let hasNewProviders = $state(false);
 let hasNewNotifications = $state(false);
@@ -14,13 +15,27 @@ let hasNew = $derived(hasNewProviders || hasNewNotifications);
 
 let providersUnsubscribe: Unsubscriber;
 let notificationsUnsubscribe: Unsubscriber;
+let providersLoadedUnsubscribe: Unsubscriber;
 
 onMount(() => {
+  let providersHaveLoaded = false;
+
+  providersLoadedUnsubscribe = providersLoaded.subscribe(loaded => {
+    providersHaveLoaded = loaded;
+  });
+
   // if there is a new provider we display the dot
   providersUnsubscribe = providerInfos.subscribe(updatedProviders => {
+    if (!providersHaveLoaded) {
+      return;
+    }
     const updatedProvidersId = updatedProviders.map(prov => prov.internalId).toSorted();
+    if (!providersBaselineSet) {
+      providersId = updatedProvidersId;
+      providersBaselineSet = true;
+      return;
+    }
     if (!hasNewProviders) {
-      // if the user is in the dashboard page we do not check for new providers
       hasNewProviders = hasNewProvider(providersId, updatedProvidersId);
     }
     providersId = updatedProvidersId;
@@ -39,6 +54,7 @@ onMount(() => {
 onDestroy(() => {
   providersUnsubscribe?.();
   notificationsUnsubscribe?.();
+  providersLoadedUnsubscribe?.();
 });
 
 function hasNewProvider(oldProvidersId: string[], newProvidersId: string[]): boolean {
