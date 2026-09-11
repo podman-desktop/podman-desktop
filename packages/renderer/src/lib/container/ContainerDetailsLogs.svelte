@@ -5,7 +5,6 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { mount, onDestroy, onMount } from 'svelte';
 
-import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
@@ -52,11 +51,7 @@ function callback(name: string, data: string): void {
     logsTerminal?.clear();
   } else if (name === 'data') {
     noLogs = false;
-    if (isMultiplexedLog(data)) {
-      logsTerminal?.write(data.substring(8) + '\r');
-    } else {
-      logsTerminal?.write(data + '\r');
-    }
+    logsTerminal?.write(data + '\r');
   }
   if (!noLogs) {
     window.dispatchEvent(new Event('resize'));

@@ -4,7 +4,6 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { SvelteDate } from 'svelte/reactivity';
 
-import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
@@ -33,14 +32,9 @@ async function getLastLogTimestamp(): Promise<void> {
 }
 
 function callback(name: string, data: string): void {
-  let timestamp: string;
   if (name === 'data' && data && lastLog) {
     lastLog = false;
-    if (isMultiplexedLog(data)) {
-      timestamp = data.substring(8).split(' ', 1)[0];
-    } else {
-      timestamp = data.split(' ', 1)[0];
-    }
+    const timestamp = data.split(' ', 1)[0];
     const datenow = new SvelteDate(timestamp);
     datenow.setSeconds(datenow.getSeconds() + 1);
     clearTimestamp = datenow.toISOString();
