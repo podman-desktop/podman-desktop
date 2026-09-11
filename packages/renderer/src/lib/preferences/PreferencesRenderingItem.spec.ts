@@ -86,6 +86,21 @@ test('record should have short title by default', async () => {
   });
 });
 
+test('record should use the configured name as its title', async () => {
+  const { getByText, queryByText } = render(PreferencesRenderingItem, {
+    record: {
+      ...EXPERIMENTAL_RECORD,
+      name: 'Path to Podman Binary',
+    },
+  });
+
+  await vi.waitFor(() => {
+    const element = getByText('Path to Podman Binary');
+    expect(element).toHaveClass('font-semibold');
+  });
+  expect(queryByText('Foo Bar')).not.toBeInTheDocument();
+});
+
 test('props title full should use full record id', async () => {
   const { getByText } = render(PreferencesRenderingItem, {
     record: EXPERIMENTAL_RECORD,

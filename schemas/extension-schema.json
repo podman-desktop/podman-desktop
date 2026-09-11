@@ -131,6 +131,11 @@
                       "id": {
                         "type": "string"
                       },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
                       "type": {
                         "anyOf": [
                           {

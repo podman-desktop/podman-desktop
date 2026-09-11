@@ -139,6 +139,48 @@ describe('ExtensionManifestSchema', () => {
     expect(result.data.contributes?.commands).toHaveLength(1);
   });
 
+  test('preserves contributed configuration property names', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      contributes: {
+        configuration: {
+          title: 'Podman',
+          properties: {
+            'podman.binary.path': {
+              name: 'Path to Podman Binary',
+              type: 'string',
+            },
+          },
+        },
+      },
+    });
+
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.contributes?.configuration?.properties?.['podman.binary.path']?.name).toBe(
+      'Path to Podman Binary',
+    );
+  });
+
+  test.each(['', '   '])('rejects blank contributed configuration property names', name => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      contributes: {
+        configuration: {
+          title: 'Podman',
+          properties: {
+            'podman.binary.path': {
+              name,
+              type: 'string',
+            },
+          },
+        },
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   test('accepts contributes with menus', () => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
