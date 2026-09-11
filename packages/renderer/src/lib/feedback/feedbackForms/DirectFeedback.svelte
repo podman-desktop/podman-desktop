@@ -13,7 +13,6 @@ import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
-import SmileyRatingButton from '/@/lib/feedback/feedbackForms/SmileyRatingButton.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 
 interface Props {
@@ -21,6 +20,13 @@ interface Props {
   contentChange: (e: boolean) => void;
   category: DirectFeedbackCategory;
 }
+
+const SMILEYS = [
+  { rating: 1, icon: faFrown, label: 'very-sad-smiley' },
+  { rating: 2, icon: faMeh, label: 'sad-smiley' },
+  { rating: 3, icon: faSmile, label: 'happy-smiley' },
+  { rating: 4, icon: faGrinStars, label: 'very-happy-smiley' },
+] as const;
 
 // feedback of the user
 let smileyRating = $state(0);
@@ -84,30 +90,16 @@ async function openGitHub(): Promise<void> {
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
       >{feedbackMessages?.experienceLabel}</label>
     <div class="flex space-x-4">
-      <SmileyRatingButton
-        rating={1}
-        selectedRating={smileyRating}
-        icon={faFrown}
-        ariaLabel="very-sad-smiley"
-        onSelect={selectSmiley} />
-      <SmileyRatingButton
-        rating={2}
-        selectedRating={smileyRating}
-        icon={faMeh}
-        ariaLabel="sad-smiley"
-        onSelect={selectSmiley} />
-      <SmileyRatingButton
-        rating={3}
-        selectedRating={smileyRating}
-        icon={faSmile}
-        ariaLabel="happy-smiley"
-        onSelect={selectSmiley} />
-      <SmileyRatingButton
-        rating={4}
-        selectedRating={smileyRating}
-        icon={faGrinStars}
-        ariaLabel="very-happy-smiley"
-        onSelect={selectSmiley} />
+      {#each SMILEYS as { rating, icon, label } (rating)}
+        <button aria-label={label} onclick={(): void => selectSmiley(rating)}>
+          <Icon
+            size="1.5x"
+            class="cursor-pointer {smileyRating === rating
+              ? 'text-(--pd-action-button-primary-text)'
+              : 'text-(--pd-button-disabled-text)'}"
+            {icon} />
+        </button>
+      {/each}
     </div>
 
     <label for="tellUsWhyFeedback" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
