@@ -88,4 +88,3 @@ allowBuilds:
   ssh2: false
   svelte-preprocess: true
   unrs-resolver: false
-  win-ca: true
