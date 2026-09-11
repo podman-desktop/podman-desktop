@@ -1,3 +1,11 @@
 website/api/
 website/build/
 website/node_modules/
+website/docs/compose/running-compose.md
+website/docs/containers/registries/index.md
+website/docs/kubernetes/viewing-and-selecting-current-kubernetes-context.md
+website/docs/migrating-from-docker/importing-saved-containers.md
+website/docs/openshift/openshift-local/index.md
+website/docs/podman/accessing-podman-from-another-wsl-instance.md
+website/docs/proxy/index.md
+website/docs/uninstall/index.md

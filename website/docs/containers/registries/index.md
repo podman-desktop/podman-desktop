@@ -78,14 +78,23 @@ If you enter the wrong credentials, you see an error message:
 
 If your registry has an insecure certificate, such as a self-signed certificate, you see a warning when setting up the registry.
 
-1. In the **Invalid Certificate** window, click **Yes** to add the registry anyway.
+<ol>
+<li>
+
+In the **Invalid Certificate** window, click **Yes** to add the registry anyway.
 
    ![Podman Desktop Registry Warning](img/registry-warning-insecure.png)
 
-1. Tell Podman that it has your authorization to access the insecure registry: edit the `registries.conf` file.
-   1. Go to a location where you can edit the `registries.conf` file:
+</li>
+<li>
 
-      <Tabs groupId="operating-systems">
+Tell Podman that it has your authorization to access the insecure registry: edit the `registries.conf` file.
+   <ol>
+   <li>
+
+   Go to a location where you can edit the `registries.conf` file:
+
+<Tabs groupId="operating-systems">
       <TabItem value="win" label="Windows">
       - The configuration file is in the Podman machine: open a terminal in the Podman Machine.
 
@@ -101,18 +110,21 @@ If your registry has an insecure certificate, such as a self-signed certificate,
       $ podman machine ssh --username root [optional-machine-name]
       ```
 
-      </TabItem>
-      <TabItem value="linux" label="Linux">
-      - The configuration file is in your host: open a terminal with superuser privileges.
+</TabItem>
+<TabItem value="linux" label="Linux">
+- The configuration file is in your host: open a terminal with superuser privileges.
 
       ```shell-session
       $ sudo su -
       ```
 
-      </TabItem>
-      </Tabs>
+</TabItem>
+</Tabs>
 
-   1. Edit the registry optional configuration file.
+   </li>
+   <li>
+
+   Edit the registry optional configuration file.
 
       ```shell-session
       # vi /etc/containers/registries.conf
@@ -133,37 +145,46 @@ If your registry has an insecure certificate, such as a self-signed certificate,
       location = "registry.example.com"
       insecure = true
       ```
+   
+   </li>
+   </ol>
 
-1. Restart Podman to apply the changes.
+</li>
+<li>
 
-   <Tabs groupId="operating-systems">
-   <TabItem value="win" label="Windows">
-   1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
-   1. Restart the Podman machine.
+Restart Podman to apply the changes.
 
-   </TabItem>
-   <TabItem value="mac" label="macOS">
-   1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
-   1. Restart the Podman machine.
+<Tabs groupId="operating-systems">
+<TabItem value="win" label="Windows">
+1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
+1. Restart the Podman machine.
 
-   </TabItem>
-   <TabItem value="linux" label="Linux (rootless)">
-   - Stop all Podman processes.
+</TabItem>
+<TabItem value="mac" label="macOS">
+1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
+1. Restart the Podman machine.
+
+</TabItem>
+<TabItem value="linux" label="Linux (rootless)">
+- Stop all Podman processes.
 
    ```shell-session
    $ pkill podman
    ```
 
-   </TabItem>
-   <TabItem value="linux-rootful" label="Linux (rootful)">
-   - Restart Podman.
+</TabItem>
+<TabItem value="linux-rootful" label="Linux (rootful)">
+- Restart Podman.
 
    ```shell-session
    $ sudo systemctl restart podman
    ```
 
-   </TabItem>
-   </Tabs>
+</TabItem>
+</Tabs>
+
+</li>
+</ol>
 
 ## Verifying your registry setup
 
