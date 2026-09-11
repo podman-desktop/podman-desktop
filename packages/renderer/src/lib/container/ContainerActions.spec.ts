@@ -19,11 +19,13 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { ContextUI } from '/@/lib/context/context';
+import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 
 import ContainerActions from './ContainerActions.svelte';
@@ -49,7 +51,6 @@ const container: ContainerInfoUI = new ContainerInfoUIImpl(
 ) as unknown as ContainerInfoUI;
 
 const getContributedMenusMock = vi.fn();
-const updateMock = vi.fn();
 
 vi.mock(import('/@/lib/actions/ContributionActions.svelte'));
 
@@ -65,6 +66,9 @@ beforeAll(() => {
 
 beforeEach(() => {
   getContributedMenusMock.mockResolvedValue([]);
+  container.state = 'STOPPED';
+  container.actionError = '';
+  containersInfos.set([container]);
 });
 
 afterEach(() => {
@@ -73,50 +77,45 @@ afterEach(() => {
 });
 
 test('Expect no error and status starting container', async () => {
-  render(ContainerActions, { container, onUpdate: updateMock });
+  render(ContainerActions, { container });
 
   // click on start button
   const startButton = screen.getByRole('button', { name: 'Start Container' });
   await fireEvent.click(startButton);
 
-  expect(container.state).toEqual('STARTING');
-  expect(container.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(get(containersInfos)[0]).toMatchObject({ state: 'STARTING', actionError: '' });
 });
 
 test('Expect no error and status stopping container', async () => {
-  render(ContainerActions, { container, onUpdate: updateMock });
+  render(ContainerActions, { container });
 
   // click on stop button
   const stopButton = screen.getByRole('button', { name: 'Stop Container' });
   await fireEvent.click(stopButton);
 
-  expect(container.state).toEqual('STOPPING');
-  expect(container.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(get(containersInfos)[0]).toMatchObject({ state: 'STOPPING', actionError: '' });
 });
 
 test('Expect no error and status starting for paused container', async () => {
   // set container state to paused
   container.state = 'PAUSED';
-  render(ContainerActions, { container, onUpdate: updateMock });
+  render(ContainerActions, { container });
 
   // click on start button
   const startButton = screen.getByRole('button', { name: 'Start Container' });
   await fireEvent.click(startButton);
 
-  expect(container.state).toEqual('STARTING');
+  expect(get(containersInfos)[0].state).toEqual('STARTING');
   expect(window.unpauseContainer).toHaveBeenCalled();
   expect(window.startContainer).not.toHaveBeenCalled();
-  expect(container.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(get(containersInfos)[0].actionError).toEqual('');
 });
 
 test('Expect error and status error for unpausing container', async () => {
   // set container state to paused
   container.state = 'PAUSED';
   const error = new Error('unpause failed');
-  render(ContainerActions, { container, onUpdate: updateMock });
+  render(ContainerActions, { container });
 
   vi.mocked(window.unpauseContainer).mockRejectedValue(error);
 
@@ -126,27 +125,24 @@ test('Expect error and status error for unpausing container', async () => {
 
   expect(window.unpauseContainer).toHaveBeenCalled();
   expect(window.startContainer).not.toHaveBeenCalled();
-  expect(container.actionError).toContain(error);
-  expect(container.state).toEqual('ERROR');
-  expect(updateMock).toHaveBeenCalled();
+  expect(get(containersInfos)[0].actionError).toContain(error);
+  expect(get(containersInfos)[0].state).toEqual('ERROR');
 });
 
 test('Expect no error and status restarting container', async () => {
-  render(ContainerActions, { container, onUpdate: updateMock });
+  render(ContainerActions, { container });
 
   // click on restart button
   const restartButton = screen.getByRole('button', { name: 'Restart Container' });
   await fireEvent.click(restartButton);
 
-  expect(container.state).toEqual('RESTARTING');
-  expect(container.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(get(containersInfos)[0]).toMatchObject({ state: 'RESTARTING', actionError: '' });
 });
 
 test('Expect no error and status deleting container', async () => {
   // Mock the showMessageBox to return 'Delete' (confirmed)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
-  render(ContainerActions, { container, onUpdate: updateMock });
+  render(ContainerActions, { container });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Container' });
@@ -155,9 +151,7 @@ test('Expect no error and status deleting container', async () => {
   // Wait for confirmation modal to disappear after clicking on delete
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
-  expect(container.state).toEqual('DELETING');
-  expect(container.actionError).toEqual('');
-  expect(updateMock).toHaveBeenCalled();
+  expect(get(containersInfos)[0]).toMatchObject({ state: 'DELETING', actionError: '' });
 });
 
 test('Expect exportContainerInfo is filled and user redirected to export container page', async () => {

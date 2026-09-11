@@ -10,6 +10,7 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { clearContainerActionInProgress, setContainerStatus } from '/@/stores/containers';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
@@ -38,30 +39,40 @@ onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_COMPOSE);
 });
 
+let someNeedStart = $derived(compose.containers?.some(c => c.state !== 'RUNNING'));
+let someNeedStop = $derived(compose.containers?.some(c => c.state === 'RUNNING'));
+let actionInProgress = $derived(
+  compose.actionInProgress === true ? true : compose.containers.some(container => container.actionInProgress),
+);
+let actionStatus = $derived(
+  compose.actionInProgress
+    ? compose.status
+    : (compose.containers.find(container => container.actionInProgress)?.state ?? compose.status),
+);
+let allContainersInProgress = $derived(compose.containers.every(container => container.actionInProgress));
+
 let hideStartForStop = $state(false);
 let hideStopForStart = $state(false);
 
-let someNeedStart = $derived(compose.containers?.some(c => c.state !== 'RUNNING'));
-let someNeedStop = $derived(compose.containers?.some(c => c.state === 'RUNNING'));
-
-function inProgress(inProgress: boolean, state?: string): void {
-  compose.actionInProgress = inProgress;
-  // reset error when starting task
-  if (inProgress) {
+function inProgress(isStarting: boolean, state?: string): void {
+  compose.actionInProgress = isStarting;
+  if (isStarting) {
     compose.actionError = '';
   }
   if (state) {
     compose.status = state;
   }
-
   for (const container of compose.containers) {
-    container.actionInProgress = inProgress;
-    // reset error when starting task
-    if (inProgress) {
-      container.actionError = '';
+    if (state === 'STARTING' && container.state === 'RUNNING') {
+      continue;
+    }
+    if (state === 'STOPPING' && container.state !== 'RUNNING') {
+      continue;
     }
     if (state) {
-      container.state = state;
+      setContainerStatus(container.engineId, container.id, state);
+    } else if (!isStarting) {
+      clearContainerActionInProgress(container.engineId, container.id);
     }
   }
   onUpdate(compose);
@@ -70,7 +81,6 @@ function inProgress(inProgress: boolean, state?: string): void {
 function handleError(errorMessage: string): void {
   compose.actionError = errorMessage;
   compose.status = 'ERROR';
-
   onUpdate(compose);
 }
 
@@ -136,26 +146,26 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
   title="Start Compose"
   onClick={startCompose}
   hidden={
-    !compose.actionInProgress
+    !actionInProgress
       ? !someNeedStart
-      : (compose.status === 'STOPPING' && hideStartForStop)
+      : (actionStatus === 'STOPPING' && (hideStartForStop || allContainersInProgress))
   }
-  enabled={!compose.actionInProgress}
+  enabled={!actionInProgress}
   detailed={detailed}
-  inProgress={compose.actionInProgress && compose.status === 'STARTING'}
+  inProgress={actionInProgress && actionStatus === 'STARTING'}
   icon={faPlay} />
 
 <ListItemButtonIcon
   title="Stop Compose"
   onClick={stopCompose}
   hidden={
-    !compose.actionInProgress
+    !actionInProgress
       ? !someNeedStop
-      : (compose.status === 'STARTING' && hideStopForStart)
+      : (actionStatus === 'STARTING' && (hideStopForStart || allContainersInProgress))
   }
   detailed={detailed}
-  enabled={!compose.actionInProgress}
-  inProgress={compose.actionInProgress && compose.status === 'STOPPING'}
+  enabled={!actionInProgress}
+  inProgress={actionInProgress && actionStatus === 'STOPPING'}
   icon={faStop} />
 
 <ListItemButtonIcon
@@ -163,7 +173,7 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
   onClick={(): void => withConfirmation(deleteCompose, `delete compose ${compose.name}`, { title: 'Delete Compose?', variant: 'delete' })}
   icon={faTrash}
   detailed={detailed}
-  inProgress={compose.actionInProgress && compose.status === 'DELETING'} />
+  inProgress={actionInProgress && actionStatus === 'DELETING'} />
 
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
 <ActionsStyle>
