@@ -122,7 +122,7 @@ function registerKubernetesFactory(
     },
     {
       auditItems: async (items: AuditRequestItems) => {
-        return await connectionAuditor(new ProviderNameExtractor(items).getProviderName(), items);
+        return await connectionAuditor(items);
       },
     },
   );
@@ -137,7 +137,11 @@ function updateKubernetesFactoryRegistration(
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
   const containerConnections = extensionApi.provider.getContainerConnections();
-  const runningConnections = containerConnections.filter(conn => conn.connection.status() === 'started');
+  const runningConnections = containerConnections.filter(
+    conn =>
+      conn.connection.status() === 'started' &&
+      (conn.connection.type === 'podman' || conn.connection.type === 'docker'),
+  );
 
   if (runningConnections.length > 0) {
     kubernetesFactoryDisposable ??= registerKubernetesFactory(provider, telemetryLogger);
@@ -165,18 +169,6 @@ async function registerProvider(
   updateKubernetesFactoryRegistration(provider, telemetryLogger);
   await searchKindClusters(provider);
   console.log('kind extension is active');
-}
-
-class ProviderNameExtractor {
-  constructor(private items: AuditRequestItems) {}
-
-  getProviderName(): string {
-    if (this.items['kind.cluster.creation.provider']) {
-      return this.items['kind.cluster.creation.provider'];
-    }
-
-    return 'docker';
-  }
 }
 
 // search for clusters
