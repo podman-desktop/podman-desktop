@@ -12,7 +12,6 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
-import { untrack } from 'svelte';
 import { router } from 'tinro';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
@@ -29,6 +28,7 @@ import {
   clearContainerActionInProgress,
   containersInfos,
   setContainerActionError,
+  setContainerGroupStatus,
   setContainerStatus,
 } from '/@/stores/containers';
 import { context } from '/@/stores/context';
@@ -56,7 +56,9 @@ interface Props {
 let { searchTerm = '' }: Props = $props();
 
 let selectedEnvironment = $state('');
-let containerGroups = $state<ContainerGroupInfoUI[]>([]);
+// not reactive on purpose: used to preserve selection state across recomputations of
+// containerGroups without relying on $effect/untrack
+let previousContainerGroups: ContainerGroupInfoUI[] = [];
 
 function fromExistingImage(): void {
   openChoiceModal = false;
@@ -94,7 +96,7 @@ async function deleteSelectedContainers(): Promise<void> {
 
   // mark pods and containers for deletion
   bulkDeleteInProgress = true;
-  podGroups.forEach(pod => (pod.status = 'DELETING'));
+  podGroups.forEach(pod => setContainerGroupStatus(pod.engineId, pod.id, 'DELETING'));
   selectedContainers.forEach(container => {
     setContainerStatus(container.engineId, container.id, 'DELETING');
   });
@@ -143,7 +145,7 @@ async function runSelectedContainers(): Promise<void> {
   }
   bulkRunInProgress = true;
   podGroups.forEach(pod => {
-    if (pod.status !== 'RUNNING') pod.status = 'STARTING';
+    if (pod.status !== 'RUNNING') setContainerGroupStatus(pod.engineId, pod.id, 'STARTING');
   });
   selectedContainers.forEach(container => {
     if (container.state !== 'RUNNING') {
@@ -158,7 +160,7 @@ async function runSelectedContainers(): Promise<void> {
         if (podGroup.engineId && podGroup.id && podGroup.status !== 'RUNNING') {
           try {
             await window.startPod(podGroup.engineId, podGroup.id);
-            podGroup.status = 'RUNNING';
+            setContainerGroupStatus(podGroup.engineId, podGroup.id, 'RUNNING');
           } catch (e) {
             console.error('error while running pod', e);
           }
@@ -206,7 +208,7 @@ async function stopSelectedContainers(): Promise<void> {
 
   bulkStopInProgress = true;
   try {
-    podGroupsToStop.forEach(podGroup => (podGroup.status = 'STOPPING'));
+    podGroupsToStop.forEach(podGroup => setContainerGroupStatus(podGroup.engineId, podGroup.id, 'STOPPING'));
     containersToStop.forEach(container => {
       setContainerStatus(container.engineId, container.id, 'STOPPING');
     });
@@ -231,7 +233,8 @@ async function stopSelectedContainers(): Promise<void> {
     podResults.forEach((result, index) => {
       if (result.status === 'rejected') {
         console.error('error while stopping pod', result.reason);
-        podGroupsToStop[index].status = 'RUNNING';
+        const podGroup = podGroupsToStop[index];
+        setContainerGroupStatus(podGroup.engineId, podGroup.id, 'RUNNING');
       }
     });
   } finally {
@@ -288,12 +291,13 @@ let enginesList = $derived.by(() => {
   return engines.filter((engine, index, self) => index === self.findIndex(t => t.name === engine.name));
 });
 
-// groups of containers that will be displayed
-let computedContainerGroups = $derived.by(() => {
-  let computedContainerGroups = containerUtils.getContainerGroups(currentContainers);
+// groups of containers that will be displayed, preserving the selected state of groups and
+// containers that already existed in the previous computation
+let containerGroups = $derived.by(() => {
+  let nextContainerGroups = containerUtils.getContainerGroups(currentContainers);
 
   // Filter containers in groups
-  computedContainerGroups.forEach(group => {
+  nextContainerGroups.forEach(group => {
     group.containers = group.containers
       .filter(containerInfo =>
         // `names` is excluded on purpose: findMatchInLeaves recurses into arrays, so the raw
@@ -319,35 +323,32 @@ let computedContainerGroups = $derived.by(() => {
       });
   });
   // Remove groups with all containers filtered
-  computedContainerGroups = computedContainerGroups.filter(group => group.containers.length > 0);
+  nextContainerGroups = nextContainerGroups.filter(group => group.containers.length > 0);
 
-  return computedContainerGroups;
-});
+  // carry the selected state of groups and containers that already existed forward
+  const mergedGroups = nextContainerGroups.map(group => {
+    const previousGroup = previousContainerGroups.find(
+      previous => previous.type === group.type && previous.id === group.id && previous.engineId === group.engineId,
+    );
+    if (!previousGroup) {
+      return group;
+    }
 
-$effect(() => {
-  const nextGroups = computedContainerGroups;
-  untrack(() => {
-    containerGroups = nextGroups.map(group => {
-      const previousGroup = containerGroups.find(
-        previous => previous.type === group.type && previous.id === group.id && previous.engineId === group.engineId,
-      );
-      if (!previousGroup) {
-        return group;
-      }
-
-      return {
-        ...group,
-        selected: previousGroup.selected,
-        expanded: previousGroup.expanded,
-        containers: group.containers.map(container => {
-          const previousContainer = previousGroup.containers.find(
-            previous => previous.id === container.id && previous.engineId === container.engineId,
-          );
-          return previousContainer ? { ...container, selected: previousContainer.selected } : container;
-        }),
-      };
-    });
+    return {
+      ...group,
+      selected: previousGroup.selected,
+      containers: group.containers.map(container => {
+        const previousContainer = previousGroup.containers.find(
+          previous => previous.id === container.id && previous.engineId === container.engineId,
+        );
+        return previousContainer ? { ...container, selected: previousContainer.selected } : container;
+      }),
+    };
   });
+
+  // remember this computation so the next one can carry the selection state forward
+  previousContainerGroups = mergedGroups;
+  return mergedGroups;
 });
 
 function toggleCreateContainer(): void {
@@ -551,8 +552,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           defaultSortColumn="Name"
           key={key}
           label={label}
-          enableLayoutConfiguration={true}
-          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+          enableLayoutConfiguration={true}>
         </Table>
       {/if}
     </div>

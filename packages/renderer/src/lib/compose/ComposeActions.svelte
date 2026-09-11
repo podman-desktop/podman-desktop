@@ -39,6 +39,9 @@ onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_COMPOSE);
 });
 
+let hideStartForStop = $state(false);
+let hideStopForStart = $state(false);
+
 let someNeedStart = $derived(compose.containers?.some(c => c.state !== 'RUNNING'));
 let someNeedStop = $derived(compose.containers?.some(c => c.state === 'RUNNING'));
 let actionInProgress = $derived(
@@ -50,9 +53,6 @@ let actionStatus = $derived(
     : (compose.containers.find(container => container.actionInProgress)?.state ?? compose.status),
 );
 let allContainersInProgress = $derived(compose.containers.every(container => container.actionInProgress));
-
-let hideStartForStop = $state(false);
-let hideStopForStart = $state(false);
 
 function inProgress(isStarting: boolean, state?: string): void {
   compose.actionInProgress = isStarting;

@@ -20,13 +20,14 @@ import type { ContainerInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { assert, beforeEach, expect, test, vi } from 'vitest';
 
-import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 
 import {
   clearContainerActionInProgress,
   containersEventStore,
   containersInfos,
   setContainerActionError,
+  setContainerGroupStatus,
   setContainerStatus,
 } from './containers';
 
@@ -44,6 +45,13 @@ beforeEach(() => {
 
 function container(id: string, engineId: string, state = 'RUNNING'): ContainerInfoUI {
   return { id, engineId, state, actionInProgress: false, actionError: '', selected: false } as ContainerInfoUI;
+}
+
+function podContainer(id: string, engineId: string, podId: string, podStatus = 'RUNNING'): ContainerInfoUI {
+  return {
+    ...container(id, engineId),
+    groupInfo: { type: ContainerGroupInfoTypeUI.POD, id: podId, engineId, status: podStatus },
+  } as ContainerInfoUI;
 }
 
 test('container action helpers update only the matching container', () => {
@@ -66,6 +74,29 @@ test('container action helpers clear progress and set errors', () => {
   setContainerStatus('engine-a', 'one', 'STOPPING');
   clearContainerActionInProgress('engine-a', 'one');
   expect(get(containersInfos)[0]).toMatchObject({ state: 'STOPPING', actionInProgress: false, actionError: '' });
+});
+
+test('setContainerGroupStatus updates the status of every container belonging to the matching pod', () => {
+  containersInfos.set([
+    podContainer('one', 'engine-a', 'pod-a', 'RUNNING'),
+    podContainer('two', 'engine-a', 'pod-a', 'RUNNING'),
+    podContainer('three', 'engine-a', 'pod-b', 'RUNNING'),
+    podContainer('four', 'engine-b', 'pod-a', 'RUNNING'),
+    {
+      ...container('five', 'engine-a'),
+      groupInfo: { type: ContainerGroupInfoTypeUI.STANDALONE, id: 'five', engineId: 'engine-a' },
+    } as ContainerInfoUI,
+  ]);
+
+  setContainerGroupStatus('engine-a', 'pod-a', 'DELETING');
+
+  const result = get(containersInfos);
+  expect(result[0].groupInfo.status).toBe('DELETING');
+  expect(result[1].groupInfo.status).toBe('DELETING');
+  // different pod id, engineId or standalone container are left untouched
+  expect(result[2].groupInfo.status).toBe('RUNNING');
+  expect(result[3].groupInfo.status).toBe('RUNNING');
+  expect(result[4]).toMatchObject({ state: 'RUNNING' });
 });
 
 test('container action helpers ignore missing containers', () => {
