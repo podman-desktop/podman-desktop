@@ -5,35 +5,39 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let kubernetesConnectionInfo: ProviderKubernetesConnectionInfo | undefined = undefined;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  kubernetesConnectionInfo?: ProviderKubernetesConnectionInfo;
+}
+let { properties = [], providerInternalId, kubernetesConnectionInfo }: Props = $props();
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
 function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
   tmpProviderContainerConfiguration = value;
 }
 
-$: Promise.all(
-  properties.map(async configurationKey => {
-    return {
-      ...configurationKey,
-      value: configurationKey.id
-        ? await window.getConfigurationValue(
-            configurationKey.id,
-            kubernetesConnectionInfo as unknown as KubernetesProviderConnection,
-          )
-        : undefined,
-      connection: kubernetesConnectionInfo?.name ?? '',
-      providerId: providerInternalId ?? '',
-    };
-  }),
-)
-  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
-  .catch((err: unknown) => console.error('Error collecting providers', err));
-
-$: providerConnectionConfiguration = tmpProviderContainerConfiguration.filter(
-  configurationKey => configurationKey.value !== undefined,
+$effect(() => {
+  Promise.all(
+    properties.map(async configurationKey => {
+      return {
+        ...configurationKey,
+        value: configurationKey.id
+          ? await window.getConfigurationValue(
+              configurationKey.id,
+              kubernetesConnectionInfo as unknown as KubernetesProviderConnection,
+            )
+          : undefined,
+        connection: kubernetesConnectionInfo?.name ?? '',
+        providerId: providerInternalId ?? '',
+      };
+    }),
+  )
+    .then(value => updateTmpProviderContainerConfiguration(value.flat()))
+    .catch((err: unknown) => console.error('Error collecting providers', err));
+});
+let providerConnectionConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $derived(
+  tmpProviderContainerConfiguration.filter(configurationKey => configurationKey.value !== undefined),
 );
 </script>
 
