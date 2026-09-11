@@ -3,6 +3,7 @@ import type { WelcomeMessages } from '@podman-desktop/core-api';
 import { Button, Checkbox, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
@@ -25,8 +26,15 @@ let podmanDesktopVersion = $state<string>();
 
 let welcomeMessages = $state<WelcomeMessages>();
 
+// User selection is kept outside of the derived value below: the derived is recomputed on every
+// onboardingList/providerInfos emission (a provider status change or an extension starting is
+// enough), which would otherwise discard whatever the user checked or unchecked
+const selectionOverrides = new SvelteMap<string, boolean>();
+
 let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = $derived(
-  welcomeUtils.getSortedOnboardingExtensions($onboardingList, $providerInfos),
+  welcomeUtils
+    .getSortedOnboardingExtensions($onboardingList, $providerInfos)
+    .map(provider => ({ ...provider, selected: selectionOverrides.get(provider.name) ?? provider.selected })),
 );
 
 onMount(async () => {
@@ -43,14 +51,8 @@ async function closeWelcome(): Promise<void> {
 
 // Function to toggle provider selection
 function toggleOnboardingSelection(providerName: string): void {
-  // Go through providers, find the provider name and toggle the selected value
-  // then update providers
-  onboardingProviders = onboardingProviders.map(provider => {
-    if (provider.name === providerName) {
-      provider.selected = !provider.selected;
-    }
-    return provider;
-  });
+  const current = onboardingProviders.find(provider => provider.name === providerName)?.selected ?? true;
+  selectionOverrides.set(providerName, !current);
 }
 
 function startOnboardingQueue(): void {
@@ -105,7 +107,7 @@ function startOnboardingQueue(): void {
                   <Checkbox
                     title="{onboarding.displayName} checkbox"
                     name="{onboarding.displayName} checkbox"
-                    bind:checked={onboarding.selected}
+                    checked={onboarding.selected}
                     on:click={(): void => toggleOnboardingSelection(onboarding.name)}
                     class="text-xl" />
                 </div>
