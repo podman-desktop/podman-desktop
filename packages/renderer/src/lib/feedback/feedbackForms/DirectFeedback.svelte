@@ -89,9 +89,15 @@ async function openGitHub(): Promise<void> {
   <svelte:fragment slot="content">
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
       >{feedbackMessages?.experienceLabel}</label>
-    <div class="flex space-x-4">
+    <div class="flex space-x-4" role="group" aria-label={feedbackMessages?.experienceLabel}>
       {#each SMILEYS as { rating, icon, label } (rating)}
-        <button aria-label={label} onclick={(): void => selectSmiley(rating)}>
+        <button
+          aria-label={label}
+          aria-pressed={smileyRating === rating ? 'true' : 'false'}
+          class="rounded-full p-1 border-2 {smileyRating === rating
+            ? 'border-(--pd-content-card-border-selected)'
+            : 'border-transparent'}"
+          onclick={(): void => selectSmiley(rating)}>
           <Icon
             size="1.5x"
             class="cursor-pointer {smileyRating === rating
