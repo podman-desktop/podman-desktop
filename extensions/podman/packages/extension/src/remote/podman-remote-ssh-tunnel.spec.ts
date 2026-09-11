@@ -17,19 +17,38 @@
  ***********************************************************************/
 
 import { rm } from 'node:fs/promises';
+import * as net from 'node:net';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 
 import { Client, type ConnectConfig, Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
+import type { Mock } from 'vitest';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
-beforeEach(() => {
+type NodeNet = typeof net;
+
+vi.mock(import('node:net'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    createServer: vi.fn((...args: unknown[]) =>
+      (actual.createServer as (...createServerArgs: unknown[]) => net.Server)(...args),
+    ) as unknown as typeof actual.createServer,
+  };
+});
+
+beforeEach(async () => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+  const actualNet = await vi.importActual<NodeNet>('node:net');
+  mockedCreateServer().mockImplementation((...args: unknown[]) =>
+    (actualNet.createServer as (...createServerArgs: unknown[]) => net.Server)(...args),
+  );
 });
 
 afterEach(() => {
@@ -45,6 +64,10 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
   getSshConfig(): ConnectConfig {
     return super.getSshConfig();
   }
+}
+
+function mockedCreateServer(): Mock {
+  return net.createServer as unknown as Mock;
 }
 
 let dummyKey: string;
