@@ -51,109 +51,109 @@ test.skip(
   'Test is not supported with CDP runner',
 );
 
-test.describe
-  .serial('Podman Kube Play Yaml - Create Pod from Scratch', { tag: '@smoke' }, () => {
-    test.beforeAll(async ({ runner, page, welcomePage }) => {
-      runner.setVideoAndTraceName('podman-kube-play-from-scratch-smoke');
-      await welcomePage.handleWelcomePage(true);
-      await waitForPodmanMachineStartup(page);
-    });
+test.describe('Podman Kube Play Yaml - Create Pod from Scratch', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test.beforeAll(async ({ runner, page, welcomePage }) => {
+    runner.setVideoAndTraceName('podman-kube-play-from-scratch-smoke');
+    await welcomePage.handleWelcomePage(true);
+    await waitForPodmanMachineStartup(page);
+  });
 
-    test.afterAll(async ({ page, runner }) => {
-      try {
-        await deletePod(page, POD_NAME_FROM_SCRATCH);
-        await deleteImage(page, NGINX_IMAGE_NAME);
-      } finally {
-        await runner.close(); // closes the app
-      }
-    });
-
-    test('Create pod and verify it is running ', async ({ page, navigationBar }) => {
-      test.setTimeout(180_000);
-
-      const podsPage = await navigationBar.openPods();
-      const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
-      await podmanKubePlayPage.playYaml({
-        podmanKubePlayOption: PodmanKubePlayOptions.CreateYamlFileFromScratch,
-        jsonResourceDefinition: JSON_RESOURCE_DEFINITION,
-      });
-      await playExpect
-        .poll(async () => await podsPage.podExists(POD_NAME_FROM_SCRATCH), { timeout: 15_000 })
-        .toBeTruthy();
-      const podDetails = await podsPage.openPodDetails(POD_NAME_FROM_SCRATCH);
-      await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toBe(PodState.Running);
-
+  test.afterAll(async ({ page, runner }) => {
+    try {
       await deletePod(page, POD_NAME_FROM_SCRATCH);
-      const imagesPage = await navigationBar.openImages();
-      await playExpect
-        .poll(async () => await imagesPage.getCurrentStatusOfImage(NGINX_IMAGE_NAME))
-        .toEqual(ImageState.Unused);
-    });
+      await deleteImage(page, NGINX_IMAGE_NAME);
+    } finally {
+      await runner.close(); // closes the app
+    }
   });
 
-test.describe
-  .serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' }, () => {
-    test.skip(!!isCI && isLinux, 'Skipping E2E test on GitHub Actions due to an outdated Podman version');
+  test('Create pod and verify it is running ', async ({ page, navigationBar }) => {
+    test.setTimeout(180_000);
 
-    //restarting the app between suites due to issue: https://github.com/podman-desktop/podman-desktop/issues/14273
-    test.beforeAll(async ({ runner, page, welcomePage }) => {
-      runner.setVideoAndTraceName('podman-kube-play-build-smoke');
-      await welcomePage.handleWelcomePage(true);
-      await waitForPodmanMachineStartup(page);
+    const podsPage = await navigationBar.openPods();
+    const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
+    await podmanKubePlayPage.playYaml({
+      podmanKubePlayOption: PodmanKubePlayOptions.CreateYamlFileFromScratch,
+      jsonResourceDefinition: JSON_RESOURCE_DEFINITION,
     });
+    await playExpect
+      .poll(async () => await podsPage.podExists(POD_NAME_FROM_SCRATCH), { timeout: 15_000 })
+      .toBeTruthy();
+    const podDetails = await podsPage.openPodDetails(POD_NAME_FROM_SCRATCH);
+    await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toBe(PodState.Running);
 
-    test.afterAll(async ({ page, runner }) => {
-      try {
-        await deletePod(page, POD_NAME_BUILD_OPTION);
-        await deleteImage(page, LOCAL_IMAGE_NAME);
-        await deleteImage(page, NGINX_IMAGE_NAME);
-      } finally {
-        await runner.close();
-      }
-    });
-    test('Create pod and verify it is running', async ({ navigationBar }) => {
-      test.setTimeout(180_000);
+    await deletePod(page, POD_NAME_FROM_SCRATCH);
+    const imagesPage = await navigationBar.openImages();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(NGINX_IMAGE_NAME))
+      .toEqual(ImageState.Unused);
+  });
+});
 
-      const podsPage = await navigationBar.openPods();
-      await playExpect(podsPage.heading).toBeVisible();
-      const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
-      await playExpect(podmanKubePlayPage.heading).toBeVisible();
+test.describe('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test.skip(!!isCI && isLinux, 'Skipping E2E test on GitHub Actions due to an outdated Podman version');
 
-      await podmanKubePlayPage.playYaml(
-        { podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile, pathToYaml: POD_BUILD_YAML_PATH },
-        true,
-      );
-      await playExpect(podsPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => await podsPage.podExists(POD_NAME_BUILD_OPTION), { timeout: 40_000 })
-        .toBeTruthy();
-      const podDetails = await podsPage.openPodDetails(POD_NAME_BUILD_OPTION);
-      await playExpect(podDetails.heading).toBeVisible();
-      await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
-    });
-    test('Verify created pod uses localhost image', async ({ page, navigationBar }) => {
-      const imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(LOCAL_IMAGE_NAME), { timeout: 40_000 })
-        .toBeTruthy();
-      await playExpect
-        .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME), { timeout: 15_000 })
-        .toBe(ImageState.Used);
+  //restarting the app between suites due to issue: https://github.com/podman-desktop/podman-desktop/issues/14273
+  test.beforeAll(async ({ runner, page, welcomePage }) => {
+    runner.setVideoAndTraceName('podman-kube-play-build-smoke');
+    await welcomePage.handleWelcomePage(true);
+    await waitForPodmanMachineStartup(page);
+  });
 
-      const containersPage = await navigationBar.openContainers();
-      await playExpect(containersPage.heading).toBeVisible();
-      await playExpect.poll(async () => containersPage.getContainerImage(CONTAINER_NAME)).toBe(CONTAINER_IMAGE);
-
-      // delete applied pod, check the images now have unused state
+  test.afterAll(async ({ page, runner }) => {
+    try {
       await deletePod(page, POD_NAME_BUILD_OPTION);
-      await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME))
-        .toEqual(ImageState.Unused);
-      await playExpect
-        .poll(async () => await imagesPage.getCurrentStatusOfImage(NGINX_IMAGE_NAME))
-        .toEqual(ImageState.Unused);
-    });
+      await deleteImage(page, LOCAL_IMAGE_NAME);
+      await deleteImage(page, NGINX_IMAGE_NAME);
+    } finally {
+      await runner.close();
+    }
   });
+  test('Create pod and verify it is running', async ({ navigationBar }) => {
+    test.setTimeout(180_000);
+
+    const podsPage = await navigationBar.openPods();
+    await playExpect(podsPage.heading).toBeVisible();
+    const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
+    await playExpect(podmanKubePlayPage.heading).toBeVisible();
+
+    await podmanKubePlayPage.playYaml(
+      { podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile, pathToYaml: POD_BUILD_YAML_PATH },
+      true,
+    );
+    await playExpect(podsPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await podsPage.podExists(POD_NAME_BUILD_OPTION), { timeout: 40_000 })
+      .toBeTruthy();
+    const podDetails = await podsPage.openPodDetails(POD_NAME_BUILD_OPTION);
+    await playExpect(podDetails.heading).toBeVisible();
+    await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
+  });
+  test('Verify created pod uses localhost image', async ({ page, navigationBar }) => {
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageExists(LOCAL_IMAGE_NAME), { timeout: 40_000 })
+      .toBeTruthy();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME), { timeout: 15_000 })
+      .toBe(ImageState.Used);
+
+    const containersPage = await navigationBar.openContainers();
+    await playExpect(containersPage.heading).toBeVisible();
+    await playExpect.poll(async () => containersPage.getContainerImage(CONTAINER_NAME)).toBe(CONTAINER_IMAGE);
+
+    // delete applied pod, check the images now have unused state
+    await deletePod(page, POD_NAME_BUILD_OPTION);
+    await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME))
+      .toEqual(ImageState.Unused);
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(NGINX_IMAGE_NAME))
+      .toEqual(ImageState.Unused);
+  });
+});
