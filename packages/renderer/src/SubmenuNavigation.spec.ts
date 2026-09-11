@@ -59,12 +59,18 @@ test('SubmenuNavigation displays a title and builds SettingsNavItem components',
     href: '/link1',
     selected: true,
     onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    titleTooltip: 'entry 1. Hold to pin to navigation. Ctrl/Cmd+Left Arrow to pin',
+    onKeyDown: expect.any(Function),
   });
   expect(SettingsNavItemMock).toHaveBeenNthCalledWith(2, expect.anything(), {
     title: 'entry 2',
     href: '/link2',
     selected: false,
     onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    titleTooltip: 'entry 2. Hold to pin to navigation. Ctrl/Cmd+Left Arrow to pin',
+    onKeyDown: expect.any(Function),
   });
 });
 

@@ -58,6 +58,23 @@ test('Expect tooltip title attribute on truncated labels', async () => {
   expect(screen.getByText(title)).not.toHaveAttribute('title');
 });
 
+test('Forwards keyboard shortcut metadata and handler to the anchor', async () => {
+  const onKeyDown = vi.fn();
+  render(SettingsNavItem, {
+    title: 'Resources',
+    href: '/test',
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    titleTooltip: 'Pin Resources to navigation',
+    onKeyDown,
+  });
+
+  const element = screen.getByRole('link', { name: 'Resources' });
+  expect(element).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowLeft Meta+ArrowLeft');
+  expect(element).toHaveAttribute('title', 'Pin Resources to navigation');
+  await fireEvent.keyDown(element, { key: 'ArrowLeft', ctrlKey: true });
+  expect(onKeyDown).toHaveBeenCalled();
+});
+
 test('Expect selection styling', async () => {
   const title = 'Resources';
   const href = '/test';

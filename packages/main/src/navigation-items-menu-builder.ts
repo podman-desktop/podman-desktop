@@ -195,7 +195,7 @@ export class NavigationItemsMenuBuilder {
     const items: MenuItemConstructorOptions[] = [];
 
     // add all navigation items to be able to show/hide them
-    const hideableItems = this.navigationItems.filter(item => !isGroupedName(item.name));
+    const hideableItems = this.navigationItems.filter(item => !isGroupedName(item.name) && item.index !== undefined);
 
     const menuForNavItems: Electron.MenuItemConstructorOptions[] = hideableItems.map(item => ({
       label: this.escapeLabel(item.name),

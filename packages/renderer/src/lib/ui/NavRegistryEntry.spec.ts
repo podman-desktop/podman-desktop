@@ -117,3 +117,66 @@ test('Expect entry to not have title when collapsed', async () => {
   const content = screen.queryByLabelText('Item1 title');
   expect(content).not.toBeInTheDocument();
 });
+
+test('Expect pinned entry to show pin badge', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Settings > Resources',
+    hidden: false,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Settings > Resources',
+    link: '/preferences/resources',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+    index: 0,
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: false });
+
+  expect(screen.getByTestId('nav-pin-badge')).toBeInTheDocument();
+});
+
+test('Expect non-pinned entry to omit pin badge', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: false });
+
+  expect(screen.queryByTestId('nav-pin-badge')).not.toBeInTheDocument();
+});
+
+test('Forwards reorder shortcut metadata to the navigation link', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, {
+    entry,
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded: false,
+    ariaKeyShortcuts: 'Control+ArrowUp Control+ArrowDown',
+    titleTooltip: 'Hold to reorder',
+  });
+
+  const link = screen.getByRole('link', { name: 'Item1' });
+  expect(link).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
+  expect(link).toHaveAttribute('title', 'Hold to reorder');
+});
