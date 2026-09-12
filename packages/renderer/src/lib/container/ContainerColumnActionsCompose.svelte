@@ -18,7 +18,6 @@ let { object }: Props = $props();
       engineId: object.engineId,
       engineType: object.engineType,
       containers: object.containers,
-    }}
-    dropdownMenu={true}
-    on:update />
+     }}
+    dropdownMenu={true}/>
 {/if}

@@ -20,17 +20,63 @@ import type { ContainerInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { assert, beforeEach, expect, test, vi } from 'vitest';
 
-import { containersEventStore, containersInfos } from './containers';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+
+import {
+  clearContainerActionInProgress,
+  containersEventStore,
+  containersInfos,
+  setContainerActionError,
+  setContainerStatus,
+} from './containers';
 
 const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
 beforeEach(() => {
   callbacks.clear();
+  containersInfos.set([]);
   vi.resetAllMocks();
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
     return { dispose: vi.fn() };
   });
+});
+
+function container(id: string, engineId: string, state = 'RUNNING'): ContainerInfoUI {
+  return { id, engineId, state, actionInProgress: false, actionError: '', selected: false } as ContainerInfoUI;
+}
+
+test('container action helpers update only the matching container', () => {
+  containersInfos.set([container('one', 'engine-a'), container('two', 'engine-a'), container('one', 'engine-b')]);
+
+  setContainerStatus('engine-a', 'one', 'STARTING');
+
+  const result = get(containersInfos);
+  expect(result[0]).toMatchObject({ state: 'STARTING', actionInProgress: true, actionError: '' });
+  expect(result[1]).toMatchObject({ state: 'RUNNING', actionInProgress: false });
+  expect(result[2]).toMatchObject({ state: 'RUNNING', actionInProgress: false });
+});
+
+test('container action helpers clear progress and set errors', () => {
+  containersInfos.set([container('one', 'engine-a', 'STARTING')]);
+
+  setContainerActionError('engine-a', 'one', 'failed');
+  expect(get(containersInfos)[0]).toMatchObject({ state: 'ERROR', actionInProgress: false, actionError: 'failed' });
+
+  setContainerStatus('engine-a', 'one', 'STOPPING');
+  clearContainerActionInProgress('engine-a', 'one');
+  expect(get(containersInfos)[0]).toMatchObject({ state: 'STOPPING', actionInProgress: false, actionError: '' });
+});
+
+test('container action helpers ignore missing containers', () => {
+  containersInfos.set([container('one', 'engine-a')]);
+  const before = get(containersInfos)[0];
+
+  setContainerStatus('missing-engine', 'missing', 'STARTING');
+  clearContainerActionInProgress('missing-engine', 'missing');
+  setContainerActionError('missing-engine', 'missing', 'failed');
+
+  expect(get(containersInfos)[0]).toBe(before);
 });
 
 test.each([

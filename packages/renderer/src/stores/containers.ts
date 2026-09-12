@@ -55,6 +55,36 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
 
 export const containersInfos: Writable<ContainerInfoUI[]> = writable([]);
 
+export function setContainerStatus(engineId: string, containerId: string, state: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, state, actionInProgress: true, actionError: '' }
+        : container,
+    ),
+  );
+}
+
+export function clearContainerActionInProgress(engineId: string, containerId: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, actionInProgress: false }
+        : container,
+    ),
+  );
+}
+
+export function setContainerActionError(engineId: string, containerId: string, error: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, actionError: error, actionInProgress: false, state: 'ERROR' }
+        : container,
+    ),
+  );
+}
+
 const containerUtils = new ContainerUtils();
 
 // use helper here as window methods are initialized after the store in tests
