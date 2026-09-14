@@ -27,11 +27,11 @@ set -euo pipefail
 #   ./setup-proxy.sh cleanup  # stop and remove it
 #
 # Override via env:
-#   PROXY_CONTAINER_NAME, PROXY_PORT, PROXY_IMAGE
+#   PROXY_PORT, PROXY_IMAGE
 
 DEFAULT_IMAGE="docker.io/ubuntu/squid@sha256:6a097f68bae708cedbabd6188d68c7e2e7a38cedd05a176e1cc0ba29e3bbe029"
 
-PROXY_NAME="${PROXY_CONTAINER_NAME:-pd-test-proxy}"
+PROXY_NAME="pd-test-proxy"
 PROXY_PORT="${PROXY_PORT:-3128}"
 PROXY_IMAGE="${PROXY_IMAGE:-${DEFAULT_IMAGE}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -90,25 +90,8 @@ start_proxy() {
 case "${1:-start}" in
   start)
     if proxy_exists; then
-      if [ "${CI:-}" = "true" ]; then
-        echo "CI detected - tearing down existing proxy."
-        cleanup
-      else
-        echo "Proxy container '${PROXY_NAME}' already exists."
-        echo ""
-        read -rp "  [t]eardown and recreate / [R]estart existing? (t/R): " choice
-        case "${choice}" in
-          t|T)
-            cleanup
-            ;;
-          *)
-            echo "Restarting existing container..."
-            podman restart "${PROXY_NAME}"
-            echo "Proxy restarted at 127.0.0.1:${PROXY_PORT}"
-            exit 0
-            ;;
-        esac
-      fi
+      echo "Proxy already exists, recreating a container..."
+      cleanup
     fi
     start_proxy
     ;;
