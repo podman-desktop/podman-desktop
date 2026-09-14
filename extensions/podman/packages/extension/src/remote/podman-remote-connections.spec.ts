@@ -406,7 +406,7 @@ test('should register remote connection with tunnel error', async () => {
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     get: () => undefined,
   } as unknown as extensionApi.Configuration);
-  vi.spyOn(fs, 'readFileSync').mockReturnValue('file');
+  vi.spyOn(podmanRemoteConnections, 'readPrivateKey').mockResolvedValue('fake-key');
   vi.mocked(extensionApi.process.exec).mockResolvedValue({
     stdout: JSON.stringify([
       {
