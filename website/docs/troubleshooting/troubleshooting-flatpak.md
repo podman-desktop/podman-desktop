@@ -20,7 +20,7 @@ When you install Podman Desktop from Flathub, the permissions declared in [`io.p
 
   ```shell-session
   $ flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
-  $ flatpak install --user flathub org.flatpak.Builder org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+  $ flatpak install --user flathub org.flatpak.Builder org.freedesktop.Platform//26.08 org.freedesktop.Sdk//26.08
   ```
 
 #### Procedure: Testing a release bundle
