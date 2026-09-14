@@ -67,6 +67,7 @@ overrides:
   postcss: '>=8.5.18'
   postcss-selector-parser@^6: ^6.1.3
   browserslist: '>=4.28.7'
+  colord: '>=2.9.4'
 
 importers:
 
@@ -6425,8 +6426,8 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
-  colord@2.9.3:
-    resolution: {integrity: sha512-jeC1axXpnb0/2nn/Y1LPuLdgXBLH7aDcHu4KEKfqw3CUhX7ZpfBSlPKyqXE6btIgEzfWtrX3/tyBCaCvXvMkOw==}
+  colord@2.10.0:
+    resolution: {integrity: sha512-AidJptpBJmjTclAp9BkLwJi0T93fo5epJnbaZslpg6QVzpHjAiveF55mE9AcUJiGMqRHgMDY8soMsQtuNYMHfw==}
 
   combine-promises@1.2.0:
     resolution: {integrity: sha512-VcQB1ziGD0NXrhKxiwyNbCDmRzs/OShMs2GqW2DlU2A/Sd0nQxE1oWDAE5O0ygSx5mgQOn9eIFh7yKPgFRVkPQ==}
@@ -18915,7 +18916,7 @@ snapshots:
 
   color-name@1.1.4: {}
 
-  colord@2.9.3: {}
+  colord@2.10.0: {}
 
   combine-promises@1.2.0: {}
 
@@ -23329,7 +23330,7 @@ snapshots:
     dependencies:
       browserslist: 4.28.9
       caniuse-api: 3.0.0
-      colord: 2.9.3
+      colord: 2.10.0
       postcss: 8.5.28
       postcss-value-parser: 4.2.0
 
@@ -23488,7 +23489,7 @@ snapshots:
 
   postcss-minify-gradients@6.0.3(postcss@8.5.28):
     dependencies:
-      colord: 2.9.3
+      colord: 2.10.0
       cssnano-utils: 4.0.2(postcss@8.5.28)
       postcss: 8.5.28
       postcss-value-parser: 4.2.0
