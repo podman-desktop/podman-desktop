@@ -3,6 +3,7 @@ import { faGear } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
@@ -29,6 +30,12 @@ let {
   hasAnyConfiguration,
   class: className = '',
 }: Props = $props();
+
+let isWindows = $state(false);
+
+onMount(async () => {
+  isWindows = (await window.getOsPlatform()) === 'win32';
+});
 
 const isOnboarding = $derived(globalContext && isOnboardingEnabled(provider, globalContext));
 
@@ -78,6 +85,13 @@ const showUpdateButton = $derived(
   provider.version && provider.updateInfo?.version && provider.version !== provider.updateInfo?.version,
 );
 
+const showHyperVPrepButton = $derived(
+  isWindows &&
+    provider.id === 'podman' &&
+    globalContext?.getValue<boolean>('podman.hypervPrepSupported') === true &&
+    globalContext?.getValue<boolean>('podman.hypervPrepNotApplied') === true,
+);
+
 function handleCreateNew(): Promise<void> {
   return onCreateNew(provider, providerDisplayName);
 }
@@ -87,6 +101,14 @@ function handleSetup(): void {
     router.goto(`/preferences/onboarding/${provider.extensionId}`);
   } else {
     router.goto(`/preferences/default/preferences.${provider.extensionId}`);
+  }
+}
+
+async function handlePrepareHyperV(): Promise<void> {
+  try {
+    await window.executeCommand('podman.hypervPrep');
+  } catch (err) {
+    console.error(`Error while executing Prepare Hyper-V: ${String(err)}`);
   }
 }
 </script>
@@ -126,6 +148,15 @@ function handleSetup(): void {
         <ProviderUpdateButton
           onPreflightChecks={onUpdatePreflightChecks}
           provider={provider} />
+      {/if}
+
+      {#if showHyperVPrepButton}
+        <Button
+          aria-label="Prepare Hyper-V"
+          title="Prepare Hyper-V"
+          onclick={handlePrepareHyperV}>
+          Prepare Hyper-V
+        </Button>
       {/if}
     </div>
   {/if}

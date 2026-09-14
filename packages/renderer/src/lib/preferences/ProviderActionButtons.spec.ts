@@ -63,6 +63,7 @@ const baseProviderInfo: ProviderInfo = {
 
 const mockGlobalContext: ContextUI = {
   setValue: vi.fn(),
+  getValue: vi.fn(),
 } as unknown as ContextUI;
 
 beforeEach(() => {
@@ -615,5 +616,54 @@ describe('ProviderActionButtons', () => {
     const createButton = screen.getByRole('button', { name: `Create new Kind Cluster` });
     expect(createButton).toBeInTheDocument();
     expect(createButton).not.toBeDisabled();
+  });
+
+  test('shows Prepare Hyper-V button for Podman on Windows when prep is not applied', async () => {
+    vi.mocked(window.getOsPlatform).mockResolvedValue('win32');
+    vi.mocked(mockGlobalContext.getValue).mockImplementation((key: string) => {
+      if (key === 'podman.hypervPrepSupported' || key === 'podman.hypervPrepNotApplied') {
+        return true;
+      }
+      return undefined;
+    });
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    const button = await screen.findByRole('button', { name: 'Prepare Hyper-V' });
+    expect(button).toBeInTheDocument();
+  });
+
+  test('runs podman.hypervPrep when Prepare Hyper-V is clicked', async () => {
+    vi.mocked(window.getOsPlatform).mockResolvedValue('win32');
+    vi.mocked(mockGlobalContext.getValue).mockImplementation((key: string) => {
+      if (key === 'podman.hypervPrepSupported' || key === 'podman.hypervPrepNotApplied') {
+        return true;
+      }
+      return undefined;
+    });
+    vi.mocked(window.executeCommand).mockResolvedValue(undefined);
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    const button = await screen.findByRole('button', { name: 'Prepare Hyper-V' });
+    await userEvent.click(button);
+
+    expect(window.executeCommand).toHaveBeenCalledWith('podman.hypervPrep');
   });
 });
