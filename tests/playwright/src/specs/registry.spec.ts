@@ -75,7 +75,7 @@ test.describe
 
       await registryPage.submitRegistryForm('invalidUrl', 'invalidName', 'invalidPswd');
       const urlErrorMsg = page.getByText(
-        /Unable to find auth info for https:\/\/invalidUrl\/v2\/\. Error: RequestError: getaddrinfo [A-Z_]+ invalidurl$/,
+        /Unable to find auth info for https:\/\/invalidUrl\/v2\/\. Error: Error: getaddrinfo [A-Z_]+ invalidurl$/,
       );
       await playExpect(urlErrorMsg).toBeVisible({ timeout: 60_000 });
       await registryPage.cancelDialogButton.click();

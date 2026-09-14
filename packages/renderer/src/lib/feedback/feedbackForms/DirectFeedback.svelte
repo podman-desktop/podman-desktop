@@ -21,6 +21,13 @@ interface Props {
   category: DirectFeedbackCategory;
 }
 
+const SMILEYS = [
+  { rating: 1, icon: faFrown, label: 'very-sad-smiley' },
+  { rating: 2, icon: faMeh, label: 'sad-smiley' },
+  { rating: 3, icon: faSmile, label: 'happy-smiley' },
+  { rating: 4, icon: faGrinStars, label: 'very-happy-smiley' },
+] as const;
+
 // feedback of the user
 let smileyRating = $state(0);
 let tellUsWhyFeedback = $state('');
@@ -83,38 +90,16 @@ async function openGitHub(): Promise<void> {
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
       >{feedbackMessages?.experienceLabel}</label>
     <div class="flex space-x-4">
-      <button aria-label="very-sad-smiley" onclick={(): void => selectSmiley(1)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 1
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faFrown} />
-      </button>
-      <button aria-label="sad-smiley" onclick={(): void => selectSmiley(2)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 2
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faMeh} />
-      </button>
-      <button aria-label="happy-smiley" onclick={(): void => selectSmiley(3)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 3
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faSmile} />
-      </button>
-      <button aria-label="very-happy-smiley" onclick={(): void => selectSmiley(4)}>
-        <Icon
-          size="1.5x"
-          class="cursor-pointer {smileyRating === 4
-            ? 'text-(--pd-action-button-primary-text)'
-            : 'text-(--pd-button-disabled-text)'}"
-          icon={faGrinStars} />
-      </button>
+      {#each SMILEYS as { rating, icon, label } (rating)}
+        <button aria-label={label} onclick={(): void => selectSmiley(rating)}>
+          <Icon
+            size="1.5x"
+            class="cursor-pointer {smileyRating === rating
+              ? 'text-(--pd-action-button-primary-text)'
+              : 'text-(--pd-button-disabled-text)'}"
+            {icon} />
+        </button>
+      {/each}
     </div>
 
     <label for="tellUsWhyFeedback" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
