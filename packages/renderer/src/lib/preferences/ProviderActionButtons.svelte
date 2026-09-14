@@ -1,15 +1,18 @@
 <script lang="ts">
 import { faGear } from '@fortawesome/free-solid-svg-icons';
-import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
+import type { CheckStatus, Menu, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
+import { ContextUI as ContextUIImpl } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ProviderUpdateButton from '/@/lib/dashboard/ProviderUpdateButton.svelte';
 
 interface Props {
   provider: ProviderInfo;
+  contributions?: Menu[];
   globalContext: ContextUI | undefined;
   providerInstallationInProgress: boolean;
   onCreateNew: (provider: ProviderInfo, displayName: string) => Promise<void>;
@@ -21,6 +24,7 @@ interface Props {
 
 let {
   provider,
+  contributions = [],
   globalContext,
   providerInstallationInProgress,
   onCreateNew,
@@ -78,6 +82,9 @@ const showUpdateButton = $derived(
   provider.version && provider.updateInfo?.version && provider.version !== provider.updateInfo?.version,
 );
 
+const providerContext = $derived(createProviderContext(provider, globalContext));
+const visibleProviderActions = $derived(contributions.filter(action => isProviderActionVisible(action)));
+
 function handleCreateNew(): Promise<void> {
   return onCreateNew(provider, providerDisplayName);
 }
@@ -87,6 +94,33 @@ function handleSetup(): void {
     router.goto(`/preferences/onboarding/${provider.extensionId}`);
   } else {
     router.goto(`/preferences/default/preferences.${provider.extensionId}`);
+  }
+}
+
+function createProviderContext(provider: ProviderInfo, globalContext: ContextUI | undefined): ContextUI {
+  const providerContext = new ContextUIImpl();
+  for (const [key, value] of Object.entries(globalContext?.value ?? {})) {
+    providerContext.setValue(key, value);
+  }
+  providerContext.setValue('providerId', provider.id);
+  providerContext.setValue('providerName', provider.name);
+  providerContext.setValue('providerStatus', provider.status);
+  providerContext.setValue('providerExtensionId', provider.extensionId);
+  return providerContext;
+}
+
+function isProviderActionVisible(action: Menu): boolean {
+  if (!action.when) {
+    return true;
+  }
+  return ContextKeyExpr.deserialize(action.when)?.evaluate(providerContext) ?? false;
+}
+
+async function executeProviderAction(action: Menu): Promise<void> {
+  try {
+    await window.executeCommand(action.command);
+  } catch (err) {
+    console.error(`Error while executing ${action.title}: ${String(err)}`);
   }
 }
 </script>
@@ -127,6 +161,15 @@ function handleSetup(): void {
           onPreflightChecks={onUpdatePreflightChecks}
           provider={provider} />
       {/if}
+
+      {#each visibleProviderActions as action (`${action.command}:${action.title}`)}
+        <Button
+          aria-label={action.title}
+          title={action.tooltip ?? action.title}
+          onclick={executeProviderAction.bind(undefined, action)}>
+          {action.title}
+        </Button>
+      {/each}
     </div>
   {/if}
 </div>

@@ -66,6 +66,7 @@ import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-hel
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { QemuHelper } from './helpers/qemu-helper';
 import { WslHelper } from './helpers/wsl-helper';
+import { initHyperVPrep } from './hyperv/hyperv-prep-command';
 import { InversifyBinding } from './inject/inversify-binding';
 import { PodmanInstall } from './installer/podman-install';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
@@ -1458,6 +1459,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   const podmanConfiguration = new PodmanConfiguration(extensionContext);
   await podmanConfiguration.init();
+
+  if (extensionApi.env.isWindows) {
+    await initHyperVPrep(extensionContext, podmanBinary, telemetryLogger);
+  }
 
   const provider = podmanProvider.provider;
 
