@@ -108,9 +108,7 @@ export function OSDownloadCard({
       className={`rounded-lg dark:text-gray-400 text-charcoal-300 bg-gray-400/25 dark:bg-charcoal-450/25 ${
         highlighted ? 'ring-2 ring-purple-500' : ''
       }`}>
-      <div
-        className="flex flex-col md:flex-row md:items-center gap-4 text-charcoal-300 dark:text-white cursor-pointer select-none"
-        aria-expanded={expanded}>
+      <div className="flex flex-col md:flex-row md:items-center gap-4 text-charcoal-300 dark:text-white cursor-pointer select-none">
         <div
           className="flex items-center gap-3 min-w-0 flex-1 px-6 py-5 w-full self-stretch"
           role="button"
@@ -121,7 +119,8 @@ export function OSDownloadCard({
               event.preventDefault();
               toggleExpanded();
             }
-          }}>
+          }}
+          aria-expanded={expanded}>
           <FontAwesomeIcon size="2x" icon={osIcon} className="shrink-0 text-purple-500" />
           <div className="min-w-0 flex-1 flex flex-col gap-0.5">
             <p className="text-lg md:text-xl font-medium leading-tight m-0">{osName}</p>
@@ -130,7 +129,7 @@ export function OSDownloadCard({
             </p>
           </div>
           {/* Mobile chevron */}
-          <span className="md:hidden shrink-0" aria-hidden="true">
+          <span className="md:hidden shrink-0">
             <FontAwesomeIcon icon={faChevronDown} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
           </span>
         </div>
@@ -152,15 +151,12 @@ export function OSDownloadCard({
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download
             </TelemetryLink>
-            <p className="block w-full mt-1 text-[0.675rem] leading-tight text-center opacity-65 m-0">
-              {primaryDownload.caption}
-            </p>
+            <p className="block w-full mt-1 text-[0.675rem] leading-tight text-center m-0">{primaryDownload.caption}</p>
           </span>
 
           {/* Desktop chevron */}
           <span
             className="hidden md:flex shrink-0"
-            aria-hidden="true"
             role="button"
             tabIndex={0}
             onClick={toggleExpanded}
@@ -169,7 +165,8 @@ export function OSDownloadCard({
                 event.preventDefault();
                 toggleExpanded();
               }
-            }}>
+            }}
+            aria-expanded={expanded}>
             <FontAwesomeIcon icon={faChevronDown} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
           </span>
         </div>
