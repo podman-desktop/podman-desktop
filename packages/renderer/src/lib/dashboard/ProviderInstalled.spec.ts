@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -218,3 +218,99 @@ test('Expect installed provider shows multiple installation warnings', async () 
   expect(screen.getByRole('list', { name: 'Provider Warnings' })).toBeInTheDocument();
   expect(screen.getByRole('listitem', { name: 'Multiple Podman installations detected' })).toBeInTheDocument();
 });
+
+test('Expect installed provider shows initialize button section when provider needs initialization', async () => {
+  const provider: ProviderInfo = {
+    containerConnections: [],
+    containerProviderConnectionCreation: false,
+    containerProviderConnectionInitialization: true,
+    detectionChecks: [],
+    id: 'podman',
+    images: {},
+    installationSupport: false,
+    kubernetesProviderConnectionInitialization: false,
+    links: [],
+    name: 'Podman',
+    status: 'installed',
+  } as unknown as ProviderInfo;
+
+  const initializationContext: InitializationContext = new InitializationContextImpl(
+    InitializeAndStartMode,
+  ) as unknown as InitializationContext;
+  render(ProviderInstalled, {
+    provider: provider,
+    initializationContext: initializationContext,
+  });
+
+  // The button's visibility is controlled by its parent wrapper's `hidden` class
+  // (see class:hidden={!initializationButtonVisible} in ProviderInstalled.svelte).
+  const button = screen.getByRole('button', { name: 'Initialize and start' });
+  const buttonWrapper = button.parentElement?.parentElement?.parentElement;
+  if (!buttonWrapper) {
+    throw new Error('Expected to find the initialize button wrapper element');
+  }
+
+  expect(buttonWrapper).not.toHaveClass('hidden');
+});
+
+test.each([
+  {
+    name: 'initialization succeeds',
+    setupMock: (): void => {
+      vi.mocked(window.initializeProvider).mockResolvedValue([]);
+    },
+    // userToggle stays false (set on click, nothing resets it on success), so the
+    // button remains hidden regardless of the provider's own initialization flags.
+    expectButtonHiddenAfterSettle: true,
+  },
+  {
+    name: 'initialization fails',
+    setupMock: (): void => {
+      vi.mocked(window.initializeProvider).mockRejectedValue('error');
+    },
+    // userToggle is forced back to true on failure, overriding the provider's
+    // initialization flags (both false here), so the button reappears.
+    expectButtonHiddenAfterSettle: false,
+  },
+])(
+  'Expect userToggle to control button visibility after click when $name',
+  async ({ setupMock, expectButtonHiddenAfterSettle }) => {
+    setupMock();
+
+    const provider: ProviderInfo = {
+      containerConnections: [],
+      containerProviderConnectionCreation: false,
+      // userToggle starts undefined, so this flag drives the initial visibility.
+      containerProviderConnectionInitialization: true,
+      detectionChecks: [],
+      id: 'podman',
+      images: {},
+      installationSupport: false,
+      kubernetesProviderConnectionInitialization: false,
+      links: [],
+      name: 'Podman',
+      status: 'installed',
+    } as unknown as ProviderInfo;
+
+    const initializationContext: InitializationContext = new InitializationContextImpl(
+      InitializeAndStartMode,
+    ) as unknown as InitializationContext;
+    render(ProviderInstalled, {
+      provider: provider,
+      initializationContext: initializationContext,
+    });
+
+    const button = screen.getByRole('button', { name: 'Initialize and start' });
+    const buttonWrapper = button.parentElement?.parentElement?.parentElement;
+
+    await userEvent.click(button);
+
+    // Flip the provider's own initialization flags off to prove visibility is now
+    // driven entirely by userToggle, not by the provider's initialization flags.
+    provider.containerProviderConnectionInitialization = false;
+
+    await waitFor(() => {
+      expect(buttonWrapper?.classList.contains('hidden')).toBe(expectButtonHiddenAfterSettle);
+    });
+  },
+);
