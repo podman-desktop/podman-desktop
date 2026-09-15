@@ -295,7 +295,7 @@ test.each([
     const initializationContext: InitializationContext = new InitializationContextImpl(
       InitializeAndStartMode,
     ) as unknown as InitializationContext;
-    render(ProviderInstalled, {
+    const { rerender } = render(ProviderInstalled, {
       provider: provider,
       initializationContext: initializationContext,
     });
@@ -307,7 +307,13 @@ test.each([
 
     // Flip the provider's own initialization flags off to prove visibility is now
     // driven entirely by userToggle, not by the provider's initialization flags.
-    provider.containerProviderConnectionInitialization = false;
+    await rerender({
+      provider: {
+        ...provider,
+        containerProviderConnectionInitialization: false,
+      },
+      initializationContext,
+    });
 
     await waitFor(() => {
       expect(buttonWrapper?.classList.contains('hidden')).toBe(expectButtonHiddenAfterSettle);
