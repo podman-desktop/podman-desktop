@@ -3,7 +3,9 @@
  * 'important' configuration so default style will be Tailwind css
  */
 
-@import 'tailwindcss';
+@import 'tailwindcss/theme.css';
+@import 'tailwindcss/utilities.css';
+
 @config '../../tailwind.config.js';
 
 /* Manrope latin subset font */
@@ -80,8 +82,13 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-svg.iconExternalLink_node_modules-\@docusaurus-theme-classic-lib-next-theme-IconExternalLink-styles-module {
-  display: inline;
+/* External-link icon (e.g. the arrow-in-square after GitHub/Discord links).
+   Docusaurus' CSS module class name is content-hashed (iconExternalLink_xxxx)
+   and changes across builds/versions, so match on the stable, non-hashed
+   `iconExternalLink_` prefix instead of a full, version-specific class name. */
+svg[class*='iconExternalLink_'] {
+  display: block;
+  vertical-align: middle;
 }
 
 /* Add icon for github instead of label */
@@ -190,6 +197,17 @@ li.footer__item a svg {
   }
 }
 
+/**
+  Stack the pen icon above the "Edit this page" text instead of showing
+  them inline. Targets the stable `theme-edit-this-page` class exposed by
+  Docusaurus rather than the icon's own CSS-module class, which has a
+  content-hash suffix that changes across builds/versions.
+ */
+.theme-edit-this-page {
+  display: inline-flex;
+  flex-direction: column;
+}
+
 .breadcrumbs {
   display: flex;
 }
@@ -199,7 +217,78 @@ li.footer__item a svg {
   align-items: center;
 }
 
-a {
+/* Restore the list reset removed when Tailwind Preflight was omitted. */
+ol,
+ul,
+menu {
+  list-style: none;
+}
+
+/* Restore Preflight's transparent default for plain buttons. */
+button {
+  background-color: transparent;
+  border: 0;
+}
+
+/* Remove the code-block toolbar button fill and border. */
+.theme-code-block button {
+  background: transparent;
+  border: none;
+  color: inherit;
+}
+
+/* Keep DocSearch result and toolbar icons at their intended size. */
+.DocSearch-Modal .DocSearch-Hit-icon,
+.DocSearch-Modal .DocSearch-Hit-action,
+.DocSearch-Modal .DocSearch-Search-Icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Restore the shortcut key size lost with Tailwind Preflight. */
+.DocSearch-Button-Keys .DocSearch-Button-Key {
+  font-size: 1em;
+}
+
+/* Match the navbar search button to DocSearch's light/dark searchbox color. */
+.DocSearch-Button,
+.DocSearch-Button:hover,
+.DocSearch-Button:active,
+.DocSearch-Button:focus {
+  background: var(--docsearch-searchbox-background);
+}
+
+/* Media elements default to block display */
+/* svg excludes:
+   - Docusaurus' appearance toggle icons (toggleIcon_*), which rely on
+     `display: none/initial` toggled via [data-theme-choice] to show only the
+     currently active light/dark/system icon; forcing `display: block` on
+     them would make all three visible at once.
+   - FontAwesome icons (svg-inline--fa), used inline within docs/tutorial
+     text via the <Icon /> MDX component (e.g. "Go to <Icon .../> Settings");
+     forcing `display: block` on them breaks the surrounding text flow.
+   - Docusaurus' external-link icon (iconExternalLink_*), rendered right
+     after external link text (e.g. the GitHub link's arrow-in-square icon);
+     forcing `display: block` on it pushes it onto its own line instead of
+     staying inline right after the link text. */
+img,
+svg:not([class*='toggleIcon_']):not([class*='svg-inline--fa']):not([class*='iconExternalLink_']),
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  vertical-align: middle;
+}
+
+/* Align sidebar collapse button arrow to the left */
+.collapseSidebarButtonIcon_pMEX {
+  display: block;
+}
+
+article .markdown a {
   color: var(--ifm-link-color);
 }
 
@@ -240,6 +329,24 @@ article .markdown ol {
 article .markdown ol ol {
   list-style-type: lower-roman;
 }
+
+/* Avoid extra vertical space around lists inside admonitions. */
+article .markdown .theme-admonition > [class*='admonitionContent_'] > ul,
+article .markdown .theme-admonition > [class*='admonitionContent_'] > ol {
+  margin-bottom: 0;
+}
+
+/* Nested tutorial notes should not add space below their parent list item. */
+article .markdown li > .theme-admonition {
+  margin-bottom: 0;
+}
+
+/* Do not leave a trailing list gap after a nested tutorial note. */
+article .markdown ul:has(> li > .theme-admonition),
+article .markdown ol:has(> li > .theme-admonition) {
+  margin-bottom: 0;
+}
+
 .dropdown__link:hover {
   background-color: transparent;
   color: var(--ifm-color-primary);
