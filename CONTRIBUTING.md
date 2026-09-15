@@ -366,6 +366,16 @@ Legal name must be used (no pseudonyms or anonymous contributions)
 If you set your `user.name` and `user.email` git configs, you can sign your
 commit automatically with `git commit -s`.
 
+### PR Splitting Guidelines
+
+Establishing rigid, blanket rules for when a pull request should be split is difficult, since expectations vary by domain and by change type. Because of this, **domain owners have the final say on whether a PR should be split**.
+
+The recommendation to break large PRs into smaller, reviewable chunks remains a guideline, not a strict mandate.
+
+When a single PR needs review from more than one [domain](https://github.com/podman-desktop/podman-desktop/labels?q=domain%2F) at once, for example a feature that touches both frontend and backend code, splitting it per domain often reduces friction and lets each part move and merge independently, rather than waiting on every reviewer to agree.
+
+If a PR can't reasonably be split, such as introducing a new API alongside its first consumer, use separate, well-scoped commits and rebase-and-merge instead of squash-and-merge. This keeps `main`'s history easier to read and bisect later.
+
 ### Skipping Jobs for Draft Pull Requests on GitHub
 
 When creating a pull request in **draft mode** on GitHub, all CI/CD jobs are **skipped by default**. This behavior is intentional to avoid triggering unnecessary workflows while the pull request is still in progress.
@@ -394,6 +404,8 @@ This ensures that CI resources are used efficiently while still providing flexib
 1. Submit your PR
 2. Reviewers are assigned by GitHub to two Podman Desktop developers
 3. PR's require 1 LGTM / Approval (2 if it's a large code change)
+
+> **_NOTE:_** See [PR Splitting Guidelines](#pr-splitting-guidelines) if you are asked to split a PR, or if you are reviewing one and are unsure whether it should be split.
 
 > **_NOTE:_** Confirm that your PR works on macOS, Windows and Linux if it's a significant change (not a UI improvement)
 
