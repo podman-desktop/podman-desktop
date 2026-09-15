@@ -1238,11 +1238,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^6.9.2
-        version: 6.9.2(@types/node@26.2.0)(supports-color@8.1.1)
+        specifier: ^6.9.3
+        version: 6.9.3(@types/node@26.2.0)(supports-color@8.1.1)
       '@argos-ci/playwright':
-        specifier: ^7.5.0
-        version: 7.5.0(@types/node@26.2.0)(supports-color@8.1.1)
+        specifier: ^7.5.1
+        version: 7.5.1(@types/node@26.2.0)(supports-color@8.1.1)
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -1367,17 +1367,17 @@ packages:
     resolution: {integrity: sha512-8qWtsOXG752VTAI6iPeHZyMKLSqN9jqdAqZZMk0Q4+j5WSPX76K5a3feV8nBlSqpr1O4RP2/GWYVoxkGdzJr3w==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/cli@6.9.2':
-    resolution: {integrity: sha512-R4HzhgsV2xBd+j3QkOGU1JvThzUiGiY3Etithmu1FBsu/BJ8YT2E/Kf+8kUAW60sJYxl69YaXwGtXhlxBE+K1w==}
+  '@argos-ci/cli@6.9.3':
+    resolution: {integrity: sha512-D3fTU+ZH8eoWC0LrJL9Q8zGfM4n5eRF6jxtvC/6Cd3FtK4qJZ7VcOy9lkTTcrcKzUFN8Qa2+iqhQ2w7w8XFAHQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@argos-ci/core@6.8.3':
-    resolution: {integrity: sha512-nMg7oiEJQnno1N4oZ6/iF1c/bQ49Ig3ZJEJr8yUxrSFlWDj9DS3jMlO88D93lMVeIJ/403D+jH+TxhvSfrCGBQ==}
+  '@argos-ci/core@6.8.4':
+    resolution: {integrity: sha512-NbXsI4+/Yb/CIApcM1Kf7n4wH9D7RXmIlADXJOUG/ZbL1zuuGeuuRb7YGbSuuM/QKrthfQ8eeH4YJZEW4fT2Kw==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/playwright@7.5.0':
-    resolution: {integrity: sha512-+fRi+M5hkjv4zHOKp07Hx9O5OemWXcfUTMtQrvgKg1l4gZHourD2zJF2eJ9/QMIdz+VFNWC5rN14RRFwo+0Pkw==}
+  '@argos-ci/playwright@7.5.1':
+    resolution: {integrity: sha512-pT7jG/zu+rT4J/9a9uqbxg6bsWPNge2+RjLpgnoq80ADDMS03y15oific7WxT/0TH4/ML0EuGMiS5/9/kRq7uw==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/util@4.2.0':
@@ -9837,8 +9837,8 @@ packages:
     resolution: {integrity: sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA==}
     engines: {node: '>=18'}
 
-  open@11.0.2:
-    resolution: {integrity: sha512-RWqF+pBSkqecEvCKOn8QYhaNdRMJDZRIrlS/7rTDdLHaPcfXGCZ/h8zb413NfvdeAV0MR7T1yJcA34/q+CSm1Q==}
+  open@11.0.3:
+    resolution: {integrity: sha512-b3souUgU0VaAvMmzA4+9cRgrOgMdE0vc9H9VhQ0FYnjjcyZ8R/f9DiwMU9V8rl+vjf05On9UJhbgb06fsTs87Q==}
     engines: {node: '>=20'}
 
   open@8.4.2:
@@ -12832,19 +12832,19 @@ snapshots:
 
   '@argos-ci/browser@6.4.5': {}
 
-  '@argos-ci/cli@6.9.2(@types/node@26.2.0)(supports-color@8.1.1)':
+  '@argos-ci/cli@6.9.3(@types/node@26.2.0)(supports-color@8.1.1)':
     dependencies:
       '@argos-ci/api-client': 0.31.0(supports-color@8.1.1)
-      '@argos-ci/core': 6.8.3(@types/node@26.2.0)(supports-color@8.1.1)
+      '@argos-ci/core': 6.8.4(@types/node@26.2.0)(supports-color@8.1.1)
       '@vercel/detect-agent': 1.2.5
       commander: 15.0.0
-      open: 11.0.2
+      open: 11.0.3
       ora: 9.4.1
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/core@6.8.3(@types/node@26.2.0)(supports-color@8.1.1)':
+  '@argos-ci/core@6.8.4(@types/node@26.2.0)(supports-color@8.1.1)':
     dependencies:
       '@argos-ci/api-client': 0.31.0(supports-color@8.1.1)
       '@argos-ci/util': 4.2.0
@@ -12859,10 +12859,10 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/playwright@7.5.0(@types/node@26.2.0)(supports-color@8.1.1)':
+  '@argos-ci/playwright@7.5.1(@types/node@26.2.0)(supports-color@8.1.1)':
     dependencies:
       '@argos-ci/browser': 6.4.5
-      '@argos-ci/core': 6.8.3(@types/node@26.2.0)(supports-color@8.1.1)
+      '@argos-ci/core': 6.8.4(@types/node@26.2.0)(supports-color@8.1.1)
       '@argos-ci/util': 4.2.0
       chalk: 6.0.0
       debug: 4.4.3(supports-color@8.1.1)
@@ -22964,7 +22964,7 @@ snapshots:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
 
-  open@11.0.2:
+  open@11.0.3:
     dependencies:
       default-browser: 5.5.1
       define-lazy-prop: 3.0.0
@@ -25912,7 +25912,7 @@ snapshots:
       http-proxy-middleware: 3.0.7(supports-color@8.1.1)
       ipaddr.js: 2.4.0
       launch-editor: 2.14.1
-      open: 11.0.2
+      open: 11.0.3
       p-retry: 8.0.0
       schema-utils: 4.3.3
       selfsigned: 5.5.0
