@@ -10,6 +10,7 @@ interface Props {
   href: string;
   section?: boolean;
   expanded?: boolean;
+  ariaControls?: string;
   child?: boolean;
   selected?: boolean;
   icon?: IconDefinition | Component | string;
@@ -23,6 +24,7 @@ let {
   href,
   section = false,
   expanded = $bindable(),
+  ariaControls = undefined,
   child = false,
   selected = false,
   icon = undefined,
@@ -37,7 +39,14 @@ function click(): void {
 }
 </script>
 
-<a class="no-underline block w-full" href={href} aria-label={title} title={title} onclick={click}>
+<a
+  class="no-underline block w-full"
+  href={href}
+  aria-label={title}
+  aria-expanded={section ? (expanded ?? false) : undefined}
+  aria-controls={section ? ariaControls : undefined}
+  title={title}
+  onclick={click}>
   <div
     data-settings-nav-row
     class="flex box-border w-full py-2 items-center cursor-pointer border-l-[4px]"

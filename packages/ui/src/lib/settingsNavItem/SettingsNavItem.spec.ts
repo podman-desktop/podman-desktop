@@ -47,6 +47,12 @@ test('Expect correct role and href', async () => {
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
   expect(element).toHaveAttribute('href', href);
+  expect(element).not.toHaveAttribute('aria-expanded');
+  expect(element).not.toHaveAttribute('aria-controls');
+
+  await fireEvent.click(element);
+  expect(element).not.toHaveAttribute('aria-expanded');
+  expect(element).not.toHaveAttribute('aria-controls');
 });
 
 test('Expect tooltip title attribute on truncated labels', async () => {
@@ -118,10 +124,16 @@ test('Expect sections expand', async () => {
   const chevronIcon = chevronContainer.querySelector('svg') as SVGElement;
   expect(chevronIcon).toBeInTheDocument();
   expect(chevronIcon).toHaveClass('rotate-0');
+  expect(element).toHaveAttribute('aria-expanded', 'false');
 
   // expand section
   await fireEvent.click(element);
   expect(chevronIcon).toHaveClass('rotate-90');
+  expect(element).toHaveAttribute('aria-expanded', 'true');
+
+  await fireEvent.click(element);
+  expect(element).toHaveAttribute('aria-expanded', 'false');
+  expect(element).toHaveAttribute('href', href);
 });
 
 test('fa icon should be visible', () => {

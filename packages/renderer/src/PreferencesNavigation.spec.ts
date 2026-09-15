@@ -592,6 +592,41 @@ describe('Navigation width measurement and calculation', () => {
   });
 });
 
+test('dynamic sections expose independent expansion state and child relationships', async () => {
+  configurationProperties.set([
+    { ...LONG_CONFIG, parentId: 'preferences.long-entry' },
+    { ...LONG_CONFIG, id: 'other-config', parentId: 'extensions.other', title: 'Other Preference' },
+  ]);
+  renderPreferencesNavigation();
+
+  const preferences = await screen.findByRole('link', { name: 'preferences' });
+  const extensions = await screen.findByRole('link', { name: 'extensions' });
+  expect(preferences).toHaveAttribute('aria-expanded', 'false');
+  expect(extensions).toHaveAttribute('aria-expanded', 'false');
+  const preferencesId = preferences.getAttribute('aria-controls');
+  const extensionsId = extensions.getAttribute('aria-controls');
+  expect(preferencesId).toBeTruthy();
+  expect(extensionsId).toBeTruthy();
+  expect(preferencesId).not.toBe(extensionsId);
+  const children = document.getElementById(preferencesId!);
+  expect(children).toBeEmptyDOMElement();
+  expect(document.getElementById(extensionsId!)).toBeEmptyDOMElement();
+
+  await fireEvent.click(preferences);
+  expect(preferences).toHaveAttribute('aria-expanded', 'true');
+  expect(extensions).toHaveAttribute('aria-expanded', 'false');
+  const child = await screen.findByRole('link', { name: LONG_CONFIG.title });
+  expect(children).toContainElement(child);
+  expect(child).toHaveAttribute('href', '/preferences/default/preferences.long-entry');
+  expect(child).not.toHaveAttribute('aria-expanded');
+
+  await fireEvent.click(preferences);
+  expect(preferences).toHaveAttribute('aria-expanded', 'false');
+  expect(preferences).toHaveAttribute('aria-controls', preferencesId);
+  expect(children).toBeEmptyDOMElement();
+  expect(screen.queryByRole('link', { name: LONG_CONFIG.title })).not.toBeInTheDocument();
+});
+
 describe('Static navigation entry children', () => {
   let originalLength: number;
 
@@ -626,6 +661,7 @@ describe('Static navigation entry children', () => {
 
     await vi.waitFor(() => {
       expect(screen.getByRole('link', { name: 'Auto Expanded' })).toBeVisible();
+      expect(screen.getByRole('link', { name: 'Auto Expanded' })).toHaveAttribute('aria-expanded', 'true');
       expect(screen.getByRole('link', { name: 'Auto Child' })).toBeVisible();
     });
   });
@@ -651,10 +687,40 @@ describe('Static navigation entry children', () => {
   test('should show visible children when parent section is expanded', async () => {
     renderPreferencesNavigation();
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+    const parent = await screen.findByRole('link', { name: 'Test Parent' });
+    expect(parent).toHaveAttribute('aria-expanded', 'false');
+    expect(parent).toHaveAttribute('href', '/preferences/test-parent');
+    const childrenId = parent.getAttribute('aria-controls');
+    expect(childrenId).toBeTruthy();
+    const children = document.getElementById(childrenId!);
+    expect(children).toBeEmptyDOMElement();
+
+    await fireEvent.click(parent);
 
     expect(await screen.findByRole('link', { name: 'Child One' })).toBeVisible();
     expect(await screen.findByRole('link', { name: 'Child Two' })).toBeVisible();
+    expect(parent).toHaveAttribute('aria-expanded', 'true');
+    expect(children).toContainElement(screen.getByRole('link', { name: 'Child One' }));
+    expect(children).toContainElement(screen.getByRole('link', { name: 'Child Two' }));
+
+    await fireEvent.click(parent);
+    expect(parent).toHaveAttribute('aria-expanded', 'false');
+    expect(parent).toHaveAttribute('aria-controls', childrenId);
+    expect(children).toBeEmptyDOMElement();
+    expect(screen.queryByRole('link', { name: 'Child One' })).not.toBeInTheDocument();
+  });
+
+  test('entries with only hidden children remain plain links', async () => {
+    settingsNavigationEntries.push({
+      title: 'Hidden Children',
+      href: '/preferences/hidden-children',
+      visible: true,
+      children: [{ title: 'Hidden', href: '/preferences/hidden-children/child', visible: false }],
+    });
+    renderPreferencesNavigation();
+    const parent = await screen.findByRole('link', { name: 'Hidden Children' });
+    expect(parent).not.toHaveAttribute('aria-expanded');
+    expect(parent).not.toHaveAttribute('aria-controls');
   });
 
   test('should filter out children with visible set to false', async () => {
