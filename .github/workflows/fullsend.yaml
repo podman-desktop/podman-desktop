@@ -1,0 +1,122 @@
+# This file is managed by fullsend. Do not edit it directly.
+# Upstream: https://github.com/fullsend-ai/fullsend/blob/main/internal/scaffold/fullsend-repo/.github/workflows/fullsend.yaml
+---
+# fullsend shim workflow (per-repo installation mode)
+# Routes events to agent workflows via reusable-dispatch.yml.
+# All agent execution happens in this repo's context — no external
+# config repo is needed.
+#
+# Security: pull_request_target runs the BASE branch version of this workflow,
+# preventing PRs from modifying it to exfiltrate credentials.
+# This shim never checks out PR code, so it is not vulnerable to "pwn request"
+# attacks.
+#
+# Routing: this shim forwards the raw event context to reusable-dispatch.yml,
+# which determines the stage and runs the agent inline (ADR 62).
+# Adding a new stage requires only a job in reusable-dispatch.yml — zero changes to this repo.
+#
+# Concurrency: per-role cancel-in-progress groups live in reusable-dispatch.yml
+# stage jobs with -agent- suffix. Roles operate independently (#2452).
+name: fullsend
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, synchronize, ready_for_review, closed, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    if: >-
+      (github.event_name != 'pull_request_target' && github.event_name != 'pull_request_review'
+       || github.event.pull_request.head.ref != 'fullsend/scaffold-install')
+      && (github.event_name != 'issue_comment'
+       || (startsWith(github.event.comment.body, '/fs-')
+           && github.event.comment.user.type != 'Bot'))
+    permissions:
+      actions: write
+      id-token: write
+      contents: write
+      issues: write
+      packages: read
+      pull-requests: write
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@d5f36921ac754705619f38c637ef692873809fbc # v0.43.0
+    with:
+      event_action: ${{ github.event.action }}
+      install_mode: per-repo
+      mint_url: ${{ vars.FULLSEND_MINT_URL }}
+      gcp_region: ${{ vars.FULLSEND_GCP_REGION }}
+      project_number: ${{ vars.FULLSEND_PROJECT_NUMBER }}
+      runner_image: ubuntu-24.04
+    secrets:
+      FULLSEND_GCP_WIF_PROVIDER: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+      FULLSEND_GCP_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+      OTEL_EXPORTER_OTLP_TRACES_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS }}
+      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+
+  stop-fix:
+    # Job-level if: is intentionally coarse — it only screens for the
+    # /fs-fix-stop command on a PR from a non-bot. The authoritative
+    # authorization decision (collaborator permission API + PR-author escape
+    # hatch) is made in the step below, so a maintainer whose author_association
+    # is not MEMBER (e.g. private org membership) is not filtered out (ADR 0054).
+    if: >-
+      github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && github.event.comment.user.type != 'Bot'
+        && github.event.comment.body == '/fs-fix-stop'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Add fullsend-no-fix label and notify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+          COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
+          ISSUE_USER_LOGIN: ${{ github.event.issue.user.login }}
+        run: |
+          set -euo pipefail
+          # ADR 0054: authorize via the collaborator permission API
+          # (admin|maintain|write), not author_association — the latter grants
+          # contributor status to anyone with a single merged PR (issue #5421).
+          # Mirrors has_repo_permission() in dispatch.yml; keep the two in sync.
+          # The PR author may always stop the fix agent on their own PR.
+          authorized=false
+          if [[ -n "$COMMENT_USER_LOGIN" && "$COMMENT_USER_LOGIN" == "$ISSUE_USER_LOGIN" ]]; then
+            authorized=true
+          else
+            if api_err=$(mktemp); then
+              if role=$(gh api "repos/$REPO/collaborators/$COMMENT_USER_LOGIN/permission" \
+                --jq '.role_name' 2>"$api_err"); then
+                case "$role" in
+                  admin|maintain|write) authorized=true ;;
+                esac
+              else
+                echo "::warning::Permission API call failed for $COMMENT_USER_LOGIN: $(cat "$api_err")"
+              fi
+              rm -f "$api_err"
+            else
+              echo "::warning::Failed to create temp file for permission check of $COMMENT_USER_LOGIN"
+            fi
+          fi
+          if [[ "$authorized" != "true" ]]; then
+            echo "::notice::User $COMMENT_USER_LOGIN is not authorized to stop the fix agent (requires write access or PR authorship)"
+            exit 0
+          fi
+          gh label create "fullsend-no-fix" --repo "$REPO" \
+            --description "Skip bot-triggered fix agent runs" --color "FBCA04" \
+            --force 2>/dev/null || true
+          gh pr edit "$PR_NUMBER" --repo "$REPO" \
+            --add-label "fullsend-no-fix"
+          gh pr comment "$PR_NUMBER" --repo "$REPO" \
+            --body "Fix agent disabled for this PR. Remove the \`fullsend-no-fix\` label or use \`/fs-fix\` to re-engage."

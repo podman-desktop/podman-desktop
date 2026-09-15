@@ -1,0 +1,50 @@
+# This file is managed by fullsend. Do not edit it directly.
+# Upstream: https://github.com/fullsend-ai/fullsend/blob/main/internal/scaffold/fullsend-repo/.github/workflows/prioritize.yml
+---
+# fullsend-stage: prioritize
+name: Prioritize
+
+permissions:
+  actions: write
+  contents: read
+  id-token: write
+  issues: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      event_type:
+        required: true
+        type: string
+      source_repo:
+        required: true
+        type: string
+      event_payload:
+        required: true
+        type: string
+      project_number:
+        description: GitHub Projects V2 project number for RICE scoring
+        required: false
+        type: string
+
+concurrency:
+  group: fullsend-prioritize-${{ inputs.source_repo }}-${{ fromJSON(inputs.event_payload).issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  prioritize:
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-prioritize.yml@d5f36921ac754705619f38c637ef692873809fbc # v0.43.0
+    with:
+      event_type: ${{ inputs.event_type }}
+      source_repo: ${{ inputs.source_repo }}
+      event_payload: ${{ inputs.event_payload }}
+      mint_url: ${{ vars.FULLSEND_MINT_URL }}
+      gcp_region: ${{ vars.FULLSEND_GCP_REGION }}
+      project_number: ${{ inputs.project_number || vars.FULLSEND_PROJECT_NUMBER }}
+      install_mode: per-repo
+      runner_image: ubuntu-24.04
+    secrets:
+      FULLSEND_GCP_WIF_PROVIDER: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+      FULLSEND_GCP_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+      OTEL_EXPORTER_OTLP_TRACES_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS }}
+      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
