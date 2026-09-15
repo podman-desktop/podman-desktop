@@ -2,11 +2,11 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getClientPlatform } from '@site/src/components/DownloadButton';
 import { LinuxDownloads } from '@site/src/components/downloads/linux';
 import { MacOSDownloads } from '@site/src/components/downloads/macos';
 import { WindowsDownloads } from '@site/src/components/downloads/windows';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
+import { getClientPlatform } from '@site/src/components/utils';
 import Layout from '@theme/Layout';
 import React from 'react';
 
