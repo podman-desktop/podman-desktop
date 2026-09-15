@@ -18,7 +18,7 @@
 
 import * as https from 'node:https';
 
-import type { ReleaseNotesInfo } from '@podman-desktop/core-api';
+import type { ButtonsType, ReleaseNotesInfo } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { app, shell } from 'electron';
 import {
@@ -44,6 +44,8 @@ import product from '/@product.json' with { type: 'json' };
 // eslint-disable-next-line no-restricted-imports
 import rootPackage from '../../../../package.json' with { type: 'json' };
 import { TaskManager } from './tasks/task-manager.js';
+
+const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Represents an updater utility for Podman Desktop.
@@ -250,9 +252,10 @@ export class Updater {
       // Get the version of the update
       const updateVersion = this.#nextVersion ?? '';
 
-      let buttons: string[];
+      const laterOptions = ['Remind me tomorrow', `Don't show again`];
+      let buttons: ButtonsType[];
       if (context === 'startup') {
-        buttons = ['Update now', `What's new`, 'Remind me later', `Don't show again`];
+        buttons = ['Update now', `What's new`, { type: 'dropdownButton', heading: 'Later', buttons: laterOptions }];
       } else {
         buttons = ['Update now', `What's new`, 'Cancel'];
       }
@@ -262,10 +265,14 @@ export class Updater {
         title: `Update ${product.name}?`,
         message: `A new version ${updateVersion} of ${product.name} is available. Do you want to update your current version ${this.#currentVersion}?`,
         buttons: buttons,
-        cancelId: 2,
+        cancelId: context === 'startup' ? undefined : 2,
       });
-      if (result.response === `Don't show again`) {
-        this.updateConfigurationValue('never');
+      if (result.response === 'Later' && result.dropdownIndex !== undefined) {
+        if (laterOptions[result.dropdownIndex] === `Don't show again`) {
+          this.updateConfigurationValue('never');
+        } else {
+          this.setNextReminderTimestamp(Date.now() + ONE_DAY_IN_MS);
+        }
       } else if (result.response === `What's new`) {
         await this.openReleaseNotes(updateVersion);
       } else if (result.response === 'Update now') {
@@ -305,7 +312,7 @@ export class Updater {
     this.#nextVersion = this.getFormattedVersion(updateInfo);
 
     this.updateAvailableEntry();
-    if (this.getConfigurationValue() === 'startup') {
+    if (this.getConfigurationValue() === 'startup' && Date.now() >= this.getNextReminderTimestamp()) {
       this.commandRegistry.executeCommand('update', 'startup').catch((err: unknown) => {
         console.error('Something went wrong while executing update command', err);
       });
@@ -340,6 +347,12 @@ export class Updater {
             type: 'boolean',
             default: true,
             hidden: false,
+          },
+          ['preferences.update.nextReminderTimestamp']: {
+            description: 'Timestamp (ms) before which the startup update prompt should stay suppressed',
+            type: 'number',
+            default: 0,
+            hidden: true,
           },
         },
       },
@@ -380,6 +393,29 @@ export class Updater {
       .update('update.reminder', value)
       .catch((err: unknown) => {
         console.error('Something went wrong while trying to update update.reminder preference', err);
+      });
+  }
+
+  /**
+   * @returns the timestamp before which the startup update prompt should stay suppressed.
+   */
+  private getNextReminderTimestamp(): number {
+    const value = this.configurationRegistry
+      .getConfiguration('preferences')
+      .get<number>('update.nextReminderTimestamp', 0);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }
+
+  /**
+   * Suppresses the startup update prompt until the given timestamp.
+   * @param value - The timestamp (ms) before which the prompt should stay suppressed.
+   */
+  private setNextReminderTimestamp(value: number): void {
+    this.configurationRegistry
+      .getConfiguration('preferences')
+      .update('update.nextReminderTimestamp', value)
+      .catch((err: unknown) => {
+        console.error('Something went wrong while trying to update update.nextReminderTimestamp preference', err);
       });
   }
 
