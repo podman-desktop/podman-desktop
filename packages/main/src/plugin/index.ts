@@ -79,6 +79,8 @@ import type {
   ImageSearchResult,
   ImagesSaveOptions,
   ImageTagsListOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   ImageUpdateStatus,
   KubeContext,
   KubernetesContextResources,
@@ -1381,6 +1383,17 @@ export class PluginSystem {
         localDigests: string[],
       ): Promise<ImageUpdateStatus> => {
         return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:updateImages',
+      async (_listener, images: ImageUpdateInfo[], cancellableTokenId?: number): Promise<ImageUpdateResult[]> => {
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          cancellableTokenId,
+        );
+        return containerProviderRegistry.updateImages(images, abortController?.signal);
       },
     );
 
