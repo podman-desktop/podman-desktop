@@ -69,6 +69,7 @@ import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { MessageBox } from '/@/plugin/message-box.js';
 import { ModuleLoader } from '/@/plugin/module-loader.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import { SearchResultProviderRegistry } from '/@/plugin/navigation/search-result-provider-registry.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { Proxy } from '/@/plugin/proxy.js';
@@ -205,6 +206,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private imageFilesRegistry: ImageFilesRegistry,
     @inject(NavigationManager)
     private navigationManager: NavigationManager,
+    @inject(SearchResultProviderRegistry)
+    private searchResultProviderRegistry: SearchResultProviderRegistry,
     @inject(WebviewRegistry)
     private webviewRegistry: WebviewRegistry,
     @inject(ColorRegistry)
@@ -1614,6 +1617,20 @@ export class ExtensionLoader implements IAsyncDisposable {
 
         disposables.push(disposable);
 
+        return disposable;
+      },
+      registerSearchResultProvider: (
+        provider: containerDesktopAPI.SearchResultProvider,
+        metadata?: containerDesktopAPI.SearchResultProviderMetadata,
+      ): containerDesktopAPI.Disposable => {
+        const disposable = this.searchResultProviderRegistry.registerProvider(
+          extensionInfo.id,
+          extensionInfo.label,
+          extensionInfo.icon,
+          provider,
+          metadata,
+        );
+        disposables.push(disposable);
         return disposable;
       },
       pushHistoryEntry: (entry: containerDesktopAPI.NavigationHistoryEntry): void => {
