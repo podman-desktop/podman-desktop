@@ -5,7 +5,6 @@
 
 @import 'tailwindcss/theme.css';
 @import 'tailwindcss/utilities.css';
-
 @config '../../tailwind.config.js';
 
 /* Manrope latin subset font */
@@ -18,7 +17,7 @@
   src: url('../../static/fonts/manrope-subset-latin.woff2') format('woff2');
   /* The unicode-range property tells the browser which characters this font should be used for.
      Instead of loading the entire font with all possible characters, we only load the ones we need:
-     
+
      U+0000-00FF: Basic Latin (a-z, A-Z, numbers, basic punctuation)
      U+0131: Turkish dotless i
      U+0152-0153: Latin ligatures (Œ, œ)
@@ -32,7 +31,7 @@
      U+2212, U+2215: Mathematical operators (−, ∕)
      U+FEFF: Zero-width no-break space
      U+FFFD: Replacement character
-     
+
      This optimization reduces the font file size by ~70% while maintaining all characters needed for the website. */
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
@@ -82,8 +81,10 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-svg.iconExternalLink_node_modules-\@docusaurus-theme-classic-lib-next-theme-IconExternalLink-styles-module {
-  display: inline;
+/* External-link icons use a stable selector across Docusaurus builds. */
+svg[class*='iconExternalLink_'] {
+  display: block;
+  vertical-align: middle;
 }
 
 /* Add icon for github instead of label */
@@ -192,6 +193,12 @@ li.footer__item a svg {
   }
 }
 
+/* Stack the edit icon above its label. */
+.theme-edit-this-page {
+  display: inline-flex;
+  flex-direction: column;
+}
+
 .breadcrumbs {
   display: flex;
 }
@@ -201,8 +208,78 @@ li.footer__item a svg {
   align-items: center;
 }
 
-/* Media elements default to block display */
+/* Restore the list reset removed when Tailwind Preflight was omitted. */
+ol,
+ul,
+menu {
+  list-style: none;
+}
+
+/* Restore Preflight's transparent default for plain buttons. */
+button {
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: 0;
+}
+
+/* Restore Preflight sizing and positioning for footnote markers. */
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/* Preserve Docusaurus' code-block toolbar appearance after the button reset. */
+/* .theme-code-block button {
+  background: var(--prism-background-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+} */
+
+/* Keep DocSearch result and toolbar icons at their intended size. */
+.DocSearch-Modal .DocSearch-Hit-icon,
+.DocSearch-Modal .DocSearch-Hit-action,
+.DocSearch-Modal .DocSearch-Search-Icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Restore the shortcut key size lost with Tailwind Preflight. */
+.DocSearch-Button-Keys .DocSearch-Button-Key {
+  font-size: 0.8em;
+}
+
+/* Match the navbar search button to DocSearch's light/dark searchbox color. */
+.DocSearch-Button,
+.DocSearch-Button:hover,
+.DocSearch-Button:active,
+.DocSearch-Button:focus {
+  background: var(--docsearch-searchbox-background);
+}
+
+.DocSearch-Button {
+  color: var(--docsearch-muted-color);
+}
+
+.DocSearch-Button:hover,
+.DocSearch-Button:active,
+.DocSearch-Button:focus {
+  color: var(--docsearch-text-color);
+}
+
+/* Media elements default to block display. */
 img,
+svg:not([class*='toggleIcon_']):not([class*='svg-inline--fa']):not([class*='iconExternalLink_']),
 video,
 canvas,
 audio,
@@ -213,8 +290,7 @@ object {
   vertical-align: middle;
 }
 
-/* Align sidebar collapse button arrow to the left */
-.collapseSidebarButton_oTwn svg,
+/* Align sidebar collapse button arrow to the left. */
 .collapseSidebarButtonIcon_pMEX {
   display: block;
 }
@@ -260,6 +336,13 @@ article .markdown ol {
 article .markdown ol ol {
   list-style-type: lower-roman;
 }
+
+/* Avoid extra vertical space around lists inside admonitions. */
+article .markdown .theme-admonition > [class*='admonitionContent_'] > ul,
+article .markdown .theme-admonition > [class*='admonitionContent_'] > ol {
+  margin-bottom: 0;
+}
+
 .dropdown__link:hover {
   background-color: transparent;
   color: var(--ifm-color-primary);
