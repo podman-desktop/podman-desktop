@@ -3,7 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import GradientButton from './GradientButton';
 
-const INDEX_PAGE_URL = 'https://github.com/podman-desktop/podman-desktop/blob/main/website/src/pages/index.tsx';
+const VENDORS_COMPONENT_URL =
+  'https://github.com/podman-desktop/podman-desktop/blob/main/website/src/components/Vendors.tsx';
 
 export function AddVendorCard(): JSX.Element {
   return (
@@ -18,7 +19,7 @@ export function AddVendorCard(): JSX.Element {
         request to be added.
       </p>
       <div className="mt-auto">
-        <GradientButton href={INDEX_PAGE_URL} className="hover:no-underline">
+        <GradientButton href={VENDORS_COMPONENT_URL} className="hover:no-underline">
           Open a pull request <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
         </GradientButton>
       </div>
