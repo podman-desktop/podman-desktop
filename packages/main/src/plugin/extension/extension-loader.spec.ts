@@ -2860,6 +2860,86 @@ test('reload extensions', async () => {
   await vi.waitFor(() => expect(fakeDisposableObject.dispose).toBeCalled(), { timeout: 5_000 });
 });
 
+test('listExtensions should expose the bundled flag', async () => {
+  const extensionId = 'my.bundled.extension';
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'bundled-extension',
+    },
+    removable: false,
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const extensions = await extensionLoader.listExtensions();
+
+  expect(extensions.length).toBe(1);
+  expect(extensions[0]?.bundled).toBeTruthy();
+  expect(extensions[0]?.removable).toBeFalsy();
+});
+
+test('reloadExtension should forward the bundled flag to analyzeExtension', async () => {
+  const extension = {
+    path: 'fakePath',
+    manifest: {
+      displayName: 'My Extension Display Name',
+    },
+    id: 'my.extensionId',
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtension;
+
+  vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+  vi.mocked(notificationRegistry.addNotification).mockReturnValue({ dispose: vi.fn() } as unknown as Disposable);
+
+  await extensionLoader.reloadExtension(extension, false);
+
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: extension.path,
+    removable: false,
+    devMode: false,
+    bundled: true,
+  });
+});
+
+test('startExtension should forward the bundled flag to analyzeExtension', async () => {
+  const extensionId = 'my.bundled.extension';
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({
+    get: (): string[] => [],
+  });
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'bundled-extension',
+    },
+    removable: false,
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+
+  await extensionLoader.startExtension(extensionId);
+
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: 'fakePath',
+    removable: false,
+    devMode: false,
+    bundled: true,
+  });
+});
+
 describe('init', () => {
   test('check configuration being registered', async () => {
     await extensionLoader.init();
