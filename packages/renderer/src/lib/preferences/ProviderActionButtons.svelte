@@ -1,15 +1,19 @@
 <script lang="ts">
 import { faGear } from '@fortawesome/free-solid-svg-icons';
-import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
+import type { CheckStatus, Menu, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
+import { removeNonSerializableProperties } from '/@/lib/actions/ActionUtils';
 import type { ContextUI } from '/@/lib/context/context';
+import { ContextUI as ContextUIImpl } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ProviderUpdateButton from '/@/lib/dashboard/ProviderUpdateButton.svelte';
 
 interface Props {
   provider: ProviderInfo;
+  contributions?: Menu[];
   globalContext: ContextUI | undefined;
   providerInstallationInProgress: boolean;
   onCreateNew: (provider: ProviderInfo, displayName: string) => Promise<void>;
@@ -21,6 +25,7 @@ interface Props {
 
 let {
   provider,
+  contributions = [],
   globalContext,
   providerInstallationInProgress,
   onCreateNew,
@@ -78,6 +83,9 @@ const showUpdateButton = $derived(
   provider.version && provider.updateInfo?.version && provider.version !== provider.updateInfo?.version,
 );
 
+const providerContext = $derived(createProviderContext(provider, globalContext));
+const visibleProviderMenus = $derived(contributions.filter(menu => isProviderMenuVisible(menu)));
+
 function handleCreateNew(): Promise<void> {
   return onCreateNew(provider, providerDisplayName);
 }
@@ -87,6 +95,40 @@ function handleSetup(): void {
     router.goto(`/preferences/onboarding/${provider.extensionId}`);
   } else {
     router.goto(`/preferences/default/preferences.${provider.extensionId}`);
+  }
+}
+
+function createProviderContext(provider: ProviderInfo, globalContext: ContextUI | undefined): ContextUI {
+  const providerContext = new ContextUIImpl();
+  for (const [key, value] of Object.entries(globalContext?.value ?? {})) {
+    providerContext.setValue(key, value);
+  }
+  providerContext.setValue('providerId', provider.id);
+  providerContext.setValue('providerName', provider.name);
+  providerContext.setValue('providerStatus', provider.status);
+  providerContext.setValue('providerExtensionId', provider.extensionId);
+  return providerContext;
+}
+
+function isProviderMenuVisible(menu: Menu): boolean {
+  if (!menu.when) {
+    return true;
+  }
+  return ContextKeyExpr.deserialize(menu.when)?.evaluate(providerContext) ?? false;
+}
+
+function isProviderMenuDisabled(menu: Menu): boolean {
+  if (!menu.disabled) {
+    return false;
+  }
+  return ContextKeyExpr.deserialize(menu.disabled)?.evaluate(providerContext) ?? false;
+}
+
+async function executeProviderMenu(menu: Menu): Promise<void> {
+  try {
+    await window.executeCommand(menu.command, removeNonSerializableProperties(provider));
+  } catch (err) {
+    console.error(`Error while executing ${menu.title}: ${String(err)}`);
   }
 }
 </script>
@@ -127,6 +169,17 @@ function handleSetup(): void {
           onPreflightChecks={onUpdatePreflightChecks}
           provider={provider} />
       {/if}
+
+      {#each visibleProviderMenus as menu, index (index)}
+        <Button
+         aria-label={menu.title}
+         title={menu.title}
+         icon={menu.icon}
+           disabled={isProviderMenuDisabled(menu)}
+           onclick={executeProviderMenu.bind(undefined, menu)}>
+          {menu.title}
+        </Button>
+      {/each}
     </div>
   {/if}
 </div>
