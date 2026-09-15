@@ -13,6 +13,25 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)"
 DEV_PORT=9223
 
+# Private, per-user state directory. A fixed /tmp/mcp-testing-session path is
+# world-writable: a local attacker could pre-create it (as a file, directory,
+# or symlink) with content this script — and stop.sh — later trust, including
+# a path fed straight into `rm -rf`. Create a 0700 directory scoped to this
+# uid and refuse to use it unless we can confirm we actually own it.
+MCP_STATE_DIR="${TMPDIR:-/tmp}/mcp-testing-$(id -u)"
+if [[ -L "$MCP_STATE_DIR" ]] || { [[ -e "$MCP_STATE_DIR" ]] && [[ ! -d "$MCP_STATE_DIR" ]]; }; then
+  echo "ERROR: $MCP_STATE_DIR exists and is not a plain private directory — remove it and re-run: rm -f '$MCP_STATE_DIR'"
+  exit 1
+fi
+mkdir -m 700 "$MCP_STATE_DIR" 2>/dev/null || true
+mcp_state_owner=$(stat -c %u "$MCP_STATE_DIR" 2>/dev/null || stat -f %u "$MCP_STATE_DIR" 2>/dev/null || echo -1)
+mcp_state_perms=$(stat -c %a "$MCP_STATE_DIR" 2>/dev/null || stat -f %Lp "$MCP_STATE_DIR" 2>/dev/null || echo 000)
+if [[ "$mcp_state_owner" != "$(id -u)" || "$mcp_state_perms" != "700" ]]; then
+  echo "ERROR: $MCP_STATE_DIR is not a private directory you own (uid=$mcp_state_owner perms=$mcp_state_perms) — remove it and re-run: rm -rf '$MCP_STATE_DIR'"
+  exit 1
+fi
+STATE_FILE="$MCP_STATE_DIR/session"
+
 # VS Code (and other Electron-based editors) set ELECTRON_RUN_AS_NODE=1 in child
 # processes. This makes the Electron binary run as plain Node.js, breaking the
 # Electron API and Chromium flags like --remote-debugging-port. Unset it so that
@@ -156,7 +175,7 @@ if [[ "$MODE" == "prod" ]]; then
         sleep 1
       done
       if [[ -n "$app_title" ]]; then
-        echo "prod" > /tmp/mcp-testing-session
+        echo "prod" > "$STATE_FILE"
         echo "Already running — $app_title (port $p)"
         echo "Ready — call mcp__podman-desktop-mcp__connect({ port: $p })"
         exit 0
@@ -202,7 +221,7 @@ if [[ "$MODE" == "prod" ]]; then
     exit 1
   fi
 
-  echo "prod" > /tmp/mcp-testing-session
+  echo "prod" > "$STATE_FILE"
   echo "Connected to production Podman Desktop — $app_title (port $PROD_PORT)"
   echo "Ready — call mcp__podman-desktop-mcp__connect({ port: $PROD_PORT })"
   exit 0
@@ -227,7 +246,7 @@ if [[ "$MODE" == "dev-fast" ]]; then
 
   close_devtools_targets
 
-  echo "dev" > /tmp/mcp-testing-session
+  echo "dev" > "$STATE_FILE"
   echo "pnpm watch already running — $app_title"
   echo "Ready — call mcp__podman-desktop-mcp__connect({ port: $DEV_PORT })"
   exit 0
@@ -268,7 +287,13 @@ if pgrep -f 'pnpm.*watch' &>/dev/null; then
   sleep 2
   echo "      Killed stale pnpm watch processes"
 fi
-rm -f /tmp/pnpm-watch.pid
+
+# Remove the private watch-state directory (log + pid file) left by a
+# previous dev session, if the session file still points to one.
+if [[ -f "$STATE_FILE" ]]; then
+  prior_watch_dir=$(sed -n '2p' "$STATE_FILE")
+  [[ -n "$prior_watch_dir" && -d "$prior_watch_dir" ]] && rm -rf "$prior_watch_dir"
+fi
 
 # Wait up to 5s for port to drain
 for i in $(seq 1 5); do
@@ -315,25 +340,51 @@ else
 fi
 
 # Launch pnpm watch and wait for CDP
-echo "[4/4] Launching pnpm watch (output → /tmp/pnpm-watch.log)…"
-if [[ "$(uname -s)" == "Linux" && -n "${WAYLAND_DISPLAY:-}" ]]; then
-  ELECTRON_OZONE_PLATFORM_HINT=x11 pnpm --dir "$REPO" watch &>/tmp/pnpm-watch.log &
-else
-  pnpm --dir "$REPO" watch &>/tmp/pnpm-watch.log &
-fi
-WATCH_PID=$!
-echo "$WATCH_PID" > /tmp/pnpm-watch.pid
-echo "      pnpm watch started (pid $WATCH_PID)"
+UI_DIST_ENTRY="$REPO/packages/ui/dist/index.js"
+VITE_STALE_IMPORT_PATTERN='Failed to resolve import .*@podman-desktop/ui-svelte'
 
-echo "      Waiting for CDP on port ${DEV_PORT}..."
-for i in $(seq 1 120); do
-  if cdp_ready; then
-    echo "      CDP ready after ${i}s"
-    break
+# Private, unpredictable directory for this run's log/pid files — a fixed
+# /tmp path would let a local attacker pre-create it (or a symlink) and
+# hijack what gets written there. Its location is recorded as the second
+# line of $STATE_FILE (itself in the private $MCP_STATE_DIR set up above) so
+# stop.sh, and the next start.sh run, can find it later.
+WATCH_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mcp-testing-watch.XXXXXX")"
+WATCH_LOG="$WATCH_DIR/pnpm-watch.log"
+WATCH_PID_FILE="$WATCH_DIR/pnpm-watch.pid"
+
+launch_pnpm_watch() {
+  if [[ "$(uname -s)" == "Linux" && -n "${WAYLAND_DISPLAY:-}" ]]; then
+    ELECTRON_OZONE_PLATFORM_HINT=x11 pnpm --dir "$REPO" watch &>"$WATCH_LOG" &
+  else
+    pnpm --dir "$REPO" watch &>"$WATCH_LOG" &
   fi
-  sleep 1
-done
-if ! cdp_ready; then
+  WATCH_PID=$!
+  echo "$WATCH_PID" > "$WATCH_PID_FILE"
+}
+
+wait_for_ui_package_build() {
+  echo "      Waiting for packages/ui build (svelte-package)…"
+  for i in $(seq 1 60); do
+    if [[ -f "$UI_DIST_ENTRY" ]]; then
+      echo "      packages/ui built after ${i}s"
+      return 0
+    fi
+    sleep 1
+  done
+  echo "ERROR: packages/ui did not build (missing dist/index.js) within 60s"
+  tail -20 "$WATCH_LOG"
+  return 1
+}
+
+wait_for_dev_cdp() {
+  echo "      Waiting for CDP on port ${DEV_PORT}..."
+  for i in $(seq 1 120); do
+    if cdp_ready; then
+      echo "      CDP ready after ${i}s"
+      return 0
+    fi
+    sleep 1
+  done
   echo "ERROR: App did not expose CDP within 120s"
   if detect_production_pd; then
     echo "HINT: A production Podman Desktop is running — it holds the"
@@ -341,11 +392,62 @@ if ! cdp_ready; then
     echo "      Either close it, or relaunch it with CDP:"
     echo "        podman-desktop --remote-debugging-port=9222"
   fi
-  tail -20 /tmp/pnpm-watch.log
-  exit 1
+  tail -20 "$WATCH_LOG"
+  return 1
+}
+
+stop_pnpm_watch() {
+  # scripts/watch.mjs spawns Electron and the svelte-package watcher with
+  # `detached: true`, putting each in its own process group specifically so
+  # watch.mjs's own SIGTERM handler can tear both down (see watch.mjs's
+  # `cleanupAndExit`/`killChildren`). Signalling $WATCH_PID lets that
+  # cascading cleanup run instead of guessing at process groups from here.
+  kill -TERM "${WATCH_PID:-}" 2>/dev/null || true
+  for _i in $(seq 1 10); do
+    cdp_ready || break
+    sleep 1
+  done
+  # Fallback only: graceful shutdown didn't release the port in time. This can
+  # still affect an unrelated `pnpm watch` elsewhere on the machine, but it's
+  # the same last-resort this skill already relies on in stop.sh.
+  if cdp_ready; then
+    pgrep -f 'pnpm.*watch' | xargs kill -KILL 2>/dev/null || true
+    sleep 1
+  fi
+}
+
+echo "[4/4] Launching pnpm watch (output → $WATCH_LOG)…"
+launch_pnpm_watch
+echo "      pnpm watch started (pid $WATCH_PID)"
+
+# packages/ui (svelte-package -w) and the renderer's Vite dev server start
+# concurrently. If Vite's initial dependency scan runs before packages/ui/dist
+# exists, it permanently caches a "Failed to resolve import '@podman-desktop/
+# ui-svelte'" error — reloading the page does not clear it. Waiting for the
+# ui package's first build narrows that startup race.
+wait_for_ui_package_build || { stop_pnpm_watch; exit 1; }
+
+wait_for_dev_cdp || { stop_pnpm_watch; exit 1; }
+
+if grep -qE "$VITE_STALE_IMPORT_PATTERN" "$WATCH_LOG" 2>/dev/null; then
+  echo "      Detected stale Vite dependency-scan error for @podman-desktop/ui-svelte — restarting pnpm watch once…"
+  stop_pnpm_watch
+  rm -f "$WATCH_PID_FILE"
+  : > "$WATCH_LOG"
+
+  launch_pnpm_watch
+  echo "      pnpm watch restarted (pid $WATCH_PID)"
+
+  wait_for_dev_cdp || { stop_pnpm_watch; exit 1; }
+
+  if grep -qE "$VITE_STALE_IMPORT_PATTERN" "$WATCH_LOG" 2>/dev/null; then
+    echo "ERROR: Vite still fails to resolve @podman-desktop/ui-svelte after automatic restart — see $WATCH_LOG"
+    stop_pnpm_watch
+    exit 1
+  fi
 fi
 
 close_devtools_targets
 
-echo "dev" > /tmp/mcp-testing-session
+printf '%s\n%s\n' "dev" "$WATCH_DIR" > "$STATE_FILE"
 echo "Ready — call mcp__podman-desktop-mcp__connect({ port: $DEV_PORT })"

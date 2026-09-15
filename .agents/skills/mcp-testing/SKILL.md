@@ -297,6 +297,14 @@ Then re-open your terminal and verify with `pnpm --version`.
 
 **If startup still times out after 120s:** the production app may have restarted in the gap between detection and the kill, or a non-Podman-Desktop process holds port 9222. Run the stop script, verify port 9222 is free (`lsof -ti :9222`), then re-run the start script.
 
+### App Stuck on "Failed to resolve import '@podman-desktop/ui-svelte'"
+
+**Symptom:** After a full `start.sh --mode dev` startup, the app window shows a Vite error overlay for every renderer file that imports from `@podman-desktop/ui-svelte`. Reloading the page does not clear it.
+
+**Cause:** `pnpm watch` starts `packages/ui`'s `svelte-package -w` build and the renderer's Vite dev server concurrently. If Vite's initial dependency scan runs before `packages/ui/dist` exists, it permanently caches the resolution failure for that session.
+
+**Fix:** `start.sh` detects this automatically — it waits for `packages/ui/dist/index.js` to exist before treating `pnpm watch` as ready, and if the error still appears in the watch log once CDP comes up, it restarts `pnpm watch` once on its own. If it happens a second time in the same run, stop the session (`stop.sh`) and start `pnpm watch` directly instead of re-running `--mode dev` — `node_modules` and `packages/ui/dist` are already valid from the failed attempt, so the full clean/reinstall isn't needed. (`start.ps1` on Windows does not yet have this guard.)
+
 ## Quick Reference
 
 | Command                                                    | Purpose                                        |
