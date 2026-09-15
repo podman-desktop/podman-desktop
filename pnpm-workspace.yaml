@@ -14,6 +14,7 @@ overrides:
   extract-zip>yauzl: ^3.3.1
   '@xmldom/xmldom': ^0.8.15
   rollup: ^4.59.0
+  path-to-regexp: ^8.4.2
   react-router>path-to-regexp: ^1.9.0
   serve-handler>path-to-regexp: ^3.3.0
   express>cookie: ^0.7.0
