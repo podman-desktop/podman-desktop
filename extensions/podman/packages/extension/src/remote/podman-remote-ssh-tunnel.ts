@@ -76,6 +76,10 @@ export class PodmanRemoteSshTunnel {
     return this.#sshConfig;
   }
 
+  protected createServer(connectionListener: (socket: net.Socket) => void): net.Server {
+    return net.createServer(connectionListener);
+  }
+
   dispose(): void {
     this.disconnect();
   }
@@ -104,7 +108,7 @@ export class PodmanRemoteSshTunnel {
         this.#resolveConnected(true);
 
         // Create a local server to listen on the local file socket
-        this.#server = net.createServer(localSocket => {
+        this.#server = this.createServer(localSocket => {
           // Create a connection to the remote socket via SSH
           this.#client?.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
             if (err) {
