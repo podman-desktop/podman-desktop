@@ -57,6 +57,11 @@ export const eventStore = new EventStore<ProviderInfo[]>(
 );
 eventStore.setup();
 
+export const providersLoaded: Writable<boolean> = writable(false);
+window.events?.receive('extensions-started', () => {
+  providersLoaded.set(true);
+});
+
 const updateProviderCallbacks: string[] = [];
 export async function fetchProviders(): Promise<ProviderInfo[]> {
   const result = await window.getProviderInfos();
