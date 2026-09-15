@@ -600,3 +600,45 @@ describe('secrets', () => {
     await expect((api as unknown as LibPod).removeSecret('secret123')).rejects.toThrow();
   });
 });
+
+describe('resolveShortnameImage', () => {
+  test('should resolve a shortname', async () => {
+    server = setupServer(
+      http.get('http://localhost/v5.0.0/libpod/images/nginx/resolve', () =>
+        HttpResponse.json({ Names: ['docker.io/library/nginx:latest'] }),
+      ),
+    );
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    const response = await (api as unknown as LibPod).resolveShortnameImage('nginx');
+
+    expect(response.Names).toStrictEqual(['docker.io/library/nginx:latest']);
+  });
+
+  // a '.' or '..' path segment makes the Podman API answer with a redirect, which docker-modem
+  // is unable to follow: it throws an uncaught 'TypeError: Invalid URL' and crashes the app
+  test.each([
+    { shortname: '.', expected: '%2E' },
+    { shortname: '..', expected: '%2E%2E' },
+    { shortname: 'foo.bar', expected: 'foo%2Ebar' },
+    { shortname: 'foo/bar', expected: 'foo%2Fbar' },
+  ])('should encode $shortname so it cannot alter the request path', async ({ shortname, expected }) => {
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' }) as unknown as DockerodeInternals;
+    const dial = vi
+      .spyOn(api.modem, 'dial')
+      .mockImplementation((_options: DockerModem.DialOptions, callback?: DockerModem.RequestCallback) => {
+        callback?.(null, { Names: [] });
+      });
+
+    await (api as unknown as LibPod).resolveShortnameImage(shortname);
+
+    expect(dial).toHaveBeenCalledOnce();
+    const dialPath = dial.mock.calls[0]![0].path;
+    expect(dialPath).toBe(`/v5.0.0/libpod/images/${expected}/resolve`);
+    // no segment the server could normalize away
+    const segments = dialPath?.split('/') ?? [];
+    expect(segments).not.toContain('.');
+    expect(segments).not.toContain('..');
+  });
+});

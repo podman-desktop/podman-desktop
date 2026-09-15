@@ -291,6 +291,14 @@ const wrapAs = <T>(data: unknown): T => {
   return data as T;
 };
 
+// encode a value used as a path segment of the libpod API.
+// encodeURIComponent leaves dots untouched, and a '.' or '..' segment makes the Podman API
+// answer with a redirect that docker-modem is unable to follow (it throws an uncaught
+// 'TypeError: Invalid URL'), so dots are encoded as well to keep the segment as-is.
+const encodePathSegment = (segment: string): string => {
+  return encodeURIComponent(segment).replaceAll('.', '%2E');
+};
+
 // tweak Dockerode by adding the support of libpod API
 // WARNING: make sure to not override existing functions
 export class LibpodDockerode {
@@ -823,8 +831,8 @@ export class LibpodDockerode {
       manifestOptions: ManifestPushOptions,
       authInfo?: Dockerode.AuthConfig,
     ): Promise<void> {
-      const encodedManifestName = encodeURIComponent(manifestOptions.name);
-      const encodedDestinationName = encodeURIComponent(manifestOptions.destination);
+      const encodedManifestName = encodePathSegment(manifestOptions.name);
+      const encodedDestinationName = encodePathSegment(manifestOptions.destination);
 
       // If there is an authInfo, we need to add it as a Header named 'X-Registry-Auth' with the base64 encoded value
       // in order to provide the credentials needed to push to the registry.
@@ -866,7 +874,7 @@ export class LibpodDockerode {
       manifestOptions: ManifestCreateOptions,
     ): Promise<{ engineId: string; Id: string }> {
       // make sure encodeURI component for the name ex. domain.com/foo/bar:latest
-      const encodedManifestName = encodeURIComponent(manifestOptions.name);
+      const encodedManifestName = encodePathSegment(manifestOptions.name);
 
       const optsf = {
         path: `/v4.2.0/libpod/manifests/${encodedManifestName}`,
@@ -893,7 +901,7 @@ export class LibpodDockerode {
     // add inspectManifest
     prototypeOfDockerode.podmanInspectManifest = function (manifestName: string): Promise<ManifestInspectInfo> {
       // make sure encodeURI component for the name ex. domain.com/foo/bar:latest
-      const encodedManifestName = encodeURIComponent(manifestName);
+      const encodedManifestName = encodePathSegment(manifestName);
 
       const optsf = {
         path: `/v4.2.0/libpod/manifests/${encodedManifestName}/json`,
@@ -921,7 +929,7 @@ export class LibpodDockerode {
     // remove manifest
     prototypeOfDockerode.podmanRemoveManifest = function (manifestName: string): Promise<void> {
       // make sure encodeURI component for the name ex. domain.com/foo/bar:latest
-      const encodedManifestName = encodeURIComponent(manifestName);
+      const encodedManifestName = encodePathSegment(manifestName);
 
       const optsf = {
         path: `/v4.2.0/libpod/manifests/${encodedManifestName}`,
@@ -948,7 +956,7 @@ export class LibpodDockerode {
       Names: string[];
     }> {
       const optsf = {
-        path: `/v5.0.0/libpod/images/${shortname}/resolve`,
+        path: `/v5.0.0/libpod/images/${encodePathSegment(shortname)}/resolve`,
         method: 'GET',
         statusCodes: {
           // in the documentation it says code 204, but only code 200 works as intended
