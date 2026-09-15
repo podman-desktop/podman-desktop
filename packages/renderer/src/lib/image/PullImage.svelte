@@ -25,6 +25,13 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
 
+// an empty, '.' or '..' path component cannot be looked up: the engine rejects it and it cannot be
+// put in a request path either. this is not about the name being a valid reference, which only the
+// engine decides, so it silences the lookups instead of reporting anything to the user
+function hasUnresolvableComponent(name: string): boolean {
+  return name.split('/').some(component => component === '' || component === '.' || component === '..');
+}
+
 // Get the preferred registries from configuration
 let preferredRegistries = $state<string[]>([DOCKER_PREFIX]);
 const imageUtils = new ImageUtils();
@@ -64,9 +71,15 @@ async function resolveShortname(): Promise<void> {
   if (selectedProviderConnection?.type !== 'podman') {
     return;
   }
-  if (imageToPull && !imageToPull.includes('/')) {
-    shortnameImages =
-      (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+  if (imageToPull && !imageToPull.includes('/') && !hasUnresolvableComponent(imageToPull)) {
+    try {
+      shortnameImages =
+        (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+    } catch {
+      // the engine rejects a name it cannot parse, such as ':', and is unreachable when its machine
+      // is stopped. there is no shortname to propose then, and pulling reports the reason if tried
+      shortnameImages = [];
+    }
     // not a shortname
   } else {
     podmanFQN = '';
@@ -289,6 +302,12 @@ function validateImageName(image: string): void {
 // allTags is defined if last search was a query to search tags of an image
 let allTags: string[] | undefined = undefined;
 async function searchImages(value: string): Promise<string[]> {
+  // a name being typed is incomplete, so a trailing '/' only means more is coming and 'quay.io/' is
+  // a registry whose images are worth listing. a tag is only listed for the name before the ':'
+  const searched = value.trim();
+  if (hasUnresolvableComponent(searched.includes(':') ? searched.split(':')[0] : searched.replace(/\/$/, ''))) {
+    return [];
+  }
   if (value.includes(':')) {
     if (allTags !== undefined) {
       return allTags.filter(i => i.startsWith(value));
@@ -348,7 +367,7 @@ async function searchImages(value: string): Promise<string[]> {
 
 let latestTagMessage = $state<string>();
 async function searchLatestTag(): Promise<void> {
-  if (imageNameIsInvalid || !imageToPull) {
+  if (imageNameIsInvalid || !imageToPull || hasUnresolvableComponent(imageToPull.split(':')[0])) {
     latestTagMessage = undefined;
     return;
   }
