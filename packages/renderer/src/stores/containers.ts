@@ -20,7 +20,7 @@ import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { type Writable, writable } from 'svelte/store';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
-import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 
 import { EventStore } from './event-store';
 
@@ -54,6 +54,52 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
 }
 
 export const containersInfos: Writable<ContainerInfoUI[]> = writable([]);
+
+export function setContainerStatus(engineId: string, containerId: string, state: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, state, actionInProgress: true, actionError: '' }
+        : container,
+    ),
+  );
+}
+
+export function clearContainerActionInProgress(engineId: string, containerId: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, actionInProgress: false }
+        : container,
+    ),
+  );
+}
+
+export function setContainerActionError(engineId: string, containerId: string, error: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, actionError: error, actionInProgress: false, state: 'ERROR' }
+        : container,
+    ),
+  );
+}
+
+// the pod group displayed in ContainerList reads its status from each member container's
+// groupInfo.status (set once when the container is fetched, see ContainerUtils#getContainerGroup),
+// not from a dedicated pod entity, so pod bulk actions update it here rather than through the
+// separate podsInfos store, which has no effect on this grouped view.
+export function setContainerGroupStatus(engineId: string, groupId: string, status: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.groupInfo.type === ContainerGroupInfoTypeUI.POD &&
+      container.groupInfo.id === groupId &&
+      container.groupInfo.engineId === engineId
+        ? { ...container, groupInfo: { ...container.groupInfo, status } }
+        : container,
+    ),
+  );
+}
 
 const containerUtils = new ContainerUtils();
 
