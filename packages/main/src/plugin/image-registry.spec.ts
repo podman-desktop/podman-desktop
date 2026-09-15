@@ -29,6 +29,7 @@ import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import * as nodeTar from 'tar';
+import { ProxyAgent, type RequestInit } from 'undici';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import imageRegistryConfigJson from '/@tests/resources/data/plugin/image-registry-config.json' with { type: 'json' };
@@ -245,6 +246,17 @@ describe('extract auth info', () => {
     expect(value).toBeDefined();
     expect(value?.authUrl).toBe('https://auth.docker.io/token?service=registry.docker.io');
     expect(value?.scheme).toBe('bearer');
+  });
+
+  test('getAuthInfo surfaces the underlying network error instead of the generic fetch failure', async () => {
+    // fetch wraps network failures in `TypeError: fetch failed`, keeping the real reason in `cause`
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new TypeError('fetch failed', { cause: new Error('getaddrinfo ENOTFOUND invalidurl') }),
+    );
+
+    await expect(imageRegistry.getAuthInfo('invalidUrl')).rejects.toThrow(
+      'Unable to find auth info for https://invalidUrl/v2/. Error: Error: getaddrinfo ENOTFOUND invalidurl',
+    );
   });
 });
 
@@ -1226,18 +1238,35 @@ test('getToken without registry auth', async () => {
   expect(token).toBe('12345');
 });
 
-test('getOptions uses proxy settings', () => {
+test('getOptions returns dispatcher for insecure mode', () => {
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+  const options = imageRegistry.getOptions({ insecure: true }) as RequestInit;
+  expect(options.dispatcher).toBeDefined();
+});
+
+test('getOptions selects the proxy matching the target protocol', () => {
   pxoxyIsEnabledMock.mockReturnValue(true);
+  // only an https proxy is configured
   proxyGetProxyMock.mockReturnValue({
-    httpProxy: 'http://192.168.1.1:3128',
-    httpsProxy: 'http://192.168.1.1:3128',
-    noProxy: '',
+    httpProxy: undefined,
+    httpsProxy: 'http://127.0.0.1:3128',
+    noProxy: undefined,
   });
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+
+  // an https target uses the https proxy
+  const secure = imageRegistry.getOptions({ url: 'https://registry.local/v2/', insecure: true }) as RequestInit;
+  expect(secure.dispatcher).toBeInstanceOf(ProxyAgent);
+
+  // an http target must not fall back to the https proxy
+  const insecure = imageRegistry.getOptions({ url: 'http://registry.local/v2/', insecure: true }) as RequestInit;
+  expect(insecure.dispatcher).not.toBeInstanceOf(ProxyAgent);
+});
+
+test('getOptions returns empty for non-insecure mode', () => {
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
   const options = imageRegistry.getOptions();
-  expect(options.agent).toBeDefined();
-  expect(options.agent?.http).toBeDefined();
-  expect(options.agent?.https).toBeDefined();
+  expect(options).toEqual({});
 });
 
 test('searchImages with proxy', async () => {
@@ -1259,7 +1288,7 @@ test('searchImages with proxy', async () => {
   server = setupServer(...handlers);
   server.listen({ onUnhandledRequest: 'error' });
 
-  await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('a proxy error');
+  await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('searching images');
 });
 
 test('searchImages without registry', async () => {

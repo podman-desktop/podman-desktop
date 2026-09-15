@@ -67,14 +67,10 @@ export class ExtensionInstaller {
     this.#dockerDesktopInstaller = new DockerDesktopInstaller(contributionManager);
   }
 
-  async extractExtensionFiles(
-    tmpFolderPath: string,
-    finalFolderPath: string,
-    reportLog: (message: string) => void,
-  ): Promise<void> {
+  async extractExtensionFiles(tmpFolderPath: string, finalFolderPath: string): Promise<void> {
     // files or folder to grab
     const filesExtension: string[] = [];
-    const hostFiles: string[] = [];
+
     // do we have binaries in ${tmpFolderPath}/extension folder ?
     if (fs.existsSync(`${tmpFolderPath}/extension`)) {
       // list all files in the binaries/${platform} folder
@@ -96,16 +92,6 @@ export class ExtensionInstaller {
     await Promise.all(
       filesExtension.map(async (file: string) => {
         return cp(path.join(tmpFolderPath, 'extension', file), path.join(finalFolderPath, file), { recursive: true });
-      }),
-    );
-    // copy all host files
-    await Promise.all(
-      hostFiles.map(async (file: string) => {
-        const sourceFile = path.join(tmpFolderPath, file);
-        // get only the filename from the path
-        const destFile = path.basename(sourceFile);
-        reportLog(`Copying host file ${destFile}.`);
-        return cp(sourceFile, path.join(finalFolderPath, 'host', destFile), { recursive: true });
       }),
     );
   }
@@ -198,7 +184,7 @@ export class ExtensionInstaller {
 
     sendLog('Filtering image content...');
     if (isPDExtension) {
-      await this.extractExtensionFiles(tmpFolderPath, finalFolderPath, sendLog);
+      await this.extractExtensionFiles(tmpFolderPath, finalFolderPath);
     } else if (isDDExtension) {
       await this.#dockerDesktopInstaller.extractExtensionFiles(
         tmpFolderPath,

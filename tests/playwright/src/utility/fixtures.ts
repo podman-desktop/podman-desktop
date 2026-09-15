@@ -19,6 +19,7 @@
 import type { Page } from '@playwright/test';
 import { test as base } from '@playwright/test';
 
+import { CommandPalette } from '/@/model/pages/command-palette';
 import { WelcomePage } from '/@/model/pages/welcome-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { StatusBar } from '/@/model/workbench/status-bar';
@@ -29,6 +30,7 @@ import { RunnerOptions } from '/@/runner/runner-options';
 export type TestFixtures = {
   runner: Runner;
   navigationBar: NavigationBar;
+  commandPalette: CommandPalette;
   welcomePage: WelcomePage;
   page: Page;
   statusBar: StatusBar;
@@ -50,6 +52,10 @@ export const test = base.extend<TestFixtures & FixtureOptions>({
   navigationBar: async ({ page }, use) => {
     const navigationBar = new NavigationBar(page);
     await use(navigationBar);
+  },
+  commandPalette: async ({ page }, use) => {
+    const commandPalette = new CommandPalette(page);
+    await use(commandPalette);
   },
   welcomePage: async ({ page }, use) => {
     const welcomePage = new WelcomePage(page);

@@ -20,6 +20,11 @@ import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
 import { BasePage } from './base-page';
+import { ContainersPage } from './containers-page';
+import { ImagesPage } from './images-page';
+import { NetworksPage } from './networks-page';
+import { PodsPage } from './pods-page';
+import { VolumesPage } from './volumes-page';
 
 export class CommandPalette extends BasePage {
   readonly commandPaletteInputField: Locator;
@@ -103,6 +108,64 @@ export class CommandPalette extends BasePage {
       await playExpect(this.commandPaletteInputField).toBeVisible();
       await this.commandPaletteInputField.pressSequentially(command, { delay: 25 });
       await this.commandPaletteInputField.press('Enter');
+    });
+  }
+
+  /**
+   * Navigate to a screen using the command palette "Go to" tab.
+   *
+   * Use the **plural** page name (e.g. `"Containers"`, `"Images"`) so the
+   * filter matches only the list-page entry (`"Containers (N)"`) and not
+   * individual resource entries (`"Container: name"`).
+   */
+  async navigateTo(screenName: string): Promise<void> {
+    return test.step(`Navigate to ${screenName} via search bar`, async () => {
+      if (!(await this.commandPaletteInputField.isVisible())) {
+        await this.openViaSearchButton();
+      }
+
+      await this.goToTab.click();
+      await this.commandPaletteInputField.clear();
+      await this.commandPaletteInputField.pressSequentially(screenName, { delay: 25 });
+
+      await playExpect(this.selectedItem).toBeVisible({ timeout: 5_000 });
+      await this.commandPaletteInputField.press('Enter');
+      await playExpect(this.commandPaletteInputField).not.toBeVisible();
+    });
+  }
+
+  async openContainers(): Promise<ContainersPage> {
+    return test.step('Open Containers page via search bar', async () => {
+      await this.navigateTo('Containers');
+      return new ContainersPage(this.page);
+    });
+  }
+
+  async openImages(): Promise<ImagesPage> {
+    return test.step('Open Images page via search bar', async () => {
+      await this.navigateTo('Images');
+      return new ImagesPage(this.page);
+    });
+  }
+
+  async openPods(): Promise<PodsPage> {
+    return test.step('Open Pods page via search bar', async () => {
+      await this.navigateTo('Pods');
+      return new PodsPage(this.page);
+    });
+  }
+
+  async openVolumes(): Promise<VolumesPage> {
+    return test.step('Open Volumes page via search bar', async () => {
+      await this.navigateTo('Volumes');
+      return new VolumesPage(this.page);
+    });
+  }
+
+  async openNetworks(): Promise<NetworksPage> {
+    return test.step('Open Networks page via search bar', async () => {
+      await this.navigateTo('Networks');
+      return new NetworksPage(this.page);
     });
   }
 }

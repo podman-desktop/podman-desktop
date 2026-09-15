@@ -25,7 +25,8 @@ import type { IDisposable } from '@podman-desktop/core-api';
 import { ProxyState } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { createProxy, type ProxyServer } from 'proxy';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { Agent } from 'undici';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
@@ -104,7 +105,9 @@ async function buildProxy(): Promise<ProxyServer> {
 let proxy: Proxy | undefined;
 let configurationRegistry: ConfigurationRegistry;
 
-beforeAll(async () => {
+beforeEach(async () => {
+  vi.resetAllMocks();
+
   // Set up filesystem mocks
   readFileSync.mockReturnValue(JSON.stringify({}));
   writeFileSync.mockReturnValue(undefined);
@@ -217,4 +220,30 @@ test('check isEnabled returns true when proxy is system and some proxy is enable
   await proxy?.setState(ProxyState.PROXY_SYSTEM);
   await proxy?.setProxy(undefined);
   expect(proxy?.isEnabled()).toBe(true);
+});
+
+test('fetch with caller-provided dispatcher should not be overridden', async () => {
+  // install our own fetch as the one the override will delegate to, so we can assert what it receives
+  const originalFetch = vi.fn().mockResolvedValue(new Response());
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = originalFetch as unknown as typeof globalThis.fetch;
+
+  try {
+    const localProxy = new Proxy(configurationRegistry, certificates);
+    await localProxy.init();
+    await localProxy.setState(ProxyState.PROXY_MANUAL);
+    await localProxy.setProxy({
+      httpsProxy: '127.0.0.1:8888',
+      httpProxy: undefined,
+      noProxy: undefined,
+    });
+
+    const customDispatcher = new Agent();
+    await globalThis.fetch(URL, { dispatcher: customDispatcher } as RequestInit);
+
+    // without the bypass the override would replace the dispatcher with its own ProxyAgent
+    expect(originalFetch).toHaveBeenCalledWith(URL, expect.objectContaining({ dispatcher: customDispatcher }));
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
 });

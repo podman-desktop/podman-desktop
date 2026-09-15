@@ -936,6 +936,93 @@ test('Try to run pods in bulk', async () => {
   expect(window.startContainer).toHaveBeenCalledOnce();
 });
 
+test.each([false, true])('Try to stop containers and pods in bulk (failure: %s)', async failure => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  let resolveStopPod: () => void;
+  vi.mocked(window.stopPod).mockReturnValue(
+    new Promise((resolve, reject) => {
+      resolveStopPod = failure ? (): void => reject(new Error('Pod stop failed')) : resolve;
+    }),
+  );
+  if (failure) {
+    vi.mocked(window.stopContainer).mockRejectedValue(new Error('Container stop failed'));
+  }
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).toHaveLength(0));
+
+  const podId = 'pod-id4';
+  const containerId = 'sha256:67890123456';
+  const mockedContainers = [
+    {
+      Id: containerId,
+      Image: 'sha256:678',
+      Names: ['standalone-container'],
+      Status: 'Running',
+      State: 'running',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'dummy-image-id',
+    } as ContainerInfo,
+    {
+      Id: 'sha256:8908901234567890123',
+      Image: 'sha256:890',
+      Names: ['container-in-pod'],
+      Status: 'Running',
+      State: 'running',
+      pod: {
+        name: 'my-pod4',
+        id: podId,
+        status: 'Running',
+        engineId: 'podman',
+      },
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'dummy-image-id',
+    } as ContainerInfo,
+  ];
+
+  vi.mocked(window.listContainers).mockResolvedValue(mockedContainers);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const selectAll = screen.getByRole('checkbox', { name: 'Toggle all' });
+  await fireEvent.click(selectAll);
+
+  const stopBulkButton = screen.getByRole('button', { name: 'Stop selected containers and pods' });
+  await fireEvent.click(stopBulkButton);
+
+  await waitFor(() => expect(window.stopPod).toHaveBeenCalledWith('podman', podId));
+  // the standalone container should be stopped without waiting for the pod operation to finish
+  await waitFor(() => expect(window.stopContainer).toHaveBeenCalledWith('podman', containerId));
+  expect(stopBulkButton).toHaveAttribute('aria-busy', 'true');
+
+  resolveStopPod!();
+  await waitFor(() => expect(stopBulkButton).toHaveAttribute('aria-busy', 'false'));
+
+  expect(window.stopPod).toHaveBeenCalledOnce();
+  expect(window.stopContainer).toHaveBeenCalledOnce();
+  if (failure) {
+    expect(consoleError).toHaveBeenCalledWith('error while stopping container', new Error('Container stop failed'));
+    expect(consoleError).toHaveBeenCalledWith('error while stopping pod', new Error('Pod stop failed'));
+    // Failed pods return to RUNNING and can be retried without stopping the failed container again.
+    vi.mocked(window.stopPod).mockResolvedValue(undefined);
+    await fireEvent.click(stopBulkButton);
+    await waitFor(() => expect(window.stopPod).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(stopBulkButton).toHaveAttribute('aria-busy', 'false'));
+    expect(window.stopContainer).toHaveBeenCalledOnce();
+  }
+  consoleError.mockRestore();
+});
+
 test('Ensuring the table and empty screen are not visible at the same time', async () => {
   // mock one container
   vi.mocked(window.listContainers).mockResolvedValue([

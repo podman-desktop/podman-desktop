@@ -19,7 +19,9 @@ interface Props {
 let { meta }: Props = $props();
 
 let configProperties: Map<string, NavItem[]> = $state(new Map<string, NavItem[]>());
-let sectionExpanded: { [key: string]: boolean } = $state({});
+let sectionExpanded: { [key: string]: boolean } = $state(
+  Object.fromEntries(settingsNavigationEntries.filter(e => e.expanded).map(e => [e.title, true])),
+);
 
 let experimentalSection: boolean = $state(false);
 
@@ -230,9 +232,13 @@ onMount(() => {
 
     configProperties = nextConfigProperties;
 
-    // Drop expansion flags for sections no longer present to avoid stale widened width.
+    // Drop expansion flags for dynamic config sections no longer present to avoid stale widened width.
+    // Preserve expansion state for static navigation entries.
     sectionExpanded = Object.fromEntries(
-      Object.entries(sectionExpanded).filter(([sectionId]) => nextConfigProperties.has(sectionId)),
+      Object.entries(sectionExpanded).filter(
+        ([sectionId]) =>
+          nextConfigProperties.has(sectionId) || settingsNavigationItems.some(e => e.title === sectionId),
+      ),
     );
 
     scheduleNavigationWidthUpdate();
@@ -268,13 +274,26 @@ onMount(() => {
   <div class="h-full overflow-y-auto" style="margin-bottom:auto">
     {#each settingsNavigationItems as navItem, index (index)}
       {#if navItem.visible}
-        <SettingsNavItem 
-          title={navItem.title} 
-          href={navItem.href} 
+        {@const visibleChildren = navItem.children?.filter(c => c.visible) ?? []}
+        <SettingsNavItem
+          title={navItem.title}
+          href={navItem.href}
           icon={navItem.icon}
+          section={visibleChildren.length > 0}
+          selected={meta.url === navItem.href && !visibleChildren.some(c => c.href === meta.url)}
           onClick={scheduleNavigationWidthUpdate}
-          selected={meta.url === navItem.href} 
-        />
+          bind:expanded={sectionExpanded[navItem.title]} />
+        {#if sectionExpanded[navItem.title]}
+          {#each visibleChildren as child (child.href)}
+            <SettingsNavItem
+              title={child.title}
+              href={child.href}
+              icon={child.icon}
+              child={true}
+              selected={meta.url === child.href}
+              onClick={scheduleNavigationWidthUpdate} />
+          {/each}
+        {/if}
       {/if}
     {/each}
 

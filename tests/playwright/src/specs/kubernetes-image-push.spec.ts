@@ -78,42 +78,44 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe
-  .serial('Kubernetes pushing an image to the cluster and reusing it with a pod E2E Test', { tag: '@k8s_e2e' }, () => {
-    test('Pull image and push it to the cluster', async ({ navigationBar }) => {
-      let imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-      const pullImagePage = await imagesPage.openPullImage();
-      await playExpect(pullImagePage.heading).toBeVisible();
-      imagesPage = await pullImagePage.pullImage(IMAGE_NAME);
-      await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_NAME, 30_000), { timeout: 0 }).toBeTruthy();
+test.describe('Kubernetes pushing an image to the cluster and reusing it with a pod E2E Test', {
+  tag: '@k8s_e2e',
+}, () => {
+  test.describe.configure({ mode: 'serial' });
+  test('Pull image and push it to the cluster', async ({ navigationBar }) => {
+    let imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    const pullImagePage = await imagesPage.openPullImage();
+    await playExpect(pullImagePage.heading).toBeVisible();
+    imagesPage = await pullImagePage.pullImage(IMAGE_NAME);
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_NAME, 30_000), { timeout: 0 }).toBeTruthy();
 
-      const imageDetails = await imagesPage.openImageDetails(IMAGE_NAME);
-      await playExpect(imageDetails.heading).toBeVisible();
-      await imageDetails.pushImageToKindCluster();
-    });
-    test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
-      const kubernetesBar = await navigationBar.openKubernetes();
-      const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
-      await playExpect(kubernetesPodsPage.heading).toBeVisible();
-
-      await playExpect.poll(async () => kubernetesPodsPage.content.textContent()).toContain('No pods');
-    });
-    test('Create a Kubernetes deployment resource', async ({ page }) => {
-      test.setTimeout(80_000);
-      await createKubernetesResource(page, KubernetesResources.Pods, DEPLOYMENT_NAME + '-pod', DEPLOYMENT_YAML_PATH);
-
-      await checkKubernetesResourceState(
-        page,
-        KubernetesResources.Pods,
-        DEPLOYMENT_NAME + '-pod',
-        KubernetesResourceState.Running,
-        80_000,
-      );
-    });
-
-    test('Delete the Kubernetes pod', async ({ page }) => {
-      await deleteKubernetesResource(page, KubernetesResources.Pods, DEPLOYMENT_NAME);
-    });
+    const imageDetails = await imagesPage.openImageDetails(IMAGE_NAME);
+    await playExpect(imageDetails.heading).toBeVisible();
+    await imageDetails.pushImageToKindCluster();
   });
+  test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+    await playExpect(kubernetesPodsPage.heading).toBeVisible();
+
+    await playExpect.poll(async () => kubernetesPodsPage.content.textContent()).toContain('No pods');
+  });
+  test('Create a Kubernetes deployment resource', async ({ page }) => {
+    test.setTimeout(80_000);
+    await createKubernetesResource(page, KubernetesResources.Pods, DEPLOYMENT_NAME + '-pod', DEPLOYMENT_YAML_PATH);
+
+    await checkKubernetesResourceState(
+      page,
+      KubernetesResources.Pods,
+      DEPLOYMENT_NAME + '-pod',
+      KubernetesResourceState.Running,
+      80_000,
+    );
+  });
+
+  test('Delete the Kubernetes pod', async ({ page }) => {
+    await deleteKubernetesResource(page, KubernetesResources.Pods, DEPLOYMENT_NAME);
+  });
+});

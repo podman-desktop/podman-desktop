@@ -108,7 +108,7 @@ function copyOf(cont: ContainerInfoUI | undefined): ContainerInfoUI | undefined 
           selected={isTabSelected($router.path, 'terminal')}
           url={getTabUrl($router.path, 'terminal')} />
         {#if displayTty}
-          <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
+          <Tab title="TTY" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
         {/if}
       {/if}
     {/snippet}
@@ -129,7 +129,7 @@ function copyOf(cont: ContainerInfoUI | undefined): ContainerInfoUI | undefined 
         <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
           <ContainerDetailsTerminal container={container} />
         </Route>
-        <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
+        <Route path="/tty" breadcrumb="TTY" navigationHint="tab">
           <ContainerDetailsTtyTerminal container={container} />
         </Route>
       {/if}
