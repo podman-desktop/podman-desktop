@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import GradientButton from './GradientButton';
 
-const DISCUSSION_URL = 'https://github.com/podman-desktop/podman-desktop/discussions';
+const INDEX_PAGE_URL = 'https://github.com/podman-desktop/podman-desktop/blob/main/website/src/pages/index.tsx';
 
 export function AddVendorCard(): JSX.Element {
   return (
@@ -14,12 +14,12 @@ export function AddVendorCard(): JSX.Element {
         </div>
       </div>
       <p className="text-charcoal-300 dark:text-gray-400 mb-4 grow">
-        If you are a vendor for Podman Desktop and would like to be added to the website, please open a GitHub
-        Discussion to be added.
+        If you are a vendor for Podman Desktop and would like to be added to the website, please open a GitHub pull
+        request to be added.
       </p>
       <div className="mt-auto">
-        <GradientButton href={DISCUSSION_URL} className="hover:no-underline">
-          Open a discussion <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
+        <GradientButton href={INDEX_PAGE_URL} className="hover:no-underline">
+          Open a pull request <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-sm" />
         </GradientButton>
       </div>
     </div>
