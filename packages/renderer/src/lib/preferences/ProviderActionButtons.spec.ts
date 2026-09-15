@@ -685,6 +685,61 @@ describe('ProviderActionButtons', () => {
     expect(screen.queryByRole('button', { name: 'Initialize' })).not.toBeInTheDocument();
   });
 
+  test('disables a provider contribution when its disabled condition matches', () => {
+    const contributions: Menu[] = [
+      { title: 'Initialize', command: 'another.initialize', disabled: 'providerStatus == ready' },
+    ];
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.getByRole('button', { name: 'Initialize' })).toBeDisabled();
+  });
+
+  test('enables a provider contribution when its disabled condition does not match', () => {
+    const contributions: Menu[] = [
+      { title: 'Initialize', command: 'another.initialize', disabled: 'providerStatus == stopped' },
+    ];
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.getByRole('button', { name: 'Initialize' })).not.toBeDisabled();
+  });
+
+  test('enables a provider contribution when its disabled condition is invalid', () => {
+    const contributions: Menu[] = [{ title: 'Initialize', command: 'another.initialize', disabled: 'invalid ==' }];
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.getByRole('button', { name: 'Initialize' })).not.toBeDisabled();
+  });
+
   test('runs a provider contribution when clicked', async () => {
     const provider: ProviderInfo = {
       ...baseProviderInfo,
