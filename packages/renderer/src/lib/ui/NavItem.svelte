@@ -10,6 +10,8 @@ interface Props {
   href: string;
   tooltip: string;
   ariaLabel?: string;
+  ariaKeyShortcuts?: string;
+  titleTooltip?: string;
   meta: TinroRouteMeta;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
   counter?: number;
@@ -17,7 +19,18 @@ interface Props {
   children?: Snippet;
 }
 
-let { href, tooltip, ariaLabel, meta = $bindable(), onClick, counter, expanded = false, children }: Props = $props();
+let {
+  href,
+  tooltip,
+  ariaLabel,
+  ariaKeyShortcuts,
+  titleTooltip,
+  meta = $bindable(),
+  onClick,
+  counter,
+  expanded = false,
+  children,
+}: Props = $props();
 
 const navItems: Writable<number> = getContext('nav-items');
 const inSection = $navItems !== undefined;
@@ -45,6 +58,8 @@ onDestroy(() => {
   href={onClick ? '#top' : uri}
   class=""
   aria-label={ariaLabel ?? tooltip}
+  aria-keyshortcuts={ariaKeyShortcuts}
+  title={titleTooltip}
   onclick={handleClick}>
   <div
     class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
