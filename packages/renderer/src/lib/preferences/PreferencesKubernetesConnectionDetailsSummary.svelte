@@ -5,35 +5,33 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let kubernetesConnectionInfo: ProviderKubernetesConnectionInfo | undefined = undefined;
-
-let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
-function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
-  tmpProviderContainerConfiguration = value;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  kubernetesConnectionInfo?: ProviderKubernetesConnectionInfo;
 }
+let { properties = [], providerInternalId, kubernetesConnectionInfo }: Props = $props();
 
-$: Promise.all(
-  properties.map(async configurationKey => {
-    return {
-      ...configurationKey,
-      value: configurationKey.id
-        ? await window.getConfigurationValue(
-            configurationKey.id,
-            kubernetesConnectionInfo as unknown as KubernetesProviderConnection,
-          )
-        : undefined,
-      connection: kubernetesConnectionInfo?.name ?? '',
-      providerId: providerInternalId ?? '',
-    };
-  }),
-)
-  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
-  .catch((err: unknown) => console.error('Error collecting providers', err));
+let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $derived(
+  await Promise.all(
+    properties.map(async configurationKey => {
+      return {
+        ...configurationKey,
+        value: configurationKey.id
+          ? await window.getConfigurationValue(
+              configurationKey.id,
+              kubernetesConnectionInfo as unknown as KubernetesProviderConnection,
+            )
+          : undefined,
+        connection: kubernetesConnectionInfo?.name ?? '',
+        providerId: providerInternalId ?? '',
+      };
+    }),
+  ),
+);
 
-$: providerConnectionConfiguration = tmpProviderContainerConfiguration.filter(
-  configurationKey => configurationKey.value !== undefined,
+let providerConnectionConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $derived(
+  tmpProviderContainerConfiguration.filter(configurationKey => configurationKey.value !== undefined),
 );
 </script>
 
