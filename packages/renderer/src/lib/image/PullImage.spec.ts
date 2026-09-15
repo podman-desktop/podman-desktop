@@ -754,3 +754,100 @@ describe('Preferred Registries', () => {
     });
   });
 });
+
+// a '.' cannot be resolved and used to reach the engine, making it answer with a redirect
+// that crashed the app with an uncaught 'TypeError: Invalid URL'
+describe('invalid image name', () => {
+  // the engine owns the reference grammar, so a name it would reject is still offered for pulling
+  // and it is the engine that reports why it cannot be pulled
+  test.each(['.', '..', ':', '#', 'Nginx'])('should leave %s for the engine to reject', async imageName => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(imageName);
+
+    expect(screen.queryByText('Invalid image name')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: buttonText })).toBeEnabled();
+  });
+
+  test('should report the engine error when pulling a name it cannot parse', async () => {
+    vi.mocked(window.pullImage).mockRejectedValue(new Error('invalid reference format'));
+    render(PullImage);
+
+    await userEvent.keyboard('.[Enter]');
+
+    const errorMessage = await vi.waitFor(() => screen.getByRole('alert', { name: 'Error Message Content' }));
+    expect(errorMessage).toHaveTextContent('Error while pulling image from test: invalid reference format');
+  });
+
+  test('should not ask the engine to resolve an invalid image name', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('.');
+
+    expect(window.resolveShortnameImage).not.toHaveBeenCalled();
+  });
+
+  // the engine rejects a name like ':' that it cannot parse, and the rejection used to escape
+  // the onChange handler as an 'Uncaught (in promise)' error
+  test('should not leak a rejection when the engine cannot resolve the name', async () => {
+    vi.mocked(window.resolveShortnameImage).mockRejectedValue(
+      new Error('(HTTP code 400) bad parameter - resolving ":": cannot parse input: ":": invalid reference format'),
+    );
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(':');
+
+    await vi.waitFor(() => {
+      expect(window.resolveShortnameImage).toHaveBeenCalled();
+    });
+    await tick();
+
+    // nothing could be resolved, so no Podman FQN is proposed
+    expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
+  });
+
+  test.each(['.', '..', '/nginx', 'quay.io//nginx'])('should not search any registry for %s', async imageName => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(imageName);
+
+    // the search is debounced, so waiting for longer than the delay is what tells a query that is
+    // never sent from one that is only queued
+    await new Promise(resolve => setTimeout(resolve, 400));
+    await tick();
+
+    expect(window.searchImageInRegistry).not.toHaveBeenCalled();
+    expect(window.listImageTagsInRegistry).not.toHaveBeenCalled();
+  });
+
+  test('should still search while a valid name is being typed', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('quay.io/');
+
+    await vi.waitFor(() => {
+      expect(window.searchImageInRegistry).toHaveBeenCalledWith(expect.objectContaining({ registry: 'quay.io' }));
+    });
+  });
+
+  test('should resolve a valid image name', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('quay.io/podman/hello');
+
+    expect(screen.queryByText('Invalid image name')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: buttonText })).toBeEnabled();
+  });
+});
