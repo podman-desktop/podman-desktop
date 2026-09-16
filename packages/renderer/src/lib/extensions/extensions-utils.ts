@@ -24,6 +24,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { isBundledExtension } from './extension-origin-utils';
 
 export class ExtensionsUtils {
   extractExtensionDetail(
@@ -161,9 +162,13 @@ export class ExtensionsUtils {
     featuredExtensions: FeaturedExtension[],
     installedExtensions: CombinedExtensionInfoUI[],
   ): CatalogExtensionInfoUI[] {
-    // filter out unlisted extensions
+    // filter out unlisted extensions and bundled ones
     const values: CatalogExtensionInfoUI[] = catalogExtensions
       .filter(e => !e.unlisted)
+      .filter(catalogExtension => {
+        const installed = installedExtensions.find(installedExtension => installedExtension.id === catalogExtension.id);
+        return !isBundledExtension(installed);
+      })
       .map(catalogExtension => {
         // grab latest version
         const nonPreviewVersions = catalogExtension.versions.filter(v => !v.preview);
