@@ -10,6 +10,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { canSearch, hasDigest, hasUnresolvableComponent, repositoryOf, tagOf } from '/@/lib/image/image-reference';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
@@ -24,20 +25,6 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
-
-// an empty, '.' or '..' path component cannot be looked up: the engine rejects it and it cannot be
-// put in a request path either. this is not about the name being a valid reference, which only the
-// engine decides, so it silences the lookups instead of reporting anything to the user
-function hasUnresolvableComponent(name: string): boolean {
-  return name.split('/').some(component => component === '' || component === '.' || component === '..');
-}
-
-// a ':' separates the tag only when it comes after the last '/', otherwise it is the port of a
-// registry such as 'localhost:5000' and the components after it still have to be looked at
-function repositoryOf(reference: string): string {
-  const tagSeparator = reference.indexOf(':', reference.lastIndexOf('/') + 1);
-  return tagSeparator === -1 ? reference : reference.slice(0, tagSeparator);
-}
 
 // Get the preferred registries from configuration
 let preferredRegistries = $state<string[]>([DOCKER_PREFIX]);
@@ -82,9 +69,10 @@ async function resolveShortname(): Promise<void> {
     try {
       shortnameImages =
         (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
-    } catch {
+    } catch (error: unknown) {
       // the engine rejects a name it cannot parse, such as ':', and is unreachable when its machine
       // is stopped. there is no shortname to propose then, and pulling reports the reason if tried
+      console.debug(`Could not resolve shortname ${imageToPull}:`, error);
       shortnameImages = [];
     }
     // not a shortname
@@ -309,14 +297,11 @@ function validateImageName(image: string): void {
 // allTags is defined if last search was a query to search tags of an image
 let allTags: string[] | undefined = undefined;
 async function searchImages(value: string): Promise<string[]> {
-  // a name being typed is incomplete, so a trailing '/' only means more is coming and 'quay.io/' is
-  // a registry whose images are worth listing
-  const searched = value.trim();
-  const repository = repositoryOf(searched);
-  if (hasUnresolvableComponent(searched.endsWith('/') ? repository.slice(0, -1) : repository)) {
+  if (!canSearch(value)) {
     return [];
   }
-  if (repositoryOf(value) !== value) {
+  // a reference pinned by digest has no tag to propose
+  if (tagOf(value) !== undefined) {
     if (allTags !== undefined) {
       return allTags.filter(i => i.startsWith(value));
     }
@@ -384,9 +369,16 @@ async function searchLatestTag(): Promise<void> {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
     const tags = await window.listImageTagsInRegistry({ image });
-    if (repositoryOf(imageToPull) !== imageToPull) {
+    const tag = tagOf(imageToPull);
+    if (tag !== undefined) {
       latestTagMessage = undefined;
-      checkIfTagExist(image, tags);
+      isValidName = tags.includes(tag);
+      return;
+    }
+    // a digest pins the image, so no tag is missing from it
+    if (hasDigest(imageToPull)) {
+      latestTagMessage = undefined;
+      isValidName = true;
       return;
     }
     isValidName = Boolean(tags);
@@ -401,12 +393,6 @@ async function searchLatestTag(): Promise<void> {
     isValidName = false;
     latestTagMessage = undefined;
   }
-}
-
-function checkIfTagExist(image: string, tags: string[]): void {
-  const tag = image.slice(repositoryOf(image).length + 1);
-
-  isValidName = tags.some(t => t === tag);
 }
 
 async function searchFunction(value: string): Promise<void> {

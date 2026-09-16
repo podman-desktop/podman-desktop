@@ -518,10 +518,11 @@ describe('registry with a port', () => {
     await userEvent.click(textbox);
     await userEvent.paste('localhost:5000/nginx:');
 
-    await new Promise(resolve => setTimeout(resolve, 400));
-    await tick();
+    // the tag lookup runs on every keystroke, the search for the tags to propose is debounced
+    await vi.waitFor(() => {
+      expect(window.listImageTagsInRegistry).toHaveBeenCalledWith({ image: 'localhost:5000/nginx' });
+    });
 
-    expect(window.listImageTagsInRegistry).toHaveBeenCalledWith({ image: 'localhost:5000/nginx' });
     expect(window.listImageTagsInRegistry).not.toHaveBeenCalledWith({ image: 'localhost' });
   });
 
@@ -543,6 +544,22 @@ describe('registry with a port', () => {
 
     const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
     expect(parentInput).toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+  });
+});
+
+// a digest names the image by content, so no tag has to be found for it
+describe('reference pinned by digest', () => {
+  const DIGEST = 'sha256:2b9e1b2a1f1c1d1e1f2a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f80';
+
+  test('should accept it even when the repository has no "latest"', async () => {
+    const pullImage = render(PullImage);
+
+    vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['v1']);
+    await userEvent.keyboard(`quay.io/podman/hello@${DIGEST}`);
+
+    const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
+    expect(parentInput).not.toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+    expect(screen.queryByText(/"latest" tag not found/)).not.toBeInTheDocument();
   });
 });
 
@@ -863,22 +880,13 @@ describe('invalid image name', () => {
     expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
   });
 
-  // a ':' after the last '/' is a tag, anywhere else it is the port of a registry, and the
-  // components that follow the port still have to be looked at
-  test.each([
-    '.',
-    '..',
-    '/nginx',
-    'quay.io//nginx',
-    'localhost:5000/./nginx',
-    'localhost:5000/../nginx',
-    'localhost:5000//nginx',
-  ])('should not search any registry for %s', async imageName => {
+  // which names are searchable is unit tested in image-reference.spec.ts, this only wires it up
+  test('should not search any registry for a name that cannot be looked up', async () => {
     render(PullImage);
 
     const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
-    await userEvent.paste(imageName);
+    await userEvent.paste('.');
 
     // the search is debounced, so waiting for longer than the delay is what tells a query that is
     // never sent from one that is only queued
