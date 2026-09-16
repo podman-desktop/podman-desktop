@@ -509,6 +509,43 @@ test('input component should raise an error when the input is not valid - error'
   expect(parentInput).not.toHaveClass('hover:border-b-[var(--pd-input-field-hover-stroke)]');
 });
 
+// a ':' is the tag separator only after the last '/', so 'localhost:5000' is a host and a port
+describe('registry with a port', () => {
+  test('should list the tags of the repository and not of the registry host', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('localhost:5000/nginx:');
+
+    await new Promise(resolve => setTimeout(resolve, 400));
+    await tick();
+
+    expect(window.listImageTagsInRegistry).toHaveBeenCalledWith({ image: 'localhost:5000/nginx' });
+    expect(window.listImageTagsInRegistry).not.toHaveBeenCalledWith({ image: 'localhost' });
+  });
+
+  test('should accept a tag the repository has', async () => {
+    const pullImage = render(PullImage);
+
+    vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest']);
+    await userEvent.keyboard('localhost:5000/nginx:latest');
+
+    const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
+    expect(parentInput).not.toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+  });
+
+  test('should reject a tag the repository does not have', async () => {
+    const pullImage = render(PullImage);
+
+    vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest']);
+    await userEvent.keyboard('localhost:5000/nginx:missing');
+
+    const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
+    expect(parentInput).toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+  });
+});
+
 describe('container connections', () => {
   // create a dummy multi connection provider
   const MULTI_CONNECTIONS: ProviderInfo = {

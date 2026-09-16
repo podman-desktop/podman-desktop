@@ -316,13 +316,12 @@ async function searchImages(value: string): Promise<string[]> {
   if (hasUnresolvableComponent(searched.endsWith('/') ? repository.slice(0, -1) : repository)) {
     return [];
   }
-  if (value.includes(':')) {
+  if (repositoryOf(value) !== value) {
     if (allTags !== undefined) {
       return allTags.filter(i => i.startsWith(value));
     }
-    const parts = value.split(':');
-    const originalImage = parts[0];
-    let image = parts[0];
+    const originalImage = repositoryOf(value);
+    let image = originalImage;
     if (image.startsWith(DOCKER_PREFIX_WITH_SLASH)) {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
@@ -385,7 +384,7 @@ async function searchLatestTag(): Promise<void> {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
     const tags = await window.listImageTagsInRegistry({ image });
-    if (imageToPull.includes(':')) {
+    if (repositoryOf(imageToPull) !== imageToPull) {
       latestTagMessage = undefined;
       checkIfTagExist(image, tags);
       return;
@@ -405,7 +404,7 @@ async function searchLatestTag(): Promise<void> {
 }
 
 function checkIfTagExist(image: string, tags: string[]): void {
-  const tag = image.split(':')[1];
+  const tag = image.slice(repositoryOf(image).length + 1);
 
   isValidName = tags.some(t => t === tag);
 }
