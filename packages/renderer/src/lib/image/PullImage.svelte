@@ -32,6 +32,13 @@ function hasUnresolvableComponent(name: string): boolean {
   return name.split('/').some(component => component === '' || component === '.' || component === '..');
 }
 
+// a ':' separates the tag only when it comes after the last '/', otherwise it is the port of a
+// registry such as 'localhost:5000' and the components after it still have to be looked at
+function repositoryOf(reference: string): string {
+  const tagSeparator = reference.indexOf(':', reference.lastIndexOf('/') + 1);
+  return tagSeparator === -1 ? reference : reference.slice(0, tagSeparator);
+}
+
 // Get the preferred registries from configuration
 let preferredRegistries = $state<string[]>([DOCKER_PREFIX]);
 const imageUtils = new ImageUtils();
@@ -303,9 +310,10 @@ function validateImageName(image: string): void {
 let allTags: string[] | undefined = undefined;
 async function searchImages(value: string): Promise<string[]> {
   // a name being typed is incomplete, so a trailing '/' only means more is coming and 'quay.io/' is
-  // a registry whose images are worth listing. a tag is only listed for the name before the ':'
+  // a registry whose images are worth listing
   const searched = value.trim();
-  if (hasUnresolvableComponent(searched.includes(':') ? searched.split(':')[0] : searched.replace(/\/$/, ''))) {
+  const repository = repositoryOf(searched);
+  if (hasUnresolvableComponent(searched.endsWith('/') ? repository.slice(0, -1) : repository)) {
     return [];
   }
   if (value.includes(':')) {
@@ -367,7 +375,7 @@ async function searchImages(value: string): Promise<string[]> {
 
 let latestTagMessage = $state<string>();
 async function searchLatestTag(): Promise<void> {
-  if (imageNameIsInvalid || !imageToPull || hasUnresolvableComponent(imageToPull.split(':')[0])) {
+  if (imageNameIsInvalid || !imageToPull || hasUnresolvableComponent(repositoryOf(imageToPull))) {
     latestTagMessage = undefined;
     return;
   }

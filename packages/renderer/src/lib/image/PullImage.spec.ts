@@ -812,7 +812,17 @@ describe('invalid image name', () => {
     expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
   });
 
-  test.each(['.', '..', '/nginx', 'quay.io//nginx'])('should not search any registry for %s', async imageName => {
+  // a ':' after the last '/' is a tag, anywhere else it is the port of a registry, and the
+  // components that follow the port still have to be looked at
+  test.each([
+    '.',
+    '..',
+    '/nginx',
+    'quay.io//nginx',
+    'localhost:5000/./nginx',
+    'localhost:5000/../nginx',
+    'localhost:5000//nginx',
+  ])('should not search any registry for %s', async imageName => {
     render(PullImage);
 
     const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
