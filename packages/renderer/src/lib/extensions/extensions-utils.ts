@@ -253,4 +253,20 @@ export class ExtensionsUtils {
       );
     });
   }
+
+  /** Keep only non-empty, trimmed category labels. */
+  resolveExtensionCategoryTags(categories: string[]): string[] {
+    return categories.map(category => category.trim()).filter(category => category.length > 0);
+  }
+
+  /** Collect the sorted, de-duplicated set of categories present across the given extensions. */
+  collectCatalogCategories(extensions: CatalogExtensionInfoUI[]): string[] {
+    const categories = new Set<string>();
+    for (const extension of extensions) {
+      for (const category of this.resolveExtensionCategoryTags(extension.categories)) {
+        categories.add(category);
+      }
+    }
+    return [...categories].sort((a, b) => a.localeCompare(b));
+  }
 }

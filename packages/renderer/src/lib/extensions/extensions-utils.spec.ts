@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { ExtensionsUtils } from './extensions-utils';
 
 let extensionsUtils: ExtensionsUtils;
@@ -523,5 +524,35 @@ describe('filters', () => {
       );
       expect(parsed.getFilter('keyword')).toEqual(['vulnerability scanner', 'security']);
     });
+  });
+});
+
+describe('category tags', () => {
+  function withCategories(categories: string[]): CatalogExtensionInfoUI {
+    return {
+      id: 'id',
+      displayName: 'Display',
+      isFeatured: false,
+      fetchable: true,
+      fetchLink: '',
+      fetchVersion: '',
+      publisherDisplayName: 'Publisher',
+      isInstalled: false,
+      shortDescription: '',
+      categories,
+      keywords: [],
+    };
+  }
+
+  test('resolveExtensionCategoryTags trims and drops empty entries', () => {
+    expect(extensionsUtils.resolveExtensionCategoryTags(['  Kubernetes  ', '', '   ', 'Cloud'])).toEqual([
+      'Kubernetes',
+      'Cloud',
+    ]);
+  });
+
+  test('collectCatalogCategories returns a sorted, de-duplicated list', () => {
+    const extensions = [withCategories(['Kubernetes', 'Cloud']), withCategories(['Cloud', 'AI']), withCategories([])];
+    expect(extensionsUtils.collectCatalogCategories(extensions)).toEqual(['AI', 'Cloud', 'Kubernetes']);
   });
 });
