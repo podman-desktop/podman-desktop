@@ -79,6 +79,7 @@ overrides:
   colord: '>=2.9.4'
   smol-toml: '>=1.7.1'
   http-cache-semantics@^4: ^4.3.0
+  vitest: '>=5.0.0'
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
