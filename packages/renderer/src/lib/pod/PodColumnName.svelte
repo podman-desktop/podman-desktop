@@ -5,7 +5,11 @@ import { handleNavigation } from '/@/navigation';
 
 import type { PodInfoUI } from './PodInfoUI';
 
-export let object: PodInfoUI;
+interface Props {
+  object: PodInfoUI;
+}
+
+let { object }: Props = $props();
 
 function openDetailsPod(pod: PodInfoUI): void {
   handleNavigation({
@@ -18,7 +22,7 @@ function openDetailsPod(pod: PodInfoUI): void {
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full text-left" on:click={(): void => openDetailsPod(object)}>
+<button class="hover:cursor-pointer flex flex-col max-w-full text-left" onclick={(): void => openDetailsPod(object)}>
   <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

@@ -49,7 +49,7 @@ const recordUI = $derived.by(() => {
   const breadCrumbUI = breadCrumb.replace(/\./g, ' > ').concat(':');
 
   return {
-    title: record.name ?? startCase(key),
+    title: record.displayName ?? startCase(key),
     breadCrumb: breadCrumbUI,
     description: record.description,
     markdownDescription: record.markdownDescription,

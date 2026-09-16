@@ -2,9 +2,13 @@
 import WindowControlLinuxButton from './LinuxControlButton.svelte';
 import WindowControlWindowsButton from './WindowsControlButton.svelte';
 
-export let name: string;
-export let action: () => void = () => {};
-export let platform: string;
+interface Props {
+  name: string;
+  action?: () => void;
+  platform: string;
+}
+
+let { name, action = (): void => {}, platform }: Props = $props();
 </script>
 
 {#if platform === 'linux'}

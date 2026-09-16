@@ -8,12 +8,14 @@ const myFirstPod = 'my-first-pod';
 const helloImage = 'quay.io/podman/hello:latest';
 const commandLine = `podman run -dt --pod new:${myFirstPod} ${helloImage}`;
 
-let inProgress = false;
+let inProgress = $state(false);
 
-$: selectedProviderConnection = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .find(providerContainerConnection => providerContainerConnection.status === 'started');
+let selectedProviderConnection = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .find(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 async function startPod(): Promise<void> {
   inProgress = true;

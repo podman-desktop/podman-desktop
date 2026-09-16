@@ -154,3 +154,18 @@ export enum ProxyTypes {
   Manual = 'Manual',
   System = 'System',
 }
+
+export enum ProxyLabel {
+  PROXY_CONFIGURATION = 'Proxy configuration',
+  HTTP = 'Web Proxy (HTTP)',
+  HTTPS = 'Secure Web Proxy (HTTPS)',
+  NO_PROXY = 'Bypass proxy settings for these hosts and domains',
+  MANAGED = 'Managed by your organization',
+}
+
+export enum ProxyElementId {
+  TOGGLE_PROXY = 'toggle-proxy',
+  HTTP_PROXY = 'httpProxy',
+  HTTPS_PROXY = 'httpsProxy',
+  NO_PROXY = 'noProxy',
+}

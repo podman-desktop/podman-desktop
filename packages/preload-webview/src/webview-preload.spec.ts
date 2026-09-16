@@ -167,13 +167,11 @@ describe('ipcInvoke', () => {
 });
 
 describe('changeContent', () => {
-  const originalDocument = document;
   beforeEach(() => {
-    // spy document.write method
-    document = originalDocument.implementation.createHTMLDocument('');
+    vi.stubGlobal('document', document.implementation.createHTMLDocument(''));
   });
   afterEach(() => {
-    document = originalDocument;
+    vi.unstubAllGlobals();
   });
 
   test('check with light theme', async () => {

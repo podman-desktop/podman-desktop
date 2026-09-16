@@ -312,6 +312,109 @@ describe('register route', () => {
       return navigationManager.navigateToRoute(routeId);
     }).rejects.toThrowError('Dummy error');
   });
+
+  test('registering route with searchEntry should fire navigation-searchable-route-update event', () => {
+    navigationManager.registerRoute({
+      routeId: 'route-with-search',
+      commandId: 'some-command',
+      searchEntry: { label: 'My Route' },
+    });
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigation-searchable-route-update');
+  });
+
+  test('registering route without searchEntry should not fire navigation-searchable-route-update event', () => {
+    navigationManager.registerRoute({
+      routeId: 'route-without-search',
+      commandId: 'some-command',
+    });
+
+    expect(apiSender.send).not.toHaveBeenCalledWith('navigation-searchable-route-update');
+  });
+
+  test('disposing route with searchEntry should fire navigation-searchable-route-update event', () => {
+    const disposable = navigationManager.registerRoute({
+      routeId: 'route-with-search',
+      commandId: 'some-command',
+      searchEntry: { label: 'My Route' },
+    });
+
+    vi.mocked(apiSender.send).mockClear();
+    disposable.dispose();
+
+    expect(apiSender.send).toHaveBeenCalledWith('navigation-searchable-route-update');
+  });
+
+  test('disposing route without searchEntry should not fire navigation-searchable-route-update event', () => {
+    const disposable = navigationManager.registerRoute({
+      routeId: 'route-without-search',
+      commandId: 'some-command',
+    });
+
+    vi.mocked(apiSender.send).mockClear();
+    disposable.dispose();
+
+    expect(apiSender.send).not.toHaveBeenCalledWith('navigation-searchable-route-update');
+  });
+});
+
+describe('getSearchableRoutes', () => {
+  test('should return empty array when no routes registered', () => {
+    expect(navigationManager.getSearchableRoutes()).toEqual([]);
+  });
+
+  test('should return only routes with searchEntry', () => {
+    navigationManager.registerRoute({
+      routeId: 'route-1',
+      commandId: 'cmd-1',
+      searchEntry: { label: 'Dashboard' },
+    });
+    navigationManager.registerRoute({
+      routeId: 'route-2',
+      commandId: 'cmd-2',
+    });
+    navigationManager.registerRoute({
+      routeId: 'route-3',
+      commandId: 'cmd-3',
+      searchEntry: { label: 'Models', icon: 'icon.png' },
+    });
+
+    const results = navigationManager.getSearchableRoutes();
+
+    expect(results).toHaveLength(2);
+    expect(results).toEqual([
+      { routeId: 'route-1', label: 'Dashboard', icon: undefined },
+      { routeId: 'route-3', label: 'Models', icon: 'icon.png' },
+    ]);
+  });
+
+  test('should not include disposed routes', () => {
+    const disposable = navigationManager.registerRoute({
+      routeId: 'route-1',
+      commandId: 'cmd-1',
+      searchEntry: { label: 'Dashboard' },
+    });
+
+    expect(navigationManager.getSearchableRoutes()).toHaveLength(1);
+
+    disposable.dispose();
+
+    expect(navigationManager.getSearchableRoutes()).toHaveLength(0);
+  });
+
+  test('should include icon with light and dark variants', () => {
+    navigationManager.registerRoute({
+      routeId: 'route-themed',
+      commandId: 'cmd-themed',
+      searchEntry: { label: 'Themed', icon: { light: 'light.png', dark: 'dark.png' } },
+    });
+
+    const results = navigationManager.getSearchableRoutes();
+
+    expect(results).toEqual([
+      { routeId: 'route-themed', label: 'Themed', icon: { light: 'light.png', dark: 'dark.png' } },
+    ]);
+  });
 });
 
 test('check navigateToCreateProviderConnection', async () => {

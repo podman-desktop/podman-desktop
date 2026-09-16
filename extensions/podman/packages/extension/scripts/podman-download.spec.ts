@@ -32,6 +32,8 @@ import { http, HttpResponse } from 'msw';
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { Octokit } from 'octokit';
 
+vi.mock(import('node:fs'));
+
 const mockedPodmanConfig = {
   versions: {
     v5: {
@@ -101,8 +103,6 @@ afterEach(() => {
 describe('macOS platform', () => {
   let currentPlatform: string;
   beforeEach(() => {
-    vi.mock('node:fs');
-
     currentPlatform = process.platform;
     // define using setProperty
     Object.defineProperty(process, 'platform', {

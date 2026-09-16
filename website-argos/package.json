@@ -7,9 +7,9 @@
     "upload": "npx @argos-ci/cli upload --build-name website ./screenshots"
   },
   "devDependencies": {
-    "@argos-ci/cli": "^6.5.0",
-    "@argos-ci/playwright": "^7.4.0",
-    "@playwright/test": "1.62.0",
+    "@argos-ci/cli": "^6.9.3",
+    "@argos-ci/playwright": "^7.5.1",
+    "@playwright/test": "1.63.0",
     "cheerio": "^1.2.0"
   }
 }

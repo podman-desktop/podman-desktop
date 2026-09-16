@@ -16,18 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+import type { OnboardingInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { WelcomeSettings } from '@podman-desktop/core-api/welcome';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { WelcomeUtils } from './welcome-utils';
 
 let welcomeUtils: WelcomeUtils;
-
-// mock window.getConfigurationValue
-const getConfigurationValueMock = vi.fn();
-(window as any).getConfigurationValue = getConfigurationValueMock;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -35,15 +30,119 @@ beforeEach(() => {
 });
 
 test('should expect no value by default', async () => {
-  getConfigurationValueMock.mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
   const version = await welcomeUtils.getVersion();
   expect(version).toBeUndefined();
-  expect(getConfigurationValueMock).toHaveBeenCalledWith(WelcomeSettings.SectionName + '.' + WelcomeSettings.Version);
+  expect(vi.mocked(window.getConfigurationValue)).toHaveBeenCalledWith(
+    WelcomeSettings.SectionName + '.' + WelcomeSettings.Version,
+  );
 });
 
 test('should expect value', async () => {
-  getConfigurationValueMock.mockResolvedValue('foo');
+  vi.mocked(window.getConfigurationValue).mockResolvedValue('foo');
   const version = await welcomeUtils.getVersion();
   expect(version).toBe('foo');
-  expect(getConfigurationValueMock).toHaveBeenCalledWith(WelcomeSettings.SectionName + '.' + WelcomeSettings.Version);
+  expect(vi.mocked(window.getConfigurationValue)).toHaveBeenCalledWith(
+    WelcomeSettings.SectionName + '.' + WelcomeSettings.Version,
+  );
+});
+
+const baseExtension: OnboardingInfo = {
+  extension: 'ext1',
+  name: 'ext1',
+  displayName: 'Extension 1',
+  icon: '',
+  description: 'First extension',
+  steps: [],
+  title: 'Extension 1',
+  removable: true,
+  enablement: '',
+};
+
+describe('getSortedOnboardingExtensions', () => {
+  test('returns empty array for empty inputs', () => {
+    expect(welcomeUtils.getSortedOnboardingExtensions([], [])).toEqual([]);
+  });
+
+  test('marks all extensions as selected by default', () => {
+    const extensions = [baseExtension];
+    const result = welcomeUtils.getSortedOnboardingExtensions(extensions, []);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.selected).toBe(true);
+  });
+
+  test('sets containerEngine true when provider has container connections', () => {
+    const extensions = [baseExtension];
+    const providers = [
+      { extensionId: 'ext1', containerConnections: [{ name: 'connection1' }] },
+    ] as unknown as ProviderInfo[];
+
+    const result = welcomeUtils.getSortedOnboardingExtensions(extensions, providers);
+
+    expect(result[0]?.containerEngine).toBe(true);
+  });
+
+  test('sets containerEngine false when provider has no container connections', () => {
+    const extensions = [baseExtension];
+    const providers = [{ extensionId: 'ext1', containerConnections: [] }] as unknown as ProviderInfo[];
+
+    const result = welcomeUtils.getSortedOnboardingExtensions(extensions, providers);
+
+    expect(result[0]?.containerEngine).toBe(false);
+  });
+
+  test('sorts extensions with container engines first', () => {
+    const extensions = [
+      { ...baseExtension, extension: 'no-engine', name: 'no-engine', displayName: 'No Engine' },
+      { ...baseExtension, extension: 'has-engine', name: 'has-engine', displayName: 'Has Engine' },
+    ];
+    const providers = [
+      { extensionId: 'has-engine', containerConnections: [{ name: 'conn' }] },
+    ] as unknown as ProviderInfo[];
+
+    const result = welcomeUtils.getSortedOnboardingExtensions(extensions, providers);
+
+    expect(result[0]?.extension).toBe('has-engine');
+    expect(result[1]?.extension).toBe('no-engine');
+  });
+
+  test('does not mutate the input array', () => {
+    const extensions = [
+      { ...baseExtension, extension: 'b' },
+      { ...baseExtension, extension: 'a' },
+    ];
+    const original = [...extensions];
+
+    welcomeUtils.getSortedOnboardingExtensions(extensions, []);
+
+    expect(extensions).toEqual(original);
+  });
+});
+
+describe('enforceFirstRun', () => {
+  test('returns firstRun true and sets version on first run', async () => {
+    vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.2.3');
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+
+    const result = await welcomeUtils.enforceFirstRun();
+
+    expect(result).toEqual({ version: '1.2.3', firstRun: true });
+    expect(vi.mocked(window.updateConfigurationValue)).toHaveBeenCalledWith(
+      WelcomeSettings.SectionName + '.' + WelcomeSettings.Version,
+      'initial',
+      'DEFAULT',
+    );
+    expect(vi.mocked(window.updateConfigurationValue)).toHaveBeenCalledWith('releaseNotesBanner.show', '1.2.3');
+  });
+
+  test('returns firstRun false when version already set', async () => {
+    vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.2.3');
+    vi.mocked(window.getConfigurationValue).mockResolvedValue('initial');
+
+    const result = await welcomeUtils.enforceFirstRun();
+
+    expect(result).toEqual({ version: '1.2.3', firstRun: false });
+    expect(vi.mocked(window.updateConfigurationValue)).not.toHaveBeenCalled();
+  });
 });

@@ -51,6 +51,7 @@ export interface PodmanContainerInfo {
   Names: string[];
   ImageID: string;
   Image: string;
+  IsInfra: boolean;
   Created: string;
   State: string;
   StartedAt: number;
@@ -83,6 +84,9 @@ interface Host {
   idMappings: IdMappings;
   kernel: string;
   logDriver: string;
+  // This property is being set in Podman 6.1.0+
+  // https://github.com/podman-container-tools/podman/issues/29116
+  memAvailable?: number;
   memFree: number;
   memTotal: number;
   networkBackend: string;

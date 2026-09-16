@@ -84,6 +84,14 @@ export interface ColumnInformation<Type, RenderType = Type> {
    * Defaults to 'false'.
    */
   readonly overflow?: boolean;
+
+  /**
+   * When true, clicks inside this column do not trigger the row onClick handler.
+   * Use for action columns (e.g. delete buttons).
+   *
+   * Defaults to 'false'.
+   */
+  readonly excludeFromRowClick?: boolean;
 }
 
 /**
@@ -114,6 +122,18 @@ export interface RowInformation<Type, ChildType> {
    * Returns an array of child objects of a given row.
    */
   readonly children?: (object: Type) => ChildType[];
+
+  /**
+   * Handler invoked when a clickable row is clicked.
+   * Applies to parent rows only; expanded child rows do not invoke this handler.
+   */
+  readonly onClick?: (object: Type, event: Event) => void;
+
+  /**
+   * Returns true if the row should respond to clicks.
+   * Defaults to true when onClick is set.
+   */
+  readonly clickable?: (object: Type) => boolean;
 }
 
 /**

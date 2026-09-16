@@ -1,7 +1,7 @@
 <script lang="ts">
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
-import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faMinusCircle, faPlusCircle, faUpload } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
@@ -114,7 +114,7 @@ async function loadImages(): Promise<void> {
         on:click={loadImages}
         inProgress={inProgress}
         class="w-full"
-        icon={faPlay}
+        icon={faUpload}
         aria-label="Load images"
         disabled={loadDisabled}>
         Load Images

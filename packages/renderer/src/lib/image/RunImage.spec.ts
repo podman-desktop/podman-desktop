@@ -20,14 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo } from '@podman-desktop/api';
 import type { ImageInspectInfo, SecretInfo } from '@podman-desktop/core-api';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import RunImage from '/@/lib/image/RunImage.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
 import { secretsInfo } from '/@/stores/secrets';
 
@@ -207,7 +209,7 @@ describe('RunImage', () => {
   test('Expect that entrypoint is sent to API', async () => {
     await createRunImage('entrypoint', []);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -220,7 +222,7 @@ describe('RunImage', () => {
   test('Expect that single array entrypoint is sent to API', async () => {
     await createRunImage(['entrypoint'], []);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -233,7 +235,7 @@ describe('RunImage', () => {
   test('Expect that single array entrypoint with space is sent to API', async () => {
     await createRunImage(['entrypoint with space'], []);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -246,7 +248,7 @@ describe('RunImage', () => {
   test('Expect that two elements array entrypoint is sent to API', async () => {
     await createRunImage(['entrypoint1', 'entrypoint2'], []);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -259,7 +261,7 @@ describe('RunImage', () => {
   test('Expect that image without cmd is sent to API', async () => {
     await createRunImage(['entrypoint1', 'entrypoint2']);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -272,7 +274,7 @@ describe('RunImage', () => {
   test('Expect that single array command is sent to API', async () => {
     await createRunImage([], ['command']);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -285,7 +287,7 @@ describe('RunImage', () => {
   test('Expect that single array command with space is sent to API', async () => {
     await createRunImage([], ['command with space']);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -297,7 +299,7 @@ describe('RunImage', () => {
   test('Expect that two elements array command is sent to API', async () => {
     await createRunImage([], ['command1', 'command2']);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -310,7 +312,7 @@ describe('RunImage', () => {
   test('Expect that image without entrypoint is sent to API', async () => {
     await createRunImage(undefined, ['command1', 'command2']);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -344,7 +346,7 @@ describe('RunImage', () => {
     // wait onPortInputTimeout (500ms) triggers
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -359,7 +361,7 @@ describe('RunImage', () => {
 
     await createRunImage('entrypoint', []);
 
-    const link = screen.getByRole('button', { name: 'Start Container' });
+    const link = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(link);
 
@@ -397,7 +399,7 @@ describe('RunImage', () => {
     const openStdinCheckbox = screen.getByRole('checkbox', { name: 'Use interactive' });
     await fireEvent.click(openStdinCheckbox);
 
-    const link = screen.getByRole('button', { name: 'Start Container' });
+    const link = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(link);
 
@@ -445,7 +447,7 @@ describe('RunImage', () => {
 
     // now click on start
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -488,7 +490,7 @@ describe('RunImage', () => {
     expect(error).toBeInTheDocument();
   });
 
-  test('Expect "start container" button to be disabled when port is not free', async () => {
+  test('Expect "Create and start" button to be disabled when port is not free', async () => {
     (window.isFreePort as Mock).mockRejectedValue(new Error('Error Message'));
     router.goto('/basic');
 
@@ -514,7 +516,7 @@ describe('RunImage', () => {
     // wait onPortInputTimeout (500ms) triggers
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
     await tick();
     expect((button as HTMLButtonElement).disabled).toBeTruthy();
   });
@@ -560,7 +562,7 @@ describe('RunImage', () => {
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, '/run/secrets/my-secret');
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
@@ -595,7 +597,7 @@ describe('RunImage', () => {
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, 'FOO_SECRET');
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
@@ -622,7 +624,7 @@ describe('RunImage', () => {
     const removeButton = screen.getByRole('button', { name: 'Remove secret' });
     await fireEvent.click(removeButton);
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
     await fireEvent.click(button);
 
     expect(window.createAndStartContainer).toHaveBeenCalledWith(
@@ -668,7 +670,7 @@ describe('RunImage', () => {
 
     // now click on start
 
-    const button = screen.getByRole('button', { name: 'Start Container' });
+    const button = screen.getByRole('button', { name: 'Create and start' });
 
     await fireEvent.click(button);
 
@@ -692,5 +694,86 @@ describe('RunImage', () => {
         }),
       }),
     );
+  });
+
+  test('Expect "Create" button calls createAndStartContainer with start false', async () => {
+    const gotoSpy = vi.spyOn(router, 'goto');
+
+    await createRunImage('entrypoint', []);
+
+    const button = screen.getByRole('button', { name: 'Create' });
+
+    await fireEvent.click(button);
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({ Entrypoint: ['entrypoint'], start: false }),
+    );
+    expect(gotoSpy).toHaveBeenCalledWith('/containers/1234/summary');
+  });
+
+  test('Expect "Create" button to be disabled when invalidFields is true', async () => {
+    vi.mocked(window.isFreePort).mockRejectedValue(new Error('Error Message'));
+    router.goto('/basic');
+
+    await createRunImage(undefined, ['command1', 'command2']);
+
+    const link1 = screen.getByRole('link', { name: 'Basic' });
+    await fireEvent.click(link1);
+
+    const customMappingButton = screen.getByRole('button', { name: 'Add custom port mapping' });
+    await fireEvent.click(customMappingButton);
+
+    const hostInput = screen.getByLabelText('host port');
+    await userEvent.click(hostInput);
+    await userEvent.clear(hostInput);
+    await userEvent.keyboard('8080');
+
+    const containerInput = screen.getByLabelText('container port');
+    await userEvent.click(containerInput);
+    await userEvent.clear(containerInput);
+    await userEvent.keyboard('80');
+
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    const createButton = screen.getByRole('button', { name: 'Create' });
+    await tick();
+    expect((createButton as HTMLButtonElement).disabled).toBeTruthy();
+  });
+
+  test('Expect Cancel button navigates to images page', async () => {
+    const gotoSpy = vi.spyOn(router, 'goto');
+
+    await createRunImage('', []);
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    await fireEvent.click(cancelButton);
+
+    expect(gotoSpy).toHaveBeenCalledWith('/images/');
+  });
+});
+
+describe('RunImage container name collision', () => {
+  test('Expect an error when the name matches one of an existing container aliases', async () => {
+    // the store holds ContainerInfoUI, whose `name` is compose-stripped and slash-free.
+    // The collision check compares against the raw `/name` form, so it needs `names`.
+    containersInfos.set([
+      {
+        id: 'existing',
+        engineId: 'engineid',
+        name: 'web-1',
+        names: ['/myproject-web-1', '/existing-container'],
+      } as unknown as ContainerInfoUI,
+    ]);
+
+    await createRunImage(undefined, []);
+
+    const nameInput = screen.getByRole('textbox', { name: 'Container Name' });
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'existing-container');
+
+    await waitFor(() => expect(screen.getByText(/The name existing-container already exists/)).toBeInTheDocument());
   });
 });

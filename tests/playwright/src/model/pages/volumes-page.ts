@@ -74,7 +74,7 @@ export class VolumesPage extends MainPage {
       const containerRowDeleteButton = volumeRow.getByRole('button', { name: 'Delete Volume' });
       await playExpect(containerRowDeleteButton).toBeEnabled();
       await containerRowDeleteButton.click();
-      await handleConfirmationDialog(this.page, 'Delete Volume?', true, 'Delete');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Delete Volume?', buttonName: 'Delete' });
 
       return this;
     });
@@ -123,7 +123,7 @@ export class VolumesPage extends MainPage {
     return test.step('Prune Volumes', async () => {
       await playExpect(this.pruneVolumesButton).toBeEnabled();
       await this.pruneVolumesButton.click();
-      await handleConfirmationDialog(this.page, 'Prune Volumes?', true, 'Prune');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Prune Volumes?', buttonName: 'Prune' });
       return this;
     });
   }

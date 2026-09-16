@@ -139,46 +139,48 @@ describe('ExtensionManifestSchema', () => {
     expect(result.data.contributes?.commands).toHaveLength(1);
   });
 
-  test('preserves contributed configuration property names', () => {
-    const result = ExtensionManifestSchema.safeParse({
+  test.each([
+    ['Path to Podman Binary', 'Path to Podman Binary'],
+    ['  Path to Podman Binary  ', 'Path to Podman Binary'],
+    [undefined, undefined],
+  ])('preserves optional configuration displayName %j', (displayName, expected) => {
+    const result = ExtensionManifestSchema.parse({
       ...minimalValidManifest,
       contributes: {
         configuration: {
           title: 'Podman',
           properties: {
-            'podman.binary.path': {
-              name: 'Path to Podman Binary',
-              type: 'string',
-            },
+            'podman.binary.path': { type: 'string', ...(displayName === undefined ? {} : { displayName }) },
           },
         },
       },
     });
 
-    expect(result.success).toBe(true);
-    assert(result.data);
-    expect(result.data.contributes?.configuration?.properties?.['podman.binary.path']?.name).toBe(
-      'Path to Podman Binary',
-    );
+    expect(result.contributes?.configuration?.properties?.['podman.binary.path']).toEqual({
+      type: 'string',
+      ...(expected === undefined ? {} : { displayName: expected }),
+    });
   });
 
-  test.each(['', '   '])('rejects blank contributed configuration property names', name => {
+  test.each(['', '   ', '\t\n', 42, null])('rejects invalid configuration displayName %j', displayName => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
       contributes: {
         configuration: {
           title: 'Podman',
-          properties: {
-            'podman.binary.path': {
-              name,
-              type: 'string',
-            },
-          },
+          properties: { 'podman.binary.path': { type: 'string', displayName } },
         },
       },
     });
 
     expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual([
+      'contributes',
+      'configuration',
+      'properties',
+      'podman.binary.path',
+      'displayName',
+    ]);
   });
 
   test('accepts contributes with menus', () => {

@@ -3,10 +3,10 @@
 import type { ExtensionInfo } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Dropdown } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber, type Writable } from 'svelte/store';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import type { ContextUI } from '/@/lib/context/context';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { isPropertyValidInContext } from '/@/lib/preferences/Util';
@@ -172,11 +172,9 @@ async function onChangeProperty(property: PropertyWithDisplayName, value: unknow
   <div class="container flex flex-row w-full pt-2" role="list" aria-label="{groupItem.name}">
     <!-- column with the group-->
     <div class="h-full bg-[var(--pd-button-primary-bg)] rounded-sm p-1">
-      <IconImage
-        image={groupItem.icon}
-        alt={groupItem.name}
-        class="max-w-6 max-h-6"
-      />
+      {#if groupItem.icon}
+        <Icon icon={groupItem.icon} title={groupItem.name} class="max-w-6 max-h-6" />
+      {/if}
     </div>
 
     <!-- column with the cards-->

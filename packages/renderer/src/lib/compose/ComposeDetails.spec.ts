@@ -264,3 +264,72 @@ test('Test that compose kube tab is clickable and loadable', async () => {
   const kubeHref = screen.getByRole('link', { name: 'Kube' });
   await fireEvent.click(kubeHref);
 });
+
+test('Expect compose status RUNNING when every container of the project runs', async () => {
+  // ContainerUtils.getState uppercases, so comparing the UI state against 'running'
+  // would silently make allRunning false and show the project as STOPPED forever
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:compose1',
+      Image: 'sha256:123',
+      Names: ['/foobar-web-1'],
+      State: 'running',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'sha256:dummy-image-id',
+      Labels: { 'com.docker.compose.project': 'foobar' },
+    },
+    {
+      Id: 'sha256:compose2',
+      Image: 'sha256:123',
+      Names: ['/foobar-db-1'],
+      State: 'running',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'sha256:dummy-image-id',
+      Labels: { 'com.docker.compose.project': 'foobar' },
+    },
+  ] as unknown as ContainerInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  // wait for the store to actually be populated
+  await vi.waitUntil(() => get(containersInfos).length === 2);
+
+  await waitRender('foobar', 'podman');
+
+  expect(screen.getByRole('status', { name: 'RUNNING' })).toBeInTheDocument();
+});
+
+test('Expect compose status STOPPED when one container of the project is stopped', async () => {
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:compose1',
+      Image: 'sha256:123',
+      Names: ['/foobar-web-1'],
+      State: 'running',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'sha256:dummy-image-id',
+      Labels: { 'com.docker.compose.project': 'foobar' },
+    },
+    {
+      Id: 'sha256:compose2',
+      Image: 'sha256:123',
+      Names: ['/foobar-db-1'],
+      State: 'exited',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'sha256:dummy-image-id',
+      Labels: { 'com.docker.compose.project': 'foobar' },
+    },
+  ] as unknown as ContainerInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  await vi.waitUntil(() => get(containersInfos).length === 2);
+
+  await waitRender('foobar', 'podman');
+
+  expect(screen.getByRole('status', { name: 'STOPPED' })).toBeInTheDocument();
+});

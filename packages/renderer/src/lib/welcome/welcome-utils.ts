@@ -16,9 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { OnboardingInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { TelemetrySettings } from '@podman-desktop/core-api/telemetry';
 import { WelcomeSettings } from '@podman-desktop/core-api/welcome';
+
+// Extend OnboardingInfo to have a selected and containerEngine property
+export interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
+  selected?: boolean;
+  containerEngine?: boolean;
+}
 
 export class WelcomeUtils {
   async getVersion(): Promise<string | undefined> {
@@ -58,5 +65,48 @@ export class WelcomeUtils {
       true,
       CONFIGURATION_DEFAULT_SCOPE,
     );
+  }
+
+  /**
+   * Returns onboarding extensions sorted so that extensions with an active
+   * container engine connection appear first. Each entry is enriched with
+   * `selected` (default true) and `containerEngine` flags.
+   *
+   * Using providerInfos as well as the information we have from onboarding,
+   * we will by default auto-select as well as add containerEngine to the list as true/false
+   * so we can make sure that extensions with container engines are listed first.
+   */
+  getSortedOnboardingExtensions(
+    onboardingList: OnboardingInfo[],
+    providerInfos: ProviderInfo[],
+  ): OnboardingInfoWithAdditionalInfo[] {
+    // Get every provider that has container connections
+    const connectedExtensionIds = new Set(
+      providerInfos.filter(p => p.containerConnections.length > 0).map(p => p.extensionId),
+    );
+    return onboardingList
+      .map(o => ({
+        ...o,
+        selected: true,
+        containerEngine: connectedExtensionIds.has(o.extension),
+      }))
+      .toSorted((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
+  }
+
+  /**
+   * Checks if this is the first run. Fetches the current app version,
+   * and if no previous version is stored, marks it as 'initial' and
+   * suppresses the release notes banner.
+   * Returns the app version and whether this is the first run.
+   */
+  async enforceFirstRun(): Promise<{ version: string; firstRun: boolean }> {
+    const version = await window.getPodmanDesktopVersion();
+    const ver = await this.getVersion();
+    if (!ver) {
+      await this.updateVersion('initial');
+      await window.updateConfigurationValue('releaseNotesBanner.show', version);
+      return { version, firstRun: true };
+    }
+    return { version, firstRun: false };
   }
 }

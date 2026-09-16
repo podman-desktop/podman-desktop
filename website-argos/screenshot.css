@@ -31,3 +31,8 @@ video {
 #github-stars-button {
   visibility: hidden;
 }
+
+/* Hide 5M banner */
+#banner-5m {
+  display: none;
+}

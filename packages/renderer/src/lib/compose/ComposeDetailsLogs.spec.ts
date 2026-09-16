@@ -69,6 +69,8 @@ const containerInfoUIMock: ContainerInfoUI = {
   created: 0,
   labels: {},
   imageBase64RepoTag: '',
+  imageId: 'foobar',
+  names: ['/foobar'],
 };
 
 const composeInfoUIMock: ComposeInfoUI = {

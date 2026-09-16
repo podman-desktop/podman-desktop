@@ -93,185 +93,185 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe
-  .serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
-    test.describe
-      .serial('Image Manifest Validation - Simple Containerfile', () => {
-        test('Build the image using cross-arch build (simple)', async ({ navigationBar }) => {
-          test.setTimeout(120_000);
+test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test.describe('Image Manifest Validation - Simple Containerfile', () => {
+    test.describe.configure({ mode: 'serial' });
+    test('Build the image using cross-arch build (simple)', async ({ navigationBar }) => {
+      test.setTimeout(120_000);
 
-          imagesPage = await navigationBar.openImages();
-          await playExpect(imagesPage.heading).toBeVisible();
-          const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
+      imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+      const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
-          const buildImagePage = await imagesPage.openBuildImage();
-          await playExpect(buildImagePage.heading).toBeVisible();
-          const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
-          const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
+      const buildImagePage = await imagesPage.openBuildImage();
+      await playExpect(buildImagePage.heading).toBeVisible();
+      const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
+      const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
-          imagesPage = await buildImagePage.buildImage(
-            manifestLabelSimple,
-            dockerfilePath,
-            contextDirectory,
-            architectures,
-          );
-          await playExpect
-            .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 60_000), { timeout: 0 })
-            .toBeTruthy();
-          await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
-          await imagesPage.toggleImageManifest(manifestLabelSimple);
-          await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
-        });
+      imagesPage = await buildImagePage.buildImage(
+        manifestLabelSimple,
+        dockerfilePath,
+        contextDirectory,
+        architectures,
+      );
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 60_000), { timeout: 0 })
+        .toBeTruthy();
+      await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
+      await imagesPage.toggleImageManifest(manifestLabelSimple);
+      await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
+    });
 
-        test('Check Manifest details', async () => {
-          const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
+    test('Check Manifest details', async () => {
+      const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
 
-          await Promise.all(
-            architectures.map(async architecture => {
-              await playExpect(imageDetailsPage.tabContent).toContainText(architecture);
-            }),
-          );
-          await playExpect(imageDetailsPage.backLink).toBeVisible();
-          await imageDetailsPage.backLink.click();
-        });
+      await Promise.all(
+        architectures.map(async architecture => {
+          await playExpect(imageDetailsPage.tabContent).toContainText(architecture);
+        }),
+      );
+      await playExpect(imageDetailsPage.backLink).toBeVisible();
+      await imageDetailsPage.backLink.click();
+    });
 
-        test('Add registry for manifest push', async ({ navigationBar, page }) => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+    test('Add registry for manifest push', async ({ navigationBar, page }) => {
+      test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
-          await navigationBar.openSettings();
-          const settingsBar = new SettingsBar(page);
-          const registryPage = await settingsBar.openTabPage(RegistriesPage);
-          await playExpect(registryPage.heading).toBeVisible();
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const registryPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registryPage.heading).toBeVisible();
 
-          await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
+      await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
-          const registryBox = await registryPage.getRegistryRowByName('GitHub');
-          const username = registryBox.getByText(registryUsername);
-          await playExpect(username).toBeVisible({ timeout: 10_000 });
-        });
+      const registryBox = await registryPage.getRegistryRowByName('GitHub');
+      const username = registryBox.getByText(registryUsername);
+      await playExpect(username).toBeVisible({ timeout: 10_000 });
+    });
 
-        test('Push manifest to registry', async ({ navigationBar }) => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
-          test.setTimeout(120_000);
+    test('Push manifest to registry', async ({ navigationBar }) => {
+      test.skip(!canTestRegistry(), 'Registry tests are disabled');
+      test.setTimeout(120_000);
 
-          imagesPage = await navigationBar.openImages();
-          await playExpect(imagesPage.heading).toBeVisible();
-          try {
-            await imagesPage.pushManifest(manifestLabelSimple, 60_000);
-          } catch (error: unknown) {
-            // On CI, the push dialog interaction can fail for small images.
-            // Push still completes; next test verifies by pulling from registry.
-            console.log('Push manifest dialog interaction failed:', error);
-          }
-        });
+      imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+      try {
+        await imagesPage.pushManifest(manifestLabelSimple, 60_000);
+      } catch (error: unknown) {
+        // On CI, the push dialog interaction can fail for small images.
+        // Push still completes; next test verifies by pulling from registry.
+        console.log('Push manifest dialog interaction failed:', error);
+      }
+    });
 
-        test('Verify manifest was pushed to registry', async ({ page, navigationBar }) => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
-          test.setTimeout(120_000);
+    test('Verify manifest was pushed to registry', async ({ page, navigationBar }) => {
+      test.skip(!canTestRegistry(), 'Registry tests are disabled');
+      test.setTimeout(120_000);
 
-          await deleteImageManifest(page, manifestLabelSimple);
+      await deleteImageManifest(page, manifestLabelSimple);
 
-          imagesPage = await navigationBar.openImages();
-          await playExpect(imagesPage.heading).toBeVisible();
+      imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
-          const pullImagePage = await imagesPage.openPullImage();
-          imagesPage = await pullImagePage.pullImage(manifestLabelSimple);
-          await playExpect(imagesPage.heading).toBeVisible();
-          await playExpect
-            .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 15_000), { timeout: 0 })
-            .toBeTruthy();
+      const pullImagePage = await imagesPage.openPullImage();
+      imagesPage = await pullImagePage.pullImage(manifestLabelSimple);
+      await playExpect(imagesPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 15_000), { timeout: 0 })
+        .toBeTruthy();
 
-          // Pull resolves the manifest to the host platform — verify via the ARCH column
-          const expectedArch = archType === 'arm64' ? ArchitectureType.ARM64 : ArchitectureType.AMD64;
-          await playExpect.poll(async () => await imagesPage.getImageArch(manifestLabelSimple)).toBe(expectedArch);
-        });
+      // Pull resolves the manifest to the host platform — verify via the ARCH column
+      const expectedArch = archType === 'arm64' ? ArchitectureType.ARM64 : ArchitectureType.AMD64;
+      await playExpect.poll(async () => await imagesPage.getImageArch(manifestLabelSimple)).toBe(expectedArch);
+    });
 
-        test('Remove registry after manifest push', async ({ page, navigationBar }) => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+    test('Remove registry after manifest push', async ({ page, navigationBar }) => {
+      test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
-          await navigationBar.openSettings();
-          const settingsBar = new SettingsBar(page);
-          const registryPage = await settingsBar.openTabPage(RegistriesPage);
-          await playExpect(registryPage.heading).toBeVisible();
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const registryPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registryPage.heading).toBeVisible();
 
-          await registryPage.removeRegistry('GitHub');
-          const registryBox = await registryPage.getRegistryRowByName('GitHub');
-          const username = registryBox.getByText(registryUsername);
-          await playExpect(username).toBeHidden();
-        });
+      await registryPage.removeRegistry('GitHub');
+      const registryBox = await registryPage.getRegistryRowByName('GitHub');
+      const username = registryBox.getByText(registryUsername);
+      await playExpect(username).toBeHidden();
+    });
 
-        test('Delete Manifest', async ({ page }) => {
-          test.setTimeout(120_000);
-          if (canTestRegistry()) {
-            // Verify test pulled the manifest back as a single-platform image,
-            // so it's a regular image now — not a manifest.
-            await deleteImage(page, manifestLabelSimple);
-          } else {
-            await deleteImageManifest(page, manifestLabelSimple);
-          }
-        });
-      });
-    test.describe
-      .serial('Image Manifest Validation - Complex Containerfile', () => {
-        test.skip(
-          () => isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
-          'Complex Containerfile uses RUN steps that require executing foreign-arch binaries, which fails on WSL without QEMU emulation. Simple Containerfile only defines CMD metadata and succeeds.',
-        );
-        test('Build the image using cross-arch build (complex)', async ({ navigationBar }) => {
-          test.setTimeout(180_000);
-
-          imagesPage = await navigationBar.openImages();
-          await playExpect(imagesPage.heading).toBeVisible();
-          const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
-
-          const buildImagePage = await imagesPage.openBuildImage();
-          await playExpect(buildImagePage.heading).toBeVisible();
-
-          const dockerfilePath = path.resolve(
-            __dirname,
-            '..',
-            '..',
-            'resources',
-            'alphine-hello',
-            'alphine-hello.containerfile',
-          );
-          const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
-
-          imagesPage = await buildImagePage.buildImage(
-            manifestLabelComplex,
-            dockerfilePath,
-            contextDirectory,
-            architectures,
-          );
-
-          await playExpect
-            .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 60_000), { timeout: 0 })
-            .toBeTruthy();
-          await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
-          await imagesPage.toggleImageManifest(manifestLabelComplex);
-          await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
-        });
-
-        test('Check Manifest details', async ({ navigationBar }) => {
-          imagesPage = await navigationBar.openImages();
-          await playExpect(imagesPage.heading).toBeVisible();
-
-          const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
-          await Promise.all(
-            architectures.map(async architecture => {
-              await playExpect(imageDetailsPage.tabContent).toContainText(architecture);
-            }),
-          );
-          await playExpect(imageDetailsPage.backLink).toBeVisible();
-          await imageDetailsPage.backLink.click();
-        });
-
-        test('Delete Manifest', async ({ page }) => {
-          test.setTimeout(180_000);
-          await deleteImageManifest(page, manifestLabelComplex);
-        });
-      });
+    test('Delete Manifest', async ({ page }) => {
+      test.setTimeout(120_000);
+      if (canTestRegistry()) {
+        // Verify test pulled the manifest back as a single-platform image,
+        // so it's a regular image now — not a manifest.
+        await deleteImage(page, manifestLabelSimple);
+      } else {
+        await deleteImageManifest(page, manifestLabelSimple);
+      }
+    });
   });
+  test.describe('Image Manifest Validation - Complex Containerfile', () => {
+    test.describe.configure({ mode: 'serial' });
+    test.skip(
+      () => isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
+      'Complex Containerfile uses RUN steps that require executing foreign-arch binaries, which fails on WSL without QEMU emulation. Simple Containerfile only defines CMD metadata and succeeds.',
+    );
+    test('Build the image using cross-arch build (complex)', async ({ navigationBar }) => {
+      test.setTimeout(180_000);
+
+      imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+      const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
+
+      const buildImagePage = await imagesPage.openBuildImage();
+      await playExpect(buildImagePage.heading).toBeVisible();
+
+      const dockerfilePath = path.resolve(
+        __dirname,
+        '..',
+        '..',
+        'resources',
+        'alphine-hello',
+        'alphine-hello.containerfile',
+      );
+      const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
+
+      imagesPage = await buildImagePage.buildImage(
+        manifestLabelComplex,
+        dockerfilePath,
+        contextDirectory,
+        architectures,
+      );
+
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 60_000), { timeout: 0 })
+        .toBeTruthy();
+      await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
+      await imagesPage.toggleImageManifest(manifestLabelComplex);
+      await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
+    });
+
+    test('Check Manifest details', async ({ navigationBar }) => {
+      imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
+      await Promise.all(
+        architectures.map(async architecture => {
+          await playExpect(imageDetailsPage.tabContent).toContainText(architecture);
+        }),
+      );
+      await playExpect(imageDetailsPage.backLink).toBeVisible();
+      await imageDetailsPage.backLink.click();
+    });
+
+    test('Delete Manifest', async ({ page }) => {
+      test.setTimeout(180_000);
+      await deleteImageManifest(page, manifestLabelComplex);
+    });
+  });
+});
 
 async function deleteImageManifest(page: Page, manifestName: string): Promise<void> {
   const navigationBar = new NavigationBar(page);

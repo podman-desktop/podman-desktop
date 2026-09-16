@@ -7,13 +7,16 @@ import Donut from '/@/lib/donut/Donut.svelte';
 import { ContainerUtils } from './container-utils';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let container: ContainerInfoUI;
+interface Props {
+  container: ContainerInfoUI;
+}
+let { container }: Props = $props();
 
 const containerUtils = new ContainerUtils();
 
 // percentage
-let cpuUsagePercentage = -1;
-let memoryUsagePercentage = -1;
+let cpuUsagePercentage = $state(-1);
+let memoryUsagePercentage = $state(-1);
 
 // id to cancel the streaming
 let fetchStatsId: number;
@@ -22,8 +25,8 @@ let fetchStatsId: number;
 let firstIteration = true;
 
 // title to use on
-let cpuUsage: string;
-let memoryUsage: string;
+let cpuUsage: string = $state('');
+let memoryUsage: string = $state('');
 
 export async function updateStatistics(containerStats: ContainerStatsInfo): Promise<void> {
   // we need enough data to compute the CPU usage

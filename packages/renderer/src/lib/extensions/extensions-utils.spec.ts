@@ -380,154 +380,56 @@ describe('filters', () => {
     },
   ] as unknown[] as CombinedExtensionInfoUI[];
 
-  test('filterCatalogExtensions with single word', () => {
+  test.each([
+    { description: 'single word', searchQuery: 'bar' },
+    { description: 'single word and installed', searchQuery: 'bar is:installed' },
+    {
+      description: 'single word and installed and not installed, only first boolean is used',
+      searchQuery: 'bar is:installed not:installed',
+    },
+    { description: 'multiple words found', searchQuery: 'bar word' },
+    { description: 'multiple words found and one category', searchQuery: 'bar word category:category1' },
+    {
+      description: 'multiple words found and multiple categories found',
+      searchQuery: 'bar word category:category1 category:category2',
+    },
+    { description: 'multiple words found and one keyword', searchQuery: 'bar word keyword:keyword1' },
+    {
+      description: 'multiple words found and multiple keywords found',
+      searchQuery: 'bar word keyword:keyword1 keyword:keyword2',
+    },
+  ])('filterCatalogExtensions with $description', ({ searchQuery }) => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
       extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
       ),
-      'bar',
+      searchQuery,
     );
     expect(filteredCatalogExtensions.length).toBe(1);
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with single word and installed', () => {
+  test.each([
+    { description: 'single word and not installed', searchQuery: 'bar not:installed' },
+    { description: 'multiple words and one is not found', searchQuery: 'bar notfound' },
+    {
+      description: 'multiple words found and multiple categories with one not found',
+      searchQuery: 'bar word category:category1 category:category3',
+    },
+    {
+      description: 'multiple words found and multiple keywords with one not found',
+      searchQuery: 'bar word keyword:keyword1 keyword:keyword3',
+    },
+  ])('filterCatalogExtensions with $description', ({ searchQuery }) => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
       extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
       ),
-      'bar is:installed',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with single word and not installed', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar not:installed',
-    );
-    expect(filteredCatalogExtensions.length).toBe(0);
-  });
-
-  test('filterCatalogExtensions with single word and installed and not installed, only first boolean is used', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar is:installed not:installed',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with multiple words found', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with multiple words and one is not found', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar notfound',
-    );
-    expect(filteredCatalogExtensions.length).toBe(0);
-  });
-
-  test('filterCatalogExtensions with multiple words found and one category', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word category:category1',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with multiple words found and multiple categories found', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word category:category1 category:category2',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with multiple words found and multiple categories with one not found ', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word category:category1 category:category3',
-    );
-    expect(filteredCatalogExtensions.length).toBe(0);
-  });
-
-  test('filterCatalogExtensions with multiple words found and one keyword', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word keyword:keyword1',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with multiple words found and multiple keywords found', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word keyword:keyword1 keyword:keyword2',
-    );
-    expect(filteredCatalogExtensions.length).toBe(1);
-    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
-  });
-
-  test('filterCatalogExtensions with multiple words found and multiple keywords with one not found ', () => {
-    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
-        [aFakeExtension, bFakeExtension],
-        featuredExtensions,
-        installedExtensions,
-      ),
-      'bar word keyword:keyword1 keyword:keyword3',
+      searchQuery,
     );
     expect(filteredCatalogExtensions.length).toBe(0);
   });
@@ -560,23 +462,13 @@ describe('filters', () => {
       ],
     };
 
-    test('filterCatalogExtensions with quoted category containing spaces', () => {
+    test.each([
+      { description: 'quoted category containing spaces', searchQuery: 'category:"Extension Packs"' },
+      { description: 'quoted keyword containing spaces', searchQuery: 'keyword:"Vulnerability Scanner"' },
+      { description: 'quoted category and additional search term', searchQuery: 'spaced category:"Extension Packs"' },
+    ])('filterCatalogExtensions with $description', ({ searchQuery }) => {
       const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
-      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'category:"Extension Packs"');
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].id).toBe('idSpacedCategory');
-    });
-
-    test('filterCatalogExtensions with quoted keyword containing spaces', () => {
-      const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
-      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'keyword:"Vulnerability Scanner"');
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].id).toBe('idSpacedCategory');
-    });
-
-    test('filterCatalogExtensions with quoted category and additional search term', () => {
-      const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
-      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'spaced category:"Extension Packs"');
+      const filtered = extensionsUtils.filterCatalogExtensions(extensions, searchQuery);
       expect(filtered.length).toBe(1);
       expect(filtered[0].id).toBe('idSpacedCategory');
     });

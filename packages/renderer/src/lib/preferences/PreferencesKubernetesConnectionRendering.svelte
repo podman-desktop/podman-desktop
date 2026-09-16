@@ -3,12 +3,12 @@ import type { ProviderConnectionInfo, ProviderInfo, ProviderKubernetesConnection
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Tab } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
@@ -25,21 +25,25 @@ import PreferencesKubernetesConnectionDetailsSummary from './PreferencesKubernet
 import type { IConnectionRestart, IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let apiUrlBase64 = '';
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  apiUrlBase64?: string;
+}
+let { properties = [], providerInternalId, apiUrlBase64 = '' }: Props = $props();
 
-const apiURL: string = Buffer.from(apiUrlBase64, 'base64').toString();
+const apiURL = $derived<string>(Buffer.from(apiUrlBase64, 'base64').toString());
 let connectionName = '';
-let connectionStatus: IConnectionStatus;
-let noLog = true;
-let connectionInfo: ProviderKubernetesConnectionInfo | undefined;
-let providerInfo: ProviderInfo | undefined;
-let loggerHandlerKey: symbol | undefined;
-let configurationKeys: IConfigurationPropertyRecordedSchema[];
-$: configurationKeys = properties
-  .filter(property => property.scope === 'KubernetesConnection')
-  .toSorted((a, b) => (a?.id ?? '').localeCompare(b?.id ?? ''));
+let connectionStatus = $state<IConnectionStatus>();
+let noLog = $state<boolean>(true);
+let connectionInfo = $state<ProviderKubernetesConnectionInfo>();
+let providerInfo = $state<ProviderInfo>();
+let loggerHandlerKey = $state<symbol>();
+let configurationKeys = $derived<IConfigurationPropertyRecordedSchema[]>(
+  properties
+    .filter(property => property.scope === 'KubernetesConnection')
+    .toSorted((a, b) => (a?.id ?? '').localeCompare(b?.id ?? '')),
+);
 
 let providersUnsubscribe: Unsubscriber;
 onMount(async () => {
@@ -96,7 +100,12 @@ async function startConnectionProvider(
   connectionInfo: ProviderKubernetesConnectionInfo,
   loggerHandlerKey: symbol,
 ): Promise<void> {
-  await window.startProviderConnectionLifecycle(provider.internalId, connectionInfo, loggerHandlerKey, eventCollect);
+  await window.startProviderConnectionLifecycle(
+    provider.internalId,
+    $state.snapshot(connectionInfo),
+    loggerHandlerKey,
+    eventCollect,
+  );
 }
 
 function updateConnectionStatus(
@@ -156,7 +165,9 @@ function setNoLogs(): void {
       {/if}
     {/snippet}
     {#snippet iconSnippet()}
-      <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
+      {#if providerInfo?.images?.icon}
+        <Icon icon={providerInfo.images.icon} title={providerInfo?.name} class="max-h-10" />
+      {/if}
     {/snippet}
     {#snippet tabsSnippet()}
       {#if connectionInfo}

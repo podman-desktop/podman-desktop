@@ -4,15 +4,23 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 
 import FileInput from '/@/lib/ui/FileInput.svelte';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: string = '';
-export let onChange = async (_id: string, _value: string): Promise<void> => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value?: string;
+  onChange?: (_id: string, _value: string) => Promise<void>;
+}
 
-let invalidEntry = false;
-let dialogOptions: OpenDialogOptions = {
+let {
+  record,
+  value = $bindable(''),
+  onChange = async (_id: string, _value: string): Promise<void> => {},
+}: Props = $props();
+
+let invalidEntry = $state(false);
+let dialogOptions: OpenDialogOptions = $derived({
   title: `Select ${record.description}`,
   selectors: record.format === 'folder' ? ['openDirectory'] : ['openFile'],
-};
+});
 
 function onChangeFileInput(value: string): void {
   if (record.id) {

@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
@@ -46,33 +44,24 @@ describe.each([{ platform: 'linux' }, { platform: 'win32' }])('Platform($platfor
   test('Expect minimize is called', async () => {
     render(ControlButtons, { platform });
 
-    const minimizeMock = vi.fn();
-    (window as any).windowMinimize = minimizeMock;
-
     const minimizeButton = screen.getByRole('button', { name: 'Minimize' });
     await fireEvent.click(minimizeButton);
-    expect(minimizeMock).toBeCalled();
+    expect(vi.mocked(window.windowMinimize)).toBeCalled();
   });
 
   test('Expect maximize is called', async () => {
     render(ControlButtons, { platform });
 
-    const maximizeMock = vi.fn().mockResolvedValue(undefined);
-    (window as any).windowMaximize = maximizeMock;
-
     const maximizeButton = screen.getByRole('button', { name: 'Maximize' });
     await fireEvent.click(maximizeButton);
-    expect(maximizeMock).toBeCalled();
+    expect(vi.mocked(window.windowMaximize)).toBeCalled();
   });
 
   test('Expect close is called', async () => {
     render(ControlButtons, { platform });
 
-    const closeMock = vi.fn().mockResolvedValue(undefined);
-    (window as any).windowClose = closeMock;
-
     const closeButton = screen.getByRole('button', { name: 'Close' });
     await fireEvent.click(closeButton);
-    expect(closeMock).toBeCalled();
+    expect(vi.mocked(window.windowClose)).toBeCalled();
   });
 });

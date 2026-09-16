@@ -40,6 +40,8 @@ export interface PlayKubeInfo {
   Volumes: { Name: string }[];
 }
 
+export type PlayKubeInput = { type: 'path'; value: string } | { type: 'content'; value: string };
+
 export interface ContainerCreateMountOption {
   Name?: string;
   Type: string;

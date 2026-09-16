@@ -62,6 +62,18 @@ describe('generateExtensionManifestJsonSchema', () => {
     expect(extensionSchema['additionalProperties']).not.toBe(false);
   });
 
+  test('generates an optional nonblank configuration displayName', () => {
+    const schema = getExtensionSchema();
+    const path = 'properties.contributes.properties.configuration.properties.properties.additionalProperties';
+
+    expect(schema).toHaveProperty(`${path}.properties.displayName`, {
+      type: 'string',
+      minLength: 1,
+      pattern: '\\S',
+    });
+    expect(schema).not.toHaveProperty(`${path}.required`);
+  });
+
   test('requires mandatory extension fields', () => {
     const extensionSchema = getExtensionSchema();
     const required = extensionSchema['required'] as string[];
@@ -71,23 +83,5 @@ describe('generateExtensionManifestJsonSchema', () => {
     expect(required).toContain('version');
     expect(required).toContain('publisher');
     expect(required).toContain('description');
-  });
-
-  test('requires visible content in contributed configuration property names', () => {
-    const extensionSchema = getExtensionSchema();
-    const extensionProperties = extensionSchema['properties'] as Record<string, Record<string, unknown>>;
-    const contributes = extensionProperties['contributes'] as Record<string, unknown>;
-    const contributesProperties = contributes['properties'] as Record<string, Record<string, unknown>>;
-    const configuration = contributesProperties['configuration'] as Record<string, unknown>;
-    const configurationProperties = configuration['properties'] as Record<string, Record<string, unknown>>;
-    const configurationPropertyMap = configurationProperties['properties'] as Record<string, unknown>;
-    const contributedProperties = configurationPropertyMap['additionalProperties'] as Record<
-      string,
-      Record<string, unknown>
-    >;
-    const propertySchema = contributedProperties['properties'] as Record<string, Record<string, unknown>>;
-
-    expect(propertySchema['name']).toMatchObject({ minLength: 1, pattern: '\\S', type: 'string' });
-    expect((contributedProperties['required'] as string[] | undefined) ?? []).not.toContain('name');
   });
 });

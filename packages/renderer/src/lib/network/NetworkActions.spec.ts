@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import NetworkActions from './NetworkActions.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
@@ -58,6 +58,7 @@ const network2: NetworkInfoUI = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
 });
 
 test('Expect non-podman unused network to have delete option and disabled edit', async () => {
@@ -125,4 +126,42 @@ test('Expect podman used network to have edit option and disabled delete', async
 
   expect(window.updateNetwork).toBeCalledWith('podman2', '123456789123456', ['0.0.0.1', '2.1.1.2'], ['1.1.1.1']);
   expect(screen.queryByText('Update Network Network 2')).not.toBeInTheDocument();
+});
+
+describe('contributions', () => {
+  test('Expect contributed menus to be fetched', async () => {
+    render(NetworkActions, { object: network1 });
+
+    await waitFor(() => {
+      expect(window.getContributedMenus).toHaveBeenCalledWith('dashboard/network');
+    });
+  });
+
+  test('Expect contributed menus to be visible', async () => {
+    vi.mocked(window.getContributedMenus).mockResolvedValue([
+      {
+        command: 'foo',
+        title: 'Open foo',
+      },
+    ]);
+
+    const { getByRole, getByTitle } = render(NetworkActions, { object: network1 });
+
+    const kebabMenu = await waitFor(() => {
+      return getByRole('button', { name: 'kebab menu' });
+    });
+
+    expect(kebabMenu).toBeInTheDocument();
+    await fireEvent.click(kebabMenu);
+
+    const openFoo = await vi.waitFor(() => {
+      return getByTitle('Open foo');
+    });
+    await fireEvent.click(openFoo);
+
+    await vi.waitFor(() => {
+      expect(window.executeCommand).toHaveBeenCalledOnce();
+      expect(window.executeCommand).toHaveBeenCalledWith('foo', network1);
+    });
+  });
 });

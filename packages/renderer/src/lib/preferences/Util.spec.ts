@@ -24,6 +24,7 @@ import { ContextUI } from '/@/lib/context/context';
 
 import {
   calcHalfCpuCores,
+  calcSliderFillPercent,
   getNormalizedDefaultNumberValue,
   isPropertyValidInContext,
   isTargetScope,
@@ -255,5 +256,36 @@ describe('calcHalfCpuCores', () => {
 
   test('should return 1 for negative numbers', () => {
     expect(calcHalfCpuCores('-4')).toBe(1);
+  });
+});
+
+describe('calcSliderFillPercent', () => {
+  test('should default minimum to 0 and maximum to 100 when unset', () => {
+    expect(calcSliderFillPercent(undefined, undefined, 25)).toBe('25.00');
+  });
+
+  test('should accept a numeric maximum', () => {
+    expect(calcSliderFillPercent(0, 200, 50)).toBe('25.00');
+  });
+
+  test('should accept a string maximum', () => {
+    expect(calcSliderFillPercent(0, '200', 50)).toBe('25.00');
+  });
+
+  test('should default current to the midpoint when unset, matching the native input', () => {
+    expect(calcSliderFillPercent(0, 100)).toBe('50.00');
+  });
+
+  test('should clamp current below minimum', () => {
+    expect(calcSliderFillPercent(10, 20, 0)).toBe('0.00');
+  });
+
+  test('should clamp current above maximum', () => {
+    expect(calcSliderFillPercent(10, 20, 100)).toBe('100.00');
+  });
+
+  test('should return 0 when maximum is not greater than minimum', () => {
+    expect(calcSliderFillPercent(10, 10, 10)).toBe('0');
+    expect(calcSliderFillPercent(10, 5, 10)).toBe('0');
   });
 });

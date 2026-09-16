@@ -18,28 +18,55 @@
 
 import type { Attachment } from 'svelte/attachments';
 
-export function longPress(cb: () => void, button = 0, threshold = 500): Attachment {
+export function longPress(cb: () => void, button = 0, threshold = 500, moveCancelPx = 5): Attachment {
   return node => {
     let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
-
-    const handleMouseDown = (event: Event): void => {
-      const mouseEvent = event as MouseEvent;
-      if (mouseEvent.button !== button) return;
-      timeout = setTimeout(cb, threshold);
-    };
+    let startX = 0;
+    let startY = 0;
 
     const handleCancel = (): void => {
       if (!timeout) return;
       clearTimeout(timeout);
       timeout = undefined;
+      window.removeEventListener('pointermove', handlePointerMove);
+    };
+
+    const handlePointerMove = (event: PointerEvent): void => {
+      if (!timeout) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (dx * dx + dy * dy > moveCancelPx * moveCancelPx) {
+        handleCancel();
+      }
+    };
+
+    const handleMouseDown = (event: Event): void => {
+      const mouseEvent = event as MouseEvent;
+      if (mouseEvent.button !== button) return;
+      startX = mouseEvent.clientX;
+      startY = mouseEvent.clientY;
+      handleCancel();
+      timeout = setTimeout(() => {
+        timeout = undefined;
+        window.removeEventListener('pointermove', handlePointerMove);
+        cb();
+      }, threshold);
+      window.addEventListener('pointermove', handlePointerMove);
     };
 
     node.addEventListener('mousedown', handleMouseDown);
     node.addEventListener('mouseup', handleCancel);
+    node.addEventListener('mouseleave', handleCancel);
+    node.addEventListener('pointerleave', handleCancel);
+    node.addEventListener('pointercancel', handleCancel);
 
     return () => {
+      handleCancel();
       node.removeEventListener('mousedown', handleMouseDown);
       node.removeEventListener('mouseup', handleCancel);
+      node.removeEventListener('mouseleave', handleCancel);
+      node.removeEventListener('pointerleave', handleCancel);
+      node.removeEventListener('pointercancel', handleCancel);
     };
   };
 }

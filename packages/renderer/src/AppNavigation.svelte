@@ -121,6 +121,9 @@ function onResizeHandlePointerDown(e: PointerEvent): void {
   isDragging = true;
   resizeStartX = e.clientX;
   resizeStartWidth = navWidth;
+  if (e.currentTarget instanceof HTMLElement) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
   window.addEventListener('pointermove', onResizeMove);
   window.addEventListener('pointerup', onResizeUp);
 }
@@ -291,7 +294,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
 
   <!-- Resize handle -->
   <div
-    class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-50 hover:bg-[var(--pd-global-nav-icon-selected-highlight)] transition-colors duration-150"
+    class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-40 hover:bg-[var(--pd-global-nav-icon-selected-highlight)] transition-colors duration-150"
     class:bg-[var(--pd-global-nav-icon-selected-highlight)]={isDragging}
     role="separator"
     aria-orientation="vertical"

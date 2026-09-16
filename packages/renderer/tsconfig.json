@@ -28,6 +28,7 @@
     "src/**/*.svelte",
     "types/**/*.d.ts",
     "../../types/**/*.d.ts",
-    "../preload/exposedInMainWorld.d.ts"
+    "../preload/exposedInMainWorld.d.ts",
+    "vite.tests.setup.ts"
   ]
 }

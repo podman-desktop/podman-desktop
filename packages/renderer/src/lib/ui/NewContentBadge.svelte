@@ -3,15 +3,17 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-export let pagePath: string;
-export let show: boolean = false;
-export let onHide: () => void = () => {};
+interface Props {
+  pagePath: string;
+  show?: boolean;
+  onHide?: () => void;
+}
+let { pagePath, show = false, onHide = (): void => {} }: Props = $props();
 
-let isInPage = $router.path === pagePath;
-let hasNew: boolean;
-$: hasNew = !isInPage && show;
+let isInPage = $derived($router.path === pagePath);
+let hasNew = $derived(!isInPage && show);
 
-let routerUnsubscribe: Unsubscriber;
+let routerUnsubscribe: Unsubscriber | undefined;
 
 onMount(() => {
   // listen to router change, so we can reset the changes and update the dot visibility

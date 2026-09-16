@@ -1,54 +1,10 @@
-<!-- The markdown rendered has it's own style that you'll have to customize / check against podman desktop
-UI guidelines -->
-<style lang="postcss">
-.markdown > :global(p) {
-  line-height: normal;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-}
-
-.markdown > :global(h1),
-:global(h2),
-:global(h3),
-:global(h4),
-:global(h5) {
-  font-size: revert;
-  line-height: normal;
-  font-weight: revert;
-  border-bottom: 1px solid var(--pd-content-divider);
-  margin-bottom: 20px;
-}
-
-.markdown > :global(ul) {
-  line-height: normal;
-  list-style: revert;
-  margin: revert;
-  padding: revert;
-}
-
-.markdown > :global(b),
-:global(strong) {
-  font-weight: 600;
-}
-.markdown > :global(blockquote) {
-  opacity: 0.8;
-  line-height: normal;
-}
-.markdown :global(a) {
-  color: var(--pd-link);
-  text-decoration: none;
-  border-radius: 4px;
-}
-.markdown :global(a):hover {
-  background-color: var(--pd-link-hover-bg);
-}
-</style>
-
 <script lang="ts">
 import DOMPurify from 'dompurify';
 import { micromark } from 'micromark';
 import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
+
+import { isDark } from '/@/stores/appearance';
 
 import { button } from './micromark-button-directive';
 import { image } from './micromark-image-directive';
@@ -154,7 +110,7 @@ onDestroy(() => {
 });
 </script>
 
-<section class="markdown" aria-label="markdown-content">
+<section class="prose max-w-none prose-sm pb-6" class:prose-invert={$isDark}  aria-label="markdown-content">
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   {@html html}
 </section>

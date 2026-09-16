@@ -1,7 +1,11 @@
 <script lang="ts">
 import logoImage from './logo.png';
 
-export let size = '104';
+interface Props {
+  size?: string;
+}
+
+let { size = '104' }: Props = $props();
 </script>
 
 <svg

@@ -49,7 +49,7 @@ $effect(() => {
 });
 
 let invalidName = $derived.by(() => {
-  if (!volumeName || !selectedEngineId) return false;
+  if (!volumeName || !selectedEngineId || createVolumeFinished) return false;
   return $volumeListInfos
     .filter(vli => vli.engineId === selectedEngineId)
     .flatMap(vli => vli.Volumes)

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,5 +83,23 @@ test('terminal used should have search enabled', async () => {
 
   await vi.waitFor(() => {
     expect(SearchAddon).toHaveBeenCalled();
+  });
+});
+
+test('should refresh logs when pod status changes', async () => {
+  const { rerender } = render(PodDetailsLogs, {
+    pod: PODMAN_POD,
+  });
+
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalledTimes(1);
+  });
+
+  await rerender({
+    pod: { ...PODMAN_POD, status: 'Stopped' },
+  });
+
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalledTimes(2);
   });
 });

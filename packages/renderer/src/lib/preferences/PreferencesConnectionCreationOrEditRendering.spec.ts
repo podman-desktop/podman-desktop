@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 
@@ -67,15 +66,7 @@ const connectionInfo = {
 const propertyScope = 'ContainerProviderConnectionFactory';
 
 beforeAll(() => {
-  (window as any).getConfigurationValue = vi.fn();
-  (window as any).updateConfigurationValue = vi.fn();
-  (window as any).getOsMemory = vi.fn();
-  (window as any).getOsCpu = vi.fn();
-  (window as any).getOsFreeDiskSize = vi.fn();
-  (window as any).getCancellableTokenSource = vi.fn();
-  (window as any).auditConnectionParameters = vi.fn();
-  (window as any).telemetryTrack = vi.fn();
-  (window as any).openDialog = vi.fn();
+  vi.resetAllMocks();
 });
 
 function mockCallback(
@@ -248,7 +239,7 @@ describe.each([
       // keep reference
       providedKeyLogger = keyLogger;
     });
-    (window as any).getCancellableTokenSource.mockReturnValue(Date.now());
+    vi.mocked(window.getCancellableTokenSource).mockResolvedValue(Date.now());
     render(PreferencesConnectionCreationOrEditRendering, {
       properties,
       providerInfo,
@@ -286,8 +277,7 @@ describe.each([
     expect(callback).toHaveBeenCalled();
     expect(providedKeyLogger).toBeDefined();
 
-    const cancelTokenMock = vi.fn().mockImplementation(() => {});
-    (window as any).cancelToken = cancelTokenMock;
+    const cancelTokenMock = vi.mocked(window.cancelToken).mockImplementation(async () => {});
     await fireEvent.click(cancelButton);
 
     // simulate end of the create operation
@@ -348,12 +338,12 @@ describe.each([
 
   test(`Expect ${label} button to be disabled if itemsAudit returns errors or enabled otherwise`, async () => {
     const callback = vi.fn();
-    let auditSpy = vi.spyOn(window as any, 'auditConnectionParameters');
+    let auditSpy = vi.spyOn(window, 'auditConnectionParameters');
     if (!connectionInfo) {
-      auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockReturnValueOnce({ records: [] });
+      auditSpy = vi.spyOn(window, 'auditConnectionParameters').mockResolvedValueOnce({ records: [] });
     }
     auditSpy
-      .mockReturnValueOnce({
+      .mockResolvedValueOnce({
         records: [
           {
             type: 'error',
@@ -361,7 +351,7 @@ describe.each([
           },
         ],
       })
-      .mockReturnValueOnce({
+      .mockResolvedValueOnce({
         records: [
           {
             type: 'info',
@@ -392,21 +382,21 @@ describe.each([
     const inputElement = screen.queryByRole('textbox', { name: 'test.factoryProperty' });
     expect(inputElement).toBeDefined();
     await fireEvent.input(inputElement!, { target: { value: '1' } });
-    await vi.waitFor(() => expect(vi.mocked(window as any).auditConnectionParameters).toBeCalled());
+    await vi.waitFor(() => expect(vi.mocked(window.auditConnectionParameters)).toBeCalled());
     const createButton = screen.getByRole('button', { name: `${label}` });
     expect(createButton).toBeInTheDocument();
     await vi.waitFor(() => expect(createButton).toBeDisabled());
 
     await fireEvent.input(inputElement as Element, { target: { value: '2' } });
-    await vi.waitFor(() => expect(vi.mocked(window as any).auditConnectionParameters).toBeCalledTimes(2));
+    await vi.waitFor(() => expect(vi.mocked(window.auditConnectionParameters)).toBeCalledTimes(2));
     await vi.waitFor(() => expect(createButton).toBeEnabled());
   });
 });
 
 test(`Check itemsAudit receive updated values`, async () => {
   const callback = mockCallback(async () => {});
-  const auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockResolvedValue({ records: [] });
-  vi.spyOn(window as any, 'openDialog').mockResolvedValue(['somefile']);
+  const auditSpy = vi.spyOn(window, 'auditConnectionParameters').mockResolvedValue({ records: [] });
+  vi.spyOn(window, 'openDialog').mockResolvedValue(['somefile']);
   // eslint-disable-next-line @typescript-eslint/await-thenable
   render(PreferencesConnectionCreationOrEditRendering, {
     properties: [
@@ -595,7 +585,7 @@ test(`Expect create with unchecked and checked checkboxes having multiple scopes
   ];
 
   // mock getConfigurationValue to return true if property is 'test.checked'
-  (window as any).getConfigurationValue = vi.fn().mockImplementation((property: string) => {
+  vi.mocked(window.getConfigurationValue).mockImplementation(async (property: string) => {
     return property === 'test.checked';
   });
 

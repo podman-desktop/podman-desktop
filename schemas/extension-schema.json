@@ -131,7 +131,7 @@
                       "id": {
                         "type": "string"
                       },
-                      "name": {
+                      "displayName": {
                         "type": "string",
                         "minLength": 1,
                         "pattern": "\\S"
@@ -168,14 +168,7 @@
                         "type": "number"
                       },
                       "maximum": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
+                        "type": ["number", "string"]
                       },
                       "format": {
                         "type": "string"

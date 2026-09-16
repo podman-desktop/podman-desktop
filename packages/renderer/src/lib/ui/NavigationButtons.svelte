@@ -1,13 +1,11 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faArrowLeft, faArrowRight, faBackward, faForward } from '@fortawesome/free-solid-svg-icons';
-import { Dropdown } from '@podman-desktop/ui-svelte';
+import { Dropdown, type IconType } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Component } from 'svelte';
 import { onMount } from 'svelte';
-import { get } from 'svelte/store';
 
-import { isDark } from '/@/stores/appearance';
 import {
   BACK,
   type Direction,
@@ -63,24 +61,18 @@ const navButtons: NavButton[] = [
 ];
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
 
-function resolveIcon(
-  icon: HistoryEntryIcon | undefined,
-  fallback: IconDefinition,
-): IconDefinition | Component | string {
+function resolveIcon(icon: HistoryEntryIcon | undefined, fallback: IconDefinition): IconType {
   if (!icon) return fallback;
   if (icon.iconComponent) return icon.iconComponent;
   if (icon.faIcon) return icon.faIcon.definition;
-  if (icon.iconImage) {
-    if (typeof icon.iconImage === 'string') return icon.iconImage;
-    return get(isDark) ? icon.iconImage.dark : icon.iconImage.light;
-  }
+  if (icon.iconImage) return icon.iconImage;
   return fallback;
 }
 
 function entriesToOptions(
   entries: HistoryEntry[],
   fallback: IconDefinition,
-): { value: string; label: string; icon: IconDefinition | Component | string }[] {
+): { value: string; label: string; icon: IconType }[] {
   return entries.map(entry => ({
     value: String(entry.index),
     label: entry.name,

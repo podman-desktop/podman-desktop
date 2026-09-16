@@ -5,9 +5,13 @@ import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let compose: ComposeInfoUI;
+interface Props {
+  compose: ComposeInfoUI;
+}
 
-let kubeDetails: string;
+let { compose }: Props = $props();
+
+let kubeDetails: string = $state('');
 
 onMount(async () => {
   // Grab all the container ID's from compose.containers

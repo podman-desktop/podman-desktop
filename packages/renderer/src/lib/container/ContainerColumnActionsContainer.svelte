@@ -4,7 +4,11 @@ import { ErrorMessage } from '@podman-desktop/ui-svelte';
 import ContainerActions from './ContainerActions.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let object: ContainerInfoUI;
+interface Props {
+  object: ContainerInfoUI;
+}
+
+let { object }: Props = $props();
 </script>
 
 {#if object.actionError}

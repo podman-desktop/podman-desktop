@@ -6,7 +6,11 @@ import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
 // Assuming V1Route type is imported or defined elsewhere
-export let artifact: V1Route | undefined;
+interface Props {
+  artifact?: V1Route;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}

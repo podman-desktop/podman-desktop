@@ -190,3 +190,31 @@ test('Expanded threshold controls text visibility', async () => {
   callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 135 } });
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 });
+
+test('resize handle captures pointer and persists width on drag end', async () => {
+  const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+
+  // Use a non-default width so waiting for it proves onMount finished (avoids mid-drag overwrite)
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(150);
+
+  await fetchNavigationRegistries();
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const handle = screen.getByRole('separator', { name: 'Resize navigation bar' });
+  const setPointerCapture = vi.fn();
+  handle.setPointerCapture = setPointerCapture;
+  await vi.waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '150'));
+
+  handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 150, pointerId: 1 }));
+  expect(setPointerCapture).toHaveBeenCalledWith(1);
+
+  window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 180, pointerId: 1 }));
+  await vi.waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '180'));
+
+  window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+  await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});

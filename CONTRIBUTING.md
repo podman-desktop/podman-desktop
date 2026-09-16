@@ -72,7 +72,7 @@ You can develop on either: `Windows`, `macOS` or `Linux`.
 Requirements:
 
 - [Node.js 24+](https://nodejs.org/en/)
-- [pnpm v10.x](https://pnpm.io/installation) (`corepack enable pnpm`)
+- [pnpm](https://pnpm.io/installation), using the version pinned in `package.json` (`corepack enable pnpm`)
 
 Optional Linux requirements:
 
@@ -261,6 +261,40 @@ This will create a binary according to your local system and output it to the `d
 > # Sign the binary
 > codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app"
 > ```
+
+### Step 9. Testing the Flatpak (Linux)
+
+On Linux, `pnpm compile:current` produces a `.flatpak` bundle in the `dist/` folder. When the Flatpak sandbox **permissions** have changed (for example, new `finish-args` entries in the [Flathub manifest](https://github.com/flathub/io.podman_desktop.PodmanDesktop/blob/master/io.podman_desktop.PodmanDesktop.yml)), installing a bundle over an existing Flathub installation can silently keep the old cached permissions, leading to unexpected failures.
+
+Before testing a locally built or release `.flatpak`:
+
+1. Uninstall any existing installation so the old permission profile is removed:
+
+   ```sh
+   flatpak uninstall --user io.podman_desktop.PodmanDesktop
+   ```
+
+   If Podman Desktop was installed system-wide, omit `--user`.
+
+2. (Optional) Remove cached application data if you need a completely clean state:
+
+   ```sh
+   rm -rf ~/.var/app/io.podman_desktop.PodmanDesktop
+   ```
+
+3. Install the bundle (replace `<version>` with the version shown in the filename):
+
+   ```sh
+   flatpak install --user dist/podman-desktop-<version>.flatpak
+   ```
+
+4. Verify the active permissions match the expected manifest:
+
+   ```sh
+   flatpak info --user --show-permissions io.podman_desktop.PodmanDesktop
+   ```
+
+For full instructions — including how to build from the Flathub manifest to test permission changes before a release — see the [Testing a Flatpak from a release](https://podman-desktop.io/docs/troubleshooting/troubleshooting-flatpak) guide.
 
 ## Submitting Pull Requests
 

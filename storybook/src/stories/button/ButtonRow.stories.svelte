@@ -1,0 +1,63 @@
+<script context="module" lang="ts">
+import { Button, ButtonRow } from '@podman-desktop/ui-svelte';
+import { defineMeta } from '@storybook/addon-svelte-csf';
+import type { ComponentProps } from 'svelte';
+
+type ButtonRowStoryArgs = ComponentProps<typeof ButtonRow> & {
+  dir?: 'ltr' | 'rtl';
+};
+
+const { Story } = defineMeta({
+  component: ButtonRow,
+  render: template,
+  title: 'Button/ButtonRow',
+  tags: ['autodocs'],
+  argTypes: {
+    initialFocus: {
+      control: 'select',
+      defaultValue: 'none',
+      options: ['none', 'first', 'last'],
+      description: 'The enabled action that receives focus when the row mounts.',
+    },
+  },
+});
+</script>
+
+{#snippet template({ initialFocus = 'none', dir = 'ltr' }: ButtonRowStoryArgs)}
+  <div class="bg-(--pd-content-card-bg) p-4" {dir}>
+    <ButtonRow {initialFocus}>
+      <Button type="secondary">Cancel</Button>
+      <Button type="primary">Save</Button>
+    </ButtonRow>
+  </div>
+{/snippet}
+
+<Story name="One Button" args={{ initialFocus: 'none' }}>
+  {#snippet template()}
+    <div class="bg-(--pd-content-card-bg) p-4">
+      <ButtonRow>
+        <Button type="primary">Save</Button>
+      </ButtonRow>
+    </div>
+  {/snippet}
+</Story>
+
+<Story name="Two Buttons" args={{ initialFocus: 'none' }} />
+
+<Story name="Three Buttons" args={{ initialFocus: 'none' }}>
+  {#snippet template()}
+    <div class="bg-(--pd-content-card-bg) p-4">
+      <ButtonRow>
+        <Button type="link">Back</Button>
+        <Button type="secondary">Cancel</Button>
+        <Button type="primary">Save</Button>
+      </ButtonRow>
+    </div>
+  {/snippet}
+</Story>
+
+<Story name="RTL" args={{ initialFocus: 'none', dir: 'rtl' }} />
+<Story name="Initial Focus Primary" args={{ initialFocus: 'last' }} />
+<Story name="Initial Focus Cancel" args={{ initialFocus: 'first' }} />
+
+<!-- Use the Themes toolbar to verify light, dark, hc-light, and hc-dark variants. -->

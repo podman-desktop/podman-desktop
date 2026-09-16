@@ -9,7 +9,11 @@ import { handleNavigation } from '/@/navigation';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let compose: ComposeInfoUI;
+interface Props {
+  compose: ComposeInfoUI;
+}
+
+let { compose }: Props = $props();
 
 function openContainer(containerID: string): void {
   handleNavigation({
@@ -48,7 +52,7 @@ function openContainer(containerID: string): void {
     {#each compose.containers as container (container.id)}
       <tr>
         <DetailsCell>
-          <Link on:click={(): void => openContainer(container.id)}>{container.name}</Link>
+          <Link onclick={openContainer.bind(undefined, container.id)}>{container.name}</Link>
         </DetailsCell>
         <DetailsCell>{container.id}</DetailsCell>
       </tr>

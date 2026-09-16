@@ -25,7 +25,9 @@ import userEvent from '@testing-library/user-event';
 import { readable, writable } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
+import { containersInfos } from '/@/stores/containers';
 import * as kubernetesPermissions from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
@@ -430,6 +432,46 @@ describe('with current context', () => {
         expect.objectContaining({
           activeCount: 0,
           count: 2,
+          kind: 'Node',
+          type: 'Nodes',
+        }),
+      );
+    });
+
+    test('active node count reads the uppercased UI state and the raw container names', async () => {
+      // regression guard: the containers store holds ContainerInfoUI, whose `state` is
+      // uppercased and whose aliases live on `names`. Comparing against 'running', or
+      // reaching for `name`, makes this count silently zero with no type error.
+      vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = readable<KubernetesObject[]>([
+        { metadata: { name: 'node-1' } },
+        { metadata: { name: 'node-2' } },
+      ]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextRoutes = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextJobs = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextConfigMaps = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextSecrets = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextPersistentVolumeClaims = readable<KubernetesObject[]>([]);
+      vi.mocked(kubeContextStore).kubernetesCurrentContextState = readable<ContextGeneralState>(
+        {} as ContextGeneralState,
+      );
+
+      containersInfos.set([
+        { id: 'c1', name: 'node-1', names: ['/node-1'], state: 'RUNNING' } as unknown as ContainerInfoUI,
+        { id: 'c2', name: 'node-2', names: ['/node-2'], state: 'EXITED' } as unknown as ContainerInfoUI,
+      ]);
+
+      render(KubernetesDashboard);
+
+      expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          count: 2,
+          activeCount: 1,
           kind: 'Node',
           type: 'Nodes',
         }),

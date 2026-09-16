@@ -1,0 +1,130 @@
+/**********************************************************************
+ * Copyright (C) 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import 'vitest-canvas-mock';
+
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import typescript from 'typescript';
+import { expect, vi } from 'vitest';
+
+import { EventStore, type EventStoreInfo } from './src/stores/event-store';
+
+/**
+ * Mock matchMedia
+ * @param query {string} the media query to match
+ * @returns {MediaQueryList} the media query list
+ */
+global.window.matchMedia = query => ({
+  matches: false,
+  media: query,
+  onchange: vi.fn(),
+  addListener: vi.fn(),
+  removeListener: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+});
+
+// Mock window.events (ApiSenderType) once globally instead of in every spec file.
+// Tests needing custom behavior can call vi.mocked(window.events.receive).mockImplementation(...)
+// or redefine window.events entirely if they need to intercept `send` as well.
+Object.defineProperty(window, 'events', {
+  value: {
+    send: vi.fn(),
+    receive: vi.fn(),
+  },
+  configurable: true,
+  writable: true,
+});
+
+// read the given path and extract the method names from the Window interface
+function extractWindowMethods(filePath: string): string[] {
+  // Read the content of the .d.ts file
+  const fileContent = readFileSync(filePath, 'utf-8');
+
+  // Create a TypeScript SourceFile
+  const sourceFile: typescript.SourceFile = typescript.createSourceFile(
+    filePath,
+    fileContent,
+    typescript.ScriptTarget.Latest,
+    true,
+  );
+
+  const methodNames: string[] = [];
+
+  // Visit each node in the AST
+  const visit = (node: typescript.Node): void => {
+    // Look for the Window interface
+    if (
+      typescript.isInterfaceDeclaration(node) &&
+      node.name.text === 'Window' // Target the "Window" interface
+    ) {
+      for (const member of node.members) {
+        if (typescript.isPropertySignature(member) && member.type && typescript.isFunctionTypeNode(member.type)) {
+          const name = member.name.getText();
+          methodNames.push(name);
+        }
+      }
+    }
+
+    typescript.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+
+  return methodNames;
+}
+
+// methods being exposed
+const declarationsPath = path.resolve(__dirname, '../preload/exposedInMainWorld.d.ts');
+
+// Extract method names from the Window interface
+const methodNames = extractWindowMethods(declarationsPath);
+
+// assert that we have more than 50 methods
+expect(methodNames.length).toBeGreaterThan(50);
+
+// Dynamically create vi mocks for all the given methods
+for (const methodName of methodNames) {
+  Object.defineProperty(window, methodName, {
+    value: vi.fn(),
+    configurable: true,
+    writable: true,
+  });
+}
+
+// Mock ResizeObserver for @floating-ui/dom
+class ResizeObserverMock {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+global.ResizeObserver = ResizeObserverMock;
+global.window.ResizeObserver = ResizeObserverMock;
+
+// Override the prototype of setupWithDebounce to ensure default values are 10ms
+const originalSetupWithDebounce = EventStore.prototype.setupWithDebounce;
+EventStore.prototype.setupWithDebounce = function (
+  debounceTimeoutDelay = 10,
+  debounceThrottleTimeoutDelay = 10,
+): EventStoreInfo {
+  return originalSetupWithDebounce.call(this, debounceTimeoutDelay, debounceThrottleTimeoutDelay);
+};

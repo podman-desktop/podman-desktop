@@ -250,11 +250,11 @@ test('Expect to see local extensions tab content', async () => {
   render(ExtensionList);
 
   await vi.waitFor(() => {
-    expect(screen.getByRole('button', { name: 'Local Extensions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Local extensions' })).toBeInTheDocument();
   });
 
   // select the local extensions tab
-  const localModeTab = screen.getByRole('button', { name: 'Local Extensions' });
+  const localModeTab = screen.getByRole('button', { name: 'Local extensions' });
   await fireEvent.click(localModeTab);
 
   // expect to see empty screen
@@ -312,7 +312,7 @@ test('Expect local extensions tab is visible', async () => {
   render(ExtensionList);
 
   await vi.waitFor(() => {
-    expect(screen.getByRole('button', { name: 'Local Extensions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Local extensions' })).toBeInTheDocument();
   });
 });
 
@@ -327,7 +327,7 @@ test('Expect local extensions tab to not be visible if extensions.localExtension
     expect(window.getConfigurationValue).toHaveBeenCalled();
   });
 
-  const localExtensionsTab = screen.queryByRole('button', { name: 'Local Extensions' });
+  const localExtensionsTab = screen.queryByRole('button', { name: 'Local extensions' });
   expect(localExtensionsTab).not.toBeInTheDocument();
 });
 

@@ -7,28 +7,30 @@ import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import { ansi256Colours, colourizedANSIContainerName } from '/@/lib/editor/editor-utils';
-import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let compose: ComposeInfoUI;
+interface Props {
+  compose: ComposeInfoUI;
+}
 
-let refCompose: ComposeInfoUI;
+let { compose }: Props = $props();
+
+let refCompose: ComposeInfoUI | undefined;
 
 // Log initialization
-let noLogs = true;
-let logsTerminal: Terminal;
+let noLogs = $state(true);
+let logsTerminal: Terminal | undefined = $state(undefined);
 
-$: {
+$effect(() => {
   if (refCompose && refCompose.status !== compose.status) {
     logsTerminal?.clear();
     fetchComposeLogs().catch((err: unknown) => console.error('Error fetching compose logs', err));
   }
-  // eslint-disable-next-line no-useless-assignment
   refCompose = compose;
-}
+});
 
 // Create a map that will store the ANSI 256 colour for each container name
 // if we run out of colours, we'll start from the beginning.
@@ -68,14 +70,7 @@ async function fetchComposeLogs(): Promise<void> {
       const padding = ' '.repeat(maxNameLength - container.name.length);
       const colouredName = colourizedContainerName.get(container.name);
 
-      let content;
-      if (isMultiplexedLog(data)) {
-        content = data.substring(8);
-      } else {
-        content = data;
-      }
-
-      callback(name, `${colouredName} ${padding} | ${content}`);
+      callback(name, `${colouredName} ${padding} | ${data}`);
     };
 
     // Wrap the logsContainer function in a Promise

@@ -1,93 +1,58 @@
 <script lang="ts">
-import type { OnboardingInfo, TelemetryMessages, WelcomeMessages } from '@podman-desktop/core-api';
-import { Button, Checkbox, Link, Tooltip } from '@podman-desktop/ui-svelte';
+import type { WelcomeMessages } from '@podman-desktop/core-api';
+import { Button } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import { router } from 'tinro';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
+import OnboardingWelcomeTelemetry from '/@/lib/onboarding/OnboardingWelcomeTelemetry.svelte';
+import OnboardingExtensionCard from '/@/lib/onboarding/wizard/OnboardingExtensionCard.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 
 import bgImage from './background.png';
+import type { OnboardingInfoWithAdditionalInfo } from './welcome-utils';
 import { WelcomeUtils } from './welcome-utils';
 
-export let showWelcome = false;
-export let showTelemetry = false;
-
-let telemetry = true;
-let telemetryMessages: TelemetryMessages;
-
-const welcomeUtils = new WelcomeUtils();
-let podmanDesktopVersion: string;
-
-// Extend ProviderInfo to have a selected property
-interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
-  selected?: boolean;
-  containerEngine?: boolean;
+interface Props {
+  showWelcome?: boolean;
 }
 
-let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
-let welcomeMessages: WelcomeMessages;
+let { showWelcome = false }: Props = $props();
 
-// Get every provider that has a container connections
-$: providersWithContainerConnections = $providerInfos.filter(provider => provider.containerConnections.length > 0);
+const welcomeUtils = new WelcomeUtils();
+let podmanDesktopVersion = $state<string>();
 
-// Using providerInfos as well as the information we have from onboarding,
-// we will by default auto-select as well as add containerEngine to the list as true/false
-// so we can make sure that extensions with container engines are listed first
-$: onboardingProviders = $onboardingList
-  .map(provider => {
-    // Check if it's in the list, if it is, then it has a container engine
-    const hasContainerConnection = providersWithContainerConnections.some(
-      connectionProvider => connectionProvider.extensionId === provider.extension,
-    );
-    return {
-      ...provider,
-      selected: true,
-      containerEngine: hasContainerConnection,
-    };
-  })
-  .toSorted((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
+let welcomeMessages = $state<WelcomeMessages>();
+
+// User selection is kept outside of the derived value below: the derived is recomputed on every
+// onboardingList/providerInfos emission (a provider status change or an extension starting is
+// enough), which would otherwise discard whatever the user checked or unchecked
+const selectionOverrides = new SvelteMap<string, boolean>();
+
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = $derived(
+  welcomeUtils
+    .getSortedOnboardingExtensions($onboardingList, $providerInfos)
+    .map(provider => ({ ...provider, selected: selectionOverrides.get(provider.name) ?? provider.selected })),
+);
 
 onMount(async () => {
-  const ver = await welcomeUtils.getVersion();
-  if (!ver) {
-    await welcomeUtils.updateVersion('initial');
-    showWelcome = true;
-  }
+  const result = await welcomeUtils.enforceFirstRun();
+  podmanDesktopVersion = result.version;
+  showWelcome = result.firstRun;
   router.goto('/');
   welcomeMessages = await window.getWelcomeMessages();
-
-  const telemetryPrompt = await welcomeUtils.havePromptedForTelemetry();
-  if (!telemetryPrompt) {
-    telemetryMessages = await window.getTelemetryMessages();
-    showTelemetry = true;
-  }
-  podmanDesktopVersion = await window.getPodmanDesktopVersion();
-
-  if (showWelcome) {
-    await window.updateConfigurationValue(`releaseNotesBanner.show`, podmanDesktopVersion);
-  }
 });
 
 async function closeWelcome(): Promise<void> {
   showWelcome = false;
-  if (showTelemetry) {
-    await welcomeUtils.setTelemetry(telemetry);
-  }
 }
 
 // Function to toggle provider selection
 function toggleOnboardingSelection(providerName: string): void {
-  // Go through providers, find the provider name and toggle the selected value
-  // then update providers
-  onboardingProviders = onboardingProviders.map(provider => {
-    if (provider.name === providerName) {
-      provider.selected = !provider.selected;
-    }
-    return provider;
-  });
+  const current = onboardingProviders.find(provider => provider.name === providerName)?.selected ?? true;
+  selectionOverrides.set(providerName, !current);
 }
 
 function startOnboardingQueue(): void {
@@ -121,29 +86,12 @@ function startOnboardingQueue(): void {
             </div>
             <div aria-label="providerList" class="grid grid-cols-3 gap-3">
               {#each onboardingProviders as onboarding, index (index)}
-                <div
-                  class="rounded-md bg-[var(--pd-content-card-bg)] flex flex-row justify-between border-2 p-4 {onboarding.selected
-                    ? 'border-[var(--pd-content-card-border-selected)]'
-                    : 'border-[var(--pd-content-card-border)]'}">
-                  <div class="place-items-top flex flex-col flex-1">
-                    <div class="flex flex-row place-items-left flex-1">
-                      <IconImage image={onboarding.icon} class="max-h-12 h-auto w-auto" alt="{onboarding.name} logo" />
-                      <div
-                        class="flex flex-1 mx-2 underline decoration-2 decoration-dotted underline-offset-2 cursor-default justify-left text-capitalize">
-                        <Tooltip top tip={onboarding.description}>
-                          {onboarding.displayName}
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Checkbox
-                    title="{onboarding.displayName} checkbox"
-                    name="{onboarding.displayName} checkbox"
-                    bind:checked={onboarding.selected}
-                    on:click={(): void => toggleOnboardingSelection(onboarding.name)}
-                    class="text-xl" />
-                </div>
+                <OnboardingExtensionCard
+                  icon={onboarding.icon}
+                  displayName={onboarding.displayName}
+                  description={onboarding.description}
+                  checked={onboarding.selected ?? true}
+                  onToggle={(): void => toggleOnboardingSelection(onboarding.name)} />
               {/each}
             </div>
           </div>
@@ -155,34 +103,7 @@ function startOnboardingQueue(): void {
     </div>
 
     <!-- Telemetry -->
-    {#if showTelemetry}
-      <div class="flex flex-col justify-end flex-none p-4">
-        <div class="flex flex-row justify-center items-start p-1 text-sm">
-          <Checkbox
-            id="toggle-telemetry"
-            bind:checked={telemetry}
-            name="Enable telemetry"
-            class="text-lg px-2"
-            title="Enable telemetry"><div class="text-base font-medium">Telemetry:</div></Checkbox>
-          <div class="w-2/5 text-[var(--pd-content-card-text)]">
-            {#if telemetryMessages}
-              {telemetryMessages.acceptMessage}
-              {#if telemetryMessages?.info}
-                <Link
-                  on:click={async (): Promise<void> => {
-                    await window.openExternal(telemetryMessages.info?.url ?? '');
-                  }}>{telemetryMessages?.info.link}</Link>
-              {/if}
-            {/if}
-          </div>
-        </div>
-        <div class="flex justify-center p-1 text-sm text-[var(--pd-content-card-text)]">
-          <div>
-            You can always modify this preference later in Settings &gt; Preferences
-          </div>
-        </div>
-      </div>
-    {/if}
+    <OnboardingWelcomeTelemetry />
 
     <!-- Footer - button bar -->
     <div class="flex justify-end flex-none bg-[var(--pd-content-bg)] p-8">

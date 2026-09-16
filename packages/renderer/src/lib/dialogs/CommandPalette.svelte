@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import {
   faArrowUpRightFromSquare,
   faChevronRight,
@@ -8,10 +7,16 @@ import {
   faMagnifyingGlass,
   faTerminal,
 } from '@fortawesome/free-solid-svg-icons';
-import type { CommandInfo, CommandPaletteSearchOption, DocumentationInfo, GoToInfo } from '@podman-desktop/core-api';
-import { Button, Input } from '@podman-desktop/ui-svelte';
+import type {
+  CommandInfo,
+  CommandPaletteSearchOption,
+  DocumentationInfo,
+  GoToInfo,
+  NavigationSearchEntryInfo,
+} from '@podman-desktop/core-api';
+import { Button, type IconType, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { type Component, onMount, tick } from 'svelte';
+import { onMount, tick } from 'svelte';
 
 import ArrowDownIcon from '/@/lib/images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '/@/lib/images/ArrowUpIcon.svelte';
@@ -22,6 +27,7 @@ import { handleNavigation, resolveRoute } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { context } from '/@/stores/context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import { navigationSearchEntries } from '/@/stores/navigation-search-entries';
 
 import TextHighLight from './TextHighLight.svelte';
 
@@ -37,7 +43,7 @@ interface Props {
   onclose?: () => void;
 }
 
-type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo;
+type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo | NavigationSearchEntryInfo;
 
 let { display = false, onclose }: Props = $props();
 
@@ -104,6 +110,12 @@ let filteredGoToItems = $derived(
   goToItems.filter(item => (inputValue ? item.name.toLowerCase().includes(inputValue.toLowerCase()) : true)),
 );
 
+let filteredExtensionRouteItems: NavigationSearchEntryInfo[] = $derived(
+  $navigationSearchEntries.filter(item =>
+    inputValue ? item.label.toLowerCase().includes(inputValue.toLowerCase()) : true,
+  ),
+);
+
 let filteredItems = $derived.by(() => {
   if (searchOptionsSelectedIndex === 1) {
     // Commands mode
@@ -112,11 +124,16 @@ let filteredItems = $derived.by(() => {
     // Documentation mode
     return filteredDocumentationInfoItems;
   } else if (searchOptionsSelectedIndex === 3) {
-    // Go to mode (could be different logic later)
-    return filteredGoToItems;
+    // Go to mode
+    return [...filteredGoToItems, ...filteredExtensionRouteItems];
   } else {
-    // All mode - combine both
-    return [...filteredGoToItems, ...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
+    // All mode - combine all
+    return [
+      ...filteredGoToItems,
+      ...filteredExtensionRouteItems,
+      ...filteredCommandInfoItems,
+      ...filteredDocumentationInfoItems,
+    ];
   }
 });
 
@@ -252,6 +269,13 @@ async function executeAction(index: number): Promise<void> {
     }
     itemType = item.category;
     pageLink = item.url;
+  } else if (isExtensionRouteItem(item)) {
+    try {
+      await window.navigateToRoute(item.routeId);
+    } catch (error) {
+      console.error('Error navigating to extension route', error);
+    }
+    itemType = 'ExtensionRoute';
   } else if (isGoToItem(item)) {
     handleNavigation(item);
     itemType = item.page;
@@ -320,6 +344,10 @@ async function onAction(): Promise<void> {
     });
 }
 
+function isExtensionRouteItem(item: CommandPaletteItem): item is NavigationSearchEntryInfo {
+  return 'routeId' in item;
+}
+
 function isGoToItem(item: CommandPaletteItem): item is GoToInfo {
   return 'page' in item;
 }
@@ -329,6 +357,10 @@ function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
 }
 
 function getItemKey(item: CommandPaletteItem, index: number): string {
+  if (isExtensionRouteItem(item)) {
+    return `route:${item.routeId}`;
+  }
+
   if (isGoToItem(item)) {
     return `goto:${resolveRoute(item)}`;
   }
@@ -341,7 +373,9 @@ function getItemKey(item: CommandPaletteItem, index: number): string {
 }
 
 function getTextToHighlight(item: CommandPaletteItem): string {
-  if (isDocItem(item)) {
+  if (isExtensionRouteItem(item)) {
+    return item.label;
+  } else if (isDocItem(item)) {
     return `${item.category}: ${item.name}`;
   } else if (isGoToItem(item)) {
     return item.name;
@@ -350,19 +384,16 @@ function getTextToHighlight(item: CommandPaletteItem): string {
   }
 }
 
-function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefinition | Component | string {
-  if (isDocItem(item)) {
+function getIcon(item: CommandPaletteItem): IconType {
+  if (isExtensionRouteItem(item)) {
+    return item.icon ?? faTerminal;
+  } else if (isDocItem(item)) {
     return item.category === 'Tutorial' ? faFilePen : faFileLines;
   } else if (isGoToItem(item)) {
-    // All goto items now have icons set in Utils
     if (item.icon) {
-      return (item.icon.iconComponent ?? item.icon.faIcon ?? item.icon.iconImage ?? faTerminal) as
-        | IconDefinition
-        | Component
-        | string;
+      return (item.icon.iconComponent ?? item.icon.faIcon ?? item.icon.iconImage ?? faTerminal) as IconType;
     }
   }
-  // Commands and fallback
   return faTerminal;
 }
 </script>
@@ -417,10 +448,11 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (getItemKey(item, i))}
+            {@const extensionRouteItem = isExtensionRouteItem(item)}
             {@const goToItem = isGoToItem(item)}
             {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}
-            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? item.name : (item.id)}>
+            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={extensionRouteItem ? item.label : goToItem ? item.name : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex

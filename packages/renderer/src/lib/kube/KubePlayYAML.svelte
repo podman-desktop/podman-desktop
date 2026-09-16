@@ -3,6 +3,7 @@ import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
+import type { PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -87,86 +88,64 @@ async function playKubeFile(): Promise<void> {
   runFinished = false;
   runError = '';
 
-  let tempFilePath: string = '';
+  const input: PlayKubeInput =
+    userChoice === 'custom'
+      ? { type: 'content', value: customYamlContent }
+      : { type: 'path', value: kubernetesYamlFilePath! };
 
-  try {
-    let yamlFilePath: string;
+  if (input.value && selectedProviderConnection) {
+    try {
+      cancellableTokenId = await window.getCancellableTokenSource();
 
-    if (userChoice === 'custom') {
-      // Create a temporary file with the custom YAML content
-      tempFilePath = await window.createTempFile(customYamlContent);
-      yamlFilePath = tempFilePath;
-    } else {
-      yamlFilePath = kubernetesYamlFilePath!;
-    }
+      const result = await window.playKube(input, $state.snapshot(selectedProviderConnection), {
+        build: $state.snapshot(kubeBuild),
+        replace: $state.snapshot(kubeReplace),
+        cancellableTokenId: $state.snapshot(cancellableTokenId),
+      });
 
-    if (yamlFilePath && selectedProviderConnection) {
-      try {
-        cancellableTokenId = await window.getCancellableTokenSource();
+      // remove the null values from the result
+      playKubeResultRaw = JSON.stringify(removeEmptyOrNull(result), undefined, 2);
+      playKubeResultJSON = JSON.parse(playKubeResultRaw);
 
-        const result = await window.playKube(yamlFilePath, $state.snapshot(selectedProviderConnection), {
-          build: $state.snapshot(kubeBuild),
-          replace: $state.snapshot(kubeReplace),
-          cancellableTokenId: $state.snapshot(cancellableTokenId),
-        });
+      // If there are container errors, that means that it was *able* to create the container
+      // but if failed to start. We will add this to the "warning" section as we were able to create the
+      // We add this with comma deliminated errors
+      if (playKubeResultJSON && typeof playKubeResultJSON === 'object') {
+        playKubeResult = {};
+        if (
+          'Pods' in playKubeResultJSON &&
+          playKubeResultJSON.Pods !== undefined &&
+          Array.isArray(playKubeResultJSON.Pods) &&
+          playKubeResultJSON.Pods.length > 0
+        ) {
+          playKubeResult.Pods = playKubeResultJSON.Pods;
+          // Filter out the pods that have container errors, but check to see that container errors exists first
+          const containerErrors = playKubeResultJSON.Pods.filter(
+            (pod: unknown) =>
+              pod &&
+              typeof pod === 'object' &&
+              'ContainerErrors' in pod &&
+              Array.isArray(pod.ContainerErrors) &&
+              pod.ContainerErrors.length > 0,
+          );
 
-        // remove the null values from the result
-        playKubeResultRaw = JSON.stringify(removeEmptyOrNull(result), undefined, 2);
-        playKubeResultJSON = JSON.parse(playKubeResultRaw);
-
-        // If there are container errors, that means that it was *able* to create the container
-        // but if failed to start. We will add this to the "warning" section as we were able to create the
-        // We add this with comma deliminated errors
-        if (playKubeResultJSON && typeof playKubeResultJSON === 'object') {
-          playKubeResult = {};
-          if (
-            'Pods' in playKubeResultJSON &&
-            playKubeResultJSON.Pods !== undefined &&
-            Array.isArray(playKubeResultJSON.Pods) &&
-            playKubeResultJSON.Pods.length > 0
-          ) {
-            playKubeResult.Pods = playKubeResultJSON.Pods;
-            // Filter out the pods that have container errors, but check to see that container errors exists first
-            const containerErrors = playKubeResultJSON.Pods.filter(
-              (pod: unknown) =>
-                pod &&
-                typeof pod === 'object' &&
-                'ContainerErrors' in pod &&
-                Array.isArray(pod.ContainerErrors) &&
-                pod.ContainerErrors.length > 0,
-            );
-
-            // For each Pod that has container errors, we will add the container errors to the warning message
-            if (containerErrors.length > 0) {
-              runWarning = `The following pods were created but failed to start: ${containerErrors
-                .map((pod: unknown) =>
-                  pod && typeof pod === 'object' && 'ContainerErrors' in pod && Array.isArray(pod.ContainerErrors)
-                    ? pod.ContainerErrors.join(', ')
-                    : '',
-                )
-                .join(', ')}`;
-            }
+          // For each Pod that has container errors, we will add the container errors to the warning message
+          if (containerErrors.length > 0) {
+            runWarning = `The following pods were created but failed to start: ${containerErrors
+              .map((pod: unknown) =>
+                pod && typeof pod === 'object' && 'ContainerErrors' in pod && Array.isArray(pod.ContainerErrors)
+                  ? pod.ContainerErrors.join(', ')
+                  : '',
+              )
+              .join(', ')}`;
           }
         }
+      }
 
-        runFinished = true;
-      } catch (error) {
-        runError = String(error);
-        console.error('error playing kube file', error);
-      }
-    }
-  } catch (error: unknown) {
-    runError = String(error);
-    console.error('error creating temporary file or playing kube', error);
-  } finally {
-    // Always cleanup temp file if one was created
-    if (tempFilePath && userChoice === 'custom') {
-      try {
-        await window.removeTempFile(tempFilePath);
-      } catch (error) {
-        console.warn('Failed to cleanup temporary file:', error);
-        // Don't show this error to the user as it's not critical
-      }
+      runFinished = true;
+    } catch (error) {
+      runError = String(error);
+      console.error('error playing kube file', error);
     }
   }
   runStarted = false;

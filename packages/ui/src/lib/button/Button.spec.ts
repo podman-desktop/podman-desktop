@@ -236,11 +236,14 @@ test('Button should not have aria-busy when not inProgress', async () => {
   expect(button).toHaveAttribute('aria-busy', 'false');
 });
 
-test('Button should have cursor-pointer class by default', async () => {
-  render(Button);
-  const button = screen.getByRole('button');
-  expect(button).toHaveClass('cursor-pointer');
-});
+test.each(['cursor-pointer', 'motion-reduce:transition-none', 'min-w-[28px]', 'min-h-[28px]'])(
+  'Button should have %s class',
+  async className => {
+    render(Button);
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass(className);
+  },
+);
 
 test('Button should have cursor-not-allowed class when disabled', async () => {
   render(Button, { disabled: true });
@@ -254,24 +257,6 @@ test('Button should have cursor-wait class when inProgress', async () => {
   const button = screen.getByRole('button');
   expect(button).toHaveClass('cursor-wait');
   expect(button).not.toHaveClass('cursor-pointer');
-});
-
-test('Button should have motion-reduce:transition-none class', async () => {
-  render(Button);
-  const button = screen.getByRole('button');
-  expect(button).toHaveClass('motion-reduce:transition-none');
-});
-
-test('Button should have min-w-[28px] class', async () => {
-  render(Button);
-  const button = screen.getByRole('button');
-  expect(button).toHaveClass('min-w-[28px]');
-});
-
-test('Button should have min-h-[28px] class', async () => {
-  render(Button);
-  const button = screen.getByRole('button');
-  expect(button).toHaveClass('min-h-[28px]');
 });
 
 test('Icon-only button without aria-label should throw an error', () => {
@@ -288,4 +273,42 @@ test('Icon-only button with aria-label should not throw', () => {
 test('Icon button with title should not throw', () => {
   expect(() => render(Button, { icon: faTrash, title: 'Delete' })).not.toThrow();
   expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
+test('Button without pressed prop should not have aria-pressed attribute', async () => {
+  render(Button, { type: 'primary' });
+  const button = screen.getByRole('button');
+  expect(button).not.toHaveAttribute('aria-pressed');
+});
+
+test('Button with pressed true should have aria-pressed true and pressed styling', async () => {
+  render(Button, { type: 'primary', pressed: true });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+  expect(button).toHaveClass('bg-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});
+
+test('Button with pressed false should have aria-pressed false and regular styling', async () => {
+  render(Button, { type: 'primary', pressed: false });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'false');
+  expect(button).toHaveClass('bg-[var(--pd-button-primary-bg)]');
+  expect(button).toHaveClass('border-[var(--pd-button-primary-border)]');
+});
+
+test('Pressed secondary button should have pressed styling', async () => {
+  render(Button, { type: 'secondary', pressed: true });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+  expect(button).toHaveClass('bg-[var(--pd-button-secondary-hover-bg)]');
+  expect(button).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});
+
+test('Disabled pressed button should keep aria-pressed but use disabled styling', async () => {
+  render(Button, { type: 'primary', pressed: true, disabled: true });
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+  expect(button).toHaveClass('bg-[var(--pd-button-disabled-bg)]');
+  expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 });

@@ -52,12 +52,20 @@ pnpm test:e2e:run          # Run tests without rebuild
 pnpm test:e2e:smoke:run    # Run smoke tests without rebuild
 pnpm test:e2e:k8s:run      # Run K8s tests without rebuild
 
+# Run a specific suite by name (searches specs/ and special-specs/)
+pnpm test:e2e:suite volume-smoke          # Run volume smoke tests
+pnpm test:e2e:suite installation          # Run installation tests
+pnpm test:e2e:suite ui-stress -g @ui-stress  # Run with tag filter
+pnpm test:e2e:suite:build volume-smoke    # Build + run specific suite
+
 # Development
 pnpm exec playwright test tests/playwright/src/specs/volume-smoke.spec.ts --ui
 pnpm exec playwright show-report tests/playwright/output/html-results
 ```
 
-> **Tip:** After running `test:e2e:build` once, use the `:run` variants (e.g., `test:e2e:smoke:run`) to skip rebuilding if no code changes were made. This significantly speeds up iteration.
+> **Tip:** After running `test:e2e:build` once, use the `:run` variants (e.g., `test:e2e:smoke:run`) or `test:e2e:suite <name>` to skip rebuilding if no code changes were made. This significantly speeds up iteration.
+>
+> **Suite runner:** All `:run` scripts use the shared `tests/playwright/scripts/run-e2e-suite.mjs` runner. For ad-hoc runs of suites without a dedicated script (e.g., pdmachine, experimental, extension, remote, ui-stress), use `pnpm test:e2e:suite <name> [extra-playwright-args]`.
 
 ## Podman Desktop-Specific Patterns
 
@@ -231,13 +239,13 @@ pnpm exec playwright test tests/playwright/src/specs/ --grep volume
 pnpm test:e2e:smoke  # Runs @smoke tagged tests
 ```
 
-**Temporarily modify package.json** npm script target `test:e2e:smoke:run` for repeated runs:
+**Run a specific suite by name** (no need to modify package.json):
 
-```json
-"test:e2e:smoke:run": "... npx playwright test tests/playwright/src/specs/volume-smoke.spec.ts"
+```bash
+pnpm test:e2e:suite volume-smoke
 ```
 
-Then: `pnpm test:e2e:smoke:run` if you have run `test:e2e:build` before (Remember to revert!)
+Then iterate with `pnpm test:e2e:suite <name>` if you have run `test:e2e:build` before.
 
 For more debugging methods, see [skill debugging section](../../.agents/skills/playwright-testing/SKILL.md#debugging-tests).
 

@@ -29,6 +29,7 @@ import type {
   ContainerInspectInfo,
   HostConfig,
   ImageInspectInfo,
+  ImageUpdateStatus,
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -53,7 +54,7 @@ import * as util from '/@/util.js';
 
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { LibPod } from './dockerode/libpod-dockerode.js';
+import type { Info, LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import type { EnvfileParser } from './env-file-parser.js';
 import type { ProviderRegistry } from './provider-registry.js';
@@ -1201,9 +1202,86 @@ describe('listContainers', () => {
     });
     expect(container?.State).toBe('running');
   });
+
+  test('list containers with Podman API and a multi-argument command', async () => {
+    const containersWithPodmanAPI = [
+      {
+        AutoRemove: false,
+        Command: ['ls', '-l', '/etc'],
+        Created: '2023-08-10T15:37:44.555961563+02:00',
+        CreatedAt: '',
+        Exited: true,
+        ExitedAt: 1691674673,
+        ExitCode: 0,
+        Id: '31a4b282691420be2611817f203765402d8da7e13cd530f80a6ddd1bb4aa63b4',
+        Image: 'docker.io/library/httpd:latest',
+        ImageID: '911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a',
+        IsInfra: false,
+        Labels: {},
+        Mounts: [],
+        Names: ['admiring_wing'],
+        Namespaces: {},
+        Networks: ['podman'],
+        Pid: 0,
+        Pod: '',
+        PodName: '',
+        Ports: [],
+        Restarts: 0,
+        Size: null,
+        StartedAt: 1691674664,
+        State: 'running',
+        Status: '',
+      },
+    ];
+
+    const handlers = [
+      http.get('http://localhost/v4.2.0/libpod/containers/json', () => HttpResponse.json(containersWithPodmanAPI)),
+
+      http.get('http://localhost/v4.2.0/libpod/pods/json', () => HttpResponse.json([])),
+    ];
+    server = setupServer(...handlers);
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+    const libpod = new LibpodDockerode();
+    libpod.enhancePrototypeWithLibPod();
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: dockerAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    const containers = await containerRegistry.listContainers();
+
+    // the whole command line, not only the executable: libpod reports Command
+    // as an array and the compatibility shape is a single string
+    expect(containers).toHaveLength(1);
+    expect(containers[0]?.Command).toBe('ls -l /etc');
+  });
 });
 
-test('pull unknown image fails with error 403', async () => {
+test.each([
+  {
+    statusCode: 403,
+    expectedMessage: 'access to image "unknown-image" is denied (403 error). Can also be that image does not exist',
+  },
+  {
+    statusCode: 401,
+    expectedMessage:
+      'access to image "unknown-image" is denied (401 error). Can also be that the registry requires authentication.',
+  },
+  {
+    statusCode: 500,
+    expectedMessage:
+      'access to image "unknown-image" is denied (500 error). Can also be that the registry requires authentication.',
+  },
+])('pull unknown image fails with error $statusCode', async ({ statusCode, expectedMessage }) => {
   const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
 
   const pullMock = vi.fn();
@@ -1220,14 +1298,14 @@ test('pull unknown image fails with error 403', async () => {
   const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
 
   // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', 403);
+  const error = new DockerodeTestStatusError('access denied', statusCode);
 
   pullMock.mockRejectedValue(error);
 
   const callback = vi.fn();
   // check that we have a nice error message
   await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    'access to image "unknown-image" is denied (403 error). Can also be that image does not exist',
+    expectedMessage,
   );
 });
 
@@ -1290,62 +1368,6 @@ test('pulling an image with platform linux/arm64 will add platform to pull optio
     authconfig: undefined,
     platform: 'linux/arm64',
   });
-});
-
-test('pull unknown image fails with error 401', async () => {
-  const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
-
-  const pullMock = vi.fn();
-
-  const fakeDockerode = {
-    pull: pullMock,
-    modem: {
-      followProgress: vi.fn(),
-    },
-  } as unknown as Dockerode;
-
-  getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
-
-  const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
-
-  // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', 401);
-
-  pullMock.mockRejectedValue(error);
-
-  const callback = vi.fn();
-  // check that we have a nice error message
-  await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    'access to image "unknown-image" is denied (401 error). Can also be that the registry requires authentication.',
-  );
-});
-
-test('pull unknown image fails with error 500', async () => {
-  const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
-
-  const pullMock = vi.fn();
-
-  const fakeDockerode = {
-    pull: pullMock,
-    modem: {
-      followProgress: vi.fn(),
-    },
-  } as unknown as Dockerode;
-
-  getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
-
-  const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
-
-  // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', 500);
-
-  pullMock.mockRejectedValue(error);
-
-  const callback = vi.fn();
-  // check that we have a nice error message
-  await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    'access to image "unknown-image" is denied (500 error). Can also be that the registry requires authentication.',
-  );
 });
 
 describe('buildImage', () => {
@@ -2559,6 +2581,83 @@ test('updateNetwork', async () => {
   expect(libPodApi.updateNetwork).toHaveBeenCalledWith('network1', ['1.1.1.1'], []);
 });
 
+describe('info', () => {
+  function mockPodmanInfo(host: Partial<Info['host']>): LibPod {
+    return {
+      podmanInfo: vi.fn().mockResolvedValue({
+        host: {
+          cpus: 4,
+          cpuUtilization: { idlePercent: 90 },
+          memTotal: 1000,
+          memFree: 100,
+          ...host,
+        },
+        store: {
+          graphRootAllocated: 2000,
+          graphRootUsed: 500,
+        },
+      } as unknown as Info),
+    } as unknown as LibPod;
+  }
+
+  test('memAvailable present and valid computes memoryUsed from memAvailable', async () => {
+    const libPodApi = mockPodmanInfo({ memAvailable: 400 });
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(600);
+  });
+
+  test('memAvailable absent falls back to memTotal - memFree (older Podman)', async () => {
+    const libPodApi = mockPodmanInfo({});
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(900);
+  });
+
+  test('memAvailable equal to -1 (non-Linux sentinel) falls back to memTotal - memFree', async () => {
+    const libPodApi = mockPodmanInfo({ memAvailable: -1 });
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      api: {} as unknown as Dockerode,
+      libpodApi: libPodApi,
+    } as InternalContainerProvider);
+
+    const info = await containerRegistry.info('podman1');
+
+    expect(info.memory).toBe(1000);
+    expect(info.memoryUsed).toBe(900);
+  });
+});
+
 describe('createVolume', () => {
   test('provided name', async () => {
     server = setupServer(http.post('http://localhost/volumes/create', () => HttpResponse.json('')));
@@ -2824,6 +2923,7 @@ test('container logs callback notified when messages arrive', async () => {
   const stream = new EventEmitter();
   const dockerodeContainer = {
     logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
   } as unknown as Dockerode.Container;
 
   vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
@@ -2857,6 +2957,236 @@ test('container logs callback notified when messages arrive', async () => {
   expect(callback).toHaveBeenCalledWith('data', 'log message');
   expect(callback).toHaveBeenCalledWith('end', '');
   expect(telemetry.track).toHaveBeenCalled();
+});
+
+// collects the payloads passed to the logsContainer callback until the stream ends
+function collectContainerLogs(container: Dockerode.Container): {
+  dataChunks: string[];
+  endPromise: Promise<void>;
+} {
+  const dataChunks: string[] = [];
+  const endPromise = new Promise<void>((resolve, reject) => {
+    const callback = (name: string, data: string): void => {
+      if (name === 'data') {
+        dataChunks.push(data);
+      } else if (name === 'end') {
+        resolve();
+      }
+    };
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(container);
+    containerRegistry
+      .logsContainer({ engineId: 'podman', id: 'containerId', callback })
+      .catch((err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
+  });
+  return { dataChunks, endPromise };
+}
+
+test('container logs reassembles multi-byte UTF-8 characters split across chunks', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // "🚀" (U+1F680) is four UTF-8 bytes: F0 9F 9A 80. Split it across two
+  // chunks so neither chunk holds a complete character on its own.
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+  const firstHalf = rocketBytes.subarray(0, 2);
+  const secondHalf = rocketBytes.subarray(2);
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.concat([Buffer.from('start '), firstHalf]));
+    stream.emit('data', Buffer.concat([secondHalf, Buffer.from(' end')]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('start 🚀 end');
+  expect(dataChunks.join('')).not.toContain('\uFFFD');
+});
+
+test('container logs flushes buffered bytes when the stream ends mid-character', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // Emit only the first two bytes of "🚀" then end the stream, leaving an
+  // incomplete sequence buffered inside the decoder.
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.concat([Buffer.from('truncated '), rocketBytes.subarray(0, 2)]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  // The decoder flushes the incomplete sequence on end(), so the buffered bytes
+  // are reported instead of being silently dropped.
+  expect(dataChunks.length).toBe(2);
+  expect(dataChunks[0]).toBe('truncated ');
+  expect(dataChunks[1]).toBe('\uFFFD');
+});
+
+// builds a frame of a multiplexed container stream: 8-byte header (stream type + payload size)
+// followed by the payload itself
+function buildLogFrameFromBytes(body: Buffer, streamType = 1): Buffer {
+  const header = Buffer.alloc(8);
+  header[0] = streamType;
+  header.writeUInt32BE(body.length, 4);
+  return Buffer.concat([header, body]);
+}
+
+function buildLogFrame(payload: string, streamType = 1): Buffer {
+  return buildLogFrameFromBytes(Buffer.from(payload, 'utf-8'), streamType);
+}
+
+test('container logs strips the multiplexed stream header of non-TTY containers', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    stream.emit('data', buildLogFrame('hello\n'));
+    stream.emit('data', buildLogFrame('world\n', 2));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  // the 8-byte header must not leak into the rendered logs
+  expect(dataChunks.join('')).toBe('hello\nworld\n');
+});
+
+test('container logs buffers multiplexed frames split across chunks', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  const frame = buildLogFrame('split payload\n');
+
+  setTimeout(() => {
+    // cut in the middle of the header, then in the middle of the payload
+    stream.emit('data', frame.subarray(0, 3));
+    stream.emit('data', frame.subarray(3, 10));
+    stream.emit('data', frame.subarray(10));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('split payload\n');
+});
+
+test('container logs decodes stdout and stderr with separate decoders', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: false } }),
+    modem: new Dockerode().modem,
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  // "🚀" split over two stdout frames, with a stderr frame emitted in between: a shared decoder
+  // would let the stderr payload complete the pending stdout character and corrupt both streams
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+  const firstHalf = buildLogFrameFromBytes(rocketBytes.subarray(0, 2), 1);
+  const secondHalf = buildLogFrameFromBytes(rocketBytes.subarray(2), 1);
+
+  setTimeout(() => {
+    stream.emit('data', firstHalf);
+    stream.emit('data', buildLogFrame('err\n', 2));
+    stream.emit('data', secondHalf);
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('err\n🚀');
+});
+
+test('container logs forwards the raw stream of a TTY container', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.from('raw log\n'));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(dataChunks.join('')).toBe('raw log\n');
+});
+
+test('container logs forwards the raw stream when the container cannot be inspected', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockRejectedValue(new Error('no such container')),
+  } as unknown as Dockerode.Container;
+
+  const { dataChunks, endPromise } = collectContainerLogs(dockerodeContainer);
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.from('raw log\n'));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  // an unreadable TTY mode must not break the logs: the stream is forwarded as-is
+  expect(dataChunks.join('')).toBe('raw log\n');
+});
+
+test('container logs forwards the since option', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+    inspect: vi.fn().mockResolvedValue({ Config: { Tty: true } }),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+
+  await containerRegistry.logsContainer({
+    engineId: 'podman',
+    id: 'containerId',
+    callback: vi.fn(),
+    since: '1700000000',
+  });
+
+  expect(vi.mocked(dockerodeContainer.logs).mock.calls[0]?.[0]).toStrictEqual({
+    follow: true,
+    stdout: true,
+    stderr: true,
+    abortSignal: undefined,
+    tail: undefined,
+    timestamps: undefined,
+    since: '1700000000',
+  });
 });
 
 describe('createContainer', () => {
@@ -6486,6 +6816,86 @@ describe('prune images', () => {
   });
 });
 
+describe('pruneVolumes', () => {
+  test('prune with Podman >= 6.0 passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '6.0.1' }),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman.new', provider);
+
+    await containerRegistry.pruneVolumes('podman.new');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+  });
+
+  test('prune with Podman < 6.0 skips all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        pruneVolumes: vi.fn(),
+        version: vi.fn().mockResolvedValue({ Version: '5.4.2' }),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        displayName: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('podman.old', provider);
+
+    await containerRegistry.pruneVolumes('podman.old');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith();
+  });
+
+  test('prune with Docker passes all filter', async () => {
+    const provider: InternalContainerProvider = {
+      name: 'docker',
+      id: 'docker1',
+      api: {
+        pruneVolumes: vi.fn(),
+      } as unknown as Dockerode,
+      libpodApi: undefined,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: vi.fn(),
+      },
+    };
+
+    containerRegistry.addInternalProvider('docker.test', provider);
+
+    await containerRegistry.pruneVolumes('docker.test');
+
+    expect(provider.api?.pruneVolumes).toBeCalledWith({ filters: { all: ['true'] } });
+  });
+});
+
 describe('kube play', () => {
   const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
     name: 'podman',
@@ -6533,7 +6943,7 @@ describe('kube play', () => {
 
     await expect(async () => {
       await containerRegistry.playKube(
-        'dummy-file',
+        { type: 'path', value: 'dummy-file' },
         {
           name: PODMAN_PROVIDER.name,
           endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6550,7 +6960,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6569,7 +6979,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6589,7 +6999,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      'dummy-file',
+      { type: 'path', value: 'dummy-file' },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6602,6 +7012,55 @@ describe('kube play', () => {
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
       abortSignal: ABORT_SIGNAL,
     });
+  });
+
+  test('content input without build should call playKube with a Readable stream', async () => {
+    const RAW_YAML = 'apiVersion: v1\nkind: Pod\n';
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'content', value: RAW_YAML },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), KUBE_PLAY_OPT);
+    const stream = vi.mocked(PODMAN_PROVIDER.libpodApi.playKube).mock.calls[0]?.[0] as Readable;
+    const chunks: string[] = [];
+    for await (const chunk of stream) {
+      chunks.push(String(chunk));
+    }
+    expect(chunks.join('')).toBe(RAW_YAML);
+  });
+
+  test('content input with build and no build contexts should play kube with a Readable stream', async () => {
+    const RAW_YAML = 'apiVersion: v1\nkind: Pod\n';
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    const fakeKubePlayContext = {
+      init: vi.fn().mockResolvedValue(undefined),
+      getBuildContexts: vi.fn().mockReturnValue([]),
+    } as unknown as KubePlayContext;
+    vi.mocked(KubePlayContext.fromContent).mockReturnValue(fakeKubePlayContext);
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'content', value: RAW_YAML },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      { build: true },
+    );
+
+    expect(KubePlayContext.fromContent).toHaveBeenCalledWith(RAW_YAML, expect.any(String));
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), { build: true });
   });
 });
 
@@ -7360,5 +7819,236 @@ describe('imageExist', () => {
 
     const exists = await containerRegistry.imageExist('foo', 'bar', 'localhost/foo:latest');
     expect(exists).toBeTruthy();
+  });
+});
+
+describe('updateImages', () => {
+  const pullMock = vi.fn();
+  const followProgressMock = vi.fn();
+  const imageInspectMock = vi.fn();
+  const getImageMock = vi.fn(() => ({ inspect: imageInspectMock }));
+  const fakeDockerode = {
+    pull: pullMock,
+    modem: { followProgress: followProgressMock },
+    getImage: getImageMock,
+  } as unknown as Dockerode;
+
+  beforeEach(() => {
+    pullMock.mockReset();
+    followProgressMock.mockReset();
+    getImageMock.mockClear();
+    imageInspectMock.mockReset();
+    imageInspectMock.mockResolvedValue({ RepoDigests: ['nginx@sha256:old'] });
+    telemetryTrackMock.mockReset();
+    followProgressMock.mockImplementation((_s: unknown, f: (err: Error | null) => void) => f(null));
+    containerRegistry.addInternalProvider('testEngine', {
+      name: 'testEngine',
+      id: 'testEngine',
+      connection: { type: 'podman', endpoint: { socketPath: '/test.socket' } },
+      api: fakeDockerode,
+    } as unknown as InternalContainerProvider);
+  });
+
+  test('returns an up-to-date result without pulling the image', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
+    ]);
+
+    expect(result).toEqual({ imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' });
+    expect(pullMock).not.toHaveBeenCalled();
+    expect(telemetryTrackMock).toHaveBeenCalledExactlyOnceWith('updateImages', {
+      count: 1,
+      updated: 0,
+      upToDate: 1,
+      skipped: 0,
+      failed: 0,
+    });
+  });
+
+  test('cancels in-progress image pulls through the abort signal', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest: 'sha256:new',
+      message: '',
+    });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+    followProgressMock.mockImplementation((_stream: unknown, onFinished: (error: Error | null) => void): void => {
+      const abortSignal = pullMock.mock.calls[0]?.[1]?.abortSignal as AbortSignal;
+      abortSignal.addEventListener('abort', () => onFinished(new Error('Update canceled')));
+    });
+
+    const abortController = new AbortController();
+    const updatePromise = containerRegistry.updateImages(
+      [{ engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' }],
+      abortController.signal,
+    );
+    await vi.waitFor(() => expect(followProgressMock).toHaveBeenCalledOnce());
+
+    abortController.abort();
+
+    await expect(updatePromise).resolves.toEqual([
+      { imageRef: 'nginx:latest', updated: false, status: 'error', message: 'Update canceled' },
+    ]);
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
+      authconfig: undefined,
+      abortSignal: expect.objectContaining({ aborted: true }),
+    });
+  });
+
+  test('does not pull when the update is skipped', async () => {
+    const mockStatus: ImageUpdateStatus = { status: 'skipped', updateAvailable: false, message: 'Skipped' };
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue(mockStatus);
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
+    ]);
+
+    expect(result!.updated).toBe(false);
+    expect(result!.status).toBe(mockStatus.status);
+    expect(pullMock).not.toHaveBeenCalled();
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', expect.objectContaining({ skipped: 1 }));
+  });
+
+  test('checks update status with current repository digests from the backend', async () => {
+    const checkImageUpdateStatusMock = vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    imageInspectMock.mockResolvedValue({ RepoDigests: ['nginx@sha256:manifestdigest'] });
+
+    await containerRegistry.updateImages([{ engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' }]);
+
+    expect(imageInspectMock).toHaveBeenCalledOnce();
+    expect(checkImageUpdateStatusMock).toHaveBeenCalledWith('nginx:latest', 'latest', ['nginx@sha256:manifestdigest']);
+    expect(pullMock).not.toHaveBeenCalled();
+  });
+
+  test('checks and updates each tag independently when an image has multiple tags', async () => {
+    imageInspectMock.mockResolvedValue({ RepoDigests: ['example.com/app@sha256:old'] });
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus')
+      .mockResolvedValueOnce({ status: 'normal', updateAvailable: false, message: 'Up to date' })
+      .mockResolvedValueOnce({ status: 'normal', updateAvailable: true, message: 'Update available' });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'example.com/app:stable', tag: 'stable' },
+      { engineId: 'testEngine', image: 'example.com/app:latest', tag: 'latest' },
+    ]);
+
+    expect(getImageMock).toHaveBeenCalledWith('example.com/app:stable');
+    expect(getImageMock).toHaveBeenCalledWith('example.com/app:latest');
+    expect(pullMock).toHaveBeenCalledExactlyOnceWith('example.com/app:latest', {
+      authconfig: undefined,
+      abortSignal: undefined,
+    });
+    expect(results).toEqual([
+      { imageRef: 'example.com/app:stable', updated: false, status: 'normal', message: 'Up to date' },
+      {
+        imageRef: 'example.com/app:latest',
+        updated: true,
+        status: 'updated',
+        message: 'Image updated successfully',
+      },
+    ]);
+  });
+
+  test('returns error when engine not found', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+    const checkImageUpdateStatusMock = vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus');
+    checkImageUpdateStatusMock.mockClear();
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'nonexistent', image: 'nginx:latest', tag: 'latest' },
+    ]);
+
+    expect(result!.updated).toBe(false);
+    expect(result!.status).toBe('error');
+    expect(result!.message).toContain('no engine matching this engine');
+    expect(checkImageUpdateStatusMock).not.toHaveBeenCalled();
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error updating image nginx:latest', expect.any(Error));
+    expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', {
+      count: 1,
+      updated: 0,
+      upToDate: 0,
+      skipped: 0,
+      failed: 1,
+    });
+  });
+
+  test('returns every result when one image update rejects', async () => {
+    vi.spyOn(console, 'error').mockReturnValue(undefined);
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Up to date',
+    });
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'nonexistent', image: 'missing:latest', tag: 'latest' },
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
+    ]);
+
+    expect(results).toEqual([
+      expect.objectContaining({ imageRef: 'missing:latest', updated: false, status: 'error' }),
+      { imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' },
+    ]);
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith(
+      'updateImages',
+      expect.objectContaining({ count: 2, upToDate: 1, failed: 1 }),
+    );
+  });
+
+  test('pulls updated images, skips failures, and tracks one batch event', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus')
+      .mockResolvedValueOnce({
+        status: 'normal',
+        updateAvailable: true,
+        remoteDigest: 'sha256:new',
+        message: '',
+      })
+      .mockResolvedValueOnce({
+        status: 'error',
+        updateAvailable: false,
+        message: 'Registry unavailable',
+      });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest' },
+      { engineId: 'testEngine', image: 'redis:latest', tag: 'latest' },
+    ]);
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toEqual(expect.objectContaining({ updated: true, status: 'updated', imageRef: 'nginx:latest' }));
+    expect(results[1]?.updated).toBe(false);
+    expect(results[1]?.status).toBe('error');
+    expect(pullMock).toHaveBeenCalledTimes(1);
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', {
+      authconfig: undefined,
+      abortSignal: undefined,
+    });
+    expect(telemetryTrackMock).toHaveBeenCalledTimes(1);
+    expect(telemetryTrackMock).toHaveBeenCalledWith('updateImages', {
+      count: 2,
+      updated: 1,
+      upToDate: 0,
+      skipped: 0,
+      failed: 1,
+    });
   });
 });

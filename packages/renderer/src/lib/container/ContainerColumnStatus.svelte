@@ -6,7 +6,11 @@ import PodIcon from '/@/lib/images/PodIcon.svelte';
 import { ContainerUtils } from './container-utils';
 import type { ContainerGroupInfoUI, ContainerInfoUI } from './ContainerInfoUI';
 
-export let object: ContainerInfoUI | ContainerGroupInfoUI;
+interface Props {
+  object: ContainerInfoUI | ContainerGroupInfoUI;
+}
+
+let { object }: Props = $props();
 
 const containerUtils = new ContainerUtils();
 </script>

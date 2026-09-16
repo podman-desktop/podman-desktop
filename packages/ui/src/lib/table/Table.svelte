@@ -365,6 +365,100 @@ async function resetColumns(): Promise<void> {
     columnOrdering.clear();
   }
 }
+
+const INTERACTIVE_SELECTOR =
+  'button, a, input, select, textarea, label, [role="button"], [role="menuitem"], [role="checkbox"], [role="switch"]';
+
+function isRowClickable(object: T): boolean {
+  return !!row.info.onClick && (row.info.clickable?.(object) ?? true);
+}
+
+function eventTargetElement(event: MouseEvent): Element | undefined {
+  if (event.target instanceof Element) {
+    return event.target;
+  }
+  if (event.target instanceof Text) {
+    return event.target.parentElement ?? undefined;
+  }
+  return undefined;
+}
+
+function isInteractiveClick(event: MouseEvent, rowElement: HTMLElement): boolean {
+  const target = eventTargetElement(event);
+  if (!target || !rowElement.contains(target)) {
+    return false;
+  }
+
+  return target.closest(INTERACTIVE_SELECTOR) !== null;
+}
+
+function shouldIgnoreRowClick(rowElement: HTMLElement, event: MouseEvent): boolean {
+  const target = eventTargetElement(event);
+
+  // Clicks on the row background / CSS grid gaps must navigate.
+  if (!target || target === rowElement) {
+    return false;
+  }
+
+  // Do not stopPropagation: Svelte 5 delegates onclick to the document, so
+  // stopping at a cell prevents action buttons from receiving the click.
+  if (isInteractiveClick(event, rowElement)) {
+    return true;
+  }
+
+  const cell = target.closest('[role="cell"]');
+  if (!cell || !rowElement.contains(cell)) {
+    return true;
+  }
+
+  const cells = Array.from(rowElement.querySelectorAll(':scope > [role="cell"]'));
+  const cellIndex = cells.indexOf(cell as HTMLElement);
+  if (cellIndex < 0) {
+    return true;
+  }
+
+  const columnIndex = cellIndex - (row.info.selectable ? 2 : 1);
+  if (columnIndex < 0) {
+    // Expander and checkbox columns: allow navigation unless an interactive control handled above.
+    return false;
+  }
+
+  if (columnIndex >= visibleColumns.length) {
+    return true;
+  }
+
+  return visibleColumns[columnIndex].info.excludeFromRowClick === true;
+}
+
+function invokeRowClick(object: T, rowElement: HTMLElement, event: Event): void {
+  if (!isRowClickable(object) || !row.info.onClick) {
+    return;
+  }
+
+  if (event instanceof MouseEvent && shouldIgnoreRowClick(rowElement, event)) {
+    return;
+  }
+
+  row.info.onClick(object, event);
+}
+
+function handleRowClick(object: T, event: MouseEvent): void {
+  invokeRowClick(object, event.currentTarget as HTMLElement, event);
+}
+
+function handleRowKeyDown(object: T, event: KeyboardEvent): void {
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+
+  const rowElement = event.currentTarget as HTMLElement;
+  if (event.target !== rowElement) {
+    return;
+  }
+
+  event.preventDefault();
+  invokeRowClick(object, rowElement, event);
+}
 </script>
 
 <div
@@ -446,14 +540,23 @@ async function resetColumns(): Promise<void> {
       {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
         <div
-          class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
+          class="grid grid-table gap-x-0.5 min-h-[48px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
+          class:group={!!row.info.onClick}
+          class:hover:bg-[var(--pd-content-card-hover-bg)]={!row.info.onClick}
           class:rounded-t-lg={!collapsed.includes(itemKey) &&
             children.length > 0}
           class:rounded-lg={collapsed.includes(itemKey) ||
             children.length === 0}
+          class:cursor-pointer={isRowClickable(object)}
           role="row"
-          aria-label={label(object)}>
-          <div class="whitespace-nowrap place-self-center" role="cell">
+          tabindex={isRowClickable(object) ? 0 : undefined}
+          aria-label={label(object)}
+          on:click={handleRowClick.bind(undefined, object)}
+          on:keydown={handleRowKeyDown.bind(undefined, object)}>
+          <div
+            class="whitespace-nowrap place-self-center"
+            class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick && isRowClickable(object)}
+            role="cell">
             {#if children.length > 0}
               <button
                 title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
@@ -487,6 +590,11 @@ async function resetColumns(): Promise<void> {
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
               class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
+              class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick &&
+                isRowClickable(object) &&
+                !column.info.excludeFromRowClick}
+              class:opacity-50={row.info.onClick && !isRowClickable(object) && !column.info.excludeFromRowClick}
+              class:cursor-default={column.info.excludeFromRowClick && isRowClickable(object)}
               role="cell">
               {#if column.info.renderer}
                 <svelte:component

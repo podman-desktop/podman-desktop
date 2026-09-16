@@ -12,31 +12,31 @@ import {
   eventCollect,
   registerConnectionCallback,
 } from './preferences-connection-rendering-task';
-import ThemedIcon from './ThemedIcon.svelte';
 import type { ILoadingStatus } from './Util';
 
-export let cliTool: CliToolInfo;
-let showError = false;
-let errorMessage = '';
-let newVersion: string | undefined = cliTool.newVersion;
-let cliToolUpdateStatus: ILoadingStatus;
-$: cliToolUpdateStatus = {
+interface Props {
+  cliTool: CliToolInfo;
+}
+let { cliTool }: Props = $props();
+
+let showError = $state<boolean>(false);
+let errorMessage = $state<string>('');
+let newVersion = $derived<string | undefined>(cliTool.newVersion);
+let cliToolUpdateStatus = $derived<ILoadingStatus>({
   inProgress: false,
   status: cliTool.canUpdate ? 'toUpdate' : 'unknown',
   action: 'update',
-};
-let cliToolInstallStatus: ILoadingStatus;
-$: cliToolInstallStatus = {
+});
+let cliToolInstallStatus = $derived<ILoadingStatus>({
   inProgress: false,
   status: cliTool.canInstall ? 'toInstall' : 'unknown',
   action: 'install',
-};
-let cliToolUninstallStatus: ILoadingStatus;
-$: cliToolUninstallStatus = {
+});
+let cliToolUninstallStatus = $derived<ILoadingStatus>({
   inProgress: false,
   status: cliTool.canInstall ? 'toUninstall' : 'unknown',
   action: 'uninstall',
-};
+});
 
 async function showTaskManager(): Promise<void> {
   // call the command show-task-manager'
@@ -149,19 +149,16 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
       <!-- left col - cli-tool icon/name + "create new" button -->
       <div class="w-[170px] h-full flex flex-col justify-between">
         <div class="flex flex-row">
-          {#if cliTool?.images?.icon ?? cliTool?.extensionInfo.icon}
-            {#if cliTool?.images?.icon}
-              <ThemedIcon
-                icon={cliTool.images.icon}
-                alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
-            {:else if typeof cliTool.extensionInfo.icon === 'string'}
-              <img
-                src={cliTool.extensionInfo.icon}
-                aria-label="cli-logo"
-                alt="{cliTool.name} logo"
-                class="max-w-[40px] max-h-[40px] h-full shrink-0" />
-            {/if}
+          {#if cliTool?.images?.icon}
+            <Icon
+              icon={cliTool.images.icon}
+              title="{cliTool.name} logo"
+              class="max-w-[40px] max-h-[40px] h-full shrink-0" />
+          {:else if typeof cliTool.extensionInfo.icon === 'string'}
+            <Icon
+              icon={cliTool.extensionInfo.icon}
+              title="{cliTool.name} logo"
+              class="max-w-[40px] max-h-[40px] h-full shrink-0" />
           {/if}
           <span
             id={cliTool.id}

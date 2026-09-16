@@ -5,8 +5,11 @@ import { Link } from '@podman-desktop/ui-svelte';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 
-// Props for Ingress artifact and Status
-export let artifact: V1IngressSpec | undefined;
+interface Props {
+  artifact?: V1IngressSpec;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}

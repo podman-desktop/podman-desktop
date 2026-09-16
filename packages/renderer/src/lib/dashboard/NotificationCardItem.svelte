@@ -5,7 +5,10 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 
-export let notification: NotificationCard;
+interface Props {
+  notification: NotificationCard;
+}
+let { notification }: Props = $props();
 
 const notificationStyleMap = {
   info: {
@@ -25,7 +28,7 @@ const notificationStyleMap = {
   },
 };
 
-const notificationStyle = notificationStyleMap[notification.type];
+const notificationStyle = $derived(notificationStyleMap[notification.type]);
 </script>
 
 <div
@@ -60,7 +63,7 @@ const notificationStyle = notificationStyleMap[notification.type];
     <div class="text-[var(--pd-content-card-carousel-card-header-text)]">
       <button
         class="p-1 hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px]"
-        on:click={(): Promise<void> => window.removeNotification(notification.id)}
+        onclick={(): Promise<void> => window.removeNotification(notification.id)}
         aria-label={`Delete notification ${notification.id}`}
         title="Delete notification">
         <Icon icon={faXmark}/>

@@ -38,6 +38,18 @@ test.describe
           await playExpect(welcomePage.welcomeMessage).toBeVisible();
         });
 
+        test('Welcome page overlays the navigation resize handle', async ({ page, welcomePage }) => {
+          await playExpect(welcomePage.welcomeMessage).toBeVisible();
+
+          const resizeHandle = page.getByRole('separator', { name: 'Resize navigation bar' });
+          const resizeHandleIsTopmost = await resizeHandle.evaluate(element => {
+            const { left, top, width, height } = element.getBoundingClientRect();
+            return document.elementFromPoint(left + width / 2, top + height / 2) === element;
+          });
+
+          playExpect(resizeHandleIsTopmost).toBeFalsy();
+        });
+
         test('Telemetry checkbox is present, set to true, consent can be changed', async ({ welcomePage }) => {
           await playExpect(welcomePage.telemetryConsent).toBeVisible();
           await playExpect(welcomePage.telemetryConsent).toBeChecked();

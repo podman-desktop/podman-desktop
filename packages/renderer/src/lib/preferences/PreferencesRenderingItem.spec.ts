@@ -86,19 +86,19 @@ test('record should have short title by default', async () => {
   });
 });
 
-test('record should use the configured name as its title', async () => {
-  const { getByText, queryByText } = render(PreferencesRenderingItem, {
-    record: {
-      ...EXPERIMENTAL_RECORD,
-      name: 'Path to Podman Binary',
-    },
-  });
+test.each(['short', 'full'] as const)('displayName overrides the %s title and follows record updates', async title => {
+  const record = { ...EXPERIMENTAL_RECORD, displayName: 'Path to Podman Binary' };
+  const { getByText, queryByText, rerender } = render(PreferencesRenderingItem, { record, title });
 
-  await vi.waitFor(() => {
-    const element = getByText('Path to Podman Binary');
-    expect(element).toHaveClass('font-semibold');
-  });
-  expect(queryByText('Foo Bar')).not.toBeInTheDocument();
+  expect(getByText('Path to Podman Binary')).toHaveClass('font-semibold');
+
+  await rerender({ record: { ...record, displayName: 'Binary location' }, title });
+  expect(getByText('Binary location')).toHaveClass('font-semibold');
+  expect(queryByText('Path to Podman Binary')).not.toBeInTheDocument();
+
+  await rerender({ record: EXPERIMENTAL_RECORD, title });
+  expect(getByText(title === 'short' ? 'Foo Bar' : 'Hello world foo Bar')).toHaveClass('font-semibold');
+  expect(queryByText('Binary location')).not.toBeInTheDocument();
 });
 
 test('props title full should use full record id', async () => {

@@ -78,7 +78,12 @@ export class RegistriesPage extends SettingsPage {
 
       if (handleUntrustedCert) {
         try {
-          await handleConfirmationDialog(this.page, 'Add Untrusted Registry?', true, 'Add', 'Cancel', 5_000);
+          await handleConfirmationDialog({
+            page: this.page,
+            dialogTitle: 'Add Untrusted Registry?',
+            buttonName: 'Add',
+            timeout: 5_000,
+          });
         } catch (err) {
           if ((err as Error).name !== 'TimeoutError' && !(err as Error).message?.includes('Timeout')) {
             throw err;

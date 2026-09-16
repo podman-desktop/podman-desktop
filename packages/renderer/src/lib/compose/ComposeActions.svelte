@@ -13,26 +13,36 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-export let compose: ComposeInfoUI;
-export let dropdownMenu = false;
-export let detailed = false;
-
 const dispatch = createEventDispatcher<{ update: ComposeInfoUI }>();
-export let onUpdate: (update: ComposeInfoUI) => void = update => {
-  dispatch('update', update);
-};
+
+interface Props {
+  compose: ComposeInfoUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+  onUpdate?: (update: ComposeInfoUI) => void;
+}
+
+let {
+  compose,
+  dropdownMenu = false,
+  detailed = false,
+  onUpdate = (update): void => {
+    dispatch('update', update);
+  },
+}: Props = $props();
+
 const composeLabel = 'com.docker.compose.project';
 
-let contributions: Menu[] = [];
+let contributions: Menu[] = $state([]);
 onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_COMPOSE);
 });
 
-let hideStartForStop = false;
-let hideStopForStart = false;
+let hideStartForStop = $state(false);
+let hideStopForStart = $state(false);
 
-$: someNeedStart = compose.containers?.some(c => c.state !== 'RUNNING');
-$: someNeedStop = compose.containers?.some(c => c.state === 'RUNNING');
+let someNeedStart = $derived(compose.containers?.some(c => c.state !== 'RUNNING'));
+let someNeedStop = $derived(compose.containers?.some(c => c.state === 'RUNNING'));
 
 function inProgress(inProgress: boolean, state?: string): void {
   compose.actionInProgress = inProgress;
@@ -119,12 +129,7 @@ function openGenerateKube(): void {
 
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
 // otherwise, leave blank.
-let actionsStyle: typeof DropdownMenu | typeof FlatMenu;
-if (dropdownMenu) {
-  actionsStyle = DropdownMenu;
-} else {
-  actionsStyle = FlatMenu;
-}
+let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
@@ -161,7 +166,7 @@ if (dropdownMenu) {
   inProgress={compose.actionInProgress && compose.status === 'DELETING'} />
 
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
-<svelte:component this={actionsStyle}>
+<ActionsStyle>
   {#if !detailed}
     <ListItemButtonIcon
       title="Generate Kube"
@@ -190,4 +195,4 @@ if (dropdownMenu) {
     contributions={contributions}
     detailed={detailed}
     onError={handleError} />
-</svelte:component>
+</ActionsStyle>

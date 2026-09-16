@@ -56,38 +56,16 @@ test('should not open devtools if none', async () => {
   expect(browserWindowMock.webContents.openDevTools).not.toBeCalled();
 });
 
-test('should open devtools on left if left config', async () => {
+test.each([
+  { configValue: 'left', expectedMode: 'left' },
+  { configValue: 'right', expectedMode: 'right' },
+  { configValue: 'bottom', expectedMode: 'bottom' },
+  { configValue: 'detach', expectedMode: 'detach' },
+])('should open devtools with $expectedMode mode', async ({ configValue, expectedMode }) => {
   getConfigurationMock.mockReturnValue({
-    get: () => 'left',
+    get: () => configValue,
   });
   openDevTools.open(browserWindowMock, configurationRegistryMock);
 
-  expect(browserWindowMock.webContents.openDevTools).toBeCalledWith({ mode: 'left' });
-});
-
-test('should open devtools on right if right config', async () => {
-  getConfigurationMock.mockReturnValue({
-    get: () => 'right',
-  });
-  openDevTools.open(browserWindowMock, configurationRegistryMock);
-
-  expect(browserWindowMock.webContents.openDevTools).toBeCalledWith({ mode: 'right' });
-});
-
-test('should open devtools on left if bottom config', async () => {
-  getConfigurationMock.mockReturnValue({
-    get: () => 'bottom',
-  });
-  openDevTools.open(browserWindowMock, configurationRegistryMock);
-
-  expect(browserWindowMock.webContents.openDevTools).toBeCalledWith({ mode: 'bottom' });
-});
-
-test('should open devtools on left if detach config', async () => {
-  getConfigurationMock.mockReturnValue({
-    get: () => 'detach',
-  });
-  openDevTools.open(browserWindowMock, configurationRegistryMock);
-
-  expect(browserWindowMock.webContents.openDevTools).toBeCalledWith({ mode: 'detach' });
+  expect(browserWindowMock.webContents.openDevTools).toBeCalledWith({ mode: expectedMode });
 });

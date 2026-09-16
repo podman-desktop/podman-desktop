@@ -4,7 +4,6 @@ import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
 import { handleNavigation } from '/@/navigation';
@@ -12,27 +11,28 @@ import { containersInfos } from '/@/stores/containers';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let containerID: string;
+interface Props {
+  containerID: string;
+}
+let { containerID }: Props = $props();
 
-let container: ContainerInfoUI | undefined = undefined;
+let container: ContainerInfoUI | undefined = $state(undefined);
 
-let invalidName = false;
-let invalidFolder = true;
-let outputTarget = '';
+let invalidName = $state(false);
+let invalidFolder = $state(true);
+let outputTarget = $state('');
 let outputUri: Uri;
-let exportedError = '';
-let inProgress = false;
-let invalidFields: boolean;
-$: invalidFields = invalidName || invalidFolder;
+let exportedError = $state('');
+let inProgress = $state(false);
+let invalidFields = $derived(invalidName || invalidFolder);
 
 onMount(() => {
-  const containerUtils = new ContainerUtils();
-
   // loading container info
   return containersInfos.subscribe(containers => {
-    const matchingContainer = containers.find(c => c.Id === containerID);
+    const matchingContainer = containers.find(c => c.id === containerID);
     if (matchingContainer) {
-      container = containerUtils.getContainerInfoUI(matchingContainer);
+      // copy: this object is local to the screen and must not alias the store's element
+      container = { ...matchingContainer };
     } else {
       handleNavigation({
         page: NavigationPage.CONTAINERS,

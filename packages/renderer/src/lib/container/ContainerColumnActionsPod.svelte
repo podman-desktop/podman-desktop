@@ -3,7 +3,11 @@ import PodActions from '/@/lib/pod/PodActions.svelte';
 
 import type { ContainerGroupInfoUI } from './ContainerInfoUI';
 
-export let object: ContainerGroupInfoUI;
+interface Props {
+  object: ContainerGroupInfoUI;
+}
+
+let { object }: Props = $props();
 </script>
 
 {#if object.engineId && object.id && object.shortId && object.status && object.engineName && object.humanCreationDate && object.created}
@@ -24,6 +28,5 @@ export let object: ContainerGroupInfoUI;
         Status: container.state,
       })),
     }}
-    dropdownMenu={true}
-    on:update />
+    dropdownMenu={true} />
 {/if}

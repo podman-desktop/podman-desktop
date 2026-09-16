@@ -94,7 +94,9 @@ let containerNameError: string | undefined = $derived.by(() => {
   const containerAlreadyExists = $containersInfos.find(
     container =>
       container.engineId === imageInspectInfo.engineId &&
-      container.Names.some(iteratingContainerName => iteratingContainerName === `/${options.basic.containerName}`),
+      // `names` keeps the raw aliases with their leading slash; `name` is a single
+      // compose-stripped string and cannot answer a multi-alias match
+      container.names.some(iteratingContainerName => iteratingContainerName === `/${options.basic.containerName}`),
   );
   if (containerAlreadyExists) {
     return `The name ${options.basic.containerName} already exists. Please choose another name or leave blank to generate a name.`;
@@ -253,8 +255,8 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
   }
 }
 
-async function startContainer(): Promise<void> {
-  if (!image) return;
+function buildCreateOptions(): ContainerCreateOptions | undefined {
+  if (!image) return undefined;
 
   createError = undefined;
   // create ExposedPorts objects
@@ -286,7 +288,7 @@ async function startContainer(): Promise<void> {
   } catch (e) {
     createError = String(e);
     console.error('Error while creating container', e);
-    return;
+    return undefined;
   }
 
   const Env = options.basic.environmentVariables
@@ -423,19 +425,34 @@ async function startContainer(): Promise<void> {
     createOptions.Hostname = options.networking.hostname;
   }
 
+  return createOptions;
+}
+
+async function submitContainer(start: boolean): Promise<void> {
+  const createOptions = buildCreateOptions();
+  if (!createOptions) return;
+
+  createOptions.start = start;
+
   try {
     const data = await window.createAndStartContainer(imageInspectInfo.engineId, createOptions);
 
-    // redirect to containers if no tty, else redirect to the container details
-    if (Tty && OpenStdin) {
+    if (start && createOptions.Tty && createOptions.OpenStdin) {
       handleNavigation({
         page: NavigationPage.CONTAINER_TTY,
         parameters: {
           id: data.id,
         },
       });
-    } else {
+    } else if (start) {
       handleNavigation({ page: NavigationPage.CONTAINERS });
+    } else {
+      handleNavigation({
+        page: NavigationPage.CONTAINER_SUMMARY,
+        parameters: {
+          id: data.id,
+        },
+      });
     }
   } catch (e) {
     createError = String(e);
@@ -1203,11 +1220,19 @@ const envDialogOptions: OpenDialogOptions = {
             Cancel
           </Button>
           <Button
-            on:click={startContainer}
+            type="secondary"
+            on:click={(): void => {submitContainer(false).catch((e: unknown) => console.error(e));}}
+            aria-label="Create"
+            disabled={invalidFields}
+            icon={faPlusCircle}>
+            Create
+          </Button>
+          <Button
+            on:click={(): void => {submitContainer(true).catch((e: unknown) => console.error(e));}}
             icon={faPlay}
-            aria-label="Start Container"
+            aria-label="Create and start"
             disabled={invalidFields}>
-            Start Container
+            Create and start
           </Button>
         </div>
         <div aria-label="createError">

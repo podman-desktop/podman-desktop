@@ -28,8 +28,8 @@ let { entry, meta = $bindable(), expanded = false }: NavRegistryEntryProps = $pr
         {:else if entry.icon.iconComponent}
           <!-- svelte-ignore svelte_component_deprecated -->
           <svelte:component this={entry.icon.iconComponent} size="24" />
-        {:else if entry.icon.iconImage && typeof entry.icon.iconImage === 'string'}
-          <img src={entry.icon.iconImage} width="22" height="22" alt={entry.name} />
+        {:else if entry.icon.iconImage}
+          <Icon icon={entry.icon.iconImage} size={22} title={entry.name} />
         {/if}
       </div>
       {#if expanded && entry.icon}

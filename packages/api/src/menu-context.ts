@@ -24,4 +24,5 @@ export enum MenuContext {
   DASHBOARD_COMPOSE = 'dashboard/compose',
   DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
   DASHBOARD_SECRET = 'dashboard/secret',
+  DASHBOARD_NETWORK = 'dashboard/network',
 }

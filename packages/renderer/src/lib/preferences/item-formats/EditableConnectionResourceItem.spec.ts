@@ -21,11 +21,15 @@ import '@testing-library/jest-dom/vitest';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import EditableConnectionResourceItem from './EditableConnectionResourceItem.svelte';
 
 const onSave = vi.fn();
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 test('Expect onSave is called with normalized value if record uses GB and input is updated', async () => {
   const record: IConfigurationPropertyRecordedSchema = {
@@ -96,7 +100,8 @@ test('Expect onSave to be called with initial value if input is cancelled', asyn
     minimum: 1000000000,
     maximum: 34000000000,
   };
-  const value = 2000000000;
+  const INITIAL_VALUE = 2000000000;
+  const value = INITIAL_VALUE;
   render(EditableConnectionResourceItem, { record, value, onSave });
 
   const buttonEdit = screen.getByRole('button', { name: 'Edit' });
@@ -118,5 +123,5 @@ test('Expect onSave to be called with initial value if input is cancelled', asyn
 
   await userEvent.click(buttonCancel);
 
-  expect(onSave).toBeCalledWith('record', 20000000000);
+  expect(onSave).toBeCalledWith('record', INITIAL_VALUE);
 });

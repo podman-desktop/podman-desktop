@@ -5,7 +5,11 @@ import PodIcon from '/@/lib/images/PodIcon.svelte';
 
 import type { PodInfoUI } from './PodInfoUI';
 
-export let object: PodInfoUI;
+interface Props {
+  object: PodInfoUI;
+}
+
+let { object }: Props = $props();
 </script>
 
 <StatusIcon icon={PodIcon} status={object.status} />
