@@ -333,7 +333,7 @@ importers:
         version: link:../../packages/extension-api
       js-yaml:
         specifier: ^5.4.1
-        version: 5.4.1
+        version: 5.4.2
     devDependencies:
       adm-zip:
         specifier: ^0.6.1
@@ -632,7 +632,7 @@ importers:
         version: 8.2.3(reflect-metadata@0.2.2)
       js-yaml:
         specifier: ^5.4.1
-        version: 5.4.1
+        version: 5.4.2
       minimist:
         specifier: ^1.2.8
         version: 1.2.8
@@ -785,7 +785,7 @@ importers:
         version: 5.0.0
       js-yaml:
         specifier: ^5.4.1
-        version: 5.4.1
+        version: 5.4.2
       search-string:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8826,6 +8826,10 @@ packages:
 
   js-yaml@5.4.1:
     resolution: {integrity: sha512-28R/k+NAjeuf7+CKlTxWZVExJGwVVLwY06DgEnOMz2gEpfNkDcD7QvyiVPT0xy0XXhU8vHsd4Ot42OOPdJG7dQ==}
+    hasBin: true
+
+  js-yaml@5.4.2:
+    resolution: {integrity: sha512-m+aqu+LwO1O6sIopafj8HUVl5aawITwZQe/yHpMCKjaWBaA/d07B/QdMb3529REftiU+RMMHL3Vlsw3hON7vWg==}
     hasBin: true
 
   jsbn@0.1.1:
@@ -21770,6 +21774,10 @@ snapshots:
       argparse: 2.0.1
 
   js-yaml@5.4.1:
+    dependencies:
+      argparse: 2.0.1
+
+  js-yaml@5.4.2:
     dependencies:
       argparse: 2.0.1
 
