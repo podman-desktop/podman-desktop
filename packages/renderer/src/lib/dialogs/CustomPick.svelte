@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faAngleDown, faAngleUp, faCircleCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import type { CustomPickItem } from '@podman-desktop/api';
-import { Button } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
@@ -293,10 +293,10 @@ function dragMe(node: HTMLElement): void {
         {/if}
       {/each}
 
-      <div class="px-5 py-5 mt-2 flex flex-row w-full justify-end space-x-5">
+      <ButtonRow class="mt-2">
         <Button type="link" aria-label="Cancel" on:click={cancel}>Cancel</Button>
         <Button aria-label="Next" disabled={!items.find(item => item.selected)} on:click={next}>Ok</Button>
-      </div>
+      </ButtonRow>
     </div>
   </div>
 {/if}
