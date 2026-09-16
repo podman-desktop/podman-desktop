@@ -193,6 +193,7 @@ const installedExtensions: CombinedExtensionInfoUI[] = [
   {
     id: 'idYInstalled',
     version: '2.0.0Y',
+    removable: true,
   },
 ] as unknown[] as CombinedExtensionInfoUI[];
 
@@ -266,6 +267,28 @@ describe('extractCatalogExtensions', () => {
     expect(bExtensionUI.publisherDisplayName).toBe('Foo Publisher');
     expect(bExtensionUI.isInstalled).toBe(false);
     expect(bExtensionUI.shortDescription).toBe('this is short B');
+  });
+
+  test('Expect bundled platform extensions to be excluded from the catalog', async () => {
+    const bundledExtension: CatalogExtension = {
+      ...aFakeExtension,
+      id: 'podman-desktop.podman',
+      displayName: 'Podman',
+    };
+
+    // the bundled extension is installed and non-removable, exactly as it ships inside the app
+    const installed = [
+      { id: 'podman-desktop.podman', type: 'pd', removable: false, devMode: false },
+    ] as unknown[] as CombinedExtensionInfoUI[];
+
+    const catalogExtensionsUI = extensionsUtils.extractCatalogExtensions(
+      [bundledExtension, bFakeExtension],
+      [],
+      installed,
+    );
+
+    // the bundled extension is dropped, the regular catalog extension remains
+    expect(catalogExtensionsUI.map(e => e.id)).toEqual(['idBNotInstalled']);
   });
 });
 
