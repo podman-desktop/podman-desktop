@@ -66,6 +66,7 @@ const PROVIDER_INFO_MOCK: ProviderInfo = {
 } as unknown as ProviderInfo;
 
 const originalConsoleError = console.error;
+const originalConsoleDebug = console.debug;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -83,6 +84,7 @@ beforeEach(() => {
     return undefined;
   });
   console.error = vi.fn();
+  console.debug = vi.fn();
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
   vi.mocked(window.cancelToken).mockResolvedValue(undefined);
@@ -96,6 +98,8 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleError;
+  console.debug = originalConsoleDebug;
+  vi.useRealTimers();
 });
 
 const buttonText = 'Pull image';
@@ -512,17 +516,19 @@ test('input component should raise an error when the input is not valid - error'
 // a ':' is the tag separator only after the last '/', so 'localhost:5000' is a host and a port
 describe('registry with a port', () => {
   test('should list the tags of the repository and not of the registry host', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(PullImage);
 
     const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
-    await userEvent.click(textbox);
-    await userEvent.paste('localhost:5000/nginx:');
+    await user.click(textbox);
+    await user.paste('localhost:5000/nginx:');
 
-    // the tag lookup runs on every keystroke, the search for the tags to propose is debounced
-    await vi.waitFor(() => {
-      expect(window.listImageTagsInRegistry).toHaveBeenCalledWith({ image: 'localhost:5000/nginx' });
-    });
+    // the tags to propose are searched once the typeahead delay has passed
+    await vi.advanceTimersByTimeAsync(400);
+    await tick();
 
+    expect(window.listImageTagsInRegistry).toHaveBeenCalledWith({ image: 'localhost:5000/nginx' });
     expect(window.listImageTagsInRegistry).not.toHaveBeenCalledWith({ image: 'localhost' });
   });
 
@@ -878,19 +884,23 @@ describe('invalid image name', () => {
 
     // nothing could be resolved, so no Podman FQN is proposed
     expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
+    // the reason is swallowed by the UI, so it is only traced
+    expect(console.debug).toHaveBeenCalledWith(`Could not resolve shortname ':':`, expect.any(Error));
   });
 
   // which names are searchable is unit tested in image-reference.spec.ts, this only wires it up
   test('should not search any registry for a name that cannot be looked up', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(PullImage);
 
     const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
-    await userEvent.click(textbox);
-    await userEvent.paste('.');
+    await user.click(textbox);
+    await user.paste('.');
 
-    // the search is debounced, so waiting for longer than the delay is what tells a query that is
-    // never sent from one that is only queued
-    await new Promise(resolve => setTimeout(resolve, 400));
+    // the search is debounced, so outrunning the delay is what tells a query that is never sent
+    // from one that is only queued
+    await vi.advanceTimersByTimeAsync(400);
     await tick();
 
     expect(window.searchImageInRegistry).not.toHaveBeenCalled();
