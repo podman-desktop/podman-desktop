@@ -75,6 +75,7 @@ overrides:
   browserslist: '>=4.28.7'
   colord: '>=2.9.4'
   smol-toml: '>=1.7.1'
+  vitest: '>=5.0.0'
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
