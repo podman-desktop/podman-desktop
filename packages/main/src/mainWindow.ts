@@ -118,8 +118,13 @@ async function createWindow(): Promise<BrowserWindow> {
         app.dock?.hide();
       }
     } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
-      // On macOS login item launch, defer showing until we can check the minimize preference
-      deferredShow = true;
+      // On macOS login item launch, apply the minimize preference now if the configuration
+      // registry has already arrived, otherwise defer until it does
+      if (configurationRegistry) {
+        loginMinimizeHandler.apply(browserWindow, configurationRegistry);
+      } else {
+        deferredShow = true;
+      }
     } else {
       browserWindow.show();
     }
