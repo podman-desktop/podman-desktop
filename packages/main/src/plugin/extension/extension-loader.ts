@@ -1739,6 +1739,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     if (fs.existsSync(oldStoragePath) && !fs.existsSync(storagePath)) {
       await fs.promises.rename(oldStoragePath, storagePath);
     }
+    await fs.promises.mkdir(storagePath, { recursive: true });
 
     const secrets = this.safeStorageRegistry.getExtensionStorage(extension.id);
 
