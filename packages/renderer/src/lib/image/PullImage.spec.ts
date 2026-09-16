@@ -361,6 +361,20 @@ test('Expect not to check not shortname images', async () => {
   expect(vi.mocked(window.resolveShortnameImage)).not.toBeCalled();
 });
 
+test('Expect no Podman FQN when the engine returns no shortname', async () => {
+  vi.mocked(window.resolveShortnameImage).mockResolvedValue(undefined as unknown as string[]);
+  render(PullImage);
+
+  const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+  await userEvent.click(textbox);
+  await userEvent.paste('nginx');
+
+  await vi.waitFor(() => {
+    expect(window.resolveShortnameImage).toHaveBeenCalled();
+  });
+  expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
+});
+
 test('Expect latest tag warning is displayed when the image does not have latest tag', async () => {
   render(PullImage);
 
