@@ -4,7 +4,7 @@
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 /* eslint-enable import/no-duplicates */
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
@@ -112,7 +112,7 @@ function end(): void {
       <input type="hidden" aria-label="Provider Choice" readonly value={selectedIndex} />
     {/if}
 
-    <div class="flex items-center justify-end gap-3">
+    <ButtonRow>
       {#if !createVolumeFinished && selectedProvider}
         {@const connection = selectedProvider}
         <Button
@@ -127,7 +127,7 @@ function end(): void {
       {#if createVolumeFinished}
         <Button onclick={end}>Done</Button>
       {/if}
-    </div>
+    </ButtonRow>
 
     {#if createError}
       <ErrorMessage class="text-sm" error={createError} />
