@@ -293,7 +293,7 @@ function dragMe(node: HTMLElement): void {
         {/if}
       {/each}
 
-      <ButtonRow class="mt-2">
+      <ButtonRow class="m-2">
         <Button type="link" aria-label="Cancel" on:click={cancel}>Cancel</Button>
         <Button aria-label="Next" disabled={!items.find(item => item.selected)} on:click={next}>Ok</Button>
       </ButtonRow>
