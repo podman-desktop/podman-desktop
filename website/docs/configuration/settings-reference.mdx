@@ -79,7 +79,7 @@ import TabItem from '@theme/TabItem';
 | `tasks.manager`                              | object  | `null`             | **EXPERIMENTAL:** New task manager widget. Example: `{}`                                                                                                                                                                                                                                                             |
 | `tasks.statusBar`                            | object  | `null`             | **EXPERIMENTAL:** Show tasks in status bar. Example: `{}`                                                                                                                                                                                                                                                            |
 | `tasks.toast`                                | boolean | `false`            | Show task creation notifications                                                                                                                                                                                                                                                                                     |
-| `telemetry.enabled`                          | boolean | `true`             | Send anonymous usage data to Red Hat                                                                                                                                                                                                                                                                                 |
+| `telemetry.enabled`                          | boolean | `true`             | Send anonymous usage data to Red Hat. Ignored in a CI environment, see [Telemetry in a CI environment](#telemetry-in-a-ci-environment)                                                                                                                                                                               |
 | `terminal.integrated.fontSize`               | number  | `10`               | Terminal font size (6-100 px)                                                                                                                                                                                                                                                                                        |
 | `terminal.integrated.lineHeight`             | number  | `1`                | Terminal line height (1-4)                                                                                                                                                                                                                                                                                           |
 | `titleBar.searchBar`                         | object  | `null`             | **EXPERIMENTAL:** Enable titlebar searchbar. Example: `{}`                                                                                                                                                                                                                                                           |
@@ -107,6 +107,32 @@ These settings are automatically managed by Podman Desktop and should not typica
 | `telemetry.check`                                | boolean | `false`                                                    | Telemetry dialog shown                                                                   |
 | `welcome.version`                                | string  | `"undefined"`                                              | Welcome page version shown                                                               |
 | `window.bounds`                                  | object  | `null`                                                     | Window position and size. Example: `{"x": 2008, "y": 310, "width": 1022, "height": 795}` |
+
+## Telemetry in a CI environment
+
+Podman Desktop never sends telemetry when it detects that it runs in a CI environment, whatever the value of the `telemetry.enabled` setting. You therefore do not need to turn telemetry off in your pipelines, for example before running end-to-end tests.
+
+At startup, Podman Desktop looks for the environment variables set by the most common CI providers:
+
+| Environment variable                                                     | Set by                                                         |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `CI`, `CONTINUOUS_INTEGRATION`                                           | Most CI providers, such as GitHub Actions, GitLab CI or Travis |
+| `BUILD_NUMBER`                                                           | Jenkins, TeamCity                                              |
+| `RUN_ID`                                                                 | TaskCluster, dsari                                             |
+| `APPVEYOR`, `BITBUCKET_BUILD_NUMBER`, `BUILDKITE`, `CIRCLECI`            | AppVeyor, Bitbucket Pipelines, Buildkite, CircleCI             |
+| `CODEBUILD_BUILD_ID`, `DRONE`, `GITHUB_ACTIONS`, `GITLAB_CI`             | AWS CodeBuild, Drone, GitHub Actions, GitLab CI                |
+| `HUDSON_URL`, `JENKINS_URL`, `SEMAPHORE`, `TEAMCITY_VERSION`, `TF_BUILD` | Hudson, Jenkins, Semaphore, TeamCity, Azure Pipelines          |
+| `TRAVIS`                                                                 | Travis CI                                                      |
+
+A variable set to an empty value, `false`, or `0` does not flag a CI environment, so that you can run Podman Desktop with telemetry on a machine where such a variable is defined but no build is running.
+
+When a CI environment is detected, Podman Desktop logs a warning:
+
+```
+CI environment detected: telemetry is disabled for this run.
+```
+
+Detecting a CI environment only turns the reporting off for the current run: your settings file is left untouched, and the welcome screen keeps prompting for telemetry as usual.
 
 ## Example Configuration
 
