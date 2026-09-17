@@ -315,6 +315,28 @@ describe('extractExtensionDetail', () => {
     expect(extensionDetail?.error?.message).toBe('An error occurred');
     expect(extensionDetail?.error?.stack).toBe('line1\nline2');
   });
+
+  test('Check the overriding flag is taken from the installed extension', async () => {
+    const overridingExtensions = [
+      { id: 'idOverriding', displayName: 'Overriding Extension', removable: true, bundled: false, overriding: true },
+    ] as unknown[] as CombinedExtensionInfoUI[];
+
+    const extensionDetail = extensionsUtils.extractExtensionDetail(
+      catalogExtensions,
+      overridingExtensions,
+      'idOverriding',
+    );
+    expect(extensionDetail?.overriding).toBeTruthy();
+  });
+
+  test('Check the overriding flag is false for an extension only in the catalog', async () => {
+    const extensionDetail = extensionsUtils.extractExtensionDetail(
+      catalogExtensions,
+      installedExtensions,
+      'idZNotInstalled',
+    );
+    expect(extensionDetail?.overriding).toBeFalsy();
+  });
 });
 
 describe('filters', () => {
