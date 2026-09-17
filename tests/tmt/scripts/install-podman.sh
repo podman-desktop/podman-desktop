@@ -19,6 +19,22 @@
 #!/bin/bash
 set -euo pipefail
 
+# Handle "latest" version early: resolve the version and check if Koji RPM exists before uninstalling the preinstalled version.
+if [[ "$PODMAN_VERSION" == "latest" ]]; then
+    RESOLVED_PODMAN_VERSION="$(curl -s https://api.github.com/repos/podman-container-tools/podman/releases/latest | jq -r .tag_name | sed 's/^v//')"
+    COMPOSE_VERSION="fc$(echo "$COMPOSE" | cut -d'-' -f2)"
+    KOJI_RPM_URL="https://kojipkgs.fedoraproject.org//packages/podman/${RESOLVED_PODMAN_VERSION}/1.${COMPOSE_VERSION}/${ARCH}/podman-${RESOLVED_PODMAN_VERSION}-1.${COMPOSE_VERSION}.${ARCH}.rpm"
+
+    if ! curl -fsIL "$KOJI_RPM_URL" > /dev/null 2>&1; then
+        echo "Warning: Latest Podman RPM (version $RESOLVED_PODMAN_VERSION) is not available on Koji for this Fedora/arch combination."
+        echo "Info: Keeping existing Podman installation $(podman --version | cut -d' ' -f3)"
+        exit 0
+    fi
+
+    # RPM exists on Koji; proceed with the resolved version which will be installed later in the script.
+    PODMAN_VERSION="$RESOLVED_PODMAN_VERSION"
+fi
+
 # Uninstall a preinstalled Podman version to ensure the desired version will be installed.
 sudo dnf remove -y podman
 
@@ -42,10 +58,7 @@ elif [[ "$PODMAN_VERSION" == "nightly" ]]; then
         --repofrompath=podman-next,https://download.copr.fedorainfracloud.org/results/rhcontainerbot/podman-next/fedora-$(rpm -E %fedora)/${ARCH}/ \
         list --showduplicates podman 2>/dev/null | grep dev | tail -n1 | cut -d':' -f2 | cut -d'-' -f1 )"
 else
-    # For "latest" or specific version, fetch version if needed and install from RPM
-    if [[ "$PODMAN_VERSION" == "latest" ]]; then
-        PODMAN_VERSION="$(curl -s https://api.github.com/repos/podman-container-tools/podman/releases/latest | jq -r .tag_name | sed 's/^v//')"
-    fi
+    # For specific version, fetch if needed and install from RPM
     CUSTOM_PODMAN_URL="https://kojipkgs.fedoraproject.org//packages/podman/${PODMAN_VERSION}/1.${COMPOSE_VERSION}/${ARCH}/podman-${PODMAN_VERSION}-1.${COMPOSE_VERSION}.${ARCH}.rpm"
     curl -Lo podman.rpm "$CUSTOM_PODMAN_URL"
     if [[ $? -ne 0 ]]; then
