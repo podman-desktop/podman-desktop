@@ -1,0 +1,19 @@
+# fullsend per-repo configuration
+# https://github.com/fullsend-ai/fullsend
+#
+# This file configures fullsend for per-repo installation mode.
+# See https://fullsend.sh/docs/guides/infrastructure/layered-config-reference
+version: "1"
+roles:
+    - triage
+allowed_remote_resources:
+    - https://raw.githubusercontent.com/fullsend-ai/fullsend/
+    - https://raw.githubusercontent.com/fullsend-ai/agents/
+create_issues:
+    allow_targets:
+        repos:
+            - podman-desktop/podman-desktop
+            - fullsend-ai/fullsend
+inference:
+    project: fullsend-eval
+    wif_provider: projects/457914409018/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-podman-desktop-podman-desktop

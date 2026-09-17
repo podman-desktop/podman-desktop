@@ -30,7 +30,7 @@ $effect(() => {
       value: configurationKey.id
         ? await window.getConfigurationValue(
             configurationKey.id,
-            containerConnectionInfo as unknown as ContainerProviderConnection,
+            $state.snapshot(containerConnectionInfo) as unknown as ContainerProviderConnection,
           )
         : undefined,
       connection: containerConnectionInfo?.name ?? '',

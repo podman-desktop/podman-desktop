@@ -50,6 +50,7 @@ export const combinedInstalledExtensions: Readable<CombinedExtensionInfoUI[]> = 
         state: 'started',
         removable: true,
         devMode: false,
+        bundled: false,
         path: ext.storagePath,
         readme: ext.readme ?? '',
       };

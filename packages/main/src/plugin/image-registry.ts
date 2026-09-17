@@ -32,7 +32,6 @@ import type {
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type * as Dockerode from 'dockerode';
-import * as fzstd from 'fzstd';
 import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import { Agent, ProxyAgent } from 'undici';
@@ -45,6 +44,7 @@ import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
+import { decompressZstd } from './util/zstd.js';
 
 export interface RegistryAuthInfo {
   authUrl: string;
@@ -621,35 +621,40 @@ export class ImageRegistry {
     const body = response.body;
     let transferred = 0;
 
-    // pipeline handles backpressure, error propagation and stream teardown
-    await pipeline(async function* () {
-      for await (const chunk of body) {
-        transferred += chunk.byteLength;
+    // in case of zstd, the downloaded file is decompressed to a separate tar file before being extracted
+    const unpackedFileName = compressionType === 'zstd' ? tmpFileName.replace('.zst', '.tar') : undefined;
 
-        const downloaded = currentDownloaded + transferred;
-        const progress = Math.round((downloaded / totalSize) * 100);
+    try {
+      // pipeline handles backpressure, error propagation and stream teardown
+      await pipeline(async function* () {
+        for await (const chunk of body) {
+          transferred += chunk.byteLength;
 
-        logger({
-          message: `Downloading ${digest}${suffix} - ${progress}% - (${downloaded}/${totalSize})`,
-          progress,
-        });
+          const downloaded = currentDownloaded + transferred;
+          const progress = Math.round((downloaded / totalSize) * 100);
 
-        yield chunk;
+          logger({
+            message: `Downloading ${digest}${suffix} - ${progress}% - (${downloaded}/${totalSize})`,
+            progress,
+          });
+
+          yield chunk;
+        }
+      }, createWriteStream(tmpFileName));
+
+      if (unpackedFileName) {
+        await decompressZstd(tmpFileName, unpackedFileName);
+        await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
+      } else {
+        await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
       }
-    }, createWriteStream(tmpFileName));
-
-    if (compressionType === 'zstd') {
-      //use fstd library to extract the file
-      const content = await fs.promises.readFile(tmpFileName);
-      const decompressed = fzstd.decompress(content);
-      const unpackedFileName = tmpFileName.replace('.zst', '.tar');
-      await fs.promises.writeFile(unpackedFileName, decompressed);
-      await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
-    } else {
-      await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
+    } finally {
+      // remove the temporary files, even if the download, the decompression or the extraction failed
+      await fs.promises.rm(tmpFileName, { force: true });
+      if (unpackedFileName) {
+        await fs.promises.rm(unpackedFileName, { force: true });
+      }
     }
-    // remove the temporary file
-    await fs.promises.rm(tmpFileName);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -66,6 +66,7 @@
       "title": "Podman",
       "properties": {
         "podman.binary.path": {
+          "displayName": "Path to Podman Binary",
           "type": "string",
           "format": "file",
           "default": "",
@@ -512,14 +513,14 @@
     "@types/mustache": "^4.2.6",
     "@types/ssh2": "^1.15.6",
     "@types/sshpk": "^1.17.5",
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
     "msw": "^2.15.0",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
     "tsx": "^4.23.13",
-    "vite": "^8.2.2",
+    "vite": "^8.3.0",
     "vitest": "^5.0.0"
   }
 }
