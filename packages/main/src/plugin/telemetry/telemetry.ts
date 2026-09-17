@@ -46,6 +46,7 @@ import product from '/@product.json' with { type: 'json' };
 
 // eslint-disable-next-line no-restricted-imports
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
+import { CIDetection } from './ci-detection.js';
 import { Identity } from './identity.js';
 import type { TelemetryRule } from './telemetry-api.js';
 
@@ -81,6 +82,8 @@ export class Telemetry {
 
   protected telemetryInitialized = false;
 
+  private isCIEnvironment = false;
+
   private telemetryConfigured = false;
 
   protected pendingItems: { eventName: string; properties?: unknown }[] = [];
@@ -99,6 +102,8 @@ export class Telemetry {
     private defaultConfiguration: DefaultConfiguration,
     @inject(LockedConfiguration)
     private lockedConfiguration: LockedConfiguration,
+    @inject(CIDetection)
+    private ciDetection: CIDetection,
   ) {
     this.identity = new Identity();
     this.lastTimeEvents = new Map();
@@ -137,6 +142,19 @@ export class Telemetry {
     // track changes on enablement
     this.listenForTelemetryUpdates();
 
+    // running on a CI: never report anything. The configuration and the welcome screen
+    // are left untouched, only the reporting is turned off for this run.
+    this.isCIEnvironment = this.ciDetection.isCIEnvironment();
+    if (this.isCIEnvironment) {
+      console.warn('CI environment detected: telemetry is disabled for this run.');
+      this.telemetryEnabled = false;
+      this.telemetryInitialized = true;
+
+      // clear pending items, they will never be sent
+      this.pendingItems.length = 0;
+      return;
+    }
+
     // initialize objects
     this.analytics = new Analytics({ writeKey: Telemetry.SEGMENT_KEY });
     this.analytics.on('error', err => {
@@ -171,6 +189,10 @@ export class Telemetry {
   }
 
   isTelemetryEnabled(): boolean {
+    // telemetry is never reported from a CI environment, whatever the configuration says
+    if (this.isCIEnvironment) {
+      return false;
+    }
     const telemetryConfiguration = this.configurationRegistry.getConfiguration(TelemetrySettings.SectionName);
     const enabled = telemetryConfiguration.get<boolean>(TelemetrySettings.Enabled);
     return enabled === true;
@@ -257,7 +279,8 @@ export class Telemetry {
   }
 
   async configureTelemetry(): Promise<void> {
-    if (this.telemetryInitialized) {
+    // the welcome screen asks to configure the telemetry when the user accepts it, keep it disabled on a CI
+    if (this.telemetryInitialized || this.isCIEnvironment) {
       return;
     }
 
