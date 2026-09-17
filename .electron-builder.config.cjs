@@ -150,11 +150,6 @@ const config = {
     }
 
     if (context.electronPlatformName === 'win32') {
-      // add the win-ca package
-      context.packager.config.extraResources.push({
-        from: 'node_modules/win-ca/lib/roots.exe',
-        to: 'win-ca/roots.exe',
-      });
       // add podman installer
       if (context.arch === Arch.x64) {
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-amd64.msi`);
