@@ -141,6 +141,7 @@ const extensionInfoMock: ExtensionInfo = {
   removable: false,
   devMode: false,
   bundled: false,
+  overriding: false,
   version: '',
   state: '',
   path: '',

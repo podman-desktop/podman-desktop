@@ -36,6 +36,8 @@ export interface ExtensionInfo {
   removable: boolean;
   devMode: boolean;
   bundled: boolean;
+  // true if this extension replaces a bundled extension having the same id
+  overriding: boolean;
   version: string;
   state: string;
   error?: ExtensionError;

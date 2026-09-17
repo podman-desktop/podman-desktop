@@ -38,6 +38,9 @@ export interface AnalyzedExtension {
   removable: boolean;
   bundled: boolean;
 
+  // true if the extension replaces a bundled extension having the same id
+  overriding: boolean;
+
   // true if the extension is running in development mode
   // it means we're using a separate development folder
   devMode: boolean;
@@ -64,6 +67,7 @@ export interface ExtensionAnalyzerOptions {
   removable: boolean;
   devMode?: boolean;
   bundled?: boolean;
+  overriding?: boolean;
 }
 
 @injectable()
@@ -73,6 +77,7 @@ export class ExtensionAnalyzer {
     removable,
     devMode,
     bundled,
+    overriding,
   }: ExtensionAnalyzerOptions): Promise<AnalyzedExtension> {
     const resolvedExtensionPath = await realpath(extensionPath);
     // do nothing if there is no package.json file
@@ -90,6 +95,7 @@ export class ExtensionAnalyzer {
         removable: removable,
         devMode: devMode ?? false,
         bundled: bundled ?? false,
+        overriding: overriding ?? false,
         subscriptions: [],
         dispose(): void {},
         error,
@@ -123,6 +129,7 @@ export class ExtensionAnalyzer {
       removable,
       devMode: devMode ?? false,
       bundled: bundled ?? false,
+      overriding: overriding ?? false,
       subscriptions: disposables,
       dispose(): void {
         for (const disposable of disposables) {
