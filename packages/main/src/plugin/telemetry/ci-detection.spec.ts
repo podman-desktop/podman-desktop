@@ -18,12 +18,18 @@
 
 import { beforeEach, expect, test } from 'vitest';
 
-import { CI_ENVIRONMENT_VARIABLES, CIDetection } from './ci-detection.js';
+import { CIDetection } from './ci-detection.js';
 
-let ciDetection: CIDetection;
+class TestCIDetection extends CIDetection {
+  public static getCIEnvironmentVariables(): readonly string[] {
+    return TestCIDetection.CI_ENVIRONMENT_VARIABLES;
+  }
+}
+
+let ciDetection: TestCIDetection;
 
 beforeEach(() => {
-  ciDetection = new CIDetection();
+  ciDetection = new TestCIDetection();
 });
 
 test('should not detect a CI environment if no variable is set', () => {
@@ -34,7 +40,7 @@ test('should not detect a CI environment if only unrelated variables are set', (
   expect(ciDetection.isCIEnvironment({ HOME: '/home/user', PATH: '/usr/bin' })).toBeFalsy();
 });
 
-test.each(CI_ENVIRONMENT_VARIABLES)('should detect a CI environment with %s', name => {
+test.each(TestCIDetection.getCIEnvironmentVariables())('should detect a CI environment with %s', name => {
   expect(ciDetection.isCIEnvironment({ [name]: 'true' })).toBeTruthy();
 });
 

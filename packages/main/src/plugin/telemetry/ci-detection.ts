@@ -18,46 +18,46 @@
 
 import { injectable } from 'inversify';
 
-/**
- * Environment variables set by the most common CI providers.
- * The four first ones are the generic variables also used by pnpm to detect a CI environment
- * (https://pnpm.io/cli/install#--frozen-lockfile), the others are provider specific and cover
- * the providers not setting any of the generic ones.
- */
-export const CI_ENVIRONMENT_VARIABLES = [
-  'CI',
-  'CONTINUOUS_INTEGRATION',
-  'BUILD_NUMBER',
-  'RUN_ID',
-  'APPVEYOR',
-  'BITBUCKET_BUILD_NUMBER',
-  'BUILDKITE',
-  'CIRCLECI',
-  'CODEBUILD_BUILD_ID',
-  'DRONE',
-  'GITHUB_ACTIONS',
-  'GITLAB_CI',
-  'HUDSON_URL',
-  'JENKINS_URL',
-  'SEMAPHORE',
-  'TEAMCITY_VERSION',
-  'TF_BUILD',
-  'TRAVIS',
-] as const;
-
-// values explicitly opting out, a provider may define the variable while not running a build
-const DISABLED_VALUES = ['', 'false', '0'];
-
 @injectable()
 export class CIDetection {
+  /**
+   * Environment variables set by the most common CI providers.
+   * The four first ones are the generic variables also used by pnpm to detect a CI environment
+   * (https://pnpm.io/cli/install#--frozen-lockfile), the others are provider specific and cover
+   * the providers not setting any of the generic ones.
+   */
+  protected static readonly CI_ENVIRONMENT_VARIABLES = [
+    'CI',
+    'CONTINUOUS_INTEGRATION',
+    'BUILD_NUMBER',
+    'RUN_ID',
+    'APPVEYOR',
+    'BITBUCKET_BUILD_NUMBER',
+    'BUILDKITE',
+    'CIRCLECI',
+    'CODEBUILD_BUILD_ID',
+    'DRONE',
+    'GITHUB_ACTIONS',
+    'GITLAB_CI',
+    'HUDSON_URL',
+    'JENKINS_URL',
+    'SEMAPHORE',
+    'TEAMCITY_VERSION',
+    'TF_BUILD',
+    'TRAVIS',
+  ] as const;
+
+  // values explicitly opting out, a provider may define the variable while not running a build
+  protected static readonly DISABLED_VALUES = ['', 'false', '0'];
+
   /**
    * Detect if the current process is running inside a CI environment.
    * @param env the environment variables to inspect, defaults to the ones of the current process
    */
   isCIEnvironment(env: NodeJS.ProcessEnv = process.env): boolean {
-    return CI_ENVIRONMENT_VARIABLES.some(name => {
+    return CIDetection.CI_ENVIRONMENT_VARIABLES.some(name => {
       const value = env[name];
-      return value !== undefined && !DISABLED_VALUES.includes(value.toLowerCase());
+      return value !== undefined && !CIDetection.DISABLED_VALUES.includes(value.toLowerCase());
     });
   }
 }
