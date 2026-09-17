@@ -23,8 +23,8 @@ onMount(async () => {
     {/if}
   </div>
 
-  <div class="px-5 py-5 mt-2 flex flex-col w-full" aria-label="validation and buttons">
-    <div aria-label="validation">
+  <div class="px-5 py-5 mt-2 flex flex-row w-full" aria-label="validation and buttons">
+    <div class="grow" aria-label="validation">
       <slot name="validation" />
     </div>
     <ButtonRow>
