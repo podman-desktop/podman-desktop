@@ -14,7 +14,7 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.c987d893.css">
-<script src="/assets/js/runtime~main.c9517ce5.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.789a3b60.js" defer="defer"></script>
 <script src="/assets/js/main.60781701.js" defer="defer"></script>
 </head>
 <body>
@@ -25,6 +25,7 @@
 <p>For instance, when testing a new image in a Kubernetes pod, the image must be accessible either by pushing it to a private or public registry or by ensuring it&#x27;s available on the Kubernetes cluster nodes. This often requires additional commands such as <code>kind load docker-image</code>, <code>minikube cache add &lt;image&gt;</code>, or publishing the image to a third-party registry.</p>
 <p>In this blog post, we’ll introduce a new extension called <code>MINC (MicroShift IN Container)</code>, which provides a <a href="https://github.com/openshift/microshift" target="_blank" rel="noopener noreferrer" class="">MicroShift</a> cluster running within an existing Podman Machine environment.</p>
 <p><img decoding="async" loading="lazy" alt="hero" src="/assets/images/iterate-quickly-inner-loop-with-a-kubernetes-cluster-fbc83434d514b5621a47049494de94cf.png" width="1216" height="832" class="img_SS3x"></p>
+<!-- -->
 <hr>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="introduction">Introduction<a href="#introduction" class="hash-link" aria-label="Direct link to Introduction" title="Direct link to Introduction" translate="no">​</a></h2>
 <p>A <a href="https://podman-desktop.io/blog/sharing-podman-images-with-kubernetes-cluster" target="_blank" rel="noopener noreferrer" class="">previous blog post</a> outlines various methods to improve the inner loop using Kind or Minikube. While these approaches can enhance performance, there are still gaps and certain complexities involved. Achieving a seamless workflow where an image is built with Podman and immediately available in the cluster—often requires additional steps or tricky configurations.</p>
