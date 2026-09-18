@@ -134,7 +134,7 @@ export function OSDownloadCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto md:shrink-0 px-6 py-5">
+        <div className="flex items-center gap-6 w-full md:w-auto md:shrink-0 px-6 py-5">
           <span
             className="flex flex-col items-stretch flex-1 md:flex-initial md:w-52 min-w-0"
             onClick={event => event.stopPropagation()}
