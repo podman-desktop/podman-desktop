@@ -51,12 +51,6 @@ const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
   ),
 );
 
-const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
-  extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm),
-);
-
-let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
-
 function closeModal(): void {
   installManualImageModal = false;
 }
@@ -72,7 +66,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} title="extensions" searchEnabled={screen !== 'catalog'}>
   {#snippet additionalActions()}
     {#if enableCustomExtensions}
       <Button
@@ -90,10 +84,6 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
     {#if filteredInstalledItems > 0 && screen === 'installed'}
       <div class="text-sm text-[var(--pd-content-text)]">
         Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
-      </div>
-    {:else if filteredCatalogItems > 0 && screen === 'catalog'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
       </div>
     {/if}
   {/snippet}
@@ -135,14 +125,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
       {/if}
       <InstalledExtensionList extensionInfos={filteredInstalledExtensions} />
     {:else if screen === 'catalog' && enableCatalog}
-      {#if searchTerm && filteredCatalogExtensions.length === 0}
-        <FilteredEmptyScreen
-          icon={ExtensionIcon}
-          kind="extensions"
-          searchTerm={searchTerm}
-          on:resetFilter={(): string => (searchTerm = '')} />
-      {/if}
-      <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={filteredCatalogExtensions} />
+      <CatalogExtensionList catalogExtensions={enhancedCatalogExtensions} />
     {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}
