@@ -318,6 +318,31 @@ Some tips for the PR process:
 - Any additional code changes should be in a new commit so we can see what has changed between reviews.
 - Squash your commits into logical pieces of work.
 
+### Contribution expectations (including AI-assisted contributions)
+
+AI-assisted contributions are welcome. Tools like Claude, Copilot, or other
+assistants can help you write code, tests, and docs — we only ask that every
+pull request, AI-assisted or not, is reviewable and that you stand behind it.
+
+To keep reviews fast and fair, every PR must meet the following expectations:
+
+- **Follow the pull request template.** Fill in every required section of
+  [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
+  Describe what the change does and how to test it — no empty or placeholder
+  descriptions.
+- **Include a screenshot or short video for UI changes.** Any change that
+  affects the UI must show the before/after (or the new behavior) so reviewers
+  can see the result without building the branch.
+- **Disclose AI-assisted tools.** If you used an AI assistant, say so — for
+  example with a `Co-authored-by:` trailer in your commit, or a brief note in
+  the PR description. Disclosure is expected, not penalized.
+- **Understand and stand behind your change.** Be able to explain what the
+  change does and why, and respond to review feedback. Do not open PRs for code
+  you have not read and cannot support.
+
+PRs that skip these steps may be asked for changes or closed until the
+expectations are met.
+
 ### Use the correct commit message semantics
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
