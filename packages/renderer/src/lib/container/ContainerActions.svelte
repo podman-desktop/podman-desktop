@@ -14,7 +14,7 @@ import {
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
@@ -23,6 +23,7 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
+import { containersInfos, setContainerActionError, setContainerStatus } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
@@ -34,10 +35,6 @@ export let detailed = false;
 let globalContext: ContextUI;
 let contextsUnsubscribe: Unsubscriber;
 
-const dispatch = createEventDispatcher<{ update: ContainerInfoUI }>();
-export let onUpdate: (update: ContainerInfoUI) => void = update => {
-  dispatch('update', update);
-};
 let contributions: Menu[] = [];
 onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_CONTAINER);
@@ -58,21 +55,23 @@ onDestroy(() => {
 });
 
 function inProgress(inProgress: boolean, state?: string): void {
-  container.actionInProgress = inProgress;
-  // reset error when starting task
+  const cnt = $containersInfos.find(c => c.id === container.id && c.engineId === container.engineId);
+  if (!cnt) return;
+
+  let containerActionError = cnt.actionError;
   if (inProgress) {
-    container.actionError = '';
+    containerActionError = '';
   }
+
+  let containerState = cnt.state;
   if (state) {
-    container.state = state;
+    containerState = state;
   }
-  onUpdate(container);
+  setContainerStatus(container.engineId, container.id, containerState, inProgress, containerActionError);
 }
 
 function handleError(errorMessage: string): void {
-  container.actionError = errorMessage;
-  container.state = 'ERROR';
-  onUpdate(container);
+  setContainerActionError(container.engineId, container.id, errorMessage);
 }
 
 async function startContainer(): Promise<void> {
