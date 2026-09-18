@@ -11,7 +11,16 @@ import type {
   SecretInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } from '@podman-desktop/ui-svelte';
+import {
+  Button,
+  ButtonRow,
+  Checkbox,
+  Dropdown,
+  ErrorMessage,
+  Input,
+  NumberInput,
+  Tab,
+} from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -1212,7 +1221,7 @@ const envDialogOptions: OpenDialogOptions = {
         </div>
 
       <div class="pt-4 pb-2">
-        <div class="flex items-center justify-end gap-3">
+        <ButtonRow>
           <Button
             type="link"
             on:click={(): void => router.goto('/images/')}
@@ -1234,7 +1243,7 @@ const envDialogOptions: OpenDialogOptions = {
             disabled={invalidFields}>
             Create and start
           </Button>
-        </div>
+        </ButtonRow>
         <div aria-label="createError">
           {#if createError}
             <ErrorMessage class="py-2 text-sm" error={createError} />
