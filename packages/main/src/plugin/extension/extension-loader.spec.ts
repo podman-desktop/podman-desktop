@@ -494,6 +494,217 @@ describe('extensionLoader#start', () => {
     // only one extension should have been loaded as we rejected one analyzeExtensionMock
     expect(vi.mocked(loadExtensionsMock).mock.calls[0]?.[0]).toHaveLength(1);
   });
+
+  test('an extension of the plugins directory overrides the bundled one having the same id', async () => {
+    extensionLoader.setPluginsScanDirectory('/fake/path/scanning');
+
+    const bundledExtension = {
+      id: 'podman-desktop.podman',
+      path: '/bundled/podman',
+      manifest: { name: 'podman', version: '1.0.0' },
+      removable: false,
+      devMode: false,
+      bundled: true,
+      overriding: false,
+    } as unknown as AnalyzedExtension;
+    vi.mocked(extensionsBundle.all).mockReturnValue([bundledExtension]);
+
+    const installedExtension = {
+      id: 'podman-desktop.podman',
+      path: path.join(directories.getPluginsDirectory(), 'podman'),
+      manifest: { name: 'podman', version: '2.0.0' },
+      removable: true,
+      devMode: false,
+      bundled: false,
+      overriding: false,
+    } as unknown as AnalyzedExtensionWithApi;
+
+    vi.spyOn(extensionLoader, 'analyzeExtension').mockResolvedValue(installedExtension);
+    const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
+    loadExtensionsMock.mockResolvedValue(undefined);
+
+    vi.mocked(
+      fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent[]>,
+    ).mockImplementation(async p =>
+      p === directories.getPluginsDirectory()
+        ? [{ name: 'podman', isFile: (): boolean => false, isDirectory: (): boolean => true } as unknown as fs.Dirent]
+        : [],
+    );
+    vi.mocked(fs.existsSync).mockImplementation(p => p === directories.getPluginsDirectory());
+
+    await extensionLoader.start();
+
+    // only the extension of the plugins directory is loaded, flagged as overriding
+    const loaded = vi.mocked(loadExtensionsMock).mock.calls[0]?.[0];
+    expect(loaded).toHaveLength(1);
+    expect(loaded?.[0]?.path).toBe(path.join(directories.getPluginsDirectory(), 'podman'));
+    expect(loaded?.[0]?.overriding).toBeTruthy();
+    expect(loaded).not.toContain(bundledExtension);
+  });
+
+  test('a bundled extension without any matching installed extension is kept as is', async () => {
+    extensionLoader.setPluginsScanDirectory('/fake/path/scanning');
+
+    const bundledExtension = {
+      id: 'podman-desktop.podman',
+      path: '/bundled/podman',
+      manifest: { name: 'podman', version: '1.0.0' },
+      removable: false,
+      devMode: false,
+      bundled: true,
+      overriding: false,
+    } as unknown as AnalyzedExtension;
+    vi.mocked(extensionsBundle.all).mockReturnValue([bundledExtension]);
+
+    const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
+    loadExtensionsMock.mockResolvedValue(undefined);
+
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    await extensionLoader.start();
+
+    const loaded = vi.mocked(loadExtensionsMock).mock.calls[0]?.[0];
+    expect(loaded).toHaveLength(1);
+    expect(loaded?.[0]?.bundled).toBeTruthy();
+    expect(loaded?.[0]?.overriding).toBeFalsy();
+  });
+
+  test('a development folder extension does not override a bundled extension', async () => {
+    extensionLoader.setPluginsScanDirectory('/fake/path/scanning');
+
+    const bundledExtension = {
+      id: 'podman-desktop.podman',
+      path: '/bundled/podman',
+      manifest: { name: 'podman', version: '1.0.0' },
+      removable: false,
+      devMode: false,
+      bundled: true,
+      overriding: false,
+    } as unknown as AnalyzedExtension;
+    vi.mocked(extensionsBundle.all).mockReturnValue([bundledExtension]);
+
+    // a development folder exposing the very same extension id
+    vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([
+      { path: '/dev/podman' },
+    ] as unknown as ReturnType<typeof extensionDevelopmentFolder.getDevelopmentFolders>);
+    vi.spyOn(extensionLoader, 'analyzeExtension').mockResolvedValue({
+      id: 'podman-desktop.podman',
+      path: '/dev/podman',
+      manifest: { name: 'podman', version: '2.0.0' },
+      removable: false,
+      devMode: true,
+      bundled: false,
+      overriding: false,
+    } as unknown as AnalyzedExtensionWithApi);
+
+    const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
+    loadExtensionsMock.mockResolvedValue(undefined);
+
+    vi.mocked(fs.existsSync).mockImplementation(p => p === '/dev/podman');
+
+    await extensionLoader.start();
+
+    // both are kept, none is flagged as overriding
+    const loaded = vi.mocked(loadExtensionsMock).mock.calls[0]?.[0];
+    expect(loaded).toHaveLength(2);
+    expect(loaded?.every(extension => !extension.overriding)).toBeTruthy();
+  });
+});
+
+describe('restore of a bundled extension on removal', () => {
+  test('removeExtension of an overriding extension re-analyzes and loads the bundled one', async () => {
+    const extensionId = 'podman-desktop.podman';
+
+    extensionLoader.setAnalyzedExtension(extensionId, {
+      id: extensionId,
+      path: '/plugins/podman',
+      manifest: { name: 'podman' },
+      removable: true,
+      devMode: false,
+      bundled: false,
+      overriding: true,
+    } as unknown as AnalyzedExtensionWithApi);
+
+    vi.mocked(extensionsBundle.all).mockReturnValue([
+      {
+        id: extensionId,
+        path: '/bundled/podman',
+        manifest: { name: 'podman' },
+        removable: false,
+        devMode: false,
+        bundled: true,
+        overriding: false,
+      } as unknown as AnalyzedExtension,
+    ]);
+
+    vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    const restoredExtension = {
+      id: extensionId,
+      path: '/bundled/podman',
+      manifest: { name: 'podman' },
+      bundled: true,
+    } as unknown as AnalyzedExtensionWithApi;
+    analyzeExtensionSpy.mockResolvedValue(restoredExtension);
+    const loadExtensionSpy = vi.spyOn(extensionLoader, 'loadExtension');
+    loadExtensionSpy.mockResolvedValue(undefined);
+
+    await extensionLoader.removeExtension(extensionId);
+
+    // the bundled extension is analyzed again, not reused from the bundle
+    expect(analyzeExtensionSpy).toBeCalledWith({
+      extensionPath: '/bundled/podman',
+      removable: false,
+      devMode: false,
+      bundled: true,
+    });
+    expect(loadExtensionSpy).toBeCalledWith(restoredExtension, true);
+  });
+
+  test('removeExtension of a non overriding extension does not restore anything', async () => {
+    const extensionId = 'my.extension';
+
+    extensionLoader.setAnalyzedExtension(extensionId, {
+      id: extensionId,
+      path: '/plugins/my-extension',
+      manifest: { name: 'my-extension' },
+      removable: true,
+      devMode: false,
+      bundled: false,
+      overriding: false,
+    } as unknown as AnalyzedExtensionWithApi);
+
+    vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    const loadExtensionSpy = vi.spyOn(extensionLoader, 'loadExtension');
+
+    await extensionLoader.removeExtension(extensionId);
+
+    expect(analyzeExtensionSpy).not.toBeCalled();
+    expect(loadExtensionSpy).not.toBeCalled();
+  });
+
+  test('removeExtension does not fail when no bundled extension matches the removed one', async () => {
+    const extensionId = 'my.extension';
+
+    extensionLoader.setAnalyzedExtension(extensionId, {
+      id: extensionId,
+      path: '/plugins/my-extension',
+      manifest: { name: 'my-extension' },
+      removable: true,
+      devMode: false,
+      bundled: false,
+      overriding: true,
+    } as unknown as AnalyzedExtensionWithApi);
+
+    vi.mocked(extensionsBundle.all).mockReturnValue([]);
+    vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+    const loadExtensionSpy = vi.spyOn(extensionLoader, 'loadExtension');
+
+    await expect(extensionLoader.removeExtension(extensionId)).resolves.toBeUndefined();
+
+    expect(loadExtensionSpy).not.toBeCalled();
+  });
 });
 
 test('Should watch for files and load them at startup', async () => {
@@ -612,6 +823,7 @@ test('Verify extension error leads to failed state', async () => {
       removable: false,
       devMode: false,
       bundled: false,
+      overriding: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -643,6 +855,7 @@ test('creates extension storage before activation', async () => {
       removable: false,
       devMode: false,
       bundled: false,
+      overriding: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -679,6 +892,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
       removable: false,
       devMode: false,
       bundled: false,
+      overriding: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -715,6 +929,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
       removable: false,
       devMode: false,
       bundled: false,
+      overriding: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -748,6 +963,7 @@ test('Verify extension load triggers an onDidChange event', async () => {
     removable: false,
     devMode: false,
     bundled: false,
+    overriding: false,
     manifest: {} as unknown as ExtensionManifest,
     subscriptions: [],
     readme: '',
@@ -770,6 +986,7 @@ test('Verify extension load', async () => {
     removable: true,
     devMode: false,
     bundled: false,
+    overriding: false,
     manifest: {
       version: '1.1',
     } as unknown as ExtensionManifest,
@@ -810,6 +1027,7 @@ test('Verify disabled extension skips registering contributions and runtime acti
     removable: true,
     devMode: false,
     bundled: false,
+    overriding: false,
     manifest: {
       version: '1.0',
       contributes: {
@@ -858,6 +1076,7 @@ test('Verify enabled extension registers contributions and activates runtime', a
     removable: true,
     devMode: false,
     bundled: false,
+    overriding: false,
     manifest: {
       version: '1.0',
       contributes: {
@@ -906,6 +1125,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
     removable: false,
     devMode: false,
     bundled: false,
+    overriding: false,
     manifest: {
       version: '1.1',
       contributes: {
@@ -942,6 +1162,7 @@ test('Verify extension activate registers extension features and the disposable 
     removable: false,
     devMode: false,
     bundled: false,
+    overriding: false,
     manifest: {
       contributes: {
         features: ['feature1', 'feature2'],
@@ -1521,6 +1742,7 @@ test('Verify extension uri', async () => {
       removable: false,
       devMode: false,
       bundled: false,
+      overriding: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -1556,6 +1778,7 @@ test('Verify exports and packageJSON', async () => {
       removable: false,
       devMode: false,
       bundled: false,
+      overriding: false,
       manifest: {
         foo: 'bar',
       } as unknown as ExtensionManifest,
@@ -2941,6 +3164,36 @@ test('reloadExtension should forward the bundled flag to analyzeExtension', asyn
     removable: false,
     devMode: false,
     bundled: true,
+    overriding: undefined,
+  });
+});
+
+test('reloadExtension should forward the overriding flag to analyzeExtension', async () => {
+  const extension = {
+    path: 'fakePath',
+    manifest: {
+      displayName: 'My Extension Display Name',
+    },
+    id: 'my.extensionId',
+    devMode: false,
+    bundled: false,
+    overriding: true,
+  } as unknown as AnalyzedExtension;
+
+  vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+  vi.mocked(notificationRegistry.addNotification).mockReturnValue({ dispose: vi.fn() } as unknown as Disposable);
+
+  await extensionLoader.reloadExtension(extension, true);
+
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: extension.path,
+    removable: true,
+    devMode: false,
+    bundled: false,
+    overriding: true,
   });
 });
 
@@ -2973,7 +3226,65 @@ test('startExtension should forward the bundled flag to analyzeExtension', async
     removable: false,
     devMode: false,
     bundled: true,
+    overriding: undefined,
   });
+});
+
+test('startExtension should forward the overriding flag to analyzeExtension', async () => {
+  const extensionId = 'my.overriding.extension';
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({
+    get: (): string[] => [],
+  });
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'overriding-extension',
+    },
+    removable: true,
+    devMode: false,
+    bundled: false,
+    overriding: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+
+  await extensionLoader.startExtension(extensionId);
+
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: 'fakePath',
+    removable: true,
+    devMode: false,
+    bundled: false,
+    overriding: true,
+  });
+});
+
+test('listExtensions should expose the overriding flag', async () => {
+  const extensionId = 'my.overriding.extension';
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'overriding-extension',
+    },
+    removable: true,
+    devMode: false,
+    bundled: false,
+    overriding: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const extensions = await extensionLoader.listExtensions();
+
+  expect(extensions.length).toBe(1);
+  expect(extensions[0]?.overriding).toBeTruthy();
+  expect(extensions[0]?.bundled).toBeFalsy();
+  expect(extensions[0]?.removable).toBeTruthy();
 });
 
 describe('init', () => {
@@ -3061,6 +3372,7 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
       readme: '',
       dispose: vi.fn(),
       bundled: false,
+      overriding: false,
     },
     {
       activate: activateMock,
