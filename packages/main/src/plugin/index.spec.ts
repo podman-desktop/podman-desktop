@@ -20,7 +20,12 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type { PullEvent } from '@podman-desktop/api';
-import type { NotificationCardOptions, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type {
+  ImageUpdateInfo,
+  NotificationCardOptions,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+} from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
@@ -1140,6 +1145,60 @@ describe('checkImageUpdateStatus handler', () => {
       updateAvailable: false,
       message: 'Image is already the latest version',
     });
+  });
+});
+
+describe('updateImages handler', () => {
+  test('should delegate image updates to the container provider registry', async () => {
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: ImageUpdateInfo[],
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images: ImageUpdateInfo[] = [
+      { engineId: 'podman.podman-machine-default', image: 'nginx', tag: 'latest' },
+      { engineId: 'podman.podman-machine-default', image: 'redis', tag: '7' },
+    ];
+    const expectedResults = [
+      { imageRef: 'nginx', updated: true, status: 'updated', message: 'Image updated successfully' },
+      { imageRef: 'redis', updated: false, status: 'normal', message: 'Already up to date' },
+    ] as const;
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([...expectedResults]);
+
+    const result = await handle(undefined, images);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images, undefined);
+    expect(result.result).toEqual(expectedResults);
+  });
+
+  test('should forward an abort signal when a cancellation token id is passed', async () => {
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+    const { result: tokenId } = await createTokenHandler();
+
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: ImageUpdateInfo[],
+        cancellableTokenId?: number,
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images: ImageUpdateInfo[] = [{ engineId: 'podman.podman-machine-default', image: 'nginx', tag: 'latest' }];
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
+
+    await handle(undefined, images, tokenId);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledOnce();
+    const abortSignal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
+    expect(abortSignal).toBeInstanceOf(AbortSignal);
+    expect(abortSignal?.aborted).toBe(false);
+
+    await cancelTokenHandler(undefined, tokenId);
+
+    expect(abortSignal?.aborted).toBe(true);
   });
 });
 
