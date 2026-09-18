@@ -10,7 +10,6 @@ import { lastPage } from '/@/stores/breadcrumb';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import VolumeDetailsSummary from '././VolumeDetailsSummary.svelte';
-import { VolumeUtils } from './volume-utils';
 import VolumeActions from './VolumeActions.svelte';
 import VolumeDetailsInspect from './VolumeDetailsInspect.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
@@ -21,21 +20,12 @@ interface Props {
 }
 let { volumeName, engineId }: Props = $props();
 
-const volumeUtils = new VolumeUtils();
 let hadVolume = false;
 
-let volume: VolumeInfoUI | undefined = $derived.by(() => {
-  const allVolumes = $volumeListInfos.map(volumeListInfo => volumeListInfo.Volumes).flat();
-  const matchingVolume = allVolumes.find(volume => volume.Name === volumeName && volume.engineId === engineId);
-  if (matchingVolume) {
-    try {
-      return volumeUtils.toVolumeInfoUI(matchingVolume);
-    } catch (err: unknown) {
-      console.error(`Error getting volume info ${volumeName} ${engineId}: ${err}`);
-    }
-  }
-  return undefined;
-});
+let matchingVolume = $derived(
+  $volumeListInfos.find(volume => volume.name === volumeName && volume.engineId === engineId),
+);
+let volume: VolumeInfoUI | undefined = $derived(matchingVolume ? { ...matchingVolume } : undefined);
 
 $effect(() => {
   if (volume) {

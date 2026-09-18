@@ -51,9 +51,8 @@ $effect(() => {
 let invalidName = $derived.by(() => {
   if (!volumeName || !selectedEngineId || createVolumeFinished) return false;
   return $volumeListInfos
-    .filter(vli => vli.engineId === selectedEngineId)
-    .flatMap(vli => vli.Volumes)
-    .some(volume => volume.Name === volumeName);
+    .filter(volume => volume.engineId === selectedEngineId)
+    .some(volume => volume.name === volumeName);
 });
 
 let volumeNameError: string | undefined = $derived(
