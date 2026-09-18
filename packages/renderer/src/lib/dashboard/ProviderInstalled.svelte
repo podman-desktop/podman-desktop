@@ -24,15 +24,20 @@ import {
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 import ProviderWarnings from './ProviderWarnings.svelte';
 
-export let provider: ProviderInfo;
-export let initializationContext: InitializationContext;
+interface Props {
+  provider: ProviderInfo;
+  initializationContext: InitializationContext;
+}
 
-let initializationButtonVisible: boolean;
-let initializeInProgress = false;
+let { provider, initializationContext }: Props = $props();
 
-let initializeError: string | undefined = undefined;
+// eslint-disable-next-line svelte/prefer-writable-derived
+let initializationButtonVisible = $state<boolean>(false);
+let initializeInProgress = $state<boolean>(false);
 
-let preflightChecks: CheckStatus[] = [];
+let initializeError = $state<string>();
+
+let preflightChecks = $state<CheckStatus[]>([]);
 
 let logsXtermDiv: HTMLDivElement;
 let logsTerminal: Terminal;
@@ -40,9 +45,9 @@ let logsTerminal: Terminal;
 // Terminal resize
 let resizeObserver: ResizeObserver;
 let termFit: FitAddon;
-let installationOptionsMenuVisible = false;
+let installationOptionsMenuVisible = $state<boolean>(false);
 let installationOptionSelected = InitializeAndStartMode;
-let checksInProgress = false;
+let checksInProgress = $state<boolean>(false);
 
 async function runChecks(): Promise<void> {
   checksInProgress = true;
@@ -68,8 +73,10 @@ async function runChecks(): Promise<void> {
 }
 
 // no initialize support, hide the button
-$: initializationButtonVisible =
-  provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization;
+$effect(() => {
+  initializationButtonVisible =
+    provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization;
+});
 
 function showLastExecutionError(): void {
   initializeError = initializationContext.error;
@@ -187,13 +194,13 @@ async function onInstallationClick(): Promise<void> {
         <div class="bg-[var(--pd-invert-content-card-bg)] text-[var(--pd-button-text)] flex w-[212px]">
           <button
             class="float-left bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] pt-2 pr-3 pl-3 pb-2 text-[13px] text-[var(--pd-button-text)] mr-px w-[180px]"
-            on:click={onInstallationClick}>
+            onclick={onInstallationClick}>
             {installationOptionSelected}
           </button>
           <button
             class="inline-block bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] text-[13px] text-[var(--pd-button-text)] pt-2 pr-3 pl-3 pb-2 w-[32px]"
             aria-label="Installation options menu"
-            on:click={(): void => updateOptionsMenu(!installationOptionsMenuVisible)}>
+            onclick={(): void => updateOptionsMenu(!installationOptionsMenuVisible)}>
             <i class="fas fa-caret-down"></i>
           </button>
         </div>
@@ -204,7 +211,7 @@ async function onInstallationClick(): Promise<void> {
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"
-                on:click={(): void => {
+                onclick={(): void => {
                   installationOptionSelected = InitializeOnlyMode;
                   installationOptionsMenuVisible = false;
                 }}>
@@ -215,7 +222,7 @@ async function onInstallationClick(): Promise<void> {
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"
-                on:click={(): void => {
+                onclick={(): void => {
                   installationOptionSelected = InitializeAndStartMode;
                   installationOptionsMenuVisible = false;
                 }}>
