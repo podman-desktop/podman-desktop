@@ -29,7 +29,7 @@
 import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faForward } from '@fortawesome/free-solid-svg-icons';
 import type { OnboardingInfo, OnboardingStepItem } from '@podman-desktop/core-api';
-import { Button, Link, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Link, Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -503,10 +503,10 @@ let sidebarTitle = $derived(
         If you exit, you can complete your setup later from the Resources page. Do you want to skip it?
       </div>
 
-      <div class="px-5 py-5 mt-2 flex flex-row w-full justify-end space-x-5">
+      <ButtonRow class="px-5 py-5">
         <Button type="secondary" aria-label="Cancel" on:click={(): void => setDisplayCancelSetup(false)}>Cancel</Button>
         <Button type="primary" class="mr-2" on:click={cancelSetup}>Ok</Button>
-      </div>
+      </ButtonRow>
     </div>
   </div>
 {/if}

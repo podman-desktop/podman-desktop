@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { type DialogType, PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
-import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
@@ -207,8 +207,8 @@ function validate(event: any): void {
       {/if}
     </div>
 
-    <div class="flex items-center justify-end pt-2">
+    <ButtonRow class="pt-2">
       <Button on:click={updateProxySettings} title="Update" icon={faPen}>Update</Button>
-    </div>
+    </ButtonRow>
   </div>
 </SettingsPage>
