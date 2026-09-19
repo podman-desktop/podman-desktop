@@ -21,7 +21,7 @@ set -euo pipefail
 
 # Handle "latest" version early: resolve the version and check if Koji RPM exists before uninstalling the preinstalled version.
 if [[ "$PODMAN_VERSION" == "latest" ]]; then
-    RESOLVED_PODMAN_VERSION="$(curl -s https://api.github.com/repos/podman-container-tools/podman/releases/latest | jq -r .tag_name | sed 's/^v//')"
+    RESOLVED_PODMAN_VERSION="$(curl -fsS https://api.github.com/repos/podman-container-tools/podman/releases/latest | jq -er '.tag_name | sub("^v"; "")')"
     COMPOSE_VERSION="fc$(echo "$COMPOSE" | cut -d'-' -f2)"
     KOJI_RPM_URL="https://kojipkgs.fedoraproject.org//packages/podman/${RESOLVED_PODMAN_VERSION}/1.${COMPOSE_VERSION}/${ARCH}/podman-${RESOLVED_PODMAN_VERSION}-1.${COMPOSE_VERSION}.${ARCH}.rpm"
 
