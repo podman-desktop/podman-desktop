@@ -286,6 +286,152 @@ describe('PreferencesRegistriesEditing', () => {
     expect(loginButton).toBeDisabled();
   });
 
+  test('Expect suggested registry with additionalConfigHandlers shows Configure… button', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [{ label: 'Red Hat SSO', commandId: 'redhat.auth.sso' }],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    expect(screen.getByText('Red Hat Registry')).toBeInTheDocument();
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    expect(configureButton).toBeInTheDocument();
+  });
+
+  test('Expect clicking Configure… opens dropdown with username/password and additional handler', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [{ label: 'Red Hat SSO', commandId: 'redhat.auth.sso' }],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    await userEvent.click(configureButton);
+
+    const dropdown = screen.getByLabelText('dropdown');
+    expect(dropdown).toBeInTheDocument();
+
+    expect(screen.getByLabelText('Username and password')).toBeInTheDocument();
+    expect(screen.getByLabelText('Red Hat SSO')).toBeInTheDocument();
+  });
+
+  test('Expect selecting username/password from dropdown shows login form', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [{ label: 'Red Hat SSO', commandId: 'redhat.auth.sso' }],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    await userEvent.click(configureButton);
+
+    const usernamePasswordOption = screen.getByLabelText('Username and password');
+    await userEvent.click(usernamePasswordOption);
+
+    expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
+  });
+
+  test('Expect selecting additional config handler executes the command', async () => {
+    vi.mocked(window.executeCommand).mockResolvedValue(undefined);
+    const suggested: RegistrySuggestedProvider = {
+      name: 'GHCR',
+      url: 'ghcr.io',
+      additionalConfigHandlers: [{ label: 'GitHub SSO', commandId: 'github.auth.configureRegistry' }],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    await userEvent.click(configureButton);
+
+    const ssoOption = screen.getByLabelText('GitHub SSO');
+    await userEvent.click(ssoOption);
+
+    expect(window.executeCommand).toHaveBeenCalledWith('github.auth.configureRegistry');
+  });
+
+  test('Expect dropdown shows multiple additional config handlers', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [
+        { label: 'Red Hat SSO', commandId: 'redhat.auth.sso' },
+        { label: 'Registry Authorizer', commandId: 'redhat.auth.authorizer' },
+      ],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    await userEvent.click(configureButton);
+
+    expect(screen.getByLabelText('Username and password')).toBeInTheDocument();
+    expect(screen.getByLabelText('Red Hat SSO')).toBeInTheDocument();
+    expect(screen.getByLabelText('Registry Authorizer')).toBeInTheDocument();
+  });
+
+  test('Expect suggested registry without additionalConfigHandlers shows plain Configure button', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Docker Hub',
+      url: 'docker.io',
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure' });
+    expect(configureButton).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Configure…' })).not.toBeInTheDocument();
+  });
+
+  test('Expect dropdown closes when clicking outside', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [{ label: 'Red Hat SSO', commandId: 'redhat.auth.sso' }],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    await userEvent.click(configureButton);
+
+    expect(screen.getByLabelText('dropdown')).toBeInTheDocument();
+
+    await userEvent.click(document.body);
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('dropdown')).not.toBeInTheDocument();
+    });
+  });
+
+  test('Expect dropdown closes when pressing Escape', async () => {
+    const suggested: RegistrySuggestedProvider = {
+      name: 'Red Hat Registry',
+      url: 'registry.redhat.io',
+      additionalConfigHandlers: [{ label: 'Red Hat SSO', commandId: 'redhat.auth.sso' }],
+    };
+    registriesSuggestedInfos.set([suggested]);
+    render(PreferencesRegistriesEditing, {});
+
+    const configureButton = screen.getByRole('button', { name: 'Configure…' });
+    await userEvent.click(configureButton);
+
+    expect(screen.getByLabelText('dropdown')).toBeInTheDocument();
+
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('dropdown')).not.toBeInTheDocument();
+    });
+  });
+
   test('Expect that adding registry using self signed or not verifiable certificate triggers confirmation request', async () => {
     render(PreferencesRegistriesEditing);
     const addRegistryBtn = screen.getByRole('button', { name: 'Add registry' });
