@@ -28,6 +28,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { Certificates } from './certificates.js';
 import type { Proxy } from './proxy.js';
+import { matchNoProxyRules, parseNoProxy } from './proxy.js';
 import * as ProxyResolver from './proxy-resolver.js';
 
 vi.mock(import('node:http'), () => {
@@ -58,8 +59,10 @@ vi.mock(import('hpagent'), () => {
 });
 
 function createProxy(enabled: boolean, httpsProxy?: string, httpProxy?: string, noProxy?: string): Proxy {
+  const rules = parseNoProxy(noProxy);
   const proxy: {
     isEnabled: () => boolean;
+    isNoProxyMatch: (hostname: string, port?: string) => boolean;
     proxy?: {
       httpProxy?: string;
       httpsProxy?: string;
@@ -67,6 +70,7 @@ function createProxy(enabled: boolean, httpsProxy?: string, httpProxy?: string, 
     };
   } = {
     isEnabled: () => enabled,
+    isNoProxyMatch: (hostname: string, port?: string) => matchNoProxyRules(hostname, port, rules),
   };
   if (httpProxy || httpsProxy || noProxy) {
     proxy.proxy = {

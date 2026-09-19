@@ -279,3 +279,74 @@ test('fetch with caller-provided dispatcher should not be overridden', async () 
     globalThis.fetch = previousFetch;
   }
 });
+
+test('isNoProxyMatch reflects updated rules after setProxy', async () => {
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'example.com',
+  });
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(true);
+  expect(proxy?.isNoProxyMatch('internal.corp')).toBe(false);
+
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'example.com,internal.corp',
+  });
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(true);
+  expect(proxy?.isNoProxyMatch('internal.corp')).toBe(true);
+});
+
+test('isNoProxyMatch returns false for all hosts when noProxy is undefined', async () => {
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: undefined,
+  });
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(false);
+});
+
+test('isNoProxyMatch reflects system proxy settings changes', async () => {
+  vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: '10.0.0.0/8,*.internal.corp',
+  });
+  await proxy?.setState(ProxyState.PROXY_SYSTEM);
+  await proxy?.setProxy(undefined);
+
+  expect(proxy?.isNoProxyMatch('10.5.5.5')).toBe(true);
+  expect(proxy?.isNoProxyMatch('app.internal.corp')).toBe(true);
+  expect(proxy?.isNoProxyMatch('external.com')).toBe(false);
+
+  vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'new.domain.com',
+  });
+  await proxy?.setProxy(undefined);
+
+  expect(proxy?.isNoProxyMatch('new.domain.com')).toBe(true);
+  expect(proxy?.isNoProxyMatch('10.5.5.5')).toBe(false);
+});
+
+test('isNoProxyMatch returns false for all hosts when proxy is disabled', async () => {
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'example.com',
+  });
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(true);
+
+  await proxy?.setState(ProxyState.PROXY_DISABLED);
+  await proxy?.updateFromConfiguration();
+
+  expect(proxy?.isNoProxyMatch('example.com')).toBe(false);
+});

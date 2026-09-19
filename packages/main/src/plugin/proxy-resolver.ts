@@ -18,7 +18,6 @@
 
 import * as http from 'node:http';
 import * as https from 'node:https';
-import * as net from 'node:net';
 import * as nodeurl from 'node:url';
 
 import type { HttpProxyAgentOptions, HttpsProxyAgentOptions } from 'hpagent';
@@ -56,133 +55,9 @@ function createProxyAgent(secure: boolean, proxyUrl: string, certificates: Certi
     : new HttpProxyAgent(options as HttpProxyAgentOptions);
 }
 
-// Checks whether a hostname/IP should bypass the proxy.
-//
-// Implements the same matching algorithm as Go's net/http/httpproxy useProxy():
-// https://github.com/golang/net/blob/master/http/httpproxy/proxy.go
-//
-// Loopback addresses (localhost, 127.0.0.1, ::1) always bypass the proxy,
-// regardless of NO_PROXY contents — same as Go's behaviour.
-//
-// NO_PROXY is a comma-separated list. Each entry can be:
-//   - "*"                → match everything
-//   - IPv4 address       → exact match (e.g. 192.168.1.1)
-//   - IPv6 address       → exact match (e.g. fd00::1, fe80::1)
-//   - IPv4 CIDR          → range match (e.g. 10.0.0.0/8, 172.16.0.0/12)
-//   - IPv6 CIDR          → range match (e.g. fd00::/8, 2001:db8::/32)
-//   - domain             → matches domain and all subdomains (e.g. foo.com matches bar.foo.com)
-//   - .domain            → matches subdomains only (e.g. .foo.com does NOT match foo.com)
-//   - *.domain           → same as .domain
-//   - any:port           → only matches when port also matches (e.g. foo.com:8080)
-function isNoProxyHost(hostname: string, port?: string, noProxy?: string): boolean {
-  if (!hostname) {
-    return false;
-  }
-  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
-    return true;
-  }
-  if (!noProxy) {
-    return false;
-  }
-
-  for (const raw of noProxy.split(',')) {
-    const p = raw.trim().toLowerCase();
-    if (!p) {
-      continue;
-    }
-    if (p === '*') {
-      return true;
-    }
-
-    // Try CIDR match (e.g. 10.0.0.0/8, fc00::/7)
-    if (p.includes('/') && net.isIP(host)) {
-      try {
-        const slashIdx = p.indexOf('/');
-        const subnet = p.slice(0, slashIdx);
-        const prefix = Number(p.slice(slashIdx + 1));
-        const hostFamily = net.isIPv6(host) ? 'ipv6' : 'ipv4';
-        const blockList = new net.BlockList();
-        blockList.addSubnet(subnet, prefix, hostFamily);
-        if (blockList.check(host, hostFamily)) {
-          return true;
-        }
-      } catch {
-        console.error(`Malformed CIDR or family mismatch in NO_PROXY: ${p}`);
-      }
-      continue;
-    }
-
-    // Split off optional port from the noProxy entry
-    let phost: string;
-    let pport: string | undefined;
-    const portSep = splitHostPort(p);
-    if (portSep) {
-      phost = portSep.host;
-      pport = portSep.port;
-    } else {
-      phost = p;
-    }
-
-    if (!phost) {
-      continue;
-    }
-
-    // Exact IP match
-    if (net.isIP(phost) && net.isIP(host)) {
-      if (phost === host && (!pport || pport === port)) {
-        return true;
-      }
-      continue;
-    }
-
-    // Domain matching (Go algorithm):
-    // "*.foo.com" → strip "*", becomes ".foo.com" → subdomain-only
-    // ".foo.com"  → subdomain-only
-    // "foo.com"   → prepend ".", set matchHost=true → domain + subdomains
-    if (phost.startsWith('*.')) {
-      phost = phost.slice(1);
-    }
-    let matchHost = false;
-    if (!phost.startsWith('.')) {
-      matchHost = true;
-      phost = `.${phost}`;
-    }
-
-    if (host.endsWith(phost) || (matchHost && host === phost.slice(1))) {
-      if (!pport || pport === port) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-function splitHostPort(value: string): { host: string; port: string } | undefined {
-  // [IPv6]:port
-  const bracketIdx = value.lastIndexOf(']');
-  if (bracketIdx !== -1) {
-    const colonAfter = value.indexOf(':', bracketIdx);
-    if (colonAfter !== -1) {
-      return {
-        host: value.slice(0, colonAfter).replace(/^\[|\]$/g, ''),
-        port: value.slice(colonAfter + 1),
-      };
-    }
-    return undefined;
-  }
-  // host:port — only if exactly one colon (not IPv6)
-  const first = value.indexOf(':');
-  const last = value.lastIndexOf(':');
-  if (first !== -1 && first === last) {
-    return { host: value.slice(0, first), port: value.slice(first + 1) };
-  }
-  return undefined;
-}
-
 export function getProxyUrl(proxy: Proxy, secure: boolean, hostname?: string, port?: string): string | undefined {
   if (proxy.isEnabled()) {
-    if (hostname && isNoProxyHost(hostname, port, proxy.proxy?.noProxy)) {
+    if (hostname && proxy.isNoProxyMatch(hostname, port)) {
       return undefined;
     }
     return secure ? proxy.proxy?.httpsProxy : proxy.proxy?.httpProxy;
