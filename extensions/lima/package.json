@@ -58,7 +58,8 @@
       "dashboard/image": [
         {
           "command": "lima.image.move",
-          "title": "Push image to Lima cluster"
+          "title": "Push image to Lima cluster",
+          "icon": "fas fa-circle-arrow-up"
         }
       ]
     },
@@ -79,10 +80,10 @@
     "@podman-desktop/api": "workspace:*"
   },
   "devDependencies": {
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "mkdirp": "^3.0.1",
-    "vite": "^8.2.0",
-    "vitest": "^4.1.10",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0",
     "tmp-promise": "^3.0.3"
   }
 }

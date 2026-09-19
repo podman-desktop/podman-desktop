@@ -48,6 +48,7 @@ import type { CustomPickRegistry } from '/@/plugin/custompick/custompick-registr
 import type { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import type { Directories } from '/@/plugin/directories.js';
 import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import type { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { IconRegistry } from '/@/plugin/icon-registry.js';
@@ -83,6 +84,7 @@ import type { ActivatedExtension, AnalyzedExtensionWithApi, RequireCacheDict } f
 import { ExtensionLoader } from './extension-loader.js';
 import type { ExtensionManifest } from './extension-manifest-schema.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
+import type { ExtensionsExternal } from './local/extensions-external.js';
 
 vi.mock(import('node:fs'));
 
@@ -324,6 +326,14 @@ const extensionAnalyzer = {
   analyzeExtension: vi.fn(),
 } as unknown as ExtensionAnalyzer;
 
+const extensionsBundle = {
+  all: vi.fn(),
+} as unknown as ExtensionsBundle;
+
+const extensionsExternal = {
+  all: vi.fn(),
+} as unknown as ExtensionsExternal;
+
 const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesktopAPI => {
   const analyzedExtension = {
     path: '/path',
@@ -345,6 +355,7 @@ vi.mock(import('node:fs/promises'));
 const readdirMock = vi.mocked(
   fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent<string>[]>,
 );
+const mkdirMock = vi.mocked(fs.promises.mkdir);
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
@@ -394,6 +405,8 @@ beforeEach(() => {
     extensionAnalyzer,
     extensionApiVersion,
     featureRegistry,
+    extensionsBundle,
+    extensionsExternal,
   );
 });
 
@@ -402,6 +415,9 @@ vi.mock(import('node:fs'));
 beforeEach(() => {
   telemetryTrackMock.mockResolvedValue(undefined);
   vi.clearAllMocks();
+
+  vi.mocked(extensionsBundle.all).mockReturnValue([]);
+  vi.mocked(extensionsExternal.all).mockReturnValue([]);
 
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: vi.fn().mockImplementation((key: string, defaultValue?: unknown) => {
@@ -415,33 +431,11 @@ beforeEach(() => {
 });
 
 describe('extensionLoader#start', () => {
-  test('should load extensions & extensions-extra', async () => {
-    vi.stubEnv('PROD', true);
-
-    const readProductionFoldersMock = vi.spyOn(extensionLoader, 'readProductionFolders');
-    readProductionFoldersMock.mockResolvedValue([]);
-    const readDevelopmentFoldersMock = vi.spyOn(extensionLoader, 'readDevelopmentFolders');
-    readDevelopmentFoldersMock.mockResolvedValue([]);
-
-    await extensionLoader.start();
-
-    expect(readProductionFoldersMock).toHaveBeenCalledOnce();
-    const prodFolder = readProductionFoldersMock.mock.calls[0]?.[0];
-    expect(prodFolder?.endsWith('extensions')).toBeTruthy();
-
-    expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
-    const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
-    expect(devFolder).toEqual(path.join(process.resourcesPath, 'extensions-extra'));
-  });
-
   test('error in one of analyzeExtension should not be dramatic', async () => {
     const fakeDirectory = '/fake/path/scanning';
 
     // fake scanning property
     extensionLoader.setPluginsScanDirectory(fakeDirectory);
-
-    vi.spyOn(extensionLoader, 'readProductionFolders').mockResolvedValue([]);
-    vi.spyOn(extensionLoader, 'readDevelopmentFolders').mockResolvedValue([]);
 
     const analyzeExtensionMock = vi.spyOn(extensionLoader, 'analyzeExtension');
     analyzeExtensionMock.mockRejectedValueOnce(new Error('Failed one'));
@@ -617,6 +611,7 @@ test('Verify extension error leads to failed state', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -629,6 +624,41 @@ test('Verify extension error leads to failed state', async () => {
     },
   );
   expect(extensionLoader.getExtensionState().get(id)).toBe('failed');
+});
+
+test('creates extension storage before activation', async () => {
+  const id = 'extension.id';
+  let extensionContext: containerDesktopAPI.ExtensionContext | undefined;
+  const activateMock = vi.fn((context: containerDesktopAPI.ExtensionContext) => {
+    extensionContext = context;
+  });
+
+  await extensionLoader.activateExtension(
+    {
+      id,
+      name: id,
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      bundled: false,
+      manifest: {} as unknown as ExtensionManifest,
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    { activate: activateMock },
+  );
+
+  const storagePath = path.resolve('/fake-extensions-storage-directory', id);
+  expect(mkdirMock).toHaveBeenCalledWith(storagePath, { recursive: true });
+  expect(extensionContext?.storagePath).toBe(storagePath);
+  const mkdirInvocation = mkdirMock.mock.invocationCallOrder[0];
+  const activateInvocation = activateMock.mock.invocationCallOrder[0];
+  expect(mkdirInvocation).toBeDefined();
+  expect(activateInvocation).toBeDefined();
+  expect(mkdirInvocation!).toBeLessThan(activateInvocation!);
 });
 
 test('Verify extension subscriptions are disposed when failed state reached', async () => {
@@ -648,6 +678,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -683,6 +714,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -715,6 +747,7 @@ test('Verify extension load triggers an onDidChange event', async () => {
     mainPath: '',
     removable: false,
     devMode: false,
+    bundled: false,
     manifest: {} as unknown as ExtensionManifest,
     subscriptions: [],
     readme: '',
@@ -736,6 +769,7 @@ test('Verify extension load', async () => {
     mainPath: '',
     removable: true,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.1',
     } as unknown as ExtensionManifest,
@@ -775,6 +809,7 @@ test('Verify disabled extension skips registering contributions and runtime acti
     mainPath: 'main.js',
     removable: true,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.0',
       contributes: {
@@ -822,6 +857,7 @@ test('Verify enabled extension registers contributions and activates runtime', a
     mainPath: '',
     removable: true,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.0',
       contributes: {
@@ -869,6 +905,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
     mainPath: '',
     removable: false,
     devMode: false,
+    bundled: false,
     manifest: {
       version: '1.1',
       contributes: {
@@ -904,6 +941,7 @@ test('Verify extension activate registers extension features and the disposable 
     mainPath: '',
     removable: false,
     devMode: false,
+    bundled: false,
     manifest: {
       contributes: {
         features: ['feature1', 'feature2'],
@@ -1482,6 +1520,7 @@ test('Verify extension uri', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
@@ -1516,6 +1555,7 @@ test('Verify exports and packageJSON', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
+      bundled: false,
       manifest: {
         foo: 'bar',
       } as unknown as ExtensionManifest,
@@ -2749,6 +2789,36 @@ test('when registering a navigation route, should be pushed to disposables', () 
   expect(disposables.length).toBe(1);
 });
 
+test('when registering a navigation route with searchEntry, the searchEntry should be passed through', () => {
+  const api = createApi();
+
+  const disposable = api.navigation.register('search-route', 'my-command', { label: 'My Label' });
+
+  const routes = navigationManager.getSearchableRoutes();
+  expect(routes).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        routeId: 'publisher.extension-name.search-route',
+        label: 'My Label',
+      }),
+    ]),
+  );
+
+  disposable.dispose();
+});
+
+test('when registering a navigation route with searchEntry without icon and no extension icon, icon should be undefined', () => {
+  const api = createApi();
+
+  const disposable = api.navigation.register('icon-fallback-route', 'my-command', { label: 'My Label' });
+
+  const routes = navigationManager.getSearchableRoutes();
+  const route = routes.find(r => r.routeId === 'publisher.extension-name.icon-fallback-route');
+  expect(route?.icon).toBeUndefined();
+
+  disposable.dispose();
+});
+
 test('withProgress should add the extension id to the routeId', async () => {
   vi.mocked(progress.withProgress).mockResolvedValue(undefined);
   const api = createApi();
@@ -2778,172 +2848,6 @@ test('withProgress should add the extension id to the routeId', async () => {
     },
     expect.any(Function),
   );
-});
-
-describe('loading extension folders', () => {
-  const fileEntry = {
-    isDirectory: () => false,
-  } as unknown as fs.Dirent<string>;
-  const nodeModulesEntry = {
-    isDirectory: () => true,
-    name: 'node_modules',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry = {
-    isDirectory: () => true,
-    name: 'extension1',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry2 = {
-    isDirectory: () => true,
-    name: 'extension2',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry3 = {
-    isDirectory: () => true,
-    name: 'extension3',
-  } as unknown as fs.Dirent<string>;
-  const dirEntry4 = {
-    isDirectory: () => true,
-    name: 'extension4',
-  } as unknown as fs.Dirent<string>;
-
-  describe('in dev mode', () => {
-    beforeEach(() => {
-      vi.restoreAllMocks();
-      vi.resetAllMocks();
-    });
-
-    test('ignores files', async () => {
-      readdirMock.mockResolvedValue([fileEntry]);
-
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('if folder does not exists do not readdir', async () => {
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-      expect(readdirMock).not.toHaveBeenCalled();
-    });
-    test('ignores node_modules folders', async () => {
-      readdirMock.mockResolvedValue([nodeModulesEntry]);
-
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('ignores folders without package.json', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(0);
-    });
-
-    test('recognizes a plain extension when only ext/package.json is present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(true);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1'));
-    });
-
-    test('recognizes as an api extension when only ext/packages/extension/package.json is present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension'));
-    });
-
-    test('recognizes as an api extension when ext/package.json and ext/packages/extension/package.json are present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension'));
-    });
-
-    test('works correctly for multiple different extensions, files and empty folders', async () => {
-      readdirMock.mockResolvedValue([fileEntry, dirEntry, dirEntry2, dirEntry3, dirEntry4]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        // an api extension
-        .mockReturnValueOnce(true)
-        // an plain extension
-        .mockReturnValueOnce(false) // plain extension
-        // priority to an api extension
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true) // priority to api extension
-        // ignore no package.json folders
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readDevelopmentFolders('path');
-
-      expect(folders).length(3);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension'));
-      expect(folders[1]).toBe(path.join('path', 'extension2'));
-      expect(folders[2]).toBe(path.join('path', 'extension3', 'packages', 'extension'));
-    });
-  });
-
-  describe('in prod mode', () => {
-    test('ignores files', async () => {
-      readdirMock.mockResolvedValue([fileEntry]);
-
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('ignores node_modules folders', async () => {
-      readdirMock.mockResolvedValue([nodeModulesEntry]);
-
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(0);
-    });
-    test('recognizes a plain extension when only ext/package.json is present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true);
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'builtin', 'extension1.cdix'));
-    });
-    test('recognizes an api extension when ext/package.json is not present', async () => {
-      readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync')
-        // existSync on the folder path => true
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
-      const folders = await extensionLoader.readProductionFolders('path');
-
-      expect(folders).length(1);
-      expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension', 'builtin', `extension1.cdix`));
-    });
-  });
 });
 
 test('reload extensions', async () => {
@@ -2990,6 +2894,86 @@ test('reload extensions', async () => {
 
   // wait the notification is disposed
   await vi.waitFor(() => expect(fakeDisposableObject.dispose).toBeCalled(), { timeout: 5_000 });
+});
+
+test('listExtensions should expose the bundled flag', async () => {
+  const extensionId = 'my.bundled.extension';
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'bundled-extension',
+    },
+    removable: false,
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const extensions = await extensionLoader.listExtensions();
+
+  expect(extensions.length).toBe(1);
+  expect(extensions[0]?.bundled).toBeTruthy();
+  expect(extensions[0]?.removable).toBeFalsy();
+});
+
+test('reloadExtension should forward the bundled flag to analyzeExtension', async () => {
+  const extension = {
+    path: 'fakePath',
+    manifest: {
+      displayName: 'My Extension Display Name',
+    },
+    id: 'my.extensionId',
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtension;
+
+  vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+  vi.mocked(notificationRegistry.addNotification).mockReturnValue({ dispose: vi.fn() } as unknown as Disposable);
+
+  await extensionLoader.reloadExtension(extension, false);
+
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: extension.path,
+    removable: false,
+    devMode: false,
+    bundled: true,
+  });
+});
+
+test('startExtension should forward the bundled flag to analyzeExtension', async () => {
+  const extensionId = 'my.bundled.extension';
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({
+    get: (): string[] => [],
+  });
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'bundled-extension',
+    },
+    removable: false,
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+
+  await extensionLoader.startExtension(extensionId);
+
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: 'fakePath',
+    removable: false,
+    devMode: false,
+    bundled: true,
+  });
 });
 
 describe('init', () => {
@@ -3076,6 +3060,7 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
+      bundled: false,
     },
     {
       activate: activateMock,

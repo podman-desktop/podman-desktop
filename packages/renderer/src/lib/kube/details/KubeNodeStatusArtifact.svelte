@@ -6,7 +6,11 @@ import Title from '/@/lib/details/DetailsTitle.svelte';
 
 import ConditionsTable from './ConditionsTable.svelte';
 
-export let artifact: V1NodeStatus | undefined;
+interface Props {
+  artifact?: V1NodeStatus;
+}
+
+let { artifact }: Props = $props();
 </script>
 
 {#if artifact}

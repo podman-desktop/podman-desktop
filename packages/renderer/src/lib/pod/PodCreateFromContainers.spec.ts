@@ -18,8 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInspectInfo } from '@podman-desktop/api';
-import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { ContainerInspectInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
@@ -243,10 +242,8 @@ test('Expect to see name input, containers and exposed ports list', async () => 
 });
 
 test('Show error if pod creation fails', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).getContainerInspect = vi.fn().mockResolvedValue(containerInspectInfo);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).createPod = vi.fn().mockRejectedValue('error create pod');
+  vi.mocked(window.getContainerInspect).mockResolvedValue(containerInspectInfo);
+  vi.mocked(window.createPod).mockRejectedValue('error create pod');
   providerInfos.set([providerInfo]);
   podCreationHolder.set(podCreation);
 
@@ -277,4 +274,103 @@ test('Do not show warning if multiple containers use different ports', async () 
   render(PodCreateFromContainers, {});
   const warningLabel = screen.queryByLabelText('warning');
   expect(warningLabel).not.toBeInTheDocument();
+});
+
+test('Resets selectedProvider when current provider is stopped', async () => {
+  vi.mocked(window.getContainerInspect).mockResolvedValue(containerInspectInfo);
+  vi.mocked(window.createPod).mockRejectedValue('abort');
+  const multiProviderInfo: ProviderInfo = {
+    ...providerInfo,
+    containerConnections: [
+      {
+        ...providerInfo.containerConnections[0],
+        name: 'machine-1',
+        endpoint: { socketPath: 'socket-1' },
+      },
+      {
+        ...providerInfo.containerConnections[0],
+        name: 'machine-2',
+        endpoint: { socketPath: 'socket-2' },
+      },
+    ],
+  };
+  providerInfos.set([multiProviderInfo]);
+  podCreationHolder.set(podCreation);
+
+  render(PodCreateFromContainers, {});
+
+  // Stop machine-1
+  const updatedProviderInfo: ProviderInfo = {
+    ...multiProviderInfo,
+    containerConnections: [
+      {
+        ...multiProviderInfo.containerConnections[0],
+        status: 'stopped',
+      },
+      multiProviderInfo.containerConnections[1],
+    ],
+  };
+  providerInfos.set([updatedProviderInfo]);
+
+  const createPodButton = screen.getByRole('button', { name: 'Create pod' });
+  await fireEvent.click(createPodButton);
+
+  expect(window.createPod).toHaveBeenCalledWith(
+    expect.objectContaining({
+      provider: expect.objectContaining({ name: 'machine-2' }),
+    }),
+  );
+});
+
+test('Preserves selectedProvider when it is still available', async () => {
+  vi.mocked(window.getContainerInspect).mockResolvedValue(containerInspectInfo);
+  vi.mocked(window.createPod).mockRejectedValue('abort');
+  const multiProviderInfo: ProviderInfo = {
+    ...providerInfo,
+    containerConnections: [
+      {
+        ...providerInfo.containerConnections[0],
+        name: 'machine-1',
+        endpoint: { socketPath: 'socket-1' },
+      },
+      {
+        ...providerInfo.containerConnections[0],
+        name: 'machine-2',
+        endpoint: { socketPath: 'socket-2' },
+      },
+    ],
+  };
+  providerInfos.set([multiProviderInfo]);
+  podCreationHolder.set(podCreation);
+
+  render(PodCreateFromContainers, {});
+
+  // Select machine-2 using the dropdown
+  const dropdownButton = screen.getByRole('button', { name: 'machine-1' });
+  await fireEvent.click(dropdownButton);
+  const option = await screen.findByRole('button', { name: 'machine-2' });
+  await fireEvent.click(option);
+
+  // Update providerInfos with an unrelated change
+  const updatedProviderInfo: ProviderInfo = {
+    ...multiProviderInfo,
+    containerConnections: [
+      ...multiProviderInfo.containerConnections,
+      {
+        ...providerInfo.containerConnections[0],
+        name: 'machine-3',
+        endpoint: { socketPath: 'socket-3' },
+      },
+    ],
+  };
+  providerInfos.set([updatedProviderInfo]);
+
+  const createPodButton = screen.getByRole('button', { name: 'Create pod' });
+  await fireEvent.click(createPodButton);
+
+  expect(window.createPod).toHaveBeenCalledWith(
+    expect.objectContaining({
+      provider: expect.objectContaining({ name: 'machine-2' }),
+    }),
+  );
 });

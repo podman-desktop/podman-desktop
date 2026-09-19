@@ -16,12 +16,15 @@ import ProviderCard from './ProviderCard.svelte';
 import { type InitializationContext, InitializationSteps, InitializeAndStartMode } from './ProviderInitUtils';
 import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 
-export let provider: ProviderInfo;
-export let initializationContext: InitializationContext;
+interface Props {
+  provider: ProviderInfo;
+  initializationContext: InitializationContext;
+}
 
-let initializeError: string | undefined = undefined;
+let { provider, initializationContext }: Props = $props();
 
-let preflightChecks: CheckStatus[] = [];
+let initializeError: string | undefined = $state();
+let preflightChecks: CheckStatus[] = $state([]);
 
 let logsXtermDiv: HTMLDivElement;
 let logsTerminal;

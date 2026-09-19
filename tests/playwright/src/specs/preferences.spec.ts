@@ -30,24 +30,24 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe
-  .serial('Preferences text persistence validation', { tag: '@macos_sanity' }, () => {
-    test('Check preferences text persistence', async ({ page, navigationBar }) => {
-      //Open Settings/Preferences page
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.preferencesTab.click();
+test.describe('Preferences text persistence validation', { tag: '@macos_sanity' }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test('Check preferences text persistence', async ({ page, navigationBar }) => {
+    //Open Settings/Preferences page
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.preferencesTab.click();
 
-      //Change kubeconfig path
-      const preferencesPage = new PreferencesPage(page);
-      await playExpect(preferencesPage.heading).toBeVisible();
-      await preferencesPage.kubePathInput.scrollIntoViewIfNeeded();
-      await preferencesPage.selectKubeFile(preferencesTestString);
-      await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
+    //Change kubeconfig path
+    const preferencesPage = new PreferencesPage(page);
+    await playExpect(preferencesPage.heading).toBeVisible();
+    await preferencesPage.kubePathInput.scrollIntoViewIfNeeded();
+    await preferencesPage.selectKubeFile(preferencesTestString);
+    await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
 
-      //Change page and check new kubeconfig path persists
-      await settingsBar.resourcesTab.click();
-      await settingsBar.preferencesTab.click();
-      await playExpect(preferencesPage.heading).toBeVisible();
-      await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
-    });
+    //Change page and check new kubeconfig path persists
+    await settingsBar.resourcesTab.click();
+    await settingsBar.preferencesTab.click();
+    await playExpect(preferencesPage.heading).toBeVisible();
+    await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
   });
+});

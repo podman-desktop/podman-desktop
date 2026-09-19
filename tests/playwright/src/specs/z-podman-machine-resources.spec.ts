@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Locator, Page } from '@playwright/test';
+import type { Locator } from '@playwright/test';
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { ResourceElementState } from '/@/model/core/states';
@@ -28,7 +28,7 @@ import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
-  handleConfirmationDialog,
+  handlePodmanConfirmationDialogs,
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
@@ -236,13 +236,4 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         await handlePodmanConfirmationDialogs(page);
       });
     });
-}
-
-async function handlePodmanConfirmationDialogs(page: Page): Promise<void> {
-  try {
-    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-    await handleConfirmationDialog(page, 'Podman', true, 'OK');
-  } catch (error) {
-    console.log('No handling dialog displayed', error);
-  }
 }

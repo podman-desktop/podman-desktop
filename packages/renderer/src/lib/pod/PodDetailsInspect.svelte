@@ -6,9 +6,13 @@ import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 
 import type { PodInfoUI } from './PodInfoUI';
 
-export let pod: PodInfoUI;
+interface Props {
+  pod: PodInfoUI;
+}
 
-let inspectDetails: string;
+let { pod }: Props = $props();
+
+let inspectDetails: string = $state('');
 
 onMount(async () => {
   // grab inspect result from the container

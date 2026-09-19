@@ -7,9 +7,11 @@
 <script lang="ts">
 import { Steps } from 'svelte-steps';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let steps: any[];
-export let current = 0;
+interface Props {
+  steps: unknown[];
+  current?: number;
+}
+let { steps, current = 0 }: Props = $props();
 </script>
 
 <div class="bootstrap-color" data-testid="step-div">

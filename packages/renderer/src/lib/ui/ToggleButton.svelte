@@ -1,14 +1,19 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import type { Snippet } from 'svelte';
 import { createEventDispatcher } from 'svelte';
 
-export let icon: IconDefinition;
-export let selected: boolean = false;
-export let disabled: boolean = false;
-export let iconClass: string = '';
+interface Props {
+  icon: IconDefinition;
+  selected?: boolean;
+  disabled?: boolean;
+  iconClass?: string;
+  children?: Snippet;
+}
+let { icon, selected = false, disabled = false, iconClass = '', children }: Props = $props();
 
-$: displayedIconClass = disabled ? '' : iconClass;
+let displayedIconClass = $derived(disabled ? '' : iconClass);
 
 const dispatch = createEventDispatcher();
 
@@ -30,11 +35,11 @@ function onclick(): void {
   class:hover:bg-[var(--pd-content-card-carousel-disabled-nav)]={disabled}
   class:text-[var(--pd-action-button-disabled-text)]={disabled}
   class:cursor-not-allowed={disabled}
-  on:click={onclick}>
+  onclick={onclick}>
   <div class="flex flex-row items-center space-x-2 px-2 py-1 text-xs">
     {#if icon}
       <Icon icon={icon} class={displayedIconClass} />
     {/if}
-    <span><slot /></span>
+    <span>{@render children?.()}</span>
   </div>
 </button>

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { V1CronJob } from '@kubernetes/client-node';
+import type { KubernetesObject, V1CronJob } from '@kubernetes/client-node';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { CronJobUtils } from './cronjob-utils';
@@ -35,10 +35,33 @@ test('expect basic UI conversion', async () => {
       name: 'my-cronjob',
       namespace: 'test-namespace',
     },
+    spec: {
+      schedule: '*/5 * * * *',
+      jobTemplate: {},
+    },
     status: {},
   } as V1CronJob;
   const cronjobUI = cronjobUtils.getCronJobUI(cronjob);
   expect(cronjobUI.kind).toEqual('CronJob');
   expect(cronjobUI.name).toEqual('my-cronjob');
   expect(cronjobUI.namespace).toEqual('test-namespace');
+});
+
+test('isV1CronJob returns true for object with spec', () => {
+  const obj = {
+    apiVersion: 'batch/v1',
+    kind: 'CronJob',
+    metadata: { name: 'my-cronjob' },
+    spec: { schedule: '*/5 * * * *', jobTemplate: {} },
+  } as KubernetesObject;
+  expect(cronjobUtils.isV1CronJob(obj)).toBeTruthy();
+});
+
+test('isV1CronJob returns false for object without spec', () => {
+  const obj: KubernetesObject = {
+    apiVersion: 'batch/v1',
+    kind: 'CronJob',
+    metadata: { name: 'my-cronjob' },
+  };
+  expect(cronjobUtils.isV1CronJob(obj)).toBeFalsy();
 });

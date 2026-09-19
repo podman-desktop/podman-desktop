@@ -146,6 +146,7 @@ import type {
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
+  PlayKubeInput,
 } from '@podman-desktop/core-api/libpod';
 import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
@@ -161,6 +162,8 @@ import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
+import { ExtensionsBundle } from '/@/plugin/extension/local/extensions-bundle.js';
+import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-external.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
@@ -212,6 +215,7 @@ import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
+import { ExtensionInstaller } from './extension/extension-installer.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -222,7 +226,6 @@ import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
-import { ExtensionInstaller } from './install/extension-installer.js';
 import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
@@ -243,8 +246,8 @@ import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js'
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
+import { CIDetection } from './telemetry/ci-detection.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
-import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
@@ -479,7 +482,7 @@ export class PluginSystem {
         await shell.openExternal(url);
         return true;
       } else if (result.response === 'Copy Link') {
-        clipboard.writeText(url);
+        await clipboard.writeText(url);
       }
       return false;
     };
@@ -558,6 +561,7 @@ export class PluginSystem {
     const exec = new Exec(proxy);
     container.bind<Exec>(Exec).toConstantValue(exec);
 
+    container.bind<CIDetection>(CIDetection).toSelf().inSingletonScope();
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
@@ -667,6 +671,7 @@ export class PluginSystem {
     containerfileParser.init();
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
+    providerRegistry.init();
     providerRegistry.registerAutostartEngine(autoStartEngine);
 
     providerRegistry.addProviderListener((name: string, providerInfo: ProviderInfo) => {
@@ -802,9 +807,11 @@ export class PluginSystem {
     container.bind<ProgressImpl>(ProgressImpl).toSelf().inSingletonScope();
 
     container.bind<ExtensionApiVersion>(ExtensionApiVersion).toSelf().inSingletonScope();
+    container.bind<ExtensionsBundle>(ExtensionsBundle).toSelf().inSingletonScope();
+    container.bind<ExtensionsExternal>(ExtensionsExternal).toSelf().inSingletonScope();
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
-    this.extensionLoader = container.get<ExtensionLoader>(ExtensionLoader);
+    this.extensionLoader = await container.getAsync<ExtensionLoader>(ExtensionLoader);
     await this.extensionLoader.init();
 
     container.bind<FeedbackHandler>(FeedbackHandler).toSelf().inSingletonScope();
@@ -822,8 +829,6 @@ export class PluginSystem {
     container.bind<RecommendationsRegistry>(RecommendationsRegistry).toSelf().inSingletonScope();
     const recommendationsRegistry = container.get<RecommendationsRegistry>(RecommendationsRegistry);
     recommendationsRegistry.init();
-
-    container.bind<TempFileService>(TempFileService).toSelf().inSingletonScope();
 
     container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
     const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
@@ -853,7 +858,6 @@ export class PluginSystem {
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);
     const authentication = container.get<AuthenticationImpl>(AuthenticationImpl);
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
-    const tempFileService = container.get<TempFileService>(TempFileService);
 
     container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
     const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
@@ -1133,7 +1137,7 @@ export class PluginSystem {
       'container-provider-registry:playKube',
       async (
         _listener,
-        yamlFilePath: string,
+        input: PlayKubeInput,
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
@@ -1153,7 +1157,7 @@ export class PluginSystem {
         });
 
         try {
-          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, {
+          const result = await containerProviderRegistry.playKube(input, selectedProvider, {
             ...options,
             abortSignal: abortController?.signal,
           });
@@ -1166,14 +1170,6 @@ export class PluginSystem {
         }
       },
     );
-
-    this.ipcHandle('temp-file-service:createTempFile', async (_listener, content: string): Promise<string> => {
-      return tempFileService.createTempFile(content);
-    });
-
-    this.ipcHandle('temp-file-service:removeTempFile', async (_listener, filePath: string): Promise<void> => {
-      return tempFileService.removeTempFile(filePath);
-    });
 
     this.ipcHandle(
       'container-provider-registry:startContainer',
@@ -1307,7 +1303,6 @@ export class PluginSystem {
     this.ipcHandle(
       'container-provider-registry:createAndStartContainer',
       async (_listener, engine: string, options: ContainerCreateOptions): Promise<{ id: string }> => {
-        options.start = true;
         return containerProviderRegistry.createContainer(engine, options);
       },
     );
@@ -1973,8 +1968,8 @@ export class PluginSystem {
       },
     );
 
-    this.ipcHandle('clipboard:writeText', async (_, text: string, type?: 'selection' | 'clipboard'): Promise<void> => {
-      return clipboard.writeText(text, type);
+    this.ipcHandle('clipboard:writeText', async (_, text: string): Promise<void> => {
+      return clipboard.writeText(text);
     });
 
     this.ipcHandle(
@@ -3275,6 +3270,10 @@ export class PluginSystem {
         navigationManager.navigateToHistoryEntry(extensionId, entryId);
       },
     );
+
+    this.ipcHandle('navigation:getSearchableRoutes', async () => {
+      return navigationManager.getSearchableRoutes();
+    });
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();

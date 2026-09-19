@@ -6,8 +6,12 @@ import Table from '/@/lib/details/DetailsTable.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 import KubeSecretArtifact from '/@/lib/kube/details/KubeSecretArtifact.svelte';
 
-export let secret: V1Secret | undefined;
-export let kubeError: string | undefined = undefined;
+interface Props {
+  secret?: V1Secret;
+  kubeError?: string;
+}
+
+let { secret, kubeError }: Props = $props();
 </script>
 
 <!-- Show the kube error if we're unable to retrieve the data correctly, but we still want to show the

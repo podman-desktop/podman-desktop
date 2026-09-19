@@ -469,4 +469,28 @@ describe('PreferencesRegistriesEditing', () => {
       insecure: true,
     });
   });
+
+  test('Expect a long error message in the Add registry dialog to wrap instead of overflowing', async () => {
+    render(PreferencesRegistriesEditing, { showNewRegistryForm: true });
+
+    await userEvent.type(screen.getByPlaceholderText('https://registry.io'), 'https://localhost:5000');
+    await userEvent.type(screen.getByPlaceholderText('Username'), 'myuser');
+    await userEvent.type(screen.getByPlaceholderText('Password'), 'password');
+
+    // the error from the original report: it ends with a run of characters that
+    // has nothing to wrap at, which is what pushed the text out of the dialog
+    const error =
+      'Unable to find auth info for https://localhost:5000/v2/. Error: RequestError: write EPROTO ' +
+      '24412595112800:error:100000f7:SSL routines:OPENSSL_internal:WRONG_VERSION_NUMBER:.../../third_party/boringssl/src/ssl/tls_record.cc:127:';
+    vi.mocked(window.checkImageCredentials).mockResolvedValue(undefined);
+    vi.mocked(window.createImageRegistry).mockRejectedValue(new Error(error));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    const message = await screen.findByText(error);
+    expect(message).toBeInTheDocument();
+    // the message can break anywhere, so it stays inside the dialog instead of
+    // widening it
+    expect(message).toHaveClass('wrap-anywhere');
+  });
 });

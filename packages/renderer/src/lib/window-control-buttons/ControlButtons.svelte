@@ -1,7 +1,11 @@
 <script lang="ts">
 import WindowControlButton from './ControlButton.svelte';
 
-export let platform: string;
+interface Props {
+  platform: string;
+}
+
+let { platform }: Props = $props();
 
 async function minimize(): Promise<void> {
   return window.windowMinimize();

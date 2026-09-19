@@ -23,6 +23,8 @@ export async function getPowerShellClient(telemetryLogger: extensionApi.Telemetr
 
 export interface PowerShellClient {
   isVirtualMachineAvailable(): Promise<boolean>;
+  isVirtualizationFirmwareEnabled(): Promise<boolean>;
+  isHypervisorPresent(): Promise<boolean>;
   isUserAdmin(): Promise<boolean>;
   isHyperVInstalled(): Promise<boolean>;
   isHyperVRunning(): Promise<boolean>;
@@ -73,6 +75,80 @@ class PowerShell5Client implements PowerShellClient {
       telemetry['killed'] = execError.killed;
     }
     this.telemetryLogger.logUsage('check.isVirtualMachineAvailable', telemetry);
+    return false;
+  }
+
+  // When Hyper-V is active the OS runs as a guest under the hypervisor, so
+  // Win32_Processor.VirtualizationFirmwareEnabled reports False even though
+  // VT-x/AMD-V is enabled in BIOS. Fall back to Win32_ComputerSystem.HypervisorPresent.
+  // https://devblogs.microsoft.com/oldnewthing/20201216-00/?p=104550
+  // https://learn.microsoft.com/en-us/answers/questions/5523363
+  async isVirtualizationFirmwareEnabled(): Promise<boolean> {
+    const telemetry: Record<string, unknown> = {};
+    try {
+      const res = await extensionApi.process.exec(
+        PowerShell5Exe,
+        psArgs(
+          '[System.Console]::OutputEncoding = [System.Text.Encoding]::Unicode; (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty VirtualizationFirmwareEnabled)',
+        ),
+        { encoding: 'utf16le' },
+      );
+      telemetry['command'] = res.command;
+      telemetry['stdout'] = res.stdout;
+      telemetry['stderr'] = res.stderr;
+      if (res.stdout.trim() === 'True') {
+        return true;
+      }
+    } catch (err) {
+      telemetry['error'] = err;
+      const execError = err as extensionApi.RunError;
+      telemetry['message'] = execError.message;
+      telemetry['exitCode'] = execError.exitCode;
+      telemetry['command'] = execError.command;
+      telemetry['stdout'] = execError.stdout;
+      telemetry['stderr'] = execError.stderr;
+      telemetry['cancelled'] = execError.cancelled;
+      telemetry['killed'] = execError.killed;
+    }
+
+    const hypervisorPresent = await this.isHypervisorPresent();
+    telemetry['hypervisorPresent'] = hypervisorPresent;
+    if (hypervisorPresent) {
+      return true;
+    }
+
+    this.telemetryLogger.logUsage('check.isVirtualizationFirmwareEnabled', telemetry);
+    return false;
+  }
+
+  async isHypervisorPresent(): Promise<boolean> {
+    const telemetry: Record<string, unknown> = {};
+    try {
+      const res = await extensionApi.process.exec(
+        PowerShell5Exe,
+        psArgs(
+          '[System.Console]::OutputEncoding = [System.Text.Encoding]::Unicode; (Get-CimInstance Win32_ComputerSystem).HypervisorPresent',
+        ),
+        { encoding: 'utf16le' },
+      );
+      telemetry['command'] = res.command;
+      telemetry['stdout'] = res.stdout;
+      telemetry['stderr'] = res.stderr;
+      if (res.stdout.trim() === 'True') {
+        return true;
+      }
+    } catch (err) {
+      telemetry['error'] = err;
+      const execError = err as extensionApi.RunError;
+      telemetry['message'] = execError.message;
+      telemetry['exitCode'] = execError.exitCode;
+      telemetry['command'] = execError.command;
+      telemetry['stdout'] = execError.stdout;
+      telemetry['stderr'] = execError.stderr;
+      telemetry['cancelled'] = execError.cancelled;
+      telemetry['killed'] = execError.killed;
+    }
+    this.telemetryLogger.logUsage('check.isHypervisorPresent', telemetry);
     return false;
   }
 

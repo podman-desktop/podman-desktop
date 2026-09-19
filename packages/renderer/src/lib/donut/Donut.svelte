@@ -1,10 +1,14 @@
 <script lang="ts">
 import { Tooltip } from '@podman-desktop/ui-svelte';
 
-export let percent = 0;
-export let size = 64;
-export let title = '';
-export let value: unknown;
+interface Props {
+  percent?: number;
+  size?: number;
+  title?: string;
+  value?: unknown;
+}
+
+let { percent = 0, size = 64, title = '', value }: Props = $props();
 
 // describes an arc with the given radius, centered at an x,y position matching the radius
 function describeArc(radius: number, endAngle: number): string {
@@ -21,16 +25,17 @@ function describeArc(radius: number, endAngle: number): string {
   return ['M', start.x, start.y, 'A', radius, radius, 0, largeArcFlag, 0, radius, 0].join(' ');
 }
 
-$: stroke =
+let stroke = $derived(
   percent < 0
     ? ''
     : percent < 50
       ? 'stroke-[var(--pd-state-success)]'
       : percent < 75
         ? 'stroke-[var(--pd-state-warning)]'
-        : 'stroke-[var(--pd-state-error)]';
+        : 'stroke-[var(--pd-state-error)]',
+);
 
-$: tooltip = percent ? percent.toFixed(0) + '% ' + title + ' usage' : '';
+let tooltip = $derived(percent ? percent.toFixed(0) + '% ' + title + ' usage' : '');
 </script>
 
 <Tooltip bottom tip={tooltip}>

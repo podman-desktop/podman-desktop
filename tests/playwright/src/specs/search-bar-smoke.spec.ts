@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { CommandPalette } from '/@/model/pages/command-palette';
+import { ContainersPage } from '/@/model/pages/containers-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 
 test.beforeAll(async ({ runner, welcomePage }) => {
@@ -188,5 +189,69 @@ test.describe
       await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
       await commandPalette.close();
+    });
+  });
+
+test.describe
+  .serial('Search bar navigation', { tag: ['@smoke', '@windows_sanity', '@macos_sanity'] }, () => {
+    test.describe.configure({ retries: 1 });
+
+    test('Navigate to Containers page via search bar', async ({ commandPalette }) => {
+      const containersPage = await commandPalette.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+    });
+
+    test('Navigate to Images page via search bar', async ({ commandPalette }) => {
+      const imagesPage = await commandPalette.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+    });
+
+    test('Navigate to Pods page via search bar', async ({ commandPalette }) => {
+      const podsPage = await commandPalette.openPods();
+      await playExpect(podsPage.heading).toBeVisible();
+    });
+
+    test('Navigate to Volumes page via search bar', async ({ commandPalette }) => {
+      const volumesPage = await commandPalette.openVolumes();
+      await playExpect(volumesPage.heading).toBeVisible();
+    });
+
+    test('Navigate to Networks page via search bar', async ({ commandPalette }) => {
+      const networksPage = await commandPalette.openNetworks();
+      await playExpect(networksPage.heading).toBeVisible();
+    });
+
+    test('Generic navigateTo method works with Go to tab', async ({ commandPalette, page }) => {
+      await commandPalette.navigateTo('Containers');
+      const containersPage = new ContainersPage(page);
+      await playExpect(containersPage.heading).toBeVisible();
+    });
+
+    test('Navigate between pages via search bar consecutively', async ({ commandPalette }) => {
+      const imagesPage = await commandPalette.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const containersPage = await commandPalette.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+
+      const volumesPage = await commandPalette.openVolumes();
+      await playExpect(volumesPage.heading).toBeVisible();
+
+      const podsPage = await commandPalette.openPods();
+      await playExpect(podsPage.heading).toBeVisible();
+
+      const networksPage = await commandPalette.openNetworks();
+      await playExpect(networksPage.heading).toBeVisible();
+    });
+
+    test('Search bar navigation and sidebar navigation reach same pages', async ({ commandPalette, navigationBar }) => {
+      const containersViaSidebar = await navigationBar.openContainers();
+      await playExpect(containersViaSidebar.heading).toBeVisible();
+
+      const imagesViaSearch = await commandPalette.openImages();
+      await playExpect(imagesViaSearch.heading).toBeVisible();
+
+      const containersViaSearch = await commandPalette.openContainers();
+      await playExpect(containersViaSearch.heading).toBeVisible();
     });
   });

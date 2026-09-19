@@ -6,12 +6,15 @@ import { getNormalizedDefaultNumberValue } from '/@/lib/preferences/Util';
 
 import EditableItem from './EditableItem.svelte';
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: number | undefined = undefined;
-export let onSave = (_recordId: string, _value: number): void => {};
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value?: number;
+  onSave?: (_recordId: string, _value: number) => void;
+}
 
-let recordValue: DisplayConfigurationValue | undefined;
-$: recordValue = getDisplayConfigurationValue(record, value);
+let { record, value = $bindable(), onSave = (_recordId: string, _value: number): void => {} }: Props = $props();
+
+let recordValue = $derived(getDisplayConfigurationValue(record, value));
 
 function onChangeInput(_recordId: string, _value: number): void {
   innerOnSave(_recordId, _value);

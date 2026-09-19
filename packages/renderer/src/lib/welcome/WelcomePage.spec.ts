@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderInfo, TelemetryMessages } from '@podman-desktop/core-api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -64,68 +64,12 @@ test('Expect that the close button closes the window', async () => {
   expect(button).not.toBeInTheDocument();
 });
 
-test('Expect that telemetry UI is hidden when telemetry has already been prompted', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue('true');
-  await waitRender({ showWelcome: true, showTelemetry: false });
-  let checkbox;
-  try {
-    checkbox = screen.getByRole('checkbox', { name: 'Enable telemetry' });
-  } catch {
-    // ignore errors
-  }
-  expect(checkbox).toBe(undefined);
-});
-
-test('Expect that telemetry UI is visible when necessary', async () => {
+test('Expect that OnboardingWelcomeTelemetry component is rendered', async () => {
   vi.mocked(window.getTelemetryMessages).mockResolvedValue({ acceptMessage: 'Help improve the product' });
-  await waitRender({ showWelcome: true, showTelemetry: true });
-  const checkbox = screen.getByRole('checkbox', { name: 'Enable telemetry' });
-  expect(checkbox).toBeInTheDocument();
-});
-
-test('Expect that telemetry messages is visible', async () => {
-  const telem: TelemetryMessages = {
-    acceptMessage: 'Help improve the product',
-  };
-  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
-
-  await waitRender({ showWelcome: true, showTelemetry: true });
-
-  const accept = screen.getByText(telem.acceptMessage);
-  expect(accept).toBeInTheDocument();
-});
-
-test('Expect that telemetry link opens url', async () => {
-  const telem: TelemetryMessages = {
-    acceptMessage: 'Help improve the product',
-    info: {
-      link: 'Click here',
-      url: 'info-url',
-    },
-  };
-  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
-
-  await waitRender({ showWelcome: true, showTelemetry: true });
-  const accept = screen.getByText(telem.acceptMessage);
-  expect(accept).toBeInTheDocument();
-
-  const infoLink = screen.getByText(telem.info?.link ?? '');
-  expect(infoLink).toBeInTheDocument();
-
-  await fireEvent.click(infoLink);
-  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.info?.url));
-});
-
-test('Expect that telemetry link is missing when info is not provided', async () => {
-  const telem = {
-    acceptMessage: 'Help improve the product',
-  } as TelemetryMessages;
-  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
-
-  await waitRender({ showWelcome: true, showTelemetry: true });
-
-  const infoLink = screen.queryByRole('link');
-  expect(infoLink).not.toBeInTheDocument();
+  await waitRender({ showWelcome: true });
+  // The telemetry section wrapper is always rendered; detailed behavior is tested in OnboardingWelcomeTelemetry.spec.ts
+  const settingsHint = screen.getByText(/You can always modify this preference later/);
+  expect(settingsHint).toBeInTheDocument();
 });
 
 test('Expect welcome screen to show three checked onboarding providers', async () => {
@@ -196,30 +140,63 @@ test('Expect welcome screen to show three checked onboarding providers', async (
   }
 
   // Check that the logos for foobar1, foobar2, and foobar3 are present
-  const image1 = screen.getByRole('img', { name: 'foobar1 logo' });
+  const image1 = screen.getByRole('img', { name: 'FooBar1 logo', hidden: true });
   expect(image1).toBeInTheDocument();
   expect(image1).toHaveAttribute('src', 'data:image/png;base64,foobar1');
 
-  const image2 = screen.getByRole('img', { name: 'foobar2 logo' });
+  const image2 = screen.getByRole('img', { name: 'FooBar2 logo', hidden: true });
   expect(image2).toBeInTheDocument();
   expect(image2).toHaveAttribute('src', 'data:image/png;base64,foobar2');
 
-  const image3 = screen.getByRole('img', { name: 'foobar3 logo' });
+  const image3 = screen.getByRole('img', { name: 'FooBar3 logo', hidden: true });
   expect(image3).toBeInTheDocument();
   expect(image3).toHaveAttribute('src', 'data:image/png;base64,foobar3');
 
   // Check that all three are checked as well
-  const checkbox1 = screen.getByRole('checkbox', { name: 'FooBar1 checkbox' });
+  const checkbox1 = screen.getByRole('checkbox', { name: 'FooBar1:' });
   expect(checkbox1).toBeInTheDocument();
   expect(checkbox1).toBeChecked();
 
-  const checkbox2 = screen.getByRole('checkbox', { name: 'FooBar2 checkbox' });
+  const checkbox2 = screen.getByRole('checkbox', { name: 'FooBar2:' });
   expect(checkbox2).toBeInTheDocument();
   expect(checkbox2).toBeChecked();
 
-  const checkbox3 = screen.getByRole('checkbox', { name: 'FooBar3 checkbox' });
+  const checkbox3 = screen.getByRole('checkbox', { name: 'FooBar3:' });
   expect(checkbox3).toBeInTheDocument();
   expect(checkbox3).toBeChecked();
+});
+
+test('Expect unchecking an onboarding provider to survive a providerInfos refresh', async () => {
+  onboardingList.set([
+    {
+      extension: 'id',
+      removable: true,
+      title: 'onboarding',
+      name: 'foobar1',
+      displayName: 'FooBar1',
+      icon: 'data:image/png;base64,foobar1',
+      steps: [],
+      enablement: 'true',
+    },
+  ]);
+  providerInfos.set([]);
+
+  await waitRender({ showWelcome: true });
+
+  const checkbox = screen.getByRole('checkbox', { name: 'FooBar1:' });
+  expect(checkbox).toBeChecked();
+
+  await fireEvent.click(checkbox);
+  expect(checkbox).not.toBeChecked();
+  expect(screen.queryByRole('button', { name: 'Start onboarding' })).not.toBeInTheDocument();
+
+  // providers emit whenever a provider status changes or an extension starts/stops, which
+  // recomputes the sorted list; the user's choice must not be reset
+  providerInfos.set([]);
+  await tick();
+
+  expect(checkbox).not.toBeChecked();
+  expect(screen.queryByRole('button', { name: 'Start onboarding' })).not.toBeInTheDocument();
 });
 
 test('Make sure the provider with name podman appears first even if its 2nd in the list', async () => {

@@ -47,6 +47,8 @@ test('Expect simple column styling - container', async () => {
     created: 0,
     labels: {},
     imageBase64RepoTag: '',
+    imageId: '',
+    names: [''],
   };
   render(ContainerColumnStatus, { object: container });
 

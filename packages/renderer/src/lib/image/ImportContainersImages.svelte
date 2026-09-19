@@ -1,7 +1,7 @@
 <script lang="ts">
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
-import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCircleArrowDown, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
@@ -144,7 +144,7 @@ async function importContainers(): Promise<void> {
         on:click={importContainers}
         inProgress={inProgress}
         class="w-full"
-        icon={faPlay}
+        icon={faCircleArrowDown}
         aria-label="Import containers"
         disabled={importDisabled}>
         Import Containers

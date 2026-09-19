@@ -16,25 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo, VolumeListInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import CreateVolume from './CreateVolume.svelte';
-
-const createVolumeMock = vi.fn();
-
-beforeAll(() => {
-  (window as any).createVolume = createVolumeMock;
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -57,7 +49,7 @@ test('Expect no create button with no providers', async () => {
   expect(emptyScreen).toBeInTheDocument();
 
   // expect that we never call
-  expect(createVolumeMock).not.toBeCalled();
+  expect(window.createVolume).not.toBeCalled();
 });
 
 test('Expect Create button is working', async () => {
@@ -86,7 +78,7 @@ test('Expect Create button is working', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.anything(), { Name: '' });
+  expect(window.createVolume).toHaveBeenCalledWith(expect.anything(), { Name: '' });
 });
 
 test('Expect Create with a custom name', async () => {
@@ -129,14 +121,14 @@ test('Expect Create with a custom name', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
     Name: customVolumeName,
   });
 });
 
 test('Expect error message when volume creation fails', async () => {
   const errorMessage = 'volume name "bad/name" includes invalid characters';
-  createVolumeMock.mockRejectedValueOnce(new Error(errorMessage));
+  vi.mocked(window.createVolume).mockRejectedValueOnce(new Error(errorMessage));
 
   providerInfos.set([
     {
@@ -225,7 +217,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
   await userEvent.click(createButton);
 
   // expect that we called createVolume API with the docker provider as we changed the toggle
-  expect(createVolumeMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'docker' }), {
     Name: customVolumeName,
   });
 });
@@ -498,7 +490,7 @@ test('Expect no duplicate error after successful creation when store updates', a
     } as unknown as VolumeListInfo,
   ]);
 
-  createVolumeMock.mockResolvedValue(undefined);
+  vi.mocked(window.createVolume).mockResolvedValue(undefined);
 
   render(CreateVolume, {});
 

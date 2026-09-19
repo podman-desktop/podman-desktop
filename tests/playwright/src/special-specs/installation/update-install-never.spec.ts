@@ -56,7 +56,7 @@ test.afterAll(async ({ runner }) => {
 test.describe
   .serial('Application update reminder preferences set to Never', { tag: '@update-install' }, () => {
     test('No update on startup', async ({ page, welcomePage }) => {
-      const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
+      const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop\?/ });
       await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 20_000 });
       await welcomePage.handleWelcomePage(true);
     });
@@ -68,6 +68,6 @@ test.describe
     test('User initiated update option is available', async ({ page, statusBar }) => {
       await playExpect(statusBar.updateButtonTitle).toHaveText(await statusBar.versionButton.innerText());
       await statusBar.updateButtonTitle.click();
-      await handleConfirmationDialog(page, 'Update Podman Desktop?', false, '', 'Cancel');
+      await handleConfirmationDialog({ page, dialogTitle: /Update .*Podman Desktop\?/, buttonName: 'Cancel' });
     });
   });

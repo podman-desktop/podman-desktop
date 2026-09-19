@@ -15,7 +15,7 @@ function getText(state: ContextGeneralState | undefined): string {
   return 'Try switching to a different context or namespace';
 }
 
-$: text = getText($kubernetesCurrentContextState);
+let text = $derived(getText($kubernetesCurrentContextState));
 </script>
 
 <KubernetesEmptyScreen icon={NodeIcon} resources={['nodes']} titleEmpty='No nodes' titleNotPermitted='Nodes not accessible' message={text} />

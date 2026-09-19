@@ -101,11 +101,21 @@ function registerProvider(
 }
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
-  const engineType: string = configuration.getConfiguration('lima').get('type') ?? 'podman';
-  const instanceName: string = configuration.getConfiguration('lima').get('name') ?? engineType;
-  const socketName: string = configuration.getConfiguration('lima').get('socket') ?? engineType + '.sock';
+  // The configuration schema declares an empty string as the default value of lima.home,
+  // lima.name and lima.socket, so a setting the user never touched is read back as '' rather
+  // than as undefined. '' is not nullish, so it has to be rejected explicitly for the fallbacks
+  // below to apply.
+  const limaConfiguration = configuration.getConfiguration('lima');
+  const type = limaConfiguration.get<string>('type');
+  const name = limaConfiguration.get<string>('name');
+  const socket = limaConfiguration.get<string>('socket');
+  const home = limaConfiguration.get<string>('home');
+
+  const engineType: string = type === undefined || type === '' ? 'podman' : type;
+  const instanceName: string = name === undefined || name === '' ? engineType : name;
+  const socketName: string = socket === undefined || socket === '' ? engineType + '.sock' : socket;
   const limaHome: string =
-    configuration.getConfiguration('lima').get('home') ?? process.env['LIMA_HOME'] ?? os.homedir() + '/.lima';
+    home === undefined || home === '' ? (process.env['LIMA_HOME'] ?? os.homedir() + '/.lima') : home;
 
   const socketPath = path.resolve(limaHome ?? '', instanceName + '/sock/' + socketName);
   const configPath = path.resolve(limaHome ?? '', instanceName + '/copied-from-guest/kubeconfig.yaml');

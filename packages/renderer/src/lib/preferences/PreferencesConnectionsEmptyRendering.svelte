@@ -1,8 +1,12 @@
 <script lang="ts">
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 
-export let message = '';
-export let hidden: boolean;
+interface Props {
+  message?: string;
+  hidden: boolean;
+}
+
+let { message = '', hidden }: Props = $props();
 </script>
 
 {#if !hidden}

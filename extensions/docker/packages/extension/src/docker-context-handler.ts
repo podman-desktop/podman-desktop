@@ -23,7 +23,7 @@ import { join } from 'node:path';
 import { env } from '@podman-desktop/api';
 import type { DockerContextInfo, DockerContextParsingInfo } from '@podman-desktop/docker-extension-api';
 
-import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
+import { NPIPE_SCHEME, UNIX_SCHEME, UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
 import type { DockerConfig } from './docker-config.js';
 
 /**
@@ -34,6 +34,21 @@ export class DockerContextHandler {
 
   constructor(dockerConfig: DockerConfig) {
     this.#dockerConfig = dockerConfig;
+  }
+
+  /**
+   * Resolves a Docker context endpoint host (e.g. `unix:///var/run/docker.sock`,
+   * `npipe:////./pipe/docker_engine`) to a socket path usable with `http.get({ socketPath })`.
+   * Returns undefined for schemes that are not a local socket (e.g. `tcp://`, `ssh://`).
+   */
+  parseEndpoint(host: string): string | undefined {
+    if (host.startsWith(UNIX_SCHEME)) {
+      return host.slice(UNIX_SCHEME.length);
+    }
+    if (host.startsWith(NPIPE_SCHEME)) {
+      return host.slice(NPIPE_SCHEME.length);
+    }
+    return undefined;
   }
 
   protected getDockerConfigPath(): string {

@@ -20,9 +20,10 @@ import type {
   NavigateToExtensionsCatalogOptions,
   NavigateToHistoryEvent,
   NavigationHistoryEntry,
+  NavigationSearchEntry,
   ProviderContainerConnection,
 } from '@podman-desktop/api';
-import type { DisposableGroup, NavigationRequest } from '@podman-desktop/core-api';
+import type { DisposableGroup, NavigationRequest, NavigationSearchEntryInfo } from '@podman-desktop/core-api';
 import { IDisposable, NavigationPage } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
@@ -39,6 +40,7 @@ import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 export interface NavigationRoute {
   routeId: string;
   commandId: string;
+  searchEntry?: NavigationSearchEntry;
 }
 
 @injectable()
@@ -119,9 +121,26 @@ export class NavigationManager {
     }
     this.#registry.set(route.routeId, route);
 
+    if (route.searchEntry) {
+      this.apiSender.send('navigation-searchable-route-update');
+    }
+
     return Disposable.create(() => {
       this.#registry.delete(route.routeId);
+      if (route.searchEntry) {
+        this.apiSender.send('navigation-searchable-route-update');
+      }
     });
+  }
+
+  getSearchableRoutes(): NavigationSearchEntryInfo[] {
+    return Array.from(this.#registry.values())
+      .filter(route => route.searchEntry !== undefined)
+      .map(route => ({
+        routeId: route.routeId,
+        label: route.searchEntry!.label,
+        icon: route.searchEntry!.icon,
+      }));
   }
 
   hasRoute(routeId: string): boolean {

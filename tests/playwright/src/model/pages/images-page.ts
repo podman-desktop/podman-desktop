@@ -115,7 +115,11 @@ export class ImagesPage extends MainPage {
   async pruneImages(): Promise<ImagesPage> {
     return test.step('Prune all images', async () => {
       await this.pruneImagesButton.click();
-      await handleConfirmationDialog(this.page, 'Prune Images?', true, 'All unused images');
+      await handleConfirmationDialog({
+        page: this.page,
+        dialogTitle: 'Prune Images?',
+        buttonName: 'All unused images',
+      });
       return this;
     });
   }
@@ -123,7 +127,11 @@ export class ImagesPage extends MainPage {
   async pruneUntaggedImages(): Promise<ImagesPage> {
     return test.step('Prune untagged images', async () => {
       await this.pruneImagesButton.click();
-      await handleConfirmationDialog(this.page, 'Prune Images?', true, 'All untagged images');
+      await handleConfirmationDialog({
+        page: this.page,
+        dialogTitle: 'Prune Images?',
+        buttonName: 'All untagged images',
+      });
       return this;
     });
   }
@@ -245,7 +253,7 @@ export class ImagesPage extends MainPage {
 
       await playExpect(this.deleteAllSelectedButton).toBeEnabled();
       await this.deleteAllSelectedButton.click();
-      await handleConfirmationDialog(this.page, 'Delete Images?', true, 'Delete');
+      await handleConfirmationDialog({ page: this.page, dialogTitle: 'Delete Images?', buttonName: 'Delete' });
     });
   }
 
@@ -284,7 +292,7 @@ export class ImagesPage extends MainPage {
     const deleteManifestButton = manifest.getByRole('button', { name: 'Delete Manifest' });
     await playExpect(deleteManifestButton).toBeEnabled();
     await deleteManifestButton.click();
-    await handleConfirmationDialog(this.page, 'Delete Manifest?', true, 'Delete');
+    await handleConfirmationDialog({ page: this.page, dialogTitle: 'Delete Manifest?', buttonName: 'Delete' });
   }
 
   async pushManifest(manifestName: string, timeout = 120_000): Promise<void> {
@@ -303,7 +311,13 @@ export class ImagesPage extends MainPage {
       await playExpect(pushManifestButton).toBeVisible();
       await pushManifestButton.click();
 
-      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', timeout, true);
+      await handleConfirmationDialog({
+        page: this.page,
+        dialogTitle: 'Push manifest',
+        buttonName: 'Push manifest',
+        timeout,
+        followUpButton: 'Done',
+      });
     });
   }
 

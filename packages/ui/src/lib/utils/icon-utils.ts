@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import type { IconSize } from 'svelte-fa';
 
+import type { ThemedIconImage } from '../icons/Icon';
+
 export const isFontAwesomeIcon = (icon: unknown): icon is IconDefinition => {
   return (
     !!icon &&
@@ -33,4 +35,15 @@ export const isFontAwesomeSize = (size: unknown): size is IconSize => {
   const fontAwesomeSizes = ['xs', 'sm', 'lg'];
   const fontAwesomePattern = /^\d+(?:\.\d+)?x$/;
   return !!size && typeof size === 'string' && (fontAwesomePattern.test(size) || fontAwesomeSizes.includes(size));
+};
+
+export const isThemedIconImage = (icon: unknown): icon is ThemedIconImage => {
+  return (
+    !!icon &&
+    typeof icon === 'object' &&
+    'light' in icon &&
+    typeof icon.light === 'string' &&
+    'dark' in icon &&
+    typeof icon.dark === 'string'
+  );
 };

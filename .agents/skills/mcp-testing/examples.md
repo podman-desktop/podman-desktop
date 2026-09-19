@@ -531,7 +531,7 @@ document.querySelector('[aria-label="Find"]');
 // Extension page tabs
 document.querySelector('button[aria-label="Installed"]');
 document.querySelector('button[aria-label="Catalog"]');
-document.querySelector('button[aria-label="Local Extensions"]');
+document.querySelector('button[aria-label="Local extensions"]');
 
 // Featured extensions region
 document.querySelector('[role="region"][aria-label="FeaturedExtensions"]');

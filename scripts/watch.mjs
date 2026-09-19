@@ -20,14 +20,99 @@
 
 import { createServer, build, createLogger } from 'vite';
 import electronPath from 'electron';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { generateAsync } from 'dts-for-context-bridge';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { readdirSync, existsSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { join } from 'node:path';
+import { watch as watchUiPackage } from '../node_modules/@sveltejs/package/src/index.js';
+import { load_config as loadUiPackageConfig } from '../node_modules/@sveltejs/package/src/config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Spawned child processes tracked so we can tear them all down on exit.
+ * @type {Set<import('node:child_process').ChildProcess>}
+ */
+const childrenProcesses = new Set();
+
+/**
+ * Track a child process so it can be killed together with the watch script.
+ * @param {import('node:child_process').ChildProcess} child
+ */
+function trackChildProcess(child) {
+  childrenProcesses.add(child);
+  child.once('exit', () => childrenProcesses.delete(child));
+}
+
+/**
+ * Kill a single child process and its descendants using platform-specific
+ * process-tree termination.
+ * @param {import('node:child_process').ChildProcess} child
+ * @param {NodeJS.Signals} signal
+ */
+function killChild(child, signal) {
+  if (child.pid === undefined) {
+    return;
+  }
+  try {
+    if (process.platform === 'win32') {
+      spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+    } else {
+      process.kill(-child.pid, signal);
+    }
+  } catch {
+    try {
+      child.kill(signal);
+    } catch {
+      // Process already exited.
+    }
+  }
+}
+
+/**
+ * Kill every tracked child process by sending the signal to its whole
+ * process group (which also kills its own descendants, e.g. pnpm → vite).
+ * @param {NodeJS.Signals} signal
+ */
+function killChildren(signal) {
+  for (const child of childrenProcesses) {
+    killChild(child, signal);
+  }
+  childrenProcesses.clear();
+}
+
+/**
+ * Kill everything spawned by this script and exit. The default terminal
+ * behavior only kills the direct `pnpm watch` process, leaving spawned
+ * package watchers (and their vite processes) orphaned.
+ * @param {NodeJS.Signals | number} signal
+ */
+function cleanupAndExit(signal) {
+  killChildren('SIGTERM');
+  if (typeof signal === 'string' && signal.startsWith('SIG')) {
+    // Re-raise so the parent shell sees the real exit reason.
+    process.removeListener(signal, cleanupAndExit);
+    process.kill(process.pid, signal);
+  } else {
+    process.exit(typeof signal === 'number' ? signal : 0);
+  }
+}
+
+/**
+ * Preserve whether a child exited with a status code or a signal.
+ * @param {number | null} code
+ * @param {NodeJS.Signals | null} signal
+ */
+function cleanupOnChildExit(code, signal) {
+  cleanupAndExit(signal ?? code ?? 0);
+}
+
+// Ensure termination propagates to all child processes.
+process.on('SIGINT', cleanupAndExit);
+process.on('SIGTERM', cleanupAndExit);
+process.on('SIGQUIT', cleanupAndExit);
 
 /** @type 'production' | 'development'' */
 const mode = (process.env.MODE = process.env.MODE || 'development');
@@ -105,8 +190,8 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
     configFile: 'packages/main/vite.config.js',
     writeBundle() {
       if (spawnProcess !== null) {
-        spawnProcess.off('exit', process.exit);
-        spawnProcess.kill('SIGINT');
+        spawnProcess.off('exit', cleanupOnChildExit);
+        killChild(spawnProcess, 'SIGINT');
         spawnProcess = null;
       }
 
@@ -117,6 +202,7 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
       });
       spawnProcess = spawn(String(electronPath), ['--remote-debugging-port=9223', '.', ...extensionArgs], {
         env: { ...process.env, ELECTRON_IS_DEV: 1 },
+        detached: process.platform !== 'win32',
       });
 
       spawnProcess.stdout.on('data', d => d.toString().trim() && logger.warn(d.toString(), { timestamp: true }));
@@ -129,45 +215,45 @@ const setupMainPackageWatcher = ({ config: { server, extensions } }) => {
       });
 
       // Stops the watch script when the application has been quit
-      spawnProcess.on('exit', process.exit);
+      spawnProcess.on('exit', cleanupOnChildExit);
+
+      // Register cleanup first so the process group remains tracked while
+      // cleanupAndExit terminates any surviving descendants.
+      trackChildProcess(spawnProcess);
     },
   });
 };
 
-const setupUiPackageWatcher = () => {
-  const logger = createLogger(LOG_LEVEL, {
-    prefix: '[ui]',
+/**
+ * Start `packages/ui`'s incremental watcher and wait for its first build to complete.
+ *
+ * The renderer's Vite dev server resolves bare imports of `@podman-desktop/ui-svelte`
+ * against `packages/ui/dist`. Vite's dependency optimizer can scan for these as soon as
+ * `createServer`/`listen` runs — independent of when the page is actually requested — and
+ * a failed resolution there is cached for the rest of the dev server's life (reloading the
+ * page does not clear it). This must be awaited before `createServer` is called.
+ *
+ * `@sveltejs/package`'s `watch()` performs and awaits its first build before returning,
+ * so awaiting it here is a direct signal that `dist` is ready — no subprocess or stdout
+ * pattern matching needed.
+ * @returns {Promise<void>} resolves once the first build has produced `dist`
+ */
+const setupUiPackageWatcher = async () => {
+  const cwd = join(__dirname, '..', 'packages/ui');
+  const config = await loadUiPackageConfig({ cwd });
+
+  const { watcher, ready, settled } = await watchUiPackage({
+    cwd,
+    input: 'src/lib',
+    output: 'dist',
+    preserve_output: false,
+    types: true,
+    config,
   });
 
-  /** @type {ChildProcessWithoutNullStreams | null} */
-  let spawnProcess = null;
+  await ready;
 
-  if (spawnProcess !== null) {
-    spawnProcess.off('exit', process.exit);
-    spawnProcess.kill('SIGINT');
-    spawnProcess = null;
-  }
-
-  const dirname = join(__dirname, '..', 'node_modules', '.bin');
-  const exe = 'svelte-package'.concat(process.platform === 'win32' ? '.cmd' : '');
-  const newPath = `${process.env.PATH}${delimiter}${dirname}`;
-  spawnProcess = spawn(exe, ['-w'], {
-    cwd: './packages/ui/',
-    env: { PATH: newPath, ...process.env },
-    shell: process.platform === 'win32',
-  });
-
-  spawnProcess.stdout.on('data', d => d.toString().trim() && logger.warn(d.toString(), { timestamp: true }));
-  spawnProcess.stderr.on('data', d => {
-    const data = d.toString().trim();
-    if (!data) return;
-    const mayIgnore = stderrFilterPatterns.some(r => r.test(data));
-    if (mayIgnore) return;
-    logger.error(data, { timestamp: true });
-  });
-
-  // Stops the watch script when the application has been quit
-  spawnProcess.on('exit', process.exit);
+  process.once('exit', () => watcher.close());
 };
 
 /**
@@ -252,11 +338,14 @@ const setupPreloadWebviewPackageWatcher = ({ ws }) =>
  * @param {{ws: import('vite').WebSocketServer}} WebSocketServer
  */
 const setupExtensionApiWatcher = name => {
-  let spawnProcess;
   const folderName = resolve(name);
 
   console.log('dirname is', folderName);
-  spawnProcess = spawn('pnpm', ['watch'], { cwd: folderName, shell: process.platform === 'win32' });
+  const spawnProcess = spawn('pnpm', ['watch'], {
+    cwd: folderName,
+    shell: process.platform === 'win32',
+    detached: process.platform !== 'win32',
+  });
 
   spawnProcess.stdout.on('data', d => d.toString().trim() && console.warn(d.toString(), { timestamp: true }));
   spawnProcess.stderr.on('data', d => {
@@ -266,7 +355,12 @@ const setupExtensionApiWatcher = name => {
   });
 
   // Stops the watch script when the application has been quit
-  spawnProcess.on('exit', process.exit);
+  spawnProcess.on('exit', cleanupOnChildExit);
+
+  // Register cleanup first so the process group remains tracked while
+  // cleanupAndExit terminates any surviving descendants.
+  trackChildProcess(spawnProcess);
+  spawnProcess.unref();
 };
 
 (async () => {
@@ -277,6 +371,8 @@ const setupExtensionApiWatcher = name => {
         extensions.push(resolve(process.argv[++index]));
       }
     }
+    await setupUiPackageWatcher();
+
     const viteDevServer = await createServer({
       ...sharedConfig,
       configFile: 'packages/renderer/vite.config.js',
@@ -315,7 +411,6 @@ const setupExtensionApiWatcher = name => {
     await setupPreloadPackageWatcher(viteDevServer);
     await setupPreloadDockerExtensionPackageWatcher(viteDevServer);
     await setupPreloadWebviewPackageWatcher(viteDevServer);
-    await setupUiPackageWatcher();
     await setupMainPackageWatcher(viteDevServer);
   } catch (e) {
     console.error(e);

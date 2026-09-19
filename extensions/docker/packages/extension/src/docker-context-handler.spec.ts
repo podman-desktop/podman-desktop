@@ -326,3 +326,21 @@ describe('removeContext', () => {
     expect(rmSpy).toBeCalled();
   });
 });
+
+describe('parseEndpoint', () => {
+  test('resolves a unix:// endpoint to its socket path', () => {
+    expect(dockerContextHandler.parseEndpoint('unix:///var/run/docker.sock')).toBe('/var/run/docker.sock');
+  });
+
+  test('resolves a npipe:// endpoint to its pipe path', () => {
+    expect(dockerContextHandler.parseEndpoint('npipe:////./pipe/docker_engine')).toBe('//./pipe/docker_engine');
+  });
+
+  test('returns undefined for a tcp:// endpoint', () => {
+    expect(dockerContextHandler.parseEndpoint('tcp://1.2.3.4:2376')).toBeUndefined();
+  });
+
+  test('returns undefined for a ssh:// endpoint', () => {
+    expect(dockerContextHandler.parseEndpoint('ssh://user@host/run/podman/podman.sock')).toBeUndefined();
+  });
+});

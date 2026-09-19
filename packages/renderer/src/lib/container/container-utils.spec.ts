@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { ContainerInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
@@ -280,8 +281,8 @@ test('containers in same named compose project on two different engine should ha
 });
 
 test('should expect icon to be undefined if no context/view is passed', async () => {
-  const containerInfo = {
-    Image: 'docker.io/kindest/node:foobar',
+  const containerInfoUI = {
+    image: 'docker.io/kindest/node:foobar',
     Ports: [
       {
         PublicPort: 80,
@@ -290,8 +291,8 @@ test('should expect icon to be undefined if no context/view is passed', async ()
         PublicPort: 8022,
       },
     ],
-  } as unknown as ContainerInfo;
-  const icon = containerUtils.iconClass(containerInfo);
+  } as unknown as ContainerInfoUI;
+  const icon = containerUtils.iconClass(containerInfoUI);
   expect(icon).toBe(undefined);
 });
 
@@ -305,13 +306,13 @@ test('should expect icon to be valid value with context/view set', async () => {
       when: 'io.x-k8s.kind.cluster in containerLabelKeys',
     },
   };
-  const containerInfo = {
-    Image: 'docker.io/kindest/node:foobar',
-    Labels: {
+  const containerInfoUI = {
+    image: 'docker.io/kindest/node:foobar',
+    labels: {
       'io.x-k8s.kind.cluster': 'ok',
     },
-  } as unknown as ContainerInfo;
-  const icon = containerUtils.iconClass(containerInfo, context, [view]);
+  } as unknown as ContainerInfoUI;
+  const icon = containerUtils.iconClass(containerInfoUI, context, [view]);
   expect(icon).toBe('podman-desktop-icon-kind-icon');
 });
 
@@ -325,10 +326,10 @@ test('should expect icon to be valid value with context/view set with containerI
       when: 'containerImageName == docker.io/kindest/node:foobar',
     },
   };
-  const containerInfo = {
-    Image: 'docker.io/kindest/node:foobar',
-  } as unknown as ContainerInfo;
-  const icon = containerUtils.iconClass(containerInfo, context, [view]);
+  const containerInfoUI = {
+    image: 'docker.io/kindest/node:foobar',
+  } as unknown as ContainerInfoUI;
+  const icon = containerUtils.iconClass(containerInfoUI, context, [view]);
   expect(icon).toBe('podman-desktop-icon-kind-icon');
 });
 
@@ -392,14 +393,14 @@ test('test that if a container is part of compose, and that container_name has b
 
 test('check parsing of container info without labels', async () => {
   const context = new ContextUI();
-  const containerInfo = {
-    Id: 'container1',
-    Image: 'registry.k8s.io/pause:3.7',
-    Labels: '',
-    Names: ['container1'],
-    State: 'RUNNING',
-  } as unknown as ContainerInfo;
-  containerUtils.adaptContextOnContainer(context, containerInfo);
+  const containerInfoUI = {
+    id: 'container1',
+    image: 'registry.k8s.io/pause:3.7',
+    labels: '',
+    name: 'container1',
+    state: 'RUNNING',
+  } as unknown as ContainerInfoUI;
+  containerUtils.adaptContextOnContainer(context, containerInfoUI);
 });
 
 test('should expect imageHref to use image tag', async () => {
@@ -461,4 +462,45 @@ test('should be able to identify containers', async () => {
   } as unknown as ContainerInfoUI;
   expect(containerUtils.isContainerInfoUI(containerInfo)).toBe(true);
   expect(containerUtils.isContainerGroupInfoUI(containerInfo)).toBe(false);
+});
+
+test('should expect getContainerInfoUI to carry the raw image id and names', async () => {
+  const containerInfo = {
+    Id: 'id123',
+    Names: ['/myproject-web-1', '/web-alias'],
+    Image: 'docker.io/library/nginx:latest',
+    ImageID: 'sha256:abcdef0123456789',
+    State: 'running',
+    Labels: {
+      'com.docker.compose.project': 'myproject',
+    },
+    engineId: 'engine',
+    engineName: 'podman',
+  } as unknown as ContainerInfo;
+
+  const containerUI = containerUtils.getContainerInfoUI(containerInfo);
+
+  // both fields are optional on the type, but the converter always populates them
+  expect(containerUI.imageId).toBe('sha256:abcdef0123456789');
+  expect(containerUI.names).toStrictEqual(['/myproject-web-1', '/web-alias']);
+
+  // names stays raw where name does not: the leading slash and the compose project
+  // prefix survive, which is what alias matching and the navigation label rely on
+  expect(containerUI.name).toBe('web-1');
+});
+
+test('should expect getContainerInfoUI to default the icon, leaving contributions to the caller', async () => {
+  const containerInfo = {
+    Id: 'id123',
+    Names: ['/container'],
+    Image: 'docker.io/kindest/node:foobar',
+    State: 'running',
+    Labels: {
+      'io.x-k8s.kind.cluster': 'ok',
+    },
+  } as unknown as ContainerInfo;
+
+  // the converter takes one argument now: it cannot see the context or the view
+  // contributions, so an extension icon is never resolved here
+  expect(containerUtils.getContainerInfoUI(containerInfo).icon).toBe(ContainerIcon);
 });

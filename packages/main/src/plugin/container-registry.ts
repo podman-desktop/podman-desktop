@@ -20,9 +20,11 @@ import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { Writable } from 'node:stream';
+import { PassThrough, Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { StringDecoder } from 'node:string_decoder';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
@@ -40,6 +42,8 @@ import type {
   ImageInspectInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   LibPodPodInfo,
   ListImagesOptions,
   ManifestCreateOptions,
@@ -73,14 +77,14 @@ import type {
   ContainerCreatePortMappingOption,
   PodmanDevice,
 } from '@podman-desktop/core-api/libpod';
-import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import { PlayKubeInfo, PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
 import { coerce, gtr, lt } from 'semver';
-import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
+import streamValues from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
@@ -285,7 +289,7 @@ export class ContainerProviderRegistry {
         errorCallback(new Error('Error in handling events', error));
       });
 
-      const pipeline = stream?.pipe(withParserAsStream());
+      const pipeline = stream?.pipe(streamValues.withParserAsStream());
       pipeline?.on('error', error => {
         console.error('Error while parsing events', error);
         pipeline.destroy();
@@ -628,6 +632,7 @@ export class ContainerProviderRegistry {
             Names: string[];
             Image: string;
             ImageID: string;
+            IsInfra?: boolean;
             Command?: string;
             Created: number;
             Ports: ContainerPortInfo[];
@@ -676,11 +681,12 @@ export class ContainerProviderRegistry {
                 Names: podmanContainer.Names.map(name => `/${name}`),
                 ImageID: `sha256:${podmanContainer.ImageID}`,
                 Image: podmanContainer.Image,
+                IsInfra: podmanContainer.IsInfra,
                 // convert to unix timestamp
                 Created: moment(podmanContainer.Created).unix(),
                 State: podmanContainer.State,
                 StartedAt,
-                Command: podmanContainer.Command?.length > 0 ? podmanContainer.Command[0] : undefined,
+                Command: podmanContainer.Command?.length > 0 ? podmanContainer.Command.join(' ') : undefined,
                 Labels,
                 Ports,
               };
@@ -737,6 +743,7 @@ export class ContainerProviderRegistry {
                 engineType: provider.connection.type,
                 StartedAt: container.StartedAt ?? '',
                 Status: container.Status,
+                IsInfra: container.IsInfra,
                 ImageBase64RepoTag: Buffer.from(container.Image, 'binary').toString('base64'),
               };
               return containerInfo;
@@ -1413,6 +1420,55 @@ export class ContainerProviderRegistry {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
 
+  async updateImages(images: ImageUpdateInfo[], abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
+    const results = await Promise.all(
+      images.map(async (info): Promise<ImageUpdateResult> => {
+        try {
+          const matchingEngine = this.getMatchingEngine(info.engineId);
+          const imageInspect = await matchingEngine.getImage(info.image).inspect();
+          const localDigests = imageInspect.RepoDigests ?? [];
+          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
+
+          if (status.status === 'error') {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          if (status.status === 'skipped' || !status.updateAvailable) {
+            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
+          }
+
+          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+          const pullStream = await matchingEngine.pull(info.image, {
+            authconfig,
+            abortSignal,
+          });
+
+          const { resolve, reject, promise } = Promise.withResolvers<void>();
+          matchingEngine.modem.followProgress(
+            pullStream,
+            (err: Error | null) => (err ? reject(err) : resolve()),
+            () => {},
+          );
+          await promise;
+
+          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
+        } catch (error: unknown) {
+          console.error(`Error updating image ${info.image}`, error);
+          const message = error instanceof Error ? error.message : String(error);
+          return { imageRef: info.image, updated: false, status: 'error', message };
+        }
+      }),
+    );
+    this.telemetryService.track('updateImages', {
+      count: images.length,
+      updated: results.filter(result => result.updated).length,
+      upToDate: results.filter(result => result.status === 'normal' && !result.updated).length,
+      skipped: results.filter(result => result.status === 'skipped').length,
+      failed: results.filter(result => result.status === 'error').length,
+    });
+    return results;
+  }
+
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
     let telemetryOptions = {};
     try {
@@ -1935,6 +1991,20 @@ export class ContainerProviderRegistry {
     if (logsParams.since) {
       optionalParams['since'] = logsParams.since;
     }
+
+    // containers started without a TTY return their logs multiplexed: every frame is prefixed
+    // with an 8-byte header (stream type + payload size) that must be stripped, otherwise the
+    // header bytes are decoded as text and pollute the beginning of the log lines. This mirrors
+    // what the podman and docker CLIs do: they read Config.Tty from an inspect and demultiplex
+    // accordingly, rather than guessing from the stream content.
+    let multiplexed = false;
+    try {
+      multiplexed = !(await container.inspect()).Config.Tty;
+    } catch (error: unknown) {
+      // if the container cannot be inspected, fall back to forwarding the stream as-is
+      console.warn(`Unable to read the TTY mode of container ${logsParams.id}`, error);
+    }
+
     container
       .logs({
         follow: true,
@@ -1946,15 +2016,53 @@ export class ContainerProviderRegistry {
         ...optionalParams,
       })
       .then(containerStream => {
-        containerStream.on('end', () => {
-          logsParams.callback('end', '');
-        });
-        containerStream.on('data', chunk => {
+        // StringDecoder buffers incomplete multi-byte sequences across chunks. stdout and stderr are
+        // interleaved in the multiplexed stream, so each one needs its own decoder: a shared one
+        // would let a frame of one stream complete the pending character of the other.
+        const stdoutDecoder = new StringDecoder('utf-8');
+        const stderrDecoder = new StringDecoder('utf-8');
+
+        const emitData = (decoder: StringDecoder, chunk: Buffer): void => {
           if (firstMessage) {
             firstMessage = false;
             logsParams.callback('first-message', '');
           }
-          logsParams.callback('data', chunk.toString('utf-8'));
+          logsParams.callback('data', decoder.write(chunk));
+        };
+
+        // the stream is consumed through a pass-through so that a single `end` handler flushes the
+        // decoders whichever path forwards the data, including once demuxStream has drained
+        const logStream = new PassThrough();
+
+        if (multiplexed) {
+          const decodeInto = (decoder: StringDecoder): Writable =>
+            new Writable({
+              write(chunk: Buffer, _encoding, done): void {
+                emitData(decoder, chunk);
+                done();
+              },
+            });
+          container.modem.demuxStream(logStream, decodeInto(stdoutDecoder), decodeInto(stderrDecoder));
+        } else {
+          logStream.on('data', (chunk: Buffer) => emitData(stdoutDecoder, chunk));
+        }
+
+        containerStream.on('data', (chunk: Buffer | string) => {
+          logStream.write(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        });
+
+        containerStream.on('end', () => {
+          logStream.end();
+        });
+
+        logStream.on('end', () => {
+          for (const decoder of [stdoutDecoder, stderrDecoder]) {
+            const remaining = decoder.end();
+            if (remaining) {
+              logsParams.callback('data', remaining);
+            }
+          }
+          logsParams.callback('end', '');
         });
       })
       .catch((error: unknown) => {
@@ -2663,7 +2771,7 @@ export class ContainerProviderRegistry {
         stream = (await containerObject.stats({ stream: true })) as unknown as NodeJS.ReadableStream;
         this.statsConsumer.set(this.statsConsumerId, stream);
 
-        const pipeline = stream?.pipe(withParserAsStream());
+        const pipeline = stream?.pipe(streamValues.withParserAsStream());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pipeline?.on('error', (error: any) => {
           console.error('Error while grabbing stats', error);
@@ -2714,7 +2822,7 @@ export class ContainerProviderRegistry {
   }
 
   async playKube(
-    kubernetesYamlFilePath: string,
+    input: PlayKubeInput,
     selectedProvider: ProviderContainerConnectionInfo,
     options?: {
       build?: boolean;
@@ -2732,9 +2840,10 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      // if we don't build, we use the file directory
+      // if we don't build, we can pass the input straight through
       if (!options?.build) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       // ensure build support is true, otherwise let's throw a nice user friendly error
@@ -2744,12 +2853,16 @@ export class ContainerProviderRegistry {
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
 
-      const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
+      const kubePlay =
+        input.type === 'path'
+          ? KubePlayContext.fromFile(input.value)
+          : KubePlayContext.fromContent(input.value, tmpdir());
       await kubePlay.init();
 
       // if we have no context let's just use the yaml
       if (kubePlay.getBuildContexts().length === 0) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
+        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
+        return provider.libpodApi.playKube(file, options);
       }
 
       return provider.libpodApi.playKube(kubePlay.build(), options);

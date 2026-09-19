@@ -88,6 +88,30 @@ const listPods = async (): Promise<PodInfoUI[]> => {
   return (await window.listPods()).map(podInfo => podUtils.getPodInfoUI(podInfo));
 };
 
+export function setPodStatus(engineId: string, podId: string, status: string): void {
+  podsInfos.update(pods =>
+    pods.map(pod =>
+      pod.id === podId && pod.engineId === engineId ? { ...pod, status, actionInProgress: true, actionError: '' } : pod,
+    ),
+  );
+}
+
+export function clearPodActionInProgress(engineId: string, podId: string): void {
+  podsInfos.update(pods =>
+    pods.map(pod => (pod.id === podId && pod.engineId === engineId ? { ...pod, actionInProgress: false } : pod)),
+  );
+}
+
+export function setPodActionError(engineId: string, podId: string, error: string): void {
+  podsInfos.update(pods =>
+    pods.map(pod =>
+      pod.id === podId && pod.engineId === engineId
+        ? { ...pod, actionError: error, actionInProgress: false, status: 'ERROR' }
+        : pod,
+    ),
+  );
+}
+
 export const podsEventStore = new EventStore<PodInfoUI[]>(
   'pods',
   podsInfos,

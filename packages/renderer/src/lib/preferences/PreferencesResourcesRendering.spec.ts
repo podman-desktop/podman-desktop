@@ -121,6 +121,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  vi.clearAllMocks();
   onboardingList.set([]);
 });
 
@@ -519,12 +520,8 @@ describe.each<{
     });
 
     test('Expect to display the dialog if missing requirements for installation', async () => {
-      const installPreflightMock = vi.fn().mockResolvedValue(false);
-      const installProviderMock = vi.fn().mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).runInstallPreflightChecks = installPreflightMock;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).installProvider = installProviderMock;
+      vi.mocked(window.runInstallPreflightChecks).mockResolvedValue(false);
+      vi.mocked(window.installProvider).mockResolvedValue([]);
       // clone providerInfo and change id and status
       const customProviderInfo: ProviderInfo = { ...providerInfo };
       // remove display name
@@ -538,19 +535,15 @@ describe.each<{
       expect(button).toBeInTheDocument();
       await userEvent.click(button);
       // provider is not installed, it checks the requirements, something fails and the dialog about missing reqs is shown
-      expect(installPreflightMock).toBeCalled();
-      expect(installProviderMock).not.toHaveBeenCalled();
+      expect(window.runInstallPreflightChecks).toBeCalled();
+      expect(window.installProvider).not.toHaveBeenCalled();
       const modal = screen.getByLabelText('install provider');
       expect(modal).toBeInTheDocument();
     });
 
     test('Expect to directly install the provider if requirements are met', async () => {
-      const installPreflightMock = vi.fn().mockResolvedValue(true);
-      const installProviderMock = vi.fn().mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).runInstallPreflightChecks = installPreflightMock;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).installProvider = installProviderMock;
+      vi.mocked(window.runInstallPreflightChecks).mockResolvedValue(true);
+      vi.mocked(window.installProvider).mockResolvedValue([]);
       // clone providerInfo and change id and status
       const customProviderInfo: ProviderInfo = { ...providerInfo };
       // remove display name
@@ -564,8 +557,8 @@ describe.each<{
       expect(button).toBeInTheDocument();
       await userEvent.click(button);
       // all requirements are met so the installProvider function is called
-      expect(installPreflightMock).toBeCalled();
-      expect(installProviderMock).toBeCalled();
+      expect(window.runInstallPreflightChecks).toBeCalled();
+      expect(window.installProvider).toBeCalled();
     });
 
     test('Expect to redirect to onboarding page if setup button is clicked', async () => {

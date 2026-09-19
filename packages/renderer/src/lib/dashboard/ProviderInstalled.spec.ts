@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
-import { render } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { type InitializationContext, InitializeAndStartMode } from '/@/lib/dashboard/ProviderInitUtils';
 import ProviderInstalled from '/@/lib/dashboard/ProviderInstalled.svelte';
+import { providerInfos } from '/@/stores/providers';
 
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
@@ -59,6 +60,10 @@ beforeAll(() => {
     func();
     return { dispose: vi.fn() };
   });
+});
+
+beforeEach(() => {
+  providerInfos.set([]);
 });
 
 test('Expect installed provider shows button', async () => {
@@ -170,4 +175,46 @@ test('Expect to see the initialize context error if provider installation fails'
 
   expect((initializationContext as InitializationContextImpl).promise).toBeDefined();
   expect((initializationContext as InitializationContextImpl).error).toBeDefined();
+});
+
+test('Expect installed provider shows multiple installation warnings', async () => {
+  const provider: ProviderInfo = {
+    containerConnections: [],
+    containerProviderConnectionCreation: false,
+    containerProviderConnectionInitialization: false,
+    detectionChecks: [],
+    id: 'podman',
+    images: {},
+    installationSupport: false,
+    internalId: 'podman-internal',
+    kubernetesConnections: [],
+    kubernetesProviderConnectionCreation: false,
+    kubernetesProviderConnectionInitialization: false,
+    vmConnections: [],
+    vmProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    name: 'Podman',
+    status: 'installed',
+    warnings: [
+      {
+        name: 'Multiple Podman installations detected',
+        details: 'You have multiple Podman instances in your PATH.',
+      },
+    ],
+    version: '5.0.0',
+    extensionId: '',
+    cleanupSupport: false,
+    canStart: false,
+    canStop: false,
+  };
+
+  providerInfos.set([provider]);
+  render(ProviderInstalled, {
+    provider,
+    initializationContext: { mode: InitializeAndStartMode },
+  });
+
+  expect(screen.getByRole('list', { name: 'Provider Warnings' })).toBeInTheDocument();
+  expect(screen.getByRole('listitem', { name: 'Multiple Podman installations detected' })).toBeInTheDocument();
 });

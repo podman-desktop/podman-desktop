@@ -1,0 +1,4 @@
+# Pre-installed extensions to verify during E2E smoke tests.
+# Format: label=<extension.id>,name=<extensionName>
+# Optionally add version=<expected version> if it differs from the Podman Desktop version.
+label=podman-desktop.kind,name=kind

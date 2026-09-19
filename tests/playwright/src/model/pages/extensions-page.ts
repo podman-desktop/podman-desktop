@@ -34,6 +34,7 @@ export class ExtensionsPage {
   readonly localExtensionsTab: Locator;
   readonly installExtensionFromOCIImageButton: Locator;
   readonly searchInput: Locator;
+  readonly refreshCatalogButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -46,9 +47,10 @@ export class ExtensionsPage {
     });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
     this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
-    this.localExtensionsTab = this.page.getByRole('button', { name: 'Local Extensions' });
+    this.localExtensionsTab = this.page.getByRole('button', { name: 'Local extensions' });
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
     this.searchInput = this.search.getByLabel('search extensions');
+    this.refreshCatalogButton = this.page.getByRole('button', { name: 'Refresh the catalog' }).first();
   }
 
   public async installExtensionFromOCIImage(extension: string, timeout = 100_000): Promise<ExtensionsPage> {
@@ -96,6 +98,13 @@ export class ExtensionsPage {
 
   public async openCatalogTab(): Promise<void> {
     await this.catalogTab.click();
+  }
+
+  public async refreshCatalog(): Promise<void> {
+    return test.step('Refresh extensions catalog', async () => {
+      await playExpect(this.refreshCatalogButton).toBeEnabled();
+      await this.refreshCatalogButton.click();
+    });
   }
 
   public async openExtensionDetails(name: string, label: string, heading: string): Promise<ExtensionDetailsPage> {

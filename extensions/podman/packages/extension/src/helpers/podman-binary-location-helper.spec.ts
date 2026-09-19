@@ -29,40 +29,18 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('should grab podman from the installer', async () => {
+test.each([
+  { stdout: '/opt/podman/bin/podman', expectedSource: 'installer', name: 'should grab podman from the installer' },
+  { stdout: '/opt/homebrew/bin/podman', expectedSource: 'brew', name: 'should grab podman from brew' },
+  { stdout: '/foo/bin/podman', expectedSource: 'unknown', name: 'should grab podman from unknown location' },
+])('$name', async ({ stdout, expectedSource }) => {
   (extensionApi.process.exec as Mock).mockResolvedValue({
-    stdout: '/opt/podman/bin/podman',
+    stdout,
   } as extensionApi.RunResult);
 
   const podmanBinaryResult = await podmanBinaryLocationHelper.getPodmanLocationMac();
 
-  expect(podmanBinaryResult.source).toBe('installer');
-
-  // expect called with which podman command
-  expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['podman']);
-});
-
-test('should grab podman from brew', async () => {
-  (extensionApi.process.exec as Mock).mockResolvedValue({
-    stdout: '/opt/homebrew/bin/podman',
-  } as extensionApi.RunResult);
-
-  const podmanBinaryResult = await podmanBinaryLocationHelper.getPodmanLocationMac();
-
-  expect(podmanBinaryResult.source).toBe('brew');
-
-  // expect called with which podman command
-  expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['podman']);
-});
-
-test('should grab podman from unknown location', async () => {
-  (extensionApi.process.exec as Mock).mockResolvedValue({
-    stdout: '/foo/bin/podman',
-  } as extensionApi.RunResult);
-
-  const podmanBinaryResult = await podmanBinaryLocationHelper.getPodmanLocationMac();
-
-  expect(podmanBinaryResult.source).toBe('unknown');
+  expect(podmanBinaryResult.source).toBe(expectedSource);
 
   // expect called with which podman command
   expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['podman']);

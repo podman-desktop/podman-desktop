@@ -111,6 +111,7 @@ export interface ApiSenderChannelMap {
   'navigation-go-back': never;
   'navigation-go-forward': never;
   'navigation-history-push': NavigationHistoryPushInfo;
+  'navigation-searchable-route-update': never;
   'network-event': never;
   'notifications-updated': never;
   onDidChangeConfiguration: unknown;

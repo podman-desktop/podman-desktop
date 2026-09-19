@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type {
@@ -38,12 +36,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
-
-const getProvidersInfoMock = vi.fn();
-const listPodsMock = vi.fn();
-const listContainersMock = vi.fn();
-const getContributedMenusMock = vi.fn();
-const kubernetesGetCurrentNamespaceMock = vi.fn();
 
 const provider: ProviderInfo = {
   canStart: false,
@@ -238,15 +230,9 @@ const ocppod: PodInfo = {
 beforeAll(() => {
   vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
   vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
-  (window as any).getProviderInfos = getProvidersInfoMock;
-  (window as any).listPods = listPodsMock;
-  (window as any).listContainers = listContainersMock.mockResolvedValue([]);
-  (window as any).kubernetesGetCurrentNamespace = kubernetesGetCurrentNamespaceMock;
-  (window as any).onDidUpdateProviderStatus = vi.fn().mockResolvedValue(undefined);
-  (window as any).removePod = vi.fn();
-  (window as any).kubernetesGetDetailedContexts = vi.fn().mockResolvedValue([]);
-  vi.mocked(window.removePod);
-  (window as any).getConfigurationValue = vi.fn();
+  vi.mocked(window.listContainers).mockResolvedValue([]);
+  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
+  vi.mocked(window.kubernetesGetDetailedContexts).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
   vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
@@ -254,8 +240,7 @@ beforeAll(() => {
     return { dispose: vi.fn() };
   });
 
-  (window as any).getContributedMenus = getContributedMenusMock;
-  getContributedMenusMock.mockResolvedValue([]);
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -264,7 +249,7 @@ async function waitRender(customProperties: object): Promise<void> {
 }
 
 test('Expect no pods being displayed', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
 
   await vi.waitUntil(() => get(providerInfos).length !== 0);
@@ -275,8 +260,8 @@ test('Expect no pods being displayed', async () => {
 });
 
 test('Expect single podman pod being displayed', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([pod1]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([pod1]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -297,8 +282,8 @@ test('Expect single podman pod being displayed', async () => {
 });
 
 test('Expect 2 podman pods being displayed', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([pod1, pod2]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([pod1, pod2]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -318,8 +303,8 @@ test('Expect 2 podman pods being displayed', async () => {
 });
 
 test('Expect filter empty screen', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([pod1]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([pod1]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -331,8 +316,8 @@ test('Expect filter empty screen', async () => {
 });
 
 test('Expect the route to a pod details page is correctly encoded with an engineId containing / characters', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([ocppod]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([ocppod]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -363,8 +348,8 @@ test('Expect the route to a pod details page is correctly encoded with an engine
 });
 
 test('Expect the pod1 row to have 3 status dots with the correct colors and the pod2 row to have 1 status dot', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([pod1, pod2]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([pod1, pod2]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -385,8 +370,8 @@ test('Expect the pod1 row to have 3 status dots with the correct colors and the 
 });
 
 test('Expect the manyPod row to show 9 dots representing every status', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([manyPod]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([manyPod]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -458,8 +443,8 @@ const stoppedPod: PodInfo = {
 };
 
 test('Expect All tab to show all pods running and stopped (not running)', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([stoppedPod, runningPod]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([stoppedPod, runningPod]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -476,8 +461,8 @@ test('Expect All tab to show all pods running and stopped (not running)', async 
 });
 
 test('Expect Running tab to show running pods only', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([stoppedPod, runningPod]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([stoppedPod, runningPod]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -498,8 +483,8 @@ test('Expect Running tab to show running pods only', async () => {
 });
 
 test('Expect Stopped tab to show stopped (not running) pods only', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([stoppedPod, runningPod]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([stoppedPod, runningPod]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -520,8 +505,8 @@ test('Expect Stopped tab to show stopped (not running) pods only', async () => {
 });
 
 test('Expect tab filtering to not duplicate filter condition in the search bar', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([stoppedPod, runningPod]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([stoppedPod, runningPod]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -541,8 +526,8 @@ test('Expect tab filtering to not duplicate filter condition in the search bar',
 });
 
 test('Expect user confirmation to pop up when preferences require', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([pod1]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
+  vi.mocked(window.listPods).mockResolvedValue([pod1]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -554,8 +539,6 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(checkboxes[0]);
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-
-  (window as any).showMessageBox = vi.fn();
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
@@ -570,7 +553,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 });
 
 test('Expect to see empty page and no table when no container engine is running', async () => {
-  getProvidersInfoMock.mockResolvedValue([
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
       status: 'started',
@@ -587,7 +570,7 @@ test('Expect to see empty page and no table when no container engine is running'
       ],
     } as unknown as ProviderInfo,
   ]);
-  listPodsMock.mockResolvedValue([pod1]);
+  vi.mocked(window.listPods).mockResolvedValue([pod1]);
 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
@@ -605,12 +588,12 @@ test('Expect to see empty page and no table when no container engine is running'
 });
 
 test('Expect environment column sorted by engineId', async () => {
-  getProvidersInfoMock.mockResolvedValue([provider]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([provider]);
 
   const podA = { ...pod1, Name: 'pod-aaa', engineId: 'engine-zzz', engineName: 'name-aaa' };
   const podB = { ...pod2, Name: 'pod-bbb', engineId: 'engine-aaa', engineName: 'name-zzz' };
 
-  listPodsMock.mockResolvedValue([podA, podB]);
+  vi.mocked(window.listPods).mockResolvedValue([podA, podB]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -630,7 +613,7 @@ test('Expect environment column sorted by engineId', async () => {
 });
 
 test('Expect environment dropdown to appear with multiple running connections', async () => {
-  getProvidersInfoMock.mockResolvedValue([
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       ...provider,
       id: 'podman',
@@ -675,7 +658,7 @@ test('Expect environment dropdown to appear with multiple running connections', 
   };
   const dockerPod = { ...pod2, Name: 'docker-pod', engineId: 'docker.docker-context', engineName: 'Docker Desktop' };
 
-  listPodsMock.mockResolvedValue([podmanPod, dockerPod]);
+  vi.mocked(window.listPods).mockResolvedValue([podmanPod, dockerPod]);
 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
@@ -694,7 +677,7 @@ test('Expect environment dropdown to appear with multiple running connections', 
 });
 
 test('Expect environment dropdown to filter pods by selected environment', async () => {
-  getProvidersInfoMock.mockResolvedValue([
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       ...provider,
       id: 'podman',
@@ -739,7 +722,7 @@ test('Expect environment dropdown to filter pods by selected environment', async
   };
   const dockerPod = { ...pod2, Name: 'docker-pod', engineId: 'docker.docker-context', engineName: 'Docker Desktop' };
 
-  listPodsMock.mockResolvedValue([podmanPod, dockerPod]);
+  vi.mocked(window.listPods).mockResolvedValue([podmanPod, dockerPod]);
 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));

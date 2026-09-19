@@ -66,9 +66,9 @@ test.beforeAll(async ({ runner, page, statusBar }) => {
   runner.setVideoAndTraceName('update-e2e');
 
   sBar = statusBar;
-  updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
-  updateDialog = page.getByRole('dialog', { name: 'Update Podman Desktop', exact: true });
-  updateDownloadedDialog = page.getByRole('dialog', { name: 'Restart Podman Desktop?', exact: true });
+  updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop\?/ });
+  updateDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop/ });
+  updateDownloadedDialog = page.getByRole('dialog', { name: /Restart .*Podman Desktop\?/ });
 });
 
 test.afterAll(async ({ runner }) => {
@@ -82,11 +82,15 @@ test.describe
       await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
       const updateNowButton = updateAvailableDialog.getByRole('button', { name: 'Update Now' });
       await playExpect(updateNowButton).toBeVisible();
-      const doNotshowButton = updateAvailableDialog.getByRole('button', { name: `Don't show again` });
-      await playExpect(doNotshowButton).toBeVisible();
-      const cancelButton = updateAvailableDialog.getByRole('button', { name: 'Cancel' });
-      await playExpect(cancelButton).toBeVisible();
-      await cancelButton.click();
+      const laterDropdownButton = updateAvailableDialog.getByRole('button', { name: 'Later' });
+      await playExpect(laterDropdownButton).toBeVisible();
+      await laterDropdownButton.click();
+      const remindLaterOption = updateAvailableDialog.getByRole('button', { name: 'Remind me later' });
+      await playExpect(remindLaterOption).toBeVisible();
+      const doNotShowAgainOption = updateAvailableDialog.getByRole('button', { name: `Don't show again` });
+      await playExpect(doNotShowAgainOption).toBeVisible();
+      const closeButton = updateAvailableDialog.getByRole('button', { name: 'Close' });
+      await closeButton.click();
       await playExpect(updateAvailableDialog).not.toBeVisible();
       // handle welcome page now
       await welcomePage.handleWelcomePage(true);
@@ -148,7 +152,7 @@ test.describe
     test('User initiated update option is available', async ({ page }) => {
       await playExpect(sBar.updateButtonTitle).toHaveText(await sBar.versionButton.innerText());
       await sBar.updateButtonTitle.click();
-      await handleConfirmationDialog(page, 'Update Podman Desktop?', false, '', 'Cancel');
+      await handleConfirmationDialog({ page, dialogTitle: /Update .*Podman Desktop\?/, buttonName: 'Cancel' });
     });
 
     test('Update can be initiated', async () => {
@@ -168,7 +172,7 @@ test.describe
       // now it takes some time to perform, in case of failure, PD gets closed
       await playExpect(updateDownloadedDialog).toBeVisible({ timeout: 120000 });
       // some buttons
-      await handleConfirmationDialog(page, 'Restart Podman Desktop?', false, 'Restart', 'Cancel');
+      await handleConfirmationDialog({ page, dialogTitle: /Restart .*Podman Desktop\?/, buttonName: 'Cancel' });
       await playExpect(updateDownloadedDialog).not.toBeVisible();
     });
 

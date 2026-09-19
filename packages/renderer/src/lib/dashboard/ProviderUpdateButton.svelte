@@ -3,14 +3,18 @@ import { faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 
-export let provider: ProviderInfo;
-let updateInProgress = false;
+interface Props {
+  provider: ProviderInfo;
+  onPreflightChecks: (status: CheckStatus[]) => void;
+}
 
-export let onPreflightChecks: (status: CheckStatus[]) => void;
+let { provider, onPreflightChecks }: Props = $props();
 
-let checksStatus: CheckStatus[] = [];
+let updateInProgress = $state(false);
 
-let preflightChecksFailed = false;
+let checksStatus: CheckStatus[] = $state([]);
+
+let preflightChecksFailed = $state(false);
 
 async function performUpdate(provider: ProviderInfo): Promise<void> {
   updateInProgress = true;

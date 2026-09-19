@@ -39,6 +39,7 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPrivilegesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
+  readonly importNativeCACheckbox: Locator;
   readonly providerTypeDropdown: DropdownComponent;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
@@ -63,6 +64,9 @@ export class MachineCreationForm extends BasePage {
     });
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
+    });
+    this.importNativeCACheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
+      name: /Import host trusted CA certificates/,
     });
     this.providerTypeDropdown = new DropdownComponent(page, 'Provider Type');
 

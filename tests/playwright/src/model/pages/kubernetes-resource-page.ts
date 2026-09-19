@@ -81,7 +81,12 @@ export class KubernetesResourcePage extends MainPage {
         await this.applyYamlButton.click();
       });
 
-      await handleConfirmationDialog(this.page, 'Apply Kubernetes YAML', true, 'Dismiss', 'Cancel', timeout);
+      await handleConfirmationDialog({
+        page: this.page,
+        dialogTitle: 'Apply Kubernetes YAML',
+        buttonName: 'Dismiss',
+        timeout,
+      });
       return this;
     });
   }

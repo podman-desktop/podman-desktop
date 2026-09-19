@@ -48,6 +48,7 @@ export class ExtensionsUtils {
 
     let removable: boolean;
     let devMode: boolean;
+    let bundled: boolean;
     let state: string;
     let icon: undefined | string | { light: string; dark: string };
     let iconRef: undefined | string;
@@ -70,6 +71,7 @@ export class ExtensionsUtils {
       type = matchingInstalledExtension.type;
       removable = matchingInstalledExtension.removable;
       devMode = matchingInstalledExtension.devMode;
+      bundled = matchingInstalledExtension.bundled;
       state = matchingInstalledExtension.state;
       icon = matchingInstalledExtension.icon;
       name = matchingInstalledExtension.name;
@@ -81,6 +83,7 @@ export class ExtensionsUtils {
       type = 'pd';
       removable = true;
       devMode = false; // catalog extensions are not in dev mode
+      bundled = false;
       state = 'downloadable';
       name = matchingCatalogExtension.extensionName;
 
@@ -97,6 +100,7 @@ export class ExtensionsUtils {
       type = 'pd';
       removable = false;
       devMode = false;
+      bundled = false;
       state = 'unknown';
       name = 'unknown';
     }
@@ -136,6 +140,7 @@ export class ExtensionsUtils {
       type,
       removable,
       devMode,
+      bundled,
       state,
       icon,
       iconRef,

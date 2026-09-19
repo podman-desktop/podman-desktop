@@ -53,7 +53,7 @@ export class TroubleshootingPage extends BasePage {
   }
 
   public async openRepairConnections(): Promise<void> {
-    await this.openTab('Repair & Connections');
+    await this.openTab('Repair & connections');
     await playExpect(this.containerConnectionsStatus).toBeVisible();
   }
 
@@ -68,7 +68,7 @@ export class TroubleshootingPage extends BasePage {
   }
 
   public async openGatherLogs(): Promise<void> {
-    await this.openTab('Gather Logs');
+    await this.openTab('Gather logs');
     await playExpect(this.gatherLogsText).toBeVisible();
   }
 

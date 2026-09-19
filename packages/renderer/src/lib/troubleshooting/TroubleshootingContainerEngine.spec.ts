@@ -16,22 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import TroubleshootingContainerEngine from './TroubleshootingContainerEngine.svelte';
-
-const listContainersFromEngineMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  (window as any).listContainersFromEngine = listContainersFromEngineMock;
-});
 
 test('Check containers button is available and click on it', async () => {
   const socketPath = '/foo/socket.path';

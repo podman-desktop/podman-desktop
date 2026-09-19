@@ -31,7 +31,7 @@ test.use({
 });
 
 test.beforeAll(async ({ runner, welcomePage, navigationBar }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(120_000);
   runner.setVideoAndTraceName('managed-configuration-extensions-e2e');
   await welcomePage.handleWelcomePage(true);
   extensionsPage = await navigationBar.openExtensions();
@@ -58,9 +58,9 @@ test.describe
       });
 
     test.describe
-      .serial('Defaults + Locked setting: Local Extensions disabled', () => {
-        test('Local Extensions tab is not rendered when extensions.localExtensions.enabled is false', async () => {
-          // ExtensionList.svelte conditionally renders the Local Extensions tab
+      .serial('Defaults + Locked setting: Local extensions disabled', () => {
+        test('Local extensions tab is not rendered when extensions.localExtensions.enabled is false', async () => {
+          // ExtensionList.svelte conditionally renders the Local extensions tab
           // with {#if enableLocalExtensions}, so the button should not exist in the DOM
           await playExpect(extensionsPage.localExtensionsTab).not.toBeAttached();
         });

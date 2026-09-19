@@ -4,8 +4,6 @@ import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
-
 interface Props {
   providerToBeInstalled: { provider: ProviderInfo; displayName: string };
   preflightChecks: CheckStatus[];
@@ -33,10 +31,12 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
       <div class="overflow-y-auto px-4 pb-4 text-[var(--pd-modal-text)]">
         <div class="flex flex-col rounded-lg">
           <div class="mx-auto max-w-[250px] mb-5">
-            <IconImage
-              image={providerToBeInstalled.provider.images.logo}
-              alt={providerToBeInstalled.provider.name}
-              class="mx-auto max-h-12" />
+            {#if providerToBeInstalled.provider.images.logo}
+              <Icon
+                icon={providerToBeInstalled.provider.images.logo}
+                title={providerToBeInstalled.provider.name}
+                class="mx-auto max-h-12" />
+            {/if}
           </div>
           <div class="flex flex-row mx-auto text-md">Some system requirements are missing.</div>
           <div class="flex flex-col min-h-[150px] mt-5 mx-auto py-4 px-10 rounded-md bg-[var(--pd-content-card-bg)]">

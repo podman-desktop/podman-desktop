@@ -16,24 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import Steps from './Steps.svelte';
-
-class ResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-  unobserve = vi.fn();
-}
-
-beforeEach(() => {
-  (window as any).ResizeObserver = ResizeObserver;
-});
 
 test('Check step styling', async () => {
   render(Steps, { steps: ['One', 'Two'] });

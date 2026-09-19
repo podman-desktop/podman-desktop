@@ -5,13 +5,15 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import { providerInfos } from '/@/stores/providers';
 
-export let provider: ProviderInfo;
+interface Props {
+  provider: ProviderInfo;
+}
+let { provider }: Props = $props();
 
 // Retrieve the provider information from the store
-let providerInfo: ProviderInfo | undefined;
-$: {
-  providerInfo = $providerInfos.find(providerSearch => providerSearch.internalId === provider.internalId);
-}
+let providerInfo: ProviderInfo | undefined = $derived(
+  $providerInfos.find(providerSearch => providerSearch.internalId === provider.internalId),
+);
 </script>
 
 <!-- TODO: Add dismiss button / ignore warning? -->

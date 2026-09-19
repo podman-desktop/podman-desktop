@@ -4,4 +4,7 @@
   become: true
   tasks:
     - name: Create symbolic link with sudo from the host
-      command: sudo ln -s {{{configurationFileInsideVmPath}}} /etc/containers/registries.conf.d/{{{configurationFileName}}}
+      ansible.builtin.file:
+        src: "{{{configurationFileInsideVmPath}}}"
+        dest: "/etc/containers/registries.conf.d/{{{configurationFileName}}}"
+        state: link
