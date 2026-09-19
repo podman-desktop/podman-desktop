@@ -20,65 +20,67 @@
 // looked for from the start of the reference: 'localhost:5000' is a host and a port, and the ':'
 // of '@sha256:...' belongs to the digest. both only separate once they come after the last '/'.
 
-// where the digest starts, or -1
-function digestIndex(reference: string): number {
-  return reference.indexOf('@', reference.lastIndexOf('/') + 1);
-}
-
-// where the tag starts, or -1
-function tagIndex(reference: string): number {
-  const digest = digestIndex(reference);
-  const name = digest === -1 ? reference : reference.slice(0, digest);
-  return name.indexOf(':', name.lastIndexOf('/') + 1);
-}
-
-/**
- * The registry and name of a reference, without its tag and digest.
- */
-export function repositoryOf(reference: string): string {
-  const tag = tagIndex(reference);
-  if (tag !== -1) {
-    return reference.slice(0, tag);
+export class ImageReference {
+  // where the digest starts, or -1
+  private static digestIndex(reference: string): number {
+    return reference.indexOf('@', reference.lastIndexOf('/') + 1);
   }
-  const digest = digestIndex(reference);
-  return digest === -1 ? reference : reference.slice(0, digest);
-}
 
-/**
- * The tag of a reference, or undefined when it carries none. A reference pinned by digest has no
- * tag to look for, and an empty tag is what a name being typed has right after its ':'.
- */
-export function tagOf(reference: string): string | undefined {
-  const tag = tagIndex(reference);
-  if (tag === -1) {
-    return undefined;
+  // where the tag starts, or -1
+  private static tagIndex(reference: string): number {
+    const digest = ImageReference.digestIndex(reference);
+    const name = digest === -1 ? reference : reference.slice(0, digest);
+    return name.indexOf(':', name.lastIndexOf('/') + 1);
   }
-  const digest = digestIndex(reference);
-  return digest === -1 ? reference.slice(tag + 1) : reference.slice(tag + 1, digest);
-}
 
-/**
- * Whether a reference is pinned by digest, which makes a tag lookup pointless.
- */
-export function hasDigest(reference: string): boolean {
-  return digestIndex(reference) !== -1;
-}
+  /**
+   * The registry and name of a reference, without its tag and digest.
+   */
+  static repositoryOf(reference: string): string {
+    const tag = ImageReference.tagIndex(reference);
+    if (tag !== -1) {
+      return reference.slice(0, tag);
+    }
+    const digest = ImageReference.digestIndex(reference);
+    return digest === -1 ? reference : reference.slice(0, digest);
+  }
 
-/**
- * Whether a name holds a path component that cannot be looked up. An empty, '.' or '..' component
- * is rejected by the engine and cannot be put in a request path either. This is not about the name
- * being a valid reference, which only the engine decides.
- */
-export function hasUnresolvableComponent(name: string): boolean {
-  return name.split('/').some(component => component === '' || component === '.' || component === '..');
-}
+  /**
+   * The tag of a reference, or undefined when it carries none. A reference pinned by digest has no
+   * tag to look for, and an empty tag is what a name being typed has right after its ':'.
+   */
+  static tagOf(reference: string): string | undefined {
+    const tag = ImageReference.tagIndex(reference);
+    if (tag === -1) {
+      return undefined;
+    }
+    const digest = ImageReference.digestIndex(reference);
+    return digest === -1 ? reference.slice(tag + 1) : reference.slice(tag + 1, digest);
+  }
 
-/**
- * Whether a name being typed is worth sending to a registry. It is still incomplete, so a trailing
- * '/' only means more is coming and 'quay.io/' is a registry whose images are worth listing.
- */
-export function canSearch(value: string): boolean {
-  const searched = value.trim();
-  const repository = repositoryOf(searched);
-  return !hasUnresolvableComponent(searched.endsWith('/') ? repository.slice(0, -1) : repository);
+  /**
+   * Whether a reference is pinned by digest, which makes a tag lookup pointless.
+   */
+  static hasDigest(reference: string): boolean {
+    return ImageReference.digestIndex(reference) !== -1;
+  }
+
+  /**
+   * Whether a name holds a path component that cannot be looked up. An empty, '.' or '..' component
+   * is rejected by the engine and cannot be put in a request path either. This is not about the name
+   * being a valid reference, which only the engine decides.
+   */
+  static hasUnresolvableComponent(name: string): boolean {
+    return name.split('/').some(component => component === '' || component === '.' || component === '..');
+  }
+
+  /**
+   * Whether a name being typed is worth sending to a registry. It is still incomplete, so a trailing
+   * '/' only means more is coming and 'quay.io/' is a registry whose images are worth listing.
+   */
+  static canSearch(value: string): boolean {
+    const searched = value.trim();
+    const repository = ImageReference.repositoryOf(searched);
+    return !ImageReference.hasUnresolvableComponent(searched.endsWith('/') ? repository.slice(0, -1) : repository);
+  }
 }

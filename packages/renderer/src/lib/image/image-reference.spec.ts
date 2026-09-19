@@ -18,7 +18,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { canSearch, hasDigest, hasUnresolvableComponent, repositoryOf, tagOf } from './image-reference';
+import { ImageReference } from './image-reference';
 
 const DIGEST = 'sha256:2b9e1b2a1f1c1d1e1f2a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f80';
 
@@ -38,7 +38,7 @@ describe('repositoryOf', () => {
     [`localhost:5000/nginx@${DIGEST}`, 'localhost:5000/nginx'],
     [`localhost:5000/nginx:v1@${DIGEST}`, 'localhost:5000/nginx'],
   ])('%s is in repository %s', (reference, expected) => {
-    expect(repositoryOf(reference)).toBe(expected);
+    expect(ImageReference.repositoryOf(reference)).toBe(expected);
   });
 });
 
@@ -54,7 +54,7 @@ describe('tagOf', () => {
     [`nginx:latest@${DIGEST}`, 'latest'],
     [`localhost:5000/nginx@${DIGEST}`, undefined],
   ])('%s has tag %s', (reference, expected) => {
-    expect(tagOf(reference)).toBe(expected);
+    expect(ImageReference.tagOf(reference)).toBe(expected);
   });
 });
 
@@ -66,7 +66,7 @@ describe('hasDigest', () => {
     [`nginx@${DIGEST}`, true],
     [`localhost:5000/nginx:v1@${DIGEST}`, true],
   ])('%s pinned by digest: %s', (reference, expected) => {
-    expect(hasDigest(reference)).toBe(expected);
+    expect(ImageReference.hasDigest(reference)).toBe(expected);
   });
 });
 
@@ -74,14 +74,14 @@ describe('hasUnresolvableComponent', () => {
   test.each(['.', '..', '/nginx', 'nginx/', 'quay.io//nginx', 'localhost:5000/./nginx', 'localhost:5000/../nginx'])(
     '%s cannot be looked up',
     name => {
-      expect(hasUnresolvableComponent(name)).toBe(true);
+      expect(ImageReference.hasUnresolvableComponent(name)).toBe(true);
     },
   );
 
   test.each(['nginx', 'quay.io/podman/hello', 'localhost:5000/nginx', '...', 'a.b', 'nginx.'])(
     '%s can be looked up',
     name => {
-      expect(hasUnresolvableComponent(name)).toBe(false);
+      expect(ImageReference.hasUnresolvableComponent(name)).toBe(false);
     },
   );
 });
@@ -90,7 +90,7 @@ describe('canSearch', () => {
   test.each(['.', '..', '/nginx', 'quay.io//nginx', 'localhost:5000/./nginx', 'localhost:5000/../nginx', 'nginx/:'])(
     '%s is not worth searching',
     value => {
-      expect(canSearch(value)).toBe(false);
+      expect(ImageReference.canSearch(value)).toBe(false);
     },
   );
 
@@ -98,7 +98,7 @@ describe('canSearch', () => {
   test.each(['nginx', 'quay.io/', 'quay.io/podman/hello', 'localhost:5000/nginx:v1', `nginx@${DIGEST}`])(
     '%s is worth searching',
     value => {
-      expect(canSearch(value)).toBe(true);
+      expect(ImageReference.canSearch(value)).toBe(true);
     },
   );
 });
