@@ -29,6 +29,10 @@
       "types": "./dist/api-sender/index.d.ts",
       "default": "./dist/api-sender/index.js"
     },
+    "./ipc-invoke": {
+      "types": "./dist/ipc-invoke/index.d.ts",
+      "default": "./dist/ipc-invoke/index.js"
+    },
     "./appearance": {
       "types": "./dist/appearance/appearance-settings.d.ts",
       "default": "./dist/appearance/appearance-settings.js"

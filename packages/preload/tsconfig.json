@@ -14,8 +14,9 @@
     "types": ["node"],
 
     "paths": {
-      "/@/*": ["./src/*"]
+      "/@/*": ["./src/*", "../api/src/*"],
+      "@podman-desktop/core-api/ipc-invoke": ["../api/src/ipc-invoke/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "exposedInMainWorld.d.ts", "../../types/**/*.d.ts"]
+  "include": ["src/**/*.ts", "exposedInMainWorld.d.ts", "exposed-api.d.ts", "../../types/**/*.d.ts"]
 }

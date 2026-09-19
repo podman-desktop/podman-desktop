@@ -28,6 +28,7 @@ import {
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { IpcChannel } from '@podman-desktop/core-api/ipc-invoke';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { IPCHandle } from '/@/plugin/api.js';
@@ -69,7 +70,7 @@ export class DashboardService implements IDisposable {
 
   @postConstruct()
   init(): void {
-    this.ipcHandle('dashboard:getSystemOverviewStatus', async (): Promise<SystemOverviewStatusInfo> => {
+    this.ipcHandle(IpcChannel.DASHBOARD_GET_SYSTEM_OVERVIEW_STATUS, async (): Promise<SystemOverviewStatusInfo> => {
       return this.getStatus();
     });
 

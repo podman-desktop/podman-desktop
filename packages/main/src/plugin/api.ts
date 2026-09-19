@@ -16,14 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IpcInvokeChannelMap } from '@podman-desktop/core-api/ipc-invoke';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 
 export const IPCHandle = Symbol.for('IPCHandle');
-export type IPCHandle = (
-  channel: string,
+export type IPCHandle = {
+  <K extends keyof IpcInvokeChannelMap>(
+    channel: K,
+    listener: (
+      event: IpcMainInvokeEvent,
+      ...args: Parameters<IpcInvokeChannelMap[K]>
+    ) => ReturnType<IpcInvokeChannelMap[K]>,
+  ): void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any,
-) => void;
+  (channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): void;
+};
 
 export const IPCMainOn = Symbol.for('IPCMainOn');
 export type IPCMainOn = (

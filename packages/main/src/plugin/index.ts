@@ -137,6 +137,8 @@ import {
 } from '@podman-desktop/core-api/configuration';
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+import type { IpcInvokeChannelMap } from '@podman-desktop/core-api/ipc-invoke';
+import { IpcChannel } from '@podman-desktop/core-api/ipc-invoke';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -308,6 +310,15 @@ export class PluginSystem {
     return window.webContents;
   }
 
+  ipcHandle<K extends keyof IpcInvokeChannelMap>(
+    channel: K,
+    listener: (
+      event: IpcMainInvokeEvent,
+      ...args: Parameters<IpcInvokeChannelMap[K]>
+    ) => ReturnType<IpcInvokeChannelMap[K]>,
+  ): void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): void {
     ipcMain.handle(channel, async (...args) => {
@@ -867,28 +878,28 @@ export class PluginSystem {
 
     await this.setupSecurityRestrictionsOnLinks(messageBox);
 
-    this.ipcHandle('tasks:clear-all', async (): Promise<void> => {
+    this.ipcHandle(IpcChannel.TASKS_CLEAR_ALL, async (): Promise<void> => {
       return taskManager.clearTasks();
     });
 
-    this.ipcHandle('tasks:clear', async (_listener, taskId: string): Promise<void> => {
+    this.ipcHandle(IpcChannel.TASKS_CLEAR, async (_listener, taskId: string): Promise<void> => {
       return taskManager.getTask(taskId).dispose();
     });
 
-    this.ipcHandle('tasks:execute', async (_listener, taskId: string): Promise<void> => {
+    this.ipcHandle(IpcChannel.TASKS_EXECUTE, async (_listener, taskId: string): Promise<void> => {
       return taskManager.execute(taskId);
     });
 
-    this.ipcHandle('container-provider-registry:listContainers', async (): Promise<ContainerInfo[]> => {
+    this.ipcHandle(IpcChannel.CONTAINER_LIST_CONTAINERS, async (): Promise<ContainerInfo[]> => {
       return containerProviderRegistry.listContainers();
     });
 
-    this.ipcHandle('container-provider-registry:listSecrets', async (): Promise<Array<SecretInfo>> => {
+    this.ipcHandle(IpcChannel.CONTAINER_LIST_SECRETS, async (): Promise<Array<SecretInfo>> => {
       return containerProviderRegistry.listSecrets();
     });
 
     this.ipcHandle(
-      'container-provider-registry:removeSecret',
+      IpcChannel.CONTAINER_REMOVE_SECRET,
       async (_listener, engineId: string, secretId: string): Promise<void> => {
         return containerProviderRegistry.removeSecret(engineId, secretId);
       },
@@ -919,12 +930,12 @@ export class PluginSystem {
       return containerProviderRegistry.listSimpleContainers();
     });
     this.ipcHandle(
-      'container-provider-registry:listImages',
+      IpcChannel.CONTAINER_LIST_IMAGES,
       async (_listener, options?: ListImagesOptions): Promise<ImageInfo[]> => {
         return containerProviderRegistry.listImages(options);
       },
     );
-    this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
+    this.ipcHandle(IpcChannel.CONTAINER_LIST_PODS, async (): Promise<PodInfo[]> => {
       return containerProviderRegistry.listPods();
     });
     this.ipcHandle('container-provider-registry:listNetworks', async (): Promise<NetworkInspectInfo[]> => {
@@ -971,7 +982,7 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
-      'container-provider-registry:listVolumes',
+      IpcChannel.CONTAINER_LIST_VOLUMES,
       async (_listener, fetchUsage: boolean): Promise<VolumeListInfo[]> => {
         return containerProviderRegistry.listVolumes(fetchUsage);
       },
@@ -2490,7 +2501,7 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'proxy:updateSettings',
+      IpcChannel.PROXY_UPDATE_SETTINGS,
       async (
         _listener: Electron.IpcMainInvokeEvent,
         proxySettings: containerDesktopAPI.ProxySettings,
@@ -2500,17 +2511,17 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'proxy:setState',
+      IpcChannel.PROXY_SET_STATE,
       async (_listener: Electron.IpcMainInvokeEvent, state: ProxyState): Promise<void> => {
         return proxy.setState(state);
       },
     );
 
-    this.ipcHandle('proxy:getSettings', async (): Promise<containerDesktopAPI.ProxySettings | undefined> => {
+    this.ipcHandle(IpcChannel.PROXY_GET_SETTINGS, async (): Promise<containerDesktopAPI.ProxySettings | undefined> => {
       return proxy.proxy;
     });
 
-    this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
+    this.ipcHandle(IpcChannel.PROXY_GET_STATE, async (): Promise<ProxyState> => {
       return proxy.getState();
     });
 

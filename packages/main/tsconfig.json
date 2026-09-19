@@ -16,9 +16,10 @@
     "types": ["node"],
 
     "paths": {
-      "/@/*": ["./src/*"],
+      "/@/*": ["./src/*", "../api/src/*"],
       "/@tests/*": ["./tests/*"],
-      "/@product.json": ["../../product.json"]
+      "/@product.json": ["../../product.json"],
+      "@podman-desktop/core-api/ipc-invoke": ["../api/src/ipc-invoke/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts", "vitest.setup.ts", "../../types/**/*.d.ts"]

@@ -140,6 +140,8 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 import type { ContextInfo } from '@podman-desktop/core-api/context';
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+import type { IpcInvokeChannelMap } from '@podman-desktop/core-api/ipc-invoke';
+import { IpcChannel } from '@podman-desktop/core-api/ipc-invoke';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -155,6 +157,8 @@ import type {
 import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
 import { contextBridge, ipcRenderer } from 'electron';
+
+import type { ExposedMainWorldApi } from './exposed-api.js';
 
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;
 
@@ -196,12 +200,69 @@ export function initExposure(): void {
     return e;
   }
 
+  async function ipcInvoke<K extends keyof IpcInvokeChannelMap>(
+    channel: K,
+    ...args: Parameters<IpcInvokeChannelMap[K]>
+  ): Promise<Awaited<ReturnType<IpcInvokeChannelMap[K]>>>;
+  async function ipcInvoke<T>(channel: string, ...args: unknown[]): Promise<T>;
   async function ipcInvoke<T>(channel: string, ...args: unknown[]): Promise<T> {
     const { error, result } = await ipcRenderer.invoke(channel, ...args);
     if (error) {
       throw decodeError(error);
     }
     return result;
+  }
+
+  const exposedApi: ExposedMainWorldApi = {
+    clearTasks: async (): Promise<void> => {
+      return ipcInvoke(IpcChannel.TASKS_CLEAR_ALL);
+    },
+    clearTask: async (taskId: string): Promise<void> => {
+      return ipcInvoke(IpcChannel.TASKS_CLEAR, taskId);
+    },
+    executeTask: async (taskId: string): Promise<void> => {
+      return ipcInvoke(IpcChannel.TASKS_EXECUTE, taskId);
+    },
+    getDashboardSystemOverviewStatus: async (): Promise<SystemOverviewStatusInfo> => {
+      return ipcInvoke(IpcChannel.DASHBOARD_GET_SYSTEM_OVERVIEW_STATUS);
+    },
+    listContainers: async (): Promise<ContainerInfo[]> => {
+      return ipcInvoke(IpcChannel.CONTAINER_LIST_CONTAINERS);
+    },
+    listImages: async (options?: ListImagesOptions): Promise<ImageInfo[]> => {
+      return ipcInvoke(IpcChannel.CONTAINER_LIST_IMAGES, options);
+    },
+    listVolumes: async (fetchUsage?: boolean): Promise<VolumeListInfo[]> => {
+      return ipcInvoke(IpcChannel.CONTAINER_LIST_VOLUMES, fetchUsage);
+    },
+    listPods: async (): Promise<PodInfo[]> => {
+      return ipcInvoke(IpcChannel.CONTAINER_LIST_PODS);
+    },
+    listSecrets: async (): Promise<SecretInfo[]> => {
+      return ipcInvoke(IpcChannel.CONTAINER_LIST_SECRETS);
+    },
+    removeSecret: async (engineId: string, secretId: string): Promise<void> => {
+      return ipcInvoke(IpcChannel.CONTAINER_REMOVE_SECRET, engineId, secretId);
+    },
+    updateProxySettings: async (proxySettings: containerDesktopAPI.ProxySettings): Promise<void> => {
+      return ipcInvoke(IpcChannel.PROXY_UPDATE_SETTINGS, proxySettings);
+    },
+    getProxySettings: async (): Promise<containerDesktopAPI.ProxySettings | undefined> => {
+      return ipcInvoke(IpcChannel.PROXY_GET_SETTINGS);
+    },
+    getProxyState: async (): Promise<ProxyState> => {
+      return ipcInvoke(IpcChannel.PROXY_GET_STATE);
+    },
+    setProxyState: async (state: ProxyState): Promise<void> => {
+      return ipcInvoke(IpcChannel.PROXY_SET_STATE, state);
+    },
+    getRegisteredFeatures: async (): Promise<string[]> => {
+      return ipcInvoke(IpcChannel.FEATURE_REGISTRY_GET_REGISTERED_FEATURES);
+    },
+  };
+
+  for (const [name, impl] of Object.entries(exposedApi)) {
+    contextBridge.exposeInMainWorld(name, impl);
   }
 
   contextBridge.exposeInMainWorld('events', apiSender);
@@ -245,28 +306,12 @@ export function initExposure(): void {
     } as NavigationRequest<NavigationPage.EXPERIMENTAL_FEATURES>);
   });
 
-  contextBridge.exposeInMainWorld('clearTasks', async (): Promise<void> => {
-    return ipcInvoke('tasks:clear-all');
-  });
-
-  contextBridge.exposeInMainWorld('clearTask', async (taskId: string): Promise<void> => {
-    return ipcInvoke('tasks:clear', taskId);
-  });
-
-  contextBridge.exposeInMainWorld('executeTask', async (taskId: string): Promise<void> => {
-    return ipcInvoke('tasks:execute', taskId);
-  });
-
   contextBridge.exposeInMainWorld('extensionSystemIsReady', async (): Promise<boolean> => {
     return ipcInvoke('extension-system:isReady');
   });
 
   contextBridge.exposeInMainWorld('extensionSystemIsExtensionsStarted', async (): Promise<boolean> => {
     return ipcInvoke('extension-system:isExtensionsStarted');
-  });
-
-  contextBridge.exposeInMainWorld('getDashboardSystemOverviewStatus', async (): Promise<SystemOverviewStatusInfo> => {
-    return ipcInvoke('dashboard:getSystemOverviewStatus');
   });
 
   contextBridge.exposeInMainWorld(
@@ -295,18 +340,6 @@ export function initExposure(): void {
     return ipcInvoke('navigation:getSearchableRoutes');
   });
 
-  contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
-    return ipcInvoke('container-provider-registry:listContainers');
-  });
-
-  contextBridge.exposeInMainWorld('listSecrets', async (): Promise<SecretInfo[]> => {
-    return ipcInvoke('container-provider-registry:listSecrets');
-  });
-
-  contextBridge.exposeInMainWorld('removeSecret', async (engineId: string, secretId: string): Promise<void> => {
-    return ipcInvoke('container-provider-registry:removeSecret', engineId, secretId);
-  });
-
   contextBridge.exposeInMainWorld('inspectSecret', async (engineId: string, secretId: string): Promise<SecretInfo> => {
     return ipcInvoke('container-provider-registry:inspectSecret', engineId, secretId);
   });
@@ -322,13 +355,6 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('listImages', async (options?: ListImagesOptions): Promise<ImageInfo[]> => {
-    return ipcInvoke('container-provider-registry:listImages', options);
-  });
-
-  contextBridge.exposeInMainWorld('listVolumes', async (fetchUsage = true): Promise<VolumeListInfo[]> => {
-    return ipcInvoke('container-provider-registry:listVolumes', fetchUsage);
-  });
   contextBridge.exposeInMainWorld('removeVolume', async (engine: string, volumeName: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:removeVolume', engine, volumeName);
   });
@@ -338,10 +364,6 @@ export function initExposure(): void {
       return ipcInvoke('container-provider-registry:getVolumeInspect', engine, volumeName);
     },
   );
-
-  contextBridge.exposeInMainWorld('listPods', async (): Promise<PodInfo[]> => {
-    return ipcInvoke('container-provider-registry:listPods');
-  });
 
   contextBridge.exposeInMainWorld('reconnectContainerProviders', async (): Promise<PodInfo[]> => {
     return ipcInvoke('container-provider-registry:reconnectContainerProviders');
@@ -958,27 +980,6 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('stopProviderLifecycle', async (providerId: string): Promise<void> => {
     return ipcInvoke('provider-registry:stopProviderLifecycle', providerId);
-  });
-
-  contextBridge.exposeInMainWorld(
-    'updateProxySettings',
-    async (proxySettings: containerDesktopAPI.ProxySettings): Promise<void> => {
-      return ipcInvoke('proxy:updateSettings', proxySettings);
-    },
-  );
-
-  contextBridge.exposeInMainWorld(
-    'getProxySettings',
-    async (): Promise<containerDesktopAPI.ProxySettings | undefined> => {
-      return ipcInvoke('proxy:getSettings');
-    },
-  );
-
-  contextBridge.exposeInMainWorld('getProxyState', async (): Promise<ProxyState> => {
-    return ipcInvoke('proxy:getState');
-  });
-  contextBridge.exposeInMainWorld('setProxyState', async (state: ProxyState): Promise<void> => {
-    return ipcInvoke('proxy:setState', state);
   });
 
   contextBridge.exposeInMainWorld(
@@ -2717,10 +2718,6 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('helpMenuGetItems', async (): Promise<ItemInfo[]> => {
     return ipcInvoke('help-menu:getItems');
-  });
-
-  contextBridge.exposeInMainWorld('getRegisteredFeatures', async (): Promise<string[]> => {
-    return ipcInvoke('feature-registry:getRegisteredFeatures');
   });
 
   contextBridge.exposeInMainWorld('contextCollectAllValues', async (): Promise<Record<string, unknown>> => {

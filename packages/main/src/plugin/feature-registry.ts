@@ -17,6 +17,7 @@
  ***********************************************************************/
 import { Event } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { IpcChannel } from '@podman-desktop/core-api/ipc-invoke';
 import { inject, injectable } from 'inversify';
 
 import { IPCHandle } from '/@/plugin/api.js';
@@ -41,7 +42,7 @@ export class FeatureRegistry {
   }
 
   init(): void {
-    this.ipcHandle('feature-registry:getRegisteredFeatures', async (): Promise<string[]> => {
+    this.ipcHandle(IpcChannel.FEATURE_REGISTRY_GET_REGISTERED_FEATURES, async (): Promise<string[]> => {
       return this.listFeatures();
     });
 

@@ -51,6 +51,7 @@ export default defineConfig({
       entry: {
         index: 'src/index.ts',
         'api-sender/index': 'src/api-sender/index.ts',
+        'ipc-invoke/index': 'src/ipc-invoke/index.ts',
         'appearance/appearance-settings': 'src/appearance/appearance-settings.ts',
         'authentication/authentication': 'src/authentication/authentication.ts',
         'configuration/index': 'src/configuration/index.ts',
