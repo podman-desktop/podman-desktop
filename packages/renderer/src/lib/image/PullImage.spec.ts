@@ -66,6 +66,7 @@ const PROVIDER_INFO_MOCK: ProviderInfo = {
 } as unknown as ProviderInfo;
 
 const originalConsoleError = console.error;
+const originalConsoleDebug = console.debug;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -83,6 +84,7 @@ beforeEach(() => {
     return undefined;
   });
   console.error = vi.fn();
+  console.debug = vi.fn();
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
   vi.mocked(window.cancelToken).mockResolvedValue(undefined);
@@ -96,6 +98,8 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleError;
+  console.debug = originalConsoleDebug;
+  vi.useRealTimers();
 });
 
 const buttonText = 'Pull image';
@@ -361,6 +365,20 @@ test('Expect not to check not shortname images', async () => {
   expect(vi.mocked(window.resolveShortnameImage)).not.toBeCalled();
 });
 
+test('Expect no Podman FQN when the engine returns no shortname', async () => {
+  vi.mocked(window.resolveShortnameImage).mockResolvedValue(undefined as unknown as string[]);
+  render(PullImage);
+
+  const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+  await userEvent.click(textbox);
+  await userEvent.paste('nginx');
+
+  await vi.waitFor(() => {
+    expect(window.resolveShortnameImage).toHaveBeenCalled();
+  });
+  expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
+});
+
 test('Expect latest tag warning is displayed when the image does not have latest tag', async () => {
   render(PullImage);
 
@@ -493,6 +511,62 @@ test('input component should raise an error when the input is not valid - error'
   expect(parentInput).toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
   expect(parentInput).toHaveClass('focus-within:border-[var(--pd-input-field-stroke-error)]');
   expect(parentInput).not.toHaveClass('hover:border-b-[var(--pd-input-field-hover-stroke)]');
+});
+
+// a ':' is the tag separator only after the last '/', so 'localhost:5000' is a host and a port
+describe('registry with a port', () => {
+  test('should list the tags of the repository and not of the registry host', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await user.click(textbox);
+    await user.paste('localhost:5000/nginx:');
+
+    // the tags to propose are searched once the typeahead delay has passed
+    await vi.advanceTimersByTimeAsync(400);
+    await tick();
+
+    expect(window.listImageTagsInRegistry).toHaveBeenCalledWith({ image: 'localhost:5000/nginx' });
+    expect(window.listImageTagsInRegistry).not.toHaveBeenCalledWith({ image: 'localhost' });
+  });
+
+  test('should accept a tag the repository has', async () => {
+    const pullImage = render(PullImage);
+
+    vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest']);
+    await userEvent.keyboard('localhost:5000/nginx:latest');
+
+    const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
+    expect(parentInput).not.toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+  });
+
+  test('should reject a tag the repository does not have', async () => {
+    const pullImage = render(PullImage);
+
+    vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest']);
+    await userEvent.keyboard('localhost:5000/nginx:missing');
+
+    const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
+    expect(parentInput).toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+  });
+});
+
+// a digest names the image by content, so no tag has to be found for it
+describe('reference pinned by digest', () => {
+  const DIGEST = 'sha256:2b9e1b2a1f1c1d1e1f2a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f80';
+
+  test('should accept it even when the repository has no "latest"', async () => {
+    const pullImage = render(PullImage);
+
+    vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['v1']);
+    await userEvent.keyboard(`quay.io/podman/hello@${DIGEST}`);
+
+    const parentInput = pullImage.getAllByRole('textbox')[0].parentElement;
+    expect(parentInput).not.toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
+    expect(screen.queryByText(/"latest" tag not found/)).not.toBeInTheDocument();
+  });
 });
 
 describe('container connections', () => {
@@ -752,5 +826,107 @@ describe('Preferred Registries', () => {
       // Should fall back to docker.io
       expect(window.searchImageInRegistry).toHaveBeenCalledWith(expect.objectContaining({ registry: 'docker.io' }));
     });
+  });
+});
+
+// a '.' cannot be resolved and used to reach the engine, making it answer with a redirect
+// that crashed the app with an uncaught 'TypeError: Invalid URL'
+describe('invalid image name', () => {
+  // the engine owns the reference grammar, so a name it would reject is still offered for pulling
+  // and it is the engine that reports why it cannot be pulled
+  test.each(['.', '..', ':', '#', 'Nginx'])('should leave %s for the engine to reject', async imageName => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(imageName);
+
+    expect(screen.queryByText('Invalid image name')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: buttonText })).toBeEnabled();
+  });
+
+  test('should report the engine error when pulling a name it cannot parse', async () => {
+    vi.mocked(window.pullImage).mockRejectedValue(new Error('invalid reference format'));
+    render(PullImage);
+
+    await userEvent.keyboard('.[Enter]');
+
+    const errorMessage = await vi.waitFor(() => screen.getByRole('alert', { name: 'Error Message Content' }));
+    expect(errorMessage).toHaveTextContent('Error while pulling image from test: invalid reference format');
+  });
+
+  test('should not ask the engine to resolve an invalid image name', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('.');
+
+    expect(window.resolveShortnameImage).not.toHaveBeenCalled();
+  });
+
+  // the engine rejects a name like ':' that it cannot parse, and the rejection used to escape
+  // the onChange handler as an 'Uncaught (in promise)' error
+  test('should not leak a rejection when the engine cannot resolve the name', async () => {
+    vi.mocked(window.resolveShortnameImage).mockRejectedValue(
+      new Error('(HTTP code 400) bad parameter - resolving ":": cannot parse input: ":": invalid reference format'),
+    );
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(':');
+
+    await vi.waitFor(() => {
+      expect(window.resolveShortnameImage).toHaveBeenCalled();
+    });
+    await tick();
+
+    // nothing could be resolved, so no Podman FQN is proposed
+    expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
+    // the reason is swallowed by the UI, so it is only traced
+    expect(console.debug).toHaveBeenCalledWith(`Could not resolve shortname ':':`, expect.any(Error));
+  });
+
+  // which names are searchable is unit tested in image-reference.spec.ts, this only wires it up
+  test('should not search any registry for a name that cannot be looked up', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await user.click(textbox);
+    await user.paste('.');
+
+    // the search is debounced, so outrunning the delay is what tells a query that is never sent
+    // from one that is only queued
+    await vi.advanceTimersByTimeAsync(400);
+    await tick();
+
+    expect(window.searchImageInRegistry).not.toHaveBeenCalled();
+    expect(window.listImageTagsInRegistry).not.toHaveBeenCalled();
+  });
+
+  test('should still search while a valid name is being typed', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('quay.io/');
+
+    await vi.waitFor(() => {
+      expect(window.searchImageInRegistry).toHaveBeenCalledWith(expect.objectContaining({ registry: 'quay.io' }));
+    });
+  });
+
+  test('should resolve a valid image name', async () => {
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste('quay.io/podman/hello');
+
+    expect(screen.queryByText('Invalid image name')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: buttonText })).toBeEnabled();
   });
 });

@@ -10,6 +10,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { ImageReference } from '/@/lib/image/image-reference';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
@@ -64,9 +65,16 @@ async function resolveShortname(): Promise<void> {
   if (selectedProviderConnection?.type !== 'podman') {
     return;
   }
-  if (imageToPull && !imageToPull.includes('/')) {
-    shortnameImages =
-      (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+  if (imageToPull && !imageToPull.includes('/') && !ImageReference.hasUnresolvableComponent(imageToPull)) {
+    try {
+      shortnameImages =
+        (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+    } catch (error: unknown) {
+      // the engine rejects a name it cannot parse, such as ':', and is unreachable when its machine
+      // is stopped. there is no shortname to propose then, and pulling reports the reason if tried
+      console.debug(`Could not resolve shortname '${imageToPull}':`, error);
+      shortnameImages = [];
+    }
     // not a shortname
   } else {
     podmanFQN = '';
@@ -289,13 +297,16 @@ function validateImageName(image: string): void {
 // allTags is defined if last search was a query to search tags of an image
 let allTags: string[] | undefined = undefined;
 async function searchImages(value: string): Promise<string[]> {
-  if (value.includes(':')) {
+  if (!ImageReference.canSearch(value)) {
+    return [];
+  }
+  // a reference pinned by digest has no tag to propose
+  if (ImageReference.tagOf(value) !== undefined) {
     if (allTags !== undefined) {
       return allTags.filter(i => i.startsWith(value));
     }
-    const parts = value.split(':');
-    const originalImage = parts[0];
-    let image = parts[0];
+    const originalImage = ImageReference.repositoryOf(value);
+    let image = originalImage;
     if (image.startsWith(DOCKER_PREFIX_WITH_SLASH)) {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
@@ -348,7 +359,11 @@ async function searchImages(value: string): Promise<string[]> {
 
 let latestTagMessage = $state<string>();
 async function searchLatestTag(): Promise<void> {
-  if (imageNameIsInvalid || !imageToPull) {
+  if (
+    imageNameIsInvalid ||
+    !imageToPull ||
+    ImageReference.hasUnresolvableComponent(ImageReference.repositoryOf(imageToPull))
+  ) {
     latestTagMessage = undefined;
     return;
   }
@@ -358,9 +373,16 @@ async function searchLatestTag(): Promise<void> {
       image = image.slice(DOCKER_PREFIX_WITH_SLASH.length);
     }
     const tags = await window.listImageTagsInRegistry({ image });
-    if (imageToPull.includes(':')) {
+    const tag = ImageReference.tagOf(imageToPull);
+    if (tag !== undefined) {
       latestTagMessage = undefined;
-      checkIfTagExist(image, tags);
+      isValidName = tags.includes(tag);
+      return;
+    }
+    // a digest pins the image, so no tag is missing from it
+    if (ImageReference.hasDigest(imageToPull)) {
+      latestTagMessage = undefined;
+      isValidName = true;
       return;
     }
     isValidName = Boolean(tags);
@@ -375,12 +397,6 @@ async function searchLatestTag(): Promise<void> {
     isValidName = false;
     latestTagMessage = undefined;
   }
-}
-
-function checkIfTagExist(image: string, tags: string[]): void {
-  const tag = image.split(':')[1];
-
-  isValidName = tags.some(t => t === tag);
 }
 
 async function searchFunction(value: string): Promise<void> {
