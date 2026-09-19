@@ -20,7 +20,12 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type { PullEvent } from '@podman-desktop/api';
-import type { NotificationCardOptions, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type {
+  ContainerStatsInfo,
+  NotificationCardOptions,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+} from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
@@ -968,6 +973,62 @@ describe('Log race condition fix', () => {
       logger.error('test');
       logger.onEnd();
     }).not.toThrow();
+  });
+});
+
+test('apiSender.send should not throw and should keep delivering events when a receive() listener throws', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  apiSender.receive('foo', () => {
+    throw new Error('boom from a receive() listener');
+  });
+
+  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  let barReceived = '';
+  apiSender.receive('bar', (data: unknown) => {
+    barReceived = String(data);
+  });
+  apiSender.send('bar', 'hello-again');
+  expect(barReceived).toBe('hello-again');
+
+  consoleErrorSpy.mockRestore();
+});
+
+describe('sendToWebContents resilience when the main window is gone', () => {
+  beforeEach(() => {
+    vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {
+      throw new Error('Unable to find the main window');
+    });
+  });
+
+  test('getContainerStats onData callback does not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, _engine: string, _containerId: string, _onDataId: number) => Promise<number>
+    >('container-provider-registry:getContainerStats');
+    vi.mocked(ContainerProviderRegistry.prototype.getContainerStats).mockImplementation(
+      async (_engine, _containerId, callback: (stats: ContainerStatsInfo) => void) => {
+        callback({} as ContainerStatsInfo);
+        return 1;
+      },
+    );
+    await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toThrow();
+  });
+
+  test('pushImage onData, error and end callbacks do not throw', async () => {
+    const pushError = new Error('push failed');
+    const handle = getHandler<
+      (_event: unknown, _engine: string, _imageId: string, _callbackId: number) => Promise<void>
+    >('container-provider-registry:pushImage');
+    vi.mocked(ContainerProviderRegistry.prototype.pushImage).mockImplementation(
+      async (_engine, _imageId, callback: (name: string, data: string) => void) => {
+        callback('data', 'push image output');
+        throw pushError;
+      },
+    );
+    await expect(handle(undefined, 'podman', 'registry.com/repo/image:latest', 1)).resolves.not.toThrow();
   });
 });
 

@@ -297,7 +297,13 @@ export class ContainerProviderRegistry {
       });
       pipeline?.on('data', data => {
         if (data?.value !== undefined) {
-          eventEmitter.emit('event', data.value);
+          try {
+            eventEmitter.emit('event', data.value);
+          } catch (error: unknown) {
+            // Do not throw as we're inside handlers/callbacks, just log the error and continue
+            // throwing here would break the event stream and we would not receive any more events
+            console.error('Error while processing docker/podman event', error, data.value);
+          }
         }
       });
     });
