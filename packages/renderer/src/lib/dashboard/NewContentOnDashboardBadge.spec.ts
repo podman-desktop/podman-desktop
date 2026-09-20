@@ -22,17 +22,41 @@ import type { NotificationCard, ProviderContainerConnectionInfo, ProviderInfo } 
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { router } from 'tinro';
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
 
 import NewContentOnDashboardBadge from './NewContentOnDashboardBadge.svelte';
 
+const extensionSystemIsExtensionsStartedMock = vi.fn<() => Promise<boolean>>();
+
+// render, then let the on-mount `extensionSystemIsExtensionsStarted()` query resolve
+// so the component's readiness (and baseline capture) is settled before the test
+// mutates the stores. Readiness is driven through this query path rather than the
+// `extensions-already-started` event to avoid triggering the stores' own fetch
+// machinery (which would overwrite the values under test).
 async function waitRender(): Promise<void> {
   render(NewContentOnDashboardBadge);
   await tick();
+  // flush the microtasks of the async readiness query
+  await new Promise(resolve => setTimeout(resolve, 0));
+  await tick();
 }
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  // by default, extensions are not yet started when the component mounts
+  extensionSystemIsExtensionsStartedMock.mockResolvedValue(false);
+  Object.defineProperty(window, 'extensionSystemIsExtensionsStarted', {
+    value: extensionSystemIsExtensionsStartedMock,
+    writable: true,
+    configurable: true,
+  });
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/');
+});
 
 const notification1: NotificationCard = {
   id: 1,
@@ -76,9 +100,15 @@ const providerInfo = {
   installationSupport: undefined,
 } as unknown as ProviderInfo;
 
+const providerInfo2 = {
+  ...providerInfo,
+  id: 'test2',
+  internalId: 'id2',
+} as unknown as ProviderInfo;
+
 test('Expect to do not display any dot if active page is Dashboard', async () => {
-  notificationQueue.set([]);
-  providerInfos.set([]);
+  // extensions started, and content arrives while on the Dashboard
+  extensionSystemIsExtensionsStartedMock.mockResolvedValue(true);
   await waitRender();
 
   notificationQueue.set([notification1]);
@@ -91,8 +121,6 @@ test('Expect to do not display any dot if active page is Dashboard', async () =>
 });
 
 test('Expect to do not display any dot if active page is not Dashboard but there are no updates', async () => {
-  notificationQueue.set([]);
-  providerInfos.set([]);
   router.goto('/pods');
 
   await waitRender();
@@ -102,11 +130,15 @@ test('Expect to do not display any dot if active page is not Dashboard but there
 });
 
 test('Expect to display the dot if active page is not Dashboard and there is a new notification', async () => {
-  notificationQueue.set([]);
-  providerInfos.set([]);
+  extensionSystemIsExtensionsStartedMock.mockResolvedValue(true);
   router.goto('/pods');
   await waitRender();
 
+  // startup snapshot resolves (empty) after readiness -> becomes the baseline
+  notificationQueue.set([]);
+  await tick();
+
+  // genuinely new notification arrives afterwards
   notificationQueue.set([notification1]);
 
   await new Promise(resolve => setTimeout(resolve, 200));
@@ -116,15 +148,47 @@ test('Expect to display the dot if active page is not Dashboard and there is a n
 });
 
 test('Expect to display the dot if active page is not Dashboard and there is a new provider', async () => {
-  notificationQueue.set([]);
-  providerInfos.set([]);
+  // provider already present at startup, extensions already started on mount:
+  // its baseline is captured from the current providers at readiness
+  providerInfos.set([providerInfo]);
+  extensionSystemIsExtensionsStartedMock.mockResolvedValue(true);
   router.goto('/pods');
   await waitRender();
 
-  providerInfos.set([providerInfo]);
+  // genuinely new provider arrives afterwards
+  providerInfos.set([providerInfo, providerInfo2]);
 
   await new Promise(resolve => setTimeout(resolve, 200));
 
   const dot = screen.getByLabelText('New content available');
   expect(dot).toBeInTheDocument();
+});
+
+// regression tests for #18563: content present at startup must not light the dot
+test('Expect to do not display any dot if the provider was already there but the initial fetch resolves after mount', async () => {
+  extensionSystemIsExtensionsStartedMock.mockResolvedValue(true);
+  router.goto('/pods');
+  await waitRender();
+
+  // startup fetch resolves after mount -> becomes the baseline, not new content
+  providerInfos.set([providerInfo]);
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  const dot = screen.queryByLabelText('New content available');
+  expect(dot).not.toBeInTheDocument();
+});
+
+test('Expect to do not display any dot if a notification was already there but the initial fetch resolves after mount', async () => {
+  extensionSystemIsExtensionsStartedMock.mockResolvedValue(true);
+  router.goto('/pods');
+  await waitRender();
+
+  // startup fetch resolves after mount -> becomes the baseline, not new content
+  notificationQueue.set([notification1]);
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  const dot = screen.queryByLabelText('New content available');
+  expect(dot).not.toBeInTheDocument();
 });
