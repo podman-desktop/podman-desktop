@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,13 @@
  ***********************************************************************/
 
 import type { ProviderContainerConnection } from '@podman-desktop/api';
-import type { OnboardingInfo, WebviewInfo } from '@podman-desktop/core-api';
+import type {
+  OnboardingInfo,
+  ProviderContainerConnectionInfo,
+  ProviderKubernetesConnectionInfo,
+  ProviderVmConnectionInfo,
+  WebviewInfo,
+} from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -193,6 +199,78 @@ test('check navigateToProviderTask', async () => {
     parameters: {
       internalId: 'internalId',
       taskId: 55,
+    },
+  });
+});
+
+test('check navigateToProviderConnection for a container connection', () => {
+  const connectionInfo: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
+    name: 'machine',
+    displayName: 'Machine',
+    status: 'stopped',
+    endpoint: { socketPath: '/machine.sock' },
+    canStart: true,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
+    type: 'podman',
+    vmType: { id: 'qemu', name: 'QEMU' },
+  };
+
+  navigationManager.navigateToProviderConnection('internalId', connectionInfo);
+
+  expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+    page: NavigationPage.CONTAINER_CONNECTION,
+    parameters: {
+      provider: 'internalId',
+      name: 'machine',
+      socketPath: '/machine.sock',
+    },
+  });
+});
+
+test('check navigateToProviderConnection for a Kubernetes connection', () => {
+  const connectionInfo: ProviderKubernetesConnectionInfo = {
+    connectionType: 'kubernetes',
+    name: 'kind',
+    status: 'stopped',
+    endpoint: { apiURL: 'https://kind.example.test' },
+    canStart: true,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
+  };
+
+  navigationManager.navigateToProviderConnection('internalId', connectionInfo);
+
+  expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+    page: NavigationPage.KUBERNETES_CONNECTION,
+    parameters: {
+      provider: 'internalId',
+      apiURL: 'https://kind.example.test',
+    },
+  });
+});
+
+test('check navigateToProviderConnection for a VM connection', () => {
+  const connectionInfo: ProviderVmConnectionInfo = {
+    connectionType: 'vm',
+    name: 'lima',
+    status: 'stopped',
+    canStart: true,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
+  };
+
+  navigationManager.navigateToProviderConnection('internalId', connectionInfo);
+
+  expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+    page: NavigationPage.VM_CONNECTION,
+    parameters: {
+      provider: 'internalId',
+      name: 'lima',
     },
   });
 });

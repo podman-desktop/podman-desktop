@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,6 +166,7 @@ beforeEach(async () => {
   } as unknown as Task);
   vi.mocked(NavigationManager.prototype.navigateToResources).mockResolvedValue(undefined);
   vi.mocked(NavigationManager.prototype.navigateToProviderTask).mockResolvedValue(undefined);
+  vi.mocked(NavigationManager.prototype.navigateToProviderConnection).mockReturnValue(undefined);
   vi.mocked(NavigationManager.prototype.navigateToImageBuild).mockResolvedValue(undefined);
 
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
@@ -757,7 +758,8 @@ describe.each<{
           _loggerId: string,
         ) => Promise<void>
       >(handler);
-    await handle(undefined, 'internal1', { name: 'name1' } as unknown as PlayKubeInfo, 'logger');
+    const connectionInfo = { name: 'name1' } as unknown as ProviderContainerConnectionInfo;
+    await handle(undefined, 'internal1', connectionInfo, 'logger');
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
     assert(params, 'params should be defined');
@@ -767,7 +769,15 @@ describe.each<{
     const execute = params.action?.execute;
     assert(execute, 'execute should be defined');
     execute(new TaskImpl('task1id', 'task1name'));
-    expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+    // delete navigates back to resources, start/stop deep-link to the connection page
+    if (expectedActionName === 'Go to resources') {
+      expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+    } else {
+      expect(NavigationManager.prototype.navigateToProviderConnection).toHaveBeenCalledWith(
+        'internal1',
+        connectionInfo,
+      );
+    }
   });
 
   test(`${methodName} is called and is resolved`, async () => {
