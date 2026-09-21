@@ -505,7 +505,7 @@ let sidebarTitle = $derived(
 
       <ButtonRow class="px-5 py-5">
         <Button type="secondary" aria-label="Cancel" on:click={(): void => setDisplayCancelSetup(false)}>Cancel</Button>
-        <Button type="primary" class="mr-2" on:click={cancelSetup}>Ok</Button>
+        <Button type="primary" on:click={cancelSetup}>Ok</Button>
       </ButtonRow>
     </div>
   </div>
