@@ -287,6 +287,10 @@ export class PluginSystem {
   // true if the application is quitting
   protected isQuitting = false;
 
+  // channels for which sendToWebContents has already logged a failure, so hot
+  // callbacks (stats polling, log/shell/build streams) don't flood the console
+  protected loggedSendFailureChannels = new Set<string>();
+
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;
   private validExtList!: ExtensionInfo[];
@@ -308,8 +312,20 @@ export class PluginSystem {
     return window.webContents;
   }
 
+  // Long-lived/streaming callbacks (container stats polling, pull/push image, shell,
+  // attach, log streams, etc.) can fire after the main window has been destroyed, e.g.
+  // during app quit. Swallow and log rather than letting an unhandled exception surface
+  // to the user as an "Unable to find the main window" error dialog.
   protected sendToWebContents(channel: string, ...args: unknown[]): void {
-    this.getWebContentsSender().send(channel, ...args);
+    try {
+      this.getWebContentsSender().send(channel, ...args);
+      this.loggedSendFailureChannels.delete(channel);
+    } catch (err: unknown) {
+      if (!this.loggedSendFailureChannels.has(channel)) {
+        this.loggedSendFailureChannels.add(channel);
+        console.error(`Unable to send '${channel}' event to the main window`, err);
+      }
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
