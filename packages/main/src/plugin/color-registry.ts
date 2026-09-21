@@ -480,8 +480,8 @@ export class ColorRegistry {
     this.registerColor(`${glNav}icon-selected-highlight`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: accent1[800],
-      hcLight: accent1[200],
+      hcDark: accent1[300],
+      hcLight: accent1[700],
     });
   }
 

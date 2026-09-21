@@ -298,6 +298,14 @@ async function skipCurrentOnboarding(): Promise<void> {
 // when doing the "global onboarding" sequence, replacing some UI elements with
 // full-screen ones.
 let globalOnboarding = $derived(global);
+
+let sidebarTitle = $derived(
+  activeStep
+    ? globalOnboarding
+      ? replaceContextKeyPlaceholders(welcomeMessage, activeStep.onboarding.extension, globalContext)
+      : replaceContextKeyPlaceholders(activeStep.onboarding.title, activeStep.onboarding.extension, globalContext)
+    : '',
+);
 </script>
 
 <svelte:window on:keydown={handleEscape} />
@@ -327,18 +335,10 @@ let globalOnboarding = $derived(global);
               src={activeStep.onboarding.media.path} />
           {/if}
           <div class="flex flex-col">
-            {#if globalOnboarding}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">
-                {replaceContextKeyPlaceholders(welcomeMessage, activeStep.onboarding.extension, globalContext)}
-              </div>
-            {:else}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">
-                {replaceContextKeyPlaceholders(
-                  activeStep.onboarding.title,
-                  activeStep.onboarding.extension,
-                  globalContext,
-                )}
-              </div>
+            <div class="text-lg font-bold text-[var(--pd-content-header)]">
+              {sidebarTitle}
+            </div>
+            {#if !globalOnboarding}
               {#if activeStep.onboarding.description}
                 <div class="text-sm text-[var(--pd-content-sub-header)]">
                   {replaceContextKeyPlaceholders(

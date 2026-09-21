@@ -78,15 +78,20 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Podman Desktop Update installation', { tag: '@update-install' }, () => {
+    test.describe.configure({ retries: 1 });
     test('Update is offered automatically on startup', async ({ welcomePage }) => {
       await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
       const updateNowButton = updateAvailableDialog.getByRole('button', { name: 'Update Now' });
       await playExpect(updateNowButton).toBeVisible();
-      const doNotshowButton = updateAvailableDialog.getByRole('button', { name: `Don't show again` });
-      await playExpect(doNotshowButton).toBeVisible();
-      const cancelButton = updateAvailableDialog.getByRole('button', { name: 'Cancel' });
-      await playExpect(cancelButton).toBeVisible();
-      await cancelButton.click();
+      const laterDropdownButton = updateAvailableDialog.getByRole('button', { name: 'Later' });
+      await playExpect(laterDropdownButton).toBeVisible();
+      await laterDropdownButton.click();
+      const remindLaterOption = updateAvailableDialog.getByRole('button', { name: 'Remind me later' });
+      await playExpect(remindLaterOption).toBeVisible();
+      const doNotShowAgainOption = updateAvailableDialog.getByRole('button', { name: `Don't show again` });
+      await playExpect(doNotShowAgainOption).toBeVisible();
+      const closeButton = updateAvailableDialog.getByRole('button', { name: 'Close' });
+      await closeButton.click();
       await playExpect(updateAvailableDialog).not.toBeVisible();
       // handle welcome page now
       await welcomePage.handleWelcomePage(true);

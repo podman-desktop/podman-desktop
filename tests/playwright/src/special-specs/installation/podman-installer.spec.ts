@@ -31,9 +31,9 @@ test.beforeAll(async ({ page, runner, welcomePage }) => {
   const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop.*/ });
   try {
     await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
-    const cancelButton = updateAvailableDialog.getByRole('button', { name: 'Cancel' });
-    await playExpect(cancelButton).toBeVisible();
-    await cancelButton.click();
+    const closeButton = updateAvailableDialog.getByRole('button', { name: 'Close' });
+    await playExpect(closeButton).toBeVisible();
+    await closeButton.click();
     await playExpect(updateAvailableDialog).not.toBeVisible();
   } catch (error) {
     console.log('No update dialog shown, continuing with the test');

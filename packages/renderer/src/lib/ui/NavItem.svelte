@@ -43,7 +43,7 @@ onDestroy(() => {
 
 <a
   href={onClick ? '#top' : uri}
-  class=""
+  class="focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--pd-global-nav-icon-selected-highlight)]"
   aria-label={ariaLabel ?? tooltip}
   onclick={handleClick}>
   <div

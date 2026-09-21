@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { networksListInfo } from '/@/stores/networks';
@@ -31,13 +30,39 @@ test('createNavigationNetworkEntry', async () => {
   const entry = createNavigationNetworkEntry();
   networksListInfo.set([
     {
-      Id: 'network1',
-      Name: 'network 1',
-    } as unknown as NetworkInspectInfo,
+      id: 'network1',
+      shortId: 'network1',
+      name: 'network 1',
+      driver: '',
+      created: '',
+      engineId: '',
+      engineName: '',
+      engineType: '',
+      selected: false,
+      status: '',
+      containers: [],
+      ipv6_enabled: false,
+      labels: {},
+      options: {},
+      subnets: [],
+    },
     {
-      Id: 'network2',
-      Name: 'network 2',
-    } as unknown as NetworkInspectInfo,
+      id: 'network2',
+      shortId: 'network2',
+      name: 'network 2',
+      driver: '',
+      created: '',
+      engineId: '',
+      engineName: '',
+      engineType: '',
+      selected: false,
+      status: '',
+      containers: [],
+      ipv6_enabled: false,
+      labels: {},
+      options: {},
+      subnets: [],
+    },
   ]);
 
   expect(entry).toBeDefined();

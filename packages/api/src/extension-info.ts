@@ -35,6 +35,7 @@ export interface ExtensionInfo {
   publisher: string;
   removable: boolean;
   devMode: boolean;
+  bundled: boolean;
   version: string;
   state: string;
   error?: ExtensionError;

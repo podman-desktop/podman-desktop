@@ -12,6 +12,8 @@ interface Props {
   readonly?: boolean;
   required?: boolean;
   clearable?: boolean;
+  disabled?: boolean;
+  error?: string;
   onChange?: (value: string) => void;
   class?: string;
   'aria-label'?: string;
@@ -26,6 +28,8 @@ let {
   readonly = false,
   required = false,
   clearable = false,
+  disabled = false,
+  error,
   onChange = (): void => {},
   class: className,
   'aria-label': ariaLabel,
@@ -58,8 +62,10 @@ function onInput(event: Event): void {
     readonly={readonly}
     required={required}
     clearable={clearable}
+    disabled={disabled}
+    error={error}
     aria-label={ariaLabel}
     aria-invalid={ariaInvalid}>
   </Input>
-  <Button aria-label="browse" icon={faFolderOpen} on:click={openDialog} />
+  <Button aria-label="browse" icon={faFolderOpen} on:click={openDialog} disabled={disabled} />
 </div>

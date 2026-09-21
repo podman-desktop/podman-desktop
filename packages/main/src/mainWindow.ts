@@ -28,10 +28,12 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { LoginMinimizeHandler } from './system/window/login-minimize-handler.js';
 import type { WindowHandler } from './system/window/window-handler.js';
 import { isLinux, isMac, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
+const loginMinimizeHandler = new LoginMinimizeHandler();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
 
 // development mode for extensions
@@ -116,8 +118,13 @@ async function createWindow(): Promise<BrowserWindow> {
         app.dock?.hide();
       }
     } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
-      // On macOS login item launch, defer showing until we can check the minimize preference
-      deferredShow = true;
+      // On macOS login item launch, apply the minimize preference now if the configuration
+      // registry has already arrived, otherwise defer until it does
+      if (configurationRegistry) {
+        loginMinimizeHandler.apply(browserWindow, configurationRegistry);
+      } else {
+        deferredShow = true;
+      }
     } else {
       browserWindow.show();
     }
@@ -140,13 +147,7 @@ async function createWindow(): Promise<BrowserWindow> {
     // check the minimize preference and show or hide accordingly
     if (deferredShow) {
       deferredShow = false;
-      const preferencesConfig = configurationRegistry.getConfiguration('preferences');
-      const minimize = preferencesConfig.get<boolean>('login.minimize');
-      if (minimize) {
-        app.dock?.hide();
-      } else {
-        browserWindow.show();
-      }
+      loginMinimizeHandler.apply(browserWindow, configurationRegistry);
     }
 
     // refresh the value of the development mode config property

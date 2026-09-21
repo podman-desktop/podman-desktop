@@ -34,3 +34,16 @@ test('Check error message', async () => {
   expect(errorMesssage).toBeInTheDocument();
   expect(errorMesssage).toHaveTextContent(error);
 });
+
+test('an error with a run of characters that has nothing to wrap at can wrap', async () => {
+  const error =
+    'Unable to find auth info for https://localhost:5000/v2/. Error: RequestError: write EPROTO ' +
+    '24412595112800:error:100000f7:SSL routines:OPENSSL_internal:WRONG_VERSION_NUMBER:.../../third_party/boringssl/src/ssl/tls_record.cc:127:';
+  render(ErrorMessage, { error });
+
+  // The defect this guards: an error is text nobody chose the length of. A run
+  // with no spaces in it cannot wrap, so it widens whatever contains it and
+  // spills out of the dialog. wrap-anywhere breaks only what would otherwise
+  // overflow.
+  expect(screen.getByRole('alert', { name: 'Error Message Content' })).toHaveClass('wrap-anywhere');
+});

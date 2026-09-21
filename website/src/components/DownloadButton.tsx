@@ -1,30 +1,10 @@
 import Link from '@docusaurus/Link';
-import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
 import { faDownload, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { getClientPlatform } from '@site/src/components/utils';
 
 import { TelemetryLink } from '../components/TelemetryLink';
-
-// Utility to detect platform
-function getClientPlatform(): {
-  os: string;
-  url: string;
-  icon: IconProp;
-} | null {
-  const ua = navigator.userAgent;
-
-  if (ua.includes('Windows')) {
-    return { os: 'Windows', url: 'windows', icon: faWindows };
-  }
-  if (ua.includes('Mac')) {
-    return { os: 'macOS', url: 'macos', icon: faApple };
-  }
-  if (ua.includes('Linux')) {
-    return { os: 'Linux', url: 'linux', icon: faLinux };
-  }
-  return null;
-}
 
 function MainDownloadButton(): JSX.Element {
   const platform = getClientPlatform();

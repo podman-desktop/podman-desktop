@@ -102,7 +102,7 @@ async function startContainerProvider(
 ): Promise<void> {
   await window.startProviderConnectionLifecycle(
     provider.internalId,
-    containerConnectionInfo,
+    $state.snapshot(containerConnectionInfo),
     loggerHandlerKey,
     eventCollect,
   );

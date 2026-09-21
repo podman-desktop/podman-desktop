@@ -160,11 +160,11 @@
   },
   "devDependencies": {
     "@types/semver": "^7.8.0",
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "byline": "^5.0.0",
     "copyfiles": "^2.4.1",
     "mkdirp": "^3.0.1",
-    "vite": "^8.2.2",
-    "vitest": "^5.0.0"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   }
 }
