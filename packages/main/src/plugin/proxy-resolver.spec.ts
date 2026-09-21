@@ -205,8 +205,32 @@ test.each<GetProxyUrlTestCase>([
     host: '128.0.0.1',
     expected: HttpsProxyUrl,
   },
+  {
+    description: 'does not bypass proxy for domain starting with 127.',
+    noProxy: 'example.com',
+    host: '127.evil.com',
+    expected: HttpsProxyUrl,
+  },
+  {
+    description: 'does not bypass proxy for 127.0.0.1.nip.io',
+    noProxy: 'example.com',
+    host: '127.0.0.1.nip.io',
+    expected: HttpsProxyUrl,
+  },
   { description: 'bypasses proxy for ::1', noProxy: 'example.com', host: '::1', expected: undefined },
   { description: 'bypasses proxy for [::1]', noProxy: 'example.com', host: '[::1]', expected: undefined },
+  {
+    description: 'bypasses proxy for fully expanded IPv6 loopback 0:0:0:0:0:0:0:1',
+    noProxy: 'example.com',
+    host: '0:0:0:0:0:0:0:1',
+    expected: undefined,
+  },
+  {
+    description: 'bypasses proxy for zero-padded IPv6 loopback 0000:0000:0000:0000:0000:0000:0000:0001',
+    noProxy: 'example.com',
+    host: '0000:0000:0000:0000:0000:0000:0000:0001',
+    expected: undefined,
+  },
   {
     description: 'bypasses loopback when noProxy is empty string',
     noProxy: '',

@@ -31,6 +31,9 @@ import { Emitter } from './events/emitter.js';
 import { getProxyUrl } from './proxy-resolver.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
 
+const IPV6_LOOPBACK = new net.BlockList();
+IPV6_LOOPBACK.addAddress('::1', 'ipv6');
+
 export function ensureURL(urlstring: string | undefined): string | undefined {
   if (urlstring) {
     try {
@@ -152,15 +155,19 @@ export function matchNoProxyRules(hostname: string, port?: string, rules?: NoPro
     return false;
   }
   const host = hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  if (host === 'localhost' || host === '::1' || host.startsWith('127.')) {
+
+  const ipFamily = net.isIP(host);
+  const hostFamily: 'ipv4' | 'ipv6' | undefined = ipFamily === 6 ? 'ipv6' : ipFamily === 4 ? 'ipv4' : undefined;
+  const hostIsIp = ipFamily !== 0;
+  const isIpv4Loopback = ipFamily === 4 && host.startsWith('127.');
+  const isIpv6Loopback = ipFamily === 6 && IPV6_LOOPBACK.check(host, 'ipv6');
+
+  if (host === 'localhost' || isIpv4Loopback || isIpv6Loopback) {
     return true;
   }
   if (!rules || rules.length === 0) {
     return false;
   }
-
-  const hostIsIp = net.isIP(host);
-  const hostFamily: 'ipv4' | 'ipv6' | undefined = hostIsIp ? (net.isIPv6(host) ? 'ipv6' : 'ipv4') : undefined;
 
   for (const rule of rules) {
     switch (rule.kind) {
