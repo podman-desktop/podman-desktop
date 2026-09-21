@@ -152,7 +152,7 @@ export function matchNoProxyRules(hostname: string, port?: string, rules?: NoPro
     return false;
   }
   const host = hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+  if (host === 'localhost' || host === '::1' || host.startsWith('127.')) {
     return true;
   }
   if (!rules || rules.length === 0) {

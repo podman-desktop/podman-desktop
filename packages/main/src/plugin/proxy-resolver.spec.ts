@@ -191,6 +191,20 @@ test.each<GetProxyUrlTestCase>([
   // Loopback Bypassing
   { description: 'bypasses proxy for localhost', noProxy: 'example.com', host: 'localhost', expected: undefined },
   { description: 'bypasses proxy for 127.0.0.1', noProxy: 'example.com', host: '127.0.0.1', expected: undefined },
+  { description: 'bypasses proxy for 127.0.0.2', noProxy: 'example.com', host: '127.0.0.2', expected: undefined },
+  {
+    description: 'bypasses proxy for 127.255.255.255',
+    noProxy: 'example.com',
+    host: '127.255.255.255',
+    expected: undefined,
+  },
+  { description: 'bypasses proxy for 127.0.1.1', noProxy: 'example.com', host: '127.0.1.1', expected: undefined },
+  {
+    description: 'does not bypass proxy for 128.0.0.1',
+    noProxy: 'example.com',
+    host: '128.0.0.1',
+    expected: HttpsProxyUrl,
+  },
   { description: 'bypasses proxy for ::1', noProxy: 'example.com', host: '::1', expected: undefined },
   { description: 'bypasses proxy for [::1]', noProxy: 'example.com', host: '[::1]', expected: undefined },
   {
