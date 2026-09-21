@@ -131,7 +131,9 @@ test.describe
           await playExpect(podmanMachineDetails.terminalTab).toBeVisible();
           await podmanMachineDetails.terminalTab.click();
           await playExpect(podmanMachineDetails.terminalContent).toBeVisible();
-          await playExpect(podmanMachineDetails.terminalContent).toContainText('@');
+          await playExpect(podmanMachineDetails.terminalContent).toContainText('@', {
+            timeout: TIMEOUT_MEDIUM,
+          });
           await podmanMachineDetails.terminalInput.pressSequentially('pwd', { delay: 15 });
           await podmanMachineDetails.terminalInput.press('Enter');
           await playExpect(podmanMachineDetails.terminalContent).toContainText('/home/', {

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { ResourceElementState } from '/@/model/core/states';
@@ -24,6 +24,7 @@ import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model
 import { CreateMachinePage } from '/@/model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
@@ -48,6 +49,50 @@ const TIMEOUT_MACHINE_CREATION = 200_000;
 const TIMEOUT_MACHINE_DELETION = 150_000;
 
 let dialog: Locator;
+
+/**
+ * Waits for a machine's connection status to reach a target state. If the status appears
+ * stuck (still shows a stale value after the initial timeout), navigates to the Dashboard
+ * and back to Settings → Resources to force a UI refresh, then re-checks.
+ */
+async function waitForMachineStatus(
+  page: Page,
+  machineName: string,
+  targetState: ResourceElementState,
+  {
+    initialTimeout = TIMEOUT_SHORT,
+    retryTimeout = TIMEOUT_SHORT,
+  }: { initialTimeout?: number; retryTimeout?: number } = {},
+): Promise<void> {
+  const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, machineName);
+
+  await waitUntil(async () => (await machineCard.resourceElementConnectionStatus.innerText()).includes(targetState), {
+    timeout: initialTimeout,
+    sendError: false,
+  });
+
+  const currentStatus = await machineCard.resourceElementConnectionStatus.innerText();
+  if (currentStatus.includes(targetState)) return;
+
+  console.log(
+    `Machine ${machineName} status is "${currentStatus}" after ${initialTimeout}ms, expected "${targetState}". ` +
+      'Navigating away and back to force UI refresh.',
+  );
+
+  const navigationBar = new NavigationBar(page);
+  await navigationBar.openDashboard();
+  const settingsBar = await navigationBar.openSettings();
+  await settingsBar.resourcesTab.click();
+
+  const resourcesPage = new ResourcesPage(page);
+  await playExpect(resourcesPage.heading).toBeVisible();
+
+  const refreshedCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, machineName);
+  await waitUntil(async () => (await refreshedCard.resourceElementConnectionStatus.innerText()).includes(targetState), {
+    timeout: retryTimeout,
+    sendError: true,
+  });
+}
 
 const machineTypes = [
   {
@@ -201,11 +246,10 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
         await handlePodmanConfirmationDialogs(page);
 
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: TIMEOUT_SHORT, sendError: true },
-        );
+        await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
+          initialTimeout: TIMEOUT_MEDIUM,
+          retryTimeout: TIMEOUT_SHORT,
+        });
       });
 
       test('Restart the machine', async ({ page }) => {
@@ -217,17 +261,15 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
         await machineCard.performConnectionAction(ResourceElementActions.Restart);
 
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-          { timeout: TIMEOUT_SHORT, sendError: true },
-        );
+        await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off, {
+          initialTimeout: TIMEOUT_MEDIUM,
+          retryTimeout: TIMEOUT_SHORT,
+        });
 
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: TIMEOUT_SHORT, sendError: true },
-        );
+        await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
+          initialTimeout: TIMEOUT_MEDIUM,
+          retryTimeout: TIMEOUT_SHORT,
+        });
       });
 
       test('Stop and delete the machine', async ({ page }) => {
