@@ -21,8 +21,8 @@ let { extension, class: className = '', ...restProps }: Props = $props();
       <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-devmode-extension-bg)]" label="devMode Extension" />
     </Tooltip>
   {:else if extension.bundled}
-    <Tooltip right tip="bundled Extension">
-      <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-bundled-extension-bg)]" label="bundled Extension" />
+    <Tooltip right tip="Bundled extension">
+      <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-bundled-extension-bg)]" label="Bundled extension" />
     </Tooltip>
   {/if}
 </div>
