@@ -458,7 +458,12 @@ export class PluginSystem {
         // from running: EventEmitter#emit aborts dispatch on the first uncaught throw.
         const listener = (...args: unknown[]): void => {
           try {
-            (func as (...args: unknown[]) => void)(...args);
+            // func may be an async function (it type-checks against `() => void`), in which
+            // case a throw after an await rejects the returned promise instead of throwing here.
+            const result = (func as (...args: unknown[]) => void | Promise<void>)(...args);
+            Promise.resolve(result).catch((err: unknown) => {
+              console.error(`Error in receive() listener for event '${String(channel)}'`, err);
+            });
           } catch (err: unknown) {
             console.error(`Error in receive() listener for event '${String(channel)}'`, err);
           }

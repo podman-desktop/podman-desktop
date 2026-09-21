@@ -1031,6 +1031,26 @@ test('apiSender.receive dispose() should stop the listener from being notified',
   expect(received).toBe('');
 });
 
+test('apiSender.receive should catch a rejected promise from an async listener', async () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  // intentionally passing an async listener, the exact case this test guards against
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  apiSender.receive('foo', async () => {
+    await Promise.resolve();
+    throw new Error('boom from an async receive() listener');
+  });
+
+  apiSender.send('foo', 'hello-world');
+  // let the listener's rejected promise settle
+  await new Promise(resolve => setImmediate(resolve));
+
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  consoleErrorSpy.mockRestore();
+});
+
 describe('sendToWebContents resilience when the main window is gone', () => {
   beforeEach(() => {
     vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {
