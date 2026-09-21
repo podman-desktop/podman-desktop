@@ -308,8 +308,16 @@ export class PluginSystem {
     return window.webContents;
   }
 
+  // Long-lived/streaming callbacks (container stats polling, pull/push image, shell,
+  // attach, log streams, etc.) can fire after the main window has been destroyed, e.g.
+  // during app quit. Swallow and log rather than letting an unhandled exception surface
+  // to the user as an "Unable to find the main window" error dialog.
   protected sendToWebContents(channel: string, ...args: unknown[]): void {
-    this.getWebContentsSender().send(channel, ...args);
+    try {
+      this.getWebContentsSender().send(channel, ...args);
+    } catch (err: unknown) {
+      console.error(`Unable to send '${channel}' event to the main window`, err);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
