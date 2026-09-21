@@ -130,7 +130,7 @@
     "generate:schemas": "pnpm run generate:schemas:extension && biome format --write schemas/",
     "generate:schemas:extension": "pnpm run build:main && node packages/main/dist/generate-extension-schema.cjs",
     "storybook:css": "tsx ./scripts/generate-stylesheet.ts --output storybook/.storybook/themes.css",
-    "storybook:dev": "pnpm run storybook:css && cd storybook && pnpm run dev",
+    "storybook:dev": "pnpm run storybook:css && node scripts/storybook-dev.mjs",
     "storybook:build": "pnpm run build:ui && pnpm run storybook:css && cd storybook && pnpm run build",
     "prepare": "husky install",
     "postinstall": "pnpm run build:core-api"
