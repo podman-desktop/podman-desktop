@@ -977,6 +977,60 @@ describe('Log race condition fix', () => {
   });
 });
 
+test('apiSender.send should not throw and should keep delivering events when a receive() listener throws', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  apiSender.receive('foo', () => {
+    throw new Error('boom from a receive() listener');
+  });
+
+  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  let barReceived = '';
+  apiSender.receive('bar', (data: unknown) => {
+    barReceived = String(data);
+  });
+  apiSender.send('bar', 'hello-again');
+  expect(barReceived).toBe('hello-again');
+
+  consoleErrorSpy.mockRestore();
+});
+
+test('apiSender.send should still notify other receive() listeners on the same channel when one throws', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  let secondListenerReceived = '';
+  apiSender.receive('foo', () => {
+    throw new Error('boom from the first receive() listener');
+  });
+  apiSender.receive('foo', (data: unknown) => {
+    secondListenerReceived = String(data);
+  });
+
+  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
+  expect(secondListenerReceived).toBe('hello-world');
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  consoleErrorSpy.mockRestore();
+});
+
+test('apiSender.receive dispose() should stop the listener from being notified', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+
+  let received = '';
+  const disposable = apiSender.receive('foo', (data: unknown) => {
+    received = String(data);
+  });
+
+  disposable.dispose();
+  apiSender.send('foo', 'hello-world');
+
+  expect(received).toBe('');
+});
+
 describe('sendToWebContents resilience when the main window is gone', () => {
   beforeEach(() => {
     vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {

@@ -446,16 +446,27 @@ export class PluginSystem {
           // add to the queue
           queuedEvents.push({ channel, data });
         }
+        // receive() wraps every listener in its own try/catch (see below), so a
+        // throwing listener can never make this emit() call throw.
         eventEmitter.emit(channel, ...data);
       },
       receive: <K extends keyof ApiSenderChannelMap>(
         channel: K,
         func: ApiSenderChannelMap[K] extends never ? () => void : (data: ApiSenderChannelMap[K]) => void,
       ): IDisposable => {
-        eventEmitter.on(channel, func);
+        // Wrap so a throwing listener cannot stop other listeners on the same channel
+        // from running: EventEmitter#emit aborts dispatch on the first uncaught throw.
+        const listener = (...args: unknown[]): void => {
+          try {
+            (func as (...args: unknown[]) => void)(...args);
+          } catch (err: unknown) {
+            console.error(`Error in receive() listener for event '${String(channel)}'`, err);
+          }
+        };
+        eventEmitter.on(channel, listener);
         return {
           dispose: (): void => {
-            eventEmitter.removeListener(channel, func);
+            eventEmitter.removeListener(channel, listener);
           },
         };
       },
