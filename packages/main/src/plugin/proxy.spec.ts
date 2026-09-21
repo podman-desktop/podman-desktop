@@ -280,6 +280,54 @@ test('fetch with caller-provided dispatcher should not be overridden', async () 
   }
 });
 
+test('fetch skips proxy when noProxy has port :443 matching default HTTPS port', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io:443',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch('https://podman-desktop.io');
+  expect(connectDone).toBeFalsy();
+});
+
+test('fetch uses proxy when noProxy has port :8080 not matching default HTTPS port', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io:8080',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch('https://podman-desktop.io');
+  expect(connectDone).toBeTruthy();
+});
+
+test('fetch skips proxy when noProxy has port :443 and URL has explicit :443', async () => {
+  const proxyServer = await buildProxy();
+  const address = proxyServer.address() as AddressInfo;
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: 'podman-desktop.io:443',
+  });
+
+  let connectDone = false;
+  proxyServer.on('connect', () => (connectDone = true));
+  await fetch('https://podman-desktop.io:443');
+  expect(connectDone).toBeFalsy();
+});
+
 test('isNoProxyMatch reflects updated rules after setProxy', async () => {
   await proxy?.setState(ProxyState.PROXY_MANUAL);
   await proxy?.setProxy({

@@ -384,7 +384,8 @@ export class Proxy {
 
       const urlObj = asURL(url);
       const isHttps = urlObj.protocol === 'https:';
-      const proxyurl = getProxyUrl(_me, isHttps, urlObj.hostname, urlObj.port);
+      const effectivePort = urlObj.port || (isHttps ? '443' : '80');
+      const proxyurl = getProxyUrl(_me, isHttps, urlObj.hostname, effectivePort);
       const ca = _me.certificates.getAllCertificates();
       if (proxyurl) {
         opts = {
