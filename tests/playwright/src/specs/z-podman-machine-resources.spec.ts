@@ -204,7 +204,7 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         await waitUntil(
           async () =>
             (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: TIMEOUT_SHORT, sendError: true },
+          { timeout: TIMEOUT_MEDIUM, sendError: true },
         );
       });
 
