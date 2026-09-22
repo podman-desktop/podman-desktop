@@ -94,7 +94,7 @@ onMount(async () => {
       (data: unknown[]) => logHandler(data, ''),
       (data: unknown[]) => logHandler(data, ''),
       (data: unknown[]) => logHandler(data, ''),
-      connectionInfo,
+      $state.snapshot(connectionInfo),
     );
   }
 });
