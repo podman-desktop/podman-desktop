@@ -117,8 +117,11 @@ export function parseNoProxy(noProxy?: string): NoProxyRule[] {
     let pport: string | undefined;
     const portSep = splitHostPort(p);
     if (portSep) {
+      if (!portSep.port) {
+        continue;
+      }
       phost = portSep.host;
-      pport = portSep.port || undefined;
+      pport = portSep.port;
     } else {
       phost = p.replace(/^\[|\]$/g, '');
     }

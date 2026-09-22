@@ -906,6 +906,25 @@ test('matchNoProxyRules returns false for empty hostname regardless of rules', (
   expect(matchNoProxyRules('', undefined, parseNoProxy('*'))).toBe(false);
 });
 
+test('parseNoProxy skips entries with trailing colon (empty port)', () => {
+  const rules = parseNoProxy('example.com:,other.com');
+  expect(matchNoProxyRules('example.com', undefined, rules)).toBe(false);
+  expect(matchNoProxyRules('example.com', '80', rules)).toBe(false);
+  expect(matchNoProxyRules('other.com', undefined, rules)).toBe(true);
+});
+
+test('parseNoProxy skips bare colon entry', () => {
+  const rules = parseNoProxy(':,valid.com');
+  expect(matchNoProxyRules('valid.com', undefined, rules)).toBe(true);
+});
+
+test('parseNoProxy skips bracketed IPv6 with trailing colon [::1]:', () => {
+  const rules = parseNoProxy('[fd00::1]:,example.com');
+  expect(matchNoProxyRules('fd00::1', undefined, rules)).toBe(false);
+  expect(matchNoProxyRules('fd00::1', '8080', rules)).toBe(false);
+  expect(matchNoProxyRules('example.com', undefined, rules)).toBe(true);
+});
+
 // Complex Combined Rule Scenarios
 test('getProxyUrl with complex noProxy containing wildcard, valid, and malformed entries', () => {
   const noProxy = [
