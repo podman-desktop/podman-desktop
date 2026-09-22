@@ -7,7 +7,7 @@
   "devDependencies": {
     "@podman-desktop/core-api": "workspace:*",
     "@podman-desktop/webview-api": "workspace:*",
-    "electron": "44.4.2",
+    "electron": "44.4.3",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
   }
