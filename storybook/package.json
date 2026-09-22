@@ -4,7 +4,7 @@
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
-    "dev": "cross-env STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6006",
+    "dev": "node scripts/dev.mjs",
     "build": "cross-env STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
   },
   "peerDependencies": {

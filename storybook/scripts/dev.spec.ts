@@ -29,20 +29,20 @@ vi.mock(import('node:child_process'), async importOriginal => {
   };
 });
 
-vi.mock(import('../node_modules/@sveltejs/package/src/index.js'), () => ({
+vi.mock(import('../../node_modules/@sveltejs/package/src/index.js'), () => ({
   watch: vi.fn(),
 }));
 
-vi.mock(import('../node_modules/@sveltejs/package/src/config.js'), () => ({
+vi.mock(import('../../node_modules/@sveltejs/package/src/config.js'), () => ({
   load_config: vi.fn(),
 }));
 
 import { spawn, spawnSync } from 'node:child_process';
 
-import { load_config as loadUiPackageConfig } from '../node_modules/@sveltejs/package/src/config.js';
-import { watch as watchUiPackage } from '../node_modules/@sveltejs/package/src/index.js';
+import { load_config as loadUiPackageConfig } from '../../node_modules/@sveltejs/package/src/config.js';
+import { watch as watchUiPackage } from '../../node_modules/@sveltejs/package/src/index.js';
 
-import { getExitCode, main, stopStorybook } from './storybook-dev.mjs';
+import { getExitCode, main, stopStorybook } from './dev.mjs';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -117,9 +117,12 @@ describe('main', () => {
 
     expect(watchUiPackage).toHaveBeenCalled();
     expect(spawn).toHaveBeenCalledWith(
-      'pnpm',
-      ['--filter', 'storybook', 'dev'],
-      expect.objectContaining({ stdio: 'inherit' }),
+      'storybook',
+      ['dev', '-p', '6006'],
+      expect.objectContaining({
+        stdio: 'inherit',
+        env: expect.objectContaining({ STORYBOOK_DISABLE_TELEMETRY: '1' }),
+      }),
     );
     expect(onSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
     expect(onSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));

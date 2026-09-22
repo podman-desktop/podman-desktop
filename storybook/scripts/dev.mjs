@@ -25,20 +25,22 @@
  * points at `packages/ui/dist`. Vite already watches that folder, so keeping `dist` fresh
  * is all that is needed for component edits to hot-reload. This also builds `dist` before
  * Storybook starts, so a fresh checkout works without a separate `build:ui` step.
+ *
+ * This is `storybook`'s own `dev` script, so it behaves the same whether it's started from
+ * the repo root (`pnpm run storybook:dev`) or from inside this package (`pnpm dev`).
  */
 
 import { spawn, spawnSync } from 'node:child_process';
 import { constants } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { watch as watchUiPackage } from '../node_modules/@sveltejs/package/src/index.js';
-import { load_config as loadUiPackageConfig } from '../node_modules/@sveltejs/package/src/config.js';
+import { watch as watchUiPackage } from '../../node_modules/@sveltejs/package/src/index.js';
+import { load_config as loadUiPackageConfig } from '../../node_modules/@sveltejs/package/src/config.js';
 
-const rootDir = join(dirname(fileURLToPath(import.meta.url)), '..');
-const uiDir = join(rootDir, 'packages/ui');
+const uiDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'packages/ui');
 const isWindows = process.platform === 'win32';
 
-// Stop Storybook together with everything pnpm started for it
+// Stop Storybook together with everything it started for itself
 export function stopStorybook(storybook, signal, windows) {
   try {
     if (windows) {
@@ -68,12 +70,12 @@ export async function main() {
     config: await loadUiPackageConfig({ cwd: uiDir }),
   });
 
-  // Own process group on POSIX, so a signal reaches pnpm and every process below it
-  const storybook = spawn('pnpm', ['--filter', 'storybook', 'dev'], {
-    cwd: rootDir,
+  // Own process group on POSIX, so a signal reaches every process Storybook starts
+  const storybook = spawn('storybook', ['dev', '-p', '6006'], {
     stdio: 'inherit',
     shell: isWindows,
     detached: !isWindows,
+    env: { ...process.env, STORYBOOK_DISABLE_TELEMETRY: '1' },
   });
 
   // On Windows, taskkill's forced termination reports its own exit code with no
