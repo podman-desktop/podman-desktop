@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faDownload, faMinusCircle } from '@fortawesome/free-solid-svg-icons';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -163,15 +163,16 @@ async function saveImages(): Promise<void> {
       {/if}
 
       <div class="pt-5 w-full">
-        <Button
-          on:click={saveImages}
-          inProgress={inProgress}
-          class="w-full"
-          icon={faDownload}
-          aria-label="Save images"
-          disabled={saveDisabled}>
-          Save Images
-        </Button>
+        <ButtonRow>
+          <Button
+            on:click={saveImages}
+            inProgress={inProgress}
+            icon={faDownload}
+            aria-label="Save images"
+            disabled={saveDisabled}>
+            Save Images
+          </Button>
+        </ButtonRow>
         <div aria-label="saveError">
           {#if saveError !== ''}
             <ErrorMessage class="py-2 text-sm" error={saveError} />

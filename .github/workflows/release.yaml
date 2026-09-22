@@ -245,9 +245,12 @@ jobs:
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - name: create the pnpm store from the dependencies
         run: |
-          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:24 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
+          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:24 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 XDG_CACHE_HOME=/project/pnpm-metadata pnpm install --frozen-lockfile --store-dir pnpm-store"
           # now the store is in the pnpm-store directory
-          # create a tarball of the store
+          # pnpm-metadata contains the registry metadata cache (required by pnpm 12+ for offline installs)
+          # nest it inside pnpm-store to avoid filename conflicts after flatpak-builder strip-components=1
+          cp -r pnpm-metadata pnpm-store/pnpm-metadata
+          # create a tarball of the store and metadata cache
           echo "Creating the archive store-cache-pnpm-${{ matrix.arch }}.tgz"
           tar -czf store-cache-pnpm-${{ matrix.arch }}.tgz pnpm-store
 

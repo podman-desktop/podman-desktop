@@ -84,7 +84,12 @@ async function startConnectionProvider(
   connectionInfo: ProviderVmConnectionInfo,
   loggerHandlerKey: symbol,
 ): Promise<void> {
-  await window.startProviderConnectionLifecycle(provider.internalId, connectionInfo, loggerHandlerKey, eventCollect);
+  await window.startProviderConnectionLifecycle(
+    provider.internalId,
+    $state.snapshot(connectionInfo),
+    loggerHandlerKey,
+    eventCollect,
+  );
 }
 
 function updateConnectionStatus(
