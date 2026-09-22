@@ -83,8 +83,11 @@ const showUpdateButton = $derived(
   provider.version && provider.updateInfo?.version && provider.version !== provider.updateInfo?.version,
 );
 
+const DISABLED = 'disabled';
+const WHEN = 'when';
+
 const providerContext = $derived(createProviderContext(provider, globalContext));
-const visibleProviderMenus = $derived(contributions.filter(menu => isProviderMenuVisible(menu)));
+const visibleProviderMenus = $derived(contributions.filter(menu => isProviderMenu(WHEN, menu)));
 
 function handleCreateNew(): Promise<void> {
   return onCreateNew(provider, providerDisplayName);
@@ -110,26 +113,17 @@ function createProviderContext(provider: ProviderInfo, globalContext: ContextUI 
   return providerContext;
 }
 
-function isProviderMenuVisible(menu: Menu): boolean {
-  if (!menu.when) {
-    return true;
+function isProviderMenu(option: typeof WHEN | typeof DISABLED, menu: Menu): boolean {
+  if (!menu[option]) {
+    return option === WHEN;
   }
-  return ContextKeyExpr.deserialize(menu.when)?.evaluate(providerContext) ?? false;
+  return ContextKeyExpr.deserialize(menu[option])?.evaluate(providerContext) ?? false;
 }
 
-function isProviderMenuDisabled(menu: Menu): boolean {
-  if (!menu.disabled) {
-    return false;
-  }
-  return ContextKeyExpr.deserialize(menu.disabled)?.evaluate(providerContext) ?? false;
-}
-
-async function executeProviderMenu(menu: Menu): Promise<void> {
-  try {
-    await window.executeCommand(menu.command, removeNonSerializableProperties(provider));
-  } catch (err) {
+function executeProviderMenu(menu: Menu): void {
+  window.executeCommand(menu.command, removeNonSerializableProperties(provider)).catch(err => {
     console.error(`Error while executing ${menu.title}: ${String(err)}`);
-  }
+  });
 }
 </script>
 
@@ -172,11 +166,11 @@ async function executeProviderMenu(menu: Menu): Promise<void> {
 
       {#each visibleProviderMenus as menu, index (index)}
         <Button
-         aria-label={menu.title}
-         title={menu.title}
-         icon={menu.icon}
-           disabled={isProviderMenuDisabled(menu)}
-           onclick={executeProviderMenu.bind(undefined, menu)}>
+          aria-label={menu.title}
+          title={menu.title}
+          icon={menu.icon}
+          disabled={isProviderMenu(DISABLED, menu)}
+          onclick={(): void => executeProviderMenu(menu)}>
           {menu.title}
         </Button>
       {/each}
