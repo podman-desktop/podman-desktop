@@ -113,6 +113,7 @@ jobs:
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/extension-api/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/webview-api/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/ui/package.json
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/api-mocks-vitest/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" tests/playwright/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" extensions/podman/packages/api/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" extensions/docker/packages/api/package.json
@@ -130,6 +131,12 @@ jobs:
       - name: Publish ui/svelte to npmjs
         run: |
           cd packages/ui
+          pnpm build
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish api-mocks-vitest to npmjs
+        run: |
+          cd packages/api-mocks-vitest
           pnpm build
           pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
 
