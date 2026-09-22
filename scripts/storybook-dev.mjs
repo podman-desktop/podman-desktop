@@ -35,31 +35,12 @@ import { load_config as loadUiPackageConfig } from '../node_modules/@sveltejs/pa
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const uiDir = join(rootDir, 'packages/ui');
-
-// `watch()` awaits the first build before returning, so `dist` exists once this resolves
-await watchUiPackage({
-  cwd: uiDir,
-  input: 'src/lib',
-  output: 'dist',
-  preserve_output: false,
-  types: true,
-  config: await loadUiPackageConfig({ cwd: uiDir }),
-});
-
 const isWindows = process.platform === 'win32';
 
-// Own process group on POSIX, so a signal reaches pnpm and every process below it
-const storybook = spawn('pnpm', ['--filter', 'storybook', 'dev'], {
-  cwd: rootDir,
-  stdio: 'inherit',
-  shell: isWindows,
-  detached: !isWindows,
-});
-
 // Stop Storybook together with everything pnpm started for it
-function stopStorybook(signal) {
+export function stopStorybook(storybook, signal, windows) {
   try {
-    if (isWindows) {
+    if (windows) {
       spawnSync('taskkill', ['/pid', String(storybook.pid), '/T', '/F'], { stdio: 'ignore' });
     } else {
       process.kill(-storybook.pid, signal);
@@ -69,11 +50,39 @@ function stopStorybook(signal) {
   }
 }
 
-for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => stopStorybook(signal));
+// A signal stop is the user ending the session, not a failure
+export function getExitCode(code, signal) {
+  return code ?? (signal ? 0 : 1);
 }
 
-storybook.on('exit', (code, signal) => {
-  // A signal stop is the user ending the session, not a failure
-  process.exit(code ?? (signal ? 0 : 1));
-});
+export async function main() {
+  // `watch()` awaits the first build before returning, so `dist` exists once this resolves
+  await watchUiPackage({
+    cwd: uiDir,
+    input: 'src/lib',
+    output: 'dist',
+    preserve_output: false,
+    types: true,
+    config: await loadUiPackageConfig({ cwd: uiDir }),
+  });
+
+  // Own process group on POSIX, so a signal reaches pnpm and every process below it
+  const storybook = spawn('pnpm', ['--filter', 'storybook', 'dev'], {
+    cwd: rootDir,
+    stdio: 'inherit',
+    shell: isWindows,
+    detached: !isWindows,
+  });
+
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => stopStorybook(storybook, signal, isWindows));
+  }
+
+  storybook.on('exit', (code, signal) => {
+    process.exit(getExitCode(code, signal));
+  });
+}
+
+if (!process.env['VITEST']) {
+  await main();
+}
