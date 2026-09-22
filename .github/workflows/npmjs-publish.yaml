@@ -134,12 +134,6 @@ jobs:
           pnpm build
           pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
 
-      - name: Publish api-mocks-vitest to npmjs
-        run: |
-          cd packages/api-mocks-vitest
-          pnpm build
-          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
-
       - name: Publish tests-playwright to npmjs
         run: |
           cd tests/playwright
@@ -154,4 +148,10 @@ jobs:
       - name: Publish Docker Extension API to npmjs
         run: |
           cd extensions/docker/packages/api
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish api-mocks-vitest to npmjs
+        run: |
+          cd packages/api-mocks-vitest
+          pnpm build
           pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
