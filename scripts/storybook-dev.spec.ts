@@ -53,8 +53,9 @@ describe('getExitCode', () => {
     expect(getExitCode(2, null)).toBe(2);
   });
 
-  test('returns 0 when the process was stopped by a signal', () => {
-    expect(getExitCode(null, 'SIGINT')).toBe(0);
+  test('returns the conventional 128+signal code for a signal exit', () => {
+    expect(getExitCode(null, 'SIGINT')).toBe(130);
+    expect(getExitCode(null, 'SIGTERM')).toBe(143);
   });
 
   test('returns 1 when there is neither a code nor a signal', () => {

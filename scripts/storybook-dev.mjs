@@ -28,6 +28,7 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process';
+import { constants } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { watch as watchUiPackage } from '../node_modules/@sveltejs/package/src/index.js';
@@ -50,9 +51,10 @@ export function stopStorybook(storybook, signal, windows) {
   }
 }
 
-// A signal stop is the user ending the session, not a failure
+// An explicit exit code wins; otherwise a signal we didn't send gets the conventional
+// 128+signal shell exit code, and no code or signal at all is a plain failure
 export function getExitCode(code, signal) {
-  return code ?? (signal ? 0 : 1);
+  return code ?? (signal ? 128 + constants.signals[signal] : 1);
 }
 
 export async function main() {
