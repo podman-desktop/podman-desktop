@@ -74,12 +74,20 @@ export async function main() {
     detached: !isWindows,
   });
 
+  // On Windows, taskkill's forced termination reports its own exit code with no
+  // signal, so the child's own exit tuple can't tell a user stop from a crash.
+  // Track it here instead: any exit after our handler fired is a success.
+  let stoppedByUser = false;
+
   for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.on(signal, () => stopStorybook(storybook, signal, isWindows));
+    process.on(signal, () => {
+      stoppedByUser = true;
+      stopStorybook(storybook, signal, isWindows);
+    });
   }
 
   storybook.on('exit', (code, signal) => {
-    process.exit(getExitCode(code, signal));
+    process.exit(stoppedByUser ? 0 : getExitCode(code, signal));
   });
 }
 

@@ -90,17 +90,27 @@ describe('stopStorybook', () => {
   });
 });
 
+function setupMainMocks(pid: number): {
+  fakeStorybook: EventEmitter & { pid: number };
+  onSpy: ReturnType<typeof vi.spyOn<typeof process, 'on'>>;
+  exitSpy: ReturnType<typeof vi.spyOn<typeof process, 'exit'>>;
+} {
+  vi.mocked(loadUiPackageConfig).mockResolvedValue({});
+  vi.mocked(watchUiPackage).mockResolvedValue(undefined);
+
+  const fakeStorybook = new EventEmitter() as EventEmitter & { pid: number };
+  fakeStorybook.pid = pid;
+  vi.mocked(spawn).mockReturnValue(fakeStorybook as never);
+
+  const onSpy = vi.spyOn(process, 'on').mockImplementation(() => process);
+  const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+  return { fakeStorybook, onSpy, exitSpy };
+}
+
 describe('main', () => {
   test('waits for the ui package build, then starts storybook', async () => {
-    vi.mocked(loadUiPackageConfig).mockResolvedValue({});
-    vi.mocked(watchUiPackage).mockResolvedValue(undefined);
-
-    const fakeStorybook = new EventEmitter() as EventEmitter & { pid: number };
-    fakeStorybook.pid = 111;
-    vi.mocked(spawn).mockReturnValue(fakeStorybook as never);
-
-    const onSpy = vi.spyOn(process, 'on').mockImplementation(() => process);
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    const { fakeStorybook, onSpy, exitSpy } = setupMainMocks(111);
 
     await main();
 
@@ -114,6 +124,20 @@ describe('main', () => {
     expect(onSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
 
     fakeStorybook.emit('exit', 0, null);
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  test('exits successfully on a user-initiated stop, even if the child reports a nonzero code', async () => {
+    // Simulates Windows, where taskkill's forced termination reports its own exit code
+    // with no signal, so the child's exit tuple alone can't tell a user stop from a crash.
+    const { fakeStorybook, onSpy, exitSpy } = setupMainMocks(222);
+
+    await main();
+
+    const sigintHandler = onSpy.mock.calls.find(([signal]) => signal === 'SIGINT')?.[1] as () => void;
+    sigintHandler();
+
+    fakeStorybook.emit('exit', 1, null);
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });
