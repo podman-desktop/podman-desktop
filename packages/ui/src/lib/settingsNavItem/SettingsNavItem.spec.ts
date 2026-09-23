@@ -64,6 +64,62 @@ test('Expect tooltip title attribute on truncated labels', async () => {
   expect(screen.getByText(title)).not.toHaveAttribute('title');
 });
 
+test('keeps section navigation separate from disclosure', async () => {
+  const onClick = vi.fn();
+  const onToggle = vi.fn();
+  render(SettingsNavItem, {
+    title: 'Preferences',
+    href: '/preferences',
+    section: true,
+    ariaControls: 'preferences-children',
+    onClick,
+    onToggle,
+  });
+
+  const link = screen.getByRole('link', { name: 'Preferences' });
+  expect(link).toHaveAttribute('href', '/preferences');
+  expect(link).not.toHaveAttribute('aria-expanded');
+  expect(link).not.toHaveAttribute('aria-controls');
+  const disclosure = screen.getByRole('button', { name: 'Toggle Preferences' });
+  expect(disclosure).toHaveAttribute('type', 'button');
+  expect(link).not.toContainElement(disclosure);
+  expect(disclosure).toHaveAttribute('aria-controls', 'preferences-children');
+  expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+
+  await fireEvent.click(link);
+  expect(onClick).toHaveBeenCalledOnce();
+  expect(onToggle).not.toHaveBeenCalled();
+  expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+
+  disclosure.focus();
+  await fireEvent.click(disclosure);
+  expect(disclosure).toHaveFocus();
+  expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+  expect(onToggle).toHaveBeenCalledOnce();
+  expect(onClick).toHaveBeenCalledOnce();
+
+  await fireEvent.click(link);
+  expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+  expect(onClick).toHaveBeenCalledTimes(2);
+  expect(onToggle).toHaveBeenCalledOnce();
+
+  await fireEvent.click(disclosure);
+  expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+  expect(onToggle).toHaveBeenCalledTimes(2);
+  expect(onClick).toHaveBeenCalledTimes(2);
+});
+
+test('plain rows keep only the navigation action', async () => {
+  const onClick = vi.fn();
+  const onToggle = vi.fn();
+  render(SettingsNavItem, { title: 'Resources', href: '/resources', onClick, onToggle });
+
+  expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  await fireEvent.click(screen.getByRole('link', { name: 'Resources' }));
+  expect(onClick).toHaveBeenCalledOnce();
+  expect(onToggle).not.toHaveBeenCalled();
+});
+
 test('Expect selection styling', async () => {
   const title = 'Resources';
   const href = '/test';
@@ -71,8 +127,7 @@ test('Expect selection styling', async () => {
 
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
-  expect(element.firstChild).toBeInTheDocument();
-  expect(element.firstChild).toHaveClass('border-[var(--pd-secondary-nav-selected-highlight)]');
+  expect(element.closest('[data-settings-nav-row]')).toHaveClass('border-[var(--pd-secondary-nav-selected-highlight)]');
 });
 
 test('Expect not to have selection styling', async () => {
@@ -81,9 +136,10 @@ test('Expect not to have selection styling', async () => {
 
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
-  expect(element.firstChild).toBeInTheDocument();
-  expect(element.firstChild).not.toHaveClass('border-[var(--pd-secondary-nav-selected-highlight)]');
-  expect(element.firstChild).toHaveClass('border-[var(--pd-secondary-nav-bg)]');
+  expect(element.closest('[data-settings-nav-row]')).not.toHaveClass(
+    'border-[var(--pd-secondary-nav-selected-highlight)]',
+  );
+  expect(element.closest('[data-settings-nav-row]')).toHaveClass('border-[var(--pd-secondary-nav-bg)]');
 });
 
 test('Expect child styling', async () => {
@@ -93,8 +149,7 @@ test('Expect child styling', async () => {
 
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
-  expect(element.firstChild).toBeInTheDocument();
-  expect(element.firstChild).toHaveClass('leading-none');
+  expect(element.closest('[data-settings-nav-row]')).toHaveClass('leading-none');
 });
 
 test('Expect section styling', async () => {
@@ -104,8 +159,7 @@ test('Expect section styling', async () => {
 
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
-  expect(element.firstChild).toBeInTheDocument();
-  const chevronContainer = element.firstChild?.childNodes[2] as HTMLElement;
+  const chevronContainer = screen.getByRole('button', { name: 'Toggle Extensions' });
   expect(chevronContainer).toBeInTheDocument();
   expect(chevronContainer.querySelector('svg')).toBeInTheDocument();
 });
@@ -118,21 +172,22 @@ test('Expect sections expand', async () => {
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
 
-  const chevronContainer = element.firstChild?.childNodes[2] as HTMLElement;
+  const chevronContainer = screen.getByRole('button', { name: 'Toggle Extensions' });
   expect(chevronContainer).toBeInTheDocument();
 
   const chevronIcon = chevronContainer.querySelector('svg') as SVGElement;
   expect(chevronIcon).toBeInTheDocument();
   expect(chevronIcon).toHaveClass('rotate-0');
-  expect(element).toHaveAttribute('aria-expanded', 'false');
+  expect(chevronContainer).toHaveAttribute('aria-expanded', 'false');
 
   // expand section
-  await fireEvent.click(element);
+  await fireEvent.click(chevronContainer);
   expect(chevronIcon).toHaveClass('rotate-90');
-  expect(element).toHaveAttribute('aria-expanded', 'true');
+  expect(chevronContainer).toHaveAttribute('aria-expanded', 'true');
 
-  await fireEvent.click(element);
-  expect(element).toHaveAttribute('aria-expanded', 'false');
+  await fireEvent.click(chevronContainer);
+  expect(chevronContainer).toHaveAttribute('aria-expanded', 'false');
+  expect(element).not.toHaveAttribute('aria-expanded');
   expect(element).toHaveAttribute('href', href);
 });
 

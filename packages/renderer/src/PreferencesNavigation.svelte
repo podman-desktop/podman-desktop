@@ -285,6 +285,7 @@ onMount(() => {
           ariaControls={childrenId}
           selected={meta.url === navItem.href && !visibleChildren.some(c => c.href === meta.url)}
           onClick={scheduleNavigationWidthUpdate}
+          onToggle={scheduleNavigationWidthUpdate}
           bind:expanded={sectionExpanded[navItem.title]} />
         {#if visibleChildren.length > 0}
           <div id={childrenId}>
@@ -315,6 +316,7 @@ onMount(() => {
         ariaControls={childrenId}
         selected={meta.url === `/preferences/default/${configSection}`}
         onClick={scheduleNavigationWidthUpdate}
+        onToggle={scheduleNavigationWidthUpdate}
         bind:expanded={sectionExpanded[configSection]} />
       <div id={childrenId}>
         {#if sectionExpanded[configSection]}

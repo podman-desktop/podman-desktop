@@ -485,7 +485,7 @@ describe('Navigation width measurement and calculation', () => {
 
     renderPreferencesNavigation();
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'preferences' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Toggle preferences' }));
 
     expect(await screen.findByRole('link', { name: 'A Very Long Preference Entry' })).toBeVisible();
     await waitForNavigationWidth('292px');
@@ -503,7 +503,7 @@ describe('Navigation width measurement and calculation', () => {
 
     renderPreferencesNavigation();
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'preferences' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Toggle preferences' }));
 
     await waitForNavigationWidth('180px');
   });
@@ -518,7 +518,7 @@ describe('Navigation width measurement and calculation', () => {
 
     renderPreferencesNavigation();
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'preferences' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Toggle preferences' }));
     await waitForNavigationWidth('292px');
 
     configurationProperties.set([]);
@@ -592,15 +592,23 @@ describe('Navigation width measurement and calculation', () => {
   });
 });
 
-test('dynamic sections expose independent expansion state and child relationships', async () => {
+test('dynamic sections separate navigation from independent expansion and child relationships', async () => {
   configurationProperties.set([
     { ...LONG_CONFIG, parentId: 'preferences.long-entry' },
     { ...LONG_CONFIG, id: 'other-config', parentId: 'extensions.other', title: 'Other Preference' },
   ]);
   renderPreferencesNavigation();
 
-  const preferences = await screen.findByRole('link', { name: 'preferences' });
-  const extensions = await screen.findByRole('link', { name: 'extensions' });
+  const preferencesLink = await screen.findByRole('link', { name: 'preferences' });
+  const extensionsLink = await screen.findByRole('link', { name: 'extensions' });
+  expect(preferencesLink).toHaveAttribute('href', '/preferences/default/preferences');
+  expect(extensionsLink).toHaveAttribute('href', '/preferences/default/extensions');
+  for (const link of [preferencesLink, extensionsLink]) {
+    expect(link).not.toHaveAttribute('aria-expanded');
+    expect(link).not.toHaveAttribute('aria-controls');
+  }
+  const preferences = screen.getByRole('button', { name: 'Toggle preferences' });
+  const extensions = screen.getByRole('button', { name: 'Toggle extensions' });
   expect(preferences).toHaveAttribute('aria-expanded', 'false');
   expect(extensions).toHaveAttribute('aria-expanded', 'false');
   const preferencesId = preferences.getAttribute('aria-controls');
@@ -612,6 +620,10 @@ test('dynamic sections expose independent expansion state and child relationship
   expect(children).toBeEmptyDOMElement();
   expect(document.getElementById(extensionsId!)).toBeEmptyDOMElement();
 
+  await fireEvent.click(preferencesLink);
+  expect(preferences).toHaveAttribute('aria-expanded', 'false');
+  expect(children).toBeEmptyDOMElement();
+
   await fireEvent.click(preferences);
   expect(preferences).toHaveAttribute('aria-expanded', 'true');
   expect(extensions).toHaveAttribute('aria-expanded', 'false');
@@ -619,12 +631,25 @@ test('dynamic sections expose independent expansion state and child relationship
   expect(children).toContainElement(child);
   expect(child).toHaveAttribute('href', '/preferences/default/preferences.long-entry');
   expect(child).not.toHaveAttribute('aria-expanded');
+  expect(child).not.toHaveAttribute('aria-controls');
+
+  await fireEvent.click(preferencesLink);
+  expect(preferences).toHaveAttribute('aria-expanded', 'true');
+  expect(children).toContainElement(child);
+
+  await fireEvent.click(extensions);
+  expect(preferences).toHaveAttribute('aria-expanded', 'true');
+  expect(extensions).toHaveAttribute('aria-expanded', 'true');
+  const otherChild = await screen.findByRole('link', { name: 'Other Preference' });
+  expect(document.getElementById(extensionsId!)).toContainElement(otherChild);
 
   await fireEvent.click(preferences);
   expect(preferences).toHaveAttribute('aria-expanded', 'false');
   expect(preferences).toHaveAttribute('aria-controls', preferencesId);
   expect(children).toBeEmptyDOMElement();
   expect(screen.queryByRole('link', { name: LONG_CONFIG.title })).not.toBeInTheDocument();
+  expect(extensions).toHaveAttribute('aria-expanded', 'true');
+  expect(document.getElementById(extensionsId!)).toContainElement(otherChild);
 });
 
 describe('Static navigation entry children', () => {
@@ -661,16 +686,24 @@ describe('Static navigation entry children', () => {
 
     await vi.waitFor(() => {
       expect(screen.getByRole('link', { name: 'Auto Expanded' })).toBeVisible();
-      expect(screen.getByRole('link', { name: 'Auto Expanded' })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('button', { name: 'Toggle Auto Expanded' })).toHaveAttribute('aria-expanded', 'true');
       expect(screen.getByRole('link', { name: 'Auto Child' })).toBeVisible();
     });
   });
 
-  test('should render parent entry with children as a link', async () => {
+  test('should render a parent navigation link separately from its disclosure button', async () => {
     renderPreferencesNavigation();
 
     const parentLink = await screen.findByRole('link', { name: 'Test Parent' });
     expect(parentLink).toBeVisible();
+    expect(parentLink).toHaveAttribute('href', '/preferences/test-parent');
+    expect(parentLink).not.toHaveAttribute('aria-expanded');
+    expect(parentLink).not.toHaveAttribute('aria-controls');
+    const toggle = screen.getByRole('button', { name: 'Toggle Test Parent' });
+    expect(toggle.tagName).toBe('BUTTON');
+    expect(toggle).toHaveAttribute('type', 'button');
+    expect(parentLink).not.toContainElement(toggle);
+    expect(toggle).not.toContainElement(parentLink);
   });
 
   test('should not show children before parent is expanded', async () => {
@@ -684,15 +717,19 @@ describe('Static navigation entry children', () => {
     expect(screen.queryByRole('link', { name: 'Child Two' })).toBeNull();
   });
 
-  test('should show visible children when parent section is expanded', async () => {
+  test('should toggle static children only from the disclosure button, not the parent link', async () => {
     renderPreferencesNavigation();
 
-    const parent = await screen.findByRole('link', { name: 'Test Parent' });
+    const parentLink = await screen.findByRole('link', { name: 'Test Parent' });
+    const parent = screen.getByRole('button', { name: 'Toggle Test Parent' });
     expect(parent).toHaveAttribute('aria-expanded', 'false');
-    expect(parent).toHaveAttribute('href', '/preferences/test-parent');
     const childrenId = parent.getAttribute('aria-controls');
     expect(childrenId).toBeTruthy();
     const children = document.getElementById(childrenId!);
+    expect(children).toBeEmptyDOMElement();
+
+    await fireEvent.click(parentLink);
+    expect(parent).toHaveAttribute('aria-expanded', 'false');
     expect(children).toBeEmptyDOMElement();
 
     await fireEvent.click(parent);
@@ -703,11 +740,17 @@ describe('Static navigation entry children', () => {
     expect(children).toContainElement(screen.getByRole('link', { name: 'Child One' }));
     expect(children).toContainElement(screen.getByRole('link', { name: 'Child Two' }));
 
+    await fireEvent.click(parentLink);
+    expect(parent).toHaveAttribute('aria-expanded', 'true');
+    expect(children).toContainElement(screen.getByRole('link', { name: 'Child One' }));
+    expect(children).toContainElement(screen.getByRole('link', { name: 'Child Two' }));
+
     await fireEvent.click(parent);
     expect(parent).toHaveAttribute('aria-expanded', 'false');
     expect(parent).toHaveAttribute('aria-controls', childrenId);
     expect(children).toBeEmptyDOMElement();
     expect(screen.queryByRole('link', { name: 'Child One' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Child Two' })).not.toBeInTheDocument();
   });
 
   test('entries with only hidden children remain plain links', async () => {
@@ -721,12 +764,13 @@ describe('Static navigation entry children', () => {
     const parent = await screen.findByRole('link', { name: 'Hidden Children' });
     expect(parent).not.toHaveAttribute('aria-expanded');
     expect(parent).not.toHaveAttribute('aria-controls');
+    expect(screen.queryByRole('button', { name: 'Toggle Hidden Children' })).not.toBeInTheDocument();
   });
 
   test('should filter out children with visible set to false', async () => {
     renderPreferencesNavigation();
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Toggle Test Parent' }));
 
     await vi.waitFor(() => {
       expect(screen.getByRole('link', { name: 'Child One' })).toBeVisible();
@@ -739,13 +783,13 @@ describe('Static navigation entry children', () => {
       meta: { url: '/preferences/test-parent/child-one' } as unknown as TinroRouteMeta,
     });
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Toggle Test Parent' }));
 
     await vi.waitFor(() => {
-      const parentRow = screen.getByRole('link', { name: 'Test Parent' }).querySelector('[data-settings-nav-row]');
+      const parentRow = screen.getByRole('link', { name: 'Test Parent' }).closest('[data-settings-nav-row]');
       expect(parentRow).not.toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
 
-      const childRow = screen.getByRole('link', { name: 'Child One' }).querySelector('[data-settings-nav-row]');
+      const childRow = screen.getByRole('link', { name: 'Child One' }).closest('[data-settings-nav-row]');
       expect(childRow).toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
     });
   });
@@ -755,13 +799,13 @@ describe('Static navigation entry children', () => {
       meta: { url: '/preferences/test-parent' } as unknown as TinroRouteMeta,
     });
 
-    await fireEvent.click(await screen.findByRole('link', { name: 'Test Parent' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Toggle Test Parent' }));
 
     await vi.waitFor(() => {
-      const parentRow = screen.getByRole('link', { name: 'Test Parent' }).querySelector('[data-settings-nav-row]');
+      const parentRow = screen.getByRole('link', { name: 'Test Parent' }).closest('[data-settings-nav-row]');
       expect(parentRow).toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
 
-      const childRow = screen.getByRole('link', { name: 'Child One' }).querySelector('[data-settings-nav-row]');
+      const childRow = screen.getByRole('link', { name: 'Child One' }).closest('[data-settings-nav-row]');
       expect(childRow).not.toHaveClass('bg-[var(--pd-secondary-nav-selected-bg)]');
     });
   });
