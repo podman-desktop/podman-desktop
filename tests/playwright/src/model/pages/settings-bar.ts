@@ -78,4 +78,12 @@ export class SettingsBar {
     }
     await playExpect(this.preferencesDisclosureButton).toHaveAttribute('aria-expanded', 'true');
   }
+
+  public async collapsePreferencesTab(): Promise<void> {
+    await playExpect(this.preferencesDisclosureButton).toBeVisible({ timeout: 10_000 });
+    if ((await this.preferencesDisclosureButton.getAttribute('aria-expanded')) !== 'false') {
+      await this.preferencesDisclosureButton.click();
+    }
+    await playExpect(this.preferencesDisclosureButton).toHaveAttribute('aria-expanded', 'false');
+  }
 }
