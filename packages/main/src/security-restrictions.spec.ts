@@ -191,6 +191,17 @@ describe('windows open handler', () => {
     setWindowOpenHandlerHandler({ url: 'https://foo.bar' } as HandlerDetails);
     expect(shell.openExternal).not.toHaveBeenCalled();
   });
+
+  test('invalid origin should call securityRestrictionCurrentHandler if defined', async () => {
+    const { securityRestrictionCurrentHandler } = await import('/@/security-restrictions-handler.js');
+    const handlerMock = vi.fn().mockResolvedValue(true);
+    securityRestrictionCurrentHandler.handler = handlerMock;
+
+    setWindowOpenHandlerHandler({ url: 'https://example.org/path' } as HandlerDetails);
+    expect(handlerMock).toHaveBeenCalledOnce();
+    expect(handlerMock).toHaveBeenCalledWith('https://example.org/path');
+    expect(shell.openExternal).not.toHaveBeenCalled();
+  });
 });
 
 describe('WebContents#session#setPermissionRequestHandler', () => {
