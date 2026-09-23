@@ -75,9 +75,10 @@ async function resolveShortname(): Promise<void> {
     try {
       shortnameImages =
         (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
-    } catch {
+    } catch (error: unknown) {
       // the engine rejects a name it cannot parse, such as ':', and is unreachable when its machine
       // is stopped. there is no shortname to propose then, and pulling reports the reason if tried
+      console.debug(`Could not resolve shortname '${imageToPull}':`, error);
       shortnameImages = [];
     }
     // not a shortname
