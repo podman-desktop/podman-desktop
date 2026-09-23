@@ -18,7 +18,6 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInfo } from '@podman-desktop/api';
 import type { ImageInspectInfo, SecretInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -27,6 +26,7 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import RunImage from '/@/lib/image/RunImage.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { containersInfos } from '/@/stores/containers';
@@ -36,11 +36,12 @@ import { secretsInfo } from '/@/stores/secrets';
 const originalConsoleDebug = console.debug;
 
 const MY_IMAGE = {
+  id: 'sha256:5555',
+  name: '<none>',
+  tag: '',
   engineId: 'podman',
-  engineType: 'podman',
-  Id: 'sha256:5555',
-  Size: 0,
-} as unknown as ImageInfo;
+  base64RepoTag: btoa('<none>'),
+} as unknown as ImageInfoUI;
 
 // fake the window.events object
 beforeAll(() => {
@@ -70,7 +71,7 @@ afterEach(() => {
 async function waitRender(): Promise<void> {
   render(RunImage, {
     engineId: MY_IMAGE.engineId,
-    imageID: MY_IMAGE.Id,
+    imageID: MY_IMAGE.id,
     base64RepoTag: btoa('<none>'),
   });
   await tick();

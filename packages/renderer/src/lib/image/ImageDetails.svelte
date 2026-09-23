@@ -15,11 +15,10 @@ import {
 } from '/@/lib/view/views';
 import Route from '/@/Route.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
-import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
 import { imageFilesProviders } from '/@/stores/image-files-providers';
-import { imagesInfos } from '/@/stores/images';
+import { getImageInfo, imagesInfos } from '/@/stores/images';
 import { viewsContributions } from '/@/stores/views';
 
 import { ImageUtils } from './image-utils';
@@ -68,12 +67,21 @@ function closeModals(): void {
   renameImageModal = false;
 }
 
-let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
+let matchingImage: ImageInfoUI | undefined = $derived(
+  $imagesInfos.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag),
+);
 let image: ImageInfoUI | undefined = $derived(
-  imageInfo
-    ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, $context, viewContributions)
+  matchingImage
+    ? {
+        ...matchingImage,
+        icon: matchingImage.isManifest
+          ? matchingImage.icon
+          : (imageUtils.iconClass(matchingImage, $context, viewContributions) ?? matchingImage.icon),
+        badges: imageUtils.computeBagdes(matchingImage, $context, viewContributions),
+      }
     : undefined,
 );
+let imageInfo: ImageInfo | undefined = $derived(image ? getImageInfo(engineId, imageID) : undefined);
 let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
 let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
 let hadImage = false;

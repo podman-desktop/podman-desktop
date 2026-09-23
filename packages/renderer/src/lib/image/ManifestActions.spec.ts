@@ -19,11 +19,13 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ManifestActions from '/@/lib/image/ManifestActions.svelte';
+import { imagesInfos } from '/@/stores/images';
 
 vi.mock(import('/@/lib/dialogs/messagebox-utils'), () => ({
   withConfirmation: vi.fn(),
@@ -122,5 +124,29 @@ test('Expect error dialog with correct message when manifest deletion fails', as
         type: 'error',
       }),
     );
+  });
+});
+
+test('Expect delete to mark the manifest DELETING in the store', async () => {
+  vi.mocked(withConfirmation).mockImplementation(f => f());
+  vi.mocked(window.removeManifest).mockReturnValue(new Promise(() => {}));
+  getContributedMenusMock.mockResolvedValue([]);
+
+  const manifest: ImageInfoUI = {
+    ...fakedManifest,
+    name: 'my-manifest',
+    base64RepoTag: 'base64RepoTag',
+    status: 'UNUSED',
+  } as unknown as ImageInfoUI;
+
+  imagesInfos.set([manifest]);
+
+  render(ManifestActions, { manifest, onPushManifest: vi.fn() });
+
+  const button = screen.getByRole('button', { name: 'Delete Manifest' });
+  await fireEvent.click(button);
+
+  await vi.waitFor(() => {
+    expect(get(imagesInfos)[0].status).toBe('DELETING');
   });
 });
