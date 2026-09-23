@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
-import { Button, CloseButton, Modal } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 
 interface Props {
   onskip: () => void;
@@ -22,9 +22,9 @@ let { onskip, onclose }: Props = $props();
       be ready to run containers. You can also configure these later in Settings.
     </p>
 
-    <div class="flex items-center gap-4 pt-2">
+    <ButtonRow class="pt-2">
       <Button type="link" onclick={onskip}>Skip anyway</Button>
       <Button icon={faCirclePlay} onclick={onclose}>Continue setup</Button>
-    </div>
+    </ButtonRow>
   </div>
 </Modal>

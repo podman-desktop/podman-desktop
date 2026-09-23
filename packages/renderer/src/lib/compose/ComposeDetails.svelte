@@ -36,6 +36,7 @@ onMount(() => {
   composeUnsubscribe = containersInfos.subscribe(containers => {
     let convertedContainers: ContainerInfoUI[];
     let status: string;
+    let actionInProgress: boolean = false;
 
     // Get all containers that match the composeName we are looking at
     const containersMatchingProject = containers.filter(container => {
@@ -43,7 +44,11 @@ onMount(() => {
     });
 
     // Update our current status
-    if (containersMatchingProject.length === 0) {
+    const containerInProgress = containersMatchingProject.find(container => container.actionInProgress);
+    if (containerInProgress) {
+      status = containerInProgress.state;
+      actionInProgress = containerInProgress.actionInProgress ?? false;
+    } else if (containersMatchingProject.length === 0) {
       status = 'STOPPED';
     } else {
       const allRunning = containersMatchingProject.every(container => {
@@ -75,6 +80,7 @@ onMount(() => {
       engineId: engineId,
       engineType: engineType,
       status: status,
+      actionInProgress: actionInProgress,
       containers: convertedContainers,
     };
   });

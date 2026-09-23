@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
-import { Button, CloseButton, Modal } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 interface Props {
@@ -65,13 +65,13 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
           <div class="text-xs text-[var(--pd-content-text)] mt-2 text-center">
             Be sure that your system fulfills all the requirements above before proceeding
           </div>
-          <div class="flex flex-row justify-end w-full pt-2">
-            <Button type="link" class="mr-3" on:click={closeCallback}>Cancel</Button>
+          <ButtonRow class="pt-2">
+            <Button type="link" on:click={closeCallback}>Cancel</Button>
             <Button
               aria-label="Next"
               on:click={(): void => doCreateNew(providerToBeInstalled.provider, providerToBeInstalled.displayName)}
               >Retry</Button>
-          </div>
+          </ButtonRow>
         </div>
       </div>
     </div>
