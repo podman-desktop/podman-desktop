@@ -208,7 +208,7 @@ Podman Desktop contains an automated extension updater that checks for newer ver
    ]
    ```
 
-   Keeping previous versions in the catalog allows Podman Desktop to compare the user's currently installed version with the available releases.
+   Keeping previous versions in the catalog lets users on older Podman Desktop releases fall back to a compatible version when newer entries require a newer `podmanDesktopVersion`.
 
 ## Common configurations
 
@@ -299,7 +299,7 @@ In `extensions.json`, reference local assets using the HTTP server URL:
 
 ### Multiple versions and automatic updates
 
-To support automatic updates, place the newest release first and keep older releases in the `versions` array:
+To support automatic updates, place the newest release first. Keep older releases in the `versions` array so older Podman Desktop releases can fall back to a compatible version when newer entries require a newer `podmanDesktopVersion`:
 
 ```json
 "versions": [
