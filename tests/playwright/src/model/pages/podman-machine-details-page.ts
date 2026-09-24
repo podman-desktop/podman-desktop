@@ -17,7 +17,9 @@
  ***********************************************************************/
 
 import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
 
+import { MachineCreationForm } from './forms/machine-creation-form';
 import { ResourcesPage } from './resources-page';
 
 export class PodmanMachineDetails extends ResourcesPage {
@@ -28,6 +30,8 @@ export class PodmanMachineDetails extends ResourcesPage {
   readonly podmanMachineRestartButton: Locator;
   readonly podmanMachineStopButton: Locator;
   readonly podmanMachineDeleteButton: Locator;
+  readonly podmanMachineUpdateButton: Locator;
+  readonly podmanMachineGoBackToResourcesButton: Locator;
 
   readonly tabs: Locator;
   readonly summaryTab: Locator;
@@ -49,6 +53,10 @@ export class PodmanMachineDetails extends ResourcesPage {
     this.podmanMachineRestartButton = this.podmanMachineConnectionActions.getByRole('button', { name: 'Restart' });
     this.podmanMachineStopButton = this.podmanMachineConnectionActions.getByRole('button', { name: 'Stop' });
     this.podmanMachineDeleteButton = this.podmanMachineConnectionActions.getByRole('button', { name: 'Delete' });
+    this.podmanMachineUpdateButton = page
+      .getByRole('form', { name: 'Properties Information' })
+      .getByRole('button', { name: 'Update' });
+    this.podmanMachineGoBackToResourcesButton = page.getByRole('button', { name: 'Go back to resources' });
 
     this.tabs = page.getByRole('region', { name: 'Tabs' });
     this.summaryTab = this.tabs.getByText('Summary');
@@ -57,5 +65,37 @@ export class PodmanMachineDetails extends ResourcesPage {
     this.tabContent = page.getByRole('region', { name: 'Tab Content' });
     this.terminalInput = this.tabContent.getByLabel('Terminal input');
     this.terminalContent = this.tabContent.locator('.xterm-rows');
+  }
+
+  // Edits the Memory slider on the machine edit form (reusing MachineCreationForm, whose
+  // submit button is named 'Create' and therefore cannot be used to submit an edit) and
+  // submits it, then waits for the update (including the machine stop/start cycle it
+  // triggers) to finish and navigates back to the Resources page.
+  async editMachineMemory(): Promise<void> {
+    return test.step('Edit Podman Machine memory', async () => {
+      const machineCreationForm = new MachineCreationForm(this.page);
+      await playExpect(machineCreationForm.podmanMachineMemory).toBeVisible({ timeout: 10_000 });
+
+      const currentValue = await machineCreationForm.podmanMachineMemory.inputValue();
+      const min = await machineCreationForm.podmanMachineMemory.getAttribute('min');
+      const max = await machineCreationForm.podmanMachineMemory.getAttribute('max');
+      const step = await machineCreationForm.podmanMachineMemory.getAttribute('step');
+
+      const current = Number(currentValue);
+      const stepValue = Number(step) || 500_000_000;
+      const maxValue = Number(max);
+      const minValue = Number(min);
+      const increasedValue = current + stepValue;
+      const newValue = increasedValue <= maxValue ? increasedValue : Math.max(minValue, current - stepValue);
+
+      await machineCreationForm.podmanMachineMemory.fill(newValue.toString());
+      await playExpect(machineCreationForm.podmanMachineMemory).toHaveValue(newValue.toString());
+
+      await playExpect(this.podmanMachineUpdateButton).toBeEnabled();
+      await this.podmanMachineUpdateButton.click();
+
+      await playExpect(this.podmanMachineGoBackToResourcesButton).toBeEnabled({ timeout: 180_000 });
+      await this.podmanMachineGoBackToResourcesButton.click();
+    });
   }
 }
