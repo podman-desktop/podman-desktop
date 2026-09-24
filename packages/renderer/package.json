@@ -55,7 +55,7 @@
     "@podman-desktop/core-api": "workspace:*",
     "@podman-desktop/ui-svelte": "workspace:*",
     "@zerodevx/svelte-toast": "^0.9.6",
-    "electron-context-menu": "5.0.0",
+    "electron-context-menu": "5.1.0",
     "js-yaml": "^5.4.2",
     "search-string": "^4.1.0",
     "tinro": "^0.6.12",
