@@ -692,8 +692,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5
       vite-plugin-dts:
-        specifier: ^5.1.0
-        version: 5.1.0(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2))
+        specifier: ^5.1.1
+        version: 5.1.1(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2))
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@types/node@26.2.0)(@vitest/coverage-v8@5.0.1)(jsdom@30.1.0(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.3))(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))
@@ -6012,6 +6012,11 @@ packages:
 
   '@volar/typescript@2.4.28':
     resolution: {integrity: sha512-Ja6yvWrbis2QtN4ClAKreeUZPVYMARDYZl9LMEv1iQ1QdepB6wn0jTRxA9MftYmYa4DQ4k/DaSZpFPUfxl8giw==}
+    peerDependencies:
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   '@webassemblyjs/ast@1.14.1':
     resolution: {integrity: sha512-nuBEDgQfm1ccRp/8bCQrx1frohyufl4JlbMMZ4P1wpeOfDhF6FQkxZJ1b/e+PLwr6X1Nhw6OLme5usuBWYBvuQ==}
@@ -12398,6 +12403,36 @@ packages:
       webpack:
         optional: true
 
+  unplugin-dts@1.1.1:
+    resolution: {integrity: sha512-Z2VcabC0hjYuzF62oWmZXVoxagkM8bUWgqUy+dotoJTPnooR5mNaxbpv63JCmcaxdGCW2Bb75omK6FOryOYCRg==}
+    peerDependencies:
+      '@microsoft/api-extractor': '>=7'
+      '@rspack/core': ^1
+      '@vue/language-core': ^3.1.5
+      esbuild: '>=0.28.1'
+      rolldown: '*'
+      rollup: ^4.59.0
+      typescript: '>=4'
+      vite: '>=3'
+      webpack: ^4 || ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      '@rspack/core':
+        optional: true
+      '@vue/language-core':
+        optional: true
+      esbuild:
+        optional: true
+      rolldown:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+
   unplugin@2.3.11:
     resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
     engines: {node: '>=18.12.0'}
@@ -12487,8 +12522,8 @@ packages:
   vimeo-video-element@1.6.1:
     resolution: {integrity: sha512-UwDLzhgg98pct1xb6799I1vRDXIzaAX6rs1TG/QOf6y+VrXpTFrI7mYz2gnj9QCtBcGK68f4z64A+MRYRsLJaQ==}
 
-  vite-plugin-dts@5.1.0:
-    resolution: {integrity: sha512-MfLc2G+mXPUDGGxpHQeYbdunavFP9UpT9yxiAsTgUXRxfEd3HqysSAM4E72jhz5eIz3OOexCHkqiVlQq8ok9/A==}
+  vite-plugin-dts@5.1.1:
+    resolution: {integrity: sha512-U5dyX3DPFvHB+gaJIULn90kKGsXNYllyJ3vn491Y+LGu2nL5Fb8z7YgurN/Pi6ZFlnGljh2wSM0ZbFogSh4yAg==}
     peerDependencies:
       '@microsoft/api-extractor': '>=7'
       rollup: ^4.59.0
@@ -18481,11 +18516,13 @@ snapshots:
 
   '@volar/source-map@2.4.28': {}
 
-  '@volar/typescript@2.4.28':
+  '@volar/typescript@2.4.28(typescript@6.0.3)':
     dependencies:
       '@volar/language-core': 2.4.28
       path-browserify: 1.0.1
       vscode-uri: 3.1.0
+    optionalDependencies:
+      typescript: 6.0.3
 
   '@webassemblyjs/ast@1.14.1':
     dependencies:
@@ -25959,7 +25996,7 @@ snapshots:
   unplugin-dts@1.1.0(@microsoft/api-extractor@7.55.2(@types/node@24.13.6))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
     dependencies:
       '@rollup/pluginutils': 5.4.0(rollup@4.61.1)
-      '@volar/typescript': 2.4.28
+      '@volar/typescript': 2.4.28(typescript@6.0.3)
       compare-versions: 6.1.1
       debug: 4.4.3(supports-color@8.1.1)
       glob-to-regexp: 0.4.1
@@ -25979,10 +26016,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  unplugin-dts@1.1.0(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
+  unplugin-dts@1.1.1(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
     dependencies:
       '@rollup/pluginutils': 5.4.0(rollup@4.61.1)
-      '@volar/typescript': 2.4.28
+      '@volar/typescript': 2.4.28(typescript@6.0.3)
       compare-versions: 6.1.1
       debug: 4.4.3(supports-color@8.1.1)
       glob-to-regexp: 0.4.1
@@ -26128,9 +26165,9 @@ snapshots:
     dependencies:
       '@vimeo/player': 2.29.0
 
-  vite-plugin-dts@5.1.0(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
+  vite-plugin-dts@5.1.1(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
     dependencies:
-      unplugin-dts: 1.1.0(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2))
+      unplugin-dts: 1.1.1(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.13)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2))
     optionalDependencies:
       '@microsoft/api-extractor': 7.55.2(@types/node@26.2.0)
       rollup: 4.61.1
