@@ -27,7 +27,7 @@
     "@types/node": "^24",
     "electron": "44.4.3",
     "typescript": "^6.0.3",
-    "unplugin-dts": "1.1.0",
+    "unplugin-dts": "1.1.1",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
   }
