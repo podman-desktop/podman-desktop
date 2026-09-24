@@ -27,7 +27,10 @@ let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyR
         providerId: providerInternalId ?? '',
       };
     }),
-  ),
+  ).catch((err: unknown) => {
+    console.error('Error collecting providers', err);
+    return [];
+  }),
 );
 
 let providerConnectionConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $derived(
