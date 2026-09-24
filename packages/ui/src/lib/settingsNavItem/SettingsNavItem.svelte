@@ -37,13 +37,8 @@ let {
 }: Props = $props();
 
 const keyboardUtils = new KeyboardUtils();
-let sanitizedKeyShortcuts = $derived.by(() => {
-  const sanitized = keyboardUtils.sanitizeAriaKeyShortcuts(ariaKeyShortcuts);
-  if (ariaKeyShortcuts !== undefined && !sanitized) {
-    console.error('Invalid ariaKeyShortcuts', ariaKeyShortcuts);
-  }
-  return sanitized;
-});
+
+let sanitizedKeyShortcuts = $derived(keyboardUtils.sanitizeAriaKeyShortcuts(ariaKeyShortcuts));
 
 function click(): void {
   expanded = !expanded;
