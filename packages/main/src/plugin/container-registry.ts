@@ -19,7 +19,7 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { readFile, rm } from 'node:fs/promises';
+import { access, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
@@ -2838,6 +2838,29 @@ export class ContainerProviderRegistry {
       const provider = this.getMatchingContainerProvider(selectedProvider);
       if (!provider?.libpodApi) {
         throw new Error('No provider with a running engine');
+      }
+
+      if (input.type === 'path') {
+        try {
+          const fileStats = await stat(input.value);
+          if (!fileStats.isFile()) {
+            throw new Error(`Kubernetes YAML path "${input.value}" is not a file. Select a YAML file.`);
+          }
+          await access(input.value, fs.constants.R_OK);
+        } catch (error) {
+          if (error instanceof Error && 'code' in error) {
+            if (error.code === 'ENOENT') {
+              const guidance = path.isAbsolute(input.value)
+                ? 'Check the path or use Browse to select a file.'
+                : 'Enter an absolute path or use Browse to select a file.';
+              throw new Error(`Kubernetes YAML file "${input.value}" was not found. ${guidance}`);
+            }
+            if (error.code === 'EACCES' || error.code === 'EPERM') {
+              throw new Error(`Kubernetes YAML file "${input.value}" cannot be read. Check its permissions.`);
+            }
+          }
+          throw error;
+        }
       }
 
       // if we don't build, we can pass the input straight through

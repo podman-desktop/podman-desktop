@@ -18,6 +18,7 @@
 
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
+import { access, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
@@ -6933,6 +6934,79 @@ describe('kube play', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(stat).mockResolvedValue({ isFile: () => true } as fs.Stats);
+    vi.mocked(access).mockResolvedValue(undefined);
+  });
+
+  test('missing YAML file reports the entered path with guidance', async () => {
+    const input = { type: 'path', value: 'missing.yaml' } as const;
+    const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
+    error.code = 'ENOENT';
+    vi.mocked(stat).mockRejectedValue(error);
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube(
+        input,
+        {
+          name: PODMAN_PROVIDER.name,
+          endpoint: PODMAN_PROVIDER.connection.endpoint,
+        } as unknown as ProviderContainerConnectionInfo,
+        KUBE_PLAY_OPT,
+      ),
+    ).rejects.toThrowError(
+      'Kubernetes YAML file "missing.yaml" was not found. Enter an absolute path or use Browse to select a file.',
+    );
+    expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('missing absolute YAML file asks to check the path', async () => {
+    const filename = path.resolve('missing.yaml');
+    const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
+    error.code = 'ENOENT';
+    vi.mocked(stat).mockRejectedValue(error);
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: filename }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError(
+      `Kubernetes YAML file "${filename}" was not found. Check the path or use Browse to select a file.`,
+    );
+    expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('directory YAML path is rejected before playing', async () => {
+    vi.mocked(stat).mockResolvedValue({ isFile: () => false } as fs.Stats);
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: '.' }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError('Kubernetes YAML path "." is not a file. Select a YAML file.');
+    expect(access).not.toHaveBeenCalled();
+    expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('unreadable YAML file reports its path with permission guidance', async () => {
+    const filename = path.resolve('unreadable.yaml');
+    const error = new Error('EACCES: permission denied') as NodeJS.ErrnoException;
+    error.code = 'EACCES';
+    vi.mocked(access).mockRejectedValue(error);
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: filename }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError(`Kubernetes YAML file "${filename}" cannot be read. Check its permissions.`);
+    expect(access).toHaveBeenCalledWith(filename, fs.constants.R_OK);
+    expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
   });
 
   test('non-supported version should throw an error', async () => {
