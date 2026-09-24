@@ -19,7 +19,7 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { type FileHandle, open, readFile, rm } from 'node:fs/promises';
+import { type FileHandle, open, readFile, rm, stat } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
@@ -2851,36 +2851,62 @@ export class ContainerProviderRegistry {
     return [expanded];
   }
 
+  private kubePlayFileAccessError(yamlPath: string, error: unknown): Error {
+    if (error instanceof Error && 'code' in error) {
+      if (error.code === 'ENOENT') {
+        return new Error(
+          `Kubernetes YAML file "${yamlPath}" was not found. Check the path or use Browse to select a file.`,
+        );
+      }
+      if (error.code === 'EACCES' || error.code === 'EPERM') {
+        return new Error(`Kubernetes YAML file "${yamlPath}" cannot be read. Check its permissions.`);
+      }
+    }
+    console.error(`Unable to access Kubernetes YAML file "${yamlPath}"`, error);
+    return new Error(`Kubernetes YAML file "${yamlPath}" could not be accessed. Check the path and try again.`);
+  }
+
+  private async closeKubePlayFile(yamlPath: string, handle: FileHandle): Promise<void> {
+    try {
+      await handle.close();
+    } catch (error) {
+      console.error(`Unable to close Kubernetes YAML file "${yamlPath}"`, error);
+    }
+  }
+
   private async openKubePlayFile(value: string): Promise<{ path: string; handle: FileHandle }> {
     const paths = this.resolveKubePlayFilePaths(value);
-    // Nonblocking open keeps a FIFO substituted for a regular file from blocking the main process.
+    // Check before opening to avoid blocking on a FIFO or device. Check the opened handle again
+    // because the path can change between stat and open. A nonblocking open covers that race on POSIX.
     const flags = process.platform === 'win32' ? 'r' : fs.constants.O_RDONLY | fs.constants.O_NONBLOCK;
 
     for (const [index, yamlPath] of paths.entries()) {
+      let pathIsFile: boolean;
+      try {
+        pathIsFile = (await stat(yamlPath)).isFile();
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT' && index < paths.length - 1) {
+          continue;
+        }
+        throw this.kubePlayFileAccessError(yamlPath, error);
+      }
+      if (!pathIsFile) {
+        throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
+      }
+
       let handle: FileHandle | undefined;
       try {
         handle = await open(yamlPath, flags);
-        if (!(await handle.stat()).isFile()) {
-          throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
-        }
-        return { path: yamlPath, handle };
+        if ((await handle.stat()).isFile()) return { path: yamlPath, handle };
       } catch (error) {
-        await handle?.close();
-        if (error instanceof Error && 'code' in error) {
-          if (error.code === 'ENOENT') {
-            if (index < paths.length - 1) continue;
-            throw new Error(
-              `Kubernetes YAML file "${yamlPath}" was not found. Check the path or use Browse to select a file.`,
-            );
-          }
-          if (error.code === 'EACCES' || error.code === 'EPERM') {
-            throw new Error(`Kubernetes YAML file "${yamlPath}" cannot be read. Check its permissions.`);
-          }
-          console.error(`Unable to validate Kubernetes YAML file "${yamlPath}"`, error);
-          throw new Error(`Kubernetes YAML file "${yamlPath}" could not be accessed. Check the path and try again.`);
+        if (handle) await this.closeKubePlayFile(yamlPath, handle);
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT' && index < paths.length - 1) {
+          continue;
         }
-        throw error;
+        throw this.kubePlayFileAccessError(yamlPath, error);
       }
+      await this.closeKubePlayFile(yamlPath, handle);
+      throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
     }
     throw new Error('Kubernetes YAML path could not be resolved.');
   }
@@ -2908,8 +2934,15 @@ export class ContainerProviderRegistry {
       try {
         if (!options?.build) {
           const fileStream = yamlFile?.handle.createReadStream({ autoClose: false });
+          let streamError: unknown;
+          fileStream?.once('error', error => {
+            streamError = error;
+          });
           try {
             return await provider.libpodApi.playKube(fileStream ?? Readable.from([input.value]), options);
+          } catch (error) {
+            if (yamlFile && streamError) throw this.kubePlayFileAccessError(yamlFile.path, streamError);
+            throw error;
           } finally {
             fileStream?.destroy();
           }
@@ -2923,7 +2956,14 @@ export class ContainerProviderRegistry {
           );
 
         // Read from the validated handle once; the original path still determines relative build contexts.
-        const content = yamlFile ? await yamlFile.handle.readFile('utf8') : input.value;
+        let content = input.value;
+        if (yamlFile) {
+          try {
+            content = await yamlFile.handle.readFile('utf8');
+          } catch (error) {
+            throw this.kubePlayFileAccessError(yamlFile.path, error);
+          }
+        }
         const kubePlay = KubePlayContext.fromContent(content, yamlFile ? path.dirname(yamlFile.path) : tmpdir());
         await kubePlay.init();
 
@@ -2933,7 +2973,9 @@ export class ContainerProviderRegistry {
 
         return provider.libpodApi.playKube(kubePlay.build(), options);
       } finally {
-        await yamlFile?.handle.close();
+        if (yamlFile) {
+          await this.closeKubePlayFile(yamlFile.path, yamlFile.handle);
+        }
       }
     } catch (error: unknown) {
       telemetryOptions['error'] = error;

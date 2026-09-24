@@ -18,7 +18,7 @@
 
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { type FileHandle, open } from 'node:fs/promises';
+import { type FileHandle, open, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
@@ -6942,6 +6942,7 @@ describe('kube play', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(stat).mockResolvedValue({ isFile: () => true } as fs.Stats);
     vi.mocked(fileHandle.stat).mockResolvedValue({ isFile: () => true } as fs.Stats);
     vi.mocked(fileHandle.readFile).mockResolvedValue(yamlContent);
     vi.mocked(fileHandle.createReadStream).mockReturnValue(Readable.from([yamlContent]) as fs.ReadStream);
@@ -7014,7 +7015,7 @@ describe('kube play', () => {
 
   test('directory YAML path is rejected before playing', async () => {
     const filename = path.resolve('.');
-    vi.mocked(fileHandle.stat).mockResolvedValue({ isFile: () => false } as fs.Stats);
+    vi.mocked(stat).mockResolvedValue({ isFile: () => false } as fs.Stats);
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await expect(
@@ -7023,6 +7024,20 @@ describe('kube play', () => {
         endpoint: PODMAN_PROVIDER.connection.endpoint,
       } as unknown as ProviderContainerConnectionInfo),
     ).rejects.toThrowError(`Kubernetes YAML path "${filename}" is not a file. Select a YAML file.`);
+    expect(open).not.toHaveBeenCalled();
+    expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('rejects a non-regular file substituted between stat and open', async () => {
+    vi.mocked(fileHandle.stat).mockResolvedValue({ isFile: () => false } as fs.Stats);
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: DUMMY_YAML_FILE }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError(`Kubernetes YAML path "${DUMMY_YAML_FILE}" is not a file. Select a YAML file.`);
     expect(fileHandle.close).toHaveBeenCalledOnce();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
   });
@@ -7043,6 +7058,25 @@ describe('kube play', () => {
     expect(open).toHaveBeenCalledWith(filename, expect.anything());
     expect(fileHandle.close).not.toHaveBeenCalled();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('unexpected file errors are logged and replaced with path guidance', async () => {
+    const error = new Error('EMFILE: too many open files') as NodeJS.ErrnoException;
+    error.code = 'EMFILE';
+    vi.mocked(open).mockRejectedValue(error);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: DUMMY_YAML_FILE }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError(
+      `Kubernetes YAML file "${DUMMY_YAML_FILE}" could not be accessed. Check the path and try again.`,
+    );
+    expect(consoleError).toHaveBeenCalledWith(`Unable to access Kubernetes YAML file "${DUMMY_YAML_FILE}"`, error);
+    consoleError.mockRestore();
   });
 
   test.each([
@@ -7158,6 +7192,31 @@ describe('kube play', () => {
     expect(fileHandle.close).toHaveBeenCalledOnce();
   });
 
+  test('reports a stream read failure without exposing its raw error', async () => {
+    const error = new Error('EIO: disk failure') as NodeJS.ErrnoException;
+    error.code = 'EIO';
+    const stream = Readable.from([yamlContent]);
+    vi.mocked(fileHandle.createReadStream).mockReturnValue(stream as fs.ReadStream);
+    vi.mocked(PODMAN_PROVIDER.libpodApi.playKube).mockImplementation(async () => {
+      stream.emit('error', error);
+      throw error;
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: DUMMY_YAML_FILE }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError(
+      `Kubernetes YAML file "${DUMMY_YAML_FILE}" could not be accessed. Check the path and try again.`,
+    );
+    expect(consoleError).toHaveBeenCalledWith(`Unable to access Kubernetes YAML file "${DUMMY_YAML_FILE}"`, error);
+    expect(fileHandle.close).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
+  });
+
   test('build reads the validated file once and preserves its directory for build contexts', async () => {
     vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
     const fakeKubePlayContext = {
@@ -7185,6 +7244,31 @@ describe('kube play', () => {
     });
     expect(fileHandle.readFile).toHaveBeenCalledWith('utf8');
     expect(fileHandle.close).toHaveBeenCalledOnce();
+  });
+
+  test('build reports a file read failure without exposing its raw error', async () => {
+    const error = new Error('EIO: disk failure') as NodeJS.ErrnoException;
+    error.code = 'EIO';
+    vi.mocked(fileHandle.readFile).mockRejectedValue(error);
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube(
+        { type: 'path', value: DUMMY_YAML_FILE },
+        {
+          name: PODMAN_PROVIDER.name,
+          endpoint: PODMAN_PROVIDER.connection.endpoint,
+        } as unknown as ProviderContainerConnectionInfo,
+        { build: true },
+      ),
+    ).rejects.toThrowError(
+      `Kubernetes YAML file "${DUMMY_YAML_FILE}" could not be accessed. Check the path and try again.`,
+    );
+    expect(consoleError).toHaveBeenCalledWith(`Unable to access Kubernetes YAML file "${DUMMY_YAML_FILE}"`, error);
+    expect(fileHandle.close).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
   });
 
   test('abortSignal should be passed down to libpod', async () => {
