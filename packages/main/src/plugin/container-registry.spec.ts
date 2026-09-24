@@ -18,7 +18,7 @@
 
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { access, stat } from 'node:fs/promises';
+import { open, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
@@ -6898,6 +6898,7 @@ describe('pruneVolumes', () => {
 });
 
 describe('kube play', () => {
+  const closeFileMock = vi.fn();
   const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
     name: 'podman',
     id: 'podman1',
@@ -6935,7 +6936,7 @@ describe('kube play', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(stat).mockResolvedValue({ isFile: () => true } as fs.Stats);
-    vi.mocked(access).mockResolvedValue(undefined);
+    vi.mocked(open).mockResolvedValue({ close: closeFileMock } as unknown as Awaited<ReturnType<typeof open>>);
   });
 
   test('missing YAML file reports the entered path with guidance', async () => {
@@ -6988,7 +6989,7 @@ describe('kube play', () => {
         endpoint: PODMAN_PROVIDER.connection.endpoint,
       } as unknown as ProviderContainerConnectionInfo),
     ).rejects.toThrowError('Kubernetes YAML path "." is not a file. Select a YAML file.');
-    expect(access).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
   });
 
@@ -6996,7 +6997,7 @@ describe('kube play', () => {
     const filename = path.resolve('unreadable.yaml');
     const error = new Error('EACCES: permission denied') as NodeJS.ErrnoException;
     error.code = 'EACCES';
-    vi.mocked(access).mockRejectedValue(error);
+    vi.mocked(open).mockRejectedValue(error);
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await expect(
@@ -7005,7 +7006,8 @@ describe('kube play', () => {
         endpoint: PODMAN_PROVIDER.connection.endpoint,
       } as unknown as ProviderContainerConnectionInfo),
     ).rejects.toThrowError(`Kubernetes YAML file "${filename}" cannot be read. Check its permissions.`);
-    expect(access).toHaveBeenCalledWith(filename, fs.constants.R_OK);
+    expect(open).toHaveBeenCalledWith(filename, 'r');
+    expect(closeFileMock).not.toHaveBeenCalled();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
   });
 
@@ -7043,6 +7045,8 @@ describe('kube play', () => {
     );
 
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
+    expect(open).toHaveBeenCalledWith('dummy-file', 'r');
+    expect(closeFileMock).toHaveBeenCalledOnce();
   });
 
   test('KubePlayContext returning zero build contexts should play kube with file', async () => {

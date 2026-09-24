@@ -19,7 +19,7 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { access, readFile, rm, stat } from 'node:fs/promises';
+import { open, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
@@ -2846,7 +2846,8 @@ export class ContainerProviderRegistry {
           if (!fileStats.isFile()) {
             throw new Error(`Kubernetes YAML path "${input.value}" is not a file. Select a YAML file.`);
           }
-          await access(input.value, fs.constants.R_OK);
+          const file = await open(input.value, 'r');
+          await file.close();
         } catch (error) {
           if (error instanceof Error && 'code' in error) {
             if (error.code === 'ENOENT') {
