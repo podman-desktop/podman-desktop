@@ -2837,12 +2837,17 @@ export class ContainerProviderRegistry {
         'Kubernetes YAML path contains control characters. Enter a valid path or use Browse to select a file.',
       );
     }
+    // Windows UNC and device namespace paths can contact remote hosts during stat or open.
+    if (process.platform === 'win32' && /^[\\/]{2}/.test(expanded)) {
+      throw new Error(
+        'Kubernetes YAML files on Windows network shares or device paths are not supported. Select a local file.',
+      );
+    }
     if (!path.isAbsolute(expanded)) {
       throw new Error(
         `Kubernetes YAML path "${trimmed}" must be absolute. Enter an absolute path or use Browse to select a file.`,
       );
     }
-    // Keep Windows UNC paths available for YAML files chosen from network shares through Browse.
     // An absolute path from Browse can legitimately end in spaces. Try it exactly as received
     // before treating trailing whitespace as part of a pasted path.
     if (path.isAbsolute(value) && !/\p{Cc}/u.test(value) && value !== expanded) {
@@ -2878,6 +2883,7 @@ export class ContainerProviderRegistry {
     const paths = this.resolveKubePlayFilePaths(value);
     // Check before opening to avoid blocking on a FIFO or device. Check the opened handle again
     // because the path can change between stat and open. A nonblocking open covers that race on POSIX.
+    // Build contexts remain path-based so their relative paths resolve against the YAML directory.
     const flags = process.platform === 'win32' ? 'r' : fs.constants.O_RDONLY | fs.constants.O_NONBLOCK;
 
     for (const [index, yamlPath] of paths.entries()) {

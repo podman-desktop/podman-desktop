@@ -6983,6 +6983,34 @@ describe('kube play', () => {
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
   });
 
+  test.each([
+    { description: 'a UNC path', value: String.raw`\\server\share\pods.yaml` },
+    { description: 'a forward-slash UNC path', value: '//server/share/pods.yaml' },
+    { description: 'a quoted UNC path', value: String.raw`"\\server\share\pods.yaml"` },
+    { description: 'an extended-length path', value: String.raw`\\?\C:\pods.yaml` },
+    { description: 'a device path', value: String.raw`\\.\pipe\pods` },
+  ])('rejects $description on Windows before filesystem checks', async ({ value }) => {
+    const actualPlatform = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    try {
+      containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+      await expect(
+        containerRegistry.playKube({ type: 'path', value }, {
+          name: PODMAN_PROVIDER.name,
+          endpoint: PODMAN_PROVIDER.connection.endpoint,
+        } as unknown as ProviderContainerConnectionInfo),
+      ).rejects.toThrowError(
+        'Kubernetes YAML files on Windows network shares or device paths are not supported. Select a local file.',
+      );
+      expect(stat).not.toHaveBeenCalled();
+      expect(open).not.toHaveBeenCalled();
+      expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(process, 'platform', { value: actualPlatform });
+    }
+  });
+
   test('overlong YAML paths are rejected before opening a file', async () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
