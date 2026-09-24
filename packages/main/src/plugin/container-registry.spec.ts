@@ -18,7 +18,7 @@
 
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { open, stat } from 'node:fs/promises';
+import { type FileHandle, open } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
@@ -6898,7 +6898,13 @@ describe('pruneVolumes', () => {
 });
 
 describe('kube play', () => {
-  const closeFileMock = vi.fn();
+  const yamlContent = 'apiVersion: v1\nkind: Pod\n';
+  const fileHandle = {
+    stat: vi.fn(),
+    readFile: vi.fn(),
+    createReadStream: vi.fn(),
+    close: vi.fn(),
+  } as unknown as FileHandle;
   const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
     name: 'podman',
     id: 'podman1',
@@ -6932,23 +6938,22 @@ describe('kube play', () => {
   const KUBE_PLAY_OPT = {
     replace: true,
   };
+  const DUMMY_YAML_FILE = path.resolve('dummy-file');
 
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mocked(stat).mockResolvedValue({ isFile: () => true } as fs.Stats);
-    vi.mocked(open).mockResolvedValue({ close: closeFileMock } as unknown as Awaited<ReturnType<typeof open>>);
+    vi.mocked(fileHandle.stat).mockResolvedValue({ isFile: () => true } as fs.Stats);
+    vi.mocked(fileHandle.readFile).mockResolvedValue(yamlContent);
+    vi.mocked(fileHandle.createReadStream).mockReturnValue(Readable.from([yamlContent]) as fs.ReadStream);
+    vi.mocked(open).mockResolvedValue(fileHandle);
   });
 
-  test('missing YAML file reports the entered path with guidance', async () => {
-    const input = { type: 'path', value: 'missing.yaml' } as const;
-    const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
-    error.code = 'ENOENT';
-    vi.mocked(stat).mockRejectedValue(error);
+  test('relative YAML path is rejected before filesystem checks', async () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await expect(
       containerRegistry.playKube(
-        input,
+        { type: 'path', value: 'existing.yaml' },
         {
           name: PODMAN_PROVIDER.name,
           endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -6956,16 +6961,44 @@ describe('kube play', () => {
         KUBE_PLAY_OPT,
       ),
     ).rejects.toThrowError(
-      'Kubernetes YAML file "missing.yaml" was not found. Enter an absolute path or use Browse to select a file.',
+      'Kubernetes YAML path "existing.yaml" must be absolute. Enter an absolute path or use Browse to select a file.',
     );
+    expect(open).not.toHaveBeenCalled();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('control characters in YAML paths are rejected before filesystem checks', async () => {
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: `${DUMMY_YAML_FILE}\0` }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError(
+      'Kubernetes YAML path contains control characters. Enter a valid path or use Browse to select a file.',
+    );
+    expect(open).not.toHaveBeenCalled();
+    expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test('overlong YAML paths are rejected before opening a file', async () => {
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: `/${'a'.repeat(32_768)}` }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError('Kubernetes YAML path is invalid or too long. Enter a valid path.');
+    expect(open).not.toHaveBeenCalled();
   });
 
   test('missing absolute YAML file asks to check the path', async () => {
     const filename = path.resolve('missing.yaml');
     const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
     error.code = 'ENOENT';
-    vi.mocked(stat).mockRejectedValue(error);
+    vi.mocked(open).mockRejectedValue(error);
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await expect(
@@ -6980,16 +7013,17 @@ describe('kube play', () => {
   });
 
   test('directory YAML path is rejected before playing', async () => {
-    vi.mocked(stat).mockResolvedValue({ isFile: () => false } as fs.Stats);
+    const filename = path.resolve('.');
+    vi.mocked(fileHandle.stat).mockResolvedValue({ isFile: () => false } as fs.Stats);
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await expect(
-      containerRegistry.playKube({ type: 'path', value: '.' }, {
+      containerRegistry.playKube({ type: 'path', value: filename }, {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
       } as unknown as ProviderContainerConnectionInfo),
-    ).rejects.toThrowError('Kubernetes YAML path "." is not a file. Select a YAML file.');
-    expect(open).not.toHaveBeenCalled();
+    ).rejects.toThrowError(`Kubernetes YAML path "${filename}" is not a file. Select a YAML file.`);
+    expect(fileHandle.close).toHaveBeenCalledOnce();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
   });
 
@@ -7006,9 +7040,58 @@ describe('kube play', () => {
         endpoint: PODMAN_PROVIDER.connection.endpoint,
       } as unknown as ProviderContainerConnectionInfo),
     ).rejects.toThrowError(`Kubernetes YAML file "${filename}" cannot be read. Check its permissions.`);
-    expect(open).toHaveBeenCalledWith(filename, 'r');
-    expect(closeFileMock).not.toHaveBeenCalled();
+    expect(open).toHaveBeenCalledWith(filename, expect.anything());
+    expect(fileHandle.close).not.toHaveBeenCalled();
     expect(PODMAN_PROVIDER.libpodApi.playKube).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    { description: 'surrounding whitespace', input: `  ${DUMMY_YAML_FILE}\n`, expected: DUMMY_YAML_FILE },
+    { description: 'surrounding quotes', input: `"${DUMMY_YAML_FILE}"`, expected: DUMMY_YAML_FILE },
+    { description: 'a home-relative path', input: '~/pods.yaml', expected: path.join(os.homedir(), 'pods.yaml') },
+  ])('normalizes $description before playing', async ({ input, expected }) => {
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      { type: 'path', value: input },
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
+
+    expect(open).toHaveBeenCalledWith(expected, expect.anything());
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), KUBE_PLAY_OPT);
+  });
+
+  test('keeps trailing spaces when the exact path exists', async () => {
+    const filename = `${DUMMY_YAML_FILE} `;
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube({ type: 'path', value: filename }, {
+      name: PODMAN_PROVIDER.name,
+      endpoint: PODMAN_PROVIDER.connection.endpoint,
+    } as unknown as ProviderContainerConnectionInfo);
+
+    expect(open).toHaveBeenCalledExactlyOnceWith(filename, expect.anything());
+    expect(fileHandle.createReadStream).toHaveBeenCalledOnce();
+  });
+
+  test('drops pasted trailing spaces only when the exact path does not exist', async () => {
+    const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
+    error.code = 'ENOENT';
+    vi.mocked(open).mockRejectedValueOnce(error);
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube({ type: 'path', value: `${DUMMY_YAML_FILE} ` }, {
+      name: PODMAN_PROVIDER.name,
+      endpoint: PODMAN_PROVIDER.connection.endpoint,
+    } as unknown as ProviderContainerConnectionInfo);
+
+    expect(open).toHaveBeenNthCalledWith(1, `${DUMMY_YAML_FILE} `, expect.anything());
+    expect(open).toHaveBeenNthCalledWith(2, DUMMY_YAML_FILE, expect.anything());
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), undefined);
   });
 
   test('non-supported version should throw an error', async () => {
@@ -7019,7 +7102,7 @@ describe('kube play', () => {
 
     await expect(async () => {
       await containerRegistry.playKube(
-        { type: 'path', value: 'dummy-file' },
+        { type: 'path', value: DUMMY_YAML_FILE },
         {
           name: PODMAN_PROVIDER.name,
           endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -7031,12 +7114,23 @@ describe('kube play', () => {
     }).rejects.toThrowError('kube play build is not supported on podman: Podman 5.3.0 and above supports this feature');
   });
 
-  test('build option false should use playKube with YAML file', async () => {
+  test('without build, playKube streams from the validated file handle and closes it', async () => {
+    const stream = Readable.from([yamlContent]);
+    vi.mocked(fileHandle.createReadStream).mockReturnValue(stream as fs.ReadStream);
+    vi.mocked(PODMAN_PROVIDER.libpodApi.playKube).mockImplementation(async file => {
+      expect(file).toBe(stream);
+      const chunks: string[] = [];
+      for await (const chunk of file as Readable) {
+        chunks.push(String(chunk));
+      }
+      expect(chunks.join('')).toBe(yamlContent);
+      return {} as Awaited<ReturnType<LibPod['playKube']>>;
+    });
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      { type: 'path', value: 'dummy-file' },
+      { type: 'path', value: DUMMY_YAML_FILE },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -7044,28 +7138,53 @@ describe('kube play', () => {
       KUBE_PLAY_OPT,
     );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
-    expect(open).toHaveBeenCalledWith('dummy-file', 'r');
-    expect(closeFileMock).toHaveBeenCalledOnce();
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), KUBE_PLAY_OPT);
+    expect(open).toHaveBeenCalledWith(DUMMY_YAML_FILE, expect.anything());
+    expect(fileHandle.createReadStream).toHaveBeenCalledWith({ autoClose: false });
+    expect(fileHandle.readFile).not.toHaveBeenCalled();
+    expect(fileHandle.close).toHaveBeenCalledOnce();
   });
 
-  test('KubePlayContext returning zero build contexts should play kube with file', async () => {
+  test('closes the validated file handle if playback fails', async () => {
+    vi.mocked(PODMAN_PROVIDER.libpodApi.playKube).mockRejectedValue(new Error('playback failed'));
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(
+      containerRegistry.playKube({ type: 'path', value: DUMMY_YAML_FILE }, {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo),
+    ).rejects.toThrowError('playback failed');
+    expect(fileHandle.close).toHaveBeenCalledOnce();
+  });
+
+  test('build reads the validated file once and preserves its directory for build contexts', async () => {
     vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
-    vi.mocked(KubePlayContext.prototype.getBuildContexts).mockReturnValue([]); // mock no contexts
+    const fakeKubePlayContext = {
+      init: vi.fn().mockResolvedValue(undefined),
+      getBuildContexts: vi.fn().mockReturnValue([]),
+    } as unknown as KubePlayContext;
+    vi.mocked(KubePlayContext.fromContent).mockReturnValue(fakeKubePlayContext);
 
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      { type: 'path', value: 'dummy-file' },
+      { type: 'path', value: `"${DUMMY_YAML_FILE}"` },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
       } as unknown as ProviderContainerConnectionInfo,
-      KUBE_PLAY_OPT,
+      { ...KUBE_PLAY_OPT, build: true },
     );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
+    expect(KubePlayContext.fromContent).toHaveBeenCalledWith(yamlContent, path.dirname(DUMMY_YAML_FILE));
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), {
+      ...KUBE_PLAY_OPT,
+      build: true,
+    });
+    expect(fileHandle.readFile).toHaveBeenCalledWith('utf8');
+    expect(fileHandle.close).toHaveBeenCalledOnce();
   });
 
   test('abortSignal should be passed down to libpod', async () => {
@@ -7077,7 +7196,7 @@ describe('kube play', () => {
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
     await containerRegistry.playKube(
-      { type: 'path', value: 'dummy-file' },
+      { type: 'path', value: DUMMY_YAML_FILE },
       {
         name: PODMAN_PROVIDER.name,
         endpoint: PODMAN_PROVIDER.connection.endpoint,
@@ -7087,7 +7206,7 @@ describe('kube play', () => {
       },
     );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith(expect.any(Readable), {
       abortSignal: ABORT_SIGNAL,
     });
   });

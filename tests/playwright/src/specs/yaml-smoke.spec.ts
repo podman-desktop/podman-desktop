@@ -70,8 +70,8 @@ test.describe
 
       const yamlFilePath = path.resolve(__dirname, '..', '..', 'resources', `${podAppName}.yaml`);
       podsPage = await podmanKubePlayPage.playYaml({
-        podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile,
-        pathToYaml: yamlFilePath,
+        podmanKubePlayOption: PodmanKubePlayOptions.EnterYamlFilePath,
+        pathToYaml: `${yamlFilePath} `,
       });
       await playExpect(podsPage.heading).toBeVisible();
     });
