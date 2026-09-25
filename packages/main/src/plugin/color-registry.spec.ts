@@ -35,8 +35,6 @@ import { colorPaletteHelper } from './color-palette-helper.js';
 import { type ColorDefinitionWithId, ColorRegistry } from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 
-const THEME_IDS = ['light', 'dark', 'hc-light', 'hc-dark'];
-
 class TestColorRegistry extends ColorRegistry {
   override notifyUpdate(): void {
     super.notifyUpdate();
@@ -1977,14 +1975,13 @@ describe('action-button tokens stay in sync with their button-* replacements', (
     colorRegistry.initActionButton();
   });
 
-  describe.each(ACTION_BUTTON_REPLACEMENTS)('%s -> %s', (oldId, newId) => {
-    test.each(THEME_IDS)('resolves to the same value in %s', theme => {
-      const colors = colorRegistry.listColors(theme);
-      const oldValue = colors.find(c => c.id === oldId)?.value;
+  test.each(ACTION_BUTTON_REPLACEMENTS)('%s -> %s', (oldId, newId) => {
+    for (const theme of colorRegistry.listThemes()) {
+      const byId = new Map(colorRegistry.listColors(theme).map(c => [c.id, c.value]));
 
-      expect(oldValue).toBeDefined();
-      expect(colors.find(c => c.id === newId)?.value).toBe(oldValue);
-    });
+      expect(byId.get(oldId), `${oldId} missing in ${theme}`).toBeDefined();
+      expect(byId.get(newId), `${newId} in ${theme}`).toBe(byId.get(oldId));
+    }
   });
 });
 
