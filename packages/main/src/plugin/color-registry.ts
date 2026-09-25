@@ -360,6 +360,7 @@ export class ColorRegistry {
     this.initInputBox();
     this.initCheckbox();
     this.initToggle();
+    this.initSlider();
     this.initTable();
     this.initDetails();
     this.initTab();
@@ -479,8 +480,8 @@ export class ColorRegistry {
     this.registerColor(`${glNav}icon-selected-highlight`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: accent1[800],
-      hcLight: accent1[200],
+      hcDark: accent1[300],
+      hcLight: accent1[700],
     });
   }
 
@@ -1117,6 +1118,19 @@ export class ColorRegistry {
     this.registerColor(`${sNav}disabled-switch`, {
       dark: gray[200],
       light: gray[200],
+    });
+  }
+
+  // range sliders
+  protected initSlider(): void {
+    const sld = 'input-slider-';
+
+    // unfilled portion of the track (the filled portion comes from accent-color, see input-toggle-on-bg)
+    this.registerColor(`${sld}track-bg`, {
+      dark: stone[600],
+      light: stone[300],
+      hcDark: stone[600],
+      hcLight: stone[300],
     });
   }
 
@@ -2340,7 +2354,7 @@ export class ColorRegistry {
 
   protected initBadge(): void {
     const badge = 'badge-';
-    this.registerColor(`${badge}builtin-extension-bg`, {
+    this.registerColor(`${badge}bundled-extension-bg`, {
       dark: sky[200],
       light: sky[200],
     });

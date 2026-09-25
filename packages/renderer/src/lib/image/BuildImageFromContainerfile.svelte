@@ -5,7 +5,7 @@ import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg
 import { type OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Checkbox, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
 
@@ -442,7 +442,7 @@ let hasInvalidFields = $derived(
         <Checkbox bind:checked={validateRegistries} title='validate registries'>Validate registries before building</Checkbox>
       </div>
 
-      <div class="flex items-center justify-end gap-3">
+      <ButtonRow>
         {#if !buildImageInfo.buildRunning}
           <Button on:click={buildContainerImage} disabled={hasInvalidFields} icon={faCube}>Build</Button>
         {/if}
@@ -450,18 +450,18 @@ let hasInvalidFields = $derived(
         {#if buildImageInfo.buildFinished}
           <Button on:click={cleanupBuild}>Done</Button>
         {/if}
-      </div>
+      </ButtonRow>
 
       <RecommendedRegistry
         bind:imageError={buildImageInfo.buildError}
         imageName={buildImageInfo.buildParentImageName} />
 
       <TerminalWindow on:init={onInit} bind:terminal={buildImageInfo.logsTerminal} />
-      <div class="flex items-center justify-end">
+      <ButtonRow>
         {#if buildImageInfo.buildRunning}
           <Button on:click={abortBuild}>Cancel</Button>
         {/if}
-      </div>
+      </ButtonRow>
     </div>
   {/snippet}
 </EngineFormPage>

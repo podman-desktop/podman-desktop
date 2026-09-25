@@ -4,6 +4,7 @@ import type { Component } from 'svelte';
 
 import ChevronExpander from '../icons/ChevronExpander.svelte';
 import Icon from '../icons/Icon.svelte';
+import { KeyboardUtils } from '../utils/keyboard-utils';
 
 interface Props {
   title: string;
@@ -18,6 +19,8 @@ interface Props {
   iconRightAlign?: 'inline' | 'end';
   onClick?: () => void;
   onToggle?: () => void;
+  ariaKeyShortcuts?: string;
+  onKeyDown?: (event: KeyboardEvent) => void;
 }
 
 let {
@@ -33,7 +36,13 @@ let {
   iconRightAlign = 'end',
   onClick = (): void => {},
   onToggle = (): void => {},
+  ariaKeyShortcuts,
+  onKeyDown,
 }: Props = $props();
+
+const keyboardUtils = new KeyboardUtils();
+
+let sanitizedKeyShortcuts = $derived(keyboardUtils.sanitizeAriaKeyShortcuts(ariaKeyShortcuts));
 
 function toggle(): void {
   expanded = !expanded;
@@ -64,7 +73,9 @@ function toggle(): void {
     href={href}
     aria-label={title}
     title={title}
-    onclick={onClick}>
+    aria-keyshortcuts={sanitizedKeyShortcuts}
+    onclick={onClick}
+    onkeydown={onKeyDown}>
     <span class="flex flex-row gap-x-2 items-center min-w-0 grow" class:capitalize={!child} class:items-start={child}>
       {#if icon}
         <span class="w-4 shrink-0 flex justify-center">

@@ -160,6 +160,12 @@ function handleFocusOut(event: FocusEvent): void {
   handleMouseLeave();
 }
 
+$effect(() => {
+  if ($tooltipHidden) {
+    handleMouseLeave();
+  }
+});
+
 $effect((): (() => void) => {
   if (isVisible && referenceElement && tooltipElement) {
     // Initial positioning

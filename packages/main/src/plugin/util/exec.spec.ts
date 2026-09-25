@@ -525,6 +525,25 @@ describe('exec', () => {
     expect(result).toEqual({ command, stdout: '', stderr: '' });
   });
 
+  test('should wrap with cmd.exe on Windows to avoid console window flash', async () => {
+    vi.mocked(isWindows).mockReturnValue(true);
+
+    const command = 'my-daemon';
+    const args = ['--background'];
+    const { spawnMock, unrefMock } = mockDetachedProcess('close', 0);
+
+    const result = await exec.exec(command, args, { detached: true });
+
+    expect(spawnMock).toHaveBeenCalledWith(
+      'cmd.exe',
+      ['/d', '/c', command, ...args],
+      expect.objectContaining({ stdio: 'ignore', windowsHide: true }),
+    );
+    expect(spawnMock).not.toHaveBeenCalledWith(command, args, expect.anything());
+    expect(unrefMock).toHaveBeenCalled();
+    expect(result).toEqual({ command, stdout: '', stderr: '' });
+  });
+
   test.each([
     {
       description: 'non-zero exit code',

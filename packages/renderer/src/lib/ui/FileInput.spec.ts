@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import FileInput from './FileInput.svelte';
 
@@ -28,6 +28,10 @@ const openDialogMock = vi.fn();
 
 beforeAll(() => {
   Object.defineProperty(window, 'openDialog', { value: openDialogMock });
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('Expect clicking the button opens file dialog', async () => {
@@ -99,4 +103,34 @@ test('Expect onChange function called if user paste content', async () => {
   await userEvent.paste(filename);
 
   expect(onChangeMock).toHaveBeenCalledWith(filename);
+});
+
+test('Expect input and button enabled by default', async () => {
+  render(FileInput, { options: { title: 'title' } });
+
+  expect(screen.getByRole('textbox')).not.toBeDisabled();
+  expect(screen.getByRole('button')).not.toBeDisabled();
+  expect(screen.queryByLabelText('error')).not.toBeInTheDocument();
+});
+
+test('Expect clicking browse does not open file dialog when disabled', async () => {
+  render(FileInput, { options: { title: 'title' }, disabled: true });
+
+  const input = screen.getByRole('textbox');
+  expect(input).toBeDisabled();
+
+  const browseButton = screen.getByRole('button');
+  expect(browseButton).toBeDisabled();
+
+  await userEvent.click(browseButton);
+
+  expect(openDialogMock).not.toHaveBeenCalled();
+});
+
+test('Expect error message displayed when error prop is provided', async () => {
+  const error = 'invalid file';
+  render(FileInput, { options: { title: 'title' }, error });
+
+  expect(screen.getByText(error)).toBeInTheDocument();
+  expect(screen.getByLabelText('error')).toBeInTheDocument();
 });

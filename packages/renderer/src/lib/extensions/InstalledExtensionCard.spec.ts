@@ -40,6 +40,7 @@ test('Expect inner div to use color-registry divider token', async () => {
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: false,
     version: 'v1.2.3',
     state: 'started',
     path: '',
@@ -63,6 +64,7 @@ test('Expect to see a div with extension id title', async () => {
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: true,
     version: 'v1.2.3',
     state: 'started',
     path: '',
@@ -74,5 +76,5 @@ test('Expect to see a div with extension id title', async () => {
   // get role Extension Badge
   const badge = await findByRole('region', { name: 'myExtensionId' });
   expect(badge).toBeInTheDocument();
-  expect(badge).toHaveTextContent('built-in');
+  expect(badge).toHaveTextContent('Bundled extension');
 });

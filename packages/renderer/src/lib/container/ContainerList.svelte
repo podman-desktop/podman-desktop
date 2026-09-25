@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { NavigationPage } from '@podman-desktop/core-api';
 import {
   Button,
@@ -24,7 +24,12 @@ import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngi
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { handleNavigation } from '/@/navigation';
-import { containersInfos } from '/@/stores/containers';
+import {
+  clearContainerActionInProgress,
+  containersInfos,
+  setContainerActionError,
+  setContainerStatus,
+} from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { podCreationHolder } from '/@/stores/creation-from-containers-store';
 import { podsInfos } from '/@/stores/pods';
@@ -88,8 +93,7 @@ async function deleteSelectedContainers(): Promise<void> {
   // mark pods and containers for deletion
   bulkDeleteInProgress = true;
   podGroups.forEach(pod => (pod.status = 'DELETING'));
-  selectedContainers.forEach(container => (container.state = 'DELETING'));
-  containerGroups = [...containerGroups];
+  selectedContainers.forEach(container => setContainerStatus(container.engineId, container.id, 'DELETING'));
 
   // delete pods first if any
   if (podGroups.length > 0) {
@@ -110,19 +114,15 @@ async function deleteSelectedContainers(): Promise<void> {
   if (selectedContainers.length > 0) {
     await Promise.all(
       selectedContainers.map(async container => {
-        container.actionInProgress = true;
         // reset error when starting task
-        container.actionError = '';
-        containerGroups = [...containerGroups];
+        setContainerStatus(container.engineId, container.id, 'DELETING');
         try {
           await window.deleteContainer(container.engineId, container.id);
         } catch (e) {
           console.log('error while removing container', e);
-          container.actionError = String(e);
-          container.state = 'ERROR';
+          setContainerActionError(container.engineId, container.id, String(e));
         } finally {
-          container.actionInProgress = false;
-          containerGroups = [...containerGroups];
+          clearContainerActionInProgress(container.engineId, container.id);
         }
       }),
     );
@@ -143,9 +143,10 @@ async function runSelectedContainers(): Promise<void> {
     if (pod.status !== 'RUNNING') pod.status = 'STARTING';
   });
   selectedContainers.forEach(container => {
-    if (container.state !== 'RUNNING') container.state = 'STARTING';
+    if (container.state !== 'RUNNING') {
+      setContainerStatus(container.engineId, container.id, 'STARTING');
+    }
   });
-  containerGroups = [...containerGroups];
 
   // runs pods first if any
   if (podGroups.length > 0) {
@@ -170,25 +171,73 @@ async function runSelectedContainers(): Promise<void> {
         if (container.state === 'RUNNING') {
           return; // skip already running containers
         }
-        container.actionInProgress = true;
+
         // reset error when starting task
-        container.actionError = '';
-        containerGroups = [...containerGroups];
+        setContainerStatus(container.engineId, container.id, 'STARTING');
         try {
           await window.startContainer(container.engineId, container.id);
-          container.state = 'RUNNING';
+          setContainerStatus(container.engineId, container.id, 'RUNNING');
         } catch (e) {
           console.log('error while runnings container', e);
-          container.actionError = String(e);
-          container.state = 'ERROR';
+          setContainerActionError(container.engineId, container.id, String(e));
         } finally {
-          container.actionInProgress = false;
-          containerGroups = [...containerGroups];
+          clearContainerActionInProgress(container.engineId, container.id);
         }
       }),
     );
   }
   bulkRunInProgress = false;
+}
+
+// stop the items selected in the list
+let bulkStopInProgress = $state(false);
+async function stopSelectedContainers(): Promise<void> {
+  const podGroups = filterContainersByGroupTypePod();
+  const selectedContainers = filterContainersByGroupTypeNotPod();
+  if (podGroups.length + selectedContainers.length === 0) {
+    return;
+  }
+
+  const podGroupsToStop = podGroups.filter(
+    podGroup => podGroup.engineId && podGroup.id && podGroup.status === 'RUNNING',
+  );
+  const containersToStop = selectedContainers.filter(container => container.state === 'RUNNING');
+
+  bulkStopInProgress = true;
+  try {
+    podGroupsToStop.forEach(podGroup => {
+      podGroup.status = 'STOPPING';
+    });
+    containersToStop.forEach(container => {
+      setContainerStatus(container.engineId, container.id, 'STOPPING');
+    });
+
+    const podStopPromises = podGroupsToStop.map(podGroup => window.stopPod(podGroup.engineId, podGroup.id));
+    const containerStopPromises = containersToStop.map(async container => {
+      try {
+        await window.stopContainer(container.engineId, container.id);
+      } catch (reason) {
+        console.error('error while stopping container', reason);
+        setContainerActionError(container.engineId, container.id, String(reason));
+      } finally {
+        clearContainerActionInProgress(container.engineId, container.id);
+      }
+    });
+
+    const [podResults] = await Promise.all([
+      Promise.allSettled(podStopPromises),
+      Promise.allSettled(containerStopPromises),
+    ]);
+
+    podResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error('error while stopping pod', result.reason);
+        podGroupsToStop[index].status = 'RUNNING';
+      }
+    });
+  } finally {
+    bulkStopInProgress = false;
+  }
 }
 
 function createPodFromContainers(): void {
@@ -240,6 +289,11 @@ let enginesList = $derived.by(() => {
   return engines.filter((engine, index, self) => index === self.findIndex(t => t.name === engine.name));
 });
 
+// Snapshot of the previously computed groups, used below to carry `selected`/`expanded`
+// state across recomputations (e.g. triggered by a container status update store-side
+// while a bulk action is running).
+let previousContainerGroups: ContainerGroupInfoUI[] = [];
+
 // groups of containers that will be displayed
 let containerGroups = $derived.by(() => {
   let computedContainerGroups = containerUtils.getContainerGroups(currentContainers);
@@ -273,9 +327,9 @@ let containerGroups = $derived.by(() => {
   // Remove groups with all containers filtered
   computedContainerGroups = computedContainerGroups.filter(group => group.containers.length > 0);
 
-  // update selected items based on current selected items
+  // update selected items based on previously selected items
   computedContainerGroups.forEach(group => {
-    const matchingGroup = computedContainerGroups.find(currentGroup => currentGroup.name === group.name);
+    const matchingGroup = previousContainerGroups.find(currentGroup => currentGroup.name === group.name);
     if (matchingGroup) {
       group.selected = matchingGroup.selected;
       group.expanded = matchingGroup.expanded;
@@ -291,6 +345,7 @@ let containerGroups = $derived.by(() => {
     }
   });
 
+  previousContainerGroups = computedContainerGroups;
   return computedContainerGroups;
 });
 
@@ -422,6 +477,13 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           icon={faPlay}>
         </Button>
         <Button
+          on:click={stopSelectedContainers}
+          aria-label="Stop selected containers and pods"
+          title="Stop {selectedItemsNumber} selected items"
+          inProgress={bulkStopInProgress}
+          icon={faStop}>
+        </Button>
+        <Button
           on:click={(): void => {
             if (selectedItemsNumber !== undefined) {
               withBulkConfirmation(
@@ -488,8 +550,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           defaultSortColumn="Name"
           key={key}
           label={label}
-          enableLayoutConfiguration={true}
-          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+          enableLayoutConfiguration={true}>
         </Table>
       {/if}
     </div>

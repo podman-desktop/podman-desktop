@@ -85,8 +85,8 @@ function getIcon(menu: Menu): IconDefinition | string {
     const className = match[1];
     return menu.icon.replace(match[0], `podman-desktop-icon-${className}`);
   }
-  console.error(`Invalid icon name: ${menu.icon}`);
-  return defaultIcon;
+
+  return menu.icon;
 }
 
 onDestroy(() => {

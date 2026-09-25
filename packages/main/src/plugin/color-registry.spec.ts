@@ -115,6 +115,10 @@ class TestColorRegistry extends ColorRegistry {
     super.initProgressBar();
   }
 
+  override initSlider(): void {
+    super.initSlider();
+  }
+
   override initActionButton(): void {
     super.initActionButton();
   }
@@ -1892,6 +1896,26 @@ describe('initProgressBar', () => {
       light: tailwindColorPalette.accent1[500],
       hcDark: tailwindColorPalette.white,
       hcLight: tailwindColorPalette.black,
+    });
+  });
+});
+
+describe('initSlider', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initSlider();
+  });
+
+  test('registers input-slider-track-bg', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('input-slider-track-bg', {
+      dark: tailwindColorPalette.stone[600],
+      light: tailwindColorPalette.stone[300],
+      hcDark: tailwindColorPalette.stone[600],
+      hcLight: tailwindColorPalette.stone[300],
     });
   });
 });

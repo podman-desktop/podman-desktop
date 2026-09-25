@@ -11,7 +11,16 @@ import type {
   SecretInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } from '@podman-desktop/ui-svelte';
+import {
+  Button,
+  ButtonRow,
+  Checkbox,
+  Dropdown,
+  ErrorMessage,
+  Input,
+  NumberInput,
+  Tab,
+} from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -30,6 +39,7 @@ import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
 import { secretsInfo } from '/@/stores/secrets';
+import { volumeListInfos } from '/@/stores/volumes';
 
 interface Props {
   imageID: string;
@@ -51,7 +61,7 @@ let options: RunOptions = $state({
     containerName: '',
     entrypoint: '',
     command: '',
-    volumeMounts: [{ source: '', target: '' }],
+    volumeMounts: [{ sourceType: 'bind', source: '', target: '' }],
     environmentVariables: [{ key: '', value: '' }],
     environmentFiles: [''],
     hostContainerPortMappings: [],
@@ -122,6 +132,34 @@ let imageDisplayName = $state('');
 
 let engineNetworks = $state<NetworkInspectInfo[]>([]);
 let engineContainers = $state<ContainerInfoUI[]>([]);
+
+const volumeSourceTypeOptions = [
+  { value: 'bind', label: 'Host path' },
+  { value: 'volume', label: 'Existing volume' },
+];
+
+let existingVolumeOptions = $derived([
+  { value: '', label: 'Select a volume' },
+  ...$volumeListInfos
+    .filter(volume => volume.engineId === imageInspectInfo?.engineId)
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .map(volume => ({
+      value: volume.name,
+      label: volume.shortName,
+    })),
+]);
+
+function changeVolumeSourceType(index: number, sourceType: string): void {
+  if (sourceType !== 'bind' && sourceType !== 'volume') {
+    return;
+  }
+  const volumeMount = options.basic.volumeMounts[index];
+  if (!volumeMount || volumeMount.sourceType === sourceType) {
+    return;
+  }
+  volumeMount.sourceType = sourceType;
+  volumeMount.source = '';
+}
 
 onMount(async () => {
   if (!image) {
@@ -255,8 +293,8 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
   }
 }
 
-async function startContainer(): Promise<void> {
-  if (!image) return;
+function buildCreateOptions(): ContainerCreateOptions | undefined {
+  if (!image) return undefined;
 
   createError = undefined;
   // create ExposedPorts objects
@@ -288,7 +326,7 @@ async function startContainer(): Promise<void> {
   } catch (e) {
     createError = String(e);
     console.error('Error while creating container', e);
-    return;
+    return undefined;
   }
 
   const Env = options.basic.environmentVariables
@@ -425,19 +463,34 @@ async function startContainer(): Promise<void> {
     createOptions.Hostname = options.networking.hostname;
   }
 
+  return createOptions;
+}
+
+async function submitContainer(start: boolean): Promise<void> {
+  const createOptions = buildCreateOptions();
+  if (!createOptions) return;
+
+  createOptions.start = start;
+
   try {
     const data = await window.createAndStartContainer(imageInspectInfo.engineId, createOptions);
 
-    // redirect to containers if no tty, else redirect to the container details
-    if (Tty && OpenStdin) {
+    if (start && createOptions.Tty && createOptions.OpenStdin) {
       handleNavigation({
         page: NavigationPage.CONTAINER_TTY,
         parameters: {
           id: data.id,
         },
       });
-    } else {
+    } else if (start) {
       handleNavigation({ page: NavigationPage.CONTAINERS });
+    } else {
+      handleNavigation({
+        page: NavigationPage.CONTAINER_SUMMARY,
+        parameters: {
+          id: data.id,
+        },
+      });
     }
   } catch (e) {
     createError = String(e);
@@ -545,7 +598,7 @@ async function deleteHostContainerPorts(index: number): Promise<void> {
 }
 
 function addVolumeMount(): void {
-  options.basic.volumeMounts = [...options.basic.volumeMounts, { source: '', target: '' }];
+  options.basic.volumeMounts = [...options.basic.volumeMounts, { sourceType: 'bind', source: '', target: '' }];
 }
 
 function deleteVolumeMount(index: number): void {
@@ -707,13 +760,35 @@ const envDialogOptions: OpenDialogOptions = {
               <!-- Display the list of volumes -->
               {#each options.basic.volumeMounts as volumeMount, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <FileInput
-                    id="volumeMount.{index}"
-                    placeholder="Path on the host"
-                    bind:value={volumeMount.source}
-                    options={volumeDialogOptions}
-                    aria-label="volumeMount.{index}" />
-                  <Input bind:value={volumeMount.target} placeholder="Path inside the container" class="ml-2" />
+                  <div class="w-32 shrink-0">
+                    <Dropdown
+                      ariaLabel="Volume source type {index}"
+                      options={volumeSourceTypeOptions}
+                      bind:value={volumeMount.sourceType}
+                      onChange={changeVolumeSourceType.bind(undefined, index)} />
+                  </div>
+                  <div class="flex-1 ml-2 min-w-0">
+                    {#if volumeMount.sourceType === 'bind'}
+                      <FileInput
+                        id="volumeMount.{index}"
+                        placeholder="Path on the host"
+                        bind:value={volumeMount.source}
+                        options={volumeDialogOptions}
+                        aria-label="Host path {index}" />
+                    {:else}
+                      <Dropdown
+                        class="w-full"
+                        ariaLabel="Existing volume {index}"
+                        options={existingVolumeOptions}
+                        bind:value={volumeMount.source} />
+                    {/if}
+                  </div>
+                  <div class="flex-1 ml-2 min-w-0">
+                    <Input
+                      bind:value={volumeMount.target}
+                      placeholder="Path inside the container"
+                      aria-label="Path inside the container {index}" />
+                  </div>
                   <Button
                     type="link"
                     hidden={index === options.basic.volumeMounts.length - 1}
@@ -1197,7 +1272,7 @@ const envDialogOptions: OpenDialogOptions = {
         </div>
 
       <div class="pt-4 pb-2">
-        <div class="flex items-center justify-end gap-3">
+        <ButtonRow>
           <Button
             type="link"
             on:click={(): void => router.goto('/images/')}
@@ -1205,13 +1280,21 @@ const envDialogOptions: OpenDialogOptions = {
             Cancel
           </Button>
           <Button
-            on:click={startContainer}
-            icon={faPlay}
-            aria-label="Start Container"
-            disabled={invalidFields}>
-            Start Container
+            type="secondary"
+            on:click={(): void => {submitContainer(false).catch((e: unknown) => console.error(e));}}
+            aria-label="Create"
+            disabled={invalidFields}
+            icon={faPlusCircle}>
+            Create
           </Button>
-        </div>
+          <Button
+            on:click={(): void => {submitContainer(true).catch((e: unknown) => console.error(e));}}
+            icon={faPlay}
+            aria-label="Create and start"
+            disabled={invalidFields}>
+            Create and start
+          </Button>
+        </ButtonRow>
         <div aria-label="createError">
           {#if createError}
             <ErrorMessage class="py-2 text-sm" error={createError} />

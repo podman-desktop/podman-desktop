@@ -45,17 +45,6 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-const TYPESCRIPT_PROJECTS = [
-  'packages/*/tsconfig.json',
-  './website/tsconfig.json',
-  './website-argos/tsconfig.json',
-  './extensions/*/tsconfig.json',
-  './extensions/*/packages/*/tsconfig.json',
-  './tests/playwright/tsconfig.json',
-  './storybook/tsconfig.json',
-  './tsconfig.json',
-];
-
 export default [
   {
     ignores: [
@@ -80,6 +69,7 @@ export default [
       'extensions/*.ts',
       'website/build',
       'scripts/**',
+      'storybook/scripts/**',
       'extensions/*/builtin/**/*',
       'extensions/*/scripts/**/*',
       'extensions/*/packages/*/scripts/**/*',
@@ -144,7 +134,9 @@ export default [
       parserOptions: {
         extraFileExtensions: ['.svelte'],
         warnOnUnsupportedTypeScriptVersion: false,
-        project: TYPESCRIPT_PROJECTS,
+        projectService: {
+          allowDefaultProject: ['types/*.d.ts'],
+        },
       },
     },
   },

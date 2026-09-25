@@ -2,7 +2,7 @@
 import { faArrowCircleDown, faBan, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
 import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
-import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
@@ -501,8 +501,8 @@ async function searchFunction(value: string): Promise<void> {
     </div>
     <footer>
       <div class="w-full flex flex-col justify-end">
-        {#if !pullFinished}
-          <div class="space-x-2 flex flex-nowrap justify-end text-[var(--pd-content-text)]">
+        <ButtonRow>
+          {#if !pullFinished}
             <Button
               icon={faArrowCircleDown}
               disabled={imageNameIsInvalid || pullInProgress}
@@ -513,14 +513,12 @@ async function searchFunction(value: string): Promise<void> {
             {#if pullInProgress}
               <Button icon={faBan} disabled={!pullInProgress} on:click={cancelPullImage} type="secondary">Cancel</Button>
             {/if}
-          </div>
-        {:else}
-        <div class="space-x-2 flex flex-nowrap justify-end text-[var(--pd-content-text)]">
-          <Button type='link' on:click={pullImageFinished}>Close</Button>
-          <Button type='secondary' on:click={gotoImageDetails}>View details</Button>
-          <Button type='primary' on:click={gotoImageRun}>Run</Button>
-        </div>
-        {/if}
+          {:else}
+            <Button type='link' on:click={pullImageFinished}>Close</Button>
+            <Button type='secondary' on:click={gotoImageDetails}>View details</Button>
+            <Button type='primary' on:click={gotoImageRun}>Run</Button>
+          {/if}
+        </ButtonRow>
         {#if pullError}
           <ErrorMessage error={pullError} />
         {/if}

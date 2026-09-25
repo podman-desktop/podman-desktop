@@ -45,7 +45,7 @@ export default defineConfig({
         // projects with sources in src folder
         '{extensions,packages,tools,storybook}/**/{src,scripts}/**',
         // projects with sources at root
-        '{website,scripts}/*',
+        '{website,scripts}/*.{js,ts,mjs,cjs}',
       ],
       exclude: [...(configDefaults.coverage.exclude ?? []), ...PODMAN_DESKTOP_EXCLUDED],
     },

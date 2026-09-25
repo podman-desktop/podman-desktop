@@ -23,9 +23,9 @@ import { inject, injectable } from 'inversify';
 import { compare } from 'semver';
 
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+import { ExtensionInstaller } from '/@/plugin/extension/extension-installer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
-import { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import product from '/@product.json' with { type: 'json' };
 

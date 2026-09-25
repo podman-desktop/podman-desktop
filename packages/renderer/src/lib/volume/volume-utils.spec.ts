@@ -39,3 +39,27 @@ test('should expect valid size if missing', async () => {
   const size = volumeUtils.getSize(volumeInfo);
   expect(size).toBe('0 B');
 });
+
+test('Should leave labels and options undefined when the volume carries none', async () => {
+  const volumeInfo = { Name: 'my-volume' } as VolumeInfo;
+  const volumeInfoUI = volumeUtils.toVolumeInfoUI(volumeInfo);
+  expect(volumeInfoUI.labels).toBeUndefined();
+  expect(volumeInfoUI.options).toBeUndefined();
+});
+
+test('Should report options as undefined when the volume carries null options', async () => {
+  const volumeInfo = { Name: 'my-volume', Options: null } as unknown as VolumeInfo;
+  const volumeInfoUI = volumeUtils.toVolumeInfoUI(volumeInfo);
+  expect(volumeInfoUI.options).toBeUndefined();
+});
+
+test('Should expose labels and options when the volume carries them', async () => {
+  const volumeInfo = {
+    Name: 'my-volume',
+    Labels: { label1: 'value1' },
+    Options: { option1: 'value1' },
+  } as unknown as VolumeInfo;
+  const volumeInfoUI = volumeUtils.toVolumeInfoUI(volumeInfo);
+  expect(volumeInfoUI.labels).toEqual({ label1: 'value1' });
+  expect(volumeInfoUI.options).toEqual({ option1: 'value1' });
+});

@@ -611,6 +611,147 @@ test('Expect environment dropdown to appear with multiple running connections', 
   expect(environmentDropdown).toBeInTheDocument();
 });
 
+test('Expect a selection to survive a store refresh without being written into the store', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listVolumes).mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/fedora/_data',
+          Name: '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Podman',
+          engineId: 'podman.Podman Machine',
+          engineType: 'podman',
+          UsageData: { RefCount: 0, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: '',
+      engineName: '',
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  const volumesEventStoreInfo = volumesEventStore.setup();
+  await volumesEventStoreInfo.fetch();
+
+  await waitFor(() => {
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle volume' });
+  await fireEvent.click(checkboxes[0]);
+
+  await vi.waitFor(() => expect(screen.getByText('On 1 selected items.')).toBeInTheDocument());
+
+  for (let i = 0; i < 2; i++) {
+    volumeListInfos.set(get(volumeListInfos).map(volume => ({ ...volume })));
+
+    await vi.waitFor(() => expect(screen.getByText('On 1 selected items.')).toBeInTheDocument());
+    expect(get(volumeListInfos).every(volume => volume.selected === false)).toBe(true);
+  }
+});
+
+test('Expect a bulk delete to mark the selected volume DELETING in the store', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listVolumes).mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/fedora/_data',
+          Name: '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Podman',
+          engineId: 'podman.Podman Machine',
+          engineType: 'podman',
+          UsageData: { RefCount: 0, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: '',
+      engineName: '',
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  const volumesEventStoreInfo = volumesEventStore.setup();
+  await volumesEventStoreInfo.fetch();
+
+  await waitFor(() => {
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  let resolveRemoveVolume: () => void;
+  const pendingRemoveVolume = new Promise<void>(resolve => {
+    resolveRemoveVolume = resolve;
+  });
+  vi.mocked(window.removeVolume).mockReturnValue(pendingRemoveVolume);
+
+  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle volume' });
+  await fireEvent.click(checkboxes[0]);
+
+  const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
+  await fireEvent.click(deleteButton);
+
+  await vi.waitFor(() => expect(window.removeVolume).toHaveBeenCalled());
+
+  await vi.waitFor(() => {
+    const volume = get(volumeListInfos).find(
+      v => v.name === '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+    );
+    expect(volume?.status).toBe('DELETING');
+  });
+
+  resolveRemoveVolume!();
+});
+
 test('Expect environment dropdown to filter volumes by selected environment', async () => {
   vi.mocked(window.getProviderInfos).mockResolvedValue([
     {

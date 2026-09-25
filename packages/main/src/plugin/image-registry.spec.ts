@@ -25,10 +25,10 @@ import * as path from 'node:path';
 
 import type { Registry } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import * as nodeTar from 'tar';
+import { ProxyAgent, type RequestInit } from 'undici';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import imageRegistryConfigJson from '/@tests/resources/data/plugin/image-registry-config.json' with { type: 'json' };
@@ -47,6 +47,7 @@ import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';
 import type { EventType, Telemetry } from './telemetry/telemetry.js';
 import type { Disposable } from './types/disposable.js';
+import { decompressZstd } from './util/zstd.js';
 
 let imageRegistry: ImageRegistry;
 let server: SetupServer | undefined = undefined;
@@ -83,11 +84,7 @@ afterEach(() => {
   server?.close();
 });
 
-vi.mock(import('fzstd'), () => {
-  return {
-    decompress: vi.fn(),
-  };
-});
+vi.mock(import('./util/zstd.js'));
 
 vi.mock(import('tar'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -245,6 +242,17 @@ describe('extract auth info', () => {
     expect(value).toBeDefined();
     expect(value?.authUrl).toBe('https://auth.docker.io/token?service=registry.docker.io');
     expect(value?.scheme).toBe('bearer');
+  });
+
+  test('getAuthInfo surfaces the underlying network error instead of the generic fetch failure', async () => {
+    // fetch wraps network failures in `TypeError: fetch failed`, keeping the real reason in `cause`
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new TypeError('fetch failed', { cause: new Error('getaddrinfo ENOTFOUND invalidurl') }),
+    );
+
+    await expect(imageRegistry.getAuthInfo('invalidUrl')).rejects.toThrow(
+      'Unable to find auth info for https://invalidUrl/v2/. Error: Error: getaddrinfo ENOTFOUND invalidurl',
+    );
   });
 });
 
@@ -713,7 +721,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
   const destFolder = path.resolve(os.tmpdir(), 'test-folder');
   const logFn = vi.fn();
 
-  vi.mocked(fzstd.decompress).mockReturnValue(Buffer.from('hello'));
+  vi.mocked(decompressZstd).mockResolvedValue();
   const spyExtract = vi.spyOn(nodeTar, 'extract').mockResolvedValue();
 
   try {
@@ -726,11 +734,52 @@ test('expect downloadAndExtractImage works with zstd', async () => {
     // expect some traces in the logger
     expect(logFn).toHaveBeenCalled();
 
+    expect(decompressZstd).toHaveBeenCalledWith(expect.stringContaining('.zst'), expect.stringContaining('.tar'));
     expect(spyExtract).toHaveBeenCalledWith({ cwd: destFolder, file: expect.stringContaining('.tar') });
   } finally {
     // remove the folders
     await fs.promises.rm(tmpTarFolder, { recursive: true });
     await fs.promises.rm(destFolder, { recursive: true });
+  }
+});
+
+test('expect downloadAndExtractImage to remove the temporary files when decompression fails', async () => {
+  vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+  vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('12345');
+
+  server = setupServer(
+    http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+      HttpResponse.json(imageRegistryManifestMultiArchJson),
+    ),
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+      () => HttpResponse.json(imageRegistryManifestZstdJson),
+    ),
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/:digest',
+      () => new HttpResponse('zstd-content', { headers: { 'content-type': 'application/octet-stream' } }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const destFolder = path.resolve(os.tmpdir(), 'test-folder');
+  // the layer is rejected, as a decompression bomb would be
+  vi.mocked(decompressZstd).mockRejectedValue(new Error('possible decompression bomb'));
+
+  try {
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow('possible decompression bomb');
+
+    // both the downloaded archive and the unpacked file must be gone
+    const tmpFile = path.resolve(
+      os.tmpdir(),
+      'sha256_ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4.zst',
+    );
+    expect(fs.existsSync(tmpFile)).toBeFalsy();
+    expect(fs.existsSync(tmpFile.replace('.zst', '.tar'))).toBeFalsy();
+  } finally {
+    await fs.promises.rm(destFolder, { recursive: true, force: true });
   }
 });
 
@@ -1226,18 +1275,35 @@ test('getToken without registry auth', async () => {
   expect(token).toBe('12345');
 });
 
-test('getOptions uses proxy settings', () => {
+test('getOptions returns dispatcher for insecure mode', () => {
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+  const options = imageRegistry.getOptions({ insecure: true }) as RequestInit;
+  expect(options.dispatcher).toBeDefined();
+});
+
+test('getOptions selects the proxy matching the target protocol', () => {
   pxoxyIsEnabledMock.mockReturnValue(true);
+  // only an https proxy is configured
   proxyGetProxyMock.mockReturnValue({
-    httpProxy: 'http://192.168.1.1:3128',
-    httpsProxy: 'http://192.168.1.1:3128',
-    noProxy: '',
+    httpProxy: undefined,
+    httpsProxy: 'http://127.0.0.1:3128',
+    noProxy: undefined,
   });
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+
+  // an https target uses the https proxy
+  const secure = imageRegistry.getOptions({ url: 'https://registry.local/v2/', insecure: true }) as RequestInit;
+  expect(secure.dispatcher).toBeInstanceOf(ProxyAgent);
+
+  // an http target must not fall back to the https proxy
+  const insecure = imageRegistry.getOptions({ url: 'http://registry.local/v2/', insecure: true }) as RequestInit;
+  expect(insecure.dispatcher).not.toBeInstanceOf(ProxyAgent);
+});
+
+test('getOptions returns empty for non-insecure mode', () => {
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
   const options = imageRegistry.getOptions();
-  expect(options.agent).toBeDefined();
-  expect(options.agent?.http).toBeDefined();
-  expect(options.agent?.https).toBeDefined();
+  expect(options).toEqual({});
 });
 
 test('searchImages with proxy', async () => {
@@ -1259,7 +1325,7 @@ test('searchImages with proxy', async () => {
   server = setupServer(...handlers);
   server.listen({ onUnhandledRequest: 'error' });
 
-  await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('a proxy error');
+  await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('searching images');
 });
 
 test('searchImages without registry', async () => {

@@ -1,12 +1,13 @@
 <script lang="ts">
 import type { WelcomeMessages } from '@podman-desktop/core-api';
-import { Button, Checkbox, Tooltip } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { Button } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import OnboardingWelcomeTelemetry from '/@/lib/onboarding/OnboardingWelcomeTelemetry.svelte';
+import OnboardingExtensionCard from '/@/lib/onboarding/wizard/OnboardingExtensionCard.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 
@@ -14,15 +15,27 @@ import bgImage from './background.png';
 import type { OnboardingInfoWithAdditionalInfo } from './welcome-utils';
 import { WelcomeUtils } from './welcome-utils';
 
-export let showWelcome = false;
+interface Props {
+  showWelcome?: boolean;
+}
+
+let { showWelcome = false }: Props = $props();
 
 const welcomeUtils = new WelcomeUtils();
-let podmanDesktopVersion: string;
+let podmanDesktopVersion = $state<string>();
 
-let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
-let welcomeMessages: WelcomeMessages;
+let welcomeMessages = $state<WelcomeMessages>();
 
-$: onboardingProviders = welcomeUtils.getSortedOnboardingExtensions($onboardingList, $providerInfos);
+// User selection is kept outside of the derived value below: the derived is recomputed on every
+// onboardingList/providerInfos emission (a provider status change or an extension starting is
+// enough), which would otherwise discard whatever the user checked or unchecked
+const selectionOverrides = new SvelteMap<string, boolean>();
+
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = $derived(
+  welcomeUtils
+    .getSortedOnboardingExtensions($onboardingList, $providerInfos)
+    .map(provider => ({ ...provider, selected: selectionOverrides.get(provider.name) ?? provider.selected })),
+);
 
 onMount(async () => {
   const result = await welcomeUtils.enforceFirstRun();
@@ -38,14 +51,8 @@ async function closeWelcome(): Promise<void> {
 
 // Function to toggle provider selection
 function toggleOnboardingSelection(providerName: string): void {
-  // Go through providers, find the provider name and toggle the selected value
-  // then update providers
-  onboardingProviders = onboardingProviders.map(provider => {
-    if (provider.name === providerName) {
-      provider.selected = !provider.selected;
-    }
-    return provider;
-  });
+  const current = onboardingProviders.find(provider => provider.name === providerName)?.selected ?? true;
+  selectionOverrides.set(providerName, !current);
 }
 
 function startOnboardingQueue(): void {
@@ -79,31 +86,12 @@ function startOnboardingQueue(): void {
             </div>
             <div aria-label="providerList" class="grid grid-cols-3 gap-3">
               {#each onboardingProviders as onboarding, index (index)}
-                <div
-                  class="rounded-md bg-[var(--pd-content-card-bg)] flex flex-row justify-between border-2 p-4 {onboarding.selected
-                    ? 'border-[var(--pd-content-card-border-selected)]'
-                    : 'border-[var(--pd-content-card-border)]'}">
-                  <div class="place-items-top flex flex-col flex-1">
-                    <div class="flex flex-row place-items-left flex-1">
-                      {#if onboarding.icon}
-                        <Icon icon={onboarding.icon} class="max-h-12 h-auto w-auto" title="{onboarding.name} logo" />
-                      {/if}
-                      <div
-                        class="flex flex-1 mx-2 underline decoration-2 decoration-dotted underline-offset-2 cursor-default justify-left text-capitalize">
-                        <Tooltip top tip={onboarding.description}>
-                          {onboarding.displayName}
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Checkbox
-                    title="{onboarding.displayName} checkbox"
-                    name="{onboarding.displayName} checkbox"
-                    bind:checked={onboarding.selected}
-                    on:click={(): void => toggleOnboardingSelection(onboarding.name)}
-                    class="text-xl" />
-                </div>
+                <OnboardingExtensionCard
+                  icon={onboarding.icon}
+                  displayName={onboarding.displayName}
+                  description={onboarding.description}
+                  checked={onboarding.selected ?? true}
+                  onToggle={(): void => toggleOnboardingSelection(onboarding.name)} />
               {/each}
             </div>
           </div>

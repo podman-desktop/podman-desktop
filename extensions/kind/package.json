@@ -3,7 +3,7 @@
   "name": "kind",
   "displayName": "Kind",
   "description": "Integration for Kind: run local Kubernetes clusters using container “nodes”",
-  "version": "1.30.0-next",
+  "version": "1.31.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -85,6 +85,7 @@
         {
           "command": "kind.image.move",
           "title": "Push image to Kind cluster",
+          "icon": "fas fa-circle-arrow-up",
           "disabled": "selectedImageId in imagesPushInProgressToKind"
         }
       ]
@@ -120,12 +121,12 @@
     "@kubernetes/client-node": "^2.0.0",
     "@podman-desktop/api": "workspace:*",
     "mustache": "^4.2.0",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "mkdirp": "^3.0.1",
-    "vite": "^8.2.2",
-    "vitest": "^4.1.11"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   }
 }

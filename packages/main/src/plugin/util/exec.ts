@@ -153,7 +153,14 @@ export class Exec {
     const cwd = options?.cwd;
 
     if (options?.detached) {
-      const childProcess = spawn(command, args ?? [], { env, cwd, detached: true, stdio: 'ignore' });
+      // On Windows, detached:true sets DETACHED_PROCESS which conflicts
+      // with CREATE_NO_WINDOW (windowsHide), causing console windows to
+      // flash. Use cmd.exe /c as a non-detached wrapper so windowsHide
+      // takes effect, while the spawned command runs independently.
+      const childProcess = isWindows()
+        ? // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command
+          spawn('cmd.exe', ['/d', '/c', command, ...(args ?? [])], { env, cwd, stdio: 'ignore', windowsHide: true })
+        : spawn(command, args ?? [], { env, cwd, detached: true, stdio: 'ignore' });
       childProcess.unref();
       return this.awaitChildProcess(childProcess, command, { stdout: '', stderr: '' });
     }

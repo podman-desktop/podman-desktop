@@ -6,7 +6,7 @@ import type {
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
@@ -140,7 +140,7 @@ async function waitForNetworkInStore(networkId: string, engineId: string): Promi
     }, 10000);
 
     const unsubscribe = networksListInfo.subscribe(networks => {
-      if (networks.some(network => network.Id === networkId && network.engineId === engineId)) {
+      if (networks.some(network => network.id === networkId && network.engineId === engineId)) {
         clearTimeout(timeout);
         unsubscribe();
         resolve();
@@ -362,7 +362,7 @@ function removeDnsServer(index: number): void {
           </Route>
         </div>
 
-        <div class="flex items-center justify-end gap-3 pt-4">
+        <ButtonRow>
           <Button type="secondary" onclick={cancelRoute}>Cancel</Button>
           <Button
             disabled={hasInvalidFields || createNetworkInProgress}
@@ -370,7 +370,7 @@ function removeDnsServer(index: number): void {
             onclick={createNetwork}>
             Create
           </Button>
-        </div>
+        </ButtonRow>
 
         {#if createError}
           <ErrorMessage class="text-sm" error={createError} />

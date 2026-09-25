@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { VolumeListInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { VolumeInfoUI } from '/@/lib/volume/VolumeInfoUI';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
@@ -31,21 +31,17 @@ test('createNavigationVolumeEntry', async () => {
   const entry = createNavigationVolumeEntry();
   volumeListInfos.set([
     {
-      Volumes: [
-        {
-          Id: '1234',
-          Size: 0,
-          Name: 'my-data',
-          engineId: 'podman',
-        },
-        {
-          Id: '3456',
-          Size: 0,
-          Name: 'cache-vol',
-          engineId: 'docker',
-        },
-      ],
-    } as unknown as VolumeListInfo,
+      Id: '1234',
+      Size: 0,
+      name: 'my-data',
+      engineId: 'podman',
+    } as unknown as VolumeInfoUI,
+    {
+      Id: '3456',
+      Size: 0,
+      name: 'cache-vol',
+      engineId: 'docker',
+    } as unknown as VolumeInfoUI,
   ]);
 
   expect(entry).toBeDefined();
@@ -75,15 +71,11 @@ test('createNavigationVolumeEntry truncates long volume names in destinations', 
   const entry = createNavigationVolumeEntry();
   volumeListInfos.set([
     {
-      Volumes: [
-        {
-          Id: '1234',
-          Size: 0,
-          Name: '1234567890abcdef',
-          engineId: 'podman',
-        },
-      ],
-    } as unknown as VolumeListInfo,
+      Id: '1234',
+      Size: 0,
+      name: '1234567890abcdef',
+      engineId: 'podman',
+    } as unknown as VolumeInfoUI,
   ]);
 
   await vi.waitFor(() => {

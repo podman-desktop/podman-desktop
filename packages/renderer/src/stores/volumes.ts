@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { VolumeListInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import { VolumeUtils } from '/@/lib/volume/volume-utils';
+import type { VolumeInfoUI } from '/@/lib/volume/VolumeInfoUI';
 
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';
@@ -53,16 +54,29 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const volumeListInfos: Writable<VolumeListInfo[]> = writable([]);
+export const volumeListInfos: Writable<VolumeInfoUI[]> = writable([]);
+
+const volumeUtils = new VolumeUtils();
 
 // use helper here as window methods are initialized after the store in tests
-const listVolumes = (...args: unknown[]): Promise<VolumeListInfo[]> => {
+const listVolumes = async (...args: unknown[]): Promise<VolumeInfoUI[]> => {
   const fetchUsage = args?.length > 0 && args[0] === 'fetchUsage';
 
-  return window.listVolumes(fetchUsage);
+  return (await window.listVolumes(fetchUsage))
+    .map(volumeListInfo => volumeListInfo.Volumes)
+    .flat()
+    .map(volume => volumeUtils.toVolumeInfoUI(volume));
 };
 
-export const volumesEventStore = new EventStore<VolumeListInfo[]>(
+export function setVolumeStatus(engineId: string, volumeName: string, status: VolumeInfoUI['status']): void {
+  volumeListInfos.update(volumes =>
+    volumes.map(volume =>
+      volume.name === volumeName && volume.engineId === engineId ? { ...volume, status } : volume,
+    ),
+  );
+}
+
+export const volumesEventStore = new EventStore<VolumeInfoUI[]>(
   'volumes',
   volumeListInfos,
   checkForUpdate,
@@ -75,20 +89,9 @@ const volumesEventStoreInfo = volumesEventStore.setupWithDebounce();
 
 export const searchPattern = writable('');
 
-export const filtered = derived([searchPattern, volumeListInfos], ([$searchPattern, $volumeListInfos]) => {
-  // returned object
-  return $volumeListInfos.map(volumeInfo => {
-    // list of volumes is filtered
-    const filteredVolumes = volumeInfo.Volumes.filter(volume =>
-      findMatchInLeaves(volume, $searchPattern.toLowerCase()),
-    );
-
-    return {
-      ...volumeInfo,
-      Volumes: filteredVolumes,
-    };
-  });
-});
+export const filtered = derived([searchPattern, volumeListInfos], ([$searchPattern, $volumeListInfos]) =>
+  $volumeListInfos.filter(volume => findMatchInLeaves(volume, $searchPattern.toLowerCase())),
+);
 
 export const fetchVolumesWithData = async (): Promise<void> => {
   await volumesEventStoreInfo.fetch('fetchUsage');
