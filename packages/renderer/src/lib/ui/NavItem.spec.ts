@@ -170,3 +170,13 @@ test('Expect that counter is rendered', async () => {
   const tooltipContent = await screen.findByText(/Foo \(4\)/);
   expect(tooltipContent).toBeInTheDocument();
 });
+
+test('Expect nav item anchor to be marked for roving-tabindex keyboard navigation', async () => {
+  const tooltip = 'Dashboard';
+  const href = '/test';
+  renderIt(tooltip, href, { url: href });
+
+  const element = screen.getByLabelText(tooltip);
+  expect(element).toHaveAttribute('data-nav-item');
+  expect(element.className).toContain('focus-visible:outline');
+});
