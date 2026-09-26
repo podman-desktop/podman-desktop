@@ -143,6 +143,17 @@ jobs:
             --directory-prefix=results \
             "$TF_VIDEOS_URL"
 
+      - name: Create json file with workflow run attributes
+        if: always()
+        uses: podman-desktop/e2e/.github/actions/generate-test-attributes@053dd9e2e4511c412dcaa835d884eec303797ed6
+        with:
+          filename: workflow-run-attributes.json
+          runs-on-gh-runner: false
+          os: ${{ matrix.os }}
+          os-version: ${{ matrix.os-version }}
+          architecture: x86_64
+          podman-version: ${{ env.PODMAN_VERSION }}
+
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -151,3 +162,4 @@ jobs:
           path: |
             results/*
             **/junit-playwright-results.xml
+            **/workflow-run-attributes.json
