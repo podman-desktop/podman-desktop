@@ -22,7 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import Button from './Button.svelte';
@@ -311,4 +311,173 @@ test('Disabled pressed button should keep aria-pressed but use disabled styling'
   expect(button).toHaveAttribute('aria-pressed', 'true');
   expect(button).toHaveClass('bg-[var(--pd-button-disabled-bg)]');
   expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});
+
+test('Menu item mode renders a div instead of a native button element', () => {
+  const { container } = render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row.tagName.toLowerCase()).toBe('div');
+  expect(container.querySelector('button')).not.toBeInTheDocument();
+});
+
+test('Menu item mode row is full width and left aligned', () => {
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).toHaveClass('w-full');
+  expect(row).toHaveClass('text-left');
+});
+
+test('Menu item mode uses row padding by default', () => {
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).toHaveClass('p-2.5');
+  expect(row).not.toHaveClass('px-[16px]');
+});
+
+test('Menu item mode respects explicit padding override', () => {
+  render(Button, { menuItem: true, padding: 'p-4', icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).toHaveClass('p-4');
+  expect(row).not.toHaveClass('p-2.5');
+});
+
+test('Menu item mode reuses type-based color classes', () => {
+  render(Button, { menuItem: true, type: 'danger', icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).toHaveClass('bg-[var(--pd-button-danger-bg)]');
+  expect(row).toHaveClass('text-[var(--pd-button-danger-text)]');
+});
+
+test('Menu item mode exposes aria-pressed for toggle-style rows, matching the native-button branch', () => {
+  render(Button, { menuItem: true, pressed: true, icon: faTrash, 'aria-label': 'Delete' });
+  expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('Menu item mode strips border and shadow classes for a flat row look', () => {
+  render(Button, { menuItem: true, type: 'danger', icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).not.toHaveClass('border');
+  expect(row).not.toHaveClass('border-[var(--pd-button-danger-border)]');
+  expect(row).not.toHaveClass('shadow-[0px_1px_4px_0px_var(--pd-shadow-color)]');
+});
+
+test('Menu item mode forces off the divider border a DropdownMenu popover imposes between rows', () => {
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).toHaveClass('border-b-0!');
+});
+
+test('Menu item mode keeps focus-visible outline classes', () => {
+  render(Button, { menuItem: true, type: 'danger', icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  expect(row).toHaveClass('focus-visible:outline-[var(--pd-button-focus-ring-danger)]');
+});
+
+test('Menu item mode click fires onclick when enabled', async () => {
+  const onclick = vi.fn();
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete', onclick });
+  await fireEvent.click(screen.getByRole('button'));
+  expect(onclick).toHaveBeenCalledOnce();
+});
+
+test.each(['disabled', 'inProgress'] as const)(
+  'Menu item mode click is ignored and does not bubble to window while %s',
+  async prop => {
+    const onclick = vi.fn();
+    const onWindowClick = vi.fn();
+    window.addEventListener('click', onWindowClick);
+    render(Button, { menuItem: true, [prop]: true, icon: faTrash, 'aria-label': 'Delete', onclick });
+    await fireEvent.click(screen.getByRole('button'));
+    window.removeEventListener('click', onWindowClick);
+    expect(onclick).not.toHaveBeenCalled();
+    expect(onWindowClick).not.toHaveBeenCalled();
+  },
+);
+
+test('Menu item mode is keyboard activatable with Enter on keydown', async () => {
+  const onclick = vi.fn();
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete', onclick });
+  await fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+  expect(onclick).toHaveBeenCalledOnce();
+});
+
+test('Menu item mode keyboard activation dispatches a real bubbling click, so a DropdownMenu listening on window can close itself', async () => {
+  const onWindowClick = vi.fn();
+  window.addEventListener('click', onWindowClick);
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete' });
+  await fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+  window.removeEventListener('click', onWindowClick);
+  expect(onWindowClick).toHaveBeenCalledOnce();
+});
+
+test('Menu item mode ignores repeated Space keydown while held, activating only once on keyup', async () => {
+  const onclick = vi.fn();
+  const onWindowClick = vi.fn();
+  window.addEventListener('click', onWindowClick);
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete', onclick });
+  const row = screen.getByRole('button');
+  // Simulates OS key-repeat firing multiple keydown events while Space is held
+  await fireEvent.keyDown(row, { key: ' ' });
+  await fireEvent.keyDown(row, { key: ' ' });
+  await fireEvent.keyDown(row, { key: ' ' });
+  expect(onclick).not.toHaveBeenCalled();
+  expect(onWindowClick).not.toHaveBeenCalled();
+  await fireEvent.keyUp(row, { key: ' ' });
+  window.removeEventListener('click', onWindowClick);
+  expect(onclick).toHaveBeenCalledOnce();
+  expect(onWindowClick).toHaveBeenCalledOnce();
+});
+
+test('Menu item mode ignores a bare Space keyup with no preceding keydown on the same row', async () => {
+  const onclick = vi.fn();
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete', onclick });
+  await fireEvent.keyUp(screen.getByRole('button'), { key: ' ' });
+  expect(onclick).not.toHaveBeenCalled();
+});
+
+test('Menu item mode clears pending Space activation on blur, so a later keyup does not activate', async () => {
+  const onclick = vi.fn();
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete', onclick });
+  const row = screen.getByRole('button');
+  await fireEvent.keyDown(row, { key: ' ' });
+  await fireEvent.blur(row);
+  await fireEvent.keyUp(row, { key: ' ' });
+  expect(onclick).not.toHaveBeenCalled();
+});
+
+test.each([
+  ['Enter', 'disabled'],
+  ['Enter', 'inProgress'],
+  ['Space', 'disabled'],
+  ['Space', 'inProgress'],
+] as const)('Menu item mode does not dispatch a bubbling click via %s when %s', async (key, prop) => {
+  const onWindowClick = vi.fn();
+  window.addEventListener('click', onWindowClick);
+  render(Button, { menuItem: true, [prop]: true, icon: faTrash, 'aria-label': 'Delete' });
+  const row = screen.getByRole('button');
+  await fireEvent.keyDown(row, { key: key === 'Enter' ? 'Enter' : ' ' });
+  if (key === 'Space') await fireEvent.keyUp(row, { key: ' ' });
+  window.removeEventListener('click', onWindowClick);
+  expect(onWindowClick).not.toHaveBeenCalled();
+});
+
+test('Menu item mode disabled row is removed from tab order', () => {
+  render(Button, { menuItem: true, disabled: true, icon: faTrash, 'aria-label': 'Delete' });
+  expect(screen.getByRole('button')).toHaveAttribute('tabindex', '-1');
+});
+
+test('Menu item mode enabled row is focusable', () => {
+  render(Button, { menuItem: true, icon: faTrash, 'aria-label': 'Delete' });
+  expect(screen.getByRole('button')).toHaveAttribute('tabindex', '0');
+});
+
+test('Menu item mode hidden should be hidden', () => {
+  render(Button, { menuItem: true, hidden: true, icon: faTrash, 'aria-label': 'Delete' });
+  expect(screen.queryByRole('button')).not.toBeInTheDocument();
+});
+
+test('Icon-only menu item row without aria-label should throw an error', () => {
+  expect(() => render(Button, { menuItem: true, icon: faTrash })).toThrow(
+    'Icon-only buttons must have an aria-label for accessibility',
+  );
 });
