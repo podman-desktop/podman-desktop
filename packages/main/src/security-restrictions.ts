@@ -95,8 +95,15 @@ export class SecurityRestrictions {
       if (ALLOWED_EXTERNAL_ORIGINS.has(origin)) {
         // Open default browser
         shell.openExternal(url).catch(console.error);
-      } else if (import.meta.env.DEV) {
-        console.warn('Blocked the opening of an unallowed origin:', origin);
+      } else {
+        const handler = securityRestrictionCurrentHandler.handler;
+        if (handler) {
+          securityRestrictionCurrentHandler.handler?.(url).catch((error: unknown) => {
+            console.error('Error in security restriction handler:', error);
+          });
+        } else if (import.meta.env.DEV) {
+          console.warn('Blocked the opening of an unallowed origin:', origin);
+        }
       }
 
       // Prevent creating new window in application
