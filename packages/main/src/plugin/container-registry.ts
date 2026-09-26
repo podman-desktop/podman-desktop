@@ -19,7 +19,7 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { type FileHandle, open, readFile, rm, stat } from 'node:fs/promises';
+import { lstat, readFile, rm } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
@@ -2821,7 +2821,7 @@ export class ContainerProviderRegistry {
     return gtr(coerced.version, '5.3.0');
   }
 
-  private resolveKubePlayFilePaths(value: string): string[] {
+  private async resolveKubePlayFilePath(value: string): Promise<string> {
     if (typeof value !== 'string' || value.length > 32_768) {
       throw new Error('Kubernetes YAML path is invalid or too long. Enter a valid path.');
     }
@@ -2837,84 +2837,22 @@ export class ContainerProviderRegistry {
         'Kubernetes YAML path contains control characters. Enter a valid path or use Browse to select a file.',
       );
     }
-    // Windows UNC and device namespace paths can contact remote hosts during stat or open.
-    if (process.platform === 'win32' && /^[\\/]{2}/.test(expanded)) {
-      throw new Error(
-        'Kubernetes YAML files on Windows network shares or device paths are not supported. Select a local file.',
-      );
-    }
     if (!path.isAbsolute(expanded)) {
       throw new Error(
         `Kubernetes YAML path "${trimmed}" must be absolute. Enter an absolute path or use Browse to select a file.`,
       );
     }
-    // An absolute path from Browse can legitimately end in spaces. Try it exactly as received
-    // before treating trailing whitespace as part of a pasted path.
+    // A browsed filename may end in spaces. Only trim the path when the exact name does not exist.
     if (path.isAbsolute(value) && !/\p{Cc}/u.test(value) && value !== expanded) {
-      return [value, expanded];
-    }
-    return [expanded];
-  }
-
-  private kubePlayFileAccessError(yamlPath: string, error: unknown): Error {
-    if (error instanceof Error && 'code' in error) {
-      if (error.code === 'ENOENT') {
-        return new Error(
-          `Kubernetes YAML file "${yamlPath}" was not found. Check the path or use Browse to select a file.`,
-        );
-      }
-      if (error.code === 'EACCES' || error.code === 'EPERM') {
-        return new Error(`Kubernetes YAML file "${yamlPath}" cannot be read. Check its permissions.`);
-      }
-    }
-    console.error(`Unable to access Kubernetes YAML file "${yamlPath}"`, error);
-    return new Error(`Kubernetes YAML file "${yamlPath}" could not be accessed. Check the path and try again.`);
-  }
-
-  private async closeKubePlayFile(yamlPath: string, handle: FileHandle): Promise<void> {
-    try {
-      await handle.close();
-    } catch (error) {
-      console.error(`Unable to close Kubernetes YAML file "${yamlPath}"`, error);
-    }
-  }
-
-  private async openKubePlayFile(value: string): Promise<{ path: string; handle: FileHandle }> {
-    const paths = this.resolveKubePlayFilePaths(value);
-    // Check before opening to avoid blocking on a FIFO or device. Check the opened handle again
-    // because the path can change between stat and open. A nonblocking open covers that race on POSIX.
-    // Build contexts remain path-based so their relative paths resolve against the YAML directory.
-    const flags = process.platform === 'win32' ? 'r' : fs.constants.O_RDONLY | fs.constants.O_NONBLOCK;
-
-    for (const [index, yamlPath] of paths.entries()) {
-      let pathIsFile: boolean;
       try {
-        pathIsFile = (await stat(yamlPath)).isFile();
+        await lstat(value);
+        return value;
       } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT' && index < paths.length - 1) {
-          continue;
-        }
-        throw this.kubePlayFileAccessError(yamlPath, error);
+        // Preserve the original path on errors other than ENOENT so we never select a different file.
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) return value;
       }
-      if (!pathIsFile) {
-        throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
-      }
-
-      let handle: FileHandle | undefined;
-      try {
-        handle = await open(yamlPath, flags);
-        if ((await handle.stat()).isFile()) return { path: yamlPath, handle };
-      } catch (error) {
-        if (handle) await this.closeKubePlayFile(yamlPath, handle);
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT' && index < paths.length - 1) {
-          continue;
-        }
-        throw this.kubePlayFileAccessError(yamlPath, error);
-      }
-      await this.closeKubePlayFile(yamlPath, handle);
-      throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
     }
-    throw new Error('Kubernetes YAML path could not be resolved.');
+    return expanded;
   }
 
   async playKube(
@@ -2936,53 +2874,28 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      const yamlFile = input.type === 'path' ? await this.openKubePlayFile(input.value) : undefined;
-      try {
-        if (!options?.build) {
-          const fileStream = yamlFile?.handle.createReadStream({ autoClose: false });
-          let streamError: unknown;
-          fileStream?.once('error', error => {
-            streamError = error;
-          });
-          try {
-            return await provider.libpodApi.playKube(fileStream ?? Readable.from([input.value]), options);
-          } catch (error) {
-            if (yamlFile && streamError) throw this.kubePlayFileAccessError(yamlFile.path, streamError);
-            throw error;
-          } finally {
-            fileStream?.destroy();
-          }
-        }
-
-        // ensure build support is true, otherwise let's throw a nice user friendly error
-        const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
-        if (!buildSupported)
-          throw new Error(
-            `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
-          );
-
-        // Read from the validated handle once; the original path still determines relative build contexts.
-        let content = input.value;
-        if (yamlFile) {
-          try {
-            content = await yamlFile.handle.readFile('utf8');
-          } catch (error) {
-            throw this.kubePlayFileAccessError(yamlFile.path, error);
-          }
-        }
-        const kubePlay = KubePlayContext.fromContent(content, yamlFile ? path.dirname(yamlFile.path) : tmpdir());
-        await kubePlay.init();
-
-        if (kubePlay.getBuildContexts().length === 0) {
-          return provider.libpodApi.playKube(Readable.from([content]), options);
-        }
-
-        return provider.libpodApi.playKube(kubePlay.build(), options);
-      } finally {
-        if (yamlFile) {
-          await this.closeKubePlayFile(yamlFile.path, yamlFile.handle);
-        }
+      const yamlPath = input.type === 'path' ? await this.resolveKubePlayFilePath(input.value) : undefined;
+      if (!options?.build) {
+        return await provider.libpodApi.playKube(yamlPath ?? Readable.from([input.value]), options);
       }
+
+      // ensure build support is true, otherwise let's throw a nice user friendly error
+      const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
+      if (!buildSupported)
+        throw new Error(
+          `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
+        );
+
+      // Build contexts are relative to the YAML file, and playback uses the same content we analyzed.
+      const content = yamlPath === undefined ? input.value : await readFile(yamlPath, 'utf8');
+      const kubePlay = KubePlayContext.fromContent(content, yamlPath === undefined ? tmpdir() : path.dirname(yamlPath));
+      await kubePlay.init();
+
+      if (kubePlay.getBuildContexts().length === 0) {
+        return await provider.libpodApi.playKube(Readable.from([content]), options);
+      }
+
+      return await provider.libpodApi.playKube(kubePlay.build(), options);
     } catch (error: unknown) {
       telemetryOptions['error'] = error;
       throw error;
