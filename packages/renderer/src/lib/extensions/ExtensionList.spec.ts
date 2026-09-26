@@ -26,11 +26,13 @@ import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
 
+import { resetCatalogListFilters } from './catalog-list-filters.svelte';
 import ExtensionList from './ExtensionList.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  resetCatalogListFilters();
 });
 
 export const aFakeExtension: CatalogExtension = {
@@ -153,15 +155,16 @@ test('Expect to see empty screen on catalog page only', async () => {
     expect(screen.getByRole('button', { name: 'Catalog' })).toBeInTheDocument();
   });
 
-  let title = screen.queryByText(`No extensions matching 'A' found`);
-  expect(title).not.toBeInTheDocument();
+  // installed page: 'A installed Extension' matches, so no empty screen
+  expect(screen.queryByText(`No extensions matching 'A' found`)).not.toBeInTheDocument();
+  expect(screen.queryByText('No extensions in the catalog')).not.toBeInTheDocument();
 
   // click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
   await fireEvent.click(catalogTab);
 
-  title = screen.queryByText(`No extensions matching 'A' found`);
-  expect(title).toBeInTheDocument();
+  // catalog is empty: the catalog owns its own empty screen (search moved to the toolbar)
+  expect(screen.getByText('No extensions in the catalog')).toBeInTheDocument();
 });
 
 test('Expect to see empty screens on both pages', async () => {
@@ -179,8 +182,8 @@ test('Expect to see empty screens on both pages', async () => {
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
   await fireEvent.click(catalogTab);
 
-  const title = screen.getByText(`No extensions matching 'foo' found`);
-  expect(title).toBeInTheDocument();
+  // catalog is empty: shows its own empty screen regardless of the (installed) search term
+  expect(screen.getByText('No extensions in the catalog')).toBeInTheDocument();
 });
 
 test('Search extension page searches also description', async () => {
@@ -213,12 +216,12 @@ test('Search extension page searches also description', async () => {
   expect(myExtension2).not.toBeInTheDocument();
 });
 
-test('Search catalog page searches also description', async () => {
+test('Catalog toolbar search also searches the description', async () => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set([]);
 
-  render(ExtensionList, { searchTerm: 'bar' });
+  render(ExtensionList);
 
   await vi.waitFor(() => {
     expect(screen.getByRole('button', { name: 'Catalog' })).toBeInTheDocument();
@@ -228,13 +231,17 @@ test('Search catalog page searches also description', async () => {
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
   await fireEvent.click(catalogTab);
 
-  // Verify that the extension containing "bar" in the description is displayed
-  const myExtension1 = screen.getByRole('group', { name: 'A Extension' });
-  expect(myExtension1).toBeInTheDocument();
+  // both extensions are visible before filtering
+  expect(screen.getByRole('group', { name: 'A Extension' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'B Extension' })).toBeInTheDocument();
 
-  // Verify that the other extension that doesn't contain "bar" is not displayed
-  const extensionIdB = screen.queryByRole('group', { name: 'B Extension' });
-  expect(extensionIdB).not.toBeInTheDocument();
+  // type "bar" (present only in A's description) into the toolbar search
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'bar' } });
+
+  // only the extension containing "bar" in the description remains
+  expect(screen.getByRole('group', { name: 'A Extension' })).toBeInTheDocument();
+  expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
 });
 
 test('Expect to see local extensions tab content', async () => {
