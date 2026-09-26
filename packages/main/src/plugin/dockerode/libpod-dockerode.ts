@@ -291,6 +291,14 @@ const wrapAs = <T>(data: unknown): T => {
   return data as T;
 };
 
+// encode a value used as a path segment of the libpod API.
+// encodeURIComponent leaves dots untouched, and a '.' or '..' segment makes the Podman API
+// answer with a redirect that docker-modem is unable to follow (it throws an uncaught
+// 'TypeError: Invalid URL'), so dots are encoded as well to keep the segment as-is.
+const encodePathSegment = (segment: string): string => {
+  return encodeURIComponent(segment).replaceAll('.', '%2E');
+};
+
 // tweak Dockerode by adding the support of libpod API
 // WARNING: make sure to not override existing functions
 export class LibpodDockerode {
@@ -948,7 +956,7 @@ export class LibpodDockerode {
       Names: string[];
     }> {
       const optsf = {
-        path: `/v5.0.0/libpod/images/${shortname}/resolve`,
+        path: `/v5.0.0/libpod/images/${encodePathSegment(shortname)}/resolve`,
         method: 'GET',
         statusCodes: {
           // in the documentation it says code 204, but only code 200 works as intended
