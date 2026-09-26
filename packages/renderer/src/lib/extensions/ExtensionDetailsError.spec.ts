@@ -36,6 +36,7 @@ test('Expect to have error message being displayed', async () => {
     removable: false,
     devMode: false,
     bundled: false,
+    overriding: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
