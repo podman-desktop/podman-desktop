@@ -59,12 +59,16 @@ test('SubmenuNavigation displays a title and builds SettingsNavItem components',
     href: '/link1',
     selected: true,
     onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    onKeyDown: expect.any(Function),
   });
   expect(SettingsNavItemMock).toHaveBeenNthCalledWith(2, expect.anything(), {
     title: 'entry 2',
     href: '/link2',
     selected: false,
     onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    onKeyDown: expect.any(Function),
   });
 });
 
