@@ -4224,6 +4224,48 @@ test('check handleEvents prefers Podman-style fields over Docker-style fields', 
   expect(apiSender.send).not.toBeCalledWith('container-started-event', 'docker-id');
 });
 
+test('check handleEvents survives a throwing apiSender.send and keeps processing later events', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  // simulate a receive()-style listener throwing while handling the first event
+  vi.mocked(apiSender.send).mockImplementationOnce(() => {
+    throw new Error('boom from a receive() listener');
+  });
+
+  passThrough.emit('data', JSON.stringify({ status: 'start', Type: 'container', id: 'first' }));
+  passThrough.emit('data', JSON.stringify({ status: 'start', Type: 'container', id: 'second' }));
+
+  // let the stream-json parser flush the queued chunk
+  await new Promise(resolve => setImmediate(resolve));
+
+  // the second event must still be processed, proving the JSON stream did not silently die
+  expect(apiSender.send).toHaveBeenCalledWith('container-started-event', 'second');
+
+  // the throw must not have been treated as a stream-level error (no reconnect triggered)
+  expect(errorCallback).not.toHaveBeenCalled();
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  consoleErrorSpy.mockRestore();
+});
+
 test('check handleEvents tracks telemetry when stream emits error', async () => {
   telemetryTrackMock.mockClear();
   const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

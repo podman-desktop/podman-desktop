@@ -20,7 +20,12 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type { PullEvent } from '@podman-desktop/api';
-import type { NotificationCardOptions, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type {
+  ContainerStatsInfo,
+  NotificationCardOptions,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+} from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
@@ -43,6 +48,7 @@ import { Emitter } from './events/emitter.js';
 import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
+import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import type { MessageBox } from './message-box.js';
 import { NavigationManager } from './navigation/navigation-manager.js';
@@ -978,6 +984,271 @@ describe('Log race condition fix', () => {
       logger.error('test');
       logger.onEnd();
     }).not.toThrow();
+  });
+});
+
+test('apiSender.send should not throw and should keep delivering events when a receive() listener throws', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  apiSender.receive('foo', () => {
+    throw new Error('boom from a receive() listener');
+  });
+
+  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  let barReceived = '';
+  apiSender.receive('bar', (data: unknown) => {
+    barReceived = String(data);
+  });
+  apiSender.send('bar', 'hello-again');
+  expect(barReceived).toBe('hello-again');
+
+  consoleErrorSpy.mockRestore();
+});
+
+test('apiSender.send should still notify other receive() listeners on the same channel when one throws', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  let secondListenerReceived = '';
+  apiSender.receive('foo', () => {
+    throw new Error('boom from the first receive() listener');
+  });
+  apiSender.receive('foo', (data: unknown) => {
+    secondListenerReceived = String(data);
+  });
+
+  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
+  expect(secondListenerReceived).toBe('hello-world');
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  consoleErrorSpy.mockRestore();
+});
+
+test('apiSender.receive dispose() should stop the listener from being notified', () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+
+  let received = '';
+  const disposable = apiSender.receive('foo', (data: unknown) => {
+    received = String(data);
+  });
+
+  disposable.dispose();
+  apiSender.send('foo', 'hello-world');
+
+  expect(received).toBe('');
+});
+
+test('apiSender.receive should catch a rejected promise from an async listener', async () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  // intentionally passing an async listener, the exact case this test guards against
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  apiSender.receive('foo', async () => {
+    await Promise.resolve();
+    throw new Error('boom from an async receive() listener');
+  });
+
+  apiSender.send('foo', 'hello-world');
+  // let the listener's rejected promise settle
+  await new Promise(resolve => setImmediate(resolve));
+
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  consoleErrorSpy.mockRestore();
+});
+
+describe('sendToWebContents resilience when the main window is gone', () => {
+  beforeEach(() => {
+    vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {
+      throw new Error('Unable to find the main window');
+    });
+  });
+
+  test('getContainerStats onData callback does not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, _engine: string, _containerId: string, _onDataId: number) => Promise<number>
+    >('container-provider-registry:getContainerStats');
+    vi.mocked(ContainerProviderRegistry.prototype.getContainerStats).mockImplementation(
+      async (_engine, _containerId, callback: (stats: ContainerStatsInfo) => void) => {
+        callback({} as ContainerStatsInfo);
+        return 1;
+      },
+    );
+    await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toHaveProperty('error');
+  });
+
+  test('pushImage onData, error and end callbacks do not throw', async () => {
+    const pushError = new Error('push failed');
+    const handle = getHandler<
+      (_event: unknown, _engine: string, _imageId: string, _callbackId: number) => Promise<void>
+    >('container-provider-registry:pushImage');
+    vi.mocked(ContainerProviderRegistry.prototype.pushImage).mockImplementation(
+      async (_engine, _imageId, callback: (name: string, data: string) => void) => {
+        callback('data', 'push image output');
+        throw pushError;
+      },
+    );
+    await expect(handle(undefined, 'podman', 'registry.com/repo/image:latest', 1)).resolves.not.toHaveProperty('error');
+  });
+
+  test('logsContainer callback does not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, logsParams: { engineId: string; containerId: string; onDataId: number }) => Promise<void>
+    >('container-provider-registry:logsContainer');
+    vi.mocked(ContainerProviderRegistry.prototype.logsContainer).mockImplementation(async params => {
+      params.callback('name', 'data');
+    });
+    await expect(
+      handle(undefined, { engineId: 'engine', containerId: 'container-id', onDataId: 1 }),
+    ).resolves.not.toHaveProperty('error');
+  });
+
+  test('shellInContainer onData, onError and onEnd callbacks do not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, _engine: string, _containerId: string, _onDataId: number) => Promise<number>
+    >('container-provider-registry:shellInContainer');
+    vi.mocked(ContainerProviderRegistry.prototype.shellInContainer).mockImplementation(
+      async (_engine, _containerId, onData, onError, onEnd) => {
+        onData(Buffer.from('data'));
+        onError('error');
+        onEnd();
+        return { write: vi.fn(), resize: vi.fn() };
+      },
+    );
+    await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toHaveProperty('error');
+  });
+
+  test('shellInProviderConnection onData, onError and onEnd callbacks do not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, _providerId: string, _connectionInfo: unknown, _onDataId: number) => Promise<number>
+    >('provider-registry:shellInProviderConnection');
+    vi.mocked(ProviderRegistry.prototype.shellInProviderConnection).mockImplementation(
+      async (_providerId, _connectionInfo, onData, onError, onEnd) => {
+        onData('data');
+        onError('error');
+        onEnd();
+        return { write: vi.fn(), resize: vi.fn(), close: vi.fn() };
+      },
+    );
+    await expect(handle(undefined, 'provider-id', {}, 1)).resolves.not.toHaveProperty('error');
+  });
+
+  test('attachContainer onData, onError and onEnd callbacks do not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, _engine: string, _containerId: string, _onDataId: number) => Promise<number>
+    >('container-provider-registry:attachContainer');
+    vi.mocked(ContainerProviderRegistry.prototype.attachContainer).mockImplementation(
+      async (_engine, _containerId, onData, onError, onEnd) => {
+        onData('data');
+        onError('error');
+        onEnd();
+        return (): void => {};
+      },
+    );
+    await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toHaveProperty('error');
+  });
+
+  test('buildImage onData callback does not throw', async () => {
+    const handle = getHandler<(...args: unknown[]) => Promise<unknown>>('container-provider-registry:buildImage');
+    vi.mocked(TaskManager.prototype.createTask).mockReturnValue({
+      status: 'in-progress',
+      error: '',
+      onUpdate: vi.fn(),
+    } as unknown as Task);
+    vi.mocked(ContainerProviderRegistry.prototype.buildImage).mockImplementation(async (_dir, eventCollect) => {
+      eventCollect('stream', 'building...');
+      return {};
+    });
+    await expect(
+      handle(undefined, 'context-dir', 'Containerfile', 'my-image', 'linux/amd64', {}, 1),
+    ).resolves.not.toHaveProperty('error');
+    expect(ContainerProviderRegistry.prototype.buildImage).toHaveBeenCalled();
+  });
+
+  test('onDidUpdateProviderStatus callback does not throw', async () => {
+    const handle = getHandler<(_event: unknown, _providerId: string, _callbackId: number) => Promise<void>>(
+      'provider-registry:onDidUpdateProviderStatus',
+    );
+    vi.mocked(ProviderRegistry.prototype.onDidUpdateProviderStatus).mockImplementation((_providerId, callback) => {
+      callback({} as ProviderInfo);
+    });
+    await expect(handle(undefined, 'provider-id', 1)).resolves.not.toHaveProperty('error');
+  });
+
+  test('install and update preflight checks callbacks do not throw', async () => {
+    const installHandle = getHandler<(_event: unknown, _providerId: string, _callbackId: number) => Promise<boolean>>(
+      'provider-registry:runInstallPreflightChecks',
+    );
+    const updateHandle = getHandler<(_event: unknown, _providerId: string, _callbackId: number) => Promise<boolean>>(
+      'provider-registry:runUpdatePreflightChecks',
+    );
+    vi.mocked(ProviderRegistry.prototype.runPreflightChecks).mockImplementation(async (_providerId, callback) => {
+      callback.startCheck({ name: 'check' });
+      callback.endCheck({ name: 'check', successful: true });
+      return true;
+    });
+    await expect(installHandle(undefined, 'provider-id', 1)).resolves.not.toHaveProperty('error');
+    await expect(updateHandle(undefined, 'provider-id', 2)).resolves.not.toHaveProperty('error');
+  });
+
+  test('startReceiveLogs log, warn and error callbacks do not throw', async () => {
+    const handle = getHandler<(_event: unknown, _providerId: string, _callbackId: number) => Promise<void>>(
+      'provider-registry:startReceiveLogs',
+    );
+    type LogHandler = {
+      log: (...data: unknown[]) => void;
+      warn: (...data: unknown[]) => void;
+      error: (...data: unknown[]) => void;
+    };
+    let capturedHandler: LogHandler | undefined;
+    vi.mocked(ProviderRegistry.prototype.getMatchingLifecycleContext).mockReturnValue({
+      log: {
+        setLogHandler: (handler: LogHandler) => {
+          capturedHandler = handler;
+        },
+      },
+    } as unknown as ReturnType<typeof ProviderRegistry.prototype.getMatchingLifecycleContext>);
+
+    await handle(undefined, 'provider-id', 1);
+    expect(() => {
+      capturedHandler?.log('log message');
+      capturedHandler?.warn('warn message');
+      capturedHandler?.error('error message');
+    }).not.toThrow();
+  });
+
+  test('kubernetes-client:readPodLog callback does not throw', async () => {
+    const handle =
+      getHandler<(_event: unknown, _name: string, _container: string, _onDataId: number) => Promise<void>>(
+        'kubernetes-client:readPodLog',
+      );
+    const readPodLogSpy = vi
+      .spyOn(KubernetesClient.prototype, 'readPodLog')
+      .mockImplementation(async (_name, _container, callback) => {
+        callback('name', 'data');
+      });
+    await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
+    readPodLogSpy.mockRestore();
+  });
+
+  test('kubernetes-client:execIntoContainer onData, onError and onClose callbacks do not throw', async () => {
+    const handle = getHandler<
+      (_event: unknown, _podName: string, _containerName: string, _onDataId: number) => Promise<number>
+    >('kubernetes-client:execIntoContainer');
+    const execIntoContainerSpy = vi
+      .spyOn(KubernetesClient.prototype, 'execIntoContainer')
+      .mockImplementation(async (_podName, _containerName, onStdOut, onStdErr, onClose) => {
+        onStdOut(Buffer.from('stdout'));
+        onStdErr(Buffer.from('stderr'));
+        onClose();
+        return { onStdIn: vi.fn(), onResize: vi.fn() };
+      });
+    await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
+    execIntoContainerSpy.mockRestore();
   });
 });
 
