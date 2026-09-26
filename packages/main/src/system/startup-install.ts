@@ -91,6 +91,10 @@ export class StartupInstall {
 
     this.configurationRegistry.registerConfigurations([loginStartConfigurationNode, startMinimizeConfigurationNode]);
 
+    if (this.osStartup instanceof WindowsStartup) {
+      await this.osStartup.syncStartupPreference();
+    }
+
     // add notification handling
 
     this.configurationRegistry.onDidChangeConfiguration(async e => {
