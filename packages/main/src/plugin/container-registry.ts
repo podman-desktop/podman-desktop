@@ -19,7 +19,7 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { lstat, readFile, rm } from 'node:fs/promises';
+import { type FileHandle, lstat, open, readFile, rm, stat } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
@@ -2837,6 +2837,12 @@ export class ContainerProviderRegistry {
         'Kubernetes YAML path contains control characters. Enter a valid path or use Browse to select a file.',
       );
     }
+    // Windows treats two leading separators as a UNC path or a device namespace, including \\?\ and \\.\.
+    if (process.platform === 'win32' && /^[\\/]{2}/u.test(expanded)) {
+      throw new Error(
+        'Kubernetes YAML path cannot use a Windows network, extended-length, or device path. Choose a local file.',
+      );
+    }
     if (!path.isAbsolute(expanded)) {
       throw new Error(
         `Kubernetes YAML path "${trimmed}" must be absolute. Enter an absolute path or use Browse to select a file.`,
@@ -2875,27 +2881,59 @@ export class ContainerProviderRegistry {
       }
 
       const yamlPath = input.type === 'path' ? await this.resolveKubePlayFilePath(input.value) : undefined;
-      if (!options?.build) {
-        return await provider.libpodApi.playKube(yamlPath ?? Readable.from([input.value]), options);
-      }
-
-      // ensure build support is true, otherwise let's throw a nice user friendly error
-      const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
-      if (!buildSupported)
+      if (options?.build && !(await this.isTarPlayBuildSupported(provider))) {
         throw new Error(
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
-
-      // Build contexts are relative to the YAML file, and playback uses the same content we analyzed.
-      const content = yamlPath === undefined ? input.value : await readFile(yamlPath, 'utf8');
-      const kubePlay = KubePlayContext.fromContent(content, yamlPath === undefined ? tmpdir() : path.dirname(yamlPath));
-      await kubePlay.init();
-
-      if (kubePlay.getBuildContexts().length === 0) {
-        return await provider.libpodApi.playKube(Readable.from([content]), options);
       }
 
-      return await provider.libpodApi.playKube(kubePlay.build(), options);
+      let yamlFile: FileHandle | undefined;
+      try {
+        if (yamlPath) {
+          // Check for special files before open, then validate the file we actually opened.
+          if (!(await stat(yamlPath)).isFile()) {
+            throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
+          }
+          yamlFile = await open(
+            yamlPath,
+            process.platform === 'win32' ? 'r' : fs.constants.O_RDONLY | fs.constants.O_NONBLOCK,
+          );
+          if (!(await yamlFile.stat()).isFile()) {
+            throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
+          }
+        }
+
+        if (!options?.build) {
+          const fileStream = yamlFile?.createReadStream({ autoClose: false });
+          try {
+            return await provider.libpodApi.playKube(fileStream ?? Readable.from([input.value]), options);
+          } finally {
+            fileStream?.destroy();
+          }
+        }
+
+        // Build contexts are relative to the YAML file; playback uses the content read from that same file.
+        const content = yamlFile === undefined ? input.value : await yamlFile.readFile('utf8');
+        const kubePlay = KubePlayContext.fromContent(
+          content,
+          yamlPath === undefined ? tmpdir() : path.dirname(yamlPath),
+        );
+        await kubePlay.init();
+
+        if (kubePlay.getBuildContexts().length === 0) {
+          return await provider.libpodApi.playKube(Readable.from([content]), options);
+        }
+
+        return await provider.libpodApi.playKube(kubePlay.build(), options);
+      } finally {
+        if (yamlFile) {
+          try {
+            await yamlFile.close();
+          } catch (error) {
+            console.error(`Unable to close Kubernetes YAML file "${yamlPath}"`, error);
+          }
+        }
+      }
     } catch (error: unknown) {
       telemetryOptions['error'] = error;
       throw error;
