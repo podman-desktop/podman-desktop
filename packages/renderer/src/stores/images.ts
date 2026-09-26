@@ -18,10 +18,14 @@
 
 import type { ImageInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { ImageUtils } from '/@/lib/image/image-utils';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 
+import { containersInfos } from './containers';
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';
 
@@ -53,14 +57,42 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const imagesInfos: Writable<ImageInfo[]> = writable([]);
+export const imagesInfos: Writable<ImageInfoUI[]> = writable([]);
+
+const imageUtils = new ImageUtils();
+let images: ImageInfo[] = [];
+function toImagesInfoUI(containers: ContainerInfoUI[]): ImageInfoUI[] {
+  return images.map(image => imageUtils.getImagesInfoUI(image, containers, images)).flat();
+}
 
 // use helper here as window methods are initialized after the store in tests
-const listImages = (): Promise<ImageInfo[]> => {
-  return window.listImages();
+const listImages = async (): Promise<ImageInfoUI[]> => {
+  images = await window.listImages();
+  return toImagesInfoUI(get(containersInfos));
 };
 
-export const imagesEventStore = new EventStore<ImageInfo[]>(
+containersInfos.subscribe(containers => imagesInfos.set(toImagesInfoUI(containers)));
+
+export function setImageStatus(
+  engineId: string,
+  imageId: string,
+  base64RepoTag: string,
+  status: ImageInfoUI['status'],
+): void {
+  const update = (image: ImageInfoUI): ImageInfoUI => {
+    if (image.id === imageId && image.engineId === engineId && image.base64RepoTag === base64RepoTag) {
+      return { ...image, status };
+    }
+    return image.children?.length ? { ...image, children: image.children.map(update) } : image;
+  };
+  imagesInfos.update(imageInfos => imageInfos.map(update));
+}
+
+export function getImageInfo(engineId: string, imageId: string): ImageInfo | undefined {
+  return images.find(image => image.engineId === engineId && image.Id === imageId);
+}
+
+export const imagesEventStore = new EventStore<ImageInfoUI[]>(
   'images',
   imagesInfos,
   checkForUpdate,
@@ -74,5 +106,7 @@ imagesEventStore.setupWithDebounce();
 export const searchPattern = writable('');
 
 export const filtered = derived([searchPattern, imagesInfos], ([$searchPattern, $imagesInfos]) =>
-  $imagesInfos.filter(imageInfo => findMatchInLeaves(imageInfo, $searchPattern.toLowerCase())),
+  $imagesInfos.filter(imageInfo =>
+    findMatchInLeaves({ ...imageInfo, children: undefined }, $searchPattern.toLowerCase()),
+  ),
 );

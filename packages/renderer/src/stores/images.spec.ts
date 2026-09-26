@@ -20,7 +20,12 @@ import type { ImageInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { filtered, imagesEventStore, imagesInfos } from './images';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
+
+import { containersInfos } from './containers';
+import { filtered, imagesEventStore, imagesInfos, searchPattern, setImageStatus } from './images';
+import { findMatchInLeaves } from './search-util';
 
 const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
 
@@ -33,6 +38,7 @@ vi.mock(import('./search-util'), () => ({
 beforeEach(() => {
   callbacks.clear();
   vi.resetAllMocks();
+  containersInfos.set([]);
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
     return { dispose: vi.fn() };
@@ -44,6 +50,7 @@ test('images should be updated in case of a image is loaded from an archive', as
   vi.mocked(window.listImages).mockResolvedValue([
     {
       Id: '1',
+      Size: 0,
     } as unknown as ImageInfo,
   ]);
   const storeInfo = imagesEventStore.setup();
@@ -57,7 +64,7 @@ test('images should be updated in case of a image is loaded from an archive', as
   // now get list
   const images = get(imagesInfos);
   expect(images.length).toBe(1);
-  expect(images[0].Id).toBe('1');
+  expect(images[0].id).toBe('1');
 
   // ok now mock the listImages function to return an empty list
   vi.mocked(window.listImages).mockResolvedValue([]);
@@ -79,7 +86,7 @@ describe('filtered images tests', () => {
   test('images with isManifest field missing should be included', async () => {
     // No isManifest field
     vi.mocked(window.listImages).mockResolvedValue([
-      { Id: '2' } as unknown as ImageInfo, // Simulate isManifest field missing
+      { Id: '2', Size: 0 } as unknown as ImageInfo, // Simulate isManifest field missing
     ]);
 
     // Setup, callback and fetch the images
@@ -89,12 +96,12 @@ describe('filtered images tests', () => {
 
     const images = get(filtered);
     expect(images.length).toBe(1);
-    expect(images[0].Id).toBe('2');
+    expect(images[0].id).toBe('2');
   });
 
   test('images with isManifest false should be included', async () => {
     // isManifest but set to false
-    vi.mocked(window.listImages).mockResolvedValue([{ Id: '3', isManifest: false } as unknown as ImageInfo]);
+    vi.mocked(window.listImages).mockResolvedValue([{ Id: '3', Size: 0, isManifest: false } as unknown as ImageInfo]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
@@ -104,13 +111,13 @@ describe('filtered images tests', () => {
     // Check the filtered images
     const images = get(filtered);
     expect(images.length).toBe(1);
-    expect(images[0].Id).toBe('3');
+    expect(images[0].id).toBe('3');
     expect(images[0].isManifest).toBe(false);
   });
 
   test('images with isManifest true should be included', async () => {
     // isManifest but set to true
-    vi.mocked(window.listImages).mockResolvedValue([{ Id: '4', isManifest: true } as unknown as ImageInfo]);
+    vi.mocked(window.listImages).mockResolvedValue([{ Id: '4', Size: 0, isManifest: true } as unknown as ImageInfo]);
 
     // Setup, callback and fetch the images
     const storeInfo = imagesEventStore.setup();
@@ -126,9 +133,9 @@ describe('filtered images tests', () => {
   test('check against 3 images with different isManifest values', async () => {
     // 3 images with different isManifest values
     vi.mocked(window.listImages).mockResolvedValue([
-      { Id: '5', isManifest: false } as unknown as ImageInfo,
-      { Id: '6', isManifest: true } as unknown as ImageInfo,
-      { Id: '7' } as unknown as ImageInfo, // Simulate isManifest field missing
+      { Id: '5', Size: 0, isManifest: false } as unknown as ImageInfo,
+      { Id: '6', Size: 0, isManifest: true } as unknown as ImageInfo,
+      { Id: '7', Size: 0 } as unknown as ImageInfo, // Simulate isManifest field missing
     ]);
 
     // Setup, callback and fetch the images
@@ -143,11 +150,200 @@ describe('filtered images tests', () => {
     expect(images.length).toBe(3);
 
     // Check the first image
-    expect(images[0].Id).toBe('5');
+    expect(images[0].id).toBe('5');
     expect(images[0].isManifest).toBe(false);
 
     // Check the second image
-    expect(images[1].Id).toBe('6');
+    expect(images[1].id).toBe('6');
     expect(images[1].isManifest).toBeDefined();
   });
+});
+
+test('store holds one ImageInfoUI per RepoTag and resolves manifest children', async () => {
+  const twoTagImage = {
+    Id: 'image-1',
+    RepoTags: ['repo/name:tag1', 'repo/name:tag2'],
+    Created: 1700000000,
+    Size: 100,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+  const untaggedImage = {
+    Id: 'image-2',
+    Created: 1700000000,
+    Size: 50,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+  const childImage = {
+    Id: 'image-3',
+    RepoTags: ['child/name:tag'],
+    Digest: 'sha256:child-digest',
+    Created: 1700000000,
+    Size: 20,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+  const manifestImage = {
+    Id: 'image-4',
+    RepoTags: ['manifest/name:tag'],
+    isManifest: true,
+    manifests: [{ digest: 'sha256:child-digest' }],
+    Created: 1700000000,
+    Size: 10,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+
+  vi.mocked(window.listImages).mockResolvedValue([twoTagImage, untaggedImage, manifestImage, childImage]);
+  const storeInfo = imagesEventStore.setup();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  await storeInfo.fetch();
+
+  await vi.waitFor(() => {
+    const rows = get(imagesInfos);
+
+    const tagRows = rows.filter(row => row.id === 'image-1');
+    expect(tagRows).toHaveLength(2);
+    expect(tagRows[0].base64RepoTag).not.toBe(tagRows[1].base64RepoTag);
+
+    const untaggedRow = rows.find(row => row.id === 'image-2');
+    expect(untaggedRow?.name).toBe('<none>');
+
+    const manifestRow = rows.find(row => row.id === 'image-4');
+    expect(manifestRow?.children).toHaveLength(1);
+    expect(manifestRow?.children?.[0].id).toBe('image-3');
+  });
+});
+
+test('status follows containersInfos without a refetch', async () => {
+  const image = {
+    Id: 'image-b',
+    RepoTags: ['app:latest'],
+    Created: 1700000000,
+    Size: 30,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+
+  vi.mocked(window.listImages).mockResolvedValue([image]);
+  const storeInfo = imagesEventStore.setup();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  await storeInfo.fetch();
+
+  await vi.waitFor(() => {
+    const rows = get(imagesInfos);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe('UNUSED');
+  });
+
+  vi.mocked(window.listImages).mockClear();
+
+  containersInfos.set([{ imageId: 'image-b', image: 'app:latest' } as ContainerInfoUI]);
+
+  await vi.waitFor(() => {
+    const rows = get(imagesInfos);
+    expect(rows[0].status).toBe('USED');
+  });
+  expect(window.listImages).not.toHaveBeenCalled();
+});
+
+test('setImageStatus marks only the matching row', () => {
+  const row1 = {
+    id: 'image-c',
+    engineId: 'engine1',
+    base64RepoTag: 'dGFnMQ==',
+    status: 'UNUSED',
+    selected: true,
+  } as ImageInfoUI;
+  const row2 = {
+    id: 'image-c',
+    engineId: 'engine1',
+    base64RepoTag: 'dGFnMg==',
+    status: 'UNUSED',
+    selected: false,
+  } as ImageInfoUI;
+  const row3 = {
+    id: 'image-c',
+    engineId: 'engine2',
+    base64RepoTag: 'dGFnMQ==',
+    status: 'UNUSED',
+    selected: false,
+  } as ImageInfoUI;
+  imagesInfos.set([row1, row2, row3]);
+
+  setImageStatus('engine1', 'image-c', 'dGFnMQ==', 'DELETING');
+
+  const result = get(imagesInfos);
+  expect(result[0]).not.toBe(row1);
+  expect(result[0].status).toBe('DELETING');
+  expect(result[0].selected).toBe(true);
+  expect(result[1]).toBe(row2);
+  expect(result[2]).toBe(row3);
+  expect(result[2].status).toBe('UNUSED');
+});
+
+test('setImageStatus reaches a child nested in a manifest', () => {
+  const childRow = {
+    id: 'child-d',
+    engineId: 'engine1',
+    base64RepoTag: 'Y2hpbGQ=',
+    status: 'UNUSED',
+    selected: false,
+  } as ImageInfoUI;
+  const manifestRow = {
+    id: 'manifest-d',
+    engineId: 'engine1',
+    base64RepoTag: 'bWFuaWZlc3Q=',
+    status: 'UNUSED',
+    selected: false,
+    children: [childRow],
+  } as ImageInfoUI;
+  imagesInfos.set([manifestRow, childRow]);
+
+  setImageStatus('engine1', 'child-d', 'Y2hpbGQ=', 'DELETING');
+
+  const result = get(imagesInfos);
+  const topLevelChild = result.find(row => row.id === 'child-d');
+  const manifest = result.find(row => row.id === 'manifest-d');
+  expect(topLevelChild?.status).toBe('DELETING');
+  expect(manifest?.children?.[0].status).toBe('DELETING');
+});
+
+test('filtered does not match a manifest through its children', async () => {
+  const actual = await vi.importActual('./search-util');
+  vi.mocked(findMatchInLeaves).mockImplementation(
+    (actual as { findMatchInLeaves: typeof findMatchInLeaves }).findMatchInLeaves,
+  );
+
+  const childRow = {
+    id: 'child-e',
+    engineId: 'engine1',
+    base64RepoTag: 'Y2hpbGQ=',
+    name: 'child-only-name',
+    status: 'UNUSED',
+    selected: false,
+    badges: [],
+  } as unknown as ImageInfoUI;
+  const manifestRow = {
+    id: 'manifest-e',
+    engineId: 'engine1',
+    base64RepoTag: 'bWFuaWZlc3Q=',
+    name: 'manifest-name',
+    status: 'UNUSED',
+    selected: false,
+    badges: [],
+    children: [childRow],
+  } as unknown as ImageInfoUI;
+  imagesInfos.set([manifestRow, childRow]);
+
+  searchPattern.set('child-only-name');
+
+  await vi.waitFor(() => {
+    const rows = get(filtered);
+    expect(rows.map(row => row.id)).toContain('child-e');
+    expect(rows.map(row => row.id)).not.toContain('manifest-e');
+  });
+
+  searchPattern.set('');
 });

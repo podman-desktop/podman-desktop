@@ -1,11 +1,8 @@
 <script lang="ts">
-import type { ImageInfo } from '@podman-desktop/api';
-import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import { ImageUtils } from '/@/lib/image/image-utils';
 import ImageDetailsSummary from '/@/lib/image/ImageDetailsSummary.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ManifestIcon from '/@/lib/images/ManifestIcon.svelte';
@@ -13,7 +10,6 @@ import Badge from '/@/lib/ui/Badge.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
-import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
 
 interface Props {
@@ -24,14 +20,11 @@ interface Props {
 
 let { imageID, engineId, base64RepoTag }: Props = $props();
 
-let viewContributions: ViewInfoUI[] = [];
-let allImages: ImageInfo[];
+let allImages: ImageInfoUI[];
 
-let imageInfo: ImageInfo | undefined;
+let imageInfo: ImageInfoUI | undefined;
 let imageMetadataInfo = $state<ImageInfoUI>();
 let detailsPage = $state<DetailsPage>();
-
-const imageUtils = new ImageUtils();
 
 // We use updateImage from "Image" since it will still contain details
 // regarding the manifest (example: tags, size, etc.) even if the size is less than 5KB, it's still
@@ -40,10 +33,10 @@ function updateImage(): void {
   if (!allImages) {
     return;
   }
-  imageInfo = allImages.find(c => c.Id === imageID && c.engineId === engineId);
+  imageInfo = allImages.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag);
   let tempImage;
   if (imageInfo) {
-    tempImage = imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, undefined, viewContributions);
+    tempImage = { ...imageInfo };
   }
   if (tempImage) {
     imageMetadataInfo = tempImage;

@@ -4,6 +4,7 @@ import { createEventDispatcher } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { setImageStatus } from '/@/stores/images';
 
 import ActionsWrapper from './ActionsMenu.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -24,7 +25,7 @@ async function pushManifest(): Promise<void> {
 }
 
 async function deleteManifest(): Promise<void> {
-  manifest.status = 'DELETING';
+  setImageStatus(manifest.engineId, manifest.id, manifest.base64RepoTag, 'DELETING');
   dispatch('update', manifest);
   try {
     await window.removeManifest(manifest.engineId, manifest.name);

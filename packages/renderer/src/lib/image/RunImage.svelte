@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { ImageInfo, OpenDialogOptions } from '@podman-desktop/api';
+import type { OpenDialogOptions } from '@podman-desktop/api';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -26,7 +26,6 @@ import { router } from 'tinro';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
-import { ImageUtils } from '/@/lib/image/image-utils';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import type { PortInfo, RunOptions } from '/@/lib/image/run/run-options';
 import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
@@ -49,12 +48,10 @@ interface Props {
 
 let { imageID, engineId, base64RepoTag }: Props = $props();
 
-const imageUtils = new ImageUtils();
-
-let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
-let image: ImageInfoUI | undefined = $derived(
-  imageInfo ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos) : undefined,
+let imageInfo: ImageInfoUI | undefined = $derived(
+  $imagesInfos.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag),
 );
+let image: ImageInfoUI | undefined = $derived(imageInfo ? { ...imageInfo } : undefined);
 
 let options: RunOptions = $state({
   basic: {

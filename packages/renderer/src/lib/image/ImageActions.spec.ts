@@ -21,6 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { NavigationPage } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -28,6 +29,7 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ImageActions from '/@/lib/image/ImageActions.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import { handleNavigation } from '/@/navigation';
+import { imagesInfos } from '/@/stores/images';
 
 import { ImageUtils } from './image-utils';
 
@@ -88,6 +90,7 @@ test('Expect error dialog with correct message when image deletion fails', async
   getContributedMenusMock.mockResolvedValue([]);
 
   const image: ImageInfoUI = new Image('dummy', 'UNUSED') as unknown as ImageInfoUI;
+  imagesInfos.set([image]);
 
   render(ImageActions, {
     onPushImage: vi.fn(),
@@ -110,7 +113,8 @@ test('Expect error dialog with correct message when image deletion fails', async
     }),
   );
 
-  expect(image.status).toBe('DELETING');
+  expect(get(imagesInfos)[0].status).toBe('DELETING');
+  expect(image.status).toBe('UNUSED');
 });
 
 test('Expect no dropdown when one contribution and dropdownMenu off', async () => {

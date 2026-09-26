@@ -31,13 +31,20 @@ const imageUtils = new ImageUtils();
 
 export function createNavigationImageEntry(): NavigationRegistryEntry {
   imagesInfos.subscribe(images => {
-    count = images.length;
+    const firstRows = images.filter(
+      (image, index) => images.findIndex(other => other.id === image.id && other.engineId === image.engineId) === index,
+    );
+    count = firstRows.length;
     destinations = [
-      ...images.map(image => ({
+      ...firstRows.map(image => ({
         page: NavigationPage.IMAGE as const,
-        parameters: { id: image.Id, engineId: image.engineId, tag: image.RepoTags?.[0] ?? '<none>' },
+        parameters: {
+          id: image.id,
+          engineId: image.engineId,
+          tag: image.tag ? `${image.name}:${image.tag}` : image.name,
+        },
         icon: { iconComponent: ImageIcon },
-        name: `Image: ${image.RepoTags?.[0] ?? imageUtils.getShortId(image.Id)}`,
+        name: image.tag ? `Image: ${image.name}:${image.tag}` : `Image: ${imageUtils.getShortId(image.id)}`,
       })),
       {
         page: NavigationPage.IMAGES as const,

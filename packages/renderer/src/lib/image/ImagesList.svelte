@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
-import type { ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import type { ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -17,7 +17,6 @@ import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
-import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { ContextUI } from '/@/lib/context/context';
 import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
@@ -25,9 +24,8 @@ import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
-import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
-import { filtered, imagesInfos, searchPattern } from '/@/stores/images';
+import { filtered, imagesInfos, searchPattern, setImageStatus } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import { viewsContributions } from '/@/stores/views';
@@ -72,12 +70,17 @@ const imageUtils = new ImageUtils();
 let globalContext: ContextUI;
 let viewContributions: ViewInfoUI[] = [];
 
+function withViewContributions(image: ImageInfoUI, globalContext: ContextUI): ImageInfoUI {
+  return {
+    ...image,
+    icon: image.isManifest ? image.icon : (imageUtils.iconClass(image, globalContext, viewContributions) ?? image.icon),
+    badges: imageUtils.computeBagdes(image, globalContext, viewContributions),
+    children: image.children?.map(child => withViewContributions(child, globalContext)),
+  };
+}
+
 function updateImages(globalContext: ContextUI): void {
-  const computedImages = storeImages
-    .map((imageInfo: ImageInfo) =>
-      imageUtils.getImagesInfoUI(imageInfo, storeContainers, globalContext, viewContributions, storeImages),
-    )
-    .flat();
+  const computedImages = storeImages.map(image => withViewContributions(image, globalContext));
 
   // update selected items based on current selected items
   computedImages.forEach(image => {
@@ -123,18 +126,11 @@ function updateImages(globalContext: ContextUI): void {
 }
 
 let imagesUnsubscribe: Unsubscriber;
-let containersUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 let viewsUnsubscribe: Unsubscriber;
-let storeContainers: ContainerInfoUI[] = [];
-let storeImages: ImageInfo[] = [];
+let storeImages: ImageInfoUI[] = [];
 
 onMount(async () => {
-  containersUnsubscribe = containersInfos.subscribe(value => {
-    storeContainers = value;
-    updateImages(globalContext);
-  });
-
   imagesUnsubscribe = filtered.subscribe(value => {
     storeImages = value;
     updateImages(globalContext);
@@ -166,9 +162,6 @@ onDestroy(() => {
   // unsubscribe from the store
   if (imagesUnsubscribe) {
     imagesUnsubscribe();
-  }
-  if (containersUnsubscribe) {
-    containersUnsubscribe();
   }
   if (contextsUnsubscribe) {
     contextsUnsubscribe();
@@ -204,7 +197,9 @@ async function deleteSelectedImages(): Promise<void> {
 
   // mark images for deletion
   bulkDeleteInProgress = true;
-  selectedImages.forEach(image => (image.status = 'DELETING'));
+  selectedImages.forEach(image => {
+    setImageStatus(image.engineId, image.id, image.base64RepoTag, 'DELETING');
+  });
   images = images;
 
   await selectedImages.reduce((prev: Promise<void>, image) => {

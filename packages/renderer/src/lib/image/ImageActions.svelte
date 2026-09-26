@@ -11,6 +11,7 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
 import { context } from '/@/stores/context';
+import { setImageStatus } from '/@/stores/images';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 
 import ActionsWrapper from './ActionsMenu.svelte';
@@ -70,7 +71,7 @@ async function runImage(): Promise<void> {
 }
 
 async function deleteImage(): Promise<void> {
-  image.status = 'DELETING';
+  setImageStatus(image.engineId, image.id, image.base64RepoTag, 'DELETING');
   dispatch('update', image);
 
   try {

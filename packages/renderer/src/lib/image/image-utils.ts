@@ -118,7 +118,7 @@ export class ImageUtils {
   }
 
   computeBagdes(
-    imageInfo: ImageInfo,
+    imageInfo: ImageInfoUI,
     context?: ContextUI,
     viewContributions?: ViewInfoUI[],
   ): ViewContributionBadgeValue[] {
@@ -143,7 +143,7 @@ export class ImageUtils {
     return badges;
   }
 
-  iconClass(imageInfo: ImageInfo, context?: ContextUI, viewContributions?: ViewInfoUI[]): string | undefined {
+  iconClass(imageInfo: ImageInfoUI, context?: ContextUI, viewContributions?: ViewInfoUI[]): string | undefined {
     if (!context || !viewContributions) {
       return undefined;
     }
@@ -172,15 +172,9 @@ export class ImageUtils {
     return icon;
   }
 
-  getImagesInfoUI(
-    imageInfo: ImageInfo,
-    containersInfo: ContainerInfoUI[],
-    context?: ContextUI,
-    viewContributions?: ViewInfoUI[],
-    imageList?: ImageInfo[],
-  ): ImageInfoUI[] {
-    let icon = this.iconClass(imageInfo, context, viewContributions) ?? ImageIcon;
-    const badges = this.computeBagdes(imageInfo, context, viewContributions);
+  getImagesInfoUI(imageInfo: ImageInfo, containersInfo: ContainerInfoUI[], imageList?: ImageInfo[]): ImageInfoUI[] {
+    let icon = ImageIcon;
+    const badges: ViewContributionBadgeValue[] = [];
     let children: ImageInfoUI[] = [];
 
     if (imageInfo.isManifest) {
@@ -188,9 +182,7 @@ export class ImageUtils {
 
       // Retrieve the images that are part of the manifest
       const images = this.getImagesFromManifest(imageInfo, imageList ?? []);
-      children = images
-        .map(child => this.getImagesInfoUI(child, containersInfo, context, viewContributions, imageList))
-        .flat();
+      children = images.map(child => this.getImagesInfoUI(child, containersInfo, imageList)).flat();
     }
 
     if (!imageInfo.RepoTags) {
@@ -246,24 +238,13 @@ export class ImageUtils {
     }
   }
 
-  adaptContextOnImage(context: ContextUI, image: ImageInfo): void {
-    context.setValue('imageLabelKeys', image.Labels ? Object.keys(image.Labels) : []);
+  adaptContextOnImage(context: ContextUI, image: ImageInfoUI): void {
+    context.setValue('imageLabelKeys', image.labels ? Object.keys(image.labels) : []);
   }
 
   deleteImage(image: ImageInfoUI): Promise<void> {
     const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
     return window.deleteImage(image.engineId, imageId);
-  }
-
-  getImageInfoUI(
-    imageInfo: ImageInfo,
-    base64RepoTag: string,
-    containersInfo: ContainerInfoUI[],
-    context?: ContextUI,
-    viewContributions?: ViewInfoUI[],
-  ): ImageInfoUI | undefined {
-    const images = this.getImagesInfoUI(imageInfo, containersInfo, context, viewContributions);
-    return images.find(image => image.base64RepoTag === base64RepoTag);
   }
 
   // Input is an image and a list of images

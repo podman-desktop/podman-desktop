@@ -910,3 +910,102 @@ test('Expect environment dropdown to filter images by selected environment', asy
     expect(screen.queryByText('docker-image')).not.toBeInTheDocument();
   });
 });
+
+test('Expect a selection to survive a store refresh without being written into the store', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:old'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await vi.waitFor(() => expect(get(imagesInfos).length).toBeGreaterThan(0));
+  await vi.waitFor(() => expect(get(providerInfos).length).toBeGreaterThan(0));
+
+  await waitRender({});
+
+  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle image' });
+  await fireEvent.click(checkboxes[0]);
+
+  await vi.waitFor(() => expect(screen.getByText('On 1 selected items.')).toBeInTheDocument());
+
+  for (let i = 0; i < 2; i++) {
+    imagesInfos.set(get(imagesInfos).map(image => ({ ...image })));
+
+    await vi.waitFor(() => expect(screen.getByText('On 1 selected items.')).toBeInTheDocument());
+    await vi.waitFor(() => expect(get(imagesInfos).every(image => image.selected === false)).toBe(true));
+  }
+});
+
+test('Expect a bulk delete to mark only the selected tag row DELETING', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:old', 'fedora:new'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  vi.mocked(window.deleteImage).mockReturnValue(new Promise<void>(() => {}));
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await vi.waitFor(() => expect(get(imagesInfos).length).toBeGreaterThan(0));
+  await vi.waitFor(() => expect(get(providerInfos).length).toBeGreaterThan(0));
+
+  await waitRender({});
+
+  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle image' });
+  await fireEvent.click(checkboxes[0]);
+
+  const deleteButton = await screen.findByRole('button', { name: 'Delete 1 selected items' });
+  await fireEvent.click(deleteButton);
+
+  await vi.waitFor(() => expect(window.deleteImage).toHaveBeenCalled());
+
+  await vi.waitFor(() => expect(get(imagesInfos).find(image => image.tag === 'old')?.status).toBe('DELETING'));
+  expect(get(imagesInfos).find(image => image.tag === 'new')?.status).toBe('UNUSED');
+});
