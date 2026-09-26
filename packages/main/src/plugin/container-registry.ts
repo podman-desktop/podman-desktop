@@ -19,8 +19,8 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import { readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { type FileHandle, lstat, open, readFile, rm, stat } from 'node:fs/promises';
+import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -2821,6 +2821,46 @@ export class ContainerProviderRegistry {
     return gtr(coerced.version, '5.3.0');
   }
 
+  private async resolveKubePlayFilePath(value: string): Promise<string> {
+    if (typeof value !== 'string' || value.length > 32_768) {
+      throw new Error('Kubernetes YAML path is invalid or too long. Enter a valid path.');
+    }
+    const trimmed = value.trim();
+    const unquoted = /^(['"]).*\1$/s.test(trimmed) ? trimmed.slice(1, -1) : trimmed;
+    const expanded =
+      unquoted === '~' || unquoted.startsWith('~/') || (process.platform === 'win32' && unquoted.startsWith('~\\'))
+        ? path.join(homedir(), unquoted.slice(2))
+        : unquoted;
+
+    if (/\p{Cc}/u.test(expanded)) {
+      throw new Error(
+        'Kubernetes YAML path contains control characters. Enter a valid path or use Browse to select a file.',
+      );
+    }
+    // Windows treats two leading separators as a UNC path or a device namespace, including \\?\ and \\.\.
+    if (process.platform === 'win32' && /^[\\/]{2}/u.test(expanded)) {
+      throw new Error(
+        'Kubernetes YAML path cannot use a Windows network, extended-length, or device path. Choose a local file.',
+      );
+    }
+    if (!path.isAbsolute(expanded)) {
+      throw new Error(
+        `Kubernetes YAML path "${trimmed}" must be absolute. Enter an absolute path or use Browse to select a file.`,
+      );
+    }
+    // A browsed filename may end in spaces. Only trim the path when the exact name does not exist.
+    if (path.isAbsolute(value) && !/\p{Cc}/u.test(value) && value !== expanded) {
+      try {
+        await lstat(value);
+        return value;
+      } catch (error) {
+        // Preserve the original path on errors other than ENOENT so we never select a different file.
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) return value;
+      }
+    }
+    return expanded;
+  }
+
   async playKube(
     input: PlayKubeInput,
     selectedProvider: ProviderContainerConnectionInfo,
@@ -2840,32 +2880,60 @@ export class ContainerProviderRegistry {
         throw new Error('No provider with a running engine');
       }
 
-      // if we don't build, we can pass the input straight through
-      if (!options?.build) {
-        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
-        return provider.libpodApi.playKube(file, options);
-      }
-
-      // ensure build support is true, otherwise let's throw a nice user friendly error
-      const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
-      if (!buildSupported)
+      const yamlPath = input.type === 'path' ? await this.resolveKubePlayFilePath(input.value) : undefined;
+      if (options?.build && !(await this.isTarPlayBuildSupported(provider))) {
         throw new Error(
           `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
-
-      const kubePlay =
-        input.type === 'path'
-          ? KubePlayContext.fromFile(input.value)
-          : KubePlayContext.fromContent(input.value, tmpdir());
-      await kubePlay.init();
-
-      // if we have no context let's just use the yaml
-      if (kubePlay.getBuildContexts().length === 0) {
-        const file = input.type === 'path' ? input.value : Readable.from([input.value]);
-        return provider.libpodApi.playKube(file, options);
       }
 
-      return provider.libpodApi.playKube(kubePlay.build(), options);
+      let yamlFile: FileHandle | undefined;
+      try {
+        if (yamlPath) {
+          // Check for special files before open, then validate the file we actually opened.
+          if (!(await stat(yamlPath)).isFile()) {
+            throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
+          }
+          yamlFile = await open(
+            yamlPath,
+            process.platform === 'win32' ? 'r' : fs.constants.O_RDONLY | fs.constants.O_NONBLOCK,
+          );
+          if (!(await yamlFile.stat()).isFile()) {
+            throw new Error(`Kubernetes YAML path "${yamlPath}" is not a file. Select a YAML file.`);
+          }
+        }
+
+        if (!options?.build) {
+          const fileStream = yamlFile?.createReadStream({ autoClose: false });
+          try {
+            return await provider.libpodApi.playKube(fileStream ?? Readable.from([input.value]), options);
+          } finally {
+            fileStream?.destroy();
+          }
+        }
+
+        // Build contexts are relative to the YAML file; playback uses the content read from that same file.
+        const content = yamlFile === undefined ? input.value : await yamlFile.readFile('utf8');
+        const kubePlay = KubePlayContext.fromContent(
+          content,
+          yamlPath === undefined ? tmpdir() : path.dirname(yamlPath),
+        );
+        await kubePlay.init();
+
+        if (kubePlay.getBuildContexts().length === 0) {
+          return await provider.libpodApi.playKube(Readable.from([content]), options);
+        }
+
+        return await provider.libpodApi.playKube(kubePlay.build(), options);
+      } finally {
+        if (yamlFile) {
+          try {
+            await yamlFile.close();
+          } catch (error) {
+            console.error(`Unable to close Kubernetes YAML file "${yamlPath}"`, error);
+          }
+        }
+      }
     } catch (error: unknown) {
       telemetryOptions['error'] = error;
       throw error;

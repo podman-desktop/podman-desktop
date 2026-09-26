@@ -69,8 +69,8 @@ test.describe(`Play yaml file to pull images and create pod for app ${podAppName
 
     const yamlFilePath = path.resolve(__dirname, '..', '..', 'resources', `${podAppName}.yaml`);
     podsPage = await podmanKubePlayPage.playYaml({
-      podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile,
-      pathToYaml: yamlFilePath,
+      podmanKubePlayOption: PodmanKubePlayOptions.EnterYamlFilePath,
+      pathToYaml: `${yamlFilePath} `,
     });
     await playExpect(podsPage.heading).toBeVisible();
   });
