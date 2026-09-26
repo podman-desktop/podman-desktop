@@ -16,24 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface DisplayItem {
-  name: string;
-  visible: boolean;
-  /**
-   * Position in the main nav (0-based). Contiguous among items present in the nav.
-   * Undefined when the item is pinnable but not currently in the main nav.
-   */
-  index?: number;
-  /**
-   * True when this item leads to the page currently being displayed, so hiding it would
-   * make the active page unreachable from the navigation bar. Set for the selected entry
-   * and for any group containing it.
-   */
-  active?: boolean;
-}
-
-export interface DragPayload {
-  /** Prefixed display name, e.g. "Settings > Resources" or "Kubernetes > Nodes". */
-  name: string;
-  link: string;
+/**
+ * Whether a navigation entry pointing at `href` is the selected one for `routeUrl`.
+ *
+ * This is the single source of truth for "which nav item is active". `NavItem` uses it to
+ * draw the selection highlight, and the navigation registry uses it to tell the main process
+ * which items must not be hidden. Keeping both on the same rule is what guarantees the user
+ * can never hide the item they are currently looking at.
+ */
+export function isNavItemSelected(routeUrl: string, href: string): boolean {
+  const uri = encodeURI(href);
+  // tinro may append a query string; selection is decided by the path alone
+  const path = routeUrl.split('?')[0] ?? routeUrl;
+  return path === uri || (uri !== '/' && path.startsWith(uri));
 }
