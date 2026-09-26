@@ -318,6 +318,10 @@ Some tips for the PR process:
 - Any additional code changes should be in a new commit so we can see what has changed between reviews.
 - Squash your commits into logical pieces of work.
 
+### AI-assisted contributions
+
+AI-assisted contributions are welcome. If you use an LLM to help write code, tests, docs, or PR text, please read the [LLM (AI) Development Policy](LLM_POLICY.md) — it covers your responsibilities as a contributor, communicating in your own words, and the screenshot/video requirement for UI changes.
+
 ### Use the correct commit message semantics
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
