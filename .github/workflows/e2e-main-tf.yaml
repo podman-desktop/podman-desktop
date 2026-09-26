@@ -61,7 +61,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora-version: ['Fedora-43', 'Fedora-44']
+        os: ['Fedora']
+        os-version: ['43', '44']
     steps:
       - name: Set the default env. variables
         env:
@@ -80,9 +81,9 @@ jobs:
           api_key: ${{ secrets.TF_TOKEN }}
           git_ref: ${{ github.event.inputs.branch || github.ref_name }}
           create_github_summary: "false"
-          compose: ${{ matrix.fedora-version }}
+          compose: ${{ matrix.os }}-${{ matrix.os-version }}
           tmt_plan_filter: 'name:/tests/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}'
-          variables: COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }};NODE_VERSION=${{ env.NODE_VERSION }}
+          variables: COMPOSE=${{ matrix.os }}-${{ matrix.os-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }};NODE_VERSION=${{ env.NODE_VERSION }}
 
       - name: Extract Testing Farm work ID and base URL
         if: always()
@@ -146,7 +147,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: testing-farm-artifacts-${{ matrix.fedora-version }}
+          name: testing-farm-artifacts-${{ matrix.os }}-${{ matrix.os-version }}
           path: |
             results/*
             **/junit-playwright-results.xml
