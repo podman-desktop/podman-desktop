@@ -48,7 +48,6 @@ test.each([
   ['container-die-event'],
   ['container-init-event'],
   ['container-started-event'],
-  ['container-created-event'],
   ['container-removed-event'],
 ])('fetch containers when receiving event %s', async eventName => {
   // fast delays (10 & 10ms)

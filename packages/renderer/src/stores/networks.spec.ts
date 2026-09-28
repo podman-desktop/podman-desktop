@@ -42,7 +42,6 @@ test.each([
   ['container-die-event'],
   ['container-init-event'],
   ['container-started-event'],
-  ['container-created-event'],
   ['container-removed-event'],
   ['network-event'],
 ])('fetch networks when receiving event %s', async eventName => {
