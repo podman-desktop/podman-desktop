@@ -15,10 +15,17 @@ const orderStatus = ['failed', 'success'];
 const orderSeverity = ['critical', 'high', 'medium', 'low', undefined];
 
 interface Props {
-  imageInfo?: ImageInfo;
+  engineId: string;
+  imageId: string;
 }
 
-const { imageInfo }: Props = $props();
+const { engineId, imageId }: Props = $props();
+
+// the image checker API takes the raw ImageInfo, which the images store no longer holds
+async function getImageInfo(): Promise<ImageInfo | undefined> {
+  const images = await window.listImages();
+  return images.find(image => image.engineId === engineId && image.Id === imageId);
+}
 
 let providers: ProviderUI[] = $state([]);
 let results: CheckUI[] = $state([]);
@@ -52,10 +59,12 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
   cancellableTokenId = await window.getCancellableTokenSource();
   remainingProviders = providers.length;
 
+  const imageInfo = await getImageInfo();
+  if (!imageInfo) {
+    return;
+  }
+
   providers.forEach(provider => {
-    if (!imageInfo) {
-      return;
-    }
     let telemetryOptions = {
       provider: provider.info.label,
       error: '',

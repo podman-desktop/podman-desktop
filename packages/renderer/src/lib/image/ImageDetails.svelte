@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { ImageInfo } from '@podman-desktop/api';
 import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
@@ -18,7 +17,7 @@ import { lastPage } from '/@/stores/breadcrumb';
 import { context } from '/@/stores/context';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
 import { imageFilesProviders } from '/@/stores/image-files-providers';
-import { getImageInfo, imagesInfos } from '/@/stores/images';
+import { imagesInfos } from '/@/stores/images';
 import { viewsContributions } from '/@/stores/views';
 
 import { ImageUtils } from './image-utils';
@@ -71,17 +70,8 @@ let matchingImage: ImageInfoUI | undefined = $derived(
   $imagesInfos.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag),
 );
 let image: ImageInfoUI | undefined = $derived(
-  matchingImage
-    ? {
-        ...matchingImage,
-        icon: matchingImage.isManifest
-          ? matchingImage.icon
-          : (imageUtils.iconClass(matchingImage, $context, viewContributions) ?? matchingImage.icon),
-        badges: imageUtils.computeBagdes(matchingImage, $context, viewContributions),
-      }
-    : undefined,
+  matchingImage ? imageUtils.applyViewContributions(matchingImage, $context, viewContributions) : undefined,
 );
-let imageInfo: ImageInfo | undefined = $derived(image ? getImageInfo(engineId, imageID) : undefined);
 let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
 let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
 let hadImage = false;
@@ -144,10 +134,10 @@ $effect(() => {
           <ImageDetailsInspect image={image} />
         </Route>
         <Route path="/check" breadcrumb="Check" navigationHint="tab">
-          <ImageDetailsCheck imageInfo={imageInfo} />
+          <ImageDetailsCheck engineId={engineId} imageId={imageID} />
         </Route>
         <Route path="/files" breadcrumb="Files" navigationHint="tab">
-          <ImageDetailsFiles imageInfo={imageInfo} />
+          <ImageDetailsFiles engineId={engineId} imageId={imageID} />
         </Route>
       {/if}
     {/snippet}

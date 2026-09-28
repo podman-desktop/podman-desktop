@@ -79,11 +79,15 @@ beforeAll(() => {
   Object.defineProperty(window, 'getImageFilesProviders', { value: vi.fn().mockResolvedValue([]) });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
+  Object.defineProperty(window, 'getCancellableTokenSource', { value: vi.fn() });
+  Object.defineProperty(window, 'imageCheck', { value: vi.fn() });
+  Object.defineProperty(window, 'telemetryTrack', { value: vi.fn() });
 });
 
 beforeEach(() => {
   imagesInfos.set([]);
   viewsContributions.set([]);
+  imageCheckerProviders.set([]);
   getContributedMenusMock.mockResolvedValue([]);
 });
 
@@ -328,17 +332,14 @@ test('expect Check tab is displayed when an image checker provider exists', () =
 });
 
 test('Expect the check tab to hand the raw image to the checker provider', async () => {
-  const imageCheckMock = vi.fn().mockResolvedValue({ checks: [] });
-  Object.defineProperty(window, 'getCancellableTokenSource', { value: vi.fn().mockResolvedValue(1) });
-  Object.defineProperty(window, 'imageCheck', { value: imageCheckMock });
-  Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1);
+  vi.mocked(window.imageCheck).mockResolvedValue({ checks: [] });
+  vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
 
   listImagesMock.mockResolvedValue([myImage]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  while (get(imagesInfos).length !== 1) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitFor(() => expect(get(imagesInfos)).toHaveLength(1));
 
   hasAuthMock.mockReturnValue(new Promise(() => false));
 
@@ -358,9 +359,9 @@ test('Expect the check tab to hand the raw image to the checker provider', async
     base64RepoTag: Buffer.from('myImageTag').toString('base64'),
   });
 
-  await vi.waitFor(() => expect(imageCheckMock).toHaveBeenCalled());
+  await vi.waitFor(() => expect(window.imageCheck).toHaveBeenCalled());
 
-  expect(imageCheckMock).toHaveBeenCalledWith(
+  expect(window.imageCheck).toHaveBeenCalledWith(
     'provider1',
     expect.objectContaining({ Id: myImage.Id, RepoTags: myImage.RepoTags }),
     expect.any(Number),

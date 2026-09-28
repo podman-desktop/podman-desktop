@@ -16,11 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { derived, get, writable } from 'svelte/store';
 
-import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
@@ -60,18 +58,19 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
 export const imagesInfos: Writable<ImageInfoUI[]> = writable([]);
 
 const imageUtils = new ImageUtils();
-let images: ImageInfo[] = [];
-function toImagesInfoUI(containers: ContainerInfoUI[]): ImageInfoUI[] {
-  return images.map(image => imageUtils.getImagesInfoUI(image, containers, images)).flat();
-}
 
 // use helper here as window methods are initialized after the store in tests
 const listImages = async (): Promise<ImageInfoUI[]> => {
-  images = await window.listImages();
-  return toImagesInfoUI(get(containersInfos));
+  const images = await window.listImages();
+  const containers = get(containersInfos);
+  return images.map(image => imageUtils.getImagesInfoUI(image, containers, images)).flat();
 };
 
-containersInfos.subscribe(containers => imagesInfos.set(toImagesInfoUI(containers)));
+containersInfos.subscribe(containers =>
+  imagesInfos.update(images =>
+    images.map(image => ({ ...image, status: imageUtils.getRowInUse(image, containers) ? 'USED' : 'UNUSED' })),
+  ),
+);
 
 export function setImageStatus(
   engineId: string,
@@ -86,10 +85,6 @@ export function setImageStatus(
     return image.children?.length ? { ...image, children: image.children.map(update) } : image;
   };
   imagesInfos.update(imageInfos => imageInfos.map(update));
-}
-
-export function getImageInfo(engineId: string, imageId: string): ImageInfo | undefined {
-  return images.find(image => image.engineId === engineId && image.Id === imageId);
 }
 
 export const imagesEventStore = new EventStore<ImageInfoUI[]>(
@@ -107,6 +102,16 @@ export const searchPattern = writable('');
 
 export const filtered = derived([searchPattern, imagesInfos], ([$searchPattern, $imagesInfos]) =>
   $imagesInfos.filter(imageInfo =>
-    findMatchInLeaves({ ...imageInfo, children: undefined }, $searchPattern.toLowerCase()),
+    findMatchInLeaves(
+      {
+        ...imageInfo,
+        status: undefined,
+        age: undefined,
+        humanSize: undefined,
+        base64RepoTag: undefined,
+        children: undefined,
+      },
+      $searchPattern.toLowerCase(),
+    ),
   ),
 );

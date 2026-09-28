@@ -2,7 +2,7 @@
 import { faCircleArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
-import { createEventDispatcher, onMount } from 'svelte';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
@@ -53,8 +53,6 @@ let globalContext: ContextUI = $derived.by(() => {
   return ctx;
 });
 
-const dispatch = createEventDispatcher<{ update: ImageInfoUI }>();
-
 onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_IMAGE);
 });
@@ -71,12 +69,13 @@ async function runImage(): Promise<void> {
 }
 
 async function deleteImage(): Promise<void> {
+  const oldStatus = image.status;
   setImageStatus(image.engineId, image.id, image.base64RepoTag, 'DELETING');
-  dispatch('update', image);
 
   try {
     await imageUtils.deleteImage(image);
   } catch (error) {
+    setImageStatus(image.engineId, image.id, image.base64RepoTag, oldStatus);
     await onError(
       `Error while deleting image: ${error instanceof Error ? error.message : String(error)}`,
       'Delete Image Failed',

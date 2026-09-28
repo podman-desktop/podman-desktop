@@ -234,12 +234,12 @@ describe('inUse', () => {
       imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
     } as unknown as ContainerInfoUI;
 
-    const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerInfo]);
+    const isUsed = imageUtils.getInUse(untaggedImageInfo.Id, untaggedImageInfo.RepoTags, undefined, [containerInfo]);
     expect(isUsed).toBeTruthy();
   });
 
   test('should not expect inUse without a containerInfo', async () => {
-    const isUsed = imageUtils.getInUse(imageInfoHello);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags);
     expect(isUsed).toBeFalsy();
   });
 
@@ -248,7 +248,7 @@ describe('inUse', () => {
     ['quay.io/podman/hello2:latest', false],
     ['quay.io/podman/hello3:latest', false],
   ])('should expect different inUse based on repoTag %s', async (repoTag: string, expected: boolean) => {
-    const isUsed = imageUtils.getInUse(imageInfoHello, repoTag, [containerInfo]);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags, repoTag, [containerInfo]);
     expect(isUsed).toBe(expected);
   });
 
@@ -259,7 +259,7 @@ describe('inUse', () => {
       imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
     } as unknown as ContainerInfoUI;
 
-    const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerWithTag]);
+    const isUsed = imageUtils.getInUse(untaggedImageInfo.Id, untaggedImageInfo.RepoTags, undefined, [containerWithTag]);
     expect(isUsed).toBeTruthy();
   });
 
@@ -269,7 +269,9 @@ describe('inUse', () => {
       RepoTags: ['quay.io/podman/hello:custom-tag'],
     } as unknown as ImageInfo;
 
-    const isUsed = imageUtils.getInUse(retaggedImage, 'quay.io/podman/hello:custom-tag', [containerInfo]);
+    const isUsed = imageUtils.getInUse(retaggedImage.Id, retaggedImage.RepoTags, 'quay.io/podman/hello:custom-tag', [
+      containerInfo,
+    ]);
     expect(isUsed).toBeTruthy();
   });
 
@@ -280,12 +282,14 @@ describe('inUse', () => {
       imageId: 'sha256:different_image_id',
     } as unknown as ContainerInfoUI;
 
-    const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', [differentContainer]);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags, 'quay.io/podman/hello:latest', [
+      differentContainer,
+    ]);
     expect(isUsed).toBeFalsy();
   });
 
   test('should not expect inUse with empty containers list', async () => {
-    const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', []);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags, 'quay.io/podman/hello:latest', []);
     expect(isUsed).toBeFalsy();
   });
 });
@@ -362,5 +366,7 @@ test('should not expect inUse when the container carries no imageId', async () =
     image: 'quay.io/podman/hello:latest',
   } as unknown as ContainerInfoUI;
 
-  expect(imageUtils.getInUse(imageInfo, 'quay.io/podman/hello:latest', [containerWithoutImageId])).toBeFalsy();
+  expect(
+    imageUtils.getInUse(imageInfo.Id, imageInfo.RepoTags, 'quay.io/podman/hello:latest', [containerWithoutImageId]),
+  ).toBeFalsy();
 });

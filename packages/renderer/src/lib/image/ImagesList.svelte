@@ -70,17 +70,17 @@ const imageUtils = new ImageUtils();
 let globalContext: ContextUI;
 let viewContributions: ViewInfoUI[] = [];
 
-function withViewContributions(image: ImageInfoUI, globalContext: ContextUI): ImageInfoUI {
-  return {
-    ...image,
-    icon: image.isManifest ? image.icon : (imageUtils.iconClass(image, globalContext, viewContributions) ?? image.icon),
-    badges: imageUtils.computeBagdes(image, globalContext, viewContributions),
-    children: image.children?.map(child => withViewContributions(child, globalContext)),
-  };
-}
-
 function updateImages(globalContext: ContextUI): void {
-  const computedImages = storeImages.map(image => withViewContributions(image, globalContext));
+  const computedImages = storeImages.map(image => {
+    const withContributions = imageUtils.applyViewContributions(image, globalContext, viewContributions);
+    // a manifest lists the children that are part of the current filter, as they come from the filtered store
+    return {
+      ...withContributions,
+      children: withContributions.children?.filter(child =>
+        storeImages.some(storeImage => storeImage.id === child.id && storeImage.engineId === child.engineId),
+      ),
+    };
+  });
 
   // update selected items based on current selected items
   computedImages.forEach(image => {
@@ -200,7 +200,6 @@ async function deleteSelectedImages(): Promise<void> {
   selectedImages.forEach(image => {
     setImageStatus(image.engineId, image.id, image.base64RepoTag, 'DELETING');
   });
-  images = images;
 
   await selectedImages.reduce((prev: Promise<void>, image) => {
     return prev
@@ -369,8 +368,7 @@ function label(item: ImageInfoUI): string {
         defaultSortColumn="Age"
         key={key}
         label={label}
-        enableLayoutConfiguration={true}
-        on:update={(): ImageInfoUI[] => (images = images)}>
+        enableLayoutConfiguration={true}>
       </Table>
     {/if}
   </div>

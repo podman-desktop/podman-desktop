@@ -92,7 +92,12 @@ export class ImageUtils {
     return Buffer.from(name, 'binary').toString('base64');
   }
 
-  getInUse(imageInfo: ImageInfo, repositoryTag?: string, containersInfo?: ContainerInfoUI[]): boolean {
+  getInUse(
+    imageId: string,
+    imageRepoTags?: string[],
+    repositoryTag?: string,
+    containersInfo?: ContainerInfoUI[],
+  ): boolean {
     if (!containersInfo) {
       return false;
     }
@@ -101,7 +106,7 @@ export class ImageUtils {
       // imageId is required on ContainerInfoUI, but a hand-built fixture (e.g. in tests)
       // may still omit it; an undefined one simply never matches. Falling back to another
       // field here would report the wrong image as in-use
-      if (container.imageId !== imageInfo.Id) {
+      if (container.imageId !== imageId) {
         return false;
       }
       if (repositoryTag) {
@@ -110,11 +115,20 @@ export class ImageUtils {
         }
         // The container's original tag no longer exists on the image (e.g. image was retagged).
         // All remaining tags should be considered in-use since the underlying image data is referenced.
-        const repoTags = imageInfo.RepoTags ?? [];
+        const repoTags = imageRepoTags ?? [];
         return !repoTags.includes(container.image);
       }
-      return (imageInfo.RepoTags ?? []).length === 0;
+      return (imageRepoTags ?? []).length === 0;
     });
+  }
+
+  getRowInUse(image: ImageInfoUI, containersInfo?: ContainerInfoUI[]): boolean {
+    return this.getInUse(
+      image.id,
+      image.repoTags,
+      image.tag ? `${image.name}:${image.tag}` : undefined,
+      containersInfo,
+    );
   }
 
   computeBagdes(
@@ -201,12 +215,14 @@ export class ImageUtils {
           tag: '',
           base64RepoTag: this.getBase64EncodedName('<none>'),
           selected: false,
-          status: this.getInUse(imageInfo, undefined, containersInfo) ? 'USED' : 'UNUSED',
+          status: this.getInUse(imageInfo.Id, imageInfo.RepoTags, undefined, containersInfo) ? 'USED' : 'UNUSED',
           badges,
           icon,
           labels: imageInfo.Labels,
           isManifest: imageInfo.isManifest,
           digest: imageInfo.Digest,
+          repoTags: imageInfo.RepoTags,
+          repoDigests: imageInfo.RepoDigests,
           children,
         },
       ];
@@ -226,16 +242,27 @@ export class ImageUtils {
           tag: this.getTag(repoTag),
           base64RepoTag: this.getBase64EncodedName(repoTag),
           selected: false,
-          status: this.getInUse(imageInfo, repoTag, containersInfo) ? 'USED' : 'UNUSED',
+          status: this.getInUse(imageInfo.Id, imageInfo.RepoTags, repoTag, containersInfo) ? 'USED' : 'UNUSED',
           badges,
           icon,
           labels: imageInfo.Labels,
           isManifest: imageInfo.isManifest,
           digest: imageInfo.Digest,
+          repoTags: imageInfo.RepoTags,
+          repoDigests: imageInfo.RepoDigests,
           children,
         };
       });
     }
+  }
+
+  applyViewContributions(image: ImageInfoUI, context?: ContextUI, viewContributions?: ViewInfoUI[]): ImageInfoUI {
+    return {
+      ...image,
+      icon: image.isManifest ? image.icon : (this.iconClass(image, context, viewContributions) ?? image.icon),
+      badges: this.computeBagdes(image, context, viewContributions),
+      children: image.children?.map(child => this.applyViewContributions(child, context, viewContributions)),
+    };
   }
 
   adaptContextOnImage(context: ContextUI, image: ImageInfoUI): void {

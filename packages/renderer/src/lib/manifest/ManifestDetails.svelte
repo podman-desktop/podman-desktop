@@ -34,12 +34,8 @@ function updateImage(): void {
     return;
   }
   imageInfo = allImages.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag);
-  let tempImage;
   if (imageInfo) {
-    tempImage = { ...imageInfo };
-  }
-  if (tempImage) {
-    imageMetadataInfo = tempImage;
+    imageMetadataInfo = imageInfo;
   } else {
     // the image has been deleted
     detailsPage?.close();

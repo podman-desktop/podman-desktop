@@ -47,10 +47,9 @@ interface Props {
 
 let { imageID, engineId, base64RepoTag }: Props = $props();
 
-let imageInfo: ImageInfoUI | undefined = $derived(
+let image: ImageInfoUI | undefined = $derived(
   $imagesInfos.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag),
 );
-let image: ImageInfoUI | undefined = $derived(imageInfo ? { ...imageInfo } : undefined);
 
 let options: RunOptions = $state({
   basic: {

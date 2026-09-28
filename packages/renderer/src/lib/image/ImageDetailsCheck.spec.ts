@@ -57,8 +57,8 @@ test('expect to display wait message before to receive results', async () => {
   // never returns results
   vi.mocked(window.imageCheck).mockReturnValue(never());
 
-  render(ImageDetailsCheck, {
-    imageInfo: {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
       engineId: 'podman.Podman',
       engineName: 'Podman',
       engineType: 'podman',
@@ -73,6 +73,11 @@ test('expect to display wait message before to receive results', async () => {
       Containers: 0,
       Digest: 'digest',
     },
+  ]);
+
+  render(ImageDetailsCheck, {
+    engineId: 'podman.Podman',
+    imageId: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
   });
 
   await vi.waitFor(() => {
@@ -92,8 +97,8 @@ test('expect to cancel when clicking the Cancel button', async () => {
   // never returns results
   vi.mocked(window.imageCheck).mockReturnValue(never());
 
-  render(ImageDetailsCheck, {
-    imageInfo: {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
       engineId: 'podman.Podman',
       engineName: 'Podman',
       engineType: 'podman',
@@ -108,6 +113,11 @@ test('expect to cancel when clicking the Cancel button', async () => {
       Containers: 0,
       Digest: 'digest',
     },
+  ]);
+
+  render(ImageDetailsCheck, {
+    engineId: 'podman.Podman',
+    imageId: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
   });
 
   await vi.waitFor(async () => {
@@ -133,8 +143,8 @@ test('expect to cancel when destroying the component', async () => {
   // never returns results
   vi.mocked(window.imageCheck).mockReturnValue(never());
 
-  const result = render(ImageDetailsCheck, {
-    imageInfo: {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
       engineId: 'podman.Podman',
       engineName: 'Podman',
       engineType: 'podman',
@@ -149,6 +159,11 @@ test('expect to cancel when destroying the component', async () => {
       Containers: 0,
       Digest: 'digest',
     },
+  ]);
+
+  const result = render(ImageDetailsCheck, {
+    engineId: 'podman.Podman',
+    imageId: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
   });
 
   await vi.waitFor(async () => {
@@ -171,8 +186,8 @@ test('expect to not cancel again when destroying the component after manual canc
   // never returns results
   vi.mocked(window.imageCheck).mockReturnValue(never());
 
-  const result = render(ImageDetailsCheck, {
-    imageInfo: {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
       engineId: 'podman.Podman',
       engineName: 'Podman',
       engineType: 'podman',
@@ -187,6 +202,11 @@ test('expect to not cancel again when destroying the component after manual canc
       Containers: 0,
       Digest: 'digest',
     },
+  ]);
+
+  const result = render(ImageDetailsCheck, {
+    engineId: 'podman.Podman',
+    imageId: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
   });
 
   await vi.waitFor(async () => {
@@ -224,8 +244,8 @@ test('expect to display results from image checker provider', async () => {
     ],
   } as ImageChecks);
 
-  render(ImageDetailsCheck, {
-    imageInfo: {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
       engineId: 'podman.Podman',
       engineName: 'Podman',
       engineType: 'podman',
@@ -240,6 +260,11 @@ test('expect to display results from image checker provider', async () => {
       Containers: 0,
       Digest: 'digest',
     },
+  ]);
+
+  render(ImageDetailsCheck, {
+    engineId: 'podman.Podman',
+    imageId: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
   });
 
   await vi.waitFor(() => {
@@ -272,8 +297,8 @@ test('expect to not cancel when destroying the component after displaying result
     ],
   } as ImageChecks);
 
-  const result = render(ImageDetailsCheck, {
-    imageInfo: {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
       engineId: 'podman.Podman',
       engineName: 'Podman',
       engineType: 'podman',
@@ -288,6 +313,11 @@ test('expect to not cancel when destroying the component after displaying result
       Containers: 0,
       Digest: 'digest',
     },
+  ]);
+
+  const result = render(ImageDetailsCheck, {
+    engineId: 'podman.Podman',
+    imageId: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
   });
 
   await vi.waitFor(() => {

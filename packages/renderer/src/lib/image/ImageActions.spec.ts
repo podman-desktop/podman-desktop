@@ -80,6 +80,7 @@ class Image {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  imagesInfos.set([]);
 
   vi.mocked(ImageUtils.prototype.deleteImage).mockRejectedValue(new Error('Cannot delete image in test'));
 });
@@ -113,7 +114,8 @@ test('Expect error dialog with correct message when image deletion fails', async
     }),
   );
 
-  expect(get(imagesInfos)[0].status).toBe('DELETING');
+  // the failed deletion restores the status the row had before it started
+  expect(get(imagesInfos)[0].status).toBe('UNUSED');
   expect(image.status).toBe('UNUSED');
 });
 

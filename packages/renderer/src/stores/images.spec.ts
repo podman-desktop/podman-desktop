@@ -25,20 +25,15 @@ import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 
 import { containersInfos } from './containers';
 import { filtered, imagesEventStore, imagesInfos, searchPattern, setImageStatus } from './images';
-import { findMatchInLeaves } from './search-util';
 
 const callbacks = new Map<string, (data?: unknown) => void | Promise<void>>();
-
-// We always mock findMatchInLeaves to return true so we can test image.ts without having to render
-// the component, as we are not testing the $searchPattern store / functionality.
-vi.mock(import('./search-util'), () => ({
-  findMatchInLeaves: vi.fn(() => true), // Assume it always finds a match unless specified otherwise
-}));
 
 beforeEach(() => {
   callbacks.clear();
   vi.resetAllMocks();
   containersInfos.set([]);
+  imagesInfos.set([]);
+  searchPattern.set('');
   vi.mocked(window.events.receive).mockImplementation((message, callback) => {
     callbacks.set(message, callback);
     return { dispose: vi.fn() };
@@ -248,6 +243,67 @@ test('status follows containersInfos without a refetch', async () => {
   expect(window.listImages).not.toHaveBeenCalled();
 });
 
+test('filtered matches every tag row of an image, and matches a digest', async () => {
+  const twoTagImage = {
+    Id: 'image-f',
+    RepoTags: ['repo/name:tag1', 'repo/name:tag2'],
+    RepoDigests: ['repo/name@sha256:f00df00d'],
+    Created: 1700000000,
+    Size: 100,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+  const otherImage = {
+    Id: 'image-g',
+    RepoTags: ['other:latest'],
+    Created: 1700000000,
+    Size: 10,
+    engineId: 'engine1',
+    engineName: 'Podman',
+  } as unknown as ImageInfo;
+
+  vi.mocked(window.listImages).mockResolvedValue([twoTagImage, otherImage]);
+  const storeInfo = imagesEventStore.setup();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  await storeInfo.fetch();
+
+  // a match on one tag keeps the image's other tags, as the raw object used to
+  searchPattern.set('tag1');
+  await vi.waitFor(() => {
+    const rows = get(filtered);
+    expect(rows).toHaveLength(2);
+    expect(rows.every(row => row.id === 'image-f')).toBe(true);
+  });
+
+  searchPattern.set('sha256:f00df00d');
+  await vi.waitFor(() => {
+    const rows = get(filtered);
+    expect(rows).toHaveLength(2);
+    expect(rows.every(row => row.id === 'image-f')).toBe(true);
+  });
+});
+
+test('filtered does not match the status of a row', async () => {
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'image-h',
+      RepoTags: ['app:latest'],
+      Created: 1700000000,
+      Size: 10,
+      engineId: 'engine1',
+      engineName: 'Podman',
+    } as unknown as ImageInfo,
+  ]);
+  const storeInfo = imagesEventStore.setup();
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  await storeInfo.fetch();
+
+  await vi.waitFor(() => expect(get(imagesInfos)).toHaveLength(1));
+
+  searchPattern.set('used');
+  await vi.waitFor(() => expect(get(filtered)).toHaveLength(0));
+});
+
 test('setImageStatus marks only the matching row', () => {
   const row1 = {
     id: 'image-c',
@@ -311,11 +367,6 @@ test('setImageStatus reaches a child nested in a manifest', () => {
 });
 
 test('filtered does not match a manifest through its children', async () => {
-  const actual = await vi.importActual('./search-util');
-  vi.mocked(findMatchInLeaves).mockImplementation(
-    (actual as { findMatchInLeaves: typeof findMatchInLeaves }).findMatchInLeaves,
-  );
-
   const childRow = {
     id: 'child-e',
     engineId: 'engine1',
@@ -344,6 +395,4 @@ test('filtered does not match a manifest through its children', async () => {
     expect(rows.map(row => row.id)).toContain('child-e');
     expect(rows.map(row => row.id)).not.toContain('manifest-e');
   });
-
-  searchPattern.set('');
 });

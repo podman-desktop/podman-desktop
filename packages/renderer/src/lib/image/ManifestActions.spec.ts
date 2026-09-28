@@ -56,6 +56,7 @@ const fakedManifest: ImageInfoUI = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  imagesInfos.set([]);
 });
 
 test('Expect Delete Manifest to be there', async () => {
@@ -149,4 +150,30 @@ test('Expect delete to mark the manifest DELETING in the store', async () => {
   await vi.waitFor(() => {
     expect(get(imagesInfos)[0].status).toBe('DELETING');
   });
+});
+
+test('Expect a failed delete to restore the previous status in the store', async () => {
+  vi.mocked(withConfirmation).mockImplementation(f => f());
+  vi.mocked(window.removeManifest).mockRejectedValue(new Error('Cannot delete manifest in test'));
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Dismiss' });
+  getContributedMenusMock.mockResolvedValue([]);
+
+  const manifest: ImageInfoUI = {
+    ...fakedManifest,
+    name: 'my-manifest',
+    base64RepoTag: 'base64RepoTag',
+    status: 'UNUSED',
+  } as unknown as ImageInfoUI;
+
+  imagesInfos.set([manifest]);
+
+  render(ManifestActions, { manifest, onPushManifest: vi.fn() });
+
+  const button = screen.getByRole('button', { name: 'Delete Manifest' });
+  await fireEvent.click(button);
+
+  await vi.waitFor(() => {
+    expect(window.showMessageBox).toHaveBeenCalled();
+  });
+  expect(get(imagesInfos)[0].status).toBe('UNUSED');
 });

@@ -19,7 +19,6 @@
 import type { ImageInfo } from '@podman-desktop/api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { imageFilesProviders } from '/@/stores/image-files-providers';
@@ -86,17 +85,19 @@ describe('ImageDetailsFiles component', () => {
         Containers: 0,
         Digest: '',
       };
+      vi.mocked(window.listImages).mockResolvedValue([imageInfo]);
       render(ImageDetailsFiles, {
-        imageInfo,
+        engineId: imageInfo.engineId,
+        imageId: imageInfo.Id,
       });
       imageFilesProviders.set(providers);
-      await tick();
-      await tick();
-      if (calledExpected) {
-        expect(imageGetFilesystemLayersMock).toHaveBeenCalled();
-      } else {
-        expect(imageGetFilesystemLayersMock).not.toHaveBeenCalled();
-      }
+      await vi.waitFor(() => {
+        if (calledExpected) {
+          expect(imageGetFilesystemLayersMock).toHaveBeenCalled();
+        } else {
+          expect(imageGetFilesystemLayersMock).not.toHaveBeenCalled();
+        }
+      });
     });
 
     test('token is canceled when component is unmounted', async () => {
@@ -118,13 +119,15 @@ describe('ImageDetailsFiles component', () => {
         Containers: 0,
         Digest: '',
       };
+      vi.mocked(window.listImages).mockResolvedValue([imageInfo]);
       const component = render(ImageDetailsFiles, {
-        imageInfo,
+        engineId: imageInfo.engineId,
+        imageId: imageInfo.Id,
       });
       imageFilesProviders.set([{ id: 'provider1', label: 'Provider 1' }]);
-      await tick();
-      await tick();
-      expect(imageGetFilesystemLayersMock).toHaveBeenCalledWith(expect.anything(), expect.anything(), TOKEN_ID);
+      await vi.waitFor(() => {
+        expect(imageGetFilesystemLayersMock).toHaveBeenCalledWith(expect.anything(), expect.anything(), TOKEN_ID);
+      });
       component.unmount();
       expect(cancelTokenMock).toHaveBeenCalledWith(TOKEN_ID);
     });
@@ -147,8 +150,10 @@ describe('ImageDetailsFiles component', () => {
         Containers: 0,
         Digest: '',
       };
+      vi.mocked(window.listImages).mockResolvedValue([imageInfo]);
       render(ImageDetailsFiles, {
-        imageInfo,
+        engineId: imageInfo.engineId,
+        imageId: imageInfo.Id,
       });
       imageFilesProviders.set([{ id: 'provider1', label: 'Provider 1' }]);
       await waitFor(() => screen.getByText('Error: an error'));
@@ -197,18 +202,20 @@ describe('ImageDetailsFiles component', () => {
         Containers: 0,
         Digest: '',
       };
+      vi.mocked(window.listImages).mockResolvedValue([imageInfo]);
       render(ImageDetailsFiles, {
-        imageInfo,
+        engineId: imageInfo.engineId,
+        imageId: imageInfo.Id,
       });
       imageFilesProviders.set(providers);
-      await tick();
-      await tick();
-      const fetchButton = screen.queryByLabelText('fetch');
-      if (displayedExpected) {
-        expect(fetchButton).not.toBeNull();
-      } else {
-        expect(fetchButton).toBeNull();
-      }
+      await vi.waitFor(() => {
+        const fetchButton = screen.queryByLabelText('fetch');
+        if (displayedExpected) {
+          expect(fetchButton).not.toBeNull();
+        } else {
+          expect(fetchButton).toBeNull();
+        }
+      });
     });
 
     test('imageGetFilesystemLayers is called when the fetch button is clicked and button is hidden', async () => {
@@ -229,8 +236,10 @@ describe('ImageDetailsFiles component', () => {
         Containers: 0,
         Digest: '',
       };
+      vi.mocked(window.listImages).mockResolvedValue([imageInfo]);
       render(ImageDetailsFiles, {
-        imageInfo,
+        engineId: imageInfo.engineId,
+        imageId: imageInfo.Id,
       });
       imageFilesProviders.set([{ id: 'provider1', label: 'Provider 1' }]);
       await vi.waitFor(() => screen.getByLabelText('fetch'));
