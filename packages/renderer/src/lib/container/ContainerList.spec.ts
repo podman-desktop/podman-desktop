@@ -1439,7 +1439,7 @@ test('Expect search not to match the raw compose-prefixed container name', async
 
   // the stripped name still matches, as it did before the store held ContainerInfoUI
   const { unmount } = await waitRender({ searchTerm: 'web-1' });
-  expect(screen.queryByText('web-1')).toBeInTheDocument();
+  expect(screen.getByText('web-1')).toBeInTheDocument();
   unmount();
 
   // the raw prefixed name must not

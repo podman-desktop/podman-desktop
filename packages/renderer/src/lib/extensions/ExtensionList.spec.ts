@@ -131,7 +131,7 @@ test('Expect to see empty screen on extension page only', async () => {
   render(ExtensionList, { searchTerm: 'A' });
 
   await vi.waitFor(() => {
-    expect(screen.queryByText(`No extensions matching 'A' found`)).toBeInTheDocument();
+    expect(screen.getByText(`No extensions matching 'A' found`)).toBeInTheDocument();
   });
 
   // click on the catalog

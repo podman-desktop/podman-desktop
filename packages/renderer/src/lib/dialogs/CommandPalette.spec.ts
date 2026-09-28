@@ -509,7 +509,7 @@ describe('Command Palette', () => {
 
       await userEvent.keyboard(shortcut);
       if (shouldOpen) {
-        expect(screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).toBeInTheDocument();
       } else {
         expect(screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).not.toBeInTheDocument();
       }
