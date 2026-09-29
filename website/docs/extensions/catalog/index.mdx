@@ -26,7 +26,7 @@ Setting a custom catalog replaces the default catalog endpoint in Podman Desktop
 - Your extension is built, packaged into an OCI container image, and pushed to an accessible OCI registry. See [Packaging and publishing a Podman Desktop extension](/docs/extensions/publish).
 - An HTTP or HTTPS web server to host the catalog JSON file and static assets (icon, README, license).
 - For local testing, Python 3 or any static HTTP server.
-- Access to Podman Desktop's `settings.json` file.
+- Access to Podman Desktop's `settings.json` file. See the [settings reference's configuration file locations](/docs/configuration/settings-reference#configuration-file-location) for the path on your operating system.
 
 :::warning Trust and Security
 Only configure catalog URLs from trusted sources. Catalog entries instruct Podman Desktop to download and execute container images on your machine.
@@ -187,9 +187,9 @@ You can test a custom catalog on your local machine using Python's built-in HTTP
 
 ## Host the catalog in production
 
-For production or team-wide deployment, host your catalog file and assets on a reliable web server or static hosting service, such as GitHub Pages, GitLab Pages, AWS S3, Google Cloud Storage, or an internal Nginx or Apache server.
+For production or team-wide deployment, host your catalog file and assets on a reliable web server or static hosting service. [GitHub Pages](https://pages.github.com/) works well for this purpose and is used by the official catalog; other options include GitLab Pages, AWS S3, Google Cloud Storage, or an internal Nginx or Apache server.
 
-- Use HTTPS for production catalogs.
+- Use HTTPS for production catalogs. Plain HTTP works for local testing, but is not recommended for production.
 - Ensure that users' workstations can reach both the catalog URL and the OCI image registry.
 
 ## Manage releases and updates
