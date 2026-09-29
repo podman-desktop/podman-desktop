@@ -2908,63 +2908,100 @@ test('listExtensions should expose the bundled flag', async () => {
   expect(extensions[0]?.removable).toBeFalsy();
 });
 
-test('reloadExtension should forward the bundled flag to analyzeExtension', async () => {
-  const extension = {
-    path: 'fakePath',
-    manifest: {
-      displayName: 'My Extension Display Name',
-    },
-    id: 'my.extensionId',
-    devMode: false,
-    bundled: true,
-  } as unknown as AnalyzedExtension;
+describe.each([
+  { name: 'the bundled flag', removable: false, bundled: true, overrides: undefined },
+  {
+    name: 'overrides',
+    removable: true,
+    bundled: false,
+    overrides: { id: 'my.bundled.extension', version: '1.0.0' },
+  },
+])('should forward $name to analyzeExtension', ({ removable, bundled, overrides }) => {
+  test('reloadExtension', async () => {
+    const extension = {
+      path: 'fakePath',
+      manifest: {
+        displayName: 'My Extension Display Name',
+      },
+      id: 'my.extensionId',
+      devMode: false,
+      bundled,
+      overrides,
+    } as unknown as AnalyzedExtension;
 
-  vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
-  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
-  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
-  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
-  vi.mocked(notificationRegistry.addNotification).mockReturnValue({ dispose: vi.fn() } as unknown as Disposable);
+    vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+    vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+    vi.mocked(notificationRegistry.addNotification).mockReturnValue({ dispose: vi.fn() } as unknown as Disposable);
 
-  await extensionLoader.reloadExtension(extension, false);
+    await extensionLoader.reloadExtension(extension, removable);
 
-  expect(analyzeExtensionSpy).toBeCalledWith({
-    extensionPath: extension.path,
-    removable: false,
-    devMode: false,
-    bundled: true,
+    expect(analyzeExtensionSpy).toBeCalledWith({
+      extensionPath: extension.path,
+      removable,
+      devMode: false,
+      bundled,
+      overrides,
+    });
+  });
+
+  test('startExtension', async () => {
+    const extensionId = 'my.extensionId';
+
+    configurationRegistryGetConfigurationMock.mockReturnValue({
+      get: (): string[] => [],
+    });
+
+    extensionLoader.setAnalyzedExtension(extensionId, {
+      id: extensionId,
+      path: 'fakePath',
+      manifest: {
+        name: 'my-extension',
+      },
+      removable,
+      devMode: false,
+      bundled,
+      overrides,
+    } as unknown as AnalyzedExtensionWithApi);
+
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+    vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+
+    await extensionLoader.startExtension(extensionId);
+
+    expect(analyzeExtensionSpy).toBeCalledWith({
+      extensionPath: 'fakePath',
+      removable,
+      devMode: false,
+      bundled,
+      overrides,
+    });
   });
 });
 
-test('startExtension should forward the bundled flag to analyzeExtension', async () => {
-  const extensionId = 'my.bundled.extension';
-
-  configurationRegistryGetConfigurationMock.mockReturnValue({
-    get: (): string[] => [],
-  });
+test('listExtensions should expose overrides', async () => {
+  const extensionId = 'my.overrides.extension';
 
   extensionLoader.setAnalyzedExtension(extensionId, {
     id: extensionId,
     path: 'fakePath',
     manifest: {
-      name: 'bundled-extension',
+      name: 'overriding-extension',
     },
-    removable: false,
+    removable: true,
     devMode: false,
-    bundled: true,
+    bundled: false,
+    overrides: { id: 'my.bundled.extension', version: '1.0.0' },
   } as unknown as AnalyzedExtensionWithApi);
 
-  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
-  analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
-  vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+  const extensions = await extensionLoader.listExtensions();
 
-  await extensionLoader.startExtension(extensionId);
-
-  expect(analyzeExtensionSpy).toBeCalledWith({
-    extensionPath: 'fakePath',
-    removable: false,
-    devMode: false,
-    bundled: true,
-  });
+  expect(extensions.length).toBe(1);
+  expect(extensions[0]?.overrides).toEqual({ id: 'my.bundled.extension', version: '1.0.0' });
+  expect(extensions[0]?.bundled).toBeFalsy();
+  expect(extensions[0]?.removable).toBeTruthy();
 });
 
 describe('init', () => {

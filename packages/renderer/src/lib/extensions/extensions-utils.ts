@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { OverriddenExtension } from '@podman-desktop/core-api';
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 
@@ -49,6 +50,7 @@ export class ExtensionsUtils {
     let removable: boolean;
     let devMode: boolean;
     let bundled: boolean;
+    let overrides: OverriddenExtension | undefined;
     let state: string;
     let icon: undefined | string | { light: string; dark: string };
     let iconRef: undefined | string;
@@ -72,6 +74,7 @@ export class ExtensionsUtils {
       removable = matchingInstalledExtension.removable;
       devMode = matchingInstalledExtension.devMode;
       bundled = matchingInstalledExtension.bundled;
+      overrides = matchingInstalledExtension.overrides;
       state = matchingInstalledExtension.state;
       icon = matchingInstalledExtension.icon;
       name = matchingInstalledExtension.name;
@@ -141,6 +144,7 @@ export class ExtensionsUtils {
       removable,
       devMode,
       bundled,
+      overrides,
       state,
       icon,
       iconRef,
