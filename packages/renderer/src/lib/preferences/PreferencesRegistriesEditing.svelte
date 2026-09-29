@@ -4,6 +4,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button, Dropdown, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, tick } from 'svelte';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
