@@ -21,8 +21,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { ContextUI } from '/@/lib/context/context';
+import ManifestIcon from '/@/lib/images/ManifestIcon.svelte';
 
 import { ImageUtils } from './image-utils';
+import type { ImageInfoUI } from './ImageInfoUI';
 
 let imageUtils: ImageUtils;
 
@@ -57,10 +59,24 @@ describe.each([
 });
 
 test('should expect icon to be undefined if no context/view is passed', async () => {
-  const imageInfo = {
-    Id: '12345',
-    Labels: {},
-  } as unknown as ImageInfo;
+  const imageInfo: ImageInfoUI = {
+    id: '12345',
+    shortId: '12345',
+    name: '',
+    engineId: '',
+    engineName: '',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: '',
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+    labels: {},
+  };
   const icon = imageUtils.iconClass(imageInfo);
   expect(icon).toBe(undefined);
 });
@@ -75,12 +91,26 @@ test('should expect icon to be valid value with context/view set', async () => {
       when: 'io.x-k8s.kind.cluster in imageLabelKeys',
     },
   };
-  const imageInfo = {
-    Id: '12345',
-    Labels: {
+  const imageInfo: ImageInfoUI = {
+    id: '12345',
+    shortId: '12345',
+    name: '',
+    engineId: '',
+    engineName: '',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: '',
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+    labels: {
       'io.x-k8s.kind.cluster': 'ok',
     },
-  } as unknown as ImageInfo;
+  };
   const icon = imageUtils.iconClass(imageInfo, context, [view]);
   expect(icon).toBe('podman-desktop-icon-kind-icon');
 });
@@ -97,18 +127,45 @@ test('should expect icon to be ContainerIcon if no context/view is passed', asyn
 
 test('check parsing of image info without labels', async () => {
   const context = new ContextUI();
-  const imageInfo = {
-    Id: '1234',
-    Labels: '',
-  } as unknown as ImageInfo;
+  const imageInfo: ImageInfoUI = {
+    id: '1234',
+    shortId: '1234',
+    name: '',
+    engineId: '',
+    engineName: '',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: '',
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+  };
   imageUtils.adaptContextOnImage(context, imageInfo);
 });
 
 test('should expect badge to be undefined if no context/view is passed', async () => {
-  const imageInfo = {
-    Id: '12345',
-    Labels: {},
-  } as unknown as ImageInfo;
+  const imageInfo: ImageInfoUI = {
+    id: '12345',
+    shortId: '12345',
+    name: '',
+    engineId: '',
+    engineName: '',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: '',
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+    labels: {},
+  };
   const badges = imageUtils.computeBagdes(imageInfo);
   expect(badges).toStrictEqual([]);
 });
@@ -126,12 +183,26 @@ test('should expect badge to be valid value with context/view set', async () => 
       when: 'io.x-k8s.kind.cluster in imageLabelKeys',
     },
   };
-  const imageInfo = {
-    Id: '12345',
-    Labels: {
+  const imageInfo: ImageInfoUI = {
+    id: '12345',
+    shortId: '12345',
+    name: '',
+    engineId: '',
+    engineName: '',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: '',
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+    labels: {
       'io.x-k8s.kind.cluster': 'ok',
     },
-  } as unknown as ImageInfo;
+  };
   const badges = imageUtils.computeBagdes(imageInfo, context, [view]);
   // size should be one
   expect(badges.length).toBe(1);
@@ -163,12 +234,12 @@ describe('inUse', () => {
       imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
     } as unknown as ContainerInfoUI;
 
-    const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerInfo]);
+    const isUsed = imageUtils.getInUse(untaggedImageInfo.Id, untaggedImageInfo.RepoTags, undefined, [containerInfo]);
     expect(isUsed).toBeTruthy();
   });
 
   test('should not expect inUse without a containerInfo', async () => {
-    const isUsed = imageUtils.getInUse(imageInfoHello);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags);
     expect(isUsed).toBeFalsy();
   });
 
@@ -177,7 +248,7 @@ describe('inUse', () => {
     ['quay.io/podman/hello2:latest', false],
     ['quay.io/podman/hello3:latest', false],
   ])('should expect different inUse based on repoTag %s', async (repoTag: string, expected: boolean) => {
-    const isUsed = imageUtils.getInUse(imageInfoHello, repoTag, [containerInfo]);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags, repoTag, [containerInfo]);
     expect(isUsed).toBe(expected);
   });
 
@@ -188,7 +259,7 @@ describe('inUse', () => {
       imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
     } as unknown as ContainerInfoUI;
 
-    const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerWithTag]);
+    const isUsed = imageUtils.getInUse(untaggedImageInfo.Id, untaggedImageInfo.RepoTags, undefined, [containerWithTag]);
     expect(isUsed).toBeTruthy();
   });
 
@@ -198,7 +269,9 @@ describe('inUse', () => {
       RepoTags: ['quay.io/podman/hello:custom-tag'],
     } as unknown as ImageInfo;
 
-    const isUsed = imageUtils.getInUse(retaggedImage, 'quay.io/podman/hello:custom-tag', [containerInfo]);
+    const isUsed = imageUtils.getInUse(retaggedImage.Id, retaggedImage.RepoTags, 'quay.io/podman/hello:custom-tag', [
+      containerInfo,
+    ]);
     expect(isUsed).toBeTruthy();
   });
 
@@ -209,12 +282,14 @@ describe('inUse', () => {
       imageId: 'sha256:different_image_id',
     } as unknown as ContainerInfoUI;
 
-    const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', [differentContainer]);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags, 'quay.io/podman/hello:latest', [
+      differentContainer,
+    ]);
     expect(isUsed).toBeFalsy();
   });
 
   test('should not expect inUse with empty containers list', async () => {
-    const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', []);
+    const isUsed = imageUtils.getInUse(imageInfoHello.Id, imageInfoHello.RepoTags, 'quay.io/podman/hello:latest', []);
     expect(isUsed).toBeFalsy();
   });
 });
@@ -225,8 +300,6 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
   let manifestImage: ImageInfo;
   let imageList: ImageInfo[];
   let containerInfoList: ContainerInfoUI[];
-  let contextUI: ContextUI;
-  let viewContributions: ViewInfoUI[];
 
   beforeEach(() => {
     imageUtils = new ImageUtils();
@@ -253,15 +326,12 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     containerInfoList = [
       { id: 'container1', image: 'my.registry:1234/manifest:latest', imageId: 'manifest1' },
     ] as unknown as ContainerInfoUI[];
-
-    contextUI = new ContextUI();
-    viewContributions = [{ extensionId: 'extension', viewId: 'id', value: {} }] as unknown as ViewInfoUI[];
   });
 
   test('should retrieve images part of the manifest and construct ImageInfoUI objects', () => {
     const children = imageUtils
       .getImagesFromManifest(manifestImage, imageList)
-      .map(child => imageUtils.getImagesInfoUI(child, containerInfoList, contextUI, viewContributions, imageList))
+      .map(child => imageUtils.getImagesInfoUI(child, containerInfoList, imageList))
       .flat();
 
     expect(children.length).toBe(2);
@@ -270,15 +340,15 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
   });
 
   test('should construct ImageInfoUI object for manifest image', () => {
-    const imageInfoUIs = imageUtils.getImagesInfoUI(
-      manifestImage,
-      containerInfoList,
-      contextUI,
-      viewContributions,
-      imageList,
-    );
+    const imageInfoUIs = imageUtils.getImagesInfoUI(manifestImage, containerInfoList, imageList);
     expect(imageInfoUIs.length).toBe(1);
     expect(imageInfoUIs[0].id).toBe('manifest1');
+  });
+
+  test('getImagesInfoUI gives a manifest ManifestIcon and no badges', () => {
+    const imageInfoUIs = imageUtils.getImagesInfoUI(manifestImage, containerInfoList, imageList);
+    expect(imageInfoUIs[0].icon).toBe(ManifestIcon);
+    expect(imageInfoUIs[0].badges).toStrictEqual([]);
   });
 });
 
@@ -296,5 +366,7 @@ test('should not expect inUse when the container carries no imageId', async () =
     image: 'quay.io/podman/hello:latest',
   } as unknown as ContainerInfoUI;
 
-  expect(imageUtils.getInUse(imageInfo, 'quay.io/podman/hello:latest', [containerWithoutImageId])).toBeFalsy();
+  expect(
+    imageUtils.getInUse(imageInfo.Id, imageInfo.RepoTags, 'quay.io/podman/hello:latest', [containerWithoutImageId]),
+  ).toBeFalsy();
 });

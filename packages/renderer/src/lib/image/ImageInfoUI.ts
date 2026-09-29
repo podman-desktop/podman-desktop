@@ -43,4 +43,6 @@ export interface ImageInfoUI {
   children?: ImageInfoUI[];
   isManifest?: boolean;
   digest?: string;
+  repoTags?: string[];
+  repoDigests?: string[];
 }

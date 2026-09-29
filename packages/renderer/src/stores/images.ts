@@ -16,12 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 
+import { ImageUtils } from '/@/lib/image/image-utils';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 
+import { containersInfos } from './containers';
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';
 
@@ -53,14 +55,39 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const imagesInfos: Writable<ImageInfo[]> = writable([]);
+export const imagesInfos: Writable<ImageInfoUI[]> = writable([]);
+
+const imageUtils = new ImageUtils();
 
 // use helper here as window methods are initialized after the store in tests
-const listImages = (): Promise<ImageInfo[]> => {
-  return window.listImages();
+const listImages = async (): Promise<ImageInfoUI[]> => {
+  const images = await window.listImages();
+  const containers = get(containersInfos);
+  return images.map(image => imageUtils.getImagesInfoUI(image, containers, images)).flat();
 };
 
-export const imagesEventStore = new EventStore<ImageInfo[]>(
+containersInfos.subscribe(containers =>
+  imagesInfos.update(images =>
+    images.map(image => ({ ...image, status: imageUtils.getRowInUse(image, containers) ? 'USED' : 'UNUSED' })),
+  ),
+);
+
+export function setImageStatus(
+  engineId: string,
+  imageId: string,
+  base64RepoTag: string,
+  status: ImageInfoUI['status'],
+): void {
+  const update = (image: ImageInfoUI): ImageInfoUI => {
+    if (image.id === imageId && image.engineId === engineId && image.base64RepoTag === base64RepoTag) {
+      return { ...image, status };
+    }
+    return image.children?.length ? { ...image, children: image.children.map(update) } : image;
+  };
+  imagesInfos.update(imageInfos => imageInfos.map(update));
+}
+
+export const imagesEventStore = new EventStore<ImageInfoUI[]>(
   'images',
   imagesInfos,
   checkForUpdate,
@@ -74,5 +101,17 @@ imagesEventStore.setupWithDebounce();
 export const searchPattern = writable('');
 
 export const filtered = derived([searchPattern, imagesInfos], ([$searchPattern, $imagesInfos]) =>
-  $imagesInfos.filter(imageInfo => findMatchInLeaves(imageInfo, $searchPattern.toLowerCase())),
+  $imagesInfos.filter(imageInfo =>
+    findMatchInLeaves(
+      {
+        ...imageInfo,
+        status: undefined,
+        age: undefined,
+        humanSize: undefined,
+        base64RepoTag: undefined,
+        children: undefined,
+      },
+      $searchPattern.toLowerCase(),
+    ),
+  ),
 );

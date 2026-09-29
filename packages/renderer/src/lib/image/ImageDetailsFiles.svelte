@@ -11,9 +11,16 @@ import FilesystemLayerView from './FilesystemLayerView.svelte';
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';
 
 interface Props {
-  imageInfo?: ImageInfo;
+  engineId: string;
+  imageId: string;
 }
-let { imageInfo }: Props = $props();
+let { engineId, imageId }: Props = $props();
+
+// the image files API takes the raw ImageInfo, which the images store no longer holds
+async function getImageInfo(): Promise<ImageInfo | undefined> {
+  const images = await window.listImages();
+  return images.find(image => image.engineId === engineId && image.Id === imageId);
+}
 
 let imageLayers = $state<ImageFilesystemLayersUI>();
 let selectedLayer = $state<ImageFilesystemLayerUI>();
@@ -45,6 +52,7 @@ async function fetchImageLayers(provider: ImageFilesInfo, img: ImageInfo): Promi
 
 async function onFetchLayers(): Promise<void> {
   showFetchButton = false;
+  const imageInfo = await getImageInfo();
   if (filesProvider !== undefined && imageInfo !== undefined) {
     await fetchImageLayers(filesProvider, imageInfo);
   }
@@ -59,14 +67,12 @@ onMount(async () => {
   } finally {
     // we do this after trying to get the configuration, to be sure we are using the right configuration
     filesProvidersUnsubscribe = imageFilesProviders.subscribe(providers => {
-      if (providers.length === 1 && imageInfo) {
+      if (providers.length === 1) {
         filesProvider = providers[0];
         if (askFetchLayers) {
           showFetchButton = true;
         } else {
-          fetchImageLayers(filesProvider, imageInfo).catch((err: unknown) =>
-            console.error(`Error fetching image layers ${imageInfo.Id}`, err),
-          );
+          onFetchLayers().catch((err: unknown) => console.error(`Error fetching image layers ${imageId}`, err));
         }
       }
     });

@@ -40,6 +40,7 @@ import { imagesInfos } from '/@/stores/images';
 import { viewsContributions } from '/@/stores/views';
 
 import ImageDetails from './ImageDetails.svelte';
+import type { ImageInfoUI } from './ImageInfoUI';
 
 const listImagesMock = vi.fn();
 const getContributedMenusMock = vi.fn();
@@ -78,11 +79,15 @@ beforeAll(() => {
   Object.defineProperty(window, 'getImageFilesProviders', { value: vi.fn().mockResolvedValue([]) });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
+  Object.defineProperty(window, 'getCancellableTokenSource', { value: vi.fn() });
+  Object.defineProperty(window, 'imageCheck', { value: vi.fn() });
+  Object.defineProperty(window, 'telemetryTrack', { value: vi.fn() });
 });
 
 beforeEach(() => {
   imagesInfos.set([]);
   viewsContributions.set([]);
+  imageCheckerProviders.set([]);
   getContributedMenusMock.mockResolvedValue([]);
 });
 
@@ -104,7 +109,7 @@ test('Expect redirect to previous page if image is deleted', async () => {
   // remove myImage from the store when we call 'deleteImage'
   // it will then refresh the store and update ImageDetails page
   deleteImageMock.mockImplementation(() => {
-    imagesInfos.update(images => images.filter(image => image.Id !== myImage.Id));
+    imagesInfos.update(images => images.filter(image => image.id !== myImage.Id));
   });
   hasAuthMock.mockReturnValue(new Promise(() => false));
 
@@ -174,11 +179,23 @@ describe('expect display usage of an image', () => {
     } as unknown as ContainerInfoUI;
     containersInfos.set([containerInfo]);
 
-    const myImage = {
+    const myImage: ImageInfoUI = {
+      id: imageID,
+      shortId: imageID,
+      name: '<none>',
       engineId: 'podman',
-      Id: imageID,
-      Size: 0,
-    } as unknown as ImageInfo;
+      engineName: 'podman',
+      tag: '',
+      createdAt: 0,
+      age: '',
+      arch: '',
+      size: 0,
+      humanSize: '',
+      base64RepoTag: Buffer.from('<none>', 'binary').toString('base64'),
+      selected: false,
+      status: 'USED',
+      badges: [],
+    };
     imagesInfos.set([myImage]);
 
     hasAuthMock.mockReturnValue(new Promise(() => false));
@@ -204,11 +221,23 @@ describe('expect display usage of an image', () => {
     } as unknown as ContainerInfoUI;
     containersInfos.set([containerInfo]);
 
-    const myImage = {
+    const myImage: ImageInfoUI = {
+      id: imageID,
+      shortId: imageID,
+      name: '<none>',
       engineId: 'podman',
-      Id: imageID,
-      Size: 0,
-    } as unknown as ImageInfo;
+      engineName: 'podman',
+      tag: '',
+      createdAt: 0,
+      age: '',
+      arch: '',
+      size: 0,
+      humanSize: '',
+      base64RepoTag: Buffer.from('<none>', 'binary').toString('base64'),
+      selected: false,
+      status: 'UNUSED',
+      badges: [],
+    };
     imagesInfos.set([myImage]);
 
     hasAuthMock.mockReturnValue(new Promise(() => false));
@@ -229,11 +258,23 @@ describe('expect display usage of an image', () => {
 test('expect Check tab is not displayed by default', () => {
   const imageID = '123456';
   const engineId = 'podman';
-  const myImage = {
+  const myImage: ImageInfoUI = {
+    id: imageID,
+    shortId: imageID,
+    name: '<none>',
     engineId,
-    Id: imageID,
-    Size: 0,
-  } as unknown as ImageInfo;
+    engineName: 'podman',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: Buffer.from('<none>', 'binary').toString('base64'),
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+  };
   imagesInfos.set([myImage]);
 
   hasAuthMock.mockReturnValue(new Promise(() => false));
@@ -252,11 +293,23 @@ test('expect Check tab is not displayed by default', () => {
 test('expect Check tab is displayed when an image checker provider exists', () => {
   const imageID = '123456';
   const engineId = 'podman';
-  const myImage = {
+  const myImage: ImageInfoUI = {
+    id: imageID,
+    shortId: imageID,
+    name: '<none>',
     engineId,
-    Id: imageID,
-    Size: 0,
-  } as unknown as ImageInfo;
+    engineName: 'podman',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: Buffer.from('<none>', 'binary').toString('base64'),
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+  };
   imagesInfos.set([myImage]);
 
   hasAuthMock.mockReturnValue(new Promise(() => false));
@@ -276,6 +329,43 @@ test('expect Check tab is displayed when an image checker provider exists', () =
   expect(summaryTab).toBeInTheDocument();
   const checkTab = screen.getByRole('link', { name: 'Check' });
   expect(checkTab).toBeInTheDocument();
+});
+
+test('Expect the check tab to hand the raw image to the checker provider', async () => {
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1);
+  vi.mocked(window.imageCheck).mockResolvedValue({ checks: [] });
+  vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
+
+  listImagesMock.mockResolvedValue([myImage]);
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  await vi.waitFor(() => expect(get(imagesInfos)).toHaveLength(1));
+
+  hasAuthMock.mockReturnValue(new Promise(() => false));
+
+  imageCheckerProviders.set([
+    {
+      id: 'provider1',
+      label: 'Image Checker',
+    },
+  ]);
+
+  router.goto('/check');
+
+  // render the component
+  render(ImageDetails, {
+    imageID: 'myImage',
+    engineId: 'engine0',
+    base64RepoTag: Buffer.from('myImageTag').toString('base64'),
+  });
+
+  await vi.waitFor(() => expect(window.imageCheck).toHaveBeenCalled());
+
+  expect(window.imageCheck).toHaveBeenCalledWith(
+    'provider1',
+    expect.objectContaining({ Id: myImage.Id, RepoTags: myImage.RepoTags }),
+    expect.any(Number),
+  );
 });
 
 test.each([

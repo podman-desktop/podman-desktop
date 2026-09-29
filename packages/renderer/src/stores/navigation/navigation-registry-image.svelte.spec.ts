@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import { imagesInfos } from '/@/stores/images';
 
 import { createNavigationImageEntry } from './navigation-registry-image.svelte';
@@ -31,16 +31,17 @@ test('createNavigationImageEntry', async () => {
   const entry = createNavigationImageEntry();
   imagesInfos.set([
     {
-      Id: '1234',
-      Size: 0,
-      RepoTags: ['nginx:latest'],
+      id: '1234',
+      name: 'nginx',
+      tag: 'latest',
       engineId: 'podman',
-    } as unknown as ImageInfo,
+    } as unknown as ImageInfoUI,
     {
-      Id: '3456',
-      Size: 0,
+      id: '3456',
+      name: '<none>',
+      tag: '',
       engineId: 'docker',
-    } as unknown as ImageInfo,
+    } as unknown as ImageInfoUI,
   ]);
 
   expect(entry).toBeDefined();
@@ -68,4 +69,46 @@ test('createNavigationImageEntry', async () => {
 
   expect(listEntry.page).toBe('images');
   expect(listEntry.name).toBe('Images (2)');
+});
+
+test('one entry per image when it carries several tags', async () => {
+  const entry = createNavigationImageEntry();
+  imagesInfos.set([
+    {
+      id: '1',
+      name: 'nginx',
+      tag: 'latest',
+      engineId: 'podman',
+    } as unknown as ImageInfoUI,
+    {
+      id: '1',
+      name: 'nginx',
+      tag: '1.0',
+      engineId: 'podman',
+    } as unknown as ImageInfoUI,
+    {
+      id: '2',
+      name: 'localhost:5000/app',
+      tag: '1',
+      engineId: 'podman',
+    } as unknown as ImageInfoUI,
+    {
+      id: '3',
+      name: '<none>',
+      tag: '<none>',
+      engineId: 'podman',
+    } as unknown as ImageInfoUI,
+  ]);
+
+  await vi.waitFor(() => {
+    expect(entry.counter).toBe(3);
+    expect(entry.destinations).toHaveLength(4);
+  });
+
+  const [first, second, third] = entry.destinations;
+
+  expect(first.name).toBe('Image: nginx:latest');
+  expect(second.name).toBe('Image: localhost:5000/app:1');
+  expect(third.name).toBe('Image: <none>:<none>');
+  expect(third).toHaveProperty('parameters', { id: '3', engineId: 'podman', tag: '<none>:<none>' });
 });

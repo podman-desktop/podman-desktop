@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { type GoToInfo, NavigationPage } from '@podman-desktop/core-api';
+import { SvelteSet } from 'svelte/reactivity';
 
 import { ImageUtils } from '/@/lib/image/image-utils';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
@@ -31,13 +32,26 @@ const imageUtils = new ImageUtils();
 
 export function createNavigationImageEntry(): NavigationRegistryEntry {
   imagesInfos.subscribe(images => {
-    count = images.length;
+    const seen = new SvelteSet<string>();
+    const firstRows = images.filter(image => {
+      const key = `${image.engineId}:${image.id}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+    count = firstRows.length;
     destinations = [
-      ...images.map(image => ({
+      ...firstRows.map(image => ({
         page: NavigationPage.IMAGE as const,
-        parameters: { id: image.Id, engineId: image.engineId, tag: image.RepoTags?.[0] ?? '<none>' },
+        parameters: {
+          id: image.id,
+          engineId: image.engineId,
+          tag: image.tag ? `${image.name}:${image.tag}` : image.name,
+        },
         icon: { iconComponent: ImageIcon },
-        name: `Image: ${image.RepoTags?.[0] ?? imageUtils.getShortId(image.Id)}`,
+        name: image.tag ? `Image: ${image.name}:${image.tag}` : `Image: ${imageUtils.getShortId(image.id)}`,
       })),
       {
         page: NavigationPage.IMAGES as const,

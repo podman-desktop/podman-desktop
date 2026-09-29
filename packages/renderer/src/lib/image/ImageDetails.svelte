@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { ImageInfo } from '@podman-desktop/api';
 import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
@@ -15,7 +14,6 @@ import {
 } from '/@/lib/view/views';
 import Route from '/@/Route.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
-import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
 import { imageFilesProviders } from '/@/stores/image-files-providers';
@@ -68,11 +66,11 @@ function closeModals(): void {
   renameImageModal = false;
 }
 
-let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
+let matchingImage: ImageInfoUI | undefined = $derived(
+  $imagesInfos.find(c => c.id === imageID && c.engineId === engineId && c.base64RepoTag === base64RepoTag),
+);
 let image: ImageInfoUI | undefined = $derived(
-  imageInfo
-    ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, $context, viewContributions)
-    : undefined,
+  matchingImage ? imageUtils.applyViewContributions(matchingImage, $context, viewContributions) : undefined,
 );
 let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
 let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
@@ -136,10 +134,10 @@ $effect(() => {
           <ImageDetailsInspect image={image} />
         </Route>
         <Route path="/check" breadcrumb="Check" navigationHint="tab">
-          <ImageDetailsCheck imageInfo={imageInfo} />
+          <ImageDetailsCheck engineId={engineId} imageId={imageID} />
         </Route>
         <Route path="/files" breadcrumb="Files" navigationHint="tab">
-          <ImageDetailsFiles imageInfo={imageInfo} />
+          <ImageDetailsFiles engineId={engineId} imageId={imageID} />
         </Route>
       {/if}
     {/snippet}

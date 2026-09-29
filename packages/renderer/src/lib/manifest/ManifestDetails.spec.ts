@@ -22,6 +22,7 @@ import type { ImageInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import { imagesInfos } from '/@/stores/images';
 
 import ManifestDetails from './ManifestDetails.svelte';
@@ -49,7 +50,24 @@ test('It should render correctly with given image information', async () => {
     Id: imageID,
     Size: 0,
   } as unknown as ImageInfo;
-  imagesInfos.set([myImage]);
+  const myImageInfoUI: ImageInfoUI = {
+    id: imageID,
+    shortId: imageID,
+    name: '<none>',
+    engineId,
+    engineName: 'podman',
+    tag: '',
+    createdAt: 0,
+    age: '',
+    arch: '',
+    size: 0,
+    humanSize: '',
+    base64RepoTag: Buffer.from('<none>', 'binary').toString('base64'),
+    selected: false,
+    status: 'UNUSED',
+    badges: [],
+  };
+  imagesInfos.set([myImageInfoUI]);
   listImagesMock.mockResolvedValue([myImage]);
 
   render(ManifestDetails, {

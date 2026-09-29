@@ -43,7 +43,7 @@ function closeModals(): void {
 <!-- There is no support for interacting with manifests yet, so do not show any manifest-related-image-actions. -->
 
 {#if object.isManifest}
-  <ManifestActions manifest={object} onPushManifest={handlePushManifestModal} dropdownMenu={true} on:update />
+  <ManifestActions manifest={object} onPushManifest={handlePushManifestModal} dropdownMenu={true} />
 
   {#if pushManifestModal && pushManifestModalInfo}
     <PushManifestModal
@@ -55,8 +55,7 @@ function closeModals(): void {
     image={object}
     onPushImage={handlePushImageModal}
     onRenameImage={handleRenameImageModal}
-    dropdownMenu={true}
-    on:update />
+    dropdownMenu={true} />
 
   {#if pushImageModal && pushImageModalImageInfo}
     <PushImageModal

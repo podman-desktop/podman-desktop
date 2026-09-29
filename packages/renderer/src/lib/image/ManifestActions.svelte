@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faArrowUp, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { setImageStatus } from '/@/stores/images';
 
 import ActionsWrapper from './ActionsMenu.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -17,18 +17,17 @@ interface Props {
 
 let { onPushManifest, manifest = $bindable(), dropdownMenu = false, detailed = false }: Props = $props();
 
-const dispatch = createEventDispatcher<{ update: ImageInfoUI }>();
-
 async function pushManifest(): Promise<void> {
   onPushManifest(manifest);
 }
 
 async function deleteManifest(): Promise<void> {
-  manifest.status = 'DELETING';
-  dispatch('update', manifest);
+  const oldStatus = manifest.status;
+  setImageStatus(manifest.engineId, manifest.id, manifest.base64RepoTag, 'DELETING');
   try {
     await window.removeManifest(manifest.engineId, manifest.name);
   } catch (error) {
+    setImageStatus(manifest.engineId, manifest.id, manifest.base64RepoTag, oldStatus);
     await onError(`Error while deleting manifest: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
