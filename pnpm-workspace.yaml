@@ -32,6 +32,8 @@ overrides:
   tmp-promise>tmp: ^0.2.7
   tar: ^7.5.3
   cheerio>undici: ^7.18.2
+  undici@^6: ^6.29.0
+  undici@^8: ^8.11.2
   minimatch>@isaacs/brace-expansion: ^5.0.1
   brace-expansion@^1: ^1.1.21
   brace-expansion@^2: ^2.1.7
