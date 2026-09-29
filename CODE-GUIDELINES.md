@@ -771,7 +771,8 @@ All dialogs, modals, and forms must adhere to the follwoing guidelines to ensure
 
 ### 1. Component usage
 
-Action rows must use the shared `ButtonRow` component from `@podman-desktop/ui-svelte` with right alignment, even for a single button. Custom button layouts are prohibited.
+Action rows must use the shared `ButtonRow` component from `@podman-desktop/ui-svelte`, even for a single button.
+Custom button layouts are prohibited.
 
 ✅ **Use this pattern:**
 
@@ -795,31 +796,33 @@ import { ButtonRow } from '@podman-desktop/ui-svelte';
 </div>
 ```
 
-### 2. Button sequencing
+### 2. Form alignment
 
-Cancel/secondary buttons appear first, while primary actions should be positioned last (right in LTR layouts, mirrored for RTL).
+The `ButtonRow` component is already right aligned within itself, so any usage must ensure this styling is preserved, including in single-button forms. No centered or full-width standalone buttons.
 
 ✅ **Use this pattern:**
 
 ```svelte
-<ButtonRow>
-  <Button type="link" on:click={onCancel}>Cancel</Button>
-  <Button type="primary" on:click={onDelete}>Delete</Button>
-</ButtonRow>
+<form on:submit={onSubmit}>
+  <ButtonRow>
+    <Button type="primary">Submit</Button>
+  </ButtonRow>
+</form>
 ```
 
 🚫 **Instead of:**
 
 ```svelte
-<ButtonRow>
-  <Button type="primary" on:click={onDelete}>Delete</Button>
-  <Button type="link" on:click={onCancel}>Cancel</Button>
-</ButtonRow>
+<form on:submit={onSubmit}>
+  <ButtonRow >
+    <Button type="primary" class="w-full">Submit</Button>
+  </ButtonRow>
+</form>
 ```
 
 ### 3. Explicit cancel buttons
 
-Every dialog requires a labeled Cancel/Dismiss button that will close it, even when an icon-only close button exists. Screen readers and keyboard users rely on focusable, labeled controls.
+Every dialog, modal, or form must have a labeled Cancel/Dismiss button that will either cancel the action or close the component, even when an icon-only close button exists. Screen readers and keyboard users rely on focusable, labeled controls.
 
 ✅ **Use this pattern:**
 
@@ -852,33 +855,31 @@ Every dialog requires a labeled Cancel/Dismiss button that will close it, even w
 </Dialog>
 ```
 
-### 4. Form alignment
+### 4. Button sequencing
 
-Button rows must be right-aligned within footers, including single-button forms. No centered or full-width standalone buttons.
+Cancel/secondary buttons appear first, while primary actions should be positioned last (right in LTR layouts, mirrored for RTL).
 
 ✅ **Use this pattern:**
 
 ```svelte
-<form on:submit={onSubmit}>
-  <Input label="Name" bind:value={name} />
-  <ButtonRow>
-    <Button type="primary">Submit</Button>
-  </ButtonRow>
-</form>
+<ButtonRow>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="primary" on:click={onDelete}>Delete</Button>
+</ButtonRow>
 ```
 
 🚫 **Instead of:**
 
 ```svelte
-<form on:submit={onSubmit}>
-  <Input label="Name" bind:value={name} />
-  <Button type="primary" class="w-full">Submit</Button>
-</form>
+<ButtonRow>
+  <Button type="primary" on:click={onDelete}>Delete</Button>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+</ButtonRow>
 ```
 
 ### 5. DOM/tab order
 
-Visual order must match DOM sequence. Never use CSS `order` property to decouple visual from logical flow. Tab navigation must proceed left-to-right (LTR) through the button row.
+Visual order must match DOM sequence. Never use CSS `order` property to manipulate visual order. Tab navigation must proceed left-to-right (LTR) through the button row.
 
 ✅ **Use this pattern:**
 
@@ -900,27 +901,13 @@ Visual order must match DOM sequence. Never use CSS `order` property to decouple
 
 ### 6. Focus management
 
-Non-destructive dialogs may focus primary actions on open. Destructive dialogs must default focus to Cancel buttons to prevent accidental data loss.
+Non-destructive dialogs may focus primary actions on open. Destructive dialogs must default focus to Cancel buttons to prevent accidental data loss or destructive action execution.
 
 ✅ **Use this pattern (destructive action):**
 
 ```svelte
-<script lang="ts">
-let cancelButton: Button;
-
-$effect(() => {
-  if (dialogOpen) {
-    cancelButton?.focus();
-  }
-});
-</script>
-
-<Dialog title="Delete Container?" bind:open={dialogOpen}>
-  <svelte:fragment slot="buttons">
-    <ButtonRow>
-      <Button type="link" bind:this={cancelButton} on:click={onCancel}>Cancel</Button>
-      <Button type="primary" on:click={onDelete}>Delete</Button>
-    </ButtonRow>
-  </svelte:fragment>
-</Dialog>
+<ButtonRow initialFocus="first">
+  <Button type="link" bind:this={cancelButton} on:click={onCancel}>Cancel</Button>
+  <Button type="primary" on:click={onDelete}>Delete</Button>
+</ButtonRow>
 ```
