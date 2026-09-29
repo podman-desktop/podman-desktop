@@ -135,7 +135,7 @@ describe('HyperVPrep.isSupported', () => {
 });
 
 describe('HyperVPrep.getStatus', () => {
-  test.each([{ message: 'unknown command' }, { message: 'unrecognized subcommand' }])(
+  test.each([{ message: 'access denied' }, { message: 'status unavailable' }])(
     'throws when podman reports "$message"',
     async ({ message }) => {
       vi.mocked(execPodman).mockRejectedValue({
@@ -165,7 +165,7 @@ describe('HyperVPrep.refreshContext', () => {
   });
 
   test.each([{ message: 'unknown command' }, { message: 'unrecognized subcommand' }])(
-    'hides buttons when podman reports "$message"',
+    'keeps the action available and records status-check failures for "$message"',
     async ({ message }) => {
       vi.mocked(execPodman).mockRejectedValue({
         message,
@@ -177,8 +177,11 @@ describe('HyperVPrep.refreshContext', () => {
       const status = await hyperVPrep.refreshContext();
 
       expect(status).toBeUndefined();
-      expect(extensionApi.context.setValue).toHaveBeenCalledWith(HYPERV_PREP_SUPPORTED_KEY, false);
-      expect(extensionApi.context.setValue).toHaveBeenCalledWith(HYPERV_PREP_NOT_APPLIED_KEY, false);
+      expect(extensionApi.context.setValue).toHaveBeenCalledWith(HYPERV_PREP_SUPPORTED_KEY, true);
+      expect(extensionApi.context.setValue).toHaveBeenCalledWith(HYPERV_PREP_NOT_APPLIED_KEY, true);
+      expect(telemetryLoggerMock.logError).toHaveBeenCalledWith('hypervPrepStatusCheckFailed', {
+        error: expect.objectContaining({ message }),
+      });
     },
   );
 

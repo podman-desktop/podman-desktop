@@ -39,12 +39,12 @@ export interface HyperVPrepStatusResult {
   stdout?: string;
 }
 
-const PODMAN_MINIMUM_VERSION_FOR_HYPERV_PREP = '6.0.0';
-const MEMBERSHIP_HEADER = 'hyper-v administrators group membership:';
-const REGISTRY_HEADER = 'hyper-v vsock registry entries:';
-
 @injectable()
 export class HyperVPrep {
+  private readonly podmanMinimumVersionForHyperVPrep = '6.0.0';
+  private readonly membershipHeader = 'hyper-v administrators group membership:';
+  private readonly registryHeader = 'hyper-v vsock registry entries:';
+
   #command: Disposable | undefined;
 
   constructor(
@@ -76,7 +76,7 @@ export class HyperVPrep {
     }
 
     const binaryInfo = await this.podmanBinary.getBinaryInfo();
-    return binaryInfo !== undefined && compare(binaryInfo.version, PODMAN_MINIMUM_VERSION_FOR_HYPERV_PREP) >= 0;
+    return binaryInfo !== undefined && compare(binaryInfo.version, this.podmanMinimumVersionForHyperVPrep) >= 0;
   }
 
   async getStatus(): Promise<HyperVPrepStatusResult> {
@@ -87,9 +87,18 @@ export class HyperVPrep {
     };
   }
 
+  /**
+   * Parses output from `podman system hyperv-prep --status`, for example:
+   * ```text
+   * Hyper-V vsock registry entries:
+   *   No vsock registry entries found.
+   * Hyper-V Administrators group membership:
+   *   Current user is NOT a member
+   * ```
+   */
   parseStatus(stdout: string): Omit<HyperVPrepStatusResult, 'stdout'> {
-    const membership = this.extractStatusSection(stdout, MEMBERSHIP_HEADER);
-    const registry = this.extractStatusSection(stdout, REGISTRY_HEADER);
+    const membership = this.extractStatusSection(stdout, this.membershipHeader);
+    const registry = this.extractStatusSection(stdout, this.registryHeader);
     const registrySource = registry || stdout;
 
     const isGroupMember = /^yes$/i.test(membership) || /current user is (?:a )?member/i.test(membership);
@@ -124,12 +133,6 @@ export class HyperVPrep {
       context.setValue(HYPERV_PREP_NOT_APPLIED_KEY, status.status === 'notApplied');
       return status;
     } catch (error) {
-      if (this.isCommandMissing(error)) {
-        context.setValue(HYPERV_PREP_SUPPORTED_KEY, false);
-        context.setValue(HYPERV_PREP_NOT_APPLIED_KEY, false);
-        return undefined;
-      }
-
       this.telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
       console.warn('Unable to check Hyper-V prep status', error);
       context.setValue(HYPERV_PREP_NOT_APPLIED_KEY, true);
@@ -137,16 +140,11 @@ export class HyperVPrep {
     }
   }
 
-  private isCommandMissing(error: unknown): boolean {
-    if (typeof error !== 'object' || error === null) {
-      return false;
-    }
-
-    const runError = error as RunError;
-    const message = `${runError.message ?? ''} ${runError.stderr ?? ''} ${runError.stdout ?? ''}`.toLowerCase();
-    return message.includes('unknown command') || message.includes('unrecognized') || message.includes('invalid');
-  }
-
+  /**
+   * Extracts the text following a section header up to the next `Hyper-V` section.
+   * For example, given `Hyper-V vsock registry entries:` as the header, the sample
+   * status output in {@link parseStatus} yields `No vsock registry entries found.`.
+   */
   private extractStatusSection(stdout: string, header: string): string {
     const start = stdout.toLowerCase().indexOf(header);
     if (start === -1) {
