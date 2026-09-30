@@ -205,7 +205,9 @@ export class ExtensionsCatalog {
         : undefined;
 
       if (latestVersionReadme) {
-        const response = await fetch(latestVersionReadme);
+        const response = await fetch(latestVersionReadme, {
+          signal: AbortSignal.timeout(ExtensionsCatalog.FETCH_TIMEOUT),
+        });
         if (!response.ok) {
           throw new Error(`Failed to fetch README from ${latestVersionReadme}`);
         }
