@@ -82,11 +82,13 @@ test('Expect empty screen when fetch fails', async () => {
   // expect fetch was called
   await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalled());
 
+  // wait for the empty screen to appear (promise resolves to empty string after catch)
+  await vi.waitFor(() => {
+    const emptyScreen = screen.getByRole('heading', { name: 'No Readme' });
+    expect(emptyScreen).toBeInTheDocument();
+  });
+
   // expect no Markdown
   const markdownContent = screen.queryByRole('region', { name: 'markdown-content' });
   expect(markdownContent).not.toBeInTheDocument();
-
-  // but empty screen due to error
-  const emptyScreen = screen.getByRole('heading', { name: 'No Readme' });
-  expect(emptyScreen).toBeInTheDocument();
 });
