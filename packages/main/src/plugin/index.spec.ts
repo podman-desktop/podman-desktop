@@ -996,7 +996,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       },
     );
     await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:getContainerStats-onData'),
+      expect.anything(),
+    );
   });
 
   test('sendToWebContents only logs once per channel while the window stays destroyed', async () => {
@@ -1028,7 +1031,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       },
     );
     await expect(handle(undefined, {}, 'my-image', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:pullImage-onData'),
+      expect.anything(),
+    );
   });
 
   test('pushImage onData, error and end callbacks do not throw', async () => {
@@ -1043,7 +1049,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       },
     );
     await expect(handle(undefined, 'podman', 'registry.com/repo/image:latest', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:pushImage-onData'),
+      expect.anything(),
+    );
   });
 
   test('logsContainer callback does not throw', async () => {
@@ -1056,7 +1065,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
     await expect(
       handle(undefined, { engineId: 'engine', containerId: 'container-id', onDataId: 1 }),
     ).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:logsContainer-onData'),
+      expect.anything(),
+    );
   });
 
   test('shellInContainer onData, onError and onEnd callbacks do not throw', async () => {
@@ -1072,7 +1084,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       },
     );
     await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:shellInContainer-onData'),
+      expect.anything(),
+    );
   });
 
   test('shellInProviderConnection onData, onError and onEnd callbacks do not throw', async () => {
@@ -1088,7 +1103,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       },
     );
     await expect(handle(undefined, 'provider-id', {}, 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider-registry:shellInProviderConnection-onData'),
+      expect.anything(),
+    );
   });
 
   test('attachContainer onData, onError and onEnd callbacks do not throw', async () => {
@@ -1104,7 +1122,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       },
     );
     await expect(handle(undefined, 'engine', 'container-id', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:attachContainer-onData'),
+      expect.anything(),
+    );
   });
 
   test('buildImage onData callback does not throw', async () => {
@@ -1122,7 +1143,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       handle(undefined, 'context-dir', 'Containerfile', 'my-image', 'linux/amd64', {}, 1),
     ).resolves.not.toHaveProperty('error');
     expect(ContainerProviderRegistry.prototype.buildImage).toHaveBeenCalled();
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('container-provider-registry:buildImage-onData'),
+      expect.anything(),
+    );
   });
 
   test('onDidUpdateProviderStatus callback does not throw', async () => {
@@ -1133,7 +1157,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       callback({} as ProviderInfo);
     });
     await expect(handle(undefined, 'provider-id', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider-registry:onDidUpdateProviderStatus-onData'),
+      expect.anything(),
+    );
   });
 
   test('install and update preflight checks callbacks do not throw', async () => {
@@ -1150,7 +1177,14 @@ describe('sendToWebContents resilience when the main window is gone', () => {
     });
     await expect(installHandle(undefined, 'provider-id', 1)).resolves.not.toHaveProperty('error');
     await expect(updateHandle(undefined, 'provider-id', 2)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider-registry:installPreflightChecksUpdate'),
+      expect.anything(),
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider-registry:updatePreflightChecksUpdate'),
+      expect.anything(),
+    );
   });
 
   test('startReceiveLogs log, warn and error callbacks do not throw', async () => {
@@ -1179,7 +1213,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       logHandler.warn('warn message');
       logHandler.error('error message');
     }).not.toThrow();
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider-registry:startReceiveLogs-onData'),
+      expect.anything(),
+    );
   });
 
   test('kubernetes-client:readPodLog callback does not throw', async () => {
@@ -1187,15 +1224,16 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       getHandler<(_event: unknown, _name: string, _container: string, _onDataId: number) => Promise<void>>(
         'kubernetes-client:readPodLog',
       );
-    // KubernetesClient isn't mocked wholesale (see comment near the top-level vi.mock calls) so
-    // only this one method is spied on, leaving the rest of the class's real behavior intact.
     const readPodLogSpy = vi
       .spyOn(KubernetesClient.prototype, 'readPodLog')
       .mockImplementation(async (_name, _container, callback) => {
         callback('name', 'data');
       });
     await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('kubernetes-client:readPodLog-onData'),
+      expect.anything(),
+    );
     readPodLogSpy.mockRestore();
   });
 
@@ -1212,7 +1250,10 @@ describe('sendToWebContents resilience when the main window is gone', () => {
         return { onStdIn: vi.fn(), onResize: vi.fn() };
       });
     await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('kubernetes-client:execIntoContainer-onData'),
+      expect.anything(),
+    );
     execIntoContainerSpy.mockRestore();
   });
 });
