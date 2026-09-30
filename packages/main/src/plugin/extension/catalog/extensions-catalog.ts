@@ -194,13 +194,27 @@ export class ExtensionsCatalog {
     return fetchableExtensions;
   }
 
-  // fetch README content from a URI
-  async fetchReadme(uri: string): Promise<string> {
-    const response = await fetch(uri);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch README from ${uri}`);
+  // fetch README content fro extensionId
+  async fetchReadme(extensionId: string): Promise<string> {
+    const catalogExtensions = await this.getExtensions();
+    const extensionInfo = catalogExtensions.find(extension => extension.id === extensionId);
+    if (extensionInfo) {
+      const latestVersion = extensionInfo.versions.length > 0 ? extensionInfo.versions[0] : undefined;
+      const latestVersionReadme = latestVersion
+        ? latestVersion.files.find(f => f.assetType.toLowerCase() === 'readme')?.data
+        : undefined;
+
+      if (latestVersionReadme) {
+        const response = await fetch(latestVersionReadme);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch README from ${latestVersionReadme}`);
+        }
+        return response.text();
+      }
+
+      throw new Error(`Extension ${extensionId} has no README`);
     }
-    return response.text();
+    throw new Error(`No extension with id ${extensionId} found`);
   }
 }
 

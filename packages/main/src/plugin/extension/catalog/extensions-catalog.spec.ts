@@ -540,28 +540,120 @@ test('should route catalog request through proxy when proxy is configured', asyn
   expect(connectDone).toBe(true);
 });
 
-test('should fetch README content successfully', async () => {
+test('should fetch README content successfully by extension ID', async () => {
+  // Mock getApiVersion to return a valid version
+  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
+
   const readmeContent = '# Extension README\n\nThis is the README content.';
-  const readmeUri = 'https://example.com/readme.md';
+  const readmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
 
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-    ok: true,
-    text: vi.fn().mockResolvedValue(readmeContent),
-  } as unknown as Response);
+  const extensionWithReadme = {
+    publisher: {
+      publisherName: 'foo',
+      displayName: 'Foo publisher',
+    },
+    extensionName: 'fooName',
+    displayName: 'Foo Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: readmeUri }, fooAssetIcon],
+      },
+    ],
+  };
 
-  const result = await extensionsCatalog.fetchReadme(readmeUri);
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [extensionWithReadme] })),
+    http.get(readmeUri, () => HttpResponse.text(readmeContent)),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const result = await extensionsCatalog.fetchReadme('foo.fooName');
 
   expect(result).toBe(readmeContent);
 });
 
+test('should throw error when extension not found', async () => {
+  server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [] })));
+  server.listen({ onUnhandledRequest: 'error' });
+
+  await expect(extensionsCatalog.fetchReadme('nonexistent.extension')).rejects.toThrow(
+    'No extension with id nonexistent.extension found',
+  );
+});
+
+test('should throw error when extension has no README', async () => {
+  // Mock getApiVersion to return a valid version
+  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
+
+  const extensionWithoutReadme = {
+    publisher: {
+      publisherName: 'bar',
+      displayName: 'Bar publisher',
+    },
+    extensionName: 'barName',
+    displayName: 'Bar Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.bar/bar/baz',
+        files: [fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [extensionWithoutReadme] }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  await expect(extensionsCatalog.fetchReadme('bar.barName')).rejects.toThrow('Extension bar.barName has no README');
+});
+
 test('should throw error when fetching README fails', async () => {
-  const readmeUri = 'https://example.com/readme.md';
+  // Mock getApiVersion to return a valid version
+  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
 
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-    ok: false,
-  } as unknown as Response);
+  const readmeUri = 'https://registry.podman-desktop.io/api/extensions/foo/fooName/1.0.0/README.md';
 
-  await expect(extensionsCatalog.fetchReadme(readmeUri)).rejects.toThrow(
-    'Failed to fetch README from https://example.com/readme.md',
+  const extensionWithReadme = {
+    publisher: {
+      publisherName: 'foo',
+      displayName: 'Foo publisher',
+    },
+    extensionName: 'fooName',
+    displayName: 'Foo Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: readmeUri }, fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [extensionWithReadme] })),
+    http.get(readmeUri, () => new HttpResponse(null, { status: 404 })),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  await expect(extensionsCatalog.fetchReadme('foo.fooName')).rejects.toThrow(
+    `Failed to fetch README from ${readmeUri}`,
   );
 });

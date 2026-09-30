@@ -34,12 +34,12 @@ beforeEach(() => {
 test('Expect to have readme with URI', async () => {
   vi.mocked(window.fetchCatalogReadme).mockResolvedValueOnce('# This is my README');
 
-  await waitRender({ readme: { uri: 'http://my-fake-registry/readme-content' } });
+  await waitRender({ extensionId: 'test.extension', readme: { uri: 'http://my-fake-registry/readme-content' } });
 
   // expect Markdown
   await vi.waitFor(() => expect(screen.getByRole('region', { name: 'markdown-content' })).toBeInTheDocument());
 
-  await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalled());
+  await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalledWith('test.extension'));
   await vi.waitFor(() =>
     expect(screen.queryByRole('region', { name: 'markdown-content' })).toContainHTML(
       '<h1 id="this-is-my-readme">This is my README</h1>',
@@ -48,7 +48,7 @@ test('Expect to have readme with URI', async () => {
 });
 
 test('Expect to have readme with content', async () => {
-  await waitRender({ readme: { content: '# my README' } });
+  await waitRender({ extensionId: 'test.extension', readme: { content: '# my README' } });
 
   // expect not calling fetch
   expect(window.fetchCatalogReadme).not.toHaveBeenCalled();
@@ -60,7 +60,7 @@ test('Expect to have readme with content', async () => {
 });
 
 test('Expect empty screen if no content', async () => {
-  await waitRender({ readme: { content: '' } });
+  await waitRender({ extensionId: 'test.extension', readme: { content: '' } });
 
   // expect not calling fetch
   expect(window.fetchCatalogReadme).not.toHaveBeenCalled();
@@ -77,10 +77,10 @@ test('Expect empty screen if no content', async () => {
 test('Expect empty screen when fetch fails', async () => {
   vi.mocked(window.fetchCatalogReadme).mockRejectedValueOnce(new Error('Error fetching README'));
 
-  await waitRender({ readme: { uri: 'https://test-uri' } });
+  await waitRender({ extensionId: 'test.extension', readme: { uri: 'https://test-uri' } });
 
-  // expect fetch was called
-  await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalled());
+  // expect fetch was called with extension ID
+  await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalledWith('test.extension'));
 
   // wait for the empty screen to appear (promise resolves to empty string after catch)
   await vi.waitFor(() => {

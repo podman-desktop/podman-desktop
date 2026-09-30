@@ -2399,8 +2399,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'catalog:fetchReadme',
-      async (_listener: Electron.IpcMainInvokeEvent, uri: string): Promise<string> => {
-        return extensionsCatalog.fetchReadme(uri);
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<string> => {
+        return extensionsCatalog.fetchReadme(extensionId);
       },
     );
 

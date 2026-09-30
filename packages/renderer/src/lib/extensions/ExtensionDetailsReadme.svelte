@@ -6,24 +6,25 @@ import Markdown from '/@/lib/markdown/Markdown.svelte';
 
 interface Props {
   readme: { content?: string; uri?: string };
+  extensionId: string;
 }
 
-const { readme }: Props = $props();
+const { readme, extensionId }: Props = $props();
 
 const readmePromise = $derived.by(async () => {
+  // First try local content (for installed extensions)
+  if (readme.content) {
+    return readme.content;
+  }
+
+  // If there's a URI but no content, fetch from catalog by extension ID
   if (readme.uri) {
     try {
-      // fetch the readme file content
-      const text = await window.fetchCatalogReadme(readme.uri);
+      const text = await window.fetchCatalogReadme(extensionId);
       return text;
     } catch (error) {
       return '';
     }
-  }
-
-  if (readme.content) {
-    // try with extension readme
-    return readme.content;
   }
 
   return '';
