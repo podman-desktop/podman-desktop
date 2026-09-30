@@ -70,6 +70,7 @@ let onboardingsUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 
 let contributionsContainerConnection = $state<Menu[]>([]);
+let contributionsProvider = $state<Menu[]>([]);
 
 onMount(async () => {
   configurationPropertiesUnsubscribe = configurationProperties.subscribe(value => {
@@ -195,6 +196,7 @@ onMount(async () => {
   });
 
   contributionsContainerConnection = await window.getContributedMenus(MenuContext.DASHBOARD_CONTAINER_CONNECTION);
+  contributionsProvider = await window.getContributedMenus(MenuContext.DASHBOARD_PROVIDER);
 });
 
 function getContainerRestarting(provider: string, container: string): IConnectionRestart {
@@ -499,6 +501,7 @@ $effect(() => {
             </div>
             <ProviderActionButtons
               provider={provider}
+              contributions={contributionsProvider}
               globalContext={globalContext}
               providerInstallationInProgress={providerInstallationInProgress.get(provider.name) ?? false}
               onCreateNew={doCreateNew}

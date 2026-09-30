@@ -3,7 +3,7 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faMinusCircle, faPlusCircle, faUpload } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -110,15 +110,16 @@ async function loadImages(): Promise<void> {
     {/each}
 
     <div class="pt-5">
-      <Button
-        on:click={loadImages}
-        inProgress={inProgress}
-        class="w-full"
-        icon={faUpload}
-        aria-label="Load images"
-        disabled={loadDisabled}>
-        Load Images
-      </Button>
+      <ButtonRow>
+        <Button
+          on:click={loadImages}
+          inProgress={inProgress}
+          icon={faUpload}
+          aria-label="Load images"
+          disabled={loadDisabled}>
+          Load Images
+        </Button>
+      </ButtonRow>
       <div aria-label="loadError">
         {#if loadError !== ''}
           <ErrorMessage class="py-2 text-sm" error={loadError} />

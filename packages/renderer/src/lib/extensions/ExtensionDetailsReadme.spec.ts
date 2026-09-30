@@ -38,7 +38,7 @@ test('Expect to have readme with URI', async () => {
   await waitRender({ readme: { uri: 'http://my-fake-registry/readme-content' } });
 
   // expect Markdown
-  await vi.waitFor(() => expect(screen.queryByRole('region', { name: 'markdown-content' })).toBeInTheDocument());
+  await vi.waitFor(() => expect(screen.getByRole('region', { name: 'markdown-content' })).toBeInTheDocument());
 
   await vi.waitFor(() => expect(spyFetch).toHaveBeenCalled());
   await vi.waitFor(() =>

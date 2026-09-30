@@ -23,9 +23,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, beforeEach, expect, type Mock, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { setContainerStatus } from '/@/stores/containers';
 
 import ComposeActions from './ComposeActions.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
+
+vi.mock(import('/@/stores/containers'));
 
 class ComposeInfoUIImpl implements ComposeInfoUI {
   #status: string = 'STOPPED';
@@ -107,8 +110,13 @@ test('Expect no error and status starting compose', async () => {
 
   expect(compose.status).toEqual('STARTING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('STARTING');
-  expect(compose.containers[0].actionError).toEqual('');
+  expect(setContainerStatus).toHaveBeenCalledWith(
+    compose.containers[0].engineId,
+    compose.containers[0].id,
+    'STARTING',
+    true,
+    '',
+  );
   expect(updateMock).toHaveBeenCalled();
 });
 
@@ -121,8 +129,13 @@ test('Expect no error and status stopping compose', async () => {
 
   expect(compose.status).toEqual('STOPPING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('STOPPING');
-  expect(compose.containers[0].actionError).toEqual('');
+  expect(setContainerStatus).toHaveBeenCalledWith(
+    compose.containers[0].engineId,
+    compose.containers[0].id,
+    'STOPPING',
+    true,
+    '',
+  );
   expect(updateMock).toHaveBeenCalled();
 });
 
@@ -135,8 +148,13 @@ test('Expect no error and status restarting compose', async () => {
 
   expect(compose.status).toEqual('RESTARTING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('RESTARTING');
-  expect(compose.containers[0].actionError).toEqual('');
+  expect(setContainerStatus).toHaveBeenCalledWith(
+    compose.containers[0].engineId,
+    compose.containers[0].id,
+    'RESTARTING',
+    true,
+    '',
+  );
   expect(updateMock).toHaveBeenCalled();
 });
 
@@ -155,8 +173,13 @@ test('Expect no error and status deleting compose', async () => {
 
   expect(compose.status).toEqual('DELETING');
   expect(compose.actionError).toEqual('');
-  expect(compose.containers[0].state).toEqual('DELETING');
-  expect(compose.containers[0].actionError).toEqual('');
+  expect(setContainerStatus).toHaveBeenCalledWith(
+    compose.containers[0].engineId,
+    compose.containers[0].id,
+    'DELETING',
+    true,
+    '',
+  );
   expect(updateMock).toHaveBeenCalled();
 });
 

@@ -7,7 +7,7 @@ import {
   type ProviderContainerConnectionInfo,
   type PullEvent,
 } from '@podman-desktop/core-api';
-import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
@@ -438,7 +438,7 @@ onMount(() => {
 
     <footer>
       <div class="w-full flex flex-col justify-end gap-3 my-3">
-        <div class="flex items-center justify-end gap-3">
+        <ButtonRow>
           <Button type="secondary" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
           {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
             <Button
@@ -451,7 +451,7 @@ onMount(() => {
           {:else}
             <Button icon={faCircleCheck} disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
-        </div>
+        </ButtonRow>
         {#if pullError}
           <ErrorMessage error={pullError} />
         {/if}

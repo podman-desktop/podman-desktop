@@ -1,14 +1,14 @@
 {
   "name": "preload-webview",
-  "version": "1.30.0-next",
+  "version": "1.31.0-next",
   "license": "apache-2.0",
   "type": "module",
   "private": true,
   "devDependencies": {
     "@podman-desktop/core-api": "workspace:*",
     "@podman-desktop/webview-api": "workspace:*",
-    "electron": "44.4.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "electron": "44.4.5",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
   }
 }

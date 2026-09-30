@@ -58,7 +58,7 @@ function receiveEndCallback(): void {
         window
           .shellInProviderConnection(
             provider.internalId,
-            connectionInfo,
+            $state.snapshot(connectionInfo),
             receiveDataCallback,
             () => {},
             receiveEndCallback,
@@ -93,7 +93,7 @@ async function executeShellIntoProviderConnection(): Promise<void> {
   // grab logs of the provider
   const callbackId = await window.shellInProviderConnection(
     provider.internalId,
-    connectionInfo,
+    $state.snapshot(connectionInfo),
     receiveDataCallback,
     () => {},
     receiveEndCallback,

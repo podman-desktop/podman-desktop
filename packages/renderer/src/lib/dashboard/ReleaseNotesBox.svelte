@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
 import type { ReleaseNotes } from '@podman-desktop/core-api';
-import { Button, CloseButton, Link } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
@@ -87,10 +87,10 @@ onDestroy(async () => {
             <Markdown markdown={notesInfo?.summary}/>
           </div>
         {/if}
-        <div class="flex flex-row justify-end items-center gap-3 mt-2">
+        <ButtonRow class="mt-2">
           <Link on:click={openReleaseNotes}>Learn more</Link>
           <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>Update</Button>
-        </div>
+        </ButtonRow>
       </div>
     </div>
   {:else if notesURL}

@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderInfo, VolumeListInfo } from '@podman-desktop/core-api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -27,6 +27,7 @@ import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import CreateVolume from './CreateVolume.svelte';
+import type { VolumeInfoUI } from './VolumeInfoUI';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -242,9 +243,8 @@ test('Expect error and disabled button when volume name already exists', async (
     {
       engineId: 'podman.podman-machine-default',
       engineName: 'podman',
-      Volumes: [{ Name: 'existing-volume' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'existing-volume',
+    } as unknown as VolumeInfoUI,
   ]);
 
   render(CreateVolume, {});
@@ -280,9 +280,8 @@ test('Expect no error when volume name is unique', async () => {
     {
       engineId: 'podman.podman-machine-default',
       engineName: 'podman',
-      Volumes: [{ Name: 'existing-volume' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'existing-volume',
+    } as unknown as VolumeInfoUI,
   ]);
 
   render(CreateVolume, {});
@@ -316,9 +315,8 @@ test('Expect no error when volume name is empty', async () => {
     {
       engineId: 'podman.podman-machine-default',
       engineName: 'podman',
-      Volumes: [{ Name: 'existing-volume' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'existing-volume',
+    } as unknown as VolumeInfoUI,
   ]);
 
   render(CreateVolume, {});
@@ -370,15 +368,8 @@ test('Expect revalidation when provider changes', async () => {
     {
       engineId: 'podman.podman-machine-default',
       engineName: 'podman',
-      Volumes: [{ Name: 'shared-name' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
-    {
-      engineId: 'docker.docker',
-      engineName: 'docker',
-      Volumes: [],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'shared-name',
+    } as unknown as VolumeInfoUI,
   ]);
 
   render(CreateVolume, {});
@@ -432,15 +423,8 @@ test('Expect no false positive when providers share connection name', async () =
     {
       engineId: 'docker.Docker',
       engineName: 'docker',
-      Volumes: [{ Name: 'my-vol' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
-    {
-      engineId: 'podman.Docker',
-      engineName: 'podman',
-      Volumes: [],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'my-vol',
+    } as unknown as VolumeInfoUI,
   ]);
 
   render(CreateVolume, {});
@@ -481,14 +465,7 @@ test('Expect no duplicate error after successful creation when store updates', a
     } as unknown as ProviderInfo,
   ]);
 
-  volumeListInfos.set([
-    {
-      engineId: 'podman.podman-machine-default',
-      engineName: 'podman',
-      Volumes: [],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
-  ]);
+  volumeListInfos.set([]);
 
   vi.mocked(window.createVolume).mockResolvedValue(undefined);
 
@@ -505,9 +482,8 @@ test('Expect no duplicate error after successful creation when store updates', a
     {
       engineId: 'podman.podman-machine-default',
       engineName: 'podman',
-      Volumes: [{ Name: 'new-volume' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'new-volume',
+    } as unknown as VolumeInfoUI,
   ]);
 
   // The "Done" button should appear and no error should be shown
@@ -537,9 +513,8 @@ test('Expect error clears when name is corrected', async () => {
     {
       engineId: 'podman.podman-machine-default',
       engineName: 'podman',
-      Volumes: [{ Name: 'my-volume' }],
-      Warnings: [],
-    } as unknown as VolumeListInfo,
+      name: 'my-volume',
+    } as unknown as VolumeInfoUI,
   ]);
 
   render(CreateVolume, {});

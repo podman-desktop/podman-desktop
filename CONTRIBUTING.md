@@ -76,10 +76,10 @@ Requirements:
 
 Optional Linux requirements:
 
-- [Flatpak builder, runtime, and SDK, version 25.08](https://docs.flatpak.org/en/latest/first-build.html)
+- [Flatpak builder, runtime, and SDK, version 26.08](https://docs.flatpak.org/en/latest/first-build.html)
   ```sh
   flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
-  flatpak install --user flathub org.flatpak.Builder org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+  flatpak install --user flathub org.flatpak.Builder org.freedesktop.Platform//26.08 org.freedesktop.Sdk//26.08
   ```
 - GNU C and C++ compiler
   Fedora/RHEL
@@ -317,6 +317,10 @@ Some tips for the PR process:
 - Try to break up larger PRs into smaller ones for easier reviewing
 - Any additional code changes should be in a new commit so we can see what has changed between reviews.
 - Squash your commits into logical pieces of work.
+
+### AI-assisted contributions
+
+AI-assisted contributions are welcome. If you use an LLM to help write code, tests, docs, or PR text, please read the [LLM (AI) Development Policy](LLM_POLICY.md) — it covers your responsibilities as a contributor, communicating in your own words, and the screenshot/video requirement for UI changes.
 
 ### Use the correct commit message semantics
 

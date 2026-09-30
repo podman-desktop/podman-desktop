@@ -137,6 +137,32 @@ test('expect being able to reconnect ', async () => {
   expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2);
 });
 
+test('connectionInfo passed to shellInProviderConnection survives structuredClone (IPC guard)', async () => {
+  const provider: ProviderInfo = {
+    id: 'myProvider',
+    internalId: 'myInternalProvider',
+    status: 'started',
+  } as unknown as ProviderInfo;
+
+  const connectionInfo: ProviderContainerConnectionInfo = {
+    name: 'myConnection',
+    status: 'started',
+    endpoint: {
+      socketPath: '/socket/path',
+    },
+  } as unknown as ProviderContainerConnectionInfo;
+
+  shellInProviderConnectionMock.mockResolvedValue(12345);
+  shellInProviderConnectionResizeMock.mockResolvedValue(undefined);
+
+  render(PreferencesConnectionDetailsTerminal, { provider, connectionInfo, screenReaderMode: true });
+
+  await waitFor(() => expect(shellInProviderConnectionMock).toHaveBeenCalled());
+
+  const passedConnectionInfo = shellInProviderConnectionMock.mock.calls[0][1];
+  expect(() => structuredClone(passedConnectionInfo)).not.toThrow();
+});
+
 test('terminal active/ restarts connection after stopping and starting a provider', async () => {
   const provider: ProviderInfo = {
     id: 'myProvider',

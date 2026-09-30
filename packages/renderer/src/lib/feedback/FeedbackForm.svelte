@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { TelemetryMessages } from '@podman-desktop/core-api';
-import { Link } from '@podman-desktop/ui-svelte';
+import { ButtonRow, Link } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 let telemetryMessages: TelemetryMessages;
@@ -23,10 +23,12 @@ onMount(async () => {
     {/if}
   </div>
 
-  <div class="px-5 py-5 mt-2 flex flex-row w-full space-x-5" aria-label="validation and buttons">
+  <div class="px-5 py-5 mt-2 flex flex-row w-full" aria-label="validation and buttons">
     <div class="grow" aria-label="validation">
       <slot name="validation" />
     </div>
-    <slot name="buttons"/>
+    <ButtonRow>
+      <slot name="buttons"/>
+    </ButtonRow>
   </div>
 </div>

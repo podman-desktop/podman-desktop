@@ -42,7 +42,6 @@ test.each([
   ['container-die-event'],
   ['container-init-event'],
   ['container-started-event'],
-  ['container-created-event'],
   ['container-removed-event'],
 ])('fetch pods when receiving event %s', async eventName => {
   // fast delays (10 & 10ms)

@@ -243,6 +243,6 @@ test('render extensions when catalog is enabled', async () => {
   render(EmbeddableCatalogExtensionList, {});
 
   await vi.waitFor(() => {
-    expect(screen.queryByText('Available extensions')).toBeInTheDocument();
+    expect(screen.getByText('Available extensions')).toBeInTheDocument();
   });
 });

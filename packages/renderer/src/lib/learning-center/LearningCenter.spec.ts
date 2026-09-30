@@ -72,7 +72,7 @@ test('Clicking on LearningCenter title hides carousel with guides', async () => 
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toBeInTheDocument();
-  expect(screen.queryByText(guides[0].title)).toBeInTheDocument();
+  expect(screen.getByText(guides[0].title)).toBeInTheDocument();
   await fireEvent.click(button);
   await vi.waitFor(async () => {
     expect(screen.queryByText(guides[0].title)).not.toBeInTheDocument();

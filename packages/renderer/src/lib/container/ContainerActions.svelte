@@ -14,8 +14,7 @@ import {
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { onMount } from 'svelte';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { ContextUI } from '/@/lib/context/context';
@@ -23,56 +22,52 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
+import { containersInfos, setContainerActionError, setContainerStatus } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
 
-export let container: ContainerInfoUI;
-export let dropdownMenu = false;
-export let detailed = false;
+interface Props {
+  container: ContainerInfoUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+}
 
-let globalContext: ContextUI;
-let contextsUnsubscribe: Unsubscriber;
+const { container, dropdownMenu = false, detailed = false }: Props = $props();
 
-const dispatch = createEventDispatcher<{ update: ContainerInfoUI }>();
-export let onUpdate: (update: ContainerInfoUI) => void = update => {
-  dispatch('update', update);
-};
-let contributions: Menu[] = [];
-onMount(async () => {
-  contributions = await window.getContributedMenus(MenuContext.DASHBOARD_CONTAINER);
-  contextsUnsubscribe = context.subscribe(value => {
-    // Copy context, do not use reference
-    globalContext = new ContextUI();
-    const allValues = value.collectAllValues();
-    for (const k in allValues) {
-      globalContext.setValue(k, allValues[k]);
-    }
-    globalContext.setValue('containerImageName', container.image);
-  });
+let globalContext: ContextUI = $derived.by(() => {
+  let contextUI = new ContextUI();
+  const allValues = $context.collectAllValues();
+  for (const k in allValues) {
+    contextUI.setValue(k, allValues[k]);
+  }
+  contextUI.setValue('containerImageName', container.image);
+  return contextUI;
 });
 
-onDestroy(() => {
-  // unsubscribe from the store
-  contextsUnsubscribe?.();
+let contributions: Menu[] = $state([]);
+onMount(async () => {
+  contributions = await window.getContributedMenus(MenuContext.DASHBOARD_CONTAINER);
 });
 
 function inProgress(inProgress: boolean, state?: string): void {
-  container.actionInProgress = inProgress;
-  // reset error when starting task
+  const cnt = $containersInfos.find(c => c.id === container.id && c.engineId === container.engineId);
+  if (!cnt) return;
+
+  let containerActionError = cnt.actionError;
   if (inProgress) {
-    container.actionError = '';
+    containerActionError = '';
   }
+
+  let containerState = cnt.state;
   if (state) {
-    container.state = state;
+    containerState = state;
   }
-  onUpdate(container);
+  setContainerStatus(container.engineId, container.id, containerState, inProgress, containerActionError);
 }
 
 function handleError(errorMessage: string): void {
-  container.actionError = errorMessage;
-  container.state = 'ERROR';
-  onUpdate(container);
+  setContainerActionError(container.engineId, container.id, errorMessage);
 }
 
 async function startContainer(): Promise<void> {
@@ -187,12 +182,7 @@ function deployToKubernetes(): void {
 
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
 // otherwise, leave blank.
-let actionsStyle: typeof DropdownMenu | typeof FlatMenu;
-if (dropdownMenu) {
-  actionsStyle = DropdownMenu;
-} else {
-  actionsStyle = FlatMenu;
-}
+let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
@@ -219,7 +209,7 @@ if (dropdownMenu) {
   inProgress={container.actionInProgress && container.state === 'DELETING'} />
 
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
-<svelte:component this={actionsStyle}>
+<ActionsStyle>
   {#if !detailed}
     <ListItemButtonIcon
       title="Open Logs"
@@ -280,4 +270,4 @@ if (dropdownMenu) {
     detailed={detailed}
     onError={handleError}
     contextUI={globalContext} />
-</svelte:component>
+</ActionsStyle>

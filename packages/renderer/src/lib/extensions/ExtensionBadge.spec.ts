@@ -48,7 +48,7 @@ test('Expect to have badge for dd Extension', async () => {
   expect(labels[1]).toBeInTheDocument();
 });
 
-test('Expect to have badge for pd  bundled Extension', async () => {
+test('Expect to have badge for pd bundled extension', async () => {
   const extension: ExtensionType = {
     type: 'pd',
     removable: false,
@@ -57,13 +57,13 @@ test('Expect to have badge for pd  bundled Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  const visibleLabel = screen.getByText('bundled Extension');
+  const visibleLabel = screen.getByText('Bundled extension');
   expect(visibleLabel).toBeInTheDocument();
 
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await fireEvent.mouseEnter(tooltipTrigger);
 
-  const labels = await screen.findAllByText('bundled Extension');
+  const labels = await screen.findAllByText('Bundled extension');
   expect(labels).toHaveLength(2);
   expect(labels[0]).toBeInTheDocument();
   expect(labels[1]).toBeInTheDocument();

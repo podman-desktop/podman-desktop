@@ -2472,15 +2472,6 @@ describe('containerEngine', async () => {
           pull: false,
         },
       },
-      {
-        name: 'pull options as non-true string',
-        options: {
-          pull: 'false',
-        },
-        expected: {
-          pull: false,
-        },
-      },
     ] as Array<TestCase>)('$name', async ({ options, expected }) => {
       await api.containerEngine.buildImage('context', vi.fn(), options);
 

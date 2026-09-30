@@ -78,6 +78,8 @@ export class VolumeUtils {
       selected: false,
       status: (volumeInfo.UsageData?.RefCount ?? 0) > 0 ? 'USED' : 'UNUSED',
       containersUsage: volumeInfo.containersUsage,
+      labels: volumeInfo.Labels,
+      options: volumeInfo.Options ?? undefined,
     };
   }
 }

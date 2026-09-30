@@ -19,5 +19,12 @@
 import type { IDisposable } from '@podman-desktop/core-api';
 
 export interface AppPlugin extends IDisposable {
+  /**
+   * Called during {@link import('electron').App} initialisation, before
+   * {@link import('electron').App.requestSingleInstanceLock}.
+   * Use for work that must happen before the app is ready.
+   */
+  onBeforeReady?(): void;
+
   onReady(): Promise<void>;
 }

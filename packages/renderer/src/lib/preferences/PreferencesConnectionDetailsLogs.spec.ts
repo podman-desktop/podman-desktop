@@ -85,6 +85,20 @@ test('Expect that the terminal is displayed', async () => {
   expect(divTerminal).toBeInTheDocument();
 });
 
+test('connectionInfo passed to startReceiveLogs survives structuredClone (IPC guard)', async () => {
+  render(PreferencesConnectionDetailsLogs, {
+    providerInternalId: 'abc123',
+    connectionInfo: containerConnection,
+    setNoLogs: () => {},
+    noLog: false,
+  });
+
+  await waitFor(() => expect(window.startReceiveLogs).toHaveBeenCalledTimes(1));
+
+  const passedConnectionInfo = (window.startReceiveLogs as Mock).mock.calls[0][4];
+  expect(() => structuredClone(passedConnectionInfo)).not.toThrow();
+});
+
 test('Should call startReceiveLogs with empty colour codes', async () => {
   render(PreferencesConnectionDetailsLogs, {
     providerInternalId: 'abc123',

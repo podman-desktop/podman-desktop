@@ -2,7 +2,7 @@
 import { faExternalLink, faRocket } from '@fortawesome/free-solid-svg-icons';
 import type { V1NamespaceList, V1Pod } from '@kubernetes/client-node/dist/api';
 import type { V1Route } from '@podman-desktop/core-api';
-import { Button, Checkbox, ErrorMessage, Input, Link } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, ErrorMessage, Input, Link } from '@podman-desktop/ui-svelte';
 import * as jsYaml from 'js-yaml';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
@@ -567,16 +567,15 @@ let kubeDetails: string = $derived.by(() => {
     {/if}
 
     {#if !deployStarted}
-      <div class="pt-4">
+      <ButtonRow class="pt-4">
         <Button
           on:click={deployToKube}
-          class="w-full"
           aria-label="Deploy"
           icon={faRocket}
           disabled={bodyPod?.metadata?.name === ''}>
           Deploy
         </Button>
-      </div>
+      </ButtonRow>
     {/if}
 
     {#if createdPod}
@@ -647,7 +646,7 @@ let kubeDetails: string = $derived.by(() => {
     {/if}
 
     {#if deployFinished}
-      <div class="pt-4 flex flex-row space-x-2 justify-end">
+      <ButtonRow class="pt-4">
         <Button on:click={goBackToHistory} aria-label="Done">Done</Button>
         {#if !kubernetesDashboardActive}
           <Button
@@ -655,7 +654,7 @@ let kubeDetails: string = $derived.by(() => {
             disabled={!createdPod?.metadata?.name || !createdPod?.metadata?.namespace}
             aria-label="Open Pod">Open Pod</Button>
         {/if}
-      </div>
+      </ButtonRow>
     {/if}
   </div>
   {/snippet}

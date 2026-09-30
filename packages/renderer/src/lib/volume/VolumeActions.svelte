@@ -9,6 +9,7 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { setVolumeStatus } from '/@/stores/volumes';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
@@ -32,7 +33,7 @@ onMount(async () => {
 });
 
 async function removeVolume(): Promise<void> {
-  volume.status = 'DELETING';
+  setVolumeStatus(volume.engineId, volume.name, 'DELETING');
   dispatch('update', volume);
 
   await window.removeVolume(volume.engineId, volume.name);

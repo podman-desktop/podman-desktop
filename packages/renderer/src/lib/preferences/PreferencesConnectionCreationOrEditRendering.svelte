@@ -7,7 +7,7 @@ import type {
   ProviderKubernetesConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { Button, EmptyScreen, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, EmptyScreen, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 /* eslint-disable import/no-duplicates */
@@ -606,13 +606,13 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
               </div>
             {/each}
             <div class="w-full">
-              <div class="float-right">
+              <ButtonRow>
                 {#if !hideCloseButton}
                   <Button type="link" aria-label="Close page" on:click={closePage}>Close</Button>
                 {/if}
                 <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl?.requestSubmit()}
                   >{buttonLabel}</Button>
-              </div>
+              </ButtonRow>
             </div>
           </form>
         </div>

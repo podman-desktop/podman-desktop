@@ -4,7 +4,7 @@ import type { OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { PlayKubeInput } from '@podman-desktop/core-api/libpod';
-import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
@@ -287,7 +287,7 @@ function toggle(choice: 'podman' | 'custom'): void {
       </div>
 
       {#if !runFinished}
-        <div class="flex items-center justify-end">
+        <ButtonRow>
           {#if !runStarted}
             <Button
               on:click={playKubeFile}
@@ -301,7 +301,7 @@ function toggle(choice: 'podman' | 'custom'): void {
               Cancel
             </Button>
           {/if}
-        </div>
+        </ButtonRow>
       {/if}
       {#if runStarted}
         <div class="text-[var(--pd-content-card-text)] text-sm">
@@ -337,9 +337,9 @@ function toggle(choice: 'podman' | 'custom'): void {
       {/if}
 
       {#if runFinished}
-        <div class="flex items-center justify-end">
+        <ButtonRow>
           <Button onclick={goBackToPodsPage}>Done</Button>
-        </div>
+        </ButtonRow>
       {/if}
     </div>
     {/snippet}

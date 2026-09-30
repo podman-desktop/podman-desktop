@@ -2,7 +2,7 @@
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
-import { Button, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
@@ -309,19 +309,17 @@ function navigateToContainers(): void {
         <input type="hidden" name="providerChoice" readonly bind:value={selectedProviderConnection.name} />
       {/if}
 
-      <div class="w-full grid justify-items-end mt-5">
-        <div>
-          <Button type="link" on:click={navigateToContainers}>Close</Button>
-          <Button
-            icon={SolidPodIcon}
-            disabled={createInProgress}
-            on:click={createPodFromContainers}
-            inProgress={createInProgress}
-            aria-label="Create pod">
-            Create Pod
-          </Button>
-        </div>
-      </div>
+      <ButtonRow class="mt-5">
+        <Button type="link" on:click={navigateToContainers}>Close</Button>
+        <Button
+          icon={SolidPodIcon}
+          disabled={createInProgress}
+          on:click={createPodFromContainers}
+          inProgress={createInProgress}
+          aria-label="Create pod">
+          Create Pod
+        </Button>
+      </ButtonRow>
 
       {#if createError}
         <ErrorMessage class="pt-2 text-sm" error={createError} />

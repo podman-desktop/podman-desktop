@@ -107,7 +107,7 @@ test('Clicking on ExploreFeatures title hides carousel with features', async () 
 
   const button = screen.getByRole('button', { name: 'Explore Features' });
   expect(button).toBeInTheDocument();
-  expect(screen.queryByText(exploreFeatures[0].title)).toBeInTheDocument();
+  expect(screen.getByText(exploreFeatures[0].title)).toBeInTheDocument();
   await fireEvent.click(button);
   await vi.waitFor(() => {
     expect(screen.queryByText(exploreFeatures[0].title)).not.toBeInTheDocument();

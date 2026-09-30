@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { Menu, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
@@ -63,6 +63,7 @@ const baseProviderInfo: ProviderInfo = {
 
 const mockGlobalContext: ContextUI = {
   setValue: vi.fn(),
+  getValue: vi.fn(),
 } as unknown as ContextUI;
 
 beforeEach(() => {
@@ -615,5 +616,180 @@ describe('ProviderActionButtons', () => {
     const createButton = screen.getByRole('button', { name: `Create new Kind Cluster` });
     expect(createButton).toBeInTheDocument();
     expect(createButton).not.toBeDisabled();
+  });
+
+  test('shows a provider contribution for any provider', () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      id: 'another-provider',
+    };
+    const contributions: Menu[] = [{ title: 'Initialize', command: 'another.initialize' }];
+
+    render(ProviderActionButtons, {
+      provider,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    screen.getByRole('button', { name: 'Initialize' });
+  });
+
+  test('shows a provider contribution when its context condition matches', () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      id: 'another-provider',
+    };
+    const contributions: Menu[] = [
+      { title: 'Initialize', command: 'another.initialize', when: 'providerId === another-provider' },
+    ];
+
+    render(ProviderActionButtons, {
+      provider,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    screen.getByRole('button', { name: 'Initialize' });
+  });
+
+  test('hides a provider contribution when its context condition does not match', () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      id: 'another-provider',
+    };
+    const contributions: Menu[] = [
+      { title: 'Initialize', command: 'another.initialize', when: 'providerId === different-provider' },
+    ];
+
+    render(ProviderActionButtons, {
+      provider,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.queryByRole('button', { name: 'Initialize' })).not.toBeInTheDocument();
+  });
+
+  test('disables a provider contribution when its disabled condition matches', () => {
+    const contributions: Menu[] = [
+      { title: 'Initialize', command: 'another.initialize', disabled: 'providerStatus == ready' },
+    ];
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.getByRole('button', { name: 'Initialize' })).toBeDisabled();
+  });
+
+  test('enables a provider contribution when its disabled condition does not match', () => {
+    const contributions: Menu[] = [
+      { title: 'Initialize', command: 'another.initialize', disabled: 'providerStatus == stopped' },
+    ];
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.getByRole('button', { name: 'Initialize' })).not.toBeDisabled();
+  });
+
+  test('enables a provider contribution when its disabled condition is invalid', () => {
+    const contributions: Menu[] = [{ title: 'Initialize', command: 'another.initialize', disabled: 'invalid ==' }];
+
+    render(ProviderActionButtons, {
+      provider: baseProviderInfo,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(screen.getByRole('button', { name: 'Initialize' })).not.toBeDisabled();
+  });
+
+  test('runs a provider contribution when clicked', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+    };
+    const contributions: Menu[] = [{ title: 'Initialize', command: 'another.initialize' }];
+    vi.mocked(window.executeCommand).mockResolvedValue(undefined);
+
+    render(ProviderActionButtons, {
+      provider,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    const button = screen.getByRole('button', { name: 'Initialize' });
+    await userEvent.click(button);
+
+    expect(window.executeCommand).toHaveBeenCalledWith(
+      'another.initialize',
+      expect.objectContaining({ id: provider.id, name: provider.name, status: provider.status }),
+    );
+  });
+
+  test('logs provider contribution errors', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+    };
+    const contributions: Menu[] = [{ title: 'Initialize', command: 'another.initialize' }];
+    const error = new Error('failed');
+    vi.mocked(window.executeCommand).mockRejectedValue(error);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(ProviderActionButtons, {
+      provider,
+      contributions,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Initialize' }));
+
+    expect(consoleError).toHaveBeenCalledWith('Error while executing Initialize: Error: failed');
+    consoleError.mockRestore();
   });
 });
