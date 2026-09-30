@@ -3523,11 +3523,7 @@ export class PluginSystem {
 
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd {
     const safeSend = (messageType: string, data?: unknown): void => {
-      try {
-        this.getWebContentsSender().send(channel, loggerId, messageType, data);
-      } catch (err) {
-        console.error('Failed to send log message to renderer:', err);
-      }
+      this.sendToWebContents(channel, loggerId, messageType, data);
     };
 
     return {
