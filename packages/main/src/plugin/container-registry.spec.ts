@@ -41,7 +41,7 @@ import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import type { Headers, PackOptions } from 'tar-fs';
 import * as tarstream from 'tar-stream';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
@@ -4222,6 +4222,44 @@ test('check handleEvents prefers Podman-style fields over Docker-style fields', 
 
   await vi.waitFor(() => expect(apiSender.send).toBeCalledWith('container-stopped-event', 'podman-id'));
   expect(apiSender.send).not.toBeCalledWith('container-started-event', 'docker-id');
+});
+
+test('check handleEvents survives a throwing apiSender.send and keeps processing later events', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  assert(eventsMockCallback, 'eventsMockCallback should be defined');
+  eventsMockCallback(undefined, passThrough);
+
+  // simulate apiSender.send throwing while handling the first event
+  vi.mocked(apiSender.send).mockImplementationOnce(() => {
+    throw new Error('boom from apiSender.send');
+  });
+
+  passThrough.emit('data', JSON.stringify({ status: 'start', Type: 'container', id: 'first' }));
+  passThrough.emit('data', JSON.stringify({ status: 'start', Type: 'container', id: 'second' }));
+
+  // the second event must still be processed, proving the JSON stream did not silently die
+  await vi.waitFor(() => expect(apiSender.send).toHaveBeenCalledWith('container-started-event', 'second'));
+
+  // the throw must not have been treated as a stream-level error (no reconnect triggered)
+  expect(errorCallback).not.toHaveBeenCalled();
+  expect(consoleErrorSpy).toHaveBeenCalled();
+
+  consoleErrorSpy.mockRestore();
 });
 
 test('check handleEvents tracks telemetry when stream emits error', async () => {
