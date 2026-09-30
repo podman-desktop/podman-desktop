@@ -193,6 +193,15 @@ export class ExtensionsCatalog {
 
     return fetchableExtensions;
   }
+
+  // fetch README content from a URI
+  async fetchReadme(uri: string): Promise<string> {
+    const response = await fetch(uri);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch README from ${uri}`);
+    }
+    return response.text();
+  }
 }
 
 // internal JSON format, not exposed to the outside

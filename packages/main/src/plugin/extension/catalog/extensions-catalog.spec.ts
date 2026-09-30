@@ -539,3 +539,29 @@ test('should route catalog request through proxy when proxy is configured', asyn
 
   expect(connectDone).toBe(true);
 });
+
+test('should fetch README content successfully', async () => {
+  const readmeContent = '# Extension README\n\nThis is the README content.';
+  const readmeUri = 'https://example.com/readme.md';
+
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    ok: true,
+    text: vi.fn().mockResolvedValue(readmeContent),
+  } as unknown as Response);
+
+  const result = await extensionsCatalog.fetchReadme(readmeUri);
+
+  expect(result).toBe(readmeContent);
+});
+
+test('should throw error when fetching README fails', async () => {
+  const readmeUri = 'https://example.com/readme.md';
+
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    ok: false,
+  } as unknown as Response);
+
+  await expect(extensionsCatalog.fetchReadme(readmeUri)).rejects.toThrow(
+    'Failed to fetch README from https://example.com/readme.md',
+  );
+});

@@ -1714,6 +1714,10 @@ export function initExposure(): void {
     return ipcInvoke('catalog:refreshExtensions');
   });
 
+  contextBridge.exposeInMainWorld('fetchCatalogReadme', async (uri: string): Promise<string> => {
+    return ipcInvoke('catalog:fetchReadme', uri);
+  });
+
   contextBridge.exposeInMainWorld('getDocumentationItems', async (): Promise<DocumentationInfo[]> => {
     return ipcInvoke('documentation:getItems');
   });
