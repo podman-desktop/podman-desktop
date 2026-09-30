@@ -73,3 +73,20 @@ test('Expect empty screen if no content', async () => {
   const emptyScreen = screen.getByRole('heading', { name: 'No Readme' });
   expect(emptyScreen).toBeInTheDocument();
 });
+
+test('Expect empty screen when fetch fails', async () => {
+  vi.mocked(window.fetchCatalogReadme).mockRejectedValueOnce(new Error('Error fetching README'));
+
+  await waitRender({ readme: { uri: 'https://test-uri' } });
+
+  // expect fetch was called
+  await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalled());
+
+  // expect no Markdown
+  const markdownContent = screen.queryByRole('region', { name: 'markdown-content' });
+  expect(markdownContent).not.toBeInTheDocument();
+
+  // but empty screen due to error
+  const emptyScreen = screen.getByRole('heading', { name: 'No Readme' });
+  expect(emptyScreen).toBeInTheDocument();
+});

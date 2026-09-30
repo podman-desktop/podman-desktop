@@ -12,9 +12,13 @@ const { readme }: Props = $props();
 
 const readmePromise = $derived.by(async () => {
   if (readme.uri) {
-    // fetch the readme file content
-    const text = await window.fetchCatalogReadme(readme.uri);
-    return text;
+    try {
+      // fetch the readme file content
+      const text = await window.fetchCatalogReadme(readme.uri);
+      return text;
+    } catch (error) {
+      return '';
+    }
   }
 
   if (readme.content) {
