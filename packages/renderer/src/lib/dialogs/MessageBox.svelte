@@ -47,7 +47,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   buttonOrder = Array.from(buttonsType, (value, index) => index);
 
   // use the provided cancel id, otherwise try to find a button labelled 'cancel'
-  if (options?.cancelId) {
+  if (options?.cancelId !== undefined && options.cancelId >= 0) {
     cancelId = options.cancelId;
   } else {
     cancelId = buttonsType.findIndex(b => {
@@ -118,7 +118,7 @@ function getButtonType(b: boolean): ButtonType {
 
 {#if display}
   <!-- for danger MessageBox, the initial focus will be on the cancel button (first one) while in all others types the focus will be on the default button (last one) -->
-  <Dialog title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? 'first' : 'last'}>
+  <Dialog title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? (cancelId < 0 ? 'none' : 'first') : 'last'}>
     {#snippet icon()}
       
         {#if type === 'error' || type === 'danger'}
