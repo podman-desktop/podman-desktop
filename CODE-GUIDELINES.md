@@ -773,6 +773,7 @@ All dialogs, modals, and forms must adhere to the follwoing guidelines to ensure
 
 Action rows must use the shared `ButtonRow` component from `@podman-desktop/ui-svelte`, even for a single button.
 Custom button layouts are prohibited.
+Note: the `Dialog` component is already using `ButtonRow`, so no need to declare it again in the `buttons` snippet
 
 ✅ **Use this pattern:**
 
@@ -827,31 +828,27 @@ Every dialog, modal, or form must have a labeled Cancel/Dismiss button that will
 ✅ **Use this pattern:**
 
 ```svelte
-<Dialog title="Confirm Action" bind:open={dialogOpen}>
-  <svelte:fragment slot="content">
-    <p>Are you sure you want to proceed?</p>
-  </svelte:fragment>
-  <svelte:fragment slot="buttons">
-    <ButtonRow>
-      <Button type="link" on:click={onCancel}>Cancel</Button>
-      <Button type="primary" on:click={onConfirm}>Confirm</Button>
-    </ButtonRow>
-  </svelte:fragment>
+<Dialog title="Duplicate Container?" onclose={onCancel}>
+  {#snippet content()}
+    <p>Do you want to duplicate this container?</p>
+  {/snippet}
+  {#snippet buttons()}
+    <Button type="link" on:click={onCancel}>Cancel</Button>
+    <Button type="primary" on:click={onConfirm}>Continue</Button>
+  {/snippet}
 </Dialog>
 ```
 
 🚫 **Instead of:**
 
 ```svelte
-<Dialog title="Confirm Action" bind:open={dialogOpen}>
-  <svelte:fragment slot="content">
-    <p>Are you sure you want to proceed?</p>
-  </svelte:fragment>
-  <svelte:fragment slot="buttons">
-    <ButtonRow>
-      <Button type="primary" on:click={onConfirm}>Confirm</Button>
-    </ButtonRow>
-  </svelte:fragment>
+<Dialog title="Duplicate Container?" onclose={onCancel}>
+  {#snippet content()}
+    <p>Do you want to duplicate this container?</p>
+  {/snippet}
+  {#snippet buttons()}
+    <Button type="primary" on:click={onConfirm}>Continue</Button>
+  {/snippet}
 </Dialog>
 ```
 
