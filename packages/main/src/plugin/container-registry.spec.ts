@@ -4311,6 +4311,67 @@ test('check handleEvents tracks telemetry when stream emits error', async () => 
   consoleErrorSpy.mockRestore();
 });
 
+test('check handleEvents reconnects when the stream closes without emitting an error', async () => {
+  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  assert(eventsMockCallback, 'eventsMockCallback should be defined');
+  eventsMockCallback(undefined, passThrough);
+
+  // the connection can end cleanly (idle timeout, daemon restart, etc.) without ever emitting 'error'
+  passThrough.emit('close');
+
+  await vi.waitFor(() =>
+    expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: '/event stream closed' })),
+  );
+
+  consoleWarnSpy.mockRestore();
+});
+
+test('check handleEvents only reconnects once when both close and error fire for the same stream', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  assert(eventsMockCallback, 'eventsMockCallback should be defined');
+  eventsMockCallback(undefined, passThrough);
+
+  passThrough.emit('error', new Error('stream connection error'));
+  passThrough.emit('close');
+
+  await vi.waitFor(() => expect(errorCallback).toHaveBeenCalled());
+  expect(errorCallback).toHaveBeenCalledTimes(1);
+
+  consoleErrorSpy.mockRestore();
+  consoleWarnSpy.mockRestore();
+});
+
 test('check handleEvents calls errorCallback and destroys pipeline on parse error', async () => {
   const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   const getEventsMock = vi.fn();

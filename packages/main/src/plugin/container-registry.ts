@@ -277,6 +277,15 @@ export class ContainerProviderRegistry {
         }
       }
 
+      // 'error' and 'close' can both fire for the same disconnect (Node commonly emits 'close'
+      // right after 'error'). Only reconnect once per stream, whichever fires first.
+      let reconnectTriggered = false;
+      const triggerReconnect = (error: Error): void => {
+        if (reconnectTriggered) return;
+        reconnectTriggered = true;
+        errorCallback(error);
+      };
+
       stream?.on('error', error => {
         console.error('/event stream received an error.', error);
         // log why it failed and after how many ms connection dropped
@@ -286,14 +295,22 @@ export class ContainerProviderRegistry {
           error,
         });
         // notify the error (do not throw as we're inside handlers/callbacks)
-        errorCallback(new Error('Error in handling events', error));
+        triggerReconnect(new Error('Error in handling events', error));
+      });
+
+      // The events connection can also end cleanly (idle timeout, daemon restart, etc.) without
+      // ever emitting 'error'. Without this, the event stream dies silently and container/pod/
+      // image/network/volume updates stop appearing until the app is restarted.
+      stream?.on('close', () => {
+        console.warn('/event stream closed, reconnecting');
+        triggerReconnect(new Error('/event stream closed'));
       });
 
       const pipeline = stream?.pipe(streamValues.withParserAsStream());
       pipeline?.on('error', error => {
         console.error('Error while parsing events', error);
         pipeline.destroy();
-        errorCallback(new Error('Error while parsing events', error));
+        triggerReconnect(new Error('Error while parsing events', error));
       });
       pipeline?.on('data', data => {
         if (data?.value !== undefined) {
