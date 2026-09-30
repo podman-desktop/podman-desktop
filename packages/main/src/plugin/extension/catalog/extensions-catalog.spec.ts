@@ -541,9 +541,6 @@ test('should route catalog request through proxy when proxy is configured', asyn
 });
 
 test('should fetch README content successfully by extension ID', async () => {
-  // Mock getApiVersion to return a valid version
-  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
-
   const readmeContent = '# Extension README\n\nThis is the README content.';
   const readmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
 
@@ -588,9 +585,6 @@ test('should throw error when extension not found', async () => {
 });
 
 test('should throw error when extension has no README', async () => {
-  // Mock getApiVersion to return a valid version
-  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
-
   const extensionWithoutReadme = {
     publisher: {
       publisherName: 'bar',
@@ -622,9 +616,6 @@ test('should throw error when extension has no README', async () => {
 });
 
 test('should throw error when fetching README fails', async () => {
-  // Mock getApiVersion to return a valid version
-  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
-
   const readmeUri = 'https://registry.podman-desktop.io/api/extensions/foo/fooName/1.0.0/README.md';
 
   const extensionWithReadme = {
