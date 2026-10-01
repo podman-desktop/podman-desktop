@@ -194,29 +194,31 @@ export class ExtensionsCatalog {
     return fetchableExtensions;
   }
 
-  // fetch README content fro extensionId
+  // fetch README content for extensionId
   async fetchReadme(extensionId: string): Promise<string> {
     const catalogExtensions = await this.getExtensions();
     const extensionInfo = catalogExtensions.find(extension => extension.id === extensionId);
-    if (extensionInfo) {
-      const latestVersion = extensionInfo.versions.length > 0 ? extensionInfo.versions[0] : undefined;
-      const latestVersionReadme = latestVersion
-        ? latestVersion.files.find(f => f.assetType.toLowerCase() === 'readme')?.data
-        : undefined;
 
-      if (latestVersionReadme) {
-        const response = await fetch(latestVersionReadme, {
-          signal: AbortSignal.timeout(ExtensionsCatalog.FETCH_TIMEOUT),
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch README from ${latestVersionReadme}`);
-        }
-        return response.text();
-      }
+    if (!extensionInfo) {
+      throw new Error(`No extension with id ${extensionId} found`);
+    }
 
+    // Get the first non-preview version (same logic as renderer)
+    const nonPreviewVersions = extensionInfo.versions.filter(v => v.preview === false);
+    const latestVersion = nonPreviewVersions.length > 0 ? nonPreviewVersions[0] : undefined;
+    const latestVersionReadme = latestVersion?.files.find(f => f.assetType.toLowerCase() === 'readme')?.data;
+
+    if (!latestVersionReadme) {
       throw new Error(`Extension ${extensionId} has no README`);
     }
-    throw new Error(`No extension with id ${extensionId} found`);
+
+    const response = await fetch(latestVersionReadme, {
+      signal: AbortSignal.timeout(ExtensionsCatalog.FETCH_TIMEOUT),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch README from ${latestVersionReadme}`);
+    }
+    return response.text();
   }
 }
 

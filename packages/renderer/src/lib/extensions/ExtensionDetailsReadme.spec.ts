@@ -75,20 +75,27 @@ test('Expect empty screen if no content', async () => {
 });
 
 test('Expect empty screen when fetch fails', async () => {
-  vi.mocked(window.fetchCatalogReadme).mockRejectedValueOnce(new Error('Error fetching README'));
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const fetchError = new Error('Error fetching README');
+  vi.mocked(window.fetchCatalogReadme).mockRejectedValueOnce(fetchError);
 
   await waitRender({ extensionId: 'test.extension', readme: { uri: 'https://test-uri' } });
 
   // expect fetch was called with extension ID
   await vi.waitFor(() => expect(window.fetchCatalogReadme).toHaveBeenCalledWith('test.extension'));
 
-  // wait for the empty screen to appear (promise resolves to empty string after catch)
-  await vi.waitFor(() => {
-    const emptyScreen = screen.getByRole('heading', { name: 'No Readme' });
-    expect(emptyScreen).toBeInTheDocument();
-  });
+  // expect error to be logged
+  await vi.waitFor(() =>
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to fetch README for extension test.extension', fetchError),
+  );
+
+  // expect empty screen to appear
+  const emptyScreen = await screen.findByRole('heading', { name: 'No Readme' });
+  expect(emptyScreen).toBeInTheDocument();
 
   // expect no Markdown
   const markdownContent = screen.queryByRole('region', { name: 'markdown-content' });
   expect(markdownContent).not.toBeInTheDocument();
+
+  consoleErrorSpy.mockRestore();
 });

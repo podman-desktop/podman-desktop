@@ -12,17 +12,16 @@ interface Props {
 const { readme, extensionId }: Props = $props();
 
 const readmePromise = $derived.by(async () => {
-  // First try local content (for installed extensions)
   if (readme.content) {
     return readme.content;
   }
 
-  // If there's a URI but no content, fetch from catalog by extension ID
   if (readme.uri) {
     try {
       const text = await window.fetchCatalogReadme(extensionId);
       return text;
     } catch (error) {
+      console.error(`Unable to fetch README for extension ${extensionId}`, error);
       return '';
     }
   }

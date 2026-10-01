@@ -648,3 +648,51 @@ test('should throw error when fetching README fails', async () => {
     `Failed to fetch README from ${readmeUri}`,
   );
 });
+
+test('should fetch README from first non-preview version', async () => {
+  // Mock getApiVersion to return a valid version
+  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
+
+  const previewReadmeUri = 'https://example.com/extensions/foo/fooName/2.0.0-preview/README.md';
+  const stableReadmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
+  const stableReadmeContent = '# Stable README';
+
+  const extensionWithPreviewFirst = {
+    publisher: {
+      publisherName: 'foo',
+      displayName: 'Foo publisher',
+    },
+    extensionName: 'fooName',
+    displayName: 'Foo Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '2.0.0-preview',
+        preview: true,
+        lastUpdated: '2021-02-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: previewReadmeUri }, fooAssetIcon],
+      },
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: stableReadmeUri }, fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [extensionWithPreviewFirst] }),
+    ),
+    http.get(stableReadmeUri, () => HttpResponse.text(stableReadmeContent)),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const result = await extensionsCatalog.fetchReadme('foo.fooName');
+
+  expect(result).toBe(stableReadmeContent);
+});
