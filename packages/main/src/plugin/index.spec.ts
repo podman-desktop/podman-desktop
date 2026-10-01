@@ -101,6 +101,9 @@ vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
 );
 vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
+vi.mock(import('./kubernetes/kubernetes-client.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'KubernetesClient'),
+);
 
 let pluginSystem: TestPluginSystem;
 
@@ -141,6 +144,10 @@ let webContents: WebContents;
 
 beforeEach(async () => {
   vi.resetAllMocks();
+  // ExploreFeatures.init() runs during the PluginSystem startup below and iterates
+  // over the result of getContextsGeneralState(), which the mocked prototype would
+  // otherwise return as undefined, failing every test in this file.
+  vi.mocked(KubernetesClient.prototype.getContextsGeneralState).mockReturnValue(new Map());
   handlers = new Map<string, unknown>();
 
   emitter = new EventEmitter();
@@ -1224,7 +1231,7 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       getHandler<(_event: unknown, _name: string, _container: string, _onDataId: number) => Promise<void>>(
         'kubernetes-client:readPodLog',
       );
-    vi.spyOn(KubernetesClient.prototype, 'readPodLog').mockImplementation(async (_name, _container, callback) => {
+    vi.mocked(KubernetesClient.prototype.readPodLog).mockImplementation(async (_name, _container, callback) => {
       callback('name', 'data');
     });
     await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
@@ -1238,7 +1245,7 @@ describe('sendToWebContents resilience when the main window is gone', () => {
     const handle = getHandler<
       (_event: unknown, _podName: string, _containerName: string, _onDataId: number) => Promise<number>
     >('kubernetes-client:execIntoContainer');
-    vi.spyOn(KubernetesClient.prototype, 'execIntoContainer').mockImplementation(
+    vi.mocked(KubernetesClient.prototype.execIntoContainer).mockImplementation(
       async (_podName, _containerName, onStdOut, onStdErr, onClose) => {
         onStdOut(Buffer.from('stdout'));
         onStdErr(Buffer.from('stderr'));
