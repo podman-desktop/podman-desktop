@@ -403,7 +403,7 @@ class DockerodeTestStatusError extends Error {
 
 let containerRegistry: TestContainerProviderRegistry;
 
-const telemetryTrackMock = vi.fn().mockResolvedValue({});
+const telemetryTrackMock = vi.fn();
 const telemetry: Telemetry = { track: telemetryTrackMock } as unknown as Telemetry;
 
 const apiSender: ApiSenderType = {
@@ -411,13 +411,8 @@ const apiSender: ApiSenderType = {
   receive: vi.fn(),
 };
 
-// Mock that the return value is true
-// since we check libpod API setting enabled to be true or not
-const getConfigMock = vi.fn().mockReturnValue(true);
+const getConfigMock = vi.fn();
 const getConfigurationMock = vi.fn();
-getConfigurationMock.mockReturnValue({
-  get: getConfigMock,
-});
 const configurationRegistry = {
   getConfiguration: getConfigurationMock,
 } as unknown as ConfigurationRegistry;
@@ -434,8 +429,15 @@ vi.mock(import('node:fs/promises'));
 vi.mock(import('/@/plugin/podman/kube.js'));
 
 beforeEach(() => {
-  vi.mocked(apiSender.receive).mockClear();
-  vi.mocked(apiSender.send).mockClear();
+  vi.resetAllMocks();
+
+  telemetryTrackMock.mockResolvedValue({});
+  // Mock that the return value is true
+  // since we check libpod API setting enabled to be true or not
+  getConfigMock.mockReturnValue(true);
+  getConfigurationMock.mockReturnValue({
+    get: getConfigMock,
+  });
 
   const certificates: Certificates = {
     init: vi.fn(),
@@ -4258,8 +4260,6 @@ test('check handleEvents survives a throwing apiSender.send and keeps processing
   // the throw must not have been treated as a stream-level error (no reconnect triggered)
   expect(errorCallback).not.toHaveBeenCalled();
   expect(consoleErrorSpy).toHaveBeenCalled();
-
-  consoleErrorSpy.mockRestore();
 });
 
 test('check handleEvents tracks telemetry when stream emits error', async () => {
@@ -4307,12 +4307,10 @@ test('check handleEvents tracks telemetry when stream emits error', async () => 
 
   // verify error callback was called with wrapped error
   expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: 'Error in handling events' }));
-
-  consoleErrorSpy.mockRestore();
 });
 
 test('check handleEvents reconnects when the stream closes without emitting an error', async () => {
-  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
   const getEventsMock = vi.fn();
   let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
   getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
@@ -4337,13 +4335,11 @@ test('check handleEvents reconnects when the stream closes without emitting an e
   await vi.waitFor(() =>
     expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: '/event stream closed' })),
   );
-
-  consoleWarnSpy.mockRestore();
 });
 
 test('check handleEvents only reconnects once when both close and error fire for the same stream', async () => {
-  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
   const getEventsMock = vi.fn();
   let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
   getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
@@ -4367,9 +4363,6 @@ test('check handleEvents only reconnects once when both close and error fire for
 
   await vi.waitFor(() => expect(errorCallback).toHaveBeenCalled());
   expect(errorCallback).toHaveBeenCalledTimes(1);
-
-  consoleErrorSpy.mockRestore();
-  consoleWarnSpy.mockRestore();
 });
 
 test('check handleEvents calls errorCallback and destroys pipeline on parse error', async () => {
@@ -4401,8 +4394,6 @@ test('check handleEvents calls errorCallback and destroys pipeline on parse erro
 
   expect(consoleErrorSpy).toHaveBeenCalledWith('Error while parsing events', expect.any(Error));
   expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: 'Error while parsing events' }));
-
-  consoleErrorSpy.mockRestore();
 });
 
 test('check volume mounted is replicated when executing replicatePodmanContainer with named volume', async () => {
