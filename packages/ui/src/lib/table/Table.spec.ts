@@ -787,6 +787,24 @@ describe('Table#collapsed', () => {
     expect(barCollapseBtn).toHaveAttribute('aria-expanded', 'true');
   });
 
+  test('re-renders when toggling a row with a plain collapsed array prop', async () => {
+    const { getByRole } = render(Table<Item>, {
+      kind: 'plain-collapsed-array',
+      data: [{ id: 'foo', name: 'foo' }],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: [],
+      key: ({ id }: Item): string => id,
+    });
+
+    const row = getByRole('row', { name: 'foo' });
+    await fireEvent.click(within(row).getByRole('button', { name: 'Collapse Row' }));
+    expect(within(row).getByRole('button', { name: 'Expand Row' })).toHaveAttribute('aria-expanded', 'false');
+
+    await fireEvent.click(within(row).getByRole('button', { name: 'Expand Row' }));
+    expect(within(row).getByRole('button', { name: 'Collapse Row' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
   test('item with same name can be distinct using Table#key prop', async () => {
     const { getAllByRole } = render(Table<Item>, {
       kind: 'demo',
