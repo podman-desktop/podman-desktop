@@ -287,6 +287,10 @@ export class PluginSystem {
   // true if the application is quitting
   protected isQuitting = false;
 
+  // channels for which sendToWebContents has already logged a failure, so hot
+  // callbacks (stats polling, log/shell/build streams) don't flood the console
+  protected loggedSendFailureChannels = new Set<string>();
+
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;
   private validExtList!: ExtensionInfo[];
@@ -306,6 +310,22 @@ export class PluginSystem {
       throw new Error('Unable to find the main window');
     }
     return window.webContents;
+  }
+
+  // Long-lived/streaming callbacks (container stats polling, pull/push image, shell,
+  // attach, log streams, etc.) can fire after the main window has been destroyed, e.g.
+  // during app quit. Swallow and log rather than letting an unhandled exception surface
+  // to the user as an "Unable to find the main window" error dialog.
+  protected sendToWebContents(channel: string, ...args: unknown[]): void {
+    try {
+      this.getWebContentsSender().send(channel, ...args);
+      this.loggedSendFailureChannels.delete(channel);
+    } catch (err: unknown) {
+      if (!this.loggedSendFailureChannels.has(channel)) {
+        this.loggedSendFailureChannels.add(channel);
+        console.error(`Unable to send '${channel}' event to the main window`, err);
+      }
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1235,7 +1255,7 @@ export class PluginSystem {
       'container-provider-registry:getContainerStats',
       async (_listener, engine: string, containerId: string, onDataId: number): Promise<number> => {
         return containerProviderRegistry.getContainerStats(engine, containerId, (stats: ContainerStatsInfo) => {
-          this.getWebContentsSender().send('container-provider-registry:getContainerStats-onData', onDataId, stats);
+          this.sendToWebContents('container-provider-registry:getContainerStats-onData', onDataId, stats);
         });
       },
     );
@@ -1354,7 +1374,7 @@ export class PluginSystem {
             providerContainerConnectionInfo,
             imageName,
             (event: PullEvent) => {
-              this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
+              this.sendToWebContents('container-provider-registry:pullImage-onData', callbackId, event);
             },
             platform,
             abortController,
@@ -1395,15 +1415,15 @@ export class PluginSystem {
         });
         return containerProviderRegistry
           .pushImage(engine, imageId, (name: string, data: string) => {
-            this.getWebContentsSender().send(msgName, callbackId, name, data);
+            this.sendToWebContents(msgName, callbackId, name, data);
           })
           .then(() => {
             task.status = 'success';
           })
           .catch((error: unknown) => {
             task.error = String(error);
-            this.getWebContentsSender().send(msgName, callbackId, 'error', String(error));
-            this.getWebContentsSender().send(msgName, callbackId, 'end');
+            this.sendToWebContents(msgName, callbackId, 'error', String(error));
+            this.sendToWebContents(msgName, callbackId, 'end');
           });
       },
     );
@@ -1430,12 +1450,7 @@ export class PluginSystem {
           engineId: logsParams.engineId,
           id: logsParams.containerId,
           callback: (name: string, data: string) => {
-            this.getWebContentsSender().send(
-              'container-provider-registry:logsContainer-onData',
-              logsParams.onDataId,
-              name,
-              data,
-            );
+            this.sendToWebContents('container-provider-registry:logsContainer-onData', logsParams.onDataId, name, data);
           },
           abortController,
           timestamps: logsParams.timestamps,
@@ -1457,13 +1472,13 @@ export class PluginSystem {
           engine,
           containerId,
           (content: Buffer) => {
-            this.getWebContentsSender().send('container-provider-registry:shellInContainer-onData', onDataId, content);
+            this.sendToWebContents('container-provider-registry:shellInContainer-onData', onDataId, content);
           },
           (error: string) => {
-            this.getWebContentsSender().send('container-provider-registry:shellInContainer-onError', onDataId, error);
+            this.sendToWebContents('container-provider-registry:shellInContainer-onError', onDataId, error);
           },
           () => {
-            this.getWebContentsSender().send('container-provider-registry:shellInContainer-onEnd', onDataId);
+            this.sendToWebContents('container-provider-registry:shellInContainer-onEnd', onDataId);
             // delete the callback
             containerProviderRegistryShellInContainerSendCallback.delete(onDataId);
           },
@@ -1515,13 +1530,13 @@ export class PluginSystem {
           internalProviderId,
           connectionInfo,
           (content: string) => {
-            this.getWebContentsSender().send('provider-registry:shellInProviderConnection-onData', onDataId, content);
+            this.sendToWebContents('provider-registry:shellInProviderConnection-onData', onDataId, content);
           },
           (error: string) => {
-            this.getWebContentsSender().send('provider-registry:shellInProviderConnection-onError', onDataId, error);
+            this.sendToWebContents('provider-registry:shellInProviderConnection-onError', onDataId, error);
           },
           () => {
-            this.getWebContentsSender().send('provider-registry:shellInProviderConnection-onEnd', onDataId);
+            this.sendToWebContents('provider-registry:shellInProviderConnection-onEnd', onDataId);
             // delete the callback
             providerRegistryShellInProviderConnectionSendCallback.delete(onDataId);
           },
@@ -1573,13 +1588,13 @@ export class PluginSystem {
           engine,
           containerId,
           (content: string) => {
-            this.getWebContentsSender().send('container-provider-registry:attachContainer-onData', onDataId, content);
+            this.sendToWebContents('container-provider-registry:attachContainer-onData', onDataId, content);
           },
           (error: string) => {
-            this.getWebContentsSender().send('container-provider-registry:attachContainer-onError', onDataId, error);
+            this.sendToWebContents('container-provider-registry:attachContainer-onError', onDataId, error);
           },
           () => {
-            this.getWebContentsSender().send('container-provider-registry:attachContainer-onEnd', onDataId);
+            this.sendToWebContents('container-provider-registry:attachContainer-onEnd', onDataId);
             // delete the callback
             containerProviderRegistryAttachContainerSendCallback.delete(onDataId);
           },
@@ -1649,7 +1664,7 @@ export class PluginSystem {
           .buildImage(
             containerBuildContextDirectory,
             (eventName: string, data: string) => {
-              this.getWebContentsSender().send(
+              this.sendToWebContents(
                 'container-provider-registry:buildImage-onData',
                 onDataCallbacksBuildImageId,
                 eventName,
@@ -1976,7 +1991,7 @@ export class PluginSystem {
       'provider-registry:onDidUpdateProviderStatus',
       async (_, providerInternalId: string, onDidUpdateProviderStatusCallbackIdnumber: number): Promise<void> => {
         return providerRegistry.onDidUpdateProviderStatus(providerInternalId, (providerInfo: ProviderInfo) => {
-          this.getWebContentsSender().send(
+          this.sendToWebContents(
             'provider-registry:onDidUpdateProviderStatus-onData',
             onDidUpdateProviderStatusCallbackIdnumber,
             providerInfo,
@@ -2005,13 +2020,13 @@ export class PluginSystem {
       async (_, providerInternalId: string, callbackId: number): Promise<boolean> => {
         const callback: PreflightChecksCallback = {
           startCheck: status => {
-            this.getWebContentsSender().send('provider-registry:installPreflightChecksUpdate', callbackId, {
+            this.sendToWebContents('provider-registry:installPreflightChecksUpdate', callbackId, {
               type: 'start',
               status,
             } as PreflightCheckEvent);
           },
           endCheck: status => {
-            this.getWebContentsSender().send('provider-registry:installPreflightChecksUpdate', callbackId, {
+            this.sendToWebContents('provider-registry:installPreflightChecksUpdate', callbackId, {
               type: 'stop',
               status,
             } as PreflightCheckEvent);
@@ -2026,13 +2041,13 @@ export class PluginSystem {
       async (_, providerInternalId: string, callbackId: number): Promise<boolean> => {
         const callback: PreflightChecksCallback = {
           startCheck: status => {
-            this.getWebContentsSender().send('provider-registry:updatePreflightChecksUpdate', callbackId, {
+            this.sendToWebContents('provider-registry:updatePreflightChecksUpdate', callbackId, {
               type: 'start',
               status,
             } as PreflightCheckEvent);
           },
           endCheck: status => {
-            this.getWebContentsSender().send('provider-registry:updatePreflightChecksUpdate', callbackId, {
+            this.sendToWebContents('provider-registry:updatePreflightChecksUpdate', callbackId, {
               type: 'stop',
               status,
             } as PreflightCheckEvent);
@@ -2078,13 +2093,13 @@ export class PluginSystem {
         }
         context.log.setLogHandler({
           log: (...data: unknown[]) => {
-            this.getWebContentsSender().send('provider-registry:startReceiveLogs-onData', callbackId, 'log', data);
+            this.sendToWebContents('provider-registry:startReceiveLogs-onData', callbackId, 'log', data);
           },
           warn: (...data: unknown[]) => {
-            this.getWebContentsSender().send('provider-registry:startReceiveLogs-onData', callbackId, 'warn', data);
+            this.sendToWebContents('provider-registry:startReceiveLogs-onData', callbackId, 'warn', data);
           },
           error: (...data: unknown[]) => {
-            this.getWebContentsSender().send('provider-registry:startReceiveLogs-onData', callbackId, 'error', data);
+            this.sendToWebContents('provider-registry:startReceiveLogs-onData', callbackId, 'error', data);
           },
         });
       },
@@ -2780,7 +2795,7 @@ export class PluginSystem {
       'kubernetes-client:readPodLog',
       async (_listener, name: string, container: string, onDataId: number): Promise<void> => {
         return kubernetesClient.readPodLog(name, container, (name: string, data: string) => {
-          this.getWebContentsSender().send('kubernetes-client:readPodLog-onData', onDataId, name, data);
+          this.sendToWebContents('kubernetes-client:readPodLog-onData', onDataId, name, data);
         });
       },
     );
@@ -3075,13 +3090,13 @@ export class PluginSystem {
           podName,
           containerName,
           (stdOut: Buffer) => {
-            this.getWebContentsSender().send('kubernetes-client:execIntoContainer-onData', onDataId, stdOut);
+            this.sendToWebContents('kubernetes-client:execIntoContainer-onData', onDataId, stdOut);
           },
           (stdErr: Buffer) => {
-            this.getWebContentsSender().send('kubernetes-client:execIntoContainer-onError', onDataId, stdErr);
+            this.sendToWebContents('kubernetes-client:execIntoContainer-onError', onDataId, stdErr);
           },
           () => {
-            this.getWebContentsSender().send('kubernetes-client:execIntoContainer-onClose', onDataId);
+            this.sendToWebContents('kubernetes-client:execIntoContainer-onClose', onDataId);
             kubernetesExecCallbackMap.delete(onDataId);
           },
         );
@@ -3508,11 +3523,7 @@ export class PluginSystem {
 
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd {
     const safeSend = (messageType: string, data?: unknown): void => {
-      try {
-        this.getWebContentsSender().send(channel, loggerId, messageType, data);
-      } catch (err) {
-        console.error('Failed to send log message to renderer:', err);
-      }
+      this.sendToWebContents(channel, loggerId, messageType, data);
     };
 
     return {
