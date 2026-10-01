@@ -16,31 +16,46 @@ import ListOrganizer from '../layouts/ListOrganizer.svelte';
 import type { Column, Row } from './table';
 import { collapsedStateMap, tablePersistence } from './table-persistence-store.svelte';
 
-export let kind: string;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let columns: Column<T, any>[];
-export let row: Row<T>;
-export let data: T[];
-export let defaultSortColumn: string | undefined = undefined;
-export let collapsed: string[] = collapsedStateMap.get(kind) ?? [];
-/**
- * To better distinct individual row, you can provide a dedicated key method
- *
- * By default, it will use the object name property
- */
-export let key: (object: T) => string = item => item.name ?? String(item);
-/**
- * Specify the aria-label for a given item
- *
- * By default, it will use the object name property
- */
-export let label: (object: T) => string = item => item.name ?? String(item);
+interface Props {
+  kind: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: Column<T, any>[];
+  row: Row<T>;
+  data: T[];
+  defaultSortColumn?: string;
+  collapsed?: string[];
+  /**
+   * To better distinct individual row, you can provide a dedicated key method
+   *
+   * By default, it will use the object name property
+   */
+  key?: (object: T) => string;
+  /**
+   * Specify the aria-label for a given item
+   *
+   * By default, it will use the object name property
+   */
+  label?: (object: T) => string;
+  enableLayoutConfiguration?: boolean;
+  selectedItemsNumber?: number;
+}
 
-export let enableLayoutConfiguration: boolean = false;
+let {
+  kind,
+  columns,
+  row,
+  data,
+  defaultSortColumn = undefined,
+  collapsed = $bindable(collapsedStateMap.get(kind) ?? []),
+  key = (item: T): string => item.name ?? String(item),
+  label = (item: T): string => item.name ?? String(item),
+  enableLayoutConfiguration = false,
+  selectedItemsNumber = $bindable(),
+}: Props = $props();
 
-let columnItems: ListOrganizerItem[] = [];
+let columnItems = $state<ListOrganizerItem[]>([]);
 let columnOrdering = new SvelteMap<string, number>();
-let isInitialized = false;
+let isInitialized = $state(false);
 let isLoading = false;
 
 // Initialize default column configuration
@@ -101,11 +116,10 @@ async function loadColumnConfiguration(): Promise<ListOrganizerItem[]> {
       // Check if items are in a different order than their original order
       const isReordered = items.some((item, index) => item.originalOrder !== index);
       if (isReordered) {
-        const ordering = new SvelteMap<string, number>();
+        columnOrdering.clear();
         items.forEach((item, index) => {
-          ordering.set(item.id, index);
+          columnOrdering.set(item.id, index);
         });
-        columnOrdering = ordering;
       } else {
         columnOrdering.clear();
       }
@@ -121,7 +135,7 @@ async function saveColumnConfiguration(): Promise<void> {
   if (enableLayoutConfiguration && tablePersistence.storage) {
     // Create ordered items based on current state
     const orderedItems = getOrderedColumns();
-    await tablePersistence.storage.save(kind, orderedItems);
+    await tablePersistence.storage.save(kind, $state.snapshot(orderedItems));
   }
 }
 
@@ -138,16 +152,17 @@ function getOrderedColumns(): ListOrganizerItem[] {
 }
 
 // Save configuration whenever columnItems or ordering changes (after initialization)
-$: if (isInitialized && columnItems.length > 0) {
-  columnOrdering;
-  saveColumnConfiguration().catch((error: unknown) => {
-    console.error('Failed to save column configuration:', error);
-  });
-}
+$effect(() => {
+  if (isInitialized && columnItems.length > 0) {
+    saveColumnConfiguration().catch((error: unknown) => {
+      console.error('Failed to save column configuration:', error);
+    });
+  }
+});
 
 // Computed visible columns based on configuration
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-$: visibleColumns = ((): Column<T, any>[] => {
+let visibleColumns = $derived.by((): Column<T, any>[] => {
   if (columnItems.length === 0) {
     // Fallback to all columns when not yet initialized
     return columns;
@@ -169,7 +184,7 @@ $: visibleColumns = ((): Column<T, any>[] => {
     .filter(Boolean);
 
   return result;
-})();
+});
 
 // Reactive source of truth for the selection UI. Callers may pass a plain /
 // $derived array whose elements are not reactive, so selection is tracked in
@@ -178,39 +193,35 @@ $: visibleColumns = ((): Column<T, any>[] => {
 let selectedItems = new SvelteSet<T>();
 
 // (Re)seed the selection from the incoming data whenever it changes.
-$: {
-  const selected = new SvelteSet<T>();
+$effect(() => {
+  selectedItems.clear();
   for (const object of data) {
     if (object.selected) {
-      selected.add(object);
+      selectedItems.add(object);
     }
     for (const child of row.info.children?.(object) ?? []) {
       if (child.selected) {
-        selected.add(child);
+        selectedItems.add(child);
       }
     }
   }
-  selectedItems = selected;
-}
+});
 
 function setSelected(object: T, checked: boolean): void {
   object.selected = checked;
-  const selected = new SvelteSet(selectedItems);
   if (checked) {
-    selected.add(object);
+    selectedItems.add(object);
   } else {
-    selected.delete(object);
+    selectedItems.delete(object);
   }
-  selectedItems = selected;
 }
 
 // All selectable items (parents and their children) in the current view.
-let selectableItems: T[] = [];
-$: {
+let selectableItems = $derived.by((): T[] => {
   if (!row.info.selectable) {
-    selectableItems = [];
+    return [];
   } else {
-    let items: T[] = [];
+    const items: T[] = [];
     for (const object of data) {
       if (row.info.selectable(object)) {
         items.push(object);
@@ -221,34 +232,36 @@ $: {
         }
       }
     }
-    selectableItems = items;
+    return items;
   }
-}
+});
 
 // number of selected items in the list
-export let selectedItemsNumber: number = 0;
-$: selectedItemsNumber = selectableItems.filter(item => selectedItems.has(item)).length;
+$effect(() => {
+  selectedItemsNumber = selectableItems.filter(item => selectedItems.has(item)).length;
+});
 
 // do we need to unselect all checkboxes if we don't have all items being selected ?
-let selectedAllCheckboxes: boolean | undefined;
-$: selectedAllCheckboxes = selectableItems.length > 0 && selectableItems.every(item => selectedItems.has(item));
+let selectedAllCheckboxes = $derived(
+  selectableItems.length > 0 && selectableItems.every(item => selectedItems.has(item)),
+);
 
-function toggleAll(event: CustomEvent<boolean>): void {
-  const checked = event.detail;
+function toggleAll(checked: boolean): void {
   for (const item of selectableItems) {
     setSelected(item, checked);
   }
 }
 
 const defaultSortCol = columns.find(column => column.title === defaultSortColumn && column.info.comparator);
-let sortCol: Column<T> | undefined = defaultSortCol;
-let sortAscending = defaultSortCol?.info.initialOrder ? defaultSortCol.info.initialOrder !== 'descending' : true;
+let sortCol = $state<Column<T> | undefined>(defaultSortCol);
+let sortAscending = $state<boolean>(
+  defaultSortCol?.info.initialOrder ? defaultSortCol.info.initialOrder !== 'descending' : true,
+);
 
 // Sorted view of the data. Uses $derived (not a $state copy) so the elements
 // remain the ORIGINAL object references passed by the caller: selection toggles
 // mutate object.selected in place and are therefore visible to the caller.
-let rows: T[];
-$: rows = ((): T[] => {
+let rows = $derived.by((): T[] => {
   const comparator = sortCol?.info.comparator;
   if (!comparator) {
     return [...data];
@@ -256,7 +269,7 @@ $: rows = ((): T[] => {
 
   const cmp = sortAscending ? comparator : (a: T, b: T): number => -comparator(a, b);
   return data.toSorted(cmp);
-})();
+});
 
 function sort(column: Column<T>): void {
   if (!column) {
@@ -277,8 +290,7 @@ function sort(column: Column<T>): void {
   }
 }
 
-let gridTemplateColumns: string;
-$: {
+let gridTemplateColumns = $derived.by(() => {
   // section and checkbox columns
   let columnWidths: string[] = ['20px'];
 
@@ -297,11 +309,10 @@ $: {
     columnWidths.push('5px');
   }
 
-  gridTemplateColumns = columnWidths.join(' ');
-}
+  return columnWidths.join(' ');
+});
 
-function objectChecked(object: T, event: CustomEvent<boolean>): void {
-  const checked = event.detail;
+function objectChecked(object: T, checked: boolean): void {
   setSelected(object, checked);
   // check for children and set them to the same state
   if (row.info.children) {
@@ -312,8 +323,8 @@ function objectChecked(object: T, event: CustomEvent<boolean>): void {
   }
 }
 
-function childChecked(child: T, event: CustomEvent<boolean>): void {
-  setSelected(child, event.detail);
+function childChecked(child: T, checked: boolean): void {
+  setSelected(child, checked);
 }
 
 function toggleChildren(name: string | undefined): void {
@@ -329,14 +340,15 @@ function toggleChildren(name: string | undefined): void {
   } else {
     collapsed.push(name);
   }
-  // trigger Svelte update
-  collapsed = collapsed;
   collapsedStateMap.set(kind, [...collapsed]);
 }
 
 // Handle column order changes from ListOrganizer
 function handleColumnOrderChange(newOrdering: SvelteMap<string, number>): void {
-  columnOrdering = newOrdering;
+  columnOrdering.clear();
+  for (const [id, order] of newOrdering) {
+    columnOrdering.set(id, order);
+  }
 }
 
 // Handle column toggle changes from ListOrganizer
@@ -479,12 +491,12 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
             checked={selectedAllCheckboxes}
             disabled={!row.info.selectable || data.filter(object => row.info.selectable?.(object)).length === 0}
             indeterminate={(selectedItemsNumber ?? 0) > 0 && !selectedAllCheckboxes}
-            on:click={toggleAll} />
+            onclick={toggleAll} />
         </div>
       {/if}
       {#each visibleColumns as column, index (index)}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_interactive_supports_focus -->
         <div
           class="max-w-full overflow-hidden flex flex-row text-sm font-semibold items-center whitespace-nowrap {column
             .info.align === 'right'
@@ -493,7 +505,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               ? 'justify-self-center'
               : 'justify-self-start'} self-center select-none"
           class:cursor-pointer={column.info.comparator}
-          on:click={sort.bind(undefined, column)}
+          onclick={sort.bind(undefined, column)}
           role="columnheader">
           <div class="overflow-hidden text-ellipsis">
             {column.title}
@@ -549,8 +561,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
           role="row"
           tabindex={isRowClickable(object) ? 0 : undefined}
           aria-label={label(object)}
-          on:click={handleRowClick.bind(undefined, object)}
-          on:keydown={handleRowKeyDown.bind(undefined, object)}>
+          onclick={handleRowClick.bind(undefined, object)}
+          onkeydown={handleRowKeyDown.bind(undefined, object)}>
           <div
             class="whitespace-nowrap place-self-center"
             class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick && isRowClickable(object)}
@@ -559,7 +571,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               <button
                 title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
                 aria-expanded={!collapsed.includes(itemKey)}
-                on:click={toggleChildren.bind(undefined, itemKey)}
+                onclick={toggleChildren.bind(undefined, itemKey)}
               >
                 <ChevronExpander
                   expanded={!collapsed.includes(itemKey)}
@@ -575,7 +587,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
                 checked={selectedItems.has(object)}
                 disabled={!row.info.selectable(object)}
                 disabledTooltip={row.info.disabledText}
-                on:click={objectChecked.bind(undefined, object)} />
+                onclick={objectChecked.bind(undefined, object)} />
             </div>
           {/if}
           {#each visibleColumns as column, index (index)}
@@ -595,9 +607,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               class:cursor-default={column.info.excludeFromRowClick && isRowClickable(object)}
               role="cell">
               {#if column.info.renderer}
-                <svelte:component
-                  this={column.info.renderer}
-                  object={column.info.renderMapping ? column.info.renderMapping(object) : object} />
+                {@const Renderer = column.info.renderer}
+                <Renderer object={column.info.renderMapping ? column.info.renderMapping(object) : object} />
               {/if}
             </div>
           {/each}
@@ -619,7 +630,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
                     checked={selectedItems.has(child)}
                     disabled={!row.info.selectable(child)}
                     disabledTooltip={row.info.disabledText}
-                    on:click={childChecked.bind(undefined, child)} />
+                    onclick={childChecked.bind(undefined, child)} />
                 </div>
               {/if}
               {#each visibleColumns as column, index (index)}
@@ -634,9 +645,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
                   class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
                   role="cell">
                   {#if column.info.renderer}
-                    <svelte:component
-                      this={column.info.renderer}
-                      object={column.info.renderMapping ? column.info.renderMapping(child) : child} />
+                    {@const Renderer = column.info.renderer}
+                    <Renderer object={column.info.renderMapping ? column.info.renderMapping(child) : child} />
                   {/if}
                 </div>
               {/each}
