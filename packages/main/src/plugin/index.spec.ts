@@ -1224,37 +1224,33 @@ describe('sendToWebContents resilience when the main window is gone', () => {
       getHandler<(_event: unknown, _name: string, _container: string, _onDataId: number) => Promise<void>>(
         'kubernetes-client:readPodLog',
       );
-    const readPodLogSpy = vi
-      .spyOn(KubernetesClient.prototype, 'readPodLog')
-      .mockImplementation(async (_name, _container, callback) => {
-        callback('name', 'data');
-      });
+    vi.spyOn(KubernetesClient.prototype, 'readPodLog').mockImplementation(async (_name, _container, callback) => {
+      callback('name', 'data');
+    });
     await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('kubernetes-client:readPodLog-onData'),
       expect.anything(),
     );
-    readPodLogSpy.mockRestore();
   });
 
   test('kubernetes-client:execIntoContainer onData, onError and onClose callbacks do not throw', async () => {
     const handle = getHandler<
       (_event: unknown, _podName: string, _containerName: string, _onDataId: number) => Promise<number>
     >('kubernetes-client:execIntoContainer');
-    const execIntoContainerSpy = vi
-      .spyOn(KubernetesClient.prototype, 'execIntoContainer')
-      .mockImplementation(async (_podName, _containerName, onStdOut, onStdErr, onClose) => {
+    vi.spyOn(KubernetesClient.prototype, 'execIntoContainer').mockImplementation(
+      async (_podName, _containerName, onStdOut, onStdErr, onClose) => {
         onStdOut(Buffer.from('stdout'));
         onStdErr(Buffer.from('stderr'));
         onClose();
         return { onStdIn: vi.fn(), onResize: vi.fn() };
-      });
+      },
+    );
     await expect(handle(undefined, 'pod', 'container', 1)).resolves.not.toHaveProperty('error');
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('kubernetes-client:execIntoContainer-onData'),
       expect.anything(),
     );
-    execIntoContainerSpy.mockRestore();
   });
 });
 
