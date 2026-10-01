@@ -926,7 +926,7 @@ For Dialog components, follow the previous instructions by using the `initialBut
 </Dialog>
 ```
 
-MessageBox components handle focus management internally as follows:
+MessageBox components (using Dialog) handle focus management internally as follows:
 
-- `initialFocus="first"` for type `Danger` if there is a cancel/dismiss button, otherwise `initialFocus="none"`
-- `initialFocus="last"` for all other cases
+- `initialButtonFocus="first"` for type `danger` if there is a cancel/dismiss button, otherwise `initialFocus="none"`
+- `initialButtonFocus="last"` for all other cases
