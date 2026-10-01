@@ -878,7 +878,7 @@ describe.each<{
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
     assert(params, 'params should be defined');
-    expect(params.title).toEqual('Creating name1 provider');
+    expect(params.title).toEqual('Updating name1 provider');
     expect(params.action?.name).toEqual('Open task');
 
     const execute = params.action?.execute;
@@ -960,7 +960,7 @@ describe.each<{
     expect(onEndMock).toHaveBeenCalled();
     expect(errorMock).toHaveBeenCalledWith(rejectError);
     expect(originalTask.status).toEqual('in-progress');
-    expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
+    expect(originalTask.error).toEqual('Something went wrong while updating container provider: Error: an error');
   });
 });
 

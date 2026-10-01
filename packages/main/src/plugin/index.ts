@@ -2606,7 +2606,7 @@ export class PluginSystem {
         }
 
         const task = taskManager.createTask({
-          title: `Creating ${providerConnectionInfo.name} provider`,
+          title: `Updating ${providerConnectionInfo.name} provider`,
           action: {
             name: 'Open task',
             execute: () => {
@@ -2622,7 +2622,7 @@ export class PluginSystem {
             return result;
           })
           .catch((err: unknown) => {
-            task.error = `Something went wrong while creating container provider: ${err}`;
+            task.error = `Something went wrong while updating container provider: ${err}`;
             logger.error(err);
             throw err;
           })
