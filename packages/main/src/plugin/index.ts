@@ -154,7 +154,7 @@ import type {
 } from '@kubernetes/client-node';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
-import type { IpcMainEvent, WebContents } from 'electron';
+import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
@@ -271,6 +271,22 @@ const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpa
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
+/**
+ * Subset of Electron's WebContents used by PluginSystem for IPC sends.
+ * Keeps the coupling narrow so the class never depends on the full WebContents surface.
+ */
+export interface MainWindowWebContentsSender {
+  send(channel: string, ...args: unknown[]): void;
+  on(eventName: 'dom-ready', listener: () => void): void;
+  isDestroyed(): boolean;
+}
+
+const DestroyedWebContentsSender: MainWindowWebContentsSender = {
+  send: () => {},
+  on: () => {},
+  isDestroyed: () => true,
+};
+
 export interface LoggerWithEnd extends containerDesktopAPI.Logger {
   // when task is finished, this function is called
   onEnd: () => void;
@@ -302,12 +318,9 @@ export class PluginSystem {
     });
   }
 
-  getWebContentsSender(): WebContents {
+  getWebContentsSender(): MainWindowWebContentsSender {
     const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
-    if (!window) {
-      throw new Error('Unable to find the main window');
-    }
-    return window.webContents;
+    return window ? window.webContents : DestroyedWebContentsSender;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -400,7 +413,7 @@ export class PluginSystem {
     logTypes.forEach(logType => this.redirectConsole(logType));
   }
 
-  getApiSender(webContents: WebContents): ApiSenderType {
+  getApiSender(webContents: MainWindowWebContentsSender): ApiSenderType {
     const queuedEvents: { channel: string; data: unknown[] }[] = [];
 
     const flushQueuedEvents = (): void => {
