@@ -767,13 +767,14 @@ Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and 
 
 ## Button layout in dialogs, modals, and forms
 
-All dialogs, modals, and forms must adhere to the follwoing guidelines to ensure accessibility, keyboard navigation, and visual coherence.
+All dialogs, modals, and forms must adhere to the following guidelines to ensure accessibility, keyboard navigation, and visual coherence.
 
 ### ButtonRow component usage
 
 Action rows must use the shared `ButtonRow` component from `@podman-desktop/ui-svelte`, even for a single button.
 Custom button layouts are prohibited.
-Note: the `Dialog` component is already using `ButtonRow`, so no need to declare it again in the `buttons` snippet
+
+Note: the `Dialog` component is already using `ButtonRow`, so no need to declare it again in the `buttons` snippet.
 
 ✅ **Use this pattern:**
 
@@ -898,13 +899,34 @@ Visual order must match DOM sequence. Never use CSS `order` property to manipula
 
 ### Focus management
 
-Non-destructive dialogs may focus primary actions on open. Destructive dialogs must default focus to Cancel buttons to prevent accidental data loss or destructive action execution.
+Non-destructive dialogs, forms, or modals may focus primary actions on open. Destructive components must default focus to Cancel buttons to prevent accidental data loss or destructive action execution. If there is no Cancel, use `initialFocus="none"` so focus never falls through to the destructive action.
 
 ✅ **Use this pattern (destructive action):**
 
 ```svelte
 <ButtonRow initialFocus="first">
-  <Button type="link" bind:this={cancelButton} on:click={onCancel}>Cancel</Button>
-  <Button type="primary" on:click={onDelete}>Delete</Button>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="danger" on:click={onDelete}>Delete</Button>
 </ButtonRow>
 ```
+
+For Dialog components, follow the previous instructions by using the `initialButtonFocus` prop.
+
+✅ **Use this pattern (destructive action):**
+
+```svelte
+<Dialog title="Duplicate Container?" onclose={onCancel} initialButtonFocus="last">
+  {#snippet content()}
+    <p>Do you want to duplicate this container?</p>
+  {/snippet}
+  {#snippet buttons()}
+    <Button type="link" on:click={onCancel}>Cancel</Button>
+    <Button type="primary" on:click={onConfirm}>Continue</Button>
+  {/snippet}
+</Dialog>
+```
+
+MessageBox components handle focus management internally as follows:
+
+- `initialFocus="first"` for type `Danger` if there is a cancel/dismiss button, otherwise `initialFocus="none"`
+- `initialFocus="last"` for all other cases
