@@ -75,7 +75,7 @@ test('Expect empty screen if no content', async () => {
 });
 
 test('Expect empty screen when fetch fails', async () => {
-  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
   const fetchError = new Error('Error fetching README');
   vi.mocked(window.fetchCatalogReadme).mockRejectedValueOnce(fetchError);
 
@@ -96,6 +96,4 @@ test('Expect empty screen when fetch fails', async () => {
   // expect no Markdown
   const markdownContent = screen.queryByRole('region', { name: 'markdown-content' });
   expect(markdownContent).not.toBeInTheDocument();
-
-  consoleErrorSpy.mockRestore();
 });

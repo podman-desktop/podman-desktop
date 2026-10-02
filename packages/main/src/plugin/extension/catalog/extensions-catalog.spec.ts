@@ -650,9 +650,6 @@ test('should throw error when fetching README fails', async () => {
 });
 
 test('should fetch README from first non-preview version', async () => {
-  // Mock getApiVersion to return a valid version
-  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
-
   const previewReadmeUri = 'https://example.com/extensions/foo/fooName/2.0.0-preview/README.md';
   const stableReadmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
   const stableReadmeContent = '# Stable README';

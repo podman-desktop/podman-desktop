@@ -194,7 +194,6 @@ export class ExtensionsCatalog {
     return fetchableExtensions;
   }
 
-  // fetch README content for extensionId
   async fetchReadme(extensionId: string): Promise<string> {
     const catalogExtensions = await this.getExtensions();
     const extensionInfo = catalogExtensions.find(extension => extension.id === extensionId);
@@ -203,7 +202,7 @@ export class ExtensionsCatalog {
       throw new Error(`No extension with id ${extensionId} found`);
     }
 
-    // Get the first non-preview version (same logic as renderer)
+    // Get the first non-preview version
     const nonPreviewVersions = extensionInfo.versions.filter(v => v.preview === false);
     const latestVersion = nonPreviewVersions.length > 0 ? nonPreviewVersions[0] : undefined;
     const latestVersionReadme = latestVersion?.files.find(f => f.assetType.toLowerCase() === 'readme')?.data;
