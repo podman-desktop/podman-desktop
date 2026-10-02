@@ -202,7 +202,7 @@ overrides:
   serialize-javascript: ^7.0.5
   ajv@^6: ^6.14.0
   ajv@^8: ^8.18.0
-  svelte>devalue: ^5.6.4
+  svelte>devalue: ^5.9.3
   protobufjs: ^7.6.5
   follow-redirects: ^1.16.0
   uuid: ^14.0.0
@@ -7623,8 +7623,8 @@ packages:
     engines: {node: '>= 16.0.0'}
     hasBin: true
 
-  devalue@5.9.1:
-    resolution: {integrity: sha512-+17vil3EVQRzvtDJSFuTWEb8XJRvXqAiV3qZyQWD398QeXUa6CxsUyMdD1fxzEhUrd4FojitFz7lhIHBTlV4fw==}
+  devalue@5.9.4:
+    resolution: {integrity: sha512-sPAT4pztbu6586/hrhOnMKS17IJrvg12mXiSPSS3W5qDeN2RGgvZ0diZCm31dBbnevfVmujNO3IM2wrS4Y2Rhg==}
 
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
@@ -20262,7 +20262,7 @@ snapshots:
     dependencies:
       address: 2.0.3
 
-  devalue@5.9.1: {}
+  devalue@5.9.4: {}
 
   devlop@1.1.0:
     dependencies:
@@ -25690,7 +25690,7 @@ snapshots:
       aria-query: 5.3.1
       axobject-query: 4.1.0
       clsx: 2.1.1
-      devalue: 5.9.1
+      devalue: 5.9.4
       esm-env: 1.2.2
       esrap: 2.3.7(@typescript-eslint/types@8.70.0)
       is-reference: 3.0.3
