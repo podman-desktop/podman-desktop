@@ -252,7 +252,7 @@ export class ImageRegistry {
   }
 
   getSuggestedRegistries(): containerDesktopAPI.RegistrySuggestedProvider[] {
-    return this.suggestedRegistries;
+    return [...this.suggestedRegistries];
   }
 
   getProviderNames(): string[] {
