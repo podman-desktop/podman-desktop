@@ -37,7 +37,7 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
-import { imagesInfos } from '/@/stores/images';
+import { imagesEventStoreInfo, imagesInfos } from '/@/stores/images';
 import { secretsInfo } from '/@/stores/secrets';
 import { volumeListInfos } from '/@/stores/volumes';
 
@@ -162,6 +162,14 @@ function changeVolumeSourceType(index: number, sourceType: string): void {
 }
 
 onMount(async () => {
+  try {
+    // the images store may not have caught up yet with an image that was just pulled or built,
+    // so refresh it before deciding the image does not exist
+    await imagesEventStoreInfo.fetch();
+  } catch (error: unknown) {
+    console.error('Unable to refresh the images list before opening the Run Image page', error);
+  }
+
   if (!image) {
     // go back to image list
     router.goto('/images/');
