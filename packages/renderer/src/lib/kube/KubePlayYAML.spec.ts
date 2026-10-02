@@ -174,7 +174,7 @@ test('allows typing and pasting a YAML path and plays the entered path', async (
   expect(playButton).toBeDisabled();
 
   await userEvent.type(fileInput, '   ');
-  expect(playButton).toBeDisabled();
+  expect(playButton).toBeEnabled();
   await userEvent.clear(fileInput);
 
   await userEvent.click(fileInput);

@@ -32,7 +32,7 @@ let hasInvalidFields = $derived.by(() => {
   if (!selectedProviderConnection) return true;
   switch (userChoice) {
     case 'podman':
-      return !kubernetesYamlFilePath?.trim();
+      return !kubernetesYamlFilePath;
     case 'custom':
       return customYamlContent.length === 0;
   }
@@ -210,7 +210,6 @@ function toggle(choice: 'podman' | 'custom'): void {
               <FileInput
                 name="containerFilePath"
                 id="containerFilePath"
-                required
                 disabled={userChoice === 'custom'}
                 bind:value={kubernetesYamlFilePath}
                 placeholder="Select a .yaml file to play"
