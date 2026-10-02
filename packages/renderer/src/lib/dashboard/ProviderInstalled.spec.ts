@@ -18,12 +18,16 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { PreflightChecksCallback, ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import { type InitializationContext, InitializeAndStartMode } from '/@/lib/dashboard/ProviderInitUtils';
+import {
+  type InitializationContext,
+  InitializeAndStartMode,
+  InitializeOnlyMode,
+} from '/@/lib/dashboard/ProviderInitUtils';
 import ProviderInstalled from '/@/lib/dashboard/ProviderInstalled.svelte';
 import { providerInfos } from '/@/stores/providers';
 
@@ -113,6 +117,110 @@ test('Expect installed provider shows button', async () => {
 
   expect((initializationContext as InitializationContextImpl).promise).toBeDefined();
   expect(window.initializeProvider).toHaveBeenCalled();
+});
+
+test.each([true, false])('handles preflight check callbacks for result %s', async result => {
+  vi.mocked(window.runInstallPreflightChecks).mockResolvedValue(result);
+
+  const provider = {
+    installationSupport: true,
+    internalId: 'myproviderid',
+    links: [],
+    name: 'MyProvider',
+    status: 'installed',
+  } as unknown as ProviderInfo;
+  const initializationContext = new InitializationContextImpl(
+    InitializeAndStartMode,
+  ) as unknown as InitializationContext;
+  render(ProviderInstalled, { provider, initializationContext });
+
+  const runChecksButton = screen.getByRole('button', { name: 'Run checks' });
+  await userEvent.click(runChecksButton);
+
+  expect(window.runInstallPreflightChecks).toHaveBeenCalledWith(provider.internalId, expect.any(Object));
+
+  const [, callbacks]: [string, PreflightChecksCallback] = vi.mocked(window.runInstallPreflightChecks).mock.calls[0];
+  callbacks.startCheck({ name: 'Check requirements' });
+  expect(await screen.findByLabelText('precheck-title')).toHaveTextContent('Check requirements');
+
+  callbacks.endCheck({ name: 'Check requirements', successful: result, description: 'Requirements satisfied' });
+  expect(await screen.findByLabelText('precheck-description')).toHaveTextContent('Requirements satisfied');
+
+  await waitFor(() => {
+    expect(runChecksButton).toBeEnabled();
+    expect(runChecksButton).toHaveAttribute('aria-busy', 'false');
+  });
+
+  await userEvent.click(runChecksButton);
+  expect(screen.queryByLabelText('precheck-title')).not.toBeInTheDocument();
+});
+
+test('resets the checks-in-progress state when preflight checks fail', async () => {
+  vi.mocked(window.runInstallPreflightChecks).mockRejectedValue(new Error('Preflight checks failed'));
+
+  const provider = {
+    installationSupport: true,
+    internalId: 'myproviderid',
+    links: [],
+    name: 'MyProvider',
+    status: 'installed',
+  } as unknown as ProviderInfo;
+  const initializationContext = new InitializationContextImpl(
+    InitializeAndStartMode,
+  ) as unknown as InitializationContext;
+  render(ProviderInstalled, { provider, initializationContext });
+
+  const runChecksButton = screen.getByRole('button', { name: 'Run checks' });
+  await userEvent.click(runChecksButton);
+  await waitFor(() => {
+    expect(runChecksButton).toBeEnabled();
+    expect(runChecksButton).toHaveAttribute('aria-busy', 'false');
+  });
+});
+
+test.each([
+  {
+    mode: InitializeOnlyMode,
+    optionName: /Initialize\s*MyProvider/,
+    selectInitializeOnlyFirst: false,
+  },
+  {
+    mode: InitializeAndStartMode,
+    optionName: /Initialize and start\s*MyProvider/,
+    selectInitializeOnlyFirst: true,
+  },
+])('uses the $mode installation option', async ({ mode, optionName, selectInitializeOnlyFirst }) => {
+  const provider = {
+    containerProviderConnectionInitialization: true,
+    internalId: 'myproviderid',
+    links: [],
+    name: 'MyProvider',
+    status: 'installed',
+  } as unknown as ProviderInfo;
+  const initializationContext = new InitializationContextImpl(
+    InitializeAndStartMode,
+  ) as unknown as InitializationContext;
+  render(ProviderInstalled, { provider, initializationContext });
+
+  const optionsMenuButton = screen.getByRole('button', { name: 'Installation options menu' });
+
+  if (selectInitializeOnlyFirst) {
+    await userEvent.click(optionsMenuButton);
+    await userEvent.click(screen.getByRole('button', { name: /Initialize\s*MyProvider/ }));
+    screen.getByRole('button', { name: InitializeOnlyMode });
+  }
+
+  await userEvent.click(optionsMenuButton);
+  await userEvent.click(screen.getByRole('button', { name: optionName }));
+
+  const installationButton = screen.getByRole('button', { name: mode });
+  await userEvent.click(optionsMenuButton);
+  screen.getByRole('button', { name: optionName });
+  await userEvent.click(optionsMenuButton);
+
+  await userEvent.click(installationButton);
+  expect(initializationContext.mode).toBe(mode);
+  expect(window.initializeProvider).toHaveBeenCalledWith(provider.internalId);
 });
 
 test('Expect installed provider shows update button', async () => {
