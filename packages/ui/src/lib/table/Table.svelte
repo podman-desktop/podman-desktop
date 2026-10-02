@@ -6,44 +6,56 @@
 </style>
 
 <script lang="ts" generics="T extends { selected?: boolean; name?: string }">
-/* eslint-disable import/no-duplicates */
-// https://github.com/import-js/eslint-plugin-import/issues/1479
-import { onMount, tick } from 'svelte';
-import { SvelteMap } from 'svelte/reactivity';
+import { onMount } from 'svelte';
+import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
 import ChevronExpander from '../icons/ChevronExpander.svelte';
 import type { ListOrganizerItem } from '../layouts/ListOrganizer';
 import ListOrganizer from '../layouts/ListOrganizer.svelte';
-/* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
 import { collapsedStateMap, tablePersistence } from './table-persistence-store.svelte';
 
-export let kind: string;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let columns: Column<T, any>[];
-export let row: Row<T>;
-export let data: T[];
-export let defaultSortColumn: string | undefined = undefined;
-export let collapsed: string[] = collapsedStateMap.get(kind) ?? [];
-/**
- * To better distinct individual row, you can provide a dedicated key method
- *
- * By default, it will use the object name property
- */
-export let key: (object: T) => string = item => item.name ?? String(item);
-/**
- * Specify the aria-label for a given item
- *
- * By default, it will use the object name property
- */
-export let label: (object: T) => string = item => item.name ?? String(item);
+interface Props {
+  kind: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: Column<T, any>[];
+  row: Row<T>;
+  data: T[];
+  defaultSortColumn?: string;
+  collapsed?: string[];
+  /**
+   * To better distinct individual row, you can provide a dedicated key method
+   *
+   * By default, it will use the object name property
+   */
+  key?: (object: T) => string;
+  /**
+   * Specify the aria-label for a given item
+   *
+   * By default, it will use the object name property
+   */
+  label?: (object: T) => string;
+  enableLayoutConfiguration?: boolean;
+  selectedItemsNumber?: number;
+}
 
-export let enableLayoutConfiguration: boolean = false;
+let {
+  kind,
+  columns,
+  row,
+  data,
+  defaultSortColumn = undefined,
+  collapsed = $bindable(collapsedStateMap.get(kind) ?? []),
+  key = (item: T): string => item.name ?? String(item),
+  label = (item: T): string => item.name ?? String(item),
+  enableLayoutConfiguration = false,
+  selectedItemsNumber = $bindable(),
+}: Props = $props();
 
-let columnItems: ListOrganizerItem[] = [];
+let columnItems = $state<ListOrganizerItem[]>([]);
 let columnOrdering = new SvelteMap<string, number>();
-let isInitialized = false;
+let isInitialized = $state(false);
 let isLoading = false;
 
 // Initialize default column configuration
@@ -104,11 +116,10 @@ async function loadColumnConfiguration(): Promise<ListOrganizerItem[]> {
       // Check if items are in a different order than their original order
       const isReordered = items.some((item, index) => item.originalOrder !== index);
       if (isReordered) {
-        const ordering = new SvelteMap<string, number>();
+        columnOrdering.clear();
         items.forEach((item, index) => {
-          ordering.set(item.id, index);
+          columnOrdering.set(item.id, index);
         });
-        columnOrdering = ordering;
       } else {
         columnOrdering.clear();
       }
@@ -124,7 +135,7 @@ async function saveColumnConfiguration(): Promise<void> {
   if (enableLayoutConfiguration && tablePersistence.storage) {
     // Create ordered items based on current state
     const orderedItems = getOrderedColumns();
-    await tablePersistence.storage.save(kind, orderedItems);
+    await tablePersistence.storage.save(kind, $state.snapshot(orderedItems));
   }
 }
 
@@ -141,16 +152,17 @@ function getOrderedColumns(): ListOrganizerItem[] {
 }
 
 // Save configuration whenever columnItems or ordering changes (after initialization)
-$: if (isInitialized && columnItems.length > 0) {
-  columnOrdering;
-  saveColumnConfiguration().catch((error: unknown) => {
-    console.error('Failed to save column configuration:', error);
-  });
-}
+$effect(() => {
+  if (isInitialized && columnItems.length > 0) {
+    saveColumnConfiguration().catch((error: unknown) => {
+      console.error('Failed to save column configuration:', error);
+    });
+  }
+});
 
 // Computed visible columns based on configuration
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-$: visibleColumns = ((): Column<T, any>[] => {
+let visibleColumns = $derived.by((): Column<T, any>[] => {
   if (columnItems.length === 0) {
     // Fallback to all columns when not yet initialized
     return columns;
@@ -172,65 +184,92 @@ $: visibleColumns = ((): Column<T, any>[] => {
     .filter(Boolean);
 
   return result;
-})();
+});
 
-let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
+// Reactive source of truth for the selection UI. Callers may pass a plain /
+// $derived array whose elements are not reactive, so selection is tracked in
+// this SvelteSet; object.selected is mutated in parallel so callers can read it
+// back (e.g. data.filter(o => o.selected)).
+let selectedItems = new SvelteSet<T>();
+
+// (Re)seed the selection from the incoming data whenever it changes.
+$effect(() => {
+  selectedItems.clear();
+  for (const object of data) {
+    if (object.selected) {
+      selectedItems.add(object);
+    }
+    for (const child of row.info.children?.(object) ?? []) {
+      if (child.selected) {
+        selectedItems.add(child);
+      }
+    }
+  }
+});
+
+function setSelected(object: T, checked: boolean): void {
+  object.selected = checked;
+  if (checked) {
+    selectedItems.add(object);
+  } else {
+    selectedItems.delete(object);
+  }
+}
+
+// All selectable items (parents and their children) in the current view.
+let selectableItems = $derived.by((): T[] => {
+  if (!row.info.selectable) {
+    return [];
+  } else {
+    const items: T[] = [];
+    for (const object of data) {
+      if (row.info.selectable(object)) {
+        items.push(object);
+      }
+      for (const child of row.info.children?.(object) ?? []) {
+        if (row.info.selectable(child)) {
+          items.push(child);
+        }
+      }
+    }
+    return items;
+  }
+});
 
 // number of selected items in the list
-export let selectedItemsNumber: number = 0;
-$: selectedItemsNumber = row.info.selectable
-  ? data.filter(object => row.info.selectable?.(object) && object.selected).length +
-    data.reduce(
-      (previous, current) =>
-        previous +
-        (row.info.children?.(current)?.filter(child => row.info.selectable?.(child) && child.selected).length ?? 0),
-      0,
-    )
-  : 0;
+$effect(() => {
+  selectedItemsNumber = selectableItems.filter(item => selectedItems.has(item)).length;
+});
 
 // do we need to unselect all checkboxes if we don't have all items being selected ?
-let selectedAllCheckboxes: boolean | undefined;
-$: selectedAllCheckboxes = row.info.selectable
-  ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
-    data
-      .reduce(
-        (accumulator, current) => {
-          const children = row.info.children?.(current);
-          if (children) {
-            accumulator.push(...children);
-          }
-          return accumulator;
-        },
-        [] as Array<T>,
-      )
-      .filter(child => row.info.selectable?.(child))
-      .every(child => child.selected) &&
-    data.filter(object => row.info.selectable?.(object)).length > 0
-  : false;
+let selectedAllCheckboxes = $derived(
+  selectableItems.length > 0 && selectableItems.every(item => selectedItems.has(item)),
+);
 
-function toggleAll(e: CustomEvent<boolean>): void {
-  const checked = e.detail;
-  if (!row.info.selectable) {
-    return;
+function toggleAll(checked: boolean): void {
+  for (const item of selectableItems) {
+    setSelected(item, checked);
   }
-  data.filter(object => row.info.selectable?.(object)).forEach(object => (object.selected = checked));
-
-  // toggle children
-  data.forEach(object => {
-    const children = row.info.children?.(object);
-    if (children) {
-      children.filter(child => row.info.selectable?.(child)).forEach(child => (child.selected = checked));
-    }
-  });
-  data = [...data];
 }
 
-let sortCol: Column<T>;
-let sortAscending: boolean;
+const defaultSortCol = columns.find(column => column.title === defaultSortColumn && column.info.comparator);
+let sortCol = $state<Column<T> | undefined>(defaultSortCol);
+let sortAscending = $state<boolean>(
+  defaultSortCol?.info.initialOrder ? defaultSortCol.info.initialOrder !== 'descending' : true,
+);
 
-$: if (data && sortCol) {
-  sortImpl();
-}
+// Sorted view of the data. Uses $derived (not a $state copy) so the elements
+// remain the ORIGINAL object references passed by the caller: selection toggles
+// mutate object.selected in place and are therefore visible to the caller.
+let rows = $derived.by((): T[] => {
+  const comparator = sortCol?.info.comparator;
+  if (!comparator) {
+    return [...data];
+  }
+
+  const cmp = sortAscending ? comparator : (a: T, b: T): number => -comparator(a, b);
+  return data.toSorted(cmp);
+});
 
 function sort(column: Column<T>): void {
   if (!column) {
@@ -249,42 +288,9 @@ function sort(column: Column<T>): void {
     sortCol = column;
     sortAscending = column.info.initialOrder ? column.info.initialOrder !== 'descending' : true;
   }
-  sortImpl();
 }
 
-function sortImpl(): void {
-  // confirm we're sorting
-  if (!sortCol) {
-    return;
-  }
-
-  let comparator = sortCol.info.comparator;
-  if (!comparator) {
-    // column is not sortable
-    return;
-  }
-
-  if (!sortAscending) {
-    // we're already sorted, switch to reverse order
-    let comparatorTemp = comparator;
-    comparator = (a, b): number => -comparatorTemp(a, b);
-  }
-
-  data = data.toSorted(comparator);
-}
-
-onMount(async () => {
-  const column: Column<T> | undefined = columns.find(column => column.title === defaultSortColumn);
-  if (column?.info.comparator) {
-    sortCol = column;
-    sortAscending = column.info.initialOrder ? column.info.initialOrder !== 'descending' : true;
-    await tick(); // Ensure all initializations are complete.
-    sortImpl(); // Explicitly call sortImpl to sort the data initially.
-  }
-});
-
-let gridTemplateColumns: string;
-$: {
+let gridTemplateColumns = $derived.by(() => {
   // section and checkbox columns
   let columnWidths: string[] = ['20px'];
 
@@ -303,18 +309,22 @@ $: {
     columnWidths.push('5px');
   }
 
-  gridTemplateColumns = columnWidths.join(' ');
-}
+  return columnWidths.join(' ');
+});
 
-function objectChecked(object: T): void {
+function objectChecked(object: T, checked: boolean): void {
+  setSelected(object, checked);
   // check for children and set them to the same state
   if (row.info.children) {
     const children = row.info.children(object);
     if (children) {
-      // event fires before parent changes so use '!'
-      children.forEach(child => (child.selected = !object.selected));
+      children.forEach(child => setSelected(child, checked));
     }
   }
+}
+
+function childChecked(child: T, checked: boolean): void {
+  setSelected(child, checked);
 }
 
 function toggleChildren(name: string | undefined): void {
@@ -330,14 +340,15 @@ function toggleChildren(name: string | undefined): void {
   } else {
     collapsed.push(name);
   }
-  // trigger Svelte update
-  collapsed = collapsed;
   collapsedStateMap.set(kind, [...collapsed]);
 }
 
 // Handle column order changes from ListOrganizer
 function handleColumnOrderChange(newOrdering: SvelteMap<string, number>): void {
-  columnOrdering = newOrdering;
+  columnOrdering.clear();
+  for (const [id, order] of newOrdering) {
+    columnOrdering.set(id, order);
+  }
 }
 
 // Handle column toggle changes from ListOrganizer
@@ -466,8 +477,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
   class="w-full mx-5"
   class:hidden={data.length === 0}
   role="table"
-  aria-label={kind}
-  bind:this={tableHtmlDivElement}>
+  aria-label={kind}>
   <!-- Table header -->
   <div role="rowgroup" class="relative">
     <div
@@ -478,15 +488,15 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
         <div class="whitespace-nowrap place-self-center" role="columnheader">
           <Checkbox
             title="Toggle all"
-            bind:checked={selectedAllCheckboxes}
+            checked={selectedAllCheckboxes}
             disabled={!row.info.selectable || data.filter(object => row.info.selectable?.(object)).length === 0}
-            indeterminate={selectedItemsNumber > 0 && !selectedAllCheckboxes}
-            on:click={toggleAll} />
+            indeterminate={(selectedItemsNumber ?? 0) > 0 && !selectedAllCheckboxes}
+            onclick={toggleAll} />
         </div>
       {/if}
       {#each visibleColumns as column, index (index)}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_interactive_supports_focus -->
         <div
           class="max-w-full overflow-hidden flex flex-row text-sm font-semibold items-center whitespace-nowrap {column
             .info.align === 'right'
@@ -495,7 +505,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               ? 'justify-self-center'
               : 'justify-self-start'} self-center select-none"
           class:cursor-pointer={column.info.comparator}
-          on:click={sort.bind(undefined, column)}
+          onclick={sort.bind(undefined, column)}
           role="columnheader">
           <div class="overflow-hidden text-ellipsis">
             {column.title}
@@ -535,7 +545,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
   </div>
   <!-- Table body -->
   <div role="rowgroup">
-    {#each data as object (object)}
+    {#each rows as object (object)}
       {@const children = row.info.children?.(object) ?? []}
       {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
@@ -551,8 +561,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
           role="row"
           tabindex={isRowClickable(object) ? 0 : undefined}
           aria-label={label(object)}
-          on:click={handleRowClick.bind(undefined, object)}
-          on:keydown={handleRowKeyDown.bind(undefined, object)}>
+          onclick={handleRowClick.bind(undefined, object)}
+          onkeydown={handleRowKeyDown.bind(undefined, object)}>
           <div
             class="whitespace-nowrap place-self-center"
             class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick && isRowClickable(object)}
@@ -561,7 +571,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               <button
                 title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
                 aria-expanded={!collapsed.includes(itemKey)}
-                on:click={toggleChildren.bind(undefined, itemKey)}
+                onclick={toggleChildren.bind(undefined, itemKey)}
               >
                 <ChevronExpander
                   expanded={!collapsed.includes(itemKey)}
@@ -574,10 +584,10 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
             <div class="whitespace-nowrap place-self-center" role="cell">
               <Checkbox
                 title="Toggle {kind}"
-                bind:checked={object.selected}
+                checked={selectedItems.has(object)}
                 disabled={!row.info.selectable(object)}
                 disabledTooltip={row.info.disabledText}
-                on:click={objectChecked.bind(undefined, object)} />
+                onclick={objectChecked.bind(undefined, object)} />
             </div>
           {/if}
           {#each visibleColumns as column, index (index)}
@@ -597,9 +607,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               class:cursor-default={column.info.excludeFromRowClick && isRowClickable(object)}
               role="cell">
               {#if column.info.renderer}
-                <svelte:component
-                  this={column.info.renderer}
-                  object={column.info.renderMapping ? column.info.renderMapping(object) : object} />
+                {@const Renderer = column.info.renderer}
+                <Renderer object={column.info.renderMapping ? column.info.renderMapping(object) : object} />
               {/if}
             </div>
           {/each}
@@ -618,9 +627,10 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
                 <div class="whitespace-nowrap place-self-center" role="cell">
                   <Checkbox
                     title="Toggle {kind}"
-                    bind:checked={child.selected}
+                    checked={selectedItems.has(child)}
                     disabled={!row.info.selectable(child)}
-                    disabledTooltip={row.info.disabledText} />
+                    disabledTooltip={row.info.disabledText}
+                    onclick={childChecked.bind(undefined, child)} />
                 </div>
               {/if}
               {#each visibleColumns as column, index (index)}
@@ -635,9 +645,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
                   class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
                   role="cell">
                   {#if column.info.renderer}
-                    <svelte:component
-                      this={column.info.renderer}
-                      object={column.info.renderMapping ? column.info.renderMapping(child) : child} />
+                    {@const Renderer = column.info.renderer}
+                    <Renderer object={column.info.renderMapping ? column.info.renderMapping(child) : child} />
                   {/if}
                 </div>
               {/each}
