@@ -60,7 +60,7 @@ overrides:
   mermaid: '>=11.16.1'
   ws@^8: '>=8.20.1'
   concurrently>shell-quote: '>=1.8.5'
-  dockerode>@grpc/grpc-js: '>=1.14.4'
+  dockerode>@grpc/grpc-js: ^1.14.5
   form-data: '>=4.0.6'
   '@docusaurus/utils@3>gray-matter': npm:@11ty/gray-matter@^2.1.0
   '@docusaurus/types>joi': ^17.13.6
