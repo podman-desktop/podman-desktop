@@ -52,6 +52,7 @@ import { KrunkitHelper } from '/@/helpers/krunkit-helper';
 import { PodmanBinaryLocationHelper } from '/@/helpers/podman-binary-location-helper';
 import { PodmanInfoHelper } from '/@/helpers/podman-info-helper';
 import { QemuHelper } from '/@/helpers/qemu-helper';
+import { HyperVPrep } from '/@/hyperv/hyperv-prep';
 import type { Installer } from '/@/installer/installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
@@ -213,6 +214,7 @@ const ROSETTA_PROVISIONER_MOCK: RosettaProvisioner = {
   enableRosettaInMachine: vi.fn(),
   provisionAndRestartForRosetta: vi.fn(),
 } as unknown as RosettaProvisioner;
+const HYPERV_PREP_MOCK = {} as unknown as HyperVPrep;
 
 beforeEach(async () => {
   fakeMachineJSON = [
@@ -291,6 +293,8 @@ beforeEach(async () => {
         return PODMAN_PROVIDER_MOCK;
       case RosettaProvisioner:
         return ROSETTA_PROVISIONER_MOCK;
+      case HyperVPrep:
+        return HYPERV_PREP_MOCK;
     }
     throw new Error(`Unknown identifier ${String(identifier)}`);
   }
