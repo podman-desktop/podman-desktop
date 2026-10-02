@@ -25,6 +25,7 @@ import { tick } from 'svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
 import ContainerExport from './ContainerExport.svelte';
@@ -117,4 +118,17 @@ test('Expect error shown if export function fails', async () => {
   expect(goToMock).not.toBeCalled();
   expect(errorDiv).toBeInTheDocument();
   expect((errorDiv as HTMLDivElement).innerHTML).toContain('error while exporting');
+});
+
+test('Expect Cancel button to navigate to last page when clicked', async () => {
+  containersInfos.set([container]);
+  lastPage.set({ name: 'Containers', path: '/containers' });
+  const goToMock = vi.spyOn(router, 'goto');
+  await waitRender();
+
+  const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+  expect(cancelButton).toBeInTheDocument();
+  await userEvent.click(cancelButton);
+
+  expect(goToMock).toHaveBeenCalledWith('/containers');
 });

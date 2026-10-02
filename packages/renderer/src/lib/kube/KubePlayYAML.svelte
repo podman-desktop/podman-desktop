@@ -6,6 +6,7 @@ import { NavigationPage } from '@podman-desktop/core-api';
 import type { PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import { Button, ButtonRow, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { router } from 'tinro';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -15,6 +16,7 @@ import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 
 let runStarted = $state(false);
@@ -289,6 +291,7 @@ function toggle(choice: 'podman' | 'custom'): void {
       {#if !runFinished}
         <ButtonRow>
           {#if !runStarted}
+            <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
             <Button
               on:click={playKubeFile}
               disabled={hasInvalidFields || runStarted}
