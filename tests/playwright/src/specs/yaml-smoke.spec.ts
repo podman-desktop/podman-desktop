@@ -60,7 +60,7 @@ test.describe(`Play yaml file to pull images and create pod for app ${podAppName
 }, () => {
   test.describe.configure({ mode: 'serial', timeout: 150_000 });
 
-  test('Playing yaml', async ({ navigationBar }) => {
+  test('Playing yaml from a typed path', async ({ navigationBar }) => {
     let podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
 
@@ -69,7 +69,7 @@ test.describe(`Play yaml file to pull images and create pod for app ${podAppName
 
     const yamlFilePath = path.resolve(__dirname, '..', '..', 'resources', `${podAppName}.yaml`);
     podsPage = await podmanKubePlayPage.playYaml({
-      podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile,
+      podmanKubePlayOption: PodmanKubePlayOptions.EnterYamlFilePath,
       pathToYaml: yamlFilePath,
     });
     await playExpect(podsPage.heading).toBeVisible();

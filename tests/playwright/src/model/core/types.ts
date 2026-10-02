@@ -44,6 +44,7 @@ export interface DeployPodOptions {
 export enum PodmanKubePlayOptions {
   SelectYamlFile = 0,
   CreateYamlFileFromScratch = 1,
+  EnterYamlFilePath = 2,
 }
 
 export interface PlayFromScratch {
@@ -56,7 +57,12 @@ export interface PlayFromYaml {
   pathToYaml: string;
 }
 
-export type PlayYamlOptions = PlayFromScratch | PlayFromYaml;
+export interface PlayFromTypedYaml {
+  podmanKubePlayOption: PodmanKubePlayOptions.EnterYamlFilePath;
+  pathToYaml: string;
+}
+
+export type PlayYamlOptions = PlayFromScratch | PlayFromYaml | PlayFromTypedYaml;
 
 export enum KubernetesResources {
   Nodes = 'Nodes',
