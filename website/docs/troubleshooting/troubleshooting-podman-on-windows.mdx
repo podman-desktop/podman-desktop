@@ -84,6 +84,38 @@ When the host is behind a VPN, Podman might fail to access network resources, an
 
 See [Accessing resources behind a VPN with Podman on Windows](/docs/proxy).
 
+## WSL v3.0.1: `podman run` fails with a cgroup controller error
+
+#### Issue
+
+After updating WSL to version 3.0.1, running a container fails with an error similar to:
+
+```shell-session
+$ podman run hello
+Error: preparing container for attach: crun: controller `pids` is not available under /sys/fs/cgroup/wsl-user/.../cgroup.controllers: OCI runtime error
+```
+
+This is a known upstream issue caused by a change in how WSL v3.0.1 exposes cgroup controllers. See [podman#29749](https://github.com/podman-container-tools/podman/issues/29749) for details.
+
+#### Workaround
+
+Use one of the following workarounds:
+
+**Option 1**: Pass `--cgroups=disabled` when running containers:
+
+```shell-session
+$ podman run --cgroups=disabled hello
+```
+
+**Option 2**: Set the cgroup manager to `cgroupfs` in your `containers.conf`:
+
+On Windows, add the following to `%APPDATA%\containers\containers.conf`:
+
+```toml
+[engine]
+cgroup_manager="cgroupfs"
+```
+
 ## Older WSL versions might lead to networking issues
 
 Older versions of WSL might cause networking issues, such as the `Get-NetTCPConnection` error, indicating that the WSL loopback forwarding facility is not functioning correctly. Recent versions of WSL do not have this issue.
