@@ -193,6 +193,32 @@ export class ExtensionsCatalog {
 
     return fetchableExtensions;
   }
+
+  async fetchReadme(extensionId: string): Promise<string> {
+    const catalogExtensions = await this.getExtensions();
+    const extensionInfo = catalogExtensions.find(extension => extension.id === extensionId);
+
+    if (!extensionInfo) {
+      throw new Error(`No extension with id ${extensionId} found`);
+    }
+
+    // Get the first non-preview version
+    const nonPreviewVersions = extensionInfo.versions.filter(v => v.preview === false);
+    const latestVersion = nonPreviewVersions.length > 0 ? nonPreviewVersions[0] : undefined;
+    const latestVersionReadme = latestVersion?.files.find(f => f.assetType.toLowerCase() === 'readme')?.data;
+
+    if (!latestVersionReadme) {
+      throw new Error(`Extension ${extensionId} has no README`);
+    }
+
+    const response = await fetch(latestVersionReadme, {
+      signal: AbortSignal.timeout(ExtensionsCatalog.FETCH_TIMEOUT),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch README from ${latestVersionReadme}`);
+    }
+    return response.text();
+  }
 }
 
 // internal JSON format, not exposed to the outside
