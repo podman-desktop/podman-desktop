@@ -43,7 +43,7 @@ getConfigurationMock.mockReturnValue({
   get: getConfigMock,
 });
 
-const readFileSync = vi.spyOn(fs, 'readFileSync');
+const readFileSync = vi.mocked(fs.readFileSync);
 const apiSender: ApiSenderType = { send: vi.fn() } as unknown as ApiSenderType;
 const context = new Context(apiSender);
 

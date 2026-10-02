@@ -313,7 +313,7 @@ test('Check handlePluginInstall', async () => {
   providerConnectionListImagesMock.mockResolvedValue([matchingImage]);
 
   // mock fs.unlinkSync
-  vi.spyOn(fs, 'unlinkSync').mockResolvedValue();
+  vi.mocked(fs.unlinkSync).mockResolvedValue();
 
   const imageAnalysis = {
     Config: {

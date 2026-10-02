@@ -236,7 +236,7 @@ test('check configureRouter with valid uuid but no matching webview', async () =
 
 test('check configureRouter with valid uuid and file exists', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -275,7 +275,7 @@ test('check configureRouter with valid uuid and file exists', async () => {
 
 test('check configureRouter with valid uuid and file does not exist', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -317,7 +317,7 @@ test('check configureRouter with valid uuid and file does not exist', async () =
 
 test('check configureRouter with valid uuid and file from another directory', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(

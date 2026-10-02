@@ -503,11 +503,11 @@ test('Should watch for files and load them at startup', async () => {
   extensionLoader.setPluginsScanDirectory(fakeDirectory);
 
   // mock fs.watch
-  const fsWatchMock = vi.spyOn(fs, 'watch');
+  const fsWatchMock = vi.mocked(fs.watch);
   fsWatchMock.mockReturnValue({} as fs.FSWatcher);
 
   // mock fs.existsSync
-  const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+  const fsExistsSyncMock = vi.mocked(fs.existsSync);
   fsExistsSyncMock.mockReturnValue(true);
 
   const ent1 = {
@@ -556,7 +556,7 @@ test('Should load file from watching scanning folder', async () => {
   extensionLoader.setWatchTimeout(50);
 
   // mock fs.watch
-  const fsWatchMock = vi.spyOn(fs, 'watch');
+  const fsWatchMock = vi.mocked(fs.watch);
   fsWatchMock.mockImplementation((filename: fs.PathLike, listener?: fs.WatchListener<string>): fs.FSWatcher => {
     watchFilename = filename;
     if (listener) {
@@ -566,7 +566,7 @@ test('Should load file from watching scanning folder', async () => {
   });
 
   // mock fs.existsSync
-  const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+  const fsExistsSyncMock = vi.mocked(fs.existsSync);
   fsExistsSyncMock.mockReturnValue(true);
 
   // mock fs.promises.readdir

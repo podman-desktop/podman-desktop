@@ -5782,7 +5782,7 @@ describe('exportContainer', () => {
     setExportContainerTestEnv();
     vi.spyOn(fs.promises, 'readdir').mockResolvedValue([]);
 
-    const createWriteStreamMock = vi.spyOn(fs, 'createWriteStream').mockReturnValue({
+    const createWriteStreamMock = vi.mocked(fs.createWriteStream).mockReturnValue({
       write: vi.fn(),
       close: vi.fn(),
     } as unknown as fs.WriteStream);

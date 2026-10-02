@@ -40,7 +40,7 @@ beforeEach(() => {
 describe('analyze extension and main', () => {
   test('check for extension with main entry', async () => {
     // mock fs.existsSync
-    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    const fsExistsSyncMock = vi.mocked(fs.existsSync);
     fsExistsSyncMock.mockReturnValue(true);
 
     const readmeContent = 'This is my custom README';
@@ -73,7 +73,7 @@ describe('analyze extension and main', () => {
 
   test('check for extension with linked folder', async () => {
     // mock fs.existsSync
-    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    const fsExistsSyncMock = vi.mocked(fs.existsSync);
     fsExistsSyncMock.mockReturnValue(true);
 
     const readmeContent = 'This is my custom README';
@@ -106,7 +106,7 @@ describe('analyze extension and main', () => {
 
   test('check for extension without main entry', async () => {
     // mock fs.existsSync
-    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    const fsExistsSyncMock = vi.mocked(fs.existsSync);
     fsExistsSyncMock.mockReturnValue(true);
 
     vi.mocked(realpath).mockResolvedValue('/fake/path');
@@ -136,7 +136,7 @@ describe('analyze extension and main', () => {
 
   test('check for extension with devMode', async () => {
     // mock fs.existsSync
-    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    const fsExistsSyncMock = vi.mocked(fs.existsSync);
     fsExistsSyncMock.mockReturnValue(true);
 
     vi.mocked(realpath).mockResolvedValue('/fake/path');
