@@ -211,9 +211,14 @@ export class ExtensionInstaller {
         sendError('Could not load extension: ' + analyzedExtension?.error);
         return;
       }
-      if (extensions.find(extension => extension.id === analyzedExtension?.id)) {
-        sendError(`Extension ${analyzedExtension?.id} is already installed.`);
-        return;
+      const sameIdExtension = extensions.find(extension => extension.id === analyzedExtension?.id);
+      if (sameIdExtension && analyzedExtension) {
+        // a bundled extension can be replaced by the one being installed, any other one blocks the installation
+        if (!sameIdExtension.bundled) {
+          sendError(`Extension ${analyzedExtension.id} is already installed.`);
+          return;
+        }
+        analyzedExtension.overriding = true;
       }
       return analyzedExtension;
     } else if (isDDExtension) {
@@ -382,6 +387,12 @@ export class ExtensionInstaller {
 
     if (!analyzeSuccessful) {
       return;
+    }
+
+    // some extensions replace a bundled one: report it and stop the bundled one before loading the new one
+    for (const extension of analyzedExtensions.filter(extension => extension.overriding)) {
+      sendLog(`Extension ${extension.id} overrides the built-in one, which will be restored if you uninstall it.`);
+      await this.extensionLoader.deactivateExtension(extension.id);
     }
 
     // load all extensions

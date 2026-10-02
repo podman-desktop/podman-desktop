@@ -161,6 +161,75 @@ describe('analyze extension and main', () => {
     expect(extension?.id).toBe('fooPublisher.fooName');
     expect(extension?.devMode).toBeTruthy();
   });
+
+  test('overriding defaults to false', async () => {
+    // mock fs.existsSync
+    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    fsExistsSyncMock.mockReturnValue(true);
+
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+    vi.mocked(readFile).mockResolvedValue('empty');
+
+    const fakeManifest = {
+      publisher: 'fooPublisher',
+      name: 'fooName',
+    } as unknown as ExtensionManifest;
+
+    // mock loadManifest
+    const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
+    loadManifestMock.mockResolvedValue(fakeManifest);
+
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: true,
+    });
+
+    expect(extension?.overriding).toBeFalsy();
+  });
+
+  test('check for extension with overriding', async () => {
+    // mock fs.existsSync
+    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    fsExistsSyncMock.mockReturnValue(true);
+
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+    vi.mocked(readFile).mockResolvedValue('empty');
+
+    const fakeManifest = {
+      publisher: 'fooPublisher',
+      name: 'fooName',
+    } as unknown as ExtensionManifest;
+
+    // mock loadManifest
+    const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
+    loadManifestMock.mockResolvedValue(fakeManifest);
+
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: true,
+      overriding: true,
+    });
+
+    expect(extension?.id).toBe('fooPublisher.fooName');
+    expect(extension?.overriding).toBeTruthy();
+  });
+
+  test('overriding is forwarded when the extension has no package.json', async () => {
+    // no package.json file
+    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    fsExistsSyncMock.mockReturnValue(false);
+
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: true,
+      overriding: true,
+    });
+
+    expect(extension?.error).toBeDefined();
+    expect(extension?.overriding).toBeTruthy();
+  });
 });
 
 describe('loadManifest', () => {

@@ -49,6 +49,7 @@ export class ExtensionsUtils {
     let removable: boolean;
     let devMode: boolean;
     let bundled: boolean;
+    let overriding: boolean;
     let state: string;
     let icon: undefined | string | { light: string; dark: string };
     let iconRef: undefined | string;
@@ -72,6 +73,7 @@ export class ExtensionsUtils {
       removable = matchingInstalledExtension.removable;
       devMode = matchingInstalledExtension.devMode;
       bundled = matchingInstalledExtension.bundled;
+      overriding = matchingInstalledExtension.overriding;
       state = matchingInstalledExtension.state;
       icon = matchingInstalledExtension.icon;
       name = matchingInstalledExtension.name;
@@ -84,6 +86,7 @@ export class ExtensionsUtils {
       removable = true;
       devMode = false; // catalog extensions are not in dev mode
       bundled = false;
+      overriding = false;
       state = 'downloadable';
       name = matchingCatalogExtension.extensionName;
 
@@ -101,6 +104,7 @@ export class ExtensionsUtils {
       removable = false;
       devMode = false;
       bundled = false;
+      overriding = false;
       state = 'unknown';
       name = 'unknown';
     }
@@ -141,6 +145,7 @@ export class ExtensionsUtils {
       removable,
       devMode,
       bundled,
+      overriding,
       state,
       icon,
       iconRef,

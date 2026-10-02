@@ -27,6 +27,7 @@ export interface ExtensionDetailsUI extends Pick<ExtensionInfo, 'repository' | '
   removable: boolean;
   devMode: boolean;
   bundled: boolean;
+  overriding: boolean;
   state: string;
   name: string;
   icon: undefined | string | { light: string; dark: string };
