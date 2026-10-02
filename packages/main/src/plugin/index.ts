@@ -2397,6 +2397,13 @@ export class PluginSystem {
       return extensionsCatalog.refreshCatalog();
     });
 
+    this.ipcHandle(
+      'catalog:fetchReadme',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<string> => {
+        return extensionsCatalog.fetchReadme(extensionId);
+      },
+    );
+
     this.ipcHandle('documentation:getItems', async (): Promise<DocumentationInfo[]> => {
       return documentationService.getDocumentationItems();
     });
