@@ -21,6 +21,7 @@ interface Props {
   'aria-label'?: string;
   onclick?: () => void;
   children?: Snippet;
+  menuItem?: boolean;
 }
 
 // support legacy usage (on:click)
@@ -40,15 +41,57 @@ let {
   'aria-label': ariaLabel,
   onclick = dispatch.bind(undefined, 'click'),
   children,
+  menuItem = false,
 }: Props = $props();
 
 if (untrack(() => icon !== undefined && !title && !children && !ariaLabel)) {
   throw new Error('Icon-only buttons must have an aria-label for accessibility');
 }
 
-let actualPadding = $derived(padding ?? 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]'));
+let actualPadding = $derived(padding ?? (menuItem ? 'p-2.5' : 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]')));
 
 let pressedActive = $derived(pressed === true && !disabled && !inProgress);
+
+function handleMenuItemClick(event: MouseEvent): void {
+  if (disabled || inProgress) {
+    // A real mouse click (unlike our own keyboard-dispatched one, already guarded before
+    // dispatch below) would otherwise still bubble to window for DropdownMenu to react to.
+    event.stopPropagation();
+    return;
+  }
+  onclick();
+}
+
+// Tracks whether this row's own keydown armed a pending Space activation, so a keyup
+// only activates when it's paired with this row's matching keydown - not a stray keyup
+// (e.g. focus moved to another row while Space was held) - matching native <button>.
+let spaceActivationPending = false;
+
+function handleMenuItemKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  if (disabled || inProgress) return;
+  if (event.key === ' ') {
+    spaceActivationPending = true;
+    return;
+  }
+  // Dispatch a real click (like a native <button> does) rather than calling the handler
+  // directly, so a click bubbles to window for DropdownMenu to close itself on selection.
+  (event.currentTarget as HTMLElement).click();
+}
+
+function handleMenuItemKeyup(event: KeyboardEvent): void {
+  if (event.key !== ' ') return;
+  event.preventDefault();
+  const shouldActivate = spaceActivationPending;
+  spaceActivationPending = false;
+  if (!shouldActivate || disabled || inProgress) return;
+  (event.currentTarget as HTMLElement).click();
+}
+
+function handleMenuItemBlur(): void {
+  spaceActivationPending = false;
+}
 
 let classes = $derived.by(() => {
   let result: string;
@@ -94,27 +137,23 @@ let classes = $derived.by(() => {
 
   return result;
 });
+
+// Menu rows sit flush inside a list rather than standing alone, so drop the border/shadow
+// that make a standalone button read as its own control - keep only color and focus classes.
+let menuItemClasses = $derived(
+  classes
+    .split(' ')
+    .filter(cls => !cls.startsWith('border') && !cls.startsWith('shadow-'))
+    .join(' '),
+);
 </script>
 
-<button
-  type="button"
-  class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] select-none {classes} {classNames}"
-  class:border-[var(--pd-button-tab-border-selected)]={(type === 'tab' && selected === true && !disabled && !inProgress) ||
-  pressedActive}
-  class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected && !disabled && !inProgress}
-  class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected && !disabled && !inProgress}
-  class:text-[var(--pd-button-tab-text)]={type === 'tab' && !selected && !disabled && !inProgress}
-  hidden={hidden}
-  title={title}
-  aria-label={ariaLabel}
-  onclick={onclick}
-  disabled={disabled || inProgress}
-  aria-disabled={disabled || inProgress}
-  aria-busy={inProgress}
-  aria-pressed={pressed}>
+{#snippet content()}
   {#if icon ?? inProgress}
     <div
-      class="flex flex-row p-0 m-0 bg-transparent justify-center items-center space-x-[4px]"
+      class="flex flex-row p-0 m-0 bg-transparent items-center space-x-[4px]"
+      class:justify-center={!menuItem}
+      class:justify-start={menuItem}
       class:py-[3px]={!children}>
       {#if inProgress}
         <Spinner size="1em" />
@@ -128,4 +167,45 @@ let classes = $derived.by(() => {
   {:else}
     {@render children?.()}
   {/if}
-</button>
+{/snippet}
+
+{#if menuItem}
+  <!-- border-b-0! defeats the divide-y border DropDownMenuItems.svelte's popover puts between its children -->
+  <div
+    role="button"
+    class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] leading-[15px] select-none w-full text-left border-b-0! {menuItemClasses} {classNames}"
+    hidden={hidden}
+    title={title}
+    aria-label={ariaLabel}
+    aria-disabled={disabled || inProgress}
+    aria-busy={inProgress}
+    aria-pressed={pressed}
+    tabindex={disabled || inProgress ? -1 : 0}
+    onclick={handleMenuItemClick}
+    onkeydown={handleMenuItemKeydown}
+    onkeyup={handleMenuItemKeyup}
+    onblur={handleMenuItemBlur}>
+    <!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -- false positive: sonarjs treats {@render} as consuming a JS return value, but Svelte snippets never return anything -->
+    {@render content()}
+  </div>
+{:else}
+  <button
+    type="button"
+    class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] select-none {classes} {classNames}"
+    class:border-[var(--pd-button-tab-border-selected)]={(type === 'tab' && selected === true && !disabled && !inProgress) ||
+    pressedActive}
+    class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected && !disabled && !inProgress}
+    class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected && !disabled && !inProgress}
+    class:text-[var(--pd-button-tab-text)]={type === 'tab' && !selected && !disabled && !inProgress}
+    hidden={hidden}
+    title={title}
+    aria-label={ariaLabel}
+    onclick={onclick}
+    disabled={disabled || inProgress}
+    aria-disabled={disabled || inProgress}
+    aria-busy={inProgress}
+    aria-pressed={pressed}>
+    <!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -- false positive: sonarjs treats {@render} as consuming a JS return value, but Svelte snippets never return anything -->
+    {@render content()}
+  </button>
+{/if}
