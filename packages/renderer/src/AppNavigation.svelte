@@ -1,3 +1,4 @@
+
 <svelte:options runes={true} />
 
 <!-- Native scrollbar hidden via Tailwind (no layout space); overlay thumb on hover. -->
@@ -30,9 +31,11 @@ let { exitSettingsCallback, meta = $bindable() }: Props = $props();
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
 let scrollRegionEl = $state<HTMLDivElement>();
+let navEl = $state<HTMLElement>();
 
 const iconSize = '24';
 const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
+const NAV_ITEM_SELECTOR = '[data-nav-item]';
 
 const minWidth = 50;
 const maxWidth = 240;
@@ -200,14 +203,98 @@ function onDidChangeConfigurationCallback(e: Event): void {
     }
   }
 }
+
+// --- Keyboard navigation (roving tabindex, see issue #16810) ---
+function getNavItems(): HTMLElement[] {
+  return navEl ? Array.from(navEl.querySelectorAll<HTMLElement>(NAV_ITEM_SELECTOR)) : [];
+}
+
+// Keep exactly one nav item tabbable even as extensions add/remove items
+// from $navigationRegistry after the initial render. Reading $navigationRegistry
+// here (rather than only inside getNavItems) is what makes this effect re-run
+// whenever the registry changes.
+//
+// Note: every <a href> has a native default tabIndex of 0, so on first render
+// *all* items look "tabbable" — we can't tell a real roving-tabindex marker
+// apart from an untouched native default by checking a single item. Instead,
+// only treat the state as already-normalized when exactly one item is 0.
+$effect(() => {
+  const items = navEl && $navigationRegistry ? getNavItems() : [];
+  if (items.length === 0) return;
+  const tabbable = items.filter(item => item.tabIndex === 0);
+  if (tabbable.length === 1) return;
+  const keep = tabbable[0] ?? items[0];
+  for (const item of items) {
+    item.tabIndex = item === keep ? 0 : -1;
+  }
+});
+
+function focusNavItem(index: number): void {
+  const items = getNavItems();
+  if (items.length === 0) return;
+  const wrapped = ((index % items.length) + items.length) % items.length;
+  for (const item of items) {
+    item.tabIndex = -1;
+  }
+  items[wrapped].tabIndex = 0;
+  items[wrapped].focus();
+}
+
+function handleNavKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    // mirrors the existing context-menu handling in App.svelte, which also
+    // dispatches this event to hide any visible tooltip
+    window.dispatchEvent(new Event('tooltip-hide'));
+    const items = getNavItems();
+    const active = items.find(item => item.tabIndex === 0) ?? items[0];
+    active?.focus();
+    return;
+  }
+
+  const items = getNavItems();
+  const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+  // only steer arrow/home/end/space when focus is on a nav item itself, so
+  // widgets nested in the nav (e.g. the Accounts dropdown) keep their own
+  // keyboard behavior
+  if (currentIndex === -1) return;
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      focusNavItem(currentIndex + 1);
+      break;
+    case 'ArrowUp':
+      event.preventDefault();
+      focusNavItem(currentIndex - 1);
+      break;
+    case 'Home':
+      event.preventDefault();
+      focusNavItem(0);
+      break;
+    case 'End':
+      event.preventDefault();
+      focusNavItem(items.length - 1);
+      break;
+    case ' ':
+      // native <a href> elements activate on Enter already; Space needs
+      // explicit handling (and must not scroll the page)
+      event.preventDefault();
+      items[currentIndex].click();
+      break;
+    default:
+      break;
+  }
+}
 </script>
 
 <svelte:window />
 <nav
+  bind:this={navEl}
   class="group w-leftnavbar relative h-full flex-shrink-0 flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
   aria-label="AppNavigation"
   class:select-none={isDragging}
-  style:width="{navWidth}px">
+  style:width="{navWidth}px"
+  onkeydown={handleNavKeydown}>
   <NavItem href="/" tooltip="Dashboard" bind:meta={meta} {expanded}>
     <div class="flex items-center w-full">
       <div class="flex items-center justify-center flex-shrink-0 w-6 relative">

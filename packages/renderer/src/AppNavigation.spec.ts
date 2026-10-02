@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import type { KubernetesObject } from '@kubernetes/client-node';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -217,4 +217,68 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+test('Keyboard: only the first nav item is tabbable, and the navigation landmark stays intact', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  const { container } = render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  // the <nav> keeps its implicit navigation landmark role, not role="menu"
+  const navigationBar = screen.getByRole('navigation', { name: 'AppNavigation' });
+  expect(navigationBar).toBeInTheDocument();
+
+  // the roving-tabindex $effect normalizes tabindex asynchronously (it runs
+  // after the initial render), so wait for it rather than asserting immediately
+  await vi.waitFor(() => {
+    const items = container.querySelectorAll<HTMLAnchorElement>('[data-nav-item]');
+    expect(items.length).toBeGreaterThan(1);
+    expect(items[0].tabIndex).toBe(0);
+    for (const item of Array.from(items).slice(1)) {
+      expect(item.tabIndex).toBe(-1);
+    }
+  });
+});
+
+test('Keyboard: ArrowDown moves roving focus to the next nav item', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  const { container } = render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const items = container.querySelectorAll<HTMLAnchorElement>('[data-nav-item]');
+  items[0].focus();
+
+  await fireEvent.keyDown(items[0], { key: 'ArrowDown' });
+
+  expect(document.activeElement).toBe(items[1]);
+  expect(items[1].tabIndex).toBe(0);
+  expect(items[0].tabIndex).toBe(-1);
+});
+
+test('Keyboard: Escape returns focus to the active nav item', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  const { container } = render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const navigationBar = screen.getByRole('navigation', { name: 'AppNavigation' });
+  const items = container.querySelectorAll<HTMLAnchorElement>('[data-nav-item]');
+
+  // simulate focus having moved elsewhere on the page
+  document.body.focus();
+
+  await fireEvent.keyDown(navigationBar, { key: 'Escape' });
+
+  expect(document.activeElement).toBe(items[0]);
 });
