@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { ExtensionsUtils } from './extensions-utils';
 
 let extensionsUtils: ExtensionsUtils;
@@ -193,6 +194,7 @@ const installedExtensions: CombinedExtensionInfoUI[] = [
   {
     id: 'idYInstalled',
     version: '2.0.0Y',
+    removable: true,
   },
 ] as unknown[] as CombinedExtensionInfoUI[];
 
@@ -266,6 +268,28 @@ describe('extractCatalogExtensions', () => {
     expect(bExtensionUI.publisherDisplayName).toBe('Foo Publisher');
     expect(bExtensionUI.isInstalled).toBe(false);
     expect(bExtensionUI.shortDescription).toBe('this is short B');
+  });
+
+  test('Expect bundled platform extensions to be excluded from the catalog', async () => {
+    const bundledExtension: CatalogExtension = {
+      ...aFakeExtension,
+      id: 'podman-desktop.podman',
+      displayName: 'Podman',
+    };
+
+    // the bundled extension is installed and non-removable, exactly as it ships inside the app
+    const installed = [
+      { id: 'podman-desktop.podman', type: 'pd', removable: false, devMode: false },
+    ] as unknown[] as CombinedExtensionInfoUI[];
+
+    const catalogExtensionsUI = extensionsUtils.extractCatalogExtensions(
+      [bundledExtension, bFakeExtension],
+      [],
+      installed,
+    );
+
+    // the bundled extension is dropped, the regular catalog extension remains
+    expect(catalogExtensionsUI.map(e => e.id)).toEqual(['idBNotInstalled']);
   });
 });
 
@@ -500,5 +524,35 @@ describe('filters', () => {
       );
       expect(parsed.getFilter('keyword')).toEqual(['vulnerability scanner', 'security']);
     });
+  });
+});
+
+describe('category tags', () => {
+  function withCategories(categories: string[]): CatalogExtensionInfoUI {
+    return {
+      id: 'id',
+      displayName: 'Display',
+      isFeatured: false,
+      fetchable: true,
+      fetchLink: '',
+      fetchVersion: '',
+      publisherDisplayName: 'Publisher',
+      isInstalled: false,
+      shortDescription: '',
+      categories,
+      keywords: [],
+    };
+  }
+
+  test('resolveExtensionCategoryTags trims and drops empty entries', () => {
+    expect(extensionsUtils.resolveExtensionCategoryTags(['  Kubernetes  ', '', '   ', 'Cloud'])).toEqual([
+      'Kubernetes',
+      'Cloud',
+    ]);
+  });
+
+  test('collectCatalogCategories returns a sorted, de-duplicated list', () => {
+    const extensions = [withCategories(['Kubernetes', 'Cloud']), withCategories(['Cloud', 'AI']), withCategories([])];
+    expect(extensionsUtils.collectCatalogCategories(extensions)).toEqual(['AI', 'Cloud', 'Kubernetes']);
   });
 });

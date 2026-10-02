@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { resetCatalogListFilters } from './catalog-list-filters.svelte';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 
 beforeAll(() => {
@@ -31,6 +32,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  resetCatalogListFilters();
 });
 
 const extensionA: CatalogExtensionInfoUI = {
@@ -71,7 +73,7 @@ test('Check with empty', async () => {
   const emptyScreen = screen.getByText('No extensions in the catalog');
   expect(emptyScreen).toBeInTheDocument();
 
-  const refreshButton = screen.getByRole('button', { name: 'Refresh the catalog' });
+  const refreshButton = screen.getByRole('button', { name: 'Refresh catalog' });
   expect(refreshButton).toBeInTheDocument();
 
   // make the refresh throwing an error
@@ -112,7 +114,7 @@ test('Check with 2 extensions', async () => {
   expect(extensionWidgetB).toBeInTheDocument();
 
   // expect to see the refresh button
-  const refreshButton = screen.getByRole('button', { name: 'Refresh the catalog' });
+  const refreshButton = screen.getByRole('button', { name: 'Refresh catalog' });
   expect(refreshButton).toBeInTheDocument();
 });
 
@@ -137,4 +139,79 @@ test('empty catalog, hide if empty', async () => {
 
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).not.toBeInTheDocument();
+});
+
+test('toolbar search filters the visible extensions', async () => {
+  render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
+
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'name2' } });
+
+  expect(screen.queryByRole('group', { name: 'This is the display name1' })).not.toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'This is the display name2' })).toBeInTheDocument();
+});
+
+test('shows no-match empty screen when filters exclude everything', async () => {
+  render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
+
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'does-not-exist' } });
+
+  expect(screen.getByText('No extensions match your filters')).toBeInTheDocument();
+});
+
+test('no-match empty screen offers an inline Clear filters button that restores every extension', async () => {
+  render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
+
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'does-not-exist' } });
+  expect(screen.getByText('No extensions match your filters')).toBeInTheDocument();
+
+  // the empty screen provides a prominent reset action (not just the toolbar link)
+  const clearFiltersButton = screen.getByRole('button', { name: 'Clear filters' });
+  await fireEvent.click(clearFiltersButton);
+
+  // filters are reset: the search input is emptied and both extensions are visible again
+  expect((searchInput as HTMLInputElement).value).toBe('');
+  expect(screen.getByRole('group', { name: 'This is the display name1' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'This is the display name2' })).toBeInTheDocument();
+});
+
+test('Clear resets the search term and filters back to their defaults', async () => {
+  render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
+
+  // type a search term that hides everything
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'does-not-exist' } });
+  expect((searchInput as HTMLInputElement).value).toBe('does-not-exist');
+  expect(screen.getByText('No extensions match your filters')).toBeInTheDocument();
+
+  // click Clear
+  const clearButton = screen.getByRole('button', { name: 'Clear' });
+  await fireEvent.click(clearButton);
+
+  // the search input is emptied and both extensions are visible again
+  expect((searchInput as HTMLInputElement).value).toBe('');
+  expect(screen.getByRole('group', { name: 'This is the display name1' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'This is the display name2' })).toBeInTheDocument();
+});
+
+test('Clear resets the install-status dropdown label back to its default', async () => {
+  render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
+
+  // open the install-status dropdown and pick "Installed"
+  const installDropdown = screen.getByLabelText('Filter by install status');
+  await fireEvent.click(installDropdown.querySelector('button')!);
+  await fireEvent.click(screen.getByRole('button', { name: 'Installed' }));
+
+  // the dropdown now shows the selected value, not the default
+  expect(installDropdown).toHaveTextContent('Installed');
+  expect(installDropdown).not.toHaveTextContent('All statuses');
+
+  // click Clear
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+  // the dropdown label is restored to the default
+  const installDropdownAfter = screen.getByLabelText('Filter by install status');
+  expect(installDropdownAfter).toHaveTextContent('All statuses');
 });

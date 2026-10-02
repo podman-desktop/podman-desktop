@@ -24,6 +24,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { isBundledExtension } from './extension-origin-utils';
 
 export class ExtensionsUtils {
   extractExtensionDetail(
@@ -166,9 +167,13 @@ export class ExtensionsUtils {
     featuredExtensions: FeaturedExtension[],
     installedExtensions: CombinedExtensionInfoUI[],
   ): CatalogExtensionInfoUI[] {
-    // filter out unlisted extensions
+    // filter out unlisted extensions and bundled ones
     const values: CatalogExtensionInfoUI[] = catalogExtensions
       .filter(e => !e.unlisted)
+      .filter(catalogExtension => {
+        const installed = installedExtensions.find(installedExtension => installedExtension.id === catalogExtension.id);
+        return !isBundledExtension(installed);
+      })
       .map(catalogExtension => {
         // grab latest version
         const nonPreviewVersions = catalogExtension.versions.filter(v => !v.preview);
@@ -247,5 +252,21 @@ export class ExtensionsUtils {
         (installed === undefined || installed === extension.isInstalled)
       );
     });
+  }
+
+  /** Keep only non-empty, trimmed category labels. */
+  resolveExtensionCategoryTags(categories: string[]): string[] {
+    return categories.map(category => category.trim()).filter(category => category.length > 0);
+  }
+
+  /** Collect the sorted, de-duplicated set of categories present across the given extensions. */
+  collectCatalogCategories(extensions: CatalogExtensionInfoUI[]): string[] {
+    const categories = new Set<string>();
+    for (const extension of extensions) {
+      for (const category of this.resolveExtensionCategoryTags(extension.categories)) {
+        categories.add(category);
+      }
+    }
+    return [...categories].sort((a, b) => a.localeCompare(b));
   }
 }
