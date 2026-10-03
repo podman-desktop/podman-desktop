@@ -20,6 +20,7 @@ import * as os from 'node:os';
 
 import type { Configuration } from '@podman-desktop/api';
 import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { app } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { StartupInstall } from './startup-install.js';
@@ -56,6 +57,31 @@ vi.mock(import('./windows-startup.js'), async importOriginal => {
   };
 });
 
+const macosStartupMock = vi.hoisted(() => ({
+  shouldEnable: vi.fn(),
+  enable: vi.fn(),
+  disable: vi.fn(),
+}));
+
+vi.mock(import('./macos-startup.js'), async importOriginal => {
+  const { MacosStartup } = await importOriginal();
+  return {
+    MacosStartup: class extends MacosStartup {
+      override shouldEnable(): boolean {
+        return macosStartupMock.shouldEnable();
+      }
+
+      override enable(): Promise<void> {
+        return macosStartupMock.enable();
+      }
+
+      override disable(): Promise<void> {
+        return macosStartupMock.disable();
+      }
+    },
+  };
+});
+
 let startOnLogin: boolean;
 let configurationRegistry: IConfigurationRegistry;
 
@@ -64,6 +90,7 @@ beforeEach(() => {
   vi.stubEnv('PROD', true);
   vi.mocked(os.platform).mockReturnValue('win32');
   windowsStartupMock.shouldEnable.mockReturnValue(true);
+  macosStartupMock.shouldEnable.mockReturnValue(true);
   startOnLogin = true;
   configurationRegistry = {
     registerConfigurations: vi.fn(),
@@ -124,4 +151,28 @@ test('Changing minimize preference does not force the Windows startup item to be
 
   expect(windowsStartupMock.enable).toHaveBeenCalledTimes(2);
   expect(windowsStartupMock.enable).toHaveBeenLastCalledWith(false);
+});
+
+test('Disabling startup from preferences disables the Windows startup item', async () => {
+  const startupInstall = new StartupInstall(configurationRegistry);
+  await startupInstall.configure();
+  const configurationListener = vi.mocked(configurationRegistry.onDidChangeConfiguration).mock.calls[0]?.[0];
+
+  await configurationListener?.({ key: 'preferences.login.start', value: false, scope: 'DEFAULT' });
+
+  expect(windowsStartupMock.disable).toHaveBeenCalledOnce();
+});
+
+test('Enabling startup from preferences enables the macOS startup item', async () => {
+  vi.mocked(os.platform).mockReturnValue('darwin');
+  vi.mocked(app.getPath).mockReturnValue('/Users/user');
+  const startupInstall = new StartupInstall(configurationRegistry);
+  await startupInstall.configure();
+  const configurationListener = vi.mocked(configurationRegistry.onDidChangeConfiguration).mock.calls[0]?.[0];
+
+  await configurationListener?.({ key: 'preferences.login.start', value: true, scope: 'DEFAULT' });
+
+  expect(macosStartupMock.enable).toHaveBeenCalledTimes(2);
+  expect(windowsStartupMock.syncStartupPreference).not.toHaveBeenCalled();
+  expect(windowsStartupMock.enable).not.toHaveBeenCalled();
 });
