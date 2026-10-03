@@ -19,7 +19,7 @@
 
 import { existsSync, unlink } from 'node:fs';
 import path from 'node:path';
-import { app } from 'electron';
+import { app, type LaunchItems } from 'electron';
 import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 
 /**
@@ -48,7 +48,12 @@ export class WindowsStartup {
     return true;
   }
 
-  async enable(): Promise<void> {
+  /**
+   * Registers the Windows startup item with the current arguments.
+   * An existing item keeps its enabled state unless `forceEnable` is set, so updating
+   * arguments does not override a startup item disabled in Task Manager.
+   */
+  async enable(forceEnable = false): Promise<void> {
     if (!this.shouldEnable()) {
       return;
     }
@@ -68,12 +73,13 @@ export class WindowsStartup {
     // We pass in "--minimize" so electron can read the flag on first startup.
     const args = minimize ? ['--minimized'] : [];
     const loginItemPath = `"${this.resolveBinaryPath()}"`;
+    const matchingLaunchItem = this.findMatchingLaunchItem();
 
     app.setLoginItemSettings({
       openAtLogin: true,
       path: loginItemPath,
       args,
-      enabled: true,
+      enabled: forceEnable || (matchingLaunchItem?.enabled ?? true),
     });
   }
 
@@ -84,10 +90,7 @@ export class WindowsStartup {
    * so a missing entry is treated as disabled.
    */
   async syncStartupPreference(): Promise<void> {
-    const startupExecutablePath = path.normalize(this.resolveBinaryPath()).toLowerCase();
-    const matchingLaunchItem = app
-      .getLoginItemSettings()
-      .launchItems.find(launchItem => path.normalize(launchItem.path).toLowerCase() === startupExecutablePath);
+    const matchingLaunchItem = this.findMatchingLaunchItem();
 
     await this.configurationRegistry.updateConfigurationValue(
       'preferences.login.start',
@@ -99,6 +102,14 @@ export class WindowsStartup {
     app.setLoginItemSettings({
       openAtLogin: false,
     });
+  }
+
+  /** Returns the Windows startup item registered for the startup executable, if any. */
+  private findMatchingLaunchItem(): LaunchItems | undefined {
+    const startupExecutablePath = path.normalize(this.resolveBinaryPath()).toLowerCase();
+    return app
+      .getLoginItemSettings()
+      .launchItems.find(launchItem => path.normalize(launchItem.path).toLowerCase() === startupExecutablePath);
   }
 
   /** Returns the portable or installed executable path used for Windows startup. */

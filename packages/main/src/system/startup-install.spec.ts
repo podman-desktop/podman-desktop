@@ -41,8 +41,8 @@ vi.mock(import('./windows-startup.js'), async importOriginal => {
         return windowsStartupMock.shouldEnable();
       }
 
-      override enable(): Promise<void> {
-        return windowsStartupMock.enable();
+      override enable(forceEnable?: boolean): Promise<void> {
+        return windowsStartupMock.enable(forceEnable);
       }
 
       override disable(): Promise<void> {
@@ -112,4 +112,16 @@ test('Enabling startup from preferences re-enables the Windows startup item', as
   await configurationListener?.({ key: 'preferences.login.start', value: true, scope: 'DEFAULT' });
 
   expect(windowsStartupMock.enable).toHaveBeenCalledTimes(2);
+  expect(windowsStartupMock.enable).toHaveBeenLastCalledWith(true);
+});
+
+test('Changing minimize preference does not force the Windows startup item to be enabled', async () => {
+  const startupInstall = new StartupInstall(configurationRegistry);
+  await startupInstall.configure();
+  const configurationListener = vi.mocked(configurationRegistry.onDidChangeConfiguration).mock.calls[0]?.[0];
+
+  await configurationListener?.({ key: 'preferences.login.minimize', value: true, scope: 'DEFAULT' });
+
+  expect(windowsStartupMock.enable).toHaveBeenCalledTimes(2);
+  expect(windowsStartupMock.enable).toHaveBeenLastCalledWith(false);
 });

@@ -37,8 +37,12 @@ export class StartupInstall {
     }
   }
 
-  async enableStartupOnLogin(): Promise<void> {
-    await this.osStartup?.enable();
+  async enableStartupOnLogin(forceEnable = false): Promise<void> {
+    if (this.osStartup instanceof WindowsStartup) {
+      await this.osStartup.enable(forceEnable);
+    } else {
+      await this.osStartup?.enable();
+    }
   }
 
   async disableStartupOnLogin(): Promise<void> {
@@ -104,7 +108,8 @@ export class StartupInstall {
     this.configurationRegistry.onDidChangeConfiguration(async e => {
       if (e.key === 'preferences.login.start') {
         if (e.value === true) {
-          await this.enableStartupOnLogin();
+          // explicitly enabled from Podman Desktop: re-enable an item disabled in Task Manager
+          await this.enableStartupOnLogin(true);
         } else {
           await this.disableStartupOnLogin();
         }
