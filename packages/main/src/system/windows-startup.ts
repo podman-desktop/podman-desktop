@@ -80,7 +80,8 @@ export class WindowsStartup {
   /**
    * Reflects the matching Windows startup item's enabled state in preferences.
    * Run before registering preference listeners to preserve external overrides
-   * without changing the Windows startup item. Missing entries leave the preference unchanged.
+   * without changing the Windows startup item. Windows removes the entry when it is disabled,
+   * so a missing entry is treated as disabled.
    */
   async syncStartupPreference(): Promise<void> {
     const startupExecutablePath = path.normalize(this.resolveBinaryPath()).toLowerCase();
@@ -88,9 +89,10 @@ export class WindowsStartup {
       .getLoginItemSettings()
       .launchItems.find(launchItem => path.normalize(launchItem.path).toLowerCase() === startupExecutablePath);
 
-    if (matchingLaunchItem) {
-      await this.configurationRegistry.updateConfigurationValue('preferences.login.start', matchingLaunchItem.enabled);
-    }
+    await this.configurationRegistry.updateConfigurationValue(
+      'preferences.login.start',
+      matchingLaunchItem ? matchingLaunchItem.enabled : false,
+    );
   }
 
   async disable(): Promise<void> {

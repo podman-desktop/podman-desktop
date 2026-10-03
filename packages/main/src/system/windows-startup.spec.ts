@@ -244,13 +244,14 @@ test('Autostart preference should reflect an enabled Windows startup item', asyn
   expect(configurationRegistry.updateConfigurationValue).toBeCalledWith('preferences.login.start', true);
 });
 
-test('Autostart preference should not change when no Windows startup item exists', async () => {
+test('Autostart preference should be disabled when no Windows startup item exists', async () => {
   mockFsExists(false);
   windowsStartup = new WindowsStartup(configurationRegistry);
 
   await windowsStartup.syncStartupPreference();
 
-  expect(configurationRegistry.updateConfigurationValue).not.toHaveBeenCalled();
+  expect(configurationRegistry.updateConfigurationValue).toBeCalledWith('preferences.login.start', false);
+  expect(app.setLoginItemSettings).not.toHaveBeenCalled();
 });
 
 test('Autostart enable call should remove existing startup file when present', async () => {
