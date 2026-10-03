@@ -281,9 +281,6 @@ importers:
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
-      '@podman-desktop/api':
-        specifier: 'workspace:'
-        version: link:packages/extension-api
       '@tailwindcss/typography':
         specifier: ^0.5.20
         version: 0.5.20(tailwindcss@4.3.3)
@@ -691,6 +688,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../extension-api
       '@types/hosted-git-info':
         specifier: ^3.0.5
         version: 3.0.5
@@ -707,6 +707,9 @@ importers:
         specifier: '>=2.0.0'
         version: 5.0.2(@types/node@26.2.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.3))(vite@8.3.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))
     devDependencies:
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../extension-api
       '@types/mustache':
         specifier: ^4.2.6
         version: 4.2.6
@@ -840,6 +843,9 @@ importers:
       '@docker/extension-api-client-types':
         specifier: 0.4.2
         version: 0.4.2
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../extension-api
       '@types/adm-zip':
         specifier: ^0.5.8
         version: 0.5.8
@@ -889,6 +895,9 @@ importers:
         specifier: 44.4.5
         version: 44.4.5(supports-color@8.1.1)
     devDependencies:
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../extension-api
       vitest:
         specifier: ^5.0.2
         version: 5.0.2(@types/node@26.2.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.1(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.3))(vite@8.3.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -966,6 +975,9 @@ importers:
       '@fortawesome/free-solid-svg-icons':
         specifier: ^7.3.1
         version: 7.3.1
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../extension-api
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.0))(vite@8.3.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))
