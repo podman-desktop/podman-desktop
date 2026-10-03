@@ -92,7 +92,11 @@ export class StartupInstall {
     this.configurationRegistry.registerConfigurations([loginStartConfigurationNode, startMinimizeConfigurationNode]);
 
     if (this.osStartup instanceof WindowsStartup) {
-      await this.osStartup.syncStartupPreference();
+      try {
+        await this.osStartup.syncStartupPreference();
+      } catch (error: unknown) {
+        console.error('Failed to synchronize Windows startup preference', error);
+      }
     }
 
     // add notification handling

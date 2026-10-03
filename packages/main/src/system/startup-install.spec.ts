@@ -91,6 +91,19 @@ test('Windows startup preference is synchronized before applying startup configu
   expect(windowsStartupMock.enable).not.toHaveBeenCalled();
 });
 
+test('Windows startup preference synchronization failure does not prevent startup configuration', async () => {
+  const error = new Error('sync failed');
+  windowsStartupMock.syncStartupPreference.mockRejectedValue(error);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const startupInstall = new StartupInstall(configurationRegistry);
+
+  await startupInstall.configure();
+
+  expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to synchronize Windows startup preference', error);
+  expect(configurationRegistry.onDidChangeConfiguration).toHaveBeenCalledOnce();
+  expect(windowsStartupMock.enable).toHaveBeenCalledOnce();
+});
+
 test('Enabling startup from preferences re-enables the Windows startup item', async () => {
   const startupInstall = new StartupInstall(configurationRegistry);
   await startupInstall.configure();
