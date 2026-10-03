@@ -153,7 +153,6 @@
     "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.63.0",
-    "@podman-desktop/api": "workspace:",
     "@tsconfig/strictest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "^8.71.0",
     "@typescript-eslint/parser": "^8.71.0",

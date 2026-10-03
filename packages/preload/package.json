@@ -16,6 +16,7 @@
     "test:watch": "vitest watch --coverage --passWithNoTests"
   },
   "devDependencies": {
+    "@podman-desktop/api": "workspace:*",
     "vitest": "^5.0.2"
   },
   "dependencies": {
