@@ -18,7 +18,7 @@
 
 /* eslint-disable sonarjs/no-unused-collection */
 
-import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
+import type { OpenDialogOptions, SaveDialogOptions } from '@desktop-framework/extension-api';
 import type { ForwardConfig } from '@podman-desktop/core-api';
 import { WorkloadKind } from '@podman-desktop/core-api';
 import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
