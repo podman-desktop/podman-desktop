@@ -18,19 +18,20 @@
 
 import type { TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
+import { Container } from 'inversify';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { HYPERV_PREP_COMMAND, HYPERV_PREP_NOT_APPLIED_KEY, HYPERV_PREP_SUPPORTED_KEY } from '/@/constants';
-import { HYPERV_PREP_RELOGIN_MESSAGE, HyperVPrep } from '/@/hyperv/hyperv-prep';
-import type { PodmanBinary } from '/@/utils/podman-binary';
+import { HyperVPrep } from '/@/hyperv/hyperv-prep';
+import { TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { PodmanBinary } from '/@/utils/podman-binary';
 import { execPodman } from '/@/utils/util';
 
 vi.mock(import('@podman-desktop/api'));
 vi.mock(import('/@/utils/util'));
+vi.mock(import('/@/utils/podman-binary'));
 
-const podmanBinaryMock: PodmanBinary = {
-  getBinaryInfo: vi.fn(),
-} as unknown as PodmanBinary;
+const podmanBinaryMock = new PodmanBinary();
 
 const telemetryLoggerMock = {
   logError: vi.fn(),
@@ -45,13 +46,32 @@ const NEEDED_STATUS_OUTPUT = 'Hyper-V Administrators group membership: no';
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(extensionApi.env).isWindows = true;
-  vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+  vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
   vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Yes');
   vi.mocked(extensionApi.window.withProgress).mockImplementation((_options, task) => {
     return task({ report: vi.fn() }, {} as extensionApi.CancellationToken);
   });
   vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 });
+
+function createHyperVPrep(): HyperVPrep {
+  const isWindows = vi.mocked(extensionApi.env).isWindows;
+  vi.mocked(extensionApi.env).isWindows = false;
+
+  const container = new Container();
+  container.bind(PodmanBinary).toConstantValue(podmanBinaryMock);
+  container.bind(TelemetryLoggerSymbol).toConstantValue(telemetryLoggerMock);
+  container.bind(HyperVPrep).toSelf();
+
+  let hyperVPrep: HyperVPrep;
+  try {
+    hyperVPrep = container.get(HyperVPrep);
+  } finally {
+    vi.mocked(extensionApi.env).isWindows = isWindows;
+  }
+
+  return hyperVPrep;
+}
 
 describe('HyperVPrep.parseStatus', () => {
   test.each([
@@ -75,12 +95,12 @@ Hyper-V Administrators group membership:
       expectedStatus: 'notApplied',
     },
     {
-      name: 'returns applied when registry entries exist before group membership is visible',
+      name: 'returns notApplied when registry entries exist but membership is not visible',
       stdout: `Hyper-V vsock registry entries:
   GuestCommunicationServices VSock registry entries: 2
 Hyper-V Administrators group membership:
   Current user is NOT a member`,
-      expectedStatus: 'applied',
+      expectedStatus: 'notApplied',
     },
     {
       name: 'returns applied when user is a group member',
@@ -91,31 +111,17 @@ Hyper-V Administrators group membership:
       expectedStatus: 'applied',
     },
   ])('$name', ({ stdout, expectedStatus }) => {
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+    const hyperVPrep = createHyperVPrep();
     expect(hyperVPrep.parseStatus(stdout).status).toBe(expectedStatus);
   });
 
   test('parses legacy applied status output', () => {
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+    const hyperVPrep = createHyperVPrep();
     expect(
       hyperVPrep.parseStatus(
         'Hyper-V Administrators group membership: yes\nGuestCommunicationServices VSock registry entries: 2',
       ),
-    ).toMatchObject({
-      status: 'applied',
-      isGroupMember: true,
-      hasRegistryEntries: true,
-    });
-  });
-
-  test('describes group membership', () => {
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
-    expect(
-      hyperVPrep.parseStatus(`Hyper-V vsock registry entries:
-  No vsock registry entries found.
-Hyper-V Administrators group membership:
-  Current user is NOT a member`).summary,
-    ).toBe('You are not a member of the Hyper-V Administrators group.');
+    ).toEqual({ status: 'applied' });
   });
 });
 
@@ -126,11 +132,18 @@ describe('HyperVPrep.isSupported', () => {
     { name: 'returns true for Podman 6', isWindows: true, version: '6.0.0', expected: true },
   ])('$name', async ({ isWindows, version, expected }) => {
     vi.mocked(extensionApi.env).isWindows = isWindows;
-    vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue({ version });
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version });
 
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+    const hyperVPrep = createHyperVPrep();
 
     expect(await hyperVPrep.isSupported()).toBe(expected);
+  });
+
+  test.each(['not-a-version', '', '6'])('returns false for invalid Podman version %j', async version => {
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version });
+    const hyperVPrep = createHyperVPrep();
+
+    await expect(hyperVPrep.isSupported()).resolves.toBe(false);
   });
 });
 
@@ -144,7 +157,7 @@ describe('HyperVPrep.getStatus', () => {
         stdout: '',
       });
 
-      const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+      const hyperVPrep = createHyperVPrep();
 
       await expect(hyperVPrep.getStatus()).rejects.toMatchObject({ message });
     },
@@ -153,9 +166,9 @@ describe('HyperVPrep.getStatus', () => {
 
 describe('HyperVPrep.refreshContext', () => {
   test('hides buttons when Podman is older than version 6', async () => {
-    vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue({ version: '5.4.0' });
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '5.4.0' });
 
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+    const hyperVPrep = createHyperVPrep();
     const status = await hyperVPrep.refreshContext();
 
     expect(status).toBeUndefined();
@@ -173,7 +186,7 @@ describe('HyperVPrep.refreshContext', () => {
         stdout: '',
       });
 
-      const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+      const hyperVPrep = createHyperVPrep();
       const status = await hyperVPrep.refreshContext();
 
       expect(status).toBeUndefined();
@@ -198,6 +211,15 @@ describe('HyperVPrep.refreshContext', () => {
       expectedStatus: 'applied',
       prepNotApplied: false,
     },
+    {
+      name: 'keeps the action available when registry entries exist without group membership',
+      stdout: `Hyper-V vsock registry entries:
+  GuestCommunicationServices VSock registry entries: 2
+Hyper-V Administrators group membership:
+  Current user is NOT a member`,
+      expectedStatus: 'notApplied',
+      prepNotApplied: true,
+    },
   ])('$name', async ({ stdout, expectedStatus, prepNotApplied }) => {
     vi.mocked(execPodman).mockResolvedValue({
       stdout,
@@ -205,7 +227,7 @@ describe('HyperVPrep.refreshContext', () => {
       command: 'podman system hyperv-prep --status',
     });
 
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+    const hyperVPrep = createHyperVPrep();
     const status = await hyperVPrep.refreshContext();
 
     expect(status?.status).toBe(expectedStatus);
@@ -222,7 +244,7 @@ describe('HyperVPrep.run', () => {
       command: 'podman system hyperv-prep',
     });
 
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
+    const hyperVPrep = createHyperVPrep();
     await hyperVPrep.run();
 
     expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
@@ -236,15 +258,18 @@ async function setupHyperVPrepCommand(): Promise<() => Promise<void>> {
     command: 'podman system hyperv-prep --status',
   });
 
-  const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
-  await hyperVPrep.init();
+  const hyperVPrep = createHyperVPrep();
+  hyperVPrep.init();
+  await vi.waitFor(() =>
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith(HYPERV_PREP_SUPPORTED_KEY, expect.any(Boolean)),
+  );
   vi.mocked(execPodman).mockClear();
 
   return vi.mocked(extensionApi.commands.registerCommand).mock.calls[0][1] as () => Promise<void>;
 }
 
 describe('HyperVPrep command lifecycle', () => {
-  test('registers the command on Windows and disposes it on deactivation', async () => {
+  test('registers the command on Windows and disposes it on deactivation', () => {
     const disposable = { dispose: vi.fn() };
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue(disposable);
     vi.mocked(execPodman).mockResolvedValue({
@@ -253,8 +278,8 @@ describe('HyperVPrep command lifecycle', () => {
       command: 'podman system hyperv-prep --status',
     });
 
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
-    await hyperVPrep.init();
+    const hyperVPrep = createHyperVPrep();
+    hyperVPrep.init();
 
     expect(extensionApi.commands.registerCommand).toHaveBeenCalledWith(HYPERV_PREP_COMMAND, expect.any(Function));
     expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(1);
@@ -264,20 +289,40 @@ describe('HyperVPrep command lifecycle', () => {
     expect(disposable.dispose).toHaveBeenCalledOnce();
   });
 
-  test('does not register the command on non-Windows', async () => {
+  test('does not register the command on non-Windows', () => {
     vi.mocked(extensionApi.env).isWindows = false;
 
-    const hyperVPrep = new HyperVPrep(podmanBinaryMock, telemetryLoggerMock);
-    await hyperVPrep.init();
+    const hyperVPrep = createHyperVPrep();
+    hyperVPrep.init();
 
     expect(extensionApi.commands.registerCommand).not.toHaveBeenCalled();
     expect(execPodman).not.toHaveBeenCalled();
+  });
+
+  test('registers the command without waiting for the initial status check', async () => {
+    let resolveBinaryInfo: ((value: { version: string }) => void) | undefined;
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockReturnValue(
+      new Promise(resolve => {
+        resolveBinaryInfo = resolve;
+      }),
+    );
+    const hyperVPrep = createHyperVPrep();
+
+    hyperVPrep.init();
+
+    expect(extensionApi.commands.registerCommand).toHaveBeenCalledWith(HYPERV_PREP_COMMAND, expect.any(Function));
+    expect(PodmanBinary.prototype.getBinaryInfo).toHaveBeenCalledOnce();
+
+    resolveBinaryInfo?.({ version: '5.0.0' });
+    await vi.waitFor(() =>
+      expect(extensionApi.context.setValue).toHaveBeenCalledWith(HYPERV_PREP_SUPPORTED_KEY, false),
+    );
   });
 });
 
 describe('HyperVPrep command handler', () => {
   test('is a no-op when Podman 6 is not available', async () => {
-    vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue({ version: '5.4.0' });
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '5.4.0' });
     const callback = await setupHyperVPrepCommand();
 
     await callback();
@@ -306,7 +351,7 @@ describe('HyperVPrep command handler', () => {
       expect.stringContaining('Hyper-V preparation applied.'),
     );
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
-      expect.stringContaining(HYPERV_PREP_RELOGIN_MESSAGE),
+      expect.stringContaining(HyperVPrep.HYPERV_PREP_RELOGIN_MESSAGE),
     );
   });
 
@@ -348,6 +393,19 @@ describe('HyperVPrep command handler', () => {
       expect(telemetryLoggerMock.logError).toHaveBeenCalledWith('hypervPrepFailed', { error: message });
     },
   );
+
+  test('narrows error fields before using them in user-facing feedback', async () => {
+    const callback = await setupHyperVPrepCommand();
+    vi.mocked(execPodman)
+      .mockResolvedValueOnce({ stdout: NEEDED_STATUS_OUTPUT, stderr: '', command: 'status' })
+      .mockRejectedValueOnce({ message: 42, stderr: 'Administrator approval was denied' });
+
+    await callback();
+
+    expect(extensionApi.window.showErrorMessage).toHaveBeenCalledWith(
+      'Hyper-V preparation failed: Administrator approval was denied',
+    );
+  });
 
   test('shows a user-facing error when the initial status check fails', async () => {
     const callback = await setupHyperVPrepCommand();

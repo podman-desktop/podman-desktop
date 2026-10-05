@@ -214,7 +214,9 @@ const ROSETTA_PROVISIONER_MOCK: RosettaProvisioner = {
   enableRosettaInMachine: vi.fn(),
   provisionAndRestartForRosetta: vi.fn(),
 } as unknown as RosettaProvisioner;
-const HYPERV_PREP_MOCK = {} as unknown as HyperVPrep;
+const HYPERV_PREP_MOCK = {
+  refreshContext: vi.fn(),
+} as unknown as HyperVPrep;
 
 beforeEach(async () => {
   fakeMachineJSON = [
@@ -280,6 +282,7 @@ beforeEach(async () => {
   });
 
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue(undefined);
+  vi.mocked(HYPERV_PREP_MOCK.refreshContext).mockResolvedValue(undefined);
 
   function getBind(identifier: ServiceIdentifier<unknown>): unknown {
     switch (identifier) {
@@ -2686,6 +2689,7 @@ describe('initCheckAndRegisterUpdate', () => {
     } as unknown as extensionApi.RunResult);
 
     expect(PODMAN_BINARY_MOCK.invalidate).not.toHaveBeenCalled();
+    expect(HYPERV_PREP_MOCK.refreshContext).not.toHaveBeenCalled();
 
     // call the updateVersion
     await func('v1');
@@ -2699,6 +2703,7 @@ describe('initCheckAndRegisterUpdate', () => {
 
     // PodmanBinary cache should be invalidate after on update event
     expect(PODMAN_BINARY_MOCK.invalidate).toHaveBeenCalledOnce();
+    expect(HYPERV_PREP_MOCK.refreshContext).toHaveBeenCalledOnce();
   });
 });
 

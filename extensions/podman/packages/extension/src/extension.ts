@@ -121,6 +121,7 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
 let rosettaProvisioner: RosettaProvisioner;
+let hyperVPrep: HyperVPrep;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -1209,6 +1210,10 @@ export async function initCheckAndRegisterUpdate(
   // register onDidUpdateVersion
   provider.onDidUpdateVersion(async () => {
     podmanBinary.invalidate();
+    hyperVPrep.refreshContext().catch((error: unknown) => {
+      telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
+      console.warn('Unable to refresh Hyper-V prep status after Podman version change', error);
+    });
     await checkForUpdate();
   });
 
@@ -1426,7 +1431,7 @@ export async function initInversify(
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
-  await inversifyContainer.getAsync(HyperVPrep);
+  hyperVPrep = await inversifyContainer.getAsync(HyperVPrep);
 
   return { podmanInstall, winPlatform, podmanProvider };
 }

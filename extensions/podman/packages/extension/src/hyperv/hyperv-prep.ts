@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Disposable, RunError, TelemetryLogger } from '@podman-desktop/api';
+import type { Disposable, TelemetryLogger } from '@podman-desktop/api';
 import { commands, context, env, ProgressLocation, window } from '@podman-desktop/api';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
-import { compare } from 'semver';
+import { compare, valid } from 'semver';
 
 import { HYPERV_PREP_COMMAND, HYPERV_PREP_NOT_APPLIED_KEY, HYPERV_PREP_SUPPORTED_KEY } from '/@/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
@@ -28,40 +28,36 @@ import { execPodman } from '/@/utils/util';
 
 export type HyperVPrepStatus = 'notApplied' | 'applied';
 
-export const HYPERV_PREP_RELOGIN_MESSAGE =
-  'Sign out of Windows and sign back in (or restart your computer) for Hyper-V Administrators group membership to take effect.';
-
 export interface HyperVPrepStatusResult {
   status: HyperVPrepStatus;
-  isGroupMember: boolean;
-  hasRegistryEntries: boolean;
-  summary: string;
-  stdout?: string;
 }
 
 @injectable()
 export class HyperVPrep {
-  private readonly podmanMinimumVersionForHyperVPrep = '6.0.0';
-  private readonly membershipHeader = 'hyper-v administrators group membership:';
-  private readonly registryHeader = 'hyper-v vsock registry entries:';
+  static readonly HYPERV_PREP_RELOGIN_MESSAGE =
+    'Sign out of Windows and sign back in (or restart your computer) for Hyper-V Administrators group membership to take effect.';
+  static readonly podmanMinimumVersionForHyperVPrep = '6.0.0';
+  private static readonly MEMBERSHIP_HEADER = 'hyper-v administrators group membership:';
+
+  @inject(PodmanBinary)
+  private readonly podmanBinary!: PodmanBinary;
+
+  @inject(TelemetryLoggerSymbol)
+  private readonly telemetryLogger!: TelemetryLogger;
 
   #command: Disposable | undefined;
 
-  constructor(
-    @inject(PodmanBinary)
-    private readonly podmanBinary: PodmanBinary,
-    @inject(TelemetryLoggerSymbol)
-    private readonly telemetryLogger: TelemetryLogger,
-  ) {}
-
   @postConstruct()
-  async init(): Promise<void> {
+  init(): void {
     if (!env.isWindows) {
       return;
     }
 
-    await this.refreshContext();
     this.#command = commands.registerCommand(HYPERV_PREP_COMMAND, this.prepare.bind(this));
+    this.refreshContext().catch((error: unknown) => {
+      this.telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
+      console.warn('Unable to check Hyper-V prep status', error);
+    });
   }
 
   @preDestroy()
@@ -76,15 +72,17 @@ export class HyperVPrep {
     }
 
     const binaryInfo = await this.podmanBinary.getBinaryInfo();
-    return binaryInfo !== undefined && compare(binaryInfo.version, this.podmanMinimumVersionForHyperVPrep) >= 0;
+    if (!binaryInfo) {
+      return false;
+    }
+
+    const version = valid(binaryInfo.version);
+    return version !== null && compare(version, HyperVPrep.podmanMinimumVersionForHyperVPrep) >= 0;
   }
 
   async getStatus(): Promise<HyperVPrepStatusResult> {
     const result = await execPodman(['system', 'hyperv-prep', '--status']);
-    return {
-      ...this.parseStatus(result.stdout ?? ''),
-      stdout: result.stdout,
-    };
+    return this.parseStatus(result.stdout);
   }
 
   /**
@@ -96,22 +94,12 @@ export class HyperVPrep {
    *   Current user is NOT a member
    * ```
    */
-  parseStatus(stdout: string): Omit<HyperVPrepStatusResult, 'stdout'> {
-    const membership = this.extractStatusSection(stdout, this.membershipHeader);
-    const registry = this.extractStatusSection(stdout, this.registryHeader);
-    const registrySource = registry || stdout;
-
+  parseStatus(stdout: string): HyperVPrepStatusResult {
+    const membership = this.extractStatusSection(stdout, HyperVPrep.MEMBERSHIP_HEADER);
     const isGroupMember = /^yes$/i.test(membership) || /current user is (?:a )?member/i.test(membership);
-    const hasRegistryEntries =
-      !/no vsock registry entries found/i.test(registrySource) &&
-      /(?:guestcommunicationservices|vsock registry entries)[^\n]*:\s*[1-9]/i.test(registrySource);
-    const status = hasRegistryEntries || isGroupMember ? 'applied' : 'notApplied';
 
     return {
-      status,
-      isGroupMember,
-      hasRegistryEntries,
-      summary: this.buildMembershipSummary(isGroupMember),
+      status: isGroupMember ? 'applied' : 'notApplied',
     };
   }
 
@@ -142,8 +130,8 @@ export class HyperVPrep {
 
   /**
    * Extracts the text following a section header up to the next `Hyper-V` section.
-   * For example, given `Hyper-V vsock registry entries:` as the header, the sample
-   * status output in {@link parseStatus} yields `No vsock registry entries found.`.
+   * For example, given `Hyper-V Administrators group membership:` as the header,
+   * the sample status output in {@link parseStatus} yields the membership result.
    */
   private extractStatusSection(stdout: string, header: string): string {
     const start = stdout.toLowerCase().indexOf(header);
@@ -155,12 +143,6 @@ export class HyperVPrep {
     const nextSection = content.search(/\nHyper-V /i);
     const section = (nextSection === -1 ? content : content.slice(0, nextSection)).trim();
     return section.split('\n')[0]?.trim() || section;
-  }
-
-  private buildMembershipSummary(isGroupMember: boolean): string {
-    return isGroupMember
-      ? 'You are a member of the Hyper-V Administrators group.'
-      : 'You are not a member of the Hyper-V Administrators group.';
   }
 
   private async prepare(): Promise<void> {
@@ -209,10 +191,10 @@ export class HyperVPrep {
     const updatedStatus = await this.refreshContext();
     this.telemetryLogger.logUsage('podman.hypervPrep', { status: updatedStatus?.status ?? 'unknown' });
     if (updatedStatus?.status === 'applied') {
-      await window.showInformationMessage(`Hyper-V preparation applied.\n\n${HYPERV_PREP_RELOGIN_MESSAGE}`);
+      await window.showInformationMessage(`Hyper-V preparation applied.\n\n${HyperVPrep.HYPERV_PREP_RELOGIN_MESSAGE}`);
     } else {
       await window.showInformationMessage(
-        `Hyper-V preparation finished, but the status could not be confirmed.\n\n${HYPERV_PREP_RELOGIN_MESSAGE}`,
+        `Hyper-V preparation finished, but the status could not be confirmed.\n\n${HyperVPrep.HYPERV_PREP_RELOGIN_MESSAGE}`,
       );
     }
   }
@@ -223,8 +205,15 @@ export class HyperVPrep {
     }
 
     if (typeof error === 'object' && error !== null) {
-      const runError = error as RunError;
-      return runError.message || runError.stderr || runError.stdout || fallback;
+      if ('message' in error && typeof error.message === 'string' && error.message.length > 0) {
+        return error.message;
+      }
+      if ('stderr' in error && typeof error.stderr === 'string' && error.stderr.length > 0) {
+        return error.stderr;
+      }
+      if ('stdout' in error && typeof error.stdout === 'string' && error.stdout.length > 0) {
+        return error.stdout;
+      }
     }
 
     return typeof error === 'string' && error.length > 0 ? error : fallback;
