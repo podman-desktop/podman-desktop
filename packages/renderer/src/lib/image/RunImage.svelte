@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { ImageInfo, OpenDialogOptions } from '@desktop-framework/extension-api';
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { ImageInfo, OpenDialogOptions } from '@podman-desktop/api';
 import type {
   ContainerCreateOptions,
   DeviceMapping,

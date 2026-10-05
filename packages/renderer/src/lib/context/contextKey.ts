@@ -28,7 +28,7 @@
 /* eslint-disable sonarjs/single-character-alternation */
 /* eslint-disable sonarjs/updated-loop-counter */
 /* eslint-disable sonarjs/function-return-type */
-import type { Event } from '@podman-desktop/api';
+import type { Event } from '@desktop-framework/extension-api';
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { ContextKeyValue, IContext } from '@podman-desktop/core-api/context';
 import { CharCode } from '@podman-desktop/core-api/context';

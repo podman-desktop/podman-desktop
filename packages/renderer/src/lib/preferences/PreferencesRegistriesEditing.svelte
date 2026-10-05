@@ -1,6 +1,6 @@
 <script lang="ts">
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import { faPlusCircle, faTrash, faUser, faUserPen } from '@fortawesome/free-solid-svg-icons';
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';

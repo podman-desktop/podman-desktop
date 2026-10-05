@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { AuditRequestItems, AuditResult, ConfigurationScope } from '@desktop-framework/extension-api';
 import { faCubes } from '@fortawesome/free-solid-svg-icons';
-import type { AuditRequestItems, AuditResult, ConfigurationScope } from '@podman-desktop/api';
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,

@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ImageInfo } from '@podman-desktop/api';
+import type { ImageInfo } from '@desktop-framework/extension-api';
 import type { ImageFilesInfo, ImageFilesystemLayersUI, ImageFilesystemLayerUI } from '@podman-desktop/core-api';
 import { Button, Checkbox } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';

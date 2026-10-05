@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { ContainerProviderConnection } from '@desktop-framework/extension-api';
 import { faCircleInfo, faTerminal } from '@fortawesome/free-solid-svg-icons';
-import type { ContainerProviderConnection } from '@podman-desktop/api';
 import type { CheckStatus, Menu, ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { MenuContext } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';

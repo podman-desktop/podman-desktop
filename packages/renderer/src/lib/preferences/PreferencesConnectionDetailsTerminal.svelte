@@ -1,7 +1,7 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
-import type { ProviderConnectionShellDimensions, ProviderConnectionStatus } from '@podman-desktop/api';
+import type { ProviderConnectionShellDimensions, ProviderConnectionStatus } from '@desktop-framework/extension-api';
 import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@podman-desktop/core-api';
 import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';

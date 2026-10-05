@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderConnectionStatus } from '@podman-desktop/api';
+import type { ProviderConnectionStatus } from '@desktop-framework/extension-api';
 import type { Menu, OnboardingInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { render, screen, within } from '@testing-library/svelte';

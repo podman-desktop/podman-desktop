@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { OpenDialogOptions } from '@desktop-framework/extension-api';
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { PlayKubeInput } from '@podman-desktop/core-api/libpod';

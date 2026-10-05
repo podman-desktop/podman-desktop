@@ -17,7 +17,7 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderStatus } from '@desktop-framework/extension-api';
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,

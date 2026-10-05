@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ImageFile, ImageFileSymlink } from '@podman-desktop/api';
+import type { ImageFile, ImageFileSymlink } from '@desktop-framework/extension-api';
 import type { FilesystemNode } from '@podman-desktop/core-api';
 import { SvelteMap } from 'svelte/reactivity';
 

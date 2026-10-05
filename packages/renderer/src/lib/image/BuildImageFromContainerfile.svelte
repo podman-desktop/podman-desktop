@@ -1,8 +1,8 @@
 <script lang="ts">
 /* eslint-disable no-useless-escape */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
+import type { OpenDialogOptions } from '@desktop-framework/extension-api';
 import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import { type OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, ButtonRow, Checkbox, Input } from '@podman-desktop/ui-svelte';

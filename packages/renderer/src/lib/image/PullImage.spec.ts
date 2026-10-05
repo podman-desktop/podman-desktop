@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInfo } from '@podman-desktop/api';
+import type { ImageInfo } from '@desktop-framework/extension-api';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { render, screen, within } from '@testing-library/svelte';

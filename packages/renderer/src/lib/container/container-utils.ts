@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Port } from '@podman-desktop/api';
+import type { Port } from '@desktop-framework/extension-api';
 import { type ContainerInfo, isViewContributionIcon, type ViewInfoUI } from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 // eslint-disable-next-line unicorn/prefer-node-protocol

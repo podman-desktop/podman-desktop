@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderConnectionStatus } from '@podman-desktop/api';
+import type { ProviderConnectionStatus } from '@desktop-framework/extension-api';
 import type {
   ProviderContainerConnectionInfo,
   ProviderKubernetesConnectionInfo,

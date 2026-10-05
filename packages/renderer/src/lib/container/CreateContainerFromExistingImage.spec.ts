@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInfo, ProviderStatus } from '@podman-desktop/api';
+import type { ImageInfo, ProviderStatus } from '@desktop-framework/extension-api';
 import {
   type ImageSearchResult,
   NavigationPage,

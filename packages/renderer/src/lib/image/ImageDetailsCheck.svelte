@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { ImageInfo } from '@desktop-framework/extension-api';
 import { faStethoscope } from '@fortawesome/free-solid-svg-icons';
-import type { ImageInfo } from '@podman-desktop/api';
 import type { ImageCheckerInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';

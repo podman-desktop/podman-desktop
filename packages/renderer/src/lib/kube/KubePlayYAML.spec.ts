@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderStatus } from '@desktop-framework/extension-api';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import { render, screen } from '@testing-library/svelte';

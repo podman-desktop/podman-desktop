@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ProviderDetectionCheck } from '@podman-desktop/api';
+import type { ProviderDetectionCheck } from '@desktop-framework/extension-api';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 
 import PreflightChecks from './PreflightChecks.svelte';
