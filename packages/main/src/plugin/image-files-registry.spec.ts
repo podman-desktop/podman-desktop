@@ -23,7 +23,7 @@ import type {
   ImageFilesystemLayers,
   ImageInfo,
   ProviderResult,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { ImageFilesExtensionInfo } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, expect, suite, test, vi } from 'vitest';

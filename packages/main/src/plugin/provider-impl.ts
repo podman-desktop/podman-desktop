@@ -38,7 +38,7 @@ import type {
   ProviderUpdate,
   VmProviderConnection,
   VmProviderConnectionFactory,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { IDisposable } from '@podman-desktop/core-api';
 
 import type { ContainerProviderRegistry } from './container-registry.js';

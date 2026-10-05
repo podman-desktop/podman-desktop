@@ -23,7 +23,7 @@ import type {
   ImageCheckerProviderMetadata,
   ImageChecks,
   ImageInfo,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';

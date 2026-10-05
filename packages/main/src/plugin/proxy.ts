@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Event, ProxySettings } from '@podman-desktop/api';
+import type { Event, ProxySettings } from '@desktop-framework/extension-api';
 import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';

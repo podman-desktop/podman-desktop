@@ -18,7 +18,7 @@
 
 import { randomUUID } from 'node:crypto';
 
-import type { Event, Webview, WebviewOptions } from '@podman-desktop/api';
+import type { Event, Webview, WebviewOptions } from '@desktop-framework/extension-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import { Emitter } from '/@/plugin/events/emitter.js';

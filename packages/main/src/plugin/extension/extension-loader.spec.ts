@@ -21,7 +21,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type {
   BuildImageOptions as InternalBuildImageOptions,
   ContributionInfo,

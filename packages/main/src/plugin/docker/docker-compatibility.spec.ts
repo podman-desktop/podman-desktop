@@ -19,7 +19,7 @@
 import type { Stats } from 'node:fs';
 import { promises } from 'node:fs';
 
-import type { ProviderContainerConnection } from '@podman-desktop/api';
+import type { ProviderContainerConnection } from '@desktop-framework/extension-api';
 import type { DockerSocketServerInfoType, ProviderInfo } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type * as Dockerode from 'dockerode';

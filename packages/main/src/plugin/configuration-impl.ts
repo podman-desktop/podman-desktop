@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
 import {

@@ -20,7 +20,7 @@ import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 
-import type { RunResult } from '@podman-desktop/api';
+import type { RunResult } from '@desktop-framework/extension-api';
 import type { ContributionInfo, IDisposable } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as jsYaml from 'js-yaml';

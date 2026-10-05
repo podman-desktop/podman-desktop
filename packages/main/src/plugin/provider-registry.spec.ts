@@ -39,7 +39,7 @@ import type {
   ProviderUpdate,
   UpdateVmConnectionEvent,
   VmProviderConnection,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type {
   CheckStatus,
   PreflightChecksCallback,

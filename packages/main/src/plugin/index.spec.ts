@@ -19,7 +19,7 @@
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
-import type { PullEvent } from '@podman-desktop/api';
+import type { PullEvent } from '@desktop-framework/extension-api';
 import type {
   ImageUpdateInfo,
   NotificationCardOptions,

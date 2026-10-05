@@ -22,7 +22,7 @@ import type {
   WebviewOptions,
   WebviewPanel,
   WebviewPanelOnDidChangeViewStateEvent,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { NavigationRequest } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';

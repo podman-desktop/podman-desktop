@@ -22,7 +22,7 @@ import type {
   AuthenticationSession,
   AuthenticationSessionAccountInformation,
   Event,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';

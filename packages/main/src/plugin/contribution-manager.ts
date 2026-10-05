@@ -19,7 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { RunResult } from '@podman-desktop/api';
+import type { RunResult } from '@desktop-framework/extension-api';
 import type { ContributionInfo } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';

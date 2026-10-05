@@ -22,6 +22,7 @@ import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { PassThrough } from 'node:stream';
 
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type {
   Cluster,
   Context,
@@ -65,7 +66,6 @@ import {
   Watch,
 } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware.js';
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   ContextGeneralState,
   ContextHealth,

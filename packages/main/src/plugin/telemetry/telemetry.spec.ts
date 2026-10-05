@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { TelemetrySender } from '@podman-desktop/api';
+import type { TelemetrySender } from '@desktop-framework/extension-api';
 import type { ExtensionInfo, TelemetryMessages } from '@podman-desktop/core-api';
 import { TelemetrySettings } from '@podman-desktop/core-api/telemetry';
 import type { MockInstance } from 'vitest';

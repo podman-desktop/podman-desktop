@@ -22,7 +22,7 @@ import type {
   NavigationHistoryEntry,
   NavigationSearchEntry,
   ProviderContainerConnection,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type {
   DisposableGroup,
   NavigationRequest,

@@ -23,6 +23,7 @@ import { EventEmitter } from 'node:events';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type {
   Cluster,
   Context as KubernetesContext,
@@ -41,7 +42,6 @@ import type {
   V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   CliToolInfo,
   ColorInfo,

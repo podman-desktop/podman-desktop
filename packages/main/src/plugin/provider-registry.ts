@@ -55,7 +55,7 @@ import type {
   UpdateKubernetesConnectionEvent,
   UpdateVmConnectionEvent,
   VmProviderConnection,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type {
   Event,
   LifecycleMethod,

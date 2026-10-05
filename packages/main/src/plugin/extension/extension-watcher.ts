@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { FileSystemWatcher, Uri } from '@podman-desktop/api';
+import type { FileSystemWatcher, Uri } from '@desktop-framework/extension-api';
 import type { Event } from '@podman-desktop/core-api';
 import { IDisposable } from '@podman-desktop/core-api';
 import type { FileMatcher } from 'get-tsconfig';

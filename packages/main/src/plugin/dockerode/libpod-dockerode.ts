@@ -18,7 +18,7 @@
 
 import type { RequestOptions } from 'node:http';
 
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@podman-desktop/api';
+import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@desktop-framework/extension-api';
 import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@podman-desktop/core-api';
 import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';

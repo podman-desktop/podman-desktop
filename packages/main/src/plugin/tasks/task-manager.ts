@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NotificationOptions } from '@podman-desktop/api';
+import type { NotificationOptions } from '@desktop-framework/extension-api';
 import type { NotificationTaskInfo, TaskInfo } from '@podman-desktop/core-api';
 import { ExperimentalTasksSettings } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';

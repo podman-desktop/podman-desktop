@@ -24,7 +24,7 @@ import type {
   CliToolSelectUpdate,
   CliToolUpdate,
   Logger,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { CliToolExtensionInfo, CliToolInfo, Event } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';

@@ -22,7 +22,7 @@ import { homedir } from 'node:os';
 import * as path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type { Event, IAsyncDisposable, IDisposable, NotificationCardOptions } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type {

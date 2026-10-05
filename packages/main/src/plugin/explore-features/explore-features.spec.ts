@@ -20,7 +20,7 @@ import { existsSync } from 'node:fs';
 import * as promises from 'node:fs/promises';
 import path from 'node:path';
 
-import type { Configuration } from '@podman-desktop/api';
+import type { Configuration } from '@desktop-framework/extension-api';
 import type {
   ContainerInfo,
   ExploreFeature,

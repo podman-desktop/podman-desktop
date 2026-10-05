@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Uri } from '@podman-desktop/api';
+import type { Uri } from '@desktop-framework/extension-api';
 import type {
   IDisposable,
   KubernetesNavigationRequest,

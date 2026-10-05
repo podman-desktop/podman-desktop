@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CliToolOptions } from '@podman-desktop/api';
+import type { CliToolOptions } from '@desktop-framework/extension-api';
 import type { CliToolExtensionInfo } from '@podman-desktop/core-api';
 import { expect, test, vi } from 'vitest';
 

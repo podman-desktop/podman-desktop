@@ -28,7 +28,7 @@ import type {
   Disposable,
   Event,
   ProviderImages,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { CliToolExtensionInfo } from '@podman-desktop/core-api';
 
 import type { CliToolRegistry } from './cli-tool-registry.js';

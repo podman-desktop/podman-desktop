@@ -24,7 +24,7 @@ import type {
   TelemetryLoggerOptions,
   TelemetrySender,
   TelemetryTrustedValue,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { Event, FeedbackProperties } from '@podman-desktop/core-api';
 import { TelemetryMessages } from '@podman-desktop/core-api';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';

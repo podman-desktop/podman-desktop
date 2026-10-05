@@ -22,7 +22,7 @@ import type {
   ImageFilesProvider,
   ImageFilesProviderMetadata,
   ImageInfo,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import type { ImageFilesExtensionInfo, ImageFilesInfo, ImageFilesystemLayersUI } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';

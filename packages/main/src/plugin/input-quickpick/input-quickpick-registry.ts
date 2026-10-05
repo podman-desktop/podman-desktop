@@ -21,7 +21,7 @@ import type {
   InputBoxOptions,
   InputBoxValidationMessage,
   QuickPickOptions,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 

@@ -24,7 +24,7 @@ import type {
   AuthenticationSessionsChangeEvent,
   Disposable,
   Event,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo, SessionRequestInfo } from '@podman-desktop/core-api/authentication';
 import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';

@@ -23,7 +23,7 @@ import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
 import * as streamPromises from 'node:stream/promises';
 
-import type * as podmanDesktopAPI from '@podman-desktop/api';
+import type * as podmanDesktopAPI from '@desktop-framework/extension-api';
 import type {
   ContainerCreateOptions,
   ContainerInspectInfo,
