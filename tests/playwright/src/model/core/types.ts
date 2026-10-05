@@ -175,3 +175,37 @@ export enum ProxyElementId {
   HTTPS_PROXY = 'httpsProxy',
   NO_PROXY = 'noProxy',
 }
+
+export interface ProductHelpMenuItem {
+  title: string;
+  tooltip?: string;
+  icon: string;
+  link?: string;
+  command?: string;
+}
+
+export interface ProductConfiguration {
+  helpMenu: { items: ProductHelpMenuItem[] };
+}
+
+export interface HelpMenuAction {
+  kind: HelpMenuActionKind;
+  parameter: string;
+}
+
+export interface HelpMenuItem {
+  title: string;
+  tooltip?: string;
+  icon: string;
+  enabled: boolean;
+  action?: HelpMenuAction;
+}
+
+export interface HelpMenuWindow extends Window {
+  helpMenuGetItems: () => Promise<HelpMenuItem[]>;
+}
+
+export enum HelpMenuActionKind {
+  LINK = 0,
+  COMMAND = 1,
+}
