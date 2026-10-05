@@ -88,8 +88,23 @@ describe('Krunkit', () => {
 
     const result = await new MacKrunkitPodmanMachineCreationCheck().execute();
     expect(result.successful).toBeTruthy();
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('krunkit', ['--version']);
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('krunkit', ['--version'], undefined);
     expect(extensionApi.process.exec).not.toHaveBeenCalledWith('brew', expect.anything(), expect.anything());
+  });
+
+  test('Krunkit is only found in the Podman installer folder', async () => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(
+      async (command: string, _args?: string[], options?: { env?: Record<string, string> }) => {
+        if (command === 'krunkit' && options?.env?.['PATH'] === '/opt/podman/bin') {
+          return { command: 'krunkit', exitCode: 0, stdout: 'krunkit 0.2.0', stderr: '' };
+        }
+        throw new Error('command failed');
+      },
+    );
+
+    const result = await new MacKrunkitPodmanMachineCreationCheck().execute();
+    expect(result.successful).toBeTruthy();
+    expect(extensionApi.process.exec).not.toHaveBeenCalledWith('which', ['brew']);
   });
 
   test('Krunkit is installed by brew', async () => {
