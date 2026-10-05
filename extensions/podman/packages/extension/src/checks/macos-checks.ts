@@ -104,6 +104,14 @@ export class MacPodmanInstallCheck extends BaseCheck {
 export class MacKrunkitPodmanMachineCreationCheck extends BaseCheck {
   title = 'Krunkit Installation';
   async execute(): Promise<extensionApi.CheckResult> {
+    // krunkit may come from outside brew (e.g. the Podman installer), so look for it in the PATH first
+    try {
+      await extensionApi.process.exec('krunkit', ['--version']);
+      return this.createSuccessfulResult();
+    } catch (err) {
+      console.debug(`krunkit not found in the PATH: ${err}`);
+    }
+
     // we need to check if brew is installed to avoid unexpected error
     try {
       await extensionApi.process.exec('which', ['brew']);
