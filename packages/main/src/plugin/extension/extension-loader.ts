@@ -526,8 +526,11 @@ export class ExtensionLoader implements IAsyncDisposable {
     // load all extensions from developer mode
     await this.loadDevelopmentFolderExtensions(analyzedExtensions);
 
+    // an extension of the plugins directory takes precedence over the bundled one it overrides
+    const extensionsToLoad = this.markOverridingExtensions(analyzedExtensions);
+
     // now we have all extensions, we can load them
-    await this.loadExtensions(analyzedExtensions);
+    await this.loadExtensions(extensionsToLoad);
 
     // handle the reload extensions callback
     this.extensionWatcher.onNeedToReloadExtension(extension => {
@@ -535,6 +538,59 @@ export class ExtensionLoader implements IAsyncDisposable {
         console.error('error while reloading extension', error);
       });
     });
+  }
+
+  /**
+   * An extension installed in the plugins directory replaces the bundled extension having the same id:
+   * flag it as overriding and drop the bundled entry so only the installed one is loaded.
+   *
+   * Only extensions of the plugins directory are candidates: extensions from development folders or
+   * `--extension-folder` are loaded alongside the bundled extension, as before.
+   */
+  protected markOverridingExtensions(analyzedExtensions: AnalyzedExtension[]): AnalyzedExtension[] {
+    const overriddenExtensionIds = new Set<string>();
+    for (const extension of analyzedExtensions) {
+      if (extension.bundled || extension.devMode || !extension.removable) {
+        continue;
+      }
+      const overriddenExtension = this.extensionsBundle.all().find(bundled => bundled.id === extension.id);
+      if (overriddenExtension) {
+        extension.overrides = { id: overriddenExtension.id, version: overriddenExtension.manifest.version };
+        overriddenExtensionIds.add(overriddenExtension.id);
+        console.log(
+          `Extension ${extension.id} from ${extension.path} is overriding the bundled extension ${overriddenExtension.id}`,
+        );
+      }
+    }
+
+    return analyzedExtensions.filter(extension => !(extension.bundled && overriddenExtensionIds.has(extension.id)));
+  }
+
+  /**
+   * Load back the bundled extension having the given id, after the extension overriding it has been removed.
+   *
+   * The extension is analyzed again instead of reusing the object cached in the bundle: the cached one
+   * keeps a `subscriptions` array holding already disposed entries.
+   */
+  protected async restoreBundledExtension(extensionId: string): Promise<void> {
+    const bundledExtension = this.extensionsBundle.all().find(extension => extension.id === extensionId);
+    if (!bundledExtension) {
+      return;
+    }
+
+    const analyzedExtension = await this.analyzeExtension({
+      extensionPath: bundledExtension.path,
+      removable: false,
+      devMode: false,
+      bundled: true,
+    });
+
+    if (analyzedExtension.error) {
+      console.error(`Error while restoring bundled extension ${extensionId}`, analyzedExtension.error);
+      return;
+    }
+
+    await this.loadExtension(analyzedExtension, true);
   }
 
   protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
@@ -1908,6 +1964,11 @@ export class ExtensionLoader implements IAsyncDisposable {
       extensionId,
     };
     try {
+      const overriddenExtensionId = this.analyzedExtensions.get(extensionId)?.overrides?.id;
+      // the extension may have been stopped before being uninstalled: the restored bundled extension must start
+      if (overriddenExtensionId) {
+        this.ensureExtensionIsEnabled(overriddenExtensionId);
+      }
       await this.removeExtension(extensionId);
 
       this.ensureExtensionIsEnabled(extensionId);
@@ -1931,6 +1992,10 @@ export class ExtensionLoader implements IAsyncDisposable {
       }
       this.analyzedExtensions.delete(extensionId);
       this.extensionDevelopmentFolder.removeExternalExtensionId(extensionId);
+      // the extension was hiding a bundled one, bring the bundled one back
+      if (extension.overrides) {
+        await this.restoreBundledExtension(extension.overrides.id);
+      }
       this.apiSender.send('extension-removed');
       this._onDidChange.fire();
     }
