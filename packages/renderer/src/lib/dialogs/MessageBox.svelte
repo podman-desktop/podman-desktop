@@ -23,6 +23,18 @@ let buttonOrder: number[] = $state([]);
 let footerMarkdownDescription: string | undefined = $state();
 
 let display = $state(false);
+let dialogContainer: HTMLElement | undefined = $state();
+
+// Computed value to determine if we should focus the dialog instead of a button
+const shouldFocusDialog = $derived(type === 'danger' && cancelId < 0);
+
+// Focus the dialog element when shouldFocusDialog
+$effect(() => {
+  if (display && shouldFocusDialog && dialogContainer) {
+    const modalDialog = dialogContainer.querySelector<HTMLElement>('[role="dialog"][tabindex="-1"]');
+    modalDialog?.focus();
+  }
+});
 
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
@@ -118,7 +130,8 @@ function getButtonType(b: boolean): ButtonType {
 
 {#if display}
   <!-- for danger MessageBox, the initial focus will be on the cancel button (first one) if available, otherwise none, while in all others types the focus will be on the default button (last one) -->
-  <Dialog title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? (cancelId < 0 ? 'none' : 'first') : 'last'}>
+  <div bind:this={dialogContainer}>
+    <Dialog tabindex="-1" title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? (cancelId < 0 ? 'none' : 'first') : 'last'}>
     {#snippet icon()}
       
         {#if type === 'error' || type === 'danger'}
@@ -180,7 +193,8 @@ function getButtonType(b: boolean): ButtonType {
             <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttonsType[i]}</Button>
           {/if}
         {/each}
-      
+
       {/snippet}
-  </Dialog>
+    </Dialog>
+  </div>
 {/if}

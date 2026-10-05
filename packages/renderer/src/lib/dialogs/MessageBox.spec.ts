@@ -454,4 +454,89 @@ describe('MessageBox', () => {
     const deleteButton = await screen.findByRole('button', { name: 'Delete' });
     expect(deleteButton).not.toHaveFocus();
   });
+
+  test('Expect danger MessageBox without Cancel button to focus the dialog container', async () => {
+    const messageBoxOptions: MessageBoxOptions = {
+      id: 712,
+      title: 'Danger without cancel',
+      message: 'This is dangerous',
+      type: 'danger',
+      buttons: ['Delete'],
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    // Wait for the dialog to be rendered
+    await screen.findByRole('dialog');
+
+    // Find the dialog element with tabindex="-1"
+    const dialog = document.querySelector('[role="dialog"][tabindex="-1"]');
+    expect(dialog).toBeInTheDocument();
+
+    // Verify the dialog has focus
+    await vi.waitFor(() => {
+      expect(document.activeElement).toBe(dialog);
+    });
+  });
+
+  test('Expect dialog container to have tabindex="-1"', async () => {
+    const messageBoxOptions: MessageBoxOptions = {
+      id: 713,
+      title: 'Any MessageBox',
+      message: 'Test message',
+      type: 'danger',
+      buttons: ['Cancel', 'OK'],
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveAttribute('tabindex', '-1');
+  });
+
+  test('Expect danger MessageBox with Cancel button to NOT focus dialog container', async () => {
+    const messageBoxOptions: MessageBoxOptions = {
+      id: 714,
+      title: 'Danger with cancel',
+      message: 'This is dangerous',
+      type: 'danger',
+      buttons: ['Cancel', 'Delete'],
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
+    const dialog = document.querySelector('[role="dialog"][tabindex="-1"]');
+
+    // The Cancel button should have focus, not the dialog
+    expect(cancelButton).toHaveFocus();
+    expect(document.activeElement).not.toBe(dialog);
+  });
 });

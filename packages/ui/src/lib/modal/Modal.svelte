@@ -11,6 +11,7 @@ interface Props {
   ignoreFocusOut?: boolean;
   onclose?: () => void;
   children?: Snippet;
+  tabindex?: string;
 }
 
 let modal: HTMLDivElement;
@@ -22,6 +23,7 @@ let {
     dispatch('close');
   },
   children,
+  tabindex,
 }: Props = $props();
 
 const handle_keydown = (e: KeyboardEvent): void => {
@@ -70,6 +72,7 @@ function handleMousedown(e: MouseEvent): void {
     role="dialog"
     aria-label={name}
     aria-modal="true"
+    tabindex={tabindex}
     bind:this={modal}>
     {@render children?.()}
   </div>
