@@ -23,7 +23,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { Registry } from '@podman-desktop/api';
+import type { Registry, RegistrySuggestedProvider } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
@@ -1431,6 +1431,120 @@ describe('getDigestFromImageName', () => {
     await expect(imageRegistry.getDigestFromImageName('nginx:latest')).rejects.toThrow(
       'Registry did not return a digest',
     );
+  });
+});
+
+describe('suggestRegistry with additionalConfigHandlers', () => {
+  test('should store and return additionalConfigHandlers on suggested registry', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'My Registry',
+      url: 'https://my-registry.io',
+      additionalConfigHandlers: [
+        { label: 'Company SSO', commandId: 'ext.login-sso' },
+        { label: 'Token Auth', commandId: 'ext.login-token' },
+      ],
+    };
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]?.additionalConfigHandlers).toStrictEqual([
+      { label: 'Company SSO', commandId: 'ext.login-sso' },
+      { label: 'Token Auth', commandId: 'ext.login-token' },
+    ]);
+  });
+
+  test('should store suggested registry without additionalConfigHandlers', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'Plain Registry',
+      url: 'https://plain-registry.io',
+    };
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]?.additionalConfigHandlers).toBeUndefined();
+  });
+
+  test('should preserve additionalConfigHandlers across multiple suggested registries', () => {
+    const reg1: RegistrySuggestedProvider = {
+      name: 'Registry A',
+      url: 'https://registry-a.io',
+      additionalConfigHandlers: [{ label: 'SSO', commandId: 'ext.sso' }],
+    };
+    const reg2: RegistrySuggestedProvider = {
+      name: 'Registry B',
+      url: 'https://registry-b.io',
+    };
+    const reg3: RegistrySuggestedProvider = {
+      name: 'Registry C',
+      url: 'https://registry-c.io',
+      additionalConfigHandlers: [
+        { label: 'OAuth', commandId: 'ext.oauth' },
+        { label: 'PAT', commandId: 'ext.pat' },
+      ],
+    };
+    imageRegistry.suggestRegistry(reg1);
+    imageRegistry.suggestRegistry(reg2);
+    imageRegistry.suggestRegistry(reg3);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(3);
+    expect(suggested[0]?.additionalConfigHandlers).toStrictEqual([{ label: 'SSO', commandId: 'ext.sso' }]);
+    expect(suggested[1]?.additionalConfigHandlers).toBeUndefined();
+    expect(suggested[2]?.additionalConfigHandlers).toStrictEqual([
+      { label: 'OAuth', commandId: 'ext.oauth' },
+      { label: 'PAT', commandId: 'ext.pat' },
+    ]);
+  });
+
+  test('should retain additionalConfigHandlers after unsuggestRegistry removes another entry', () => {
+    const reg1: RegistrySuggestedProvider = {
+      name: 'Registry A',
+      url: 'https://registry-a.io',
+      additionalConfigHandlers: [{ label: 'SSO', commandId: 'ext.sso' }],
+    };
+    const reg2: RegistrySuggestedProvider = {
+      name: 'Registry B',
+      url: 'https://registry-b.io',
+    };
+    imageRegistry.suggestRegistry(reg1);
+    imageRegistry.suggestRegistry(reg2);
+
+    imageRegistry.unsuggestRegistry(reg2);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]?.name).toBe('Registry A');
+    expect(suggested[0]?.additionalConfigHandlers).toStrictEqual([{ label: 'SSO', commandId: 'ext.sso' }]);
+  });
+
+  test('should remove registry with additionalConfigHandlers via dispose', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'My Registry',
+      url: 'https://my-registry.io',
+      additionalConfigHandlers: [{ label: 'SSO', commandId: 'ext.sso' }],
+    };
+    const disposable = imageRegistry.suggestRegistry(registry);
+
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(1);
+
+    disposable.dispose();
+
+    expect(imageRegistry.getSuggestedRegistries()).toHaveLength(0);
+  });
+
+  test('should store additionalConfigHandlers with empty array', () => {
+    const registry: RegistrySuggestedProvider = {
+      name: 'Empty Handlers',
+      url: 'https://empty-handlers.io',
+      additionalConfigHandlers: [],
+    };
+    imageRegistry.suggestRegistry(registry);
+
+    const suggested = imageRegistry.getSuggestedRegistries();
+    expect(suggested).toHaveLength(1);
+    expect(suggested[0]?.additionalConfigHandlers).toStrictEqual([]);
   });
 });
 
