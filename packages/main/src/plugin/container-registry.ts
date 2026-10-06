@@ -2764,12 +2764,13 @@ export class ContainerProviderRegistry {
       }
 
       const containerObject = provider.api.getContainer(id);
-      this.statsConsumerId++;
+      // capture the id as callbacks may run after other streams have been started
+      const statsId = ++this.statsConsumerId;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let stream: any;
       try {
         stream = (await containerObject.stats({ stream: true })) as unknown as NodeJS.ReadableStream;
-        this.statsConsumer.set(this.statsConsumerId, stream);
+        this.statsConsumer.set(statsId, stream);
 
         const pipeline = stream?.pipe(streamValues.withParserAsStream());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2777,7 +2778,7 @@ export class ContainerProviderRegistry {
           console.error('Error while grabbing stats', error);
           try {
             stream?.destroy();
-            this.statsConsumer.delete(this.statsConsumerId);
+            this.statsConsumer.delete(statsId);
           } catch (error) {
             console.error('Error while destroying stream', error);
           }
@@ -2795,10 +2796,10 @@ export class ContainerProviderRegistry {
       } catch (error) {
         // try to destroy the stream
         stream?.destroy();
-        this.statsConsumer.delete(this.statsConsumerId);
+        this.statsConsumer.delete(statsId);
       }
 
-      return this.statsConsumerId;
+      return statsId;
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;

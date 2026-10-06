@@ -8052,3 +8052,29 @@ describe('updateImages', () => {
     });
   });
 });
+
+describe('getContainerStats', () => {
+  test('a failing stream should not unregister a stream started afterwards', async () => {
+    const firstStream = new PassThrough();
+    const secondStream = new PassThrough();
+    const statsMock = vi.fn().mockResolvedValueOnce(firstStream).mockResolvedValueOnce(secondStream);
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { getContainer: vi.fn().mockReturnValue({ stats: statsMock }) } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const firstId = await containerRegistry.getContainerStats('podman1', 'container1', vi.fn());
+    const secondId = await containerRegistry.getContainerStats('podman1', 'container2', vi.fn());
+
+    // invalid JSON makes the first pipeline fail, after the second stream has been registered
+    firstStream.end('}');
+    await vi.waitFor(() => expect(firstStream.destroyed).toBeTruthy());
+
+    await containerRegistry.stopContainerStats(secondId);
+
+    expect(firstId).not.toBe(secondId);
+    expect(secondStream.destroyed).toBeTruthy();
+  });
+});
