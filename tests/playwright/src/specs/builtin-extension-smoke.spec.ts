@@ -28,6 +28,29 @@ import { expect as playExpect, test } from '/@/utility/fixtures';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEFAULT_PREINSTALLED_FILE = path.resolve(__dirname, '..', '..', 'resources', 'preinstalled-extensions.txt');
+const DEFAULT_CATALOG_EXTENSION_NAME = 'Bootable Containers';
+
+interface CatalogExtension {
+  displayName: string;
+}
+
+function loadCatalogExtensionName(): string {
+  const catalogFile = process.env.CATALOG_JSON_FILE;
+  if (catalogFile === undefined) {
+    return DEFAULT_CATALOG_EXTENSION_NAME;
+  }
+
+  // eslint-disable-next-line n/no-sync
+  const catalog = JSON.parse(readFileSync(catalogFile, 'utf-8')) as { extensions: CatalogExtension[] };
+  const extensionName = catalog.extensions[0]?.displayName;
+  if (!extensionName) {
+    throw new Error(`No extension displayName found in catalog file: ${catalogFile}`);
+  }
+
+  return extensionName;
+}
+
+const catalogExtensionName = loadCatalogExtensionName();
 
 interface PreInstalledExtension {
   label: string;
@@ -278,9 +301,9 @@ test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity',
       .toBeGreaterThan(0);
     const totalCards = await extensionsPage.countCatalogExtensionCards();
 
-    await extensionsPage.filterByName('Bootable Containers');
+    await extensionsPage.filterByName(catalogExtensionName);
     await playExpect
-      .poll(async () => await extensionsPage.extensionCardIsVisible('Bootable Containers'), { timeout: 10_000 })
+      .poll(async () => await extensionsPage.extensionCardIsVisible(catalogExtensionName), { timeout: 10_000 })
       .toBeTruthy();
     await playExpect
       .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: 10_000 })
