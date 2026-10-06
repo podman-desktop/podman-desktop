@@ -834,3 +834,50 @@ test('Expect per-extension Skip button to call updateStepState for each step', a
   const newCalls = updateStepStateMock.mock.calls.slice(callCountBefore);
   expect(newCalls.length).toBeGreaterThanOrEqual(2);
 });
+
+test('Expect "Try again" to reset only the current onboarding, not other onboarding contexts', async () => {
+  const contextConfig = new ContextUI();
+  context.set(contextConfig);
+  // Set context for another onboarding that should not be affected
+  contextConfig.setValue('other-ext.onboarding.key1', 'other-value');
+  contextConfig.setValue('current-ext.onboarding.key1', 'current-value');
+
+  onboardingList.set([
+    {
+      extension: 'current-ext',
+      removable: true,
+      title: 'Current Onboarding',
+      name: 'current',
+      displayName: 'Current',
+      icon: 'data:image/png;base64,current',
+      welcomeMessage: 'Current Onboarding',
+      steps: [
+        {
+          id: 'step',
+          title: 'step',
+          state: 'failed',
+          completionEvents: [],
+        },
+      ],
+      enablement: 'true',
+    },
+  ]);
+
+  await waitRender({
+    extensionIds: ['current-ext'],
+  });
+
+  // The failed step should show the "Try again" button
+  const tryAgainButton = screen.getByRole('button', { name: 'Try again' });
+  expect(tryAgainButton).toBeInTheDocument();
+
+  await fireEvent.click(tryAgainButton);
+  await tick();
+
+  expect(vi.mocked(window.resetOnboarding)).toHaveBeenCalledWith(['current-ext']);
+
+  // Verify context for current onboarding is cleared but other onboarding's context remains
+  const contextValues = contextConfig.collectAllValues();
+  expect(contextValues['other-ext.onboarding.key1']).toBe('other-value');
+  expect(contextValues['current-ext.onboarding.key1']).toBeUndefined();
+});
