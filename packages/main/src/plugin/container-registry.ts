@@ -67,7 +67,11 @@ import type {
   VolumeInspectInfo,
   VolumeListInfo,
 } from '@podman-desktop/core-api';
-import { ContainerRegistrySettings } from '@podman-desktop/core-api';
+import {
+  ContainerRegistrySettings,
+  ContainerStatsSettings,
+  DEFAULT_CONTAINER_STATS_REFRESH_INTERVAL,
+} from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type {
@@ -171,7 +175,23 @@ export class ContainerProviderRegistry {
       },
     };
 
-    this.configurationRegistry.registerConfigurations([providerTimeoutConfiguration]);
+    const containerStatsConfiguration: IConfigurationNode = {
+      id: 'preferences.containers',
+      title: 'Containers',
+      type: 'object',
+      properties: {
+        [`${ContainerStatsSettings.SectionName}.${ContainerStatsSettings.RefreshInterval}`]: {
+          description:
+            'Interval in seconds between CPU and memory readings in the container list. Set to 0 to disable.',
+          type: 'number',
+          default: DEFAULT_CONTAINER_STATS_REFRESH_INTERVAL,
+          minimum: 0,
+          maximum: 60,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([providerTimeoutConfiguration, containerStatsConfiguration]);
   }
 
   protected containerProviders: Map<string, containerDesktopAPI.ContainerProviderConnection> = new Map();
@@ -2764,12 +2784,13 @@ export class ContainerProviderRegistry {
       }
 
       const containerObject = provider.api.getContainer(id);
-      this.statsConsumerId++;
+      // capture the id as callbacks may run after other streams have been started
+      const statsId = ++this.statsConsumerId;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let stream: any;
       try {
         stream = (await containerObject.stats({ stream: true })) as unknown as NodeJS.ReadableStream;
-        this.statsConsumer.set(this.statsConsumerId, stream);
+        this.statsConsumer.set(statsId, stream);
 
         const pipeline = stream?.pipe(streamValues.withParserAsStream());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2777,7 +2798,7 @@ export class ContainerProviderRegistry {
           console.error('Error while grabbing stats', error);
           try {
             stream?.destroy();
-            this.statsConsumer.delete(this.statsConsumerId);
+            this.statsConsumer.delete(statsId);
           } catch (error) {
             console.error('Error while destroying stream', error);
           }
@@ -2795,16 +2816,35 @@ export class ContainerProviderRegistry {
       } catch (error) {
         // try to destroy the stream
         stream?.destroy();
-        this.statsConsumer.delete(this.statsConsumerId);
+        this.statsConsumer.delete(statsId);
       }
 
-      return this.statsConsumerId;
+      return statsId;
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
     } finally {
       this.telemetryService.track('containerStats', telemetryOptions);
     }
+  }
+
+  async getContainerStatsSnapshot(engineId: string, id: string): Promise<ContainerStatsInfo> {
+    // no telemetry here as it is polled for every running container
+    const provider = this.internalProviders.get(engineId);
+    if (!provider) {
+      throw new Error('no engine matching this container');
+    }
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+
+    // one-shot returns immediately, without waiting for a second sample to fill precpu_stats
+    const stats = await provider.api.getContainer(id).stats({ stream: false, 'one-shot': true });
+    return {
+      engineName: provider.name,
+      engineId: provider.id,
+      ...stats,
+    };
   }
 
   protected async isTarPlayBuildSupported(internalProvider: InternalContainerProvider): Promise<boolean> {

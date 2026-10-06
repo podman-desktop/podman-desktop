@@ -7186,6 +7186,12 @@ describe('ContainerRegistrySettings', () => {
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.default).toBe(30);
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.minimum).toBe(5);
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.maximum).toBe(120);
+
+    const statsConfig = registerConfigurationsMock.mock.calls[0]?.[0]?.[1] as IConfigurationNode | undefined;
+    expect(statsConfig?.id).toBe('preferences.containers');
+    expect(statsConfig?.properties?.['containers.statsRefreshInterval']).toEqual(
+      expect.objectContaining({ type: 'number', default: 5, minimum: 0, maximum: 60 }),
+    );
   });
 });
 
@@ -8050,5 +8056,71 @@ describe('updateImages', () => {
       skipped: 0,
       failed: 1,
     });
+  });
+});
+
+describe('getContainerStats', () => {
+  test('a failing stream should not unregister a stream started afterwards', async () => {
+    const firstStream = new PassThrough();
+    const secondStream = new PassThrough();
+    const statsMock = vi.fn().mockResolvedValueOnce(firstStream).mockResolvedValueOnce(secondStream);
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { getContainer: vi.fn().mockReturnValue({ stats: statsMock }) } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const firstId = await containerRegistry.getContainerStats('podman1', 'container1', vi.fn());
+    const secondId = await containerRegistry.getContainerStats('podman1', 'container2', vi.fn());
+
+    // invalid JSON makes the first pipeline fail, after the second stream has been registered
+    firstStream.end('}');
+    await vi.waitFor(() => expect(firstStream.destroyed).toBeTruthy());
+
+    await containerRegistry.stopContainerStats(secondId);
+
+    expect(firstId).not.toBe(secondId);
+    expect(secondStream.destroyed).toBeTruthy();
+  });
+});
+
+describe('getContainerStatsSnapshot', () => {
+  test('should return a single statistics reading with engine details', async () => {
+    telemetryTrackMock.mockClear();
+    const stats = { read: '2026-10-06T19:12:13Z', memory_stats: { usage: 1024, limit: 2048 } };
+    const statsMock = vi.fn().mockResolvedValue(stats);
+    const getContainerMock = vi.fn().mockReturnValue({ stats: statsMock });
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { getContainer: getContainerMock } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const result = await containerRegistry.getContainerStatsSnapshot('podman1', 'container1');
+
+    expect(getContainerMock).toHaveBeenCalledWith('container1');
+    expect(statsMock).toHaveBeenCalledWith({ stream: false, 'one-shot': true });
+    expect(result).toEqual({ engineName: 'podman', engineId: 'podman1', ...stats });
+    expect(telemetryTrackMock).not.toHaveBeenCalled();
+  });
+
+  test('should throw if no engine matches', async () => {
+    await expect(containerRegistry.getContainerStatsSnapshot('unknown', 'container1')).rejects.toThrow(
+      'no engine matching this container',
+    );
+  });
+
+  test('should throw if the engine is not running', async () => {
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    await expect(containerRegistry.getContainerStatsSnapshot('podman1', 'container1')).rejects.toThrow(
+      'no running provider for the matching container',
+    );
   });
 });

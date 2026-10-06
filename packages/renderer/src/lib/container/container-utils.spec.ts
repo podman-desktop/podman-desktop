@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ContainerInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import type { ContainerInfo, ContainerStatsInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 
@@ -503,4 +503,51 @@ test('should expect getContainerInfoUI to default the icon, leaving contribution
   // the converter takes one argument now: it cannot see the context or the view
   // contributions, so an extension icon is never resolved here
   expect(containerUtils.getContainerInfoUI(containerInfo).icon).toBe(ContainerIcon);
+});
+
+describe('getCpuUsagePercentage', () => {
+  function cpuStats(totalUsage: number, systemCpuUsage: number, onlineCpus: number): ContainerStatsInfo['cpu_stats'] {
+    return {
+      cpu_usage: { total_usage: totalUsage, percpu_usage: [], usage_in_kernelmode: 0, usage_in_usermode: 0 },
+      system_cpu_usage: systemCpuUsage,
+      online_cpus: onlineCpus,
+      throttling_data: { periods: 0, throttled_periods: 0, throttled_time: 0 },
+    };
+  }
+
+  test('should compute the percentage from the delta between two readings', () => {
+    const percentage = containerUtils.getCpuUsagePercentage(cpuStats(300, 3000, 2), cpuStats(100, 1000, 2));
+    expect(percentage).toBe(20);
+  });
+
+  test('should fall back to the number of per-cpu usages when online cpus is missing', () => {
+    const current = cpuStats(300, 3000, 0);
+    current.cpu_usage.percpu_usage = [1, 1, 1, 1];
+    const percentage = containerUtils.getCpuUsagePercentage(current, cpuStats(100, 1000, 0));
+    expect(percentage).toBe(40);
+  });
+
+  test('should be undefined when the system usage did not move forward', () => {
+    expect(containerUtils.getCpuUsagePercentage(cpuStats(300, 1000, 2), cpuStats(100, 1000, 2))).toBeUndefined();
+  });
+
+  test('should be undefined when the previous reading is empty', () => {
+    expect(containerUtils.getCpuUsagePercentage(cpuStats(300, 3000, 2), cpuStats(0, 0, 0))).toBeUndefined();
+  });
+});
+
+describe('getUsedMemory', () => {
+  test('should subtract the cache from the memory usage', () => {
+    const memoryStats = { usage: 1000, limit: 4000, stats: { cache: 200 } } as ContainerStatsInfo['memory_stats'];
+    expect(containerUtils.getUsedMemory(memoryStats)).toBe(800);
+  });
+
+  test('should return the memory usage when there are no detailed stats', () => {
+    const memoryStats = { usage: 1000, limit: 4000 } as ContainerStatsInfo['memory_stats'];
+    expect(containerUtils.getUsedMemory(memoryStats)).toBe(1000);
+  });
+});
+
+test('should format the CPU usage with one decimal', () => {
+  expect(containerUtils.getCpuUsageTitle(12.345)).toBe('12.3%');
 });

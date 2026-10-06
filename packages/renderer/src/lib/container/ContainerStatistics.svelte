@@ -35,18 +35,16 @@ export async function updateStatistics(containerStats: ContainerStatsInfo): Prom
     return;
   }
 
-  const usedMemory = containerStats.memory_stats.usage - (containerStats.memory_stats.stats?.cache || 0);
+  const usedMemory = containerUtils.getUsedMemory(containerStats.memory_stats);
   const availableMemory = containerStats.memory_stats.limit;
   memoryUsagePercentage = (usedMemory / availableMemory) * 100.0;
   memoryUsage = containerUtils.getMemoryUsageTitle(usedMemory);
 
-  const cpuDelta = containerStats.cpu_stats.cpu_usage.total_usage - containerStats.precpu_stats.cpu_usage.total_usage;
-  const systemCpuDelta =
-    containerStats.cpu_stats.system_cpu_usage - (containerStats.precpu_stats?.system_cpu_usage || 0);
-  const numberCpus =
-    containerStats.cpu_stats.online_cpus || containerStats.cpu_stats.cpu_usage?.percpu_usage?.length || 1.0;
-  cpuUsagePercentage = (cpuDelta / systemCpuDelta) * numberCpus * 100.0;
-  cpuUsage = cpuUsagePercentage.toFixed(1) + '%';
+  const cpuPercentage = containerUtils.getCpuUsagePercentage(containerStats.cpu_stats, containerStats.precpu_stats);
+  if (cpuPercentage !== undefined) {
+    cpuUsagePercentage = cpuPercentage;
+    cpuUsage = cpuUsagePercentage.toFixed(1) + '%';
+  }
 }
 
 onMount(async () => {

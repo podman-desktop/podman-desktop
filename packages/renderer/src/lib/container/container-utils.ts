@@ -17,7 +17,12 @@
  ***********************************************************************/
 
 import type { Port } from '@podman-desktop/api';
-import { type ContainerInfo, isViewContributionIcon, type ViewInfoUI } from '@podman-desktop/core-api';
+import {
+  type ContainerInfo,
+  type ContainerStatsInfo,
+  isViewContributionIcon,
+  type ViewInfoUI,
+} from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer } from 'buffer';
@@ -272,6 +277,28 @@ export class ContainerUtils {
 
   getMemoryUsageTitle(usedMemory: number): string {
     return `${filesize(usedMemory)}`;
+  }
+
+  // percentage of one CPU (can go over 100% with several CPUs) used between two readings
+  getCpuUsagePercentage(
+    current: ContainerStatsInfo['cpu_stats'],
+    previous: ContainerStatsInfo['cpu_stats'],
+  ): number | undefined {
+    const cpuDelta = current.cpu_usage.total_usage - previous.cpu_usage.total_usage;
+    const systemCpuDelta = (current.system_cpu_usage ?? 0) - (previous.system_cpu_usage ?? 0);
+    if (!previous.system_cpu_usage || systemCpuDelta <= 0 || cpuDelta < 0) {
+      return undefined;
+    }
+    const numberCpus = current.online_cpus || current.cpu_usage.percpu_usage?.length || 1;
+    return (cpuDelta / systemCpuDelta) * numberCpus * 100;
+  }
+
+  getCpuUsageTitle(cpuPercentage: number): string {
+    return `${cpuPercentage.toFixed(1)}%`;
+  }
+
+  getUsedMemory(memoryStats: ContainerStatsInfo['memory_stats']): number {
+    return memoryStats.usage - (memoryStats.stats?.cache ?? 0);
   }
 
   getPortsAsString(containerInfo: ContainerInfo): string {
