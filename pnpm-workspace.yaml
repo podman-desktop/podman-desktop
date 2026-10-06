@@ -80,6 +80,7 @@ overrides:
   smol-toml: '>=1.7.1'
   http-cache-semantics@^4: ^4.3.0
   proxy-addr@^2: ^2.0.8
+  tinypool: ^2.1.1
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
