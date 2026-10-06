@@ -527,7 +527,11 @@ export class ExtensionLoader implements IAsyncDisposable {
     await this.loadDevelopmentFolderExtensions(analyzedExtensions);
 
     // an extension of the plugins directory takes precedence over the bundled one it overrides
-    const extensionsToLoad = this.markOverridingExtensions(analyzedExtensions);
+    this.markOverridingExtensions(analyzedExtensions);
+    const overriddenExtensionIds = new Set(analyzedExtensions.flatMap(extension => extension.overrides?.id ?? []));
+    const extensionsToLoad = analyzedExtensions.filter(
+      extension => !(extension.bundled && overriddenExtensionIds.has(extension.id)),
+    );
 
     // now we have all extensions, we can load them
     await this.loadExtensions(extensionsToLoad);
@@ -542,13 +546,12 @@ export class ExtensionLoader implements IAsyncDisposable {
 
   /**
    * An extension installed in the plugins directory replaces the bundled extension having the same id:
-   * flag it as overriding and drop the bundled entry so only the installed one is loaded.
+   * set its `overrides` to the bundled extension it replaces.
    *
    * Only extensions of the plugins directory are candidates: extensions from development folders or
    * `--extension-folder` are loaded alongside the bundled extension, as before.
    */
-  protected markOverridingExtensions(analyzedExtensions: AnalyzedExtension[]): AnalyzedExtension[] {
-    const overriddenExtensionIds = new Set<string>();
+  protected markOverridingExtensions(analyzedExtensions: AnalyzedExtension[]): void {
     for (const extension of analyzedExtensions) {
       if (extension.bundled || extension.devMode || !extension.removable) {
         continue;
@@ -556,14 +559,11 @@ export class ExtensionLoader implements IAsyncDisposable {
       const overriddenExtension = this.extensionsBundle.all().find(bundled => bundled.id === extension.id);
       if (overriddenExtension) {
         extension.overrides = { id: overriddenExtension.id, version: overriddenExtension.manifest.version };
-        overriddenExtensionIds.add(overriddenExtension.id);
         console.log(
           `Extension ${extension.id} from ${extension.path} is overriding the bundled extension ${overriddenExtension.id}`,
         );
       }
     }
-
-    return analyzedExtensions.filter(extension => !(extension.bundled && overriddenExtensionIds.has(extension.id)));
   }
 
   /**
@@ -571,6 +571,8 @@ export class ExtensionLoader implements IAsyncDisposable {
    *
    * The extension is analyzed again instead of reusing the object cached in the bundle: the cached one
    * keeps a `subscriptions` array holding already disposed entries.
+   *
+   * A failure is only logged: the extension overriding it is already removed.
    */
   protected async restoreBundledExtension(extensionId: string): Promise<void> {
     const bundledExtension = this.extensionsBundle.all().find(extension => extension.id === extensionId);
@@ -578,19 +580,23 @@ export class ExtensionLoader implements IAsyncDisposable {
       return;
     }
 
-    const analyzedExtension = await this.analyzeExtension({
-      extensionPath: bundledExtension.path,
-      removable: false,
-      devMode: false,
-      bundled: true,
-    });
+    try {
+      const analyzedExtension = await this.analyzeExtension({
+        extensionPath: bundledExtension.path,
+        removable: bundledExtension.removable,
+        devMode: bundledExtension.devMode,
+        bundled: bundledExtension.bundled,
+      });
 
-    if (analyzedExtension.error) {
-      console.error(`Error while restoring bundled extension ${extensionId}`, analyzedExtension.error);
-      return;
+      if (analyzedExtension.error) {
+        console.error(`Error while restoring bundled extension ${extensionId}`, analyzedExtension.error);
+        return;
+      }
+
+      await this.loadExtension(analyzedExtension, true);
+    } catch (error: unknown) {
+      console.error(`Error while restoring bundled extension ${extensionId}`, error);
     }
-
-    await this.loadExtension(analyzedExtension, true);
   }
 
   protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
@@ -1964,14 +1970,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       extensionId,
     };
     try {
-      const overriddenExtensionId = this.analyzedExtensions.get(extensionId)?.overrides?.id;
-      // the extension may have been stopped before being uninstalled: the restored bundled extension must start
-      if (overriddenExtensionId) {
-        this.ensureExtensionIsEnabled(overriddenExtensionId);
-      }
-      await this.removeExtension(extensionId);
-
+      // enabled before the removal: the bundled extension it may override is restored with this same id and must start
       this.ensureExtensionIsEnabled(extensionId);
+      await this.removeExtension(extensionId);
     } catch (error) {
       telemetryData.error = error;
       throw error;
