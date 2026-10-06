@@ -26,13 +26,15 @@ import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
 import { viewsContributions } from '/@/stores/views';
 
+import { containerStatsPoller } from './container-stats.svelte';
 import ContainerList from './ContainerList.svelte';
 
 vi.mock(import('tinro'));
@@ -42,6 +44,8 @@ beforeEach(() => {
   // vi.resetAllMocks does not touch Svelte stores; a test that sets one would
   // otherwise leak its contributions into every test declared after it
   viewsContributions.set([]);
+  // keep the statistics poller idle unless a test enables it
+  vi.spyOn(containerStatsPoller, 'setRefreshInterval').mockReturnValue(undefined);
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
@@ -1445,4 +1449,90 @@ test('Expect search not to match the raw compose-prefixed container name', async
   // the raw prefixed name must not
   await waitRender({ searchTerm: 'myproject-web-1' });
   expect(screen.queryByText('web-1')).not.toBeInTheDocument();
+});
+
+describe('container statistics', () => {
+  const REFRESH_INTERVAL_KEY = 'containers.statsRefreshInterval';
+
+  async function renderWithRunningContainers(): Promise<void> {
+    vi.mocked(window.listContainers).mockResolvedValue([
+      {
+        Id: 'busy',
+        Image: 'sha256:123',
+        Names: ['busy-container'],
+        State: 'running',
+        engineId: 'podman',
+        engineName: 'podman',
+        engineType: 'podman',
+        ImageID: 'dummy-image-id',
+      } as unknown as ContainerInfo,
+      {
+        Id: 'idle',
+        Image: 'sha256:223',
+        Names: ['idle-container'],
+        State: 'running',
+        engineId: 'podman',
+        engineName: 'podman',
+        engineType: 'podman',
+        ImageID: 'dummy-image-id',
+      } as unknown as ContainerInfo,
+    ]);
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
+    window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+    window.dispatchEvent(new CustomEvent('tray:update-provider'));
+    await waitFor(() => expect(get(containersInfos)).toHaveLength(2));
+    await waitRender({});
+  }
+
+  test('Expect CPU and Memory columns with placeholders while there is no reading', async () => {
+    await renderWithRunningContainers();
+
+    expect(screen.getByRole('columnheader', { name: 'CPU' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Memory' })).toBeInTheDocument();
+    expect(screen.getAllByText('-')).toHaveLength(4);
+  });
+
+  test('Expect refresh interval to be read from the configuration', async () => {
+    vi.mocked(window.getConfigurationValue).mockImplementation(async key =>
+      key === REFRESH_INTERVAL_KEY ? 10 : false,
+    );
+
+    await waitRender({});
+
+    expect(window.getConfigurationValue).toHaveBeenCalledWith(REFRESH_INTERVAL_KEY);
+    await vi.waitFor(() => expect(containerStatsPoller.setRefreshInterval).toHaveBeenCalledWith(10));
+  });
+
+  test('Expect default refresh interval when the configuration has no number', async () => {
+    await waitRender({});
+
+    await vi.waitFor(() => expect(containerStatsPoller.setRefreshInterval).toHaveBeenCalledWith(5));
+  });
+
+  test('Expect refresh interval to follow configuration changes', async () => {
+    await waitRender({});
+
+    onDidChangeConfiguration.dispatchEvent(
+      new CustomEvent(REFRESH_INTERVAL_KEY, { detail: { key: REFRESH_INTERVAL_KEY, value: 0 } }),
+    );
+
+    expect(containerStatsPoller.setRefreshInterval).toHaveBeenCalledWith(0);
+  });
+
+  test('Expect containers to be sortable by CPU and memory usage', async () => {
+    vi.spyOn(containerStatsPoller, 'getUsage').mockImplementation(containerIds =>
+      containerIds.includes('busy') ? { cpuPercentage: 80, memoryUsage: 100 } : { cpuPercentage: 5, memoryUsage: 900 },
+    );
+    await renderWithRunningContainers();
+
+    const busy = screen.getByRole('row', { name: 'busy-container' });
+    const idle = screen.getByRole('row', { name: 'idle-container' });
+
+    // the heaviest containers come first
+    await fireEvent.click(screen.getByRole('columnheader', { name: 'CPU' }));
+    expect(busy.compareDocumentPosition(idle)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    await fireEvent.click(screen.getByRole('columnheader', { name: 'Memory' }));
+    expect(idle.compareDocumentPosition(busy)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
 });

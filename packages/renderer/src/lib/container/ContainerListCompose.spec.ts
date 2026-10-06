@@ -29,10 +29,13 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
 
+import { containerStatsPoller } from './container-stats.svelte';
 import ContainerList from './ContainerList.svelte';
 
 // Mocked window methods
 beforeAll(() => {
+  // statistics are covered by ContainerList.spec.ts
+  vi.spyOn(containerStatsPoller, 'setRefreshInterval').mockReturnValue(undefined);
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);

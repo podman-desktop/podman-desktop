@@ -937,6 +937,13 @@ export function initExposure(): void {
   });
 
   contextBridge.exposeInMainWorld(
+    'getContainerStatsSnapshot',
+    async (engineId: string, containerId: string): Promise<ContainerStatsInfo> => {
+      return ipcInvoke('container-provider-registry:getContainerStatsSnapshot', engineId, containerId);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
     'getImageInspect',
     async (engine: string, imageId: string): Promise<ImageInspectInfo> => {
       return ipcInvoke('container-provider-registry:getImageInspect', engine, imageId);

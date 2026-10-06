@@ -1,6 +1,10 @@
 <script lang="ts">
 import { faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { NavigationPage } from '@podman-desktop/core-api';
+import {
+  ContainerStatsSettings,
+  DEFAULT_CONTAINER_STATS_REFRESH_INTERVAL,
+  NavigationPage,
+} from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -12,6 +16,7 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
@@ -24,6 +29,7 @@ import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngi
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { handleNavigation } from '/@/navigation';
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import {
   clearContainerActionInProgress,
   containersInfos,
@@ -37,9 +43,12 @@ import { providerInfos } from '/@/stores/providers';
 import { findMatchInLeaves } from '/@/stores/search-util';
 import { viewsContributions } from '/@/stores/views';
 
+import { type ContainerResourceUsage, containerStatsPoller, getRunningContainers } from './container-stats.svelte';
 import { ContainerUtils } from './container-utils';
 import ContainerColumnActions from './ContainerColumnActions.svelte';
+import ContainerColumnCpu from './ContainerColumnCpu.svelte';
 import ContainerColumnImage from './ContainerColumnImage.svelte';
+import ContainerColumnMemory from './ContainerColumnMemory.svelte';
 import ContainerColumnName from './ContainerColumnName.svelte';
 import ContainerColumnStatus from './ContainerColumnStatus.svelte';
 import ContainerEmptyScreen from './ContainerEmptyScreen.svelte';
@@ -372,6 +381,31 @@ function setStoppedFilter(): void {
 
 let selectedItemsNumber = $state<number>();
 
+const STATS_REFRESH_INTERVAL_KEY = `${ContainerStatsSettings.SectionName}.${ContainerStatsSettings.RefreshInterval}`;
+
+function setStatsRefreshInterval(value: unknown): void {
+  containerStatsPoller.setRefreshInterval(typeof value === 'number' ? value : DEFAULT_CONTAINER_STATS_REFRESH_INTERVAL);
+}
+
+function onStatsRefreshIntervalChange(event: Event): void {
+  if (event instanceof CustomEvent) {
+    setStatsRefreshInterval(event.detail?.value);
+  }
+}
+
+async function loadStatsRefreshInterval(): Promise<void> {
+  setStatsRefreshInterval(await window.getConfigurationValue<number>(STATS_REFRESH_INTERVAL_KEY));
+}
+
+onMount(() => {
+  loadStatsRefreshInterval().catch((error: unknown) =>
+    console.error('Unable to read the container statistics refresh interval', error),
+  );
+  onDidChangeConfiguration.addEventListener(STATS_REFRESH_INTERVAL_KEY, onStatsRefreshIntervalChange);
+  return (): void =>
+    onDidChangeConfiguration.removeEventListener(STATS_REFRESH_INTERVAL_KEY, onStatsRefreshIntervalChange);
+});
+
 let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Status', {
   align: 'center',
   width: '70px',
@@ -419,15 +453,34 @@ let uptimeColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI, Date 
   },
 });
 
+function getUsage(object: ContainerInfoUI | ContainerGroupInfoUI): ContainerResourceUsage {
+  return containerStatsPoller.getUsage(getRunningContainers(object).map(container => container.id));
+}
+
+// heaviest containers first, the ones without a reading last
+let cpuColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('CPU', {
+  width: '70px',
+  renderer: ContainerColumnCpu,
+  comparator: (a, b): number => (getUsage(b).cpuPercentage ?? -1) - (getUsage(a).cpuPercentage ?? -1),
+});
+
+let memoryColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Memory', {
+  width: '70px',
+  renderer: ContainerColumnMemory,
+  comparator: (a, b): number => (getUsage(b).memoryUsage ?? -1) - (getUsage(a).memoryUsage ?? -1),
+});
+
 const columns = [
   statusColumn,
   nameColumn,
   envColumn,
   imageColumn,
   uptimeColumn,
+  cpuColumn,
+  memoryColumn,
   new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Actions', {
     align: 'right',
-    width: '150px',
+    width: '100px',
     renderer: ContainerColumnActions,
     overflow: true,
   }),

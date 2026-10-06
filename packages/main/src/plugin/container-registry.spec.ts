@@ -7186,6 +7186,12 @@ describe('ContainerRegistrySettings', () => {
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.default).toBe(30);
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.minimum).toBe(5);
     expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.maximum).toBe(120);
+
+    const statsConfig = registerConfigurationsMock.mock.calls[0]?.[0]?.[1] as IConfigurationNode | undefined;
+    expect(statsConfig?.id).toBe('preferences.containers');
+    expect(statsConfig?.properties?.['containers.statsRefreshInterval']).toEqual(
+      expect.objectContaining({ type: 'number', default: 5, minimum: 0, maximum: 60 }),
+    );
   });
 });
 
@@ -8076,5 +8082,45 @@ describe('getContainerStats', () => {
 
     expect(firstId).not.toBe(secondId);
     expect(secondStream.destroyed).toBeTruthy();
+  });
+});
+
+describe('getContainerStatsSnapshot', () => {
+  test('should return a single statistics reading with engine details', async () => {
+    telemetryTrackMock.mockClear();
+    const stats = { read: '2026-10-06T19:12:13Z', memory_stats: { usage: 1024, limit: 2048 } };
+    const statsMock = vi.fn().mockResolvedValue(stats);
+    const getContainerMock = vi.fn().mockReturnValue({ stats: statsMock });
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { getContainer: getContainerMock } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const result = await containerRegistry.getContainerStatsSnapshot('podman1', 'container1');
+
+    expect(getContainerMock).toHaveBeenCalledWith('container1');
+    expect(statsMock).toHaveBeenCalledWith({ stream: false, 'one-shot': true });
+    expect(result).toEqual({ engineName: 'podman', engineId: 'podman1', ...stats });
+    expect(telemetryTrackMock).not.toHaveBeenCalled();
+  });
+
+  test('should throw if no engine matches', async () => {
+    await expect(containerRegistry.getContainerStatsSnapshot('unknown', 'container1')).rejects.toThrow(
+      'no engine matching this container',
+    );
+  });
+
+  test('should throw if the engine is not running', async () => {
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    await expect(containerRegistry.getContainerStatsSnapshot('podman1', 'container1')).rejects.toThrow(
+      'no running provider for the matching container',
+    );
   });
 });

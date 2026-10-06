@@ -1250,6 +1250,13 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'container-provider-registry:getContainerStatsSnapshot',
+      async (_listener, engine: string, containerId: string): Promise<ContainerStatsInfo> => {
+        return containerProviderRegistry.getContainerStatsSnapshot(engine, containerId);
+      },
+    );
+
+    this.ipcHandle(
       'container-provider-registry:pruneContainers',
       async (_listener, engine: string): Promise<Dockerode.PruneContainersInfo> => {
         return containerProviderRegistry.pruneContainers(engine);
