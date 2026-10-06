@@ -528,9 +528,16 @@ export class ExtensionLoader implements IAsyncDisposable {
     await this.loadDevelopmentFolderExtensions(analyzedExtensions);
 
     // an extension from --extension-folder or the plugins directory takes precedence over the bundled one it
-    // overrides, the --extension-folder one first; a development folder one sharing its id is ignored, as before
+    // overrides; a development folder one sharing its id is ignored, as before. When both --extension-folder and
+    // the plugins directory provide the same id, both are flagged but only the first listed, from
+    // --extension-folder, is loaded
     this.markOverridingExtensions([...this.extensionsExternal.all(), ...analyzedPluginsDirectoryExtensions]);
-    const overriddenExtensionIds = new Set(analyzedExtensions.flatMap(extension => extension.overrides?.id ?? []));
+    const overriddenExtensionIds = new Set<string>();
+    for (const extension of analyzedExtensions) {
+      if (extension.overrides) {
+        overriddenExtensionIds.add(extension.overrides.id);
+      }
+    }
     const extensionsToLoad = analyzedExtensions.filter(
       extension => !(extension.bundled && overriddenExtensionIds.has(extension.id)),
     );
@@ -551,11 +558,12 @@ export class ExtensionLoader implements IAsyncDisposable {
    * extension it replaces. A candidate analyzed with an error does not replace anything.
    */
   protected markOverridingExtensions(candidates: AnalyzedExtension[]): void {
+    const bundledExtensions = this.extensionsBundle.all();
     for (const extension of candidates) {
       if (extension.error) {
         continue;
       }
-      const overriddenExtension = this.extensionsBundle.all().find(bundled => bundled.id === extension.id);
+      const overriddenExtension = bundledExtensions.find(bundled => bundled.id === extension.id);
       if (overriddenExtension) {
         extension.overrides = { id: overriddenExtension.id, version: overriddenExtension.manifest.version };
         console.log(

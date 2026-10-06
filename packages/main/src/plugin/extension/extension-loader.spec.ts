@@ -164,11 +164,14 @@ function buildAnalyzedExtension(id: string, fields: Partial<AnalyzedExtensionWit
   };
 }
 
-const bundledPodmanExtension = buildAnalyzedExtension('podman-desktop.podman', {
-  path: '/bundled/podman',
-  removable: false,
-  bundled: true,
-});
+/**
+ * Build a directory entry, as returned by readdir with file types.
+ */
+function buildDirectoryEntry(name: string): fs.Dirent<string> {
+  return { name, isFile: (): boolean => false, isDirectory: (): boolean => true } as unknown as fs.Dirent<string>;
+}
+
+let bundledPodmanExtension: AnalyzedExtensionWithApi;
 
 const commandRegistry: CommandRegistry = {
   registerCommandsFromExtension: vi.fn(),
@@ -443,6 +446,12 @@ beforeEach(() => {
   telemetryTrackMock.mockResolvedValue(undefined);
   vi.clearAllMocks();
 
+  bundledPodmanExtension = buildAnalyzedExtension('podman-desktop.podman', {
+    path: '/bundled/podman',
+    removable: false,
+    bundled: true,
+  });
+
   vi.mocked(extensionsBundle.all).mockReturnValue([]);
   vi.mocked(extensionsExternal.all).mockReturnValue([]);
 
@@ -534,12 +543,8 @@ describe('extensionLoader#start', () => {
     const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
     loadExtensionsMock.mockResolvedValue(undefined);
 
-    vi.mocked(
-      fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent[]>,
-    ).mockImplementation(async p =>
-      p === directories.getPluginsDirectory()
-        ? [{ name: 'podman', isFile: (): boolean => false, isDirectory: (): boolean => true } as unknown as fs.Dirent]
-        : [],
+    readdirMock.mockImplementation(async p =>
+      p === directories.getPluginsDirectory() ? [buildDirectoryEntry('podman')] : [],
     );
     vi.mocked(fs.existsSync).mockImplementation(p => p === directories.getPluginsDirectory());
 
@@ -570,9 +575,7 @@ describe('extensionLoader#start', () => {
     vi.mocked(extensionsBundle.all).mockReturnValue([bundledPodmanExtension]);
 
     // a development folder exposing the very same extension id
-    vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([
-      { path: '/dev/podman' },
-    ] as unknown as ReturnType<typeof extensionDevelopmentFolder.getDevelopmentFolders>);
+    vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([{ path: '/dev/podman' }]);
     const developmentExtension = buildAnalyzedExtension('podman-desktop.podman', {
       path: '/dev/podman',
       removable: false,
@@ -622,12 +625,8 @@ describe('extensionLoader#start', () => {
     vi.spyOn(extensionLoader, 'analyzeExtension').mockResolvedValue(installedExtension);
     const loadExtensionSpy = vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
 
-    vi.mocked(
-      fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent[]>,
-    ).mockImplementation(async p =>
-      p === directories.getPluginsDirectory()
-        ? [{ name: 'podman', isFile: (): boolean => false, isDirectory: (): boolean => true } as unknown as fs.Dirent]
-        : [],
+    readdirMock.mockImplementation(async p =>
+      p === directories.getPluginsDirectory() ? [buildDirectoryEntry('podman')] : [],
     );
     vi.mocked(fs.existsSync).mockImplementation(p => p === directories.getPluginsDirectory());
 
@@ -641,11 +640,13 @@ describe('extensionLoader#start', () => {
 });
 
 describe('restore of a bundled extension on removal', () => {
-  const overridingExtension = buildAnalyzedExtension('podman-desktop.podman', {
-    overrides: { id: 'podman-desktop.podman', version: '1.0.0' },
-  });
+  let overridingExtension: AnalyzedExtensionWithApi;
 
   beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    overridingExtension = buildAnalyzedExtension('podman-desktop.podman', {
+      overrides: { id: 'podman-desktop.podman', version: '1.0.0' },
+    });
     extensionLoader.setAnalyzedExtension(overridingExtension.id, overridingExtension);
     vi.mocked(extensionsBundle.all).mockReturnValue([bundledPodmanExtension]);
     vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
@@ -663,13 +664,13 @@ describe('restore of a bundled extension on removal', () => {
     await extensionLoader.removeExtensionPerUserRequest(overridingExtension.id);
 
     // the bundled extension is analyzed again, not reused from the bundle
-    expect(analyzeExtensionSpy).toBeCalledWith({
+    expect(analyzeExtensionSpy).toHaveBeenCalledWith({
       extensionPath: '/bundled/podman',
       removable: false,
       devMode: false,
       bundled: true,
     });
-    expect(loadExtensionSpy).toBeCalledWith(restoredExtension, true);
+    expect(loadExtensionSpy).toHaveBeenCalledWith(restoredExtension, true);
   });
 
   test('removeExtension alone, as done by an update, does not restore the bundled extension', async () => {
@@ -678,8 +679,8 @@ describe('restore of a bundled extension on removal', () => {
 
     await extensionLoader.removeExtension(overridingExtension.id);
 
-    expect(analyzeExtensionSpy).not.toBeCalled();
-    expect(loadExtensionSpy).not.toBeCalled();
+    expect(analyzeExtensionSpy).not.toHaveBeenCalled();
+    expect(loadExtensionSpy).not.toHaveBeenCalled();
   });
 
   test('removeExtensionPerUserRequest of a non overriding extension does not restore anything', async () => {
@@ -690,8 +691,8 @@ describe('restore of a bundled extension on removal', () => {
 
     await extensionLoader.removeExtensionPerUserRequest(extension.id);
 
-    expect(analyzeExtensionSpy).not.toBeCalled();
-    expect(loadExtensionSpy).not.toBeCalled();
+    expect(analyzeExtensionSpy).not.toHaveBeenCalled();
+    expect(loadExtensionSpy).not.toHaveBeenCalled();
   });
 
   test('removeExtensionPerUserRequest does not fail when no bundled extension matches the removed one', async () => {
@@ -700,11 +701,10 @@ describe('restore of a bundled extension on removal', () => {
 
     await expect(extensionLoader.removeExtensionPerUserRequest(overridingExtension.id)).resolves.toBeUndefined();
 
-    expect(loadExtensionSpy).not.toBeCalled();
+    expect(loadExtensionSpy).not.toHaveBeenCalled();
   });
 
   test('removeExtensionPerUserRequest does not load a bundled extension analyzed with an error', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error');
     vi.spyOn(extensionLoader, 'analyzeExtension').mockResolvedValue(
       buildAnalyzedExtension('podman-desktop.podman', { error: 'invalid manifest' }),
     );
@@ -712,8 +712,8 @@ describe('restore of a bundled extension on removal', () => {
 
     await extensionLoader.removeExtensionPerUserRequest(overridingExtension.id);
 
-    expect(loadExtensionSpy).not.toBeCalled();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(loadExtensionSpy).not.toHaveBeenCalled();
+    expect(vi.mocked(console.error)).toHaveBeenCalledWith(
       'Error while restoring bundled extension podman-desktop.podman',
       'invalid manifest',
     );
@@ -721,13 +721,12 @@ describe('restore of a bundled extension on removal', () => {
   });
 
   test('removeExtensionPerUserRequest completes the removal when the restore of the bundled extension fails', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error');
     const error = new Error('analyze failed');
     vi.spyOn(extensionLoader, 'analyzeExtension').mockRejectedValue(error);
 
     await expect(extensionLoader.removeExtensionPerUserRequest(overridingExtension.id)).resolves.toBeUndefined();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(vi.mocked(console.error)).toHaveBeenCalledWith(
       'Error while restoring bundled extension podman-desktop.podman',
       error,
     );
