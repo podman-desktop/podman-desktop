@@ -211,7 +211,7 @@ overrides:
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.16.1'
   ws@^8: '>=8.20.1'
-  concurrently>shell-quote: '>=1.8.5'
+  concurrently>shell-quote: ^1.12.0
   dockerode>@grpc/grpc-js: ^1.14.5
   form-data: '>=4.0.6'
   '@docusaurus/utils@3>gray-matter': npm:@11ty/gray-matter@^2.1.0
@@ -11657,8 +11657,8 @@ packages:
     resolution: {integrity: sha512-s/9q9PEtcRmDTz69+cJ3yYBAe9yGrL7e46gm2bU4pQ9N48ecPK9QrGFnLwYgb4smOHskx4PL7wCNMktW2AoD+g==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  shell-quote@1.10.0:
-    resolution: {integrity: sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA==}
+  shell-quote@1.12.0:
+    resolution: {integrity: sha512-PcByqNyT/38F2kDNi006HAMRJaULuBzq/FOsw3qdZvX/GA9W/jamDaRskgHjubHiftXK5sIFxLNkvrXUwcof6Q==}
     engines: {node: '>= 0.4'}
 
   side-channel-list@1.0.0:
@@ -22307,7 +22307,7 @@ snapshots:
   launch-editor@2.14.1:
     dependencies:
       picocolors: 1.1.1
-      shell-quote: 1.10.0
+      shell-quote: 1.12.0
 
   layout-base@1.0.2: {}
 
@@ -25234,7 +25234,7 @@ snapshots:
     dependencies:
       shell-env: 4.0.1
 
-  shell-quote@1.10.0: {}
+  shell-quote@1.12.0: {}
 
   side-channel-list@1.0.0:
     dependencies:
