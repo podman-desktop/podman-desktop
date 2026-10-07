@@ -204,6 +204,28 @@ test('Should queue events until we are ready', async () => {
   expect(webContents.send).toBeCalledWith('api-sender', 'foo', 'hello-world');
 });
 
+test('Should drop the queued events when the window has been destroyed while they were queued', async () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  pluginSystem.markAsReady();
+
+  // the UI has not reported being ready yet, so the event is queued
+  apiSender.send('foo', 'hello-world');
+  expect(webContents.send).not.toHaveBeenCalled();
+
+  // the user closes the window while the event is still queued
+  vi.mocked(webContents.isDestroyed).mockReturnValue(true);
+
+  // flushing the queue must drop the events instead of sending to the destroyed window
+  expect(() => emitter.emit('dom-ready')).not.toThrow();
+  expect(webContents.send).not.toHaveBeenCalled();
+
+  // and the events are not kept around to be flushed again later
+  vi.mocked(webContents.isDestroyed).mockReturnValue(false);
+  apiSender.send('bar', 'hello-again');
+  expect(webContents.send).toHaveBeenCalledTimes(1);
+  expect(webContents.send).toHaveBeenCalledWith('api-sender', 'bar', 'hello-again');
+});
+
 test('Check SecurityRestrictions on Links and user accept', async () => {
   const showMessageBoxMock = vi.fn();
   const messageBox = {
@@ -1006,6 +1028,13 @@ describe('getWebContentsSender', () => {
       scenario: 'every window is destroyed',
       getWindows: (): BrowserWindow[] => [{ isDestroyed: () => true, webContents } as unknown as BrowserWindow],
     },
+    // the renderer is gone, so the window is still alive but it has nothing to send to anymore
+    {
+      scenario: 'the web contents of the window are destroyed',
+      getWindows: (): BrowserWindow[] => [
+        { isDestroyed: () => false, webContents: { isDestroyed: () => true } } as unknown as BrowserWindow,
+      ],
+    },
   ])('should return a sender doing nothing when $scenario', ({ getWindows }) => {
     vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(getWindows());
 
@@ -1015,6 +1044,36 @@ describe('getWebContentsSender', () => {
     expect(sender.isDestroyed()).toBe(true);
     expect(() => sender.send('api-sender', 'foo')).not.toThrow();
     expect(() => sender.on('dom-ready', vi.fn())).not.toThrow();
+  });
+});
+
+describe('getRequiredWebContentsSender', () => {
+  test('should return the webContents of the first window that is not destroyed', () => {
+    const destroyedWebContents = { send: vi.fn() } as unknown as WebContents;
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+      { isDestroyed: () => true, webContents: destroyedWebContents } as unknown as BrowserWindow,
+      { isDestroyed: () => false, webContents } as unknown as BrowserWindow,
+    ]);
+
+    expect(pluginSystem.getRequiredWebContentsSender()).toBe(webContents);
+  });
+
+  test.each([
+    { scenario: 'there is no window anymore', getWindows: (): BrowserWindow[] => [] },
+    {
+      scenario: 'every window is destroyed',
+      getWindows: (): BrowserWindow[] => [{ isDestroyed: () => true, webContents } as unknown as BrowserWindow],
+    },
+    {
+      scenario: 'the web contents of the window are destroyed',
+      getWindows: (): BrowserWindow[] => [
+        { isDestroyed: () => false, webContents: { isDestroyed: () => true } } as unknown as BrowserWindow,
+      ],
+    },
+  ])('should throw when $scenario', ({ getWindows }) => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(getWindows());
+
+    expect(() => pluginSystem.getRequiredWebContentsSender()).toThrow('Unable to find the main window');
   });
 });
 

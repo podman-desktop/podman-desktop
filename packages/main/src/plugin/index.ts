@@ -319,9 +319,33 @@ export class PluginSystem {
     });
   }
 
+  // the web contents can already be gone while the window is still listed, for example when the
+  // renderer process crashed, so both have to be checked before sending anything
+  private findMainWindow(): BrowserWindow | undefined {
+    return BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && !w.webContents.isDestroyed());
+  }
+
+  /**
+   * Sender for fire-and-forget sends, looked up for every send. It falls back to a sender doing
+   * nothing when the window is gone, so that streams still running while the application is being
+   * closed do not fail.
+   */
   getWebContentsSender(): MainWindowWebContentsSender {
-    const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
-    return window ? window.webContents : PluginSystem.DESTROYED_WEB_CONTENTS_SENDER;
+    return this.findMainWindow()?.webContents ?? PluginSystem.DESTROYED_WEB_CONTENTS_SENDER;
+  }
+
+  /**
+   * Sender for the callers resolving it once and keeping the reference, like the api sender.
+   * Falling back to a sender doing nothing here would leave such a caller unable to ever reach the
+   * UI, so the missing window is reported instead.
+   * @throws when there is no window to send to
+   */
+  getRequiredWebContentsSender(): MainWindowWebContentsSender {
+    const window = this.findMainWindow();
+    if (!window) {
+      throw new Error('Unable to find the main window');
+    }
+    return window.webContents;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -420,6 +444,11 @@ export class PluginSystem {
     const flushQueuedEvents = (): void => {
       // flush queued events ?
       if (this.uiReady && this.isReady && queuedEvents.length > 0) {
+        // the window may have been destroyed while the events were queued, drop them instead of failing
+        if (webContents.isDestroyed()) {
+          queuedEvents.length = 0;
+          return;
+        }
         console.log(`Delayed startup, flushing ${queuedEvents.length} events`);
         queuedEvents.forEach(({ channel, data }) => {
           webContents.send('api-sender', channel, ...data);
@@ -533,7 +562,7 @@ export class PluginSystem {
     this.redirectLogging();
 
     // init api sender
-    const apiSender = this.getApiSender(this.getWebContentsSender());
+    const apiSender = this.getApiSender(this.getRequiredWebContentsSender());
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
