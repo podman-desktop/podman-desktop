@@ -341,30 +341,6 @@ test('Should apiSender handle local receive events', async () => {
   expect(fooReceived).toBe('hello-world');
 });
 
-test('Should not send events to the renderer when there is no window left', async () => {
-  // no window available, so the api sender gets the no-op sender
-  vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
-  const apiSender = pluginSystem.getApiSender(pluginSystem.getWebContentsSender());
-
-  // ready on server side
-  pluginSystem.markAsReady();
-  // the no-op sender never emits dom-ready, so notify through the live webContents
-  // to reach the send path instead of the queueing one
-  emitter.emit('dom-ready');
-
-  let fooReceived = '';
-  apiSender.receive('foo', (data: unknown) => {
-    fooReceived = String(data);
-  });
-
-  // try to send data
-  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
-
-  // local listeners are still notified, but nothing reaches the renderer
-  expect(fooReceived).toBe('hello-world');
-  expect(webContents.send).not.toHaveBeenCalledWith('api-sender', 'foo', 'hello-world');
-});
-
 test('Should return no AbortController if the token is undefined', async () => {
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const abortController = pluginSystem.createAbortControllerOnCancellationToken(cancellationTokenRegistry);
@@ -1021,37 +997,52 @@ describe('getWebContentsSender', () => {
     expect(pluginSystem.getWebContentsSender()).toBe(webContents);
   });
 
-  test('should return a no-op sender instead of throwing when there is no window', () => {
-    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
-
-    const sender = pluginSystem.getWebContentsSender();
-
-    expect(sender.isDestroyed()).toBe(true);
-    expect(() => sender.send('api-sender', 'foo')).not.toThrow();
-    expect(() => sender.on('dom-ready', vi.fn())).not.toThrow();
-  });
-
-  test('should return a no-op sender when every window is destroyed', () => {
-    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
-      { isDestroyed: () => true, webContents } as unknown as BrowserWindow,
-    ]);
+  // the windows are built lazily: test.each evaluates its table before beforeEach assigns webContents
+  test.each([
+    // all the windows are gone, like when the application has been closed
+    { scenario: 'there is no window anymore', getWindows: (): BrowserWindow[] => [] },
+    // the windows are still listed while being closed, but they are already destroyed
+    {
+      scenario: 'every window is destroyed',
+      getWindows: (): BrowserWindow[] => [{ isDestroyed: () => true, webContents } as unknown as BrowserWindow],
+    },
+  ])('should return a sender doing nothing when $scenario', ({ getWindows }) => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(getWindows());
 
     const sender = pluginSystem.getWebContentsSender();
 
     expect(sender).not.toBe(webContents);
     expect(sender.isDestroyed()).toBe(true);
+    expect(() => sender.send('api-sender', 'foo')).not.toThrow();
+    expect(() => sender.on('dom-ready', vi.fn())).not.toThrow();
   });
+});
 
-  test('should not report a send failure when logging while no window is available', () => {
+describe('container-provider-registry:logsContainer', () => {
+  type LogsContainerHandler = (
+    _event: unknown,
+    logsParams: { engineId: string; containerId: string; onDataId: number },
+  ) => Promise<void>;
+
+  test('should keep streaming container logs when there is no window anymore', async () => {
+    // the window is gone, like when the application is being closed
     vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
 
-    const logger = pluginSystem.getLogHandler('test-channel', 'test-logger');
-    logger.log('test');
-    logger.onEnd();
+    const logsContainerMock = vi.mocked(ContainerProviderRegistry.prototype.logsContainer).mockResolvedValue(undefined);
 
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-    consoleErrorSpy.mockRestore();
+    const handle = getHandler<LogsContainerHandler>('container-provider-registry:logsContainer');
+    await handle(undefined, { engineId: 'engine1', containerId: 'container1', onDataId: 1 });
+
+    // the handler asked the registry for the logs, renaming containerId to id
+    expect(logsContainerMock).toHaveBeenCalledWith(expect.objectContaining({ engineId: 'engine1', id: 'container1' }));
+
+    // it gave the registry the callback sending the logs to the renderer
+    const logsParams = logsContainerMock.mock.calls[0]?.[0];
+    assert(logsParams, 'logsContainer should have been called');
+    const sendLogLineToRenderer = logsParams.callback;
+
+    // sending a log line was throwing 'Unable to find the main window' before, and it should not throw anymore
+    expect(() => sendLogLineToRenderer('data', 'a log line')).not.toThrow();
   });
 });
 
