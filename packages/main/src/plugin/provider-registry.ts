@@ -112,6 +112,7 @@ export class ProviderRegistry {
 
   private connectionLifecycleContexts: Map<ProviderConnection, LifecycleContextImpl> = new Map();
   private connectionErrors: Map<ProviderConnection, string> = new Map();
+  private connectionStartedTimes: Map<ProviderConnection, number> = new Map();
   private listeners: ProviderEventListener[];
   private lifecycleListeners: ProviderLifecycleListener[];
   private containerConnectionLifecycleListeners: ContainerConnectionProviderLifecycleListener[];
@@ -731,13 +732,48 @@ export class ProviderRegistry {
     let providerConnection: ProviderConnectionInfo;
     const lifecycleError = this.connectionErrors.get(connection);
     const error = connection.error ?? lifecycleError;
+    const status = connection.status();
+
+    let started: number | undefined;
+    const conn = connection as {
+      started?: number | Date | string | (() => number | Date | string | undefined);
+    };
+    const rawStarted = typeof conn.started === 'function' ? conn.started() : conn.started;
+    if (rawStarted !== undefined && rawStarted !== null) {
+      if (typeof rawStarted === 'number' && !Number.isNaN(rawStarted)) {
+        started = rawStarted;
+      } else if (rawStarted instanceof Date) {
+        started = rawStarted.getTime();
+      } else if (typeof rawStarted === 'string') {
+        const parsed = Date.parse(rawStarted);
+        if (!Number.isNaN(parsed)) {
+          started = parsed;
+        }
+      }
+    }
+
+    if (started === undefined) {
+      if (status === 'started') {
+        if (!this.connectionStartedTimes.has(connection)) {
+          this.connectionStartedTimes.set(connection, Date.now());
+        }
+        started = this.connectionStartedTimes.get(connection);
+      } else {
+        this.connectionStartedTimes.delete(connection);
+      }
+    } else if (status === 'started') {
+      this.connectionStartedTimes.set(connection, started);
+    } else {
+      this.connectionStartedTimes.delete(connection);
+    }
 
     if (this.isContainerConnection(connection)) {
       providerConnection = {
         connectionType: 'container',
         name: connection.name,
         displayName: connection.displayName ?? connection.name,
-        status: connection.status(),
+        status,
+        started,
         error,
         type: connection.type,
         endpoint: {
@@ -759,7 +795,8 @@ export class ProviderRegistry {
       providerConnection = {
         connectionType: 'kubernetes',
         name: connection.name,
-        status: connection.status(),
+        status,
+        started,
         error,
         endpoint: {
           apiURL: connection.endpoint.apiURL,
@@ -773,7 +810,8 @@ export class ProviderRegistry {
       providerConnection = {
         connectionType: 'vm',
         name: connection.name,
-        status: connection.status(),
+        status,
+        started,
         error,
         canStart: false,
         canStop: false,
@@ -1220,6 +1258,9 @@ export class ProviderRegistry {
     try {
       await lifecycle.start(context, logHandler);
       this.connectionErrors.delete(connection);
+      if (!this.connectionStartedTimes.has(connection)) {
+        this.connectionStartedTimes.set(connection, Date.now());
+      }
       if (this.isProviderContainerConnection(providerConnectionInfo)) {
         this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
       } else {
@@ -1304,6 +1345,7 @@ export class ProviderRegistry {
     }
 
     try {
+      this.connectionStartedTimes.delete(connection);
       this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'stopped');
       await lifecycle.stop(context, logHandler);
       this.connectionErrors.delete(connection);
@@ -1444,6 +1486,7 @@ export class ProviderRegistry {
     provider: ProviderImpl,
     containerConnection: ContainerProviderConnection,
   ): void {
+    this.connectionStartedTimes.delete(containerConnection);
     // notify listeners
     this.containerConnectionLifecycleListeners.forEach(listener => {
       listener(
@@ -1459,11 +1502,13 @@ export class ProviderRegistry {
     provider: ProviderImpl,
     kubernetesProviderConnection: KubernetesProviderConnection,
   ): void {
+    this.connectionStartedTimes.delete(kubernetesProviderConnection);
     this.apiSender.send('provider-unregister-kubernetes-connection', { name: kubernetesProviderConnection.name });
     this._onDidUnregisterKubernetesConnection.fire({ providerId: provider.id });
   }
 
   onDidUnregisterVmConnectionCallback(provider: ProviderImpl, vmProviderConnection: VmProviderConnection): void {
+    this.connectionStartedTimes.delete(vmProviderConnection);
     this.apiSender.send('provider-unregister-vm-connection', { name: vmProviderConnection.name });
     this._onDidUnregisterVmConnection.fire({ providerId: provider.id });
   }

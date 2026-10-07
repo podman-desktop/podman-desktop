@@ -112,3 +112,36 @@ test('logs an error when a Kubernetes configuration value cannot be retrieved', 
   expect(screen.getByLabelText('connection')).toBeInTheDocument();
   expect(screen.queryByText('Context')).not.toBeInTheDocument();
 });
+
+test('renders Uptime and Started at when kubernetesConnectionInfo is started with started timestamp', async () => {
+  const startedTimestamp = Date.now() - 15 * 60 * 1000;
+  render(PreferencesKubernetesConnectionDetailsSummary, {
+    kubernetesConnectionInfo: {
+      ...kubernetesConnection,
+      status: 'started',
+      started: startedTimestamp,
+    },
+  });
+
+  await vi.waitFor(() => {
+    const uptime = screen.getByLabelText('Uptime');
+    expect(uptime).toBeInTheDocument();
+    expect(uptime).toHaveTextContent('15 minutes');
+
+    const startedAt = screen.getByLabelText('Started at');
+    expect(startedAt).toBeInTheDocument();
+    expect(startedAt).toHaveTextContent(new Date(startedTimestamp).toLocaleString());
+  });
+});
+
+test('does not render Uptime and Started at when kubernetesConnectionInfo is stopped', async () => {
+  render(PreferencesKubernetesConnectionDetailsSummary, {
+    kubernetesConnectionInfo: {
+      ...kubernetesConnection,
+      status: 'stopped',
+    },
+  });
+
+  expect(screen.queryByLabelText('Uptime')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Started at')).not.toBeInTheDocument();
+});

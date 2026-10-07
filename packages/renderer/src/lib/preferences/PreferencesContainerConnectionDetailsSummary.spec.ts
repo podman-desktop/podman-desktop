@@ -232,4 +232,35 @@ describe('resource metrics display', () => {
     expect(capturedConnection).toBeDefined();
     expect(() => structuredClone(capturedConnection)).not.toThrow();
   });
+
+  test('renders Uptime and Started at when containerConnectionInfo is started with started timestamp', async () => {
+    const startedTimestamp = Date.now() - 10 * 60 * 1000;
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: {
+        ...podmanContainerConnection,
+        status: 'started',
+        started: startedTimestamp,
+      },
+    });
+
+    const uptime = screen.getByLabelText('Uptime');
+    expect(uptime).toBeInTheDocument();
+    expect(uptime).toHaveTextContent('10 minutes');
+
+    const startedAt = screen.getByLabelText('Started at');
+    expect(startedAt).toBeInTheDocument();
+    expect(startedAt).toHaveTextContent(new Date(startedTimestamp).toLocaleString());
+  });
+
+  test('does not render Uptime and Started at when containerConnectionInfo is stopped', async () => {
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: {
+        ...podmanContainerConnection,
+        status: 'stopped',
+      },
+    });
+
+    expect(screen.queryByLabelText('Uptime')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Started at')).not.toBeInTheDocument();
+  });
 });

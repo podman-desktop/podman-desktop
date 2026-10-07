@@ -2,6 +2,9 @@
 import type { ProviderKubernetesConnectionInfo } from '@desktop-framework/api';
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { KubernetesProviderConnection } from '@desktop-framework/extension-api';
+import humanizeDuration from 'humanize-duration';
+import moment from 'moment';
+import { onDestroy } from 'svelte';
 
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
@@ -11,6 +14,68 @@ interface Props {
   kubernetesConnectionInfo?: ProviderKubernetesConnectionInfo;
 }
 let { properties = [], providerInternalId, kubernetesConnectionInfo }: Props = $props();
+
+let duration: string = $state('');
+let refreshTimeout: ReturnType<typeof setTimeout> | undefined;
+
+function computeInterval(uptimeInMs: number): number {
+  const SECOND = 1000;
+  const MINUTE = SECOND * 60;
+  const HOUR = MINUTE * 60;
+  const DAY = HOUR * 24;
+
+  if (uptimeInMs < MINUTE - 2 * SECOND) {
+    return 2 * SECOND;
+  }
+  if (uptimeInMs < HOUR) {
+    return Math.ceil((uptimeInMs + 1) / MINUTE) * MINUTE - uptimeInMs;
+  }
+  if (uptimeInMs < DAY) {
+    return Math.ceil((uptimeInMs + 1) / HOUR) * HOUR - uptimeInMs;
+  }
+  return Math.ceil((uptimeInMs + 1) / DAY) * DAY - uptimeInMs;
+}
+
+function refreshDuration(): void {
+  if (refreshTimeout) {
+    clearTimeout(refreshTimeout);
+    refreshTimeout = undefined;
+  }
+  if (!kubernetesConnectionInfo?.started || kubernetesConnectionInfo.status !== 'started') {
+    duration = '';
+    return;
+  }
+  const uptimeInMs = moment().diff(kubernetesConnectionInfo.started);
+  if (uptimeInMs < 0) {
+    duration = '';
+    return;
+  }
+  duration = humanizeDuration(uptimeInMs, { round: true, largest: 1 });
+  const interval = computeInterval(uptimeInMs);
+  refreshTimeout = setTimeout(refreshDuration, interval);
+}
+
+$effect(() => {
+  if (kubernetesConnectionInfo?.status === 'started' && kubernetesConnectionInfo?.started) {
+    refreshDuration();
+  } else {
+    duration = '';
+    if (refreshTimeout) {
+      clearTimeout(refreshTimeout);
+      refreshTimeout = undefined;
+    }
+  }
+});
+
+onDestroy(() => {
+  if (refreshTimeout) {
+    clearTimeout(refreshTimeout);
+  }
+});
+
+let startedTime = $derived(
+  kubernetesConnectionInfo?.started ? new Date(kubernetesConnectionInfo.started).toLocaleString() : '',
+);
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $derived(
   await Promise.all(
@@ -65,6 +130,16 @@ let providerConnectionConfiguration: IProviderConnectionConfigurationPropertyRec
         <span class="font-semibold min-w-[150px]">Endpoint</span>
         <span aria-label={kubernetesConnectionInfo.endpoint.apiURL}>{kubernetesConnectionInfo.endpoint.apiURL}</span>
       </div>
+      {#if kubernetesConnectionInfo.status === 'started' && kubernetesConnectionInfo.started}
+        <div class="flex flex-row mt-5">
+          <span class="font-semibold min-w-[150px]">Uptime</span>
+          <span aria-label="Uptime">{duration}</span>
+        </div>
+        <div class="flex flex-row mt-5">
+          <span class="font-semibold min-w-[150px]">Started at</span>
+          <span aria-label="Started at">{startedTime}</span>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

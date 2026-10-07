@@ -850,10 +850,13 @@ export async function registerProviderFor(
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_ROOTFUL, isEditRootfulSupported);
   extensionApi.context.setValue(PODMAN_EDIT_IMPORT_NATIVE_CA, isEditImportNativeCASupported);
 
+  let machineInspect: Record<string, unknown> | undefined;
+
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
       try {
         await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
+        machineInspect = await getMachineInspect(machineInfo);
         containerProviderConnection.error = undefined;
       } catch (err) {
         containerProviderConnection.error = err instanceof Error ? err.message : String(err);
@@ -941,6 +944,12 @@ export async function registerProviderFor(
     displayName: prettyMachineName(machineInfo.name),
     type: 'podman',
     status: () => podmanMachinesStatuses.get(machineInfo.name) ?? 'unknown',
+    started: () => {
+      if (podmanMachinesStatuses.get(machineInfo.name) !== 'started') {
+        return undefined;
+      }
+      return machineInspect?.LastUp ? String(machineInspect.LastUp) : undefined;
+    },
     shellAccess: providerConnectionShellAccess,
     lifecycle,
     endpoint: {
@@ -962,7 +971,7 @@ export async function registerProviderFor(
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const machineInspect = await getMachineInspect(machineInfo);
+  machineInspect = await getMachineInspect(machineInfo);
   const isRootful = isRootfulFromInspect(machineInspect);
 
   // Set values for the machine

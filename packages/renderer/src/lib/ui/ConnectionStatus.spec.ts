@@ -83,3 +83,18 @@ test('Expect green text and icon when connection is unknown', async () => {
   expect(label).toHaveClass('text-[var(--pd-status-unknown)]');
   expect(label).toHaveTextContent('UNKNOWN');
 });
+
+test('Expect duration displayed when connection is started and started timestamp is passed', async () => {
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  render(ConnectionStatus, { status: 'started', started: fiveMinutesAgo });
+  const duration = screen.getByLabelText('Connection Duration');
+  expect(duration).toBeInTheDocument();
+  expect(duration).toHaveTextContent('5 minutes');
+});
+
+test('Expect no duration displayed when connection is stopped even if started timestamp is passed', async () => {
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  render(ConnectionStatus, { status: 'stopped', started: fiveMinutesAgo });
+  const duration = screen.queryByLabelText('Connection Duration');
+  expect(duration).not.toBeInTheDocument();
+});
