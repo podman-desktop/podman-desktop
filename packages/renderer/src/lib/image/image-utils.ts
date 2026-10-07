@@ -18,6 +18,7 @@
 
 import {
   type ImageInfo,
+  type ImageUpdateResult,
   isViewContributionBadge,
   isViewContributionIcon,
   type ViewContributionBadgeValue,
@@ -215,6 +216,7 @@ export class ImageUtils {
           labels: imageInfo.Labels,
           isManifest: imageInfo.isManifest,
           digest: imageInfo.Digest,
+          repoDigests: imageInfo.RepoDigests,
           children,
         },
       ];
@@ -240,6 +242,7 @@ export class ImageUtils {
           labels: imageInfo.Labels,
           isManifest: imageInfo.isManifest,
           digest: imageInfo.Digest,
+          repoDigests: imageInfo.RepoDigests,
           children,
         };
       });
@@ -253,6 +256,48 @@ export class ImageUtils {
   deleteImage(image: ImageInfoUI): Promise<void> {
     const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
     return window.deleteImage(image.engineId, imageId);
+  }
+
+  async updateImages(images: ImageInfoUI[]): Promise<ImageUpdateResult[]> {
+    const results: ImageUpdateResult[] = new Array(images.length);
+    const validEntries: { index: number; image: ImageInfoUI }[] = [];
+
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      if (!image.digest) {
+        results[i] = {
+          imageRef: `${image.name}:${image.tag}`,
+          updated: false,
+          status: 'skipped',
+          message: 'Image digest is unavailable for this image.',
+        };
+      } else if (!image.engineId || !image.name || image.name === '<none>' || !image.tag || image.tag === '<none>') {
+        results[i] = {
+          imageRef: `${image.name}:${image.tag}`,
+          updated: false,
+          status: 'skipped',
+          message: 'Image engine, name, or tag is unavailable for this image.',
+        };
+      } else {
+        validEntries.push({ index: i, image });
+      }
+    }
+
+    if (validEntries.length > 0) {
+      const backendResults = await window.updateImages(
+        validEntries.map(({ image }) => ({
+          engineId: image.engineId,
+          image: `${image.name}:${image.tag}`,
+          tag: image.tag,
+        })),
+      );
+
+      for (let j = 0; j < validEntries.length; j++) {
+        results[validEntries[j].index] = backendResults[j];
+      }
+    }
+
+    return results;
   }
 
   getImageInfoUI(

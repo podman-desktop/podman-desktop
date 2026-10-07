@@ -23,6 +23,7 @@ import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { ContextUI } from '/@/lib/context/context';
 
 import { ImageUtils } from './image-utils';
+import type { ImageInfoUI } from './ImageInfoUI';
 
 let imageUtils: ImageUtils;
 
@@ -279,6 +280,159 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     );
     expect(imageInfoUIs.length).toBe(1);
     expect(imageInfoUIs[0].id).toBe('manifest1');
+  });
+
+  test('should preserve repository digests on image info UI objects', () => {
+    const imageInfo = {
+      Id: 'image1',
+      Digest: 'sha256:configdigest',
+      RepoTags: ['quay.io/podman/hello:latest'],
+      RepoDigests: ['quay.io/podman/hello@sha256:manifestdigest'],
+      Created: 1599888000,
+      Size: 1024,
+    } as unknown as ImageInfo;
+
+    const [imageInfoUI] = imageUtils.getImagesInfoUI(imageInfo, containerInfoList, contextUI, viewContributions);
+
+    expect(imageInfoUI?.repoDigests).toEqual(['quay.io/podman/hello@sha256:manifestdigest']);
+  });
+});
+
+describe('updateImages', () => {
+  beforeEach(() => {
+    vi.mocked(window.updateImages).mockReset();
+  });
+
+  test('returns no results for an empty batch without calling IPC', async () => {
+    await expect(imageUtils.updateImages([])).resolves.toEqual([]);
+    expect(window.updateImages).not.toHaveBeenCalled();
+  });
+
+  test.each([{ engineId: '' }, { name: '' }, { name: '<none>' }, { tag: '' }, { tag: '<none>' }])(
+    'skips an image with missing request data: %j',
+    async missingData => {
+      const results = await imageUtils.updateImages([
+        { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc', ...missingData } as ImageInfoUI,
+      ]);
+      expect(results).toEqual([expect.objectContaining({ updated: false, status: 'skipped' })]);
+      expect(window.updateImages).not.toHaveBeenCalled();
+    },
+  );
+
+  test('propagates backend errors to the caller', async () => {
+    const error = new Error('Registry unavailable');
+    vi.mocked(window.updateImages).mockRejectedValue(error);
+    await expect(
+      imageUtils.updateImages([
+        { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc' } as ImageInfoUI,
+      ]),
+    ).rejects.toThrow(error);
+  });
+
+  test('skips images without digest', async () => {
+    const results = await imageUtils.updateImages([
+      { name: 'nginx', tag: 'latest', engineId: 'podman' } as ImageInfoUI,
+    ]);
+
+    expect(results[0]?.updated).toBe(false);
+    expect(results[0]?.message).toContain('digest');
+    expect(window.updateImages).not.toHaveBeenCalled();
+  });
+
+  test('sends batch payload in a single IPC call', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'redis:7', updated: false, status: 'normal', message: 'Up to date' },
+    ]);
+
+    const results = await imageUtils.updateImages([
+      { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc' },
+      { name: 'redis', tag: '7', engineId: 'podman', digest: 'sha256:def' },
+    ] as ImageInfoUI[]);
+
+    expect(window.updateImages).toHaveBeenCalledOnce();
+    expect(results).toHaveLength(2);
+    expect(results[0]?.updated).toBe(true);
+    expect(results[1]?.updated).toBe(false);
+  });
+
+  test('preserves original result positions when only some images have digests', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'redis:7', updated: false, status: 'normal', message: 'Up to date' },
+    ]);
+
+    const results = await imageUtils.updateImages([
+      { name: 'missing', tag: 'latest', engineId: 'podman' },
+      { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc' },
+      { name: 'redis', tag: '7', engineId: 'docker', digest: 'sha256:def' },
+      { name: 'also-missing', tag: 'dev', engineId: 'podman' },
+    ] as ImageInfoUI[]);
+
+    expect(window.updateImages).toHaveBeenCalledOnce();
+    expect(window.updateImages).toHaveBeenCalledWith([
+      { engineId: 'podman', image: 'nginx:latest', tag: 'latest' },
+      { engineId: 'docker', image: 'redis:7', tag: '7' },
+    ]);
+    expect(results).toEqual([
+      expect.objectContaining({
+        imageRef: 'missing:latest',
+        updated: false,
+        message: expect.stringContaining('digest'),
+      }),
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'redis:7', updated: false, status: 'normal', message: 'Up to date' },
+      expect.objectContaining({
+        imageRef: 'also-missing:dev',
+        updated: false,
+        message: expect.stringContaining('digest'),
+      }),
+    ]);
+  });
+
+  test('leaves digest resolution to the backend', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([
+      { imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' },
+    ]);
+
+    await imageUtils.updateImages([
+      {
+        name: 'nginx',
+        tag: 'latest',
+        engineId: 'podman',
+        digest: 'sha256:configdigest',
+        repoDigests: ['nginx@sha256:manifestdigest'],
+      },
+    ] as ImageInfoUI[]);
+
+    expect(window.updateImages).toHaveBeenCalledWith([
+      {
+        engineId: 'podman',
+        image: 'nginx:latest',
+        tag: 'latest',
+      },
+    ]);
+  });
+
+  test('sends a cloneable payload when repository digests are proxied', async () => {
+    vi.mocked(window.updateImages).mockImplementation(async images => {
+      structuredClone(images);
+      return [{ imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' }];
+    });
+
+    const repoDigests = new Proxy(['nginx@sha256:manifestdigest'], {});
+
+    await expect(
+      imageUtils.updateImages([
+        {
+          name: 'nginx',
+          tag: 'latest',
+          engineId: 'podman',
+          digest: 'sha256:configdigest',
+          repoDigests,
+        },
+      ] as ImageInfoUI[]),
+    ).resolves.toEqual([{ imageRef: 'nginx:latest', updated: false, status: 'normal', message: 'Up to date' }]);
   });
 });
 
