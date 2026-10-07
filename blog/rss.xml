@@ -999,7 +999,7 @@ release we received pull requests from the following people:</p>
 <ul>
 <li class="">refactor: extracted duplicated code to function by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/17154" target="_blank" rel="noopener noreferrer" class="">#17154</a></li>
 <li class="">refactor(registry-setup): modernise node<!-- -->:fs<!-- --> usage by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/17101" target="_blank" rel="noopener noreferrer" class="">#17101</a></li>
-<li class="">refactor(api): unify DialogType definition in @podman-desktop/core-api by @JustMell0 <a href="https://github.com/podman-desktop/podman-desktop/pull/17055" target="_blank" rel="noopener noreferrer" class="">#17055</a></li>
+<li class="">refactor(api): unify DialogType definition in @desktop-framework/api by @JustMell0 <a href="https://github.com/podman-desktop/podman-desktop/pull/17055" target="_blank" rel="noopener noreferrer" class="">#17055</a></li>
 <li class="">refactor(Onboarding): migrated Onboarding component to svelte5 by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/17036" target="_blank" rel="noopener noreferrer" class="">#17036</a></li>
 <li class="">refactor(renderer): replace hardcoded Tailwind colors in micromark with color-registry tokens by @vancura <a href="https://github.com/podman-desktop/podman-desktop/pull/17003" target="_blank" rel="noopener noreferrer" class="">#17003</a></li>
 <li class="">refactor(main): extract global timeout utility by @sheikhlimon <a href="https://github.com/podman-desktop/podman-desktop/pull/16950" target="_blank" rel="noopener noreferrer" class="">#16950</a></li>
