@@ -1293,8 +1293,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       unplugin-dts:
-        specifier: 1.1.1
-        version: 1.1.1(@microsoft/api-extractor@7.55.2(@types/node@24.19.1))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2))
+        specifier: 1.1.2
+        version: 1.1.2(@microsoft/api-extractor@7.55.2(@types/node@24.19.1))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2))
       vite:
         specifier: ^8.3.2
         version: 8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0)
@@ -12469,6 +12469,36 @@ packages:
 
   unplugin-dts@1.1.1:
     resolution: {integrity: sha512-Z2VcabC0hjYuzF62oWmZXVoxagkM8bUWgqUy+dotoJTPnooR5mNaxbpv63JCmcaxdGCW2Bb75omK6FOryOYCRg==}
+    peerDependencies:
+      '@microsoft/api-extractor': '>=7'
+      '@rspack/core': ^1
+      '@vue/language-core': ^3.1.5
+      esbuild: '>=0.28.1'
+      rolldown: '*'
+      rollup: ^4.59.0
+      typescript: '>=4'
+      vite: '>=3'
+      webpack: ^4 || ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      '@rspack/core':
+        optional: true
+      '@vue/language-core':
+        optional: true
+      esbuild:
+        optional: true
+      rolldown:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+
+  unplugin-dts@1.1.2:
+    resolution: {integrity: sha512-RDqy90XUmFj6rz4U5YoTMdYdaCJe2ZnQZaWIjkWS4952Gv0zBTQyqWtlGgVMPYHa982dURvyoc+sUOFIcDFv+w==}
     peerDependencies:
       '@microsoft/api-extractor': '>=7'
       '@rspack/core': ^1
@@ -26111,29 +26141,6 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-dts@1.1.1(@microsoft/api-extractor@7.55.2(@types/node@24.19.1))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
-    dependencies:
-      '@rollup/pluginutils': 5.4.0(rollup@4.61.1)
-      '@volar/typescript': 2.4.28(typescript@6.0.3)
-      compare-versions: 6.1.1
-      debug: 4.4.3(supports-color@8.1.1)
-      glob-to-regexp: 0.4.1
-      kolorist: 1.8.0
-      local-pkg: 1.2.1
-      magic-string: 0.30.21
-      typescript: 6.0.3
-      unplugin: 2.3.11
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.55.2(@types/node@24.19.1)
-      '@rspack/core': 1.7.12
-      esbuild: 0.28.2
-      rolldown: 1.2.8
-      rollup: 4.61.1
-      vite: 8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0)
-      webpack: 5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)
-    transitivePeerDependencies:
-      - supports-color
-
   unplugin-dts@1.1.1(@microsoft/api-extractor@7.55.2(@types/node@26.2.0))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
     dependencies:
       '@rollup/pluginutils': 5.4.0(rollup@4.61.1)
@@ -26153,6 +26160,29 @@ snapshots:
       rolldown: 1.2.8
       rollup: 4.61.1
       vite: 8.3.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1)
+      webpack: 5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)
+    transitivePeerDependencies:
+      - supports-color
+
+  unplugin-dts@1.1.2(@microsoft/api-extractor@7.55.2(@types/node@24.19.1))(@rspack/core@1.7.12)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.61.1)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0))(webpack@5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)):
+    dependencies:
+      '@rollup/pluginutils': 5.4.0(rollup@4.61.1)
+      '@volar/typescript': 2.4.28(typescript@6.0.3)
+      compare-versions: 6.1.1
+      debug: 4.4.3(supports-color@8.1.1)
+      glob-to-regexp: 0.4.1
+      kolorist: 1.8.0
+      local-pkg: 1.2.1
+      magic-string: 0.30.21
+      typescript: 6.0.3
+      unplugin: 2.3.11
+    optionalDependencies:
+      '@microsoft/api-extractor': 7.55.2(@types/node@24.19.1)
+      '@rspack/core': 1.7.12
+      esbuild: 0.28.2
+      rolldown: 1.2.8
+      rollup: 4.61.1
+      vite: 8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.0)
       webpack: 5.105.0(@swc/core@1.16.2)(esbuild@0.28.2)
     transitivePeerDependencies:
       - supports-color
