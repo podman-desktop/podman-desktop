@@ -20,6 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -28,11 +29,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import { providerInfos } from '/@/stores/providers';
 
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
+  providerInfos.set([]);
 });
 
 async function awaitRender(record: IConfigurationPropertyRecordedSchema, customProperties: any): Promise<void> {
@@ -509,6 +512,165 @@ test('Expect a password input when record is type string and format is password'
   // check that the name is properly set and the value too
   expect(passwordInput).toHaveAttribute('name', 'record');
   expect(passwordInput).toHaveValue('foobar');
+});
+
+test('waits for the saved container connection before selecting a default', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'kind.cluster.creation.provider',
+    title: 'Kind',
+    parentId: 'kind',
+    description: 'Container Connection',
+    type: 'string',
+    format: 'containerConnection',
+  };
+  const podmanSelection = JSON.stringify({ providerId: 'podman', connectionName: 'podman-machine-default' });
+  const dockerSelection = JSON.stringify({ providerId: 'docker', connectionName: 'docker-desktop' });
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'Docker',
+      containerConnections: [
+        {
+          name: 'docker-desktop',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+
+  let resolveInitialValue: (value: unknown) => void = (): void => {};
+  const initialValue = new Promise<unknown>(resolve => {
+    resolveInitialValue = resolve;
+  });
+  const setRecordValue = vi.fn();
+
+  render(PreferencesRenderingItemFormat, { record, initialValue, setRecordValue });
+  await tick();
+
+  expect(screen.queryByLabelText('Container Connection')).not.toBeInTheDocument();
+  expect(setRecordValue).not.toHaveBeenCalled();
+
+  resolveInitialValue(dockerSelection);
+
+  await vi.waitFor(() =>
+    expect(screen.getByLabelText('Container Connection')).toHaveTextContent('Docker Desktop (Docker)'),
+  );
+  await vi.waitFor(() =>
+    expect(setRecordValue).toHaveBeenCalledWith('kind.cluster.creation.provider', dockerSelection),
+  );
+  expect(setRecordValue).not.toHaveBeenCalledWith('kind.cluster.creation.provider', podmanSelection);
+});
+
+test('does not select a default container connection when the saved value cannot be loaded', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'kind.cluster.creation.provider',
+    title: 'Kind',
+    parentId: 'kind',
+    description: 'Container Connection',
+    type: 'string',
+    format: 'containerConnection',
+  };
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+  const setRecordValue = vi.fn();
+  const consoleError = vi.spyOn(console, 'error').mockReturnValue(undefined);
+
+  render(PreferencesRenderingItemFormat, {
+    record,
+    initialValue: Promise.reject(new Error('settings unavailable')),
+    setRecordValue,
+  });
+
+  await vi.waitFor(() => expect(consoleError).toHaveBeenCalledWith('Error getting initial value', expect.any(Error)));
+  expect(screen.getByTestId('tooltip-trigger')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Container Connection')).not.toBeInTheDocument();
+  expect(setRecordValue).not.toHaveBeenCalled();
+});
+
+test('ignores a stale initial-value rejection after the record changes', async () => {
+  const firstRecord: IConfigurationPropertyRecordedSchema = {
+    id: 'first.connection',
+    title: 'First',
+    parentId: 'kind',
+    description: 'First Connection',
+    type: 'string',
+    format: 'containerConnection',
+  };
+  const secondRecord: IConfigurationPropertyRecordedSchema = {
+    ...firstRecord,
+    id: 'second.connection',
+    title: 'Second',
+    description: 'Second Connection',
+  };
+  const selection = JSON.stringify({ providerId: 'podman', connectionName: 'podman-machine-default' });
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'Podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+  let rejectFirst: (reason: Error) => void = (): void => {};
+  const firstInitialValue = new Promise<unknown>((_resolve, reject) => {
+    rejectFirst = reject;
+  });
+  const setRecordValue = vi.fn();
+  const consoleError = vi.spyOn(console, 'error').mockReturnValue(undefined);
+  const { rerender } = render(PreferencesRenderingItemFormat, {
+    record: firstRecord,
+    initialValue: firstInitialValue,
+    setRecordValue,
+  });
+
+  await rerender({ record: secondRecord, initialValue: Promise.resolve(selection), setRecordValue });
+  await vi.waitFor(() => expect(screen.getByLabelText('Second Connection')).toBeInTheDocument());
+
+  rejectFirst(new Error('stale settings failure'));
+  await tick();
+
+  expect(screen.getByLabelText('Second Connection')).toBeInTheDocument();
+  expect(consoleError).not.toHaveBeenCalled();
 });
 
 describe('experimental configuration update', () => {
