@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ContainerInfo, ProviderInfo } from '@desktop-framework/api';
 import { fireEvent, render, type RenderResult, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */

@@ -18,7 +18,7 @@
 
 import * as os from 'node:os';
 
-import type { IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
 
 import product from '/@product.json' with { type: 'json' };
 

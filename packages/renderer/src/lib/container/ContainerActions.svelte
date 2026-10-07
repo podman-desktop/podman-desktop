@@ -1,4 +1,6 @@
 <script lang="ts">
+import type { Menu } from '@desktop-framework/api';
+import { MenuContext, NavigationPage } from '@desktop-framework/api';
 import {
   faAlignLeft,
   faArrowsRotate,
@@ -11,8 +13,6 @@ import {
   faTerminal,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import type { Menu } from '@podman-desktop/core-api';
-import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 

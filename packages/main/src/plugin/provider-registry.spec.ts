@@ -19,6 +19,16 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import type {
+  CheckStatus,
+  PreflightChecksCallback,
+  ProviderConnectionInfo,
+  ProviderContainerConnectionInfo,
+  ProviderKubernetesConnectionInfo,
+  ProviderVmConnectionInfo,
+} from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import type {
   AutostartContext,
   CancellationToken,
   CheckResult,
@@ -40,16 +50,6 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@desktop-framework/extension-api';
-import type {
-  CheckStatus,
-  PreflightChecksCallback,
-  ProviderConnectionInfo,
-  ProviderContainerConnectionInfo,
-  ProviderKubernetesConnectionInfo,
-  ProviderVmConnectionInfo,
-} from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AutostartEngine } from './autostart-engine.js';

@@ -1,6 +1,4 @@
 <script lang="ts">
-import type { ImageInfo, OpenDialogOptions } from '@desktop-framework/extension-api';
-import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type {
   ContainerCreateOptions,
   DeviceMapping,
@@ -9,8 +7,10 @@ import type {
   ImageInspectInfo,
   NetworkInspectInfo,
   SecretInfo,
-} from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
+} from '@desktop-framework/api';
+import { NavigationPage } from '@desktop-framework/api';
+import type { ImageInfo, OpenDialogOptions } from '@desktop-framework/extension-api';
+import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   ButtonRow,

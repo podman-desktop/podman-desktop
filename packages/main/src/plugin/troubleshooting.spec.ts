@@ -18,8 +18,8 @@
 
 import * as fs from 'node:fs';
 
-import type { LogType } from '@podman-desktop/core-api';
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { LogType } from '@desktop-framework/api';
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import type AdmZip from 'adm-zip';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 

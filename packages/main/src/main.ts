@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { IDisposable } from '@podman-desktop/core-api';
+import type { IDisposable } from '@desktop-framework/api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
 import { AppIdentityDevPlugin } from '/@/plugin/app-ready/app-identity-plugin.js';

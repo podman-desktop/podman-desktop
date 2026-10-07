@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { HistoryStackEntry, NavigationHistoryPushInfo } from '@podman-desktop/core-api';
+import type { HistoryStackEntry, NavigationHistoryPushInfo } from '@desktop-framework/api';
 // svelte subpaths share one types entry, not real duplicates
 /* eslint-disable import/no-duplicates */
 import { SvelteSet } from 'svelte/reactivity';

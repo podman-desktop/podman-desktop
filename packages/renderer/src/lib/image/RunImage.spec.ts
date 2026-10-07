@@ -18,8 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInspectInfo, SecretInfo } from '@desktop-framework/api';
 import type { ImageInfo } from '@desktop-framework/extension-api';
-import type { ImageInspectInfo, SecretInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';

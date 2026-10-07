@@ -23,7 +23,6 @@ import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
 import * as streamPromises from 'node:stream/promises';
 
-import type * as podmanDesktopAPI from '@desktop-framework/extension-api';
 import type {
   ContainerCreateOptions,
   ContainerInspectInfo,
@@ -31,10 +30,11 @@ import type {
   ImageInspectInfo,
   ImageUpdateStatus,
   ProviderContainerConnectionInfo,
-} from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
-import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '@podman-desktop/core-api/libpod';
+} from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { IConfigurationNode } from '@desktop-framework/api/configuration';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '@desktop-framework/api/libpod';
+import type * as podmanDesktopAPI from '@desktop-framework/extension-api';
 import Dockerode from 'dockerode';
 import moment from 'moment';
 import { http, HttpResponse } from 'msw';

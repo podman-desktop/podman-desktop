@@ -74,7 +74,7 @@
     "test:e2e:managed-configuration:run": "node tests/playwright/scripts/run-e2e-suite.mjs managed-configuration -g @managed-configuration",
     "test:e2e:suite": "node tests/playwright/scripts/run-e2e-suite.mjs",
     "test:e2e:suite:build": "pnpm run test:e2e:build && pnpm run test:e2e:suite",
-    "test:core-api": "vitest --run --project=@podman-desktop/core-api --passWithNoTests",
+    "test:core-api": "vitest --run --project=@desktop-framework/api --passWithNoTests",
     "test:main": "vitest --run --project=@podman-desktop/main --passWithNoTests",
     "test:preload": "vitest --run --project=@podman-desktop/preload --passWithNoTests",
     "test:preload-docker-extension": "vitest --run --project=@podman-desktop/preload-docker-extension --passWithNoTests",

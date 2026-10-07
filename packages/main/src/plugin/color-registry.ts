@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ColorDefinition, ColorInfo, RawThemeContribution, ThemeInfo } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import type * as extensionApi from '@desktop-framework/extension-api';
-import type { ColorDefinition, ColorInfo, RawThemeContribution, ThemeInfo } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@podman-desktop/core-api",
+  "name": "@desktop-framework/api",
   "version": "1.31.0-next",
   "description": "API to be consumed by main/renderer/preload packages",
   "type": "module",

@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionUpdateInfo } from '@podman-desktop/core-api';
-import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
-import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { ExtensionUpdateInfo } from '@desktop-framework/api';
+import type { IConfigurationNode } from '@desktop-framework/api/configuration';
+import { IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { inject, injectable } from 'inversify';
 import { compare } from 'semver';
 

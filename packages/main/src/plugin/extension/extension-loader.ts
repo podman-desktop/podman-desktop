@@ -19,17 +19,17 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type {
   Event,
   ExtensionError,
   ExtensionInfo,
   ExtensionUpdateInfo,
   ImageInspectInfo,
-} from '@podman-desktop/core-api';
-import { DEFAULT_TIMEOUT, ExtensionLoaderSettings, IAsyncDisposable, PodInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api';
+import { DEFAULT_TIMEOUT, ExtensionLoaderSettings, IAsyncDisposable, PodInfo } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
 import { inject, injectable, preDestroy } from 'inversify';

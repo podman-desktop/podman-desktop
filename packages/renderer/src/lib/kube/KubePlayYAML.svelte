@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { ProviderContainerConnectionInfo } from '@desktop-framework/api';
+import { NavigationPage } from '@desktop-framework/api';
+import type { PlayKubeInput } from '@desktop-framework/api/libpod';
 import type { OpenDialogOptions } from '@desktop-framework/extension-api';
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
-import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
-import type { PlayKubeInput } from '@podman-desktop/core-api/libpod';
 import { Button, ButtonRow, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 

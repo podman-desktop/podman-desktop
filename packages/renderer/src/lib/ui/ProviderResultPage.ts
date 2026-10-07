@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ImageCheckerInfo } from '@desktop-framework/api';
 import type { ImageCheck } from '@desktop-framework/extension-api';
-import type { ImageCheckerInfo } from '@podman-desktop/core-api';
 
 export interface ProviderUI {
   info: ImageCheckerInfo;

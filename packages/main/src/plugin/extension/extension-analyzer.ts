@@ -20,8 +20,8 @@ import * as fs from 'node:fs';
 import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
+import type { OverriddenExtension } from '@desktop-framework/api';
 import type * as containerDesktopAPI from '@desktop-framework/extension-api';
-import type { OverriddenExtension } from '@podman-desktop/core-api';
 import { injectable } from 'inversify';
 import { z } from 'zod';
 

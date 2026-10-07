@@ -22,25 +22,6 @@
 
 import EventEmitter from 'node:events';
 
-import type * as containerDesktopAPI from '@desktop-framework/extension-api';
-import type {
-  Cluster,
-  Context,
-  KubernetesObject,
-  User,
-  V1ConfigMap,
-  V1CronJob,
-  V1Deployment,
-  V1Ingress,
-  V1Job,
-  V1NamespaceList,
-  V1Node,
-  V1PersistentVolumeClaim,
-  V1Pod,
-  V1PodList,
-  V1Secret,
-  V1Service,
-} from '@kubernetes/client-node';
 import type {
   CliToolInfo,
   ColorInfo,
@@ -134,28 +115,47 @@ import type {
   VolumeListInfo,
   WebviewInfo,
   WelcomeMessages,
-} from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { AuthenticationProviderInfo } from '@podman-desktop/core-api/authentication';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import type { ContextInfo } from '@podman-desktop/core-api/context';
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
-import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+} from '@desktop-framework/api';
+import { NavigationPage } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { AuthenticationProviderInfo } from '@desktop-framework/api/authentication';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
+import type { ContextInfo } from '@desktop-framework/api/context';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
+import type { FeaturedExtension } from '@desktop-framework/api/featured';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
   KubernetesGeneratorInfo,
   KubernetesGeneratorSelector,
-} from '@podman-desktop/core-api/kubernetes';
-import type { Guide } from '@podman-desktop/core-api/learning-center';
+} from '@desktop-framework/api/kubernetes';
+import type { Guide } from '@desktop-framework/api/learning-center';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
   PlayKubeInput,
-} from '@podman-desktop/core-api/libpod';
-import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
-import type { PinOption } from '@podman-desktop/core-api/status-bar';
+} from '@desktop-framework/api/libpod';
+import type { ExtensionBanner, RecommendedRegistry } from '@desktop-framework/api/recommendations';
+import type { PinOption } from '@desktop-framework/api/status-bar';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
+import type {
+  Cluster,
+  Context,
+  KubernetesObject,
+  User,
+  V1ConfigMap,
+  V1CronJob,
+  V1Deployment,
+  V1Ingress,
+  V1Job,
+  V1NamespaceList,
+  V1Node,
+  V1PersistentVolumeClaim,
+  V1Pod,
+  V1PodList,
+  V1Secret,
+  V1Service,
+} from '@kubernetes/client-node';
 import { contextBridge, ipcRenderer } from 'electron';
 
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;

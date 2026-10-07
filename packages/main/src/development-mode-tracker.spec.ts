@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ExtensionLoaderSettings } from '@desktop-framework/api';
 import type { Configuration } from '@desktop-framework/extension-api';
-import { ExtensionLoaderSettings } from '@podman-desktop/core-api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DevelopmentModeTracker } from './development-mode-tracker.js';

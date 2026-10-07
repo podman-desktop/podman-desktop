@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type {
   CancellationToken,
   Disposable,
@@ -24,8 +26,6 @@ import type {
   ImageChecks,
   ImageInfo,
 } from '@desktop-framework/extension-api';
-import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
 export interface ImageCheckerProviderWithMetadata {

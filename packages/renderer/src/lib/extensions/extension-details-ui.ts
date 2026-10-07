@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionError, ExtensionInfo, OverriddenExtension } from '@podman-desktop/core-api';
+import type { ExtensionError, ExtensionInfo, OverriddenExtension } from '@desktop-framework/api';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 

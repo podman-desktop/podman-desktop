@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ImageCheckerInfo } from '@desktop-framework/api';
 import type { ImageCheck } from '@desktop-framework/extension-api';
 import {
   faCheckSquare,
@@ -7,7 +8,6 @@ import {
   faExclamationTriangle,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import type { ImageCheckerInfo } from '@podman-desktop/core-api';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Snippet } from 'svelte';

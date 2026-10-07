@@ -19,8 +19,8 @@
 import * as nodeHttp from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { Configuration } from '@desktop-framework/extension-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { delay, http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import { createProxy } from 'proxy';

@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NavigationRequest } from '@desktop-framework/api';
+import { NavigationPage } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type {
   Event,
   Uri,
@@ -23,9 +26,6 @@ import type {
   WebviewPanel,
   WebviewPanelOnDidChangeViewStateEvent,
 } from '@desktop-framework/extension-api';
-import type { NavigationRequest } from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
 

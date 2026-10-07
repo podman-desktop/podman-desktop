@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import type {
   AuthenticationProvider,
   AuthenticationProviderAuthenticationSessionsChangeEvent,
@@ -23,8 +25,6 @@ import type {
   AuthenticationSessionAccountInformation,
   Event,
 } from '@desktop-framework/extension-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {

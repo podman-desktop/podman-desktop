@@ -15,8 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { TaskState, TaskStatus } from '@desktop-framework/api';
 import type { Event } from '@desktop-framework/extension-api';
-import type { TaskState, TaskStatus } from '@podman-desktop/core-api';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
 

@@ -21,7 +21,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type {
   BuildImageOptions as InternalBuildImageOptions,
   ContributionInfo,
@@ -29,9 +28,10 @@ import type {
   OnboardingInfo,
   PodInspectInfo,
   WebviewInfo,
-} from '@podman-desktop/core-api';
-import { ExtensionLoaderSettings, NavigationPage } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+} from '@desktop-framework/api';
+import { ExtensionLoaderSettings, NavigationPage } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 

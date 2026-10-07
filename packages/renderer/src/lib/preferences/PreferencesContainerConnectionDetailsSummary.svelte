@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { ProviderContainerConnectionInfo } from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { ContainerProviderConnection } from '@desktop-framework/extension-api';
-import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 
 import Donut from '/@/lib/donut/Donut.svelte';
 

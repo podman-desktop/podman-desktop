@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { OpenDialogOptions } from '@desktop-framework/extension-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 
 import FileInput from '/@/lib/ui/FileInput.svelte';
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ImageInfo, ViewInfoUI } from '@desktop-framework/api';
 import {
   faCircleArrowDown,
   faCloudDownload,
@@ -7,7 +8,6 @@ import {
   faTrash,
   faUpload,
 } from '@fortawesome/free-solid-svg-icons';
-import type { ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,

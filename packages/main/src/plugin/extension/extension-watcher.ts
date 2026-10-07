@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Event } from '@desktop-framework/api';
+import { IDisposable } from '@desktop-framework/api';
 import type { FileSystemWatcher, Uri } from '@desktop-framework/extension-api';
-import type { Event } from '@podman-desktop/core-api';
-import { IDisposable } from '@podman-desktop/core-api';
 import type { FileMatcher } from 'get-tsconfig';
 import { inject, injectable } from 'inversify';
 

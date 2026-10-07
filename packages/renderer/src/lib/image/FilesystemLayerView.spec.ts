@@ -17,8 +17,8 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import { FilesystemNode } from '@desktop-framework/api';
 import type { ImageFile } from '@desktop-framework/extension-api';
-import { FilesystemNode } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 

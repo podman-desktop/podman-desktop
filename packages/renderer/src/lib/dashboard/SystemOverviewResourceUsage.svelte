@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { ContainerProviderConnection } from '@desktop-framework/extension-api';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { ProgressBar } from '@podman-desktop/ui-svelte';
 import { filesize } from 'filesize';
 

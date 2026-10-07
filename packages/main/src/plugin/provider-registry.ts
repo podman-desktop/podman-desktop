@@ -17,6 +17,19 @@
  ***********************************************************************/
 
 import type {
+  Event,
+  LifecycleMethod,
+  PreflightChecksCallback,
+  ProviderCleanupActionInfo,
+  ProviderConnectionInfo,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+  ProviderKubernetesConnectionInfo,
+  ProviderVmConnectionInfo,
+} from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import type {
   AuditRequestItems,
   AuditResult,
   CancellationToken,
@@ -56,19 +69,6 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@desktop-framework/extension-api';
-import type {
-  Event,
-  LifecycleMethod,
-  PreflightChecksCallback,
-  ProviderCleanupActionInfo,
-  ProviderConnectionInfo,
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-  ProviderVmConnectionInfo,
-} from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
 import type { AutostartEngine } from './autostart-engine.js';

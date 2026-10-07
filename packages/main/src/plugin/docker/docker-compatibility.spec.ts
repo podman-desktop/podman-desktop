@@ -19,9 +19,9 @@
 import type { Stats } from 'node:fs';
 import { promises } from 'node:fs';
 
+import type { DockerSocketServerInfoType, ProviderInfo } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { ProviderContainerConnection } from '@desktop-framework/extension-api';
-import type { DockerSocketServerInfoType, ProviderInfo } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type * as Dockerode from 'dockerode';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 

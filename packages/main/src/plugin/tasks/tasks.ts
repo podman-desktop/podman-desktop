@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { TaskState, TaskStatus } from '@desktop-framework/api';
 import type { Disposable, Event } from '@desktop-framework/extension-api';
-import type { TaskState, TaskStatus } from '@podman-desktop/core-api';
 
 export interface TaskAction {
   name: string;

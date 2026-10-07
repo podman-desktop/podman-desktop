@@ -19,8 +19,8 @@
 import type { ClientRequest, IncomingMessage, RequestOptions } from 'node:http';
 import { get } from 'node:https';
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { Configuration } from '@desktop-framework/extension-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { app, shell } from 'electron';
 import { type AppUpdater, autoUpdater, type UpdateCheckResult, type UpdateDownloadedEvent } from 'electron-updater';
 import type { AppUpdaterEvents } from 'electron-updater/out/AppUpdater.js';

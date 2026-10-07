@@ -19,15 +19,15 @@
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
-import type { PullEvent } from '@desktop-framework/extension-api';
 import type {
   ImageUpdateInfo,
   NotificationCardOptions,
   ProviderContainerConnectionInfo,
   ProviderInfo,
-} from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+} from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { PlayKubeInfo } from '@desktop-framework/api/libpod';
+import type { PullEvent } from '@desktop-framework/extension-api';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';

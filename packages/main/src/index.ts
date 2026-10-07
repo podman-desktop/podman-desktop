@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { Event } from '@podman-desktop/core-api';
+import type { Event } from '@desktop-framework/api';
 import { app, ipcMain, Menu, Tray } from 'electron';
 
 import { restoreWindow } from '/@/mainWindow.js';

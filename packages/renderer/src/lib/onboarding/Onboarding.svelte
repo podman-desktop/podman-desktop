@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { OnboardingInfo, OnboardingStepItem } from '@desktop-framework/api';
 import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faForward } from '@fortawesome/free-solid-svg-icons';
-import type { OnboardingInfo, OnboardingStepItem } from '@podman-desktop/core-api';
 import { Button, ButtonRow, Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';

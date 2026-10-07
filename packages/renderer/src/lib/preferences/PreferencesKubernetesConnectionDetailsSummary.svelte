@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { ProviderKubernetesConnectionInfo } from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { KubernetesProviderConnection } from '@desktop-framework/extension-api';
-import type { ProviderKubernetesConnectionInfo } from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 

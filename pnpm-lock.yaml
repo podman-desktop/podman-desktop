@@ -737,15 +737,15 @@ importers:
 
   packages/main:
     dependencies:
+      '@desktop-framework/api':
+        specifier: workspace:*
+        version: link:../api
       '@expo/sudo-prompt':
         specifier: ^9.3.2
         version: 9.3.2
       '@kubernetes/client-node':
         specifier: ^2.0.0
         version: 2.0.0(supports-color@8.1.1)
-      '@podman-desktop/core-api':
-        specifier: workspace:*
-        version: link:../api
       '@segment/analytics-node':
         specifier: ^3.1.0
         version: 3.1.0
@@ -891,7 +891,7 @@ importers:
 
   packages/preload:
     dependencies:
-      '@podman-desktop/core-api':
+      '@desktop-framework/api':
         specifier: workspace:*
         version: link:../api
       electron:
@@ -907,7 +907,7 @@ importers:
 
   packages/preload-docker-extension:
     dependencies:
-      '@podman-desktop/core-api':
+      '@desktop-framework/api':
         specifier: workspace:*
         version: link:../api
       electron:
@@ -923,7 +923,7 @@ importers:
 
   packages/preload-webview:
     devDependencies:
-      '@podman-desktop/core-api':
+      '@desktop-framework/api':
         specifier: workspace:*
         version: link:../api
       '@podman-desktop/webview-api':
@@ -941,7 +941,7 @@ importers:
 
   packages/renderer:
     dependencies:
-      '@podman-desktop/core-api':
+      '@desktop-framework/api':
         specifier: workspace:*
         version: link:../api
       '@podman-desktop/ui-svelte':

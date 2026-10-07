@@ -20,9 +20,9 @@ import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 
+import type { ContributionInfo, IDisposable } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { RunResult } from '@desktop-framework/extension-api';
-import type { ContributionInfo, IDisposable } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as jsYaml from 'js-yaml';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 

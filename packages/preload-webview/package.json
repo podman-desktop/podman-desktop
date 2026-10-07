@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@podman-desktop/core-api": "workspace:*",
+    "@desktop-framework/api": "workspace:*",
     "@podman-desktop/webview-api": "workspace:*",
     "electron": "44.5.1",
     "vite": "^8.3.2",

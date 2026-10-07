@@ -18,8 +18,8 @@
 
 import * as fs from 'node:fs';
 
-import type { OnboardingState } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { OnboardingState } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
