@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
-import type { DisplayItem } from '@podman-desktop/core-api';
+import type { DisplayItem, MessageBoxOptions, MessageBoxReturnValue } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
@@ -26,6 +26,17 @@ import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 
 // items that can't be hidden
 const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
+
+// buttons of the confirmation shown the first time an item is hidden
+const HIDE_BUTTON = 'Hide';
+const DONT_SHOW_AGAIN_BUTTON = `Don't show again`;
+const CANCEL_BUTTON = 'Cancel';
+
+/**
+ * Shows the in-app message box. Electron's native dialog is deliberately not used: every
+ * confirmation in Podman Desktop goes through the application's own dialog component.
+ */
+export type ShowMessageBoxFn = (options: MessageBoxOptions) => Promise<MessageBoxReturnValue>;
 
 const EXPANDED_WIDTH = 160;
 
@@ -41,7 +52,10 @@ function leafName(name: string): string {
 export class NavigationItemsMenuBuilder {
   private navigationItems: DisplayItem[] = [];
 
-  constructor(private configurationRegistry: ConfigurationRegistry) {}
+  constructor(
+    private configurationRegistry: ConfigurationRegistry,
+    private showMessageBox: ShowMessageBoxFn,
+  ) {}
 
   receiveNavigationItems(data: DisplayItem[]): void {
     this.navigationItems = data;
@@ -71,7 +85,21 @@ export class NavigationItemsMenuBuilder {
     );
   }
 
+  /**
+   * True when the item leads to the page currently displayed. Such an item must stay in the
+   * navigation bar, otherwise the user would hide the page they are looking at and lose the
+   * way back to it.
+   */
+  protected isActiveItem(itemName: string): boolean {
+    return this.navigationItems.some(item => item.name === itemName && item.active === true);
+  }
+
   protected async updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
+    // defense in depth: the menu never offers this, but never hide a protected item
+    if (!visible && (EXCLUDED_ITEMS.includes(itemName) || this.isActiveItem(itemName))) {
+      return;
+    }
+
     let items = this.getDisabledItems();
     if (visible) {
       items = items.filter(i => i !== itemName);
@@ -79,6 +107,66 @@ export class NavigationItemsMenuBuilder {
       items.push(itemName);
     }
     await this.setDisabledItems(items);
+  }
+
+  protected isHideConfirmationDismissed(): boolean {
+    return this.getNavbarConfiguration().get<boolean>('hideConfirmationDismissed', false) === true;
+  }
+
+  protected async dismissHideConfirmation(): Promise<void> {
+    await this.configurationRegistry.updateConfigurationValue(
+      'navbar.hideConfirmationDismissed',
+      true,
+      CONFIGURATION_DEFAULT_SCOPE,
+    );
+  }
+
+  /**
+   * Asks the user to confirm the very first hide, so the item does not just vanish with no hint
+   * of how to bring it back. Answers to `Don't show again` are remembered and skip it from then on.
+   *
+   * @param itemName the plain item name; it is rendered by the in-app dialog and so must not be
+   * run through {@link escapeLabel}, which only exists for Electron menu labels
+   * @returns whether the item may be hidden
+   */
+  protected async confirmHide(itemName: string): Promise<boolean> {
+    if (this.isHideConfirmationDismissed()) {
+      return true;
+    }
+
+    const { response } = await this.showMessageBox({
+      type: 'question',
+      title: 'Hide From Navigation Bar',
+      message: `Hide "${itemName}" from the navigation bar?`,
+      detail: 'Right-click the navigation bar to show it again, or to reset the navigation bar entirely.',
+      buttons: [HIDE_BUTTON, DONT_SHOW_AGAIN_BUTTON, CANCEL_BUTTON],
+      defaultId: 0,
+      cancelId: 2,
+    });
+
+    // allowlist: `response` is undefined when the dialog is dismissed, and anything
+    // unrecognised must not be read as consent to hide
+    if (response !== HIDE_BUTTON && response !== DONT_SHOW_AGAIN_BUTTON) {
+      return false;
+    }
+
+    if (response === DONT_SHOW_AGAIN_BUTTON) {
+      await this.dismissHideConfirmation();
+    }
+
+    return true;
+  }
+
+  /**
+   * Single entry point for every visibility change the context menu offers, so the confirmation
+   * cannot be bypassed by reaching for one hide path rather than the other. Restoring an item is
+   * not destructive and never prompts.
+   */
+  protected async setItemVisibility(itemName: string, visible: boolean): Promise<void> {
+    if (!visible && !(await this.confirmHide(itemName))) {
+      return;
+    }
+    await this.updateNavbarHiddenItem(itemName, visible);
   }
 
   /** True when the item is currently present in the main nav (has an index / is in itemOrder). */
@@ -128,7 +216,7 @@ export class NavigationItemsMenuBuilder {
     // it's at the end with parenthesis like itemName (2)
     const itemName = this.computeItemName(rawItemName);
 
-    if (EXCLUDED_ITEMS.includes(itemName) || isGroupedName(itemName)) {
+    if (EXCLUDED_ITEMS.includes(itemName) || isGroupedName(itemName) || this.isActiveItem(itemName)) {
       return undefined;
     }
 
@@ -139,8 +227,7 @@ export class NavigationItemsMenuBuilder {
       label: `Hide ${itemDisplayName}`,
       visible: true,
       click: (): void => {
-        // flag the item as being disabled
-        this.updateNavbarHiddenItem(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
+        this.setItemVisibility(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
       },
     };
     return item;
@@ -201,9 +288,11 @@ export class NavigationItemsMenuBuilder {
       label: this.escapeLabel(item.name),
       type: 'checkbox',
       checked: item.visible,
+      // the active item cannot be unchecked; a hidden item stays restorable even while active
+      enabled: !(item.visible && this.isActiveItem(item.name)),
       click: (): void => {
         // send the item to the frontend to show/hide it
-        this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
+        this.setItemVisibility(item.name, !item.visible).catch((e: unknown) =>
           console.error('error disabling item', e),
         );
       },
@@ -218,34 +307,31 @@ export class NavigationItemsMenuBuilder {
     return items;
   }
 
-  protected buildResetOrderMenuItem(): MenuItemConstructorOptions | undefined {
-    if (this.getItemOrder().length === 0) {
+  /**
+   * A single entry restoring the navigation bar to its defaults. Order and visibility used to be
+   * two separate entries, which made the user guess which of them held the customization they
+   * wanted gone; one entry covering both is what "reset" means to them.
+   *
+   * Offered only when something was actually customized, so the menu stays empty-handed otherwise.
+   */
+  protected buildResetNavigationBarMenuItem(): MenuItemConstructorOptions | undefined {
+    if (this.getItemOrder().length === 0 && this.getDisabledItems().length === 0) {
       return undefined;
     }
     return {
-      label: 'Reset Order',
+      label: 'Reset Navigation Bar',
       visible: true,
       click: (): void => {
-        this.resetNavbarItemOrder().catch((e: unknown) => console.error('error resetting item order', e));
+        this.resetNavigationBar().catch((e: unknown) => console.error('error resetting the navigation bar', e));
       },
     };
   }
 
-  protected buildShowAllMenuItem(): MenuItemConstructorOptions | undefined {
-    if (this.getDisabledItems().length === 0) {
-      return undefined;
-    }
-    return {
-      label: 'Show All',
-      visible: true,
-      click: (): void => {
-        this.setDisabledItems([]).catch((e: unknown) => console.error('error clearing hidden navigation items', e));
-      },
-    };
-  }
-
-  protected async resetNavbarItemOrder(): Promise<void> {
+  protected async resetNavigationBar(): Promise<void> {
+    // the `don't ask again` answer is a preference about being prompted, not part of the
+    // navigation bar layout, so it deliberately survives a reset
     await this.setItemOrder([]);
+    await this.setDisabledItems([]);
   }
 
   protected getNavWidth(): number {
@@ -270,13 +356,9 @@ export class NavigationItemsMenuBuilder {
       }
     }
     if (inMainNav) {
-      const resetMenu = this.buildResetOrderMenuItem();
+      const resetMenu = this.buildResetNavigationBarMenuItem();
       if (resetMenu) {
         items.push(resetMenu);
-      }
-      const showAllMenu = this.buildShowAllMenuItem();
-      if (showAllMenu) {
-        items.push(showAllMenu);
       }
       items.push(...this.buildNavigationToggleMenuItems());
     }
