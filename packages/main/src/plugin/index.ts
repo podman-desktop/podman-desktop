@@ -275,17 +275,11 @@ export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
  * Subset of Electron's WebContents used by PluginSystem for IPC sends.
  * Keeps the coupling narrow so the class never depends on the full WebContents surface.
  */
-export interface MainWindowWebContentsSender {
+interface MainWindowWebContentsSender {
   send(channel: string, ...args: unknown[]): void;
   on(eventName: 'dom-ready', listener: () => void): void;
   isDestroyed(): boolean;
 }
-
-const DestroyedWebContentsSender: MainWindowWebContentsSender = {
-  send: () => {},
-  on: () => {},
-  isDestroyed: () => true,
-};
 
 export interface LoggerWithEnd extends containerDesktopAPI.Logger {
   // when task is finished, this function is called
@@ -293,6 +287,13 @@ export interface LoggerWithEnd extends containerDesktopAPI.Logger {
 }
 
 export class PluginSystem {
+  // used when no window is available anymore, so sends are simply dropped
+  private static readonly DESTROYED_WEB_CONTENTS_SENDER: MainWindowWebContentsSender = {
+    send: (): void => {},
+    on: (): void => {},
+    isDestroyed: (): boolean => true,
+  };
+
   // ready is when we've finished to initialize extension system
   private isReady = false;
 
@@ -320,7 +321,7 @@ export class PluginSystem {
 
   getWebContentsSender(): MainWindowWebContentsSender {
     const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
-    return window ? window.webContents : DestroyedWebContentsSender;
+    return window ? window.webContents : PluginSystem.DESTROYED_WEB_CONTENTS_SENDER;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
