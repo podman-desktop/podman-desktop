@@ -341,6 +341,30 @@ test('Should apiSender handle local receive events', async () => {
   expect(fooReceived).toBe('hello-world');
 });
 
+test('Should not send events to the renderer when there is no window left', async () => {
+  // no window available, so the api sender gets the no-op sender
+  vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
+  const apiSender = pluginSystem.getApiSender(pluginSystem.getWebContentsSender());
+
+  // ready on server side
+  pluginSystem.markAsReady();
+  // the no-op sender never emits dom-ready, so notify through the live webContents
+  // to reach the send path instead of the queueing one
+  emitter.emit('dom-ready');
+
+  let fooReceived = '';
+  apiSender.receive('foo', (data: unknown) => {
+    fooReceived = String(data);
+  });
+
+  // try to send data
+  expect(() => apiSender.send('foo', 'hello-world')).not.toThrow();
+
+  // local listeners are still notified, but nothing reaches the renderer
+  expect(fooReceived).toBe('hello-world');
+  expect(webContents.send).not.toHaveBeenCalledWith('api-sender', 'foo', 'hello-world');
+});
+
 test('Should return no AbortController if the token is undefined', async () => {
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const abortController = pluginSystem.createAbortControllerOnCancellationToken(cancellationTokenRegistry);
@@ -983,6 +1007,51 @@ describe('Log race condition fix', () => {
       logger.error('test');
       logger.onEnd();
     }).not.toThrow();
+  });
+});
+
+describe('getWebContentsSender', () => {
+  test('should return the webContents of the first window that is not destroyed', () => {
+    const destroyedWebContents = { send: vi.fn() } as unknown as WebContents;
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+      { isDestroyed: () => true, webContents: destroyedWebContents } as unknown as BrowserWindow,
+      { isDestroyed: () => false, webContents } as unknown as BrowserWindow,
+    ]);
+
+    expect(pluginSystem.getWebContentsSender()).toBe(webContents);
+  });
+
+  test('should return a no-op sender instead of throwing when there is no window', () => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
+
+    const sender = pluginSystem.getWebContentsSender();
+
+    expect(sender.isDestroyed()).toBe(true);
+    expect(() => sender.send('api-sender', 'foo')).not.toThrow();
+    expect(() => sender.on('dom-ready', vi.fn())).not.toThrow();
+  });
+
+  test('should return a no-op sender when every window is destroyed', () => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+      { isDestroyed: () => true, webContents } as unknown as BrowserWindow,
+    ]);
+
+    const sender = pluginSystem.getWebContentsSender();
+
+    expect(sender).not.toBe(webContents);
+    expect(sender.isDestroyed()).toBe(true);
+  });
+
+  test('should not report a send failure when logging while no window is available', () => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+
+    const logger = pluginSystem.getLogHandler('test-channel', 'test-logger');
+    logger.log('test');
+    logger.onEnd();
+
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
   });
 });
 
