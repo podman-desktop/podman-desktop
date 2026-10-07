@@ -237,7 +237,8 @@ function findNavigationEntry(
   const { path } = parseUrl(url);
 
   for (const entry of entries) {
-    const currentPath = [...parentPath, entry.name];
+    const entryParentPath = parentPath.length > 0 ? parentPath : entry.parentName ? [entry.parentName] : [];
+    const currentPath = entry.type === 'group' ? entryParentPath : [...entryParentPath, entry.name];
 
     // Check nested items (for groups and submenus)
     if (entry.items) {
@@ -307,6 +308,14 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
   const registry = get(navigationRegistry);
   const result = findNavigationEntry(url, registry);
   if (result) {
+    if (path === result.entry.link && result.entry.parentName) {
+      return { name: `${result.entry.parentName} > ${result.entry.name}`, icon: result.entry.icon };
+    }
+
+    if (path === result.entry.link && result.breadcrumb.length > 1) {
+      return { name: result.breadcrumb.join(' → '), icon: result.entry.icon };
+    }
+
     // Always use urlToDisplayName, passing registry breadcrumb for base routes
     return { name: urlToDisplayName(url, result.breadcrumb), icon: result.entry.icon };
   }

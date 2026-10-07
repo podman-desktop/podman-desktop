@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import type { KubernetesObject } from '@kubernetes/client-node';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@podman-desktop/core-api';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -31,16 +31,39 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
-import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
+import { navigationDragState } from './stores/navigation/navigation-drag-state.svelte';
+import { fetchNavigationRegistries, setNavigationItemOrder } from './stores/navigation/navigation-registry';
+import { createNavigationSecretEntry } from './stores/navigation/navigation-registry-secret.svelte';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
+vi.mock(import('./stores/navigation/navigation-registry-secret.svelte'));
 
 // fake the window object
 beforeAll(() => {
+  vi.mocked(createNavigationSecretEntry).mockReturnValue({
+    name: 'Tools',
+    link: '/tools',
+    tooltip: 'Tools',
+    type: 'submenu',
+    icon: {},
+    counter: 0,
+    destinations: [],
+    items: [
+      {
+        name: 'Nodes',
+        link: '/tools/nodes',
+        tooltip: 'Nodes',
+        type: 'entry',
+        counter: 0,
+        destinations: [],
+        icon: { iconImage: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>' },
+      },
+    ],
+  });
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
@@ -91,6 +114,21 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
   expect(volumes).toBeInTheDocument();
   const settings = screen.getByRole('link', { name: 'Settings' });
   expect(settings).toBeInTheDocument();
+});
+
+test('places reorder shortcut metadata on the focused navigation link', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  expect(containers).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
+  expect(containers).toHaveAttribute('title', expect.stringContaining('Arrow to move'));
+  expect(containers.closest('[role="listitem"]')).not.toHaveAttribute('aria-keyshortcuts');
 });
 
 test('Test contributions', () => {
@@ -217,4 +255,49 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+test('dragging a registered submenu child uses its canonical label and icon and pins it at the top', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(150);
+  await fetchNavigationRegistries();
+  const { unmount } = render(AppNavigation, {
+    meta: { url: '/' } as TinroRouteMeta,
+    exitSettingsCallback: (): void => {},
+  });
+  await vi.waitFor(() =>
+    expect(screen.getByRole('separator', { name: 'Resize navigation bar' })).toHaveAttribute('aria-valuenow', '150'),
+  );
+  const firstRow = screen.getAllByRole('listitem')[0];
+  firstRow.getBoundingClientRect = (): DOMRect => new DOMRect(0, 10, 150, 30);
+  navigationDragState.payload = { name: 'Wrong label', parentName: 'Wrong parent', link: '/tools/nodes' };
+  const ghost = await screen.findByTestId('nav-drag-ghost');
+  expect(ghost).toHaveTextContent('Tools > Nodes');
+  expect(ghost.querySelector('img')).toHaveAttribute(
+    'src',
+    'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>',
+  );
+
+  window.dispatchEvent(new PointerEvent('pointerup', { clientX: 0, clientY: 0 }));
+  await vi.waitFor(() => {
+    const links = screen.getByRole('region', { name: 'Scrollable navigation list' }).querySelectorAll('a');
+    expect(links[0]).toHaveAttribute('href', '/tools/nodes');
+    expect(links[0]).toHaveAccessibleName('Tools > Nodes');
+  });
+  expect(navigationDragState.payload).toBeUndefined();
+  unmount();
+  setNavigationItemOrder([]);
+});
+
+test('an unpinned Settings destination retains its own icon in the drag preview', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(150);
+  await fetchNavigationRegistries();
+  render(AppNavigation, {
+    meta: { url: '/' } as TinroRouteMeta,
+    exitSettingsCallback: (): void => {},
+  });
+  expect(screen.queryByRole('link', { name: 'Settings > Resources' })).not.toBeInTheDocument();
+  navigationDragState.payload = { name: 'Resources', parentName: 'Settings', link: '/preferences/resources' };
+  const ghost = await screen.findByTestId('nav-drag-ghost');
+  within(ghost).getByLabelText('Resources');
+  navigationDragState.payload = undefined;
 });
