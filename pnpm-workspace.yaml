@@ -83,6 +83,7 @@ overrides:
   http-cache-semantics@^4: ^4.3.0
   proxy-addr@^2: ^2.0.8
   tinypool: ^2.1.1
+  katex@^0: ^0.19.0
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true
