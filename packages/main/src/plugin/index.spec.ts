@@ -51,6 +51,7 @@ import { PluginSystem } from './index.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import type { MessageBox } from './message-box.js';
 import { NavigationManager } from './navigation/navigation-manager.js';
+import { SearchResultProviderRegistry } from './navigation/search-result-provider-registry.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { TaskImpl } from './tasks/task-impl.js';
 import { TaskManager } from './tasks/task-manager.js';
@@ -97,6 +98,9 @@ vi.mock(import('./container-registry.js'), importOriginal =>
 vi.mock(import('./tasks/task-manager.js'), importOriginal => mockOriginalClass(importOriginal, 'TaskManager'));
 vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
   mockOriginalClass(importOriginal, 'NavigationManager'),
+);
+vi.mock(import('./navigation/search-result-provider-registry.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'SearchResultProviderRegistry'),
 );
 vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
@@ -1342,4 +1346,46 @@ test('navigation:getSearchableRoutes handler should delegate to navigationManage
 
   expect(NavigationManager.prototype.getSearchableRoutes).toHaveBeenCalled();
   expect(result).toEqual({ result: mockRoutes });
+});
+
+test('navigation:searchDynamicProviders handler should delegate to searchResultProviderRegistry', async () => {
+  const mockResults = [{ label: 'Test', command: 'test.cmd', providerLabel: 'Provider' }];
+  vi.mocked(SearchResultProviderRegistry.prototype.search).mockResolvedValue(mockResults);
+
+  const handle = getHandler<(listener: undefined, query: string, maxResults: number) => Promise<{ result: unknown }>>(
+    'navigation:searchDynamicProviders',
+  );
+  const result = await handle(undefined, 'test query', 10);
+
+  expect(SearchResultProviderRegistry.prototype.search).toHaveBeenCalledWith('test query', 10);
+  expect(result).toEqual({ result: mockResults });
+});
+
+test('navigation:searchDynamicProviders handler should cap maxResults at 10', async () => {
+  vi.mocked(SearchResultProviderRegistry.prototype.search).mockResolvedValue([]);
+
+  const handle = getHandler<(listener: undefined, query: string, maxResults: number) => Promise<{ result: unknown }>>(
+    'navigation:searchDynamicProviders',
+  );
+  await handle(undefined, 'test query', 100);
+
+  expect(SearchResultProviderRegistry.prototype.search).toHaveBeenCalledWith('test query', 10);
+});
+
+test.each([
+  { query: 42, maxResults: 10 },
+  { query: 'query', maxResults: 0 },
+  { query: 'query', maxResults: -1 },
+  { query: 'query', maxResults: 1.5 },
+  { query: 'query', maxResults: Number.MAX_SAFE_INTEGER + 1 },
+  { query: 'query', maxResults: '10' },
+])('navigation:searchDynamicProviders handler should reject invalid arguments %#', async ({ query, maxResults }) => {
+  const handle = getHandler<
+    (listener: undefined, query: unknown, maxResults: unknown) => Promise<{ result?: unknown; error?: Error }>
+  >('navigation:searchDynamicProviders');
+  const result = await handle(undefined, query, maxResults);
+
+  expect(result.error).toBeInstanceOf(TypeError);
+  expect(result.error?.message).toBe('Invalid dynamic search arguments');
+  expect(SearchResultProviderRegistry.prototype.search).not.toHaveBeenCalled();
 });
