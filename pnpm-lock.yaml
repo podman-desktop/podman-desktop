@@ -1418,11 +1418,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^6.9.5
-        version: 6.9.5(@types/node@26.2.0)(supports-color@8.1.1)
+        specifier: ^6.9.6
+        version: 6.9.6(@types/node@26.2.0)(supports-color@8.1.1)
       '@argos-ci/playwright':
-        specifier: ^7.7.0
-        version: 7.7.0(@types/node@26.2.0)(supports-color@8.1.1)
+        specifier: ^7.7.1
+        version: 7.7.1(@types/node@26.2.0)(supports-color@8.1.1)
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -1539,29 +1539,29 @@ packages:
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
-  '@argos-ci/api-client@0.31.1':
-    resolution: {integrity: sha512-QkJ6/1xzoolhYqYYTtRH4iTc6FFY3TVtLyjb1BFytif4RsvW+uwozhZCU0oPDRxR2rCmBQD9miVB+km9nDhh7Q==}
+  '@argos-ci/api-client@0.31.2':
+    resolution: {integrity: sha512-ejVcvK4BsMmUSt4K/E+wtcAq7V4Tk2cOH7HdkLBEAQoRs1dLzjXIvvD8spthJ/UlIBhtVbiktDeTzB2dcO5/Dg==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/browser@6.5.0':
     resolution: {integrity: sha512-HvoY0tRgi5IESptSvugbLMANRsGiDIKTfG0WnSkWHpIAjq9KwKLgREImo8MbNU6E2t6WTomBGvVvkgPXuuSHdw==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/cli@6.9.5':
-    resolution: {integrity: sha512-cc9jxbGrT7BCeQlV4y9GfmbtNoULLQ+uy1+MOOm6YU7i1tYKWTUUcUnKJG87JBvqPUVAkjsQE9AMO09eKTri5w==}
+  '@argos-ci/cli@6.9.6':
+    resolution: {integrity: sha512-h4a/CQbBG4KyUJuxqMFI9LI4vdJq6NWNvcPXNQEh+JXUYpWKwlcj8edx8YJwuVWTyujIpnKEHsoMHi6fqjiX3g==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@argos-ci/core@6.8.6':
-    resolution: {integrity: sha512-B8xZUSocftDVc2pw2Su63e6KKPx928iQLLqNjV/xOTqnRrRGUAMnlezsHZZ/T6UpX1U9eRR3at/kDZa4bTVYmQ==}
+  '@argos-ci/core@6.8.7':
+    resolution: {integrity: sha512-usclV9hcOXNKk327diW5EQ2IvFhqG7e0RWGmv2e+d7JhX0SdrIh2mj3U5EAXvd1HcDEu0tOpeOnoX4HEE7IKFQ==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/playwright@7.7.0':
-    resolution: {integrity: sha512-cYB8jk0An7AKl0mTVljOFLydmNP9bF8nv+eXq6GE4Vps6fYf8u/BgK5hoYXSF4jkdufXyKchhT+VMScDtul1AA==}
+  '@argos-ci/playwright@7.7.1':
+    resolution: {integrity: sha512-UJcZFw5l+S8RKIxcerN7aUpd7sgexkMF7RZPGLDcSHQ/PaCnr92o1cReM5JV858g8t7xitzYy/w+nAhJouypew==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/util@4.2.1':
-    resolution: {integrity: sha512-TriX5ahqHmIZg8eiSkL/b7to29bybxZ1x8VRMxwW998RLuYrXqg73vUI+LrhD2zksAchS61KjuCcMF/AC6s7Aw==}
+  '@argos-ci/util@4.2.2':
+    resolution: {integrity: sha512-2gOelvXtZNqE25zSXh5jvqmgSvNfxY/9hP31XWm6vcQQSq4QGGeHaBSKjP2m/2P4formr3KCoAq+sl2FZg16aA==}
     engines: {node: '>=22.0.0'}
 
   '@asamuzakjp/css-color@7.0.0':
@@ -7851,10 +7851,6 @@ packages:
     resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
     engines: {node: '>=0.12'}
 
-  entities@8.0.0:
-    resolution: {integrity: sha512-zwfzJecQ/Uej6tusMqwAqU/6KL2XaB2VZ2Jg54Je6ahNBGNH6Ek6g3jjNCF0fG9EWQKGZNddNjU5F1ZQn/sBnA==}
-    engines: {node: '>=20.19.0'}
-
   entities@8.1.0:
     resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
     engines: {node: '>=20.19.0'}
@@ -13182,7 +13178,7 @@ snapshots:
       package-manager-detector: 1.3.0
       tinyexec: 1.3.1
 
-  '@argos-ci/api-client@0.31.1(supports-color@8.1.1)':
+  '@argos-ci/api-client@0.31.2(supports-color@8.1.1)':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       openapi-fetch: 0.17.0
@@ -13192,10 +13188,10 @@ snapshots:
 
   '@argos-ci/browser@6.5.0': {}
 
-  '@argos-ci/cli@6.9.5(@types/node@26.2.0)(supports-color@8.1.1)':
+  '@argos-ci/cli@6.9.6(@types/node@26.2.0)(supports-color@8.1.1)':
     dependencies:
-      '@argos-ci/api-client': 0.31.1(supports-color@8.1.1)
-      '@argos-ci/core': 6.8.6(@types/node@26.2.0)(supports-color@8.1.1)
+      '@argos-ci/api-client': 0.31.2(supports-color@8.1.1)
+      '@argos-ci/core': 6.8.7(@types/node@26.2.0)(supports-color@8.1.1)
       '@vercel/detect-agent': 1.2.5
       commander: 15.0.0
       open: 11.0.4
@@ -13204,10 +13200,10 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/core@6.8.6(@types/node@26.2.0)(supports-color@8.1.1)':
+  '@argos-ci/core@6.8.7(@types/node@26.2.0)(supports-color@8.1.1)':
     dependencies:
-      '@argos-ci/api-client': 0.31.1(supports-color@8.1.1)
-      '@argos-ci/util': 4.2.1
+      '@argos-ci/api-client': 0.31.2(supports-color@8.1.1)
+      '@argos-ci/util': 4.2.2
       convict: 6.2.5
       debug: 4.4.3(supports-color@8.1.1)
       fast-glob: 3.3.3
@@ -13219,18 +13215,18 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/playwright@7.7.0(@types/node@26.2.0)(supports-color@8.1.1)':
+  '@argos-ci/playwright@7.7.1(@types/node@26.2.0)(supports-color@8.1.1)':
     dependencies:
       '@argos-ci/browser': 6.5.0
-      '@argos-ci/core': 6.8.6(@types/node@26.2.0)(supports-color@8.1.1)
-      '@argos-ci/util': 4.2.1
+      '@argos-ci/core': 6.8.7(@types/node@26.2.0)(supports-color@8.1.1)
+      '@argos-ci/util': 4.2.2
       chalk: 6.0.1
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
 
-  '@argos-ci/util@4.2.1': {}
+  '@argos-ci/util@4.2.2': {}
 
   '@asamuzakjp/css-color@7.0.0':
     dependencies:
@@ -20518,8 +20514,6 @@ snapshots:
 
   entities@7.0.1: {}
 
-  entities@8.0.0: {}
-
   entities@8.1.0: {}
 
   env-paths@2.2.1: {}
@@ -23779,7 +23773,7 @@ snapshots:
 
   parse5@8.0.1:
     dependencies:
-      entities: 8.0.0
+      entities: 8.1.0
 
   parseurl@1.3.3: {}
 
