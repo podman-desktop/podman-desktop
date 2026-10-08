@@ -152,7 +152,7 @@ import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-
 import type { PinOption } from '@podman-desktop/core-api/status-bar';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
-import type { IpcMainEvent, WebContents } from 'electron';
+import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
@@ -269,12 +269,29 @@ const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpa
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
+/**
+ * Subset of Electron's WebContents used by PluginSystem for IPC sends.
+ * Keeps the coupling narrow so the class never depends on the full WebContents surface.
+ */
+interface MainWindowWebContentsSender {
+  send(channel: string, ...args: unknown[]): void;
+  on(eventName: 'dom-ready', listener: () => void): void;
+  isDestroyed(): boolean;
+}
+
 export interface LoggerWithEnd extends containerDesktopAPI.Logger {
   // when task is finished, this function is called
   onEnd: () => void;
 }
 
 export class PluginSystem {
+  // used when no window is available anymore, so sends are simply dropped
+  private static readonly DESTROYED_WEB_CONTENTS_SENDER: MainWindowWebContentsSender = {
+    send: (): void => {},
+    on: (): void => {},
+    isDestroyed: (): boolean => true,
+  };
+
   // ready is when we've finished to initialize extension system
   private isReady = false;
 
@@ -300,8 +317,29 @@ export class PluginSystem {
     });
   }
 
-  getWebContentsSender(): WebContents {
-    const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+  // the web contents can already be gone while the window is still listed, for example when the
+  // renderer process crashed, so both have to be checked before sending anything
+  private findMainWindow(): BrowserWindow | undefined {
+    return BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && !w.webContents.isDestroyed());
+  }
+
+  /**
+   * Sender for fire-and-forget sends, looked up for every send. It falls back to a sender doing
+   * nothing when the window is gone, so that streams still running while the application is being
+   * closed do not fail.
+   */
+  getWebContentsSender(): MainWindowWebContentsSender {
+    return this.findMainWindow()?.webContents ?? PluginSystem.DESTROYED_WEB_CONTENTS_SENDER;
+  }
+
+  /**
+   * Sender for the callers resolving it once and keeping the reference, like the api sender.
+   * Falling back to a sender doing nothing here would leave such a caller unable to ever reach the
+   * UI, so the missing window is reported instead.
+   * @throws when there is no window to send to
+   */
+  getRequiredWebContentsSender(): MainWindowWebContentsSender {
+    const window = this.findMainWindow();
     if (!window) {
       throw new Error('Unable to find the main window');
     }
@@ -398,12 +436,17 @@ export class PluginSystem {
     logTypes.forEach(logType => this.redirectConsole(logType));
   }
 
-  getApiSender(webContents: WebContents): ApiSenderType {
+  getApiSender(webContents: MainWindowWebContentsSender): ApiSenderType {
     const queuedEvents: { channel: string; data: unknown[] }[] = [];
 
     const flushQueuedEvents = (): void => {
       // flush queued events ?
       if (this.uiReady && this.isReady && queuedEvents.length > 0) {
+        // the window may have been destroyed while the events were queued, drop them instead of failing
+        if (webContents.isDestroyed()) {
+          queuedEvents.length = 0;
+          return;
+        }
         console.log(`Delayed startup, flushing ${queuedEvents.length} events`);
         queuedEvents.forEach(({ channel, data }) => {
           webContents.send('api-sender', channel, ...data);
@@ -517,7 +560,7 @@ export class PluginSystem {
     this.redirectLogging();
 
     // init api sender
-    const apiSender = this.getApiSender(this.getWebContentsSender());
+    const apiSender = this.getApiSender(this.getRequiredWebContentsSender());
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
