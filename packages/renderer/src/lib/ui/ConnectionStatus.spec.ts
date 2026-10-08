@@ -98,3 +98,9 @@ test('Expect no duration displayed when connection is stopped even if started ti
   const duration = screen.queryByLabelText('Connection Duration');
   expect(duration).not.toBeInTheDocument();
 });
+
+test('does not display a duration for an invalid started timestamp', () => {
+  render(ConnectionStatus, { status: 'started', started: Number.POSITIVE_INFINITY });
+
+  expect(screen.queryByLabelText('Connection Duration')).not.toBeInTheDocument();
+});

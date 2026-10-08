@@ -18,6 +18,12 @@ let { properties = [], providerInternalId, kubernetesConnectionInfo }: Props = $
 let duration: string = $state('');
 let refreshTimeout: ReturnType<typeof setTimeout> | undefined;
 
+/**
+ * Calculates the next refresh interval based on current uptime.
+ *
+ * @param uptimeInMs Current uptime in milliseconds
+ * @returns Milliseconds until the next timer tick
+ */
 function computeInterval(uptimeInMs: number): number {
   const SECOND = 1000;
   const MINUTE = SECOND * 60;
@@ -36,6 +42,7 @@ function computeInterval(uptimeInMs: number): number {
   return Math.ceil((uptimeInMs + 1) / DAY) * DAY - uptimeInMs;
 }
 
+/** Updates the displayed uptime and schedules its next refresh when started. */
 function refreshDuration(): void {
   if (refreshTimeout) {
     clearTimeout(refreshTimeout);
@@ -46,7 +53,7 @@ function refreshDuration(): void {
     return;
   }
   const uptimeInMs = moment().diff(kubernetesConnectionInfo.started);
-  if (uptimeInMs < 0) {
+  if (!Number.isFinite(uptimeInMs) || uptimeInMs < 0) {
     duration = '';
     return;
   }
@@ -73,9 +80,18 @@ onDestroy(() => {
   }
 });
 
-let startedTime = $derived(
-  kubernetesConnectionInfo?.started ? new Date(kubernetesConnectionInfo.started).toLocaleString() : '',
-);
+let startedTime = $derived.by(() => {
+  const started = kubernetesConnectionInfo?.started;
+  if (started === undefined || started === null || !Number.isFinite(started)) {
+    return '';
+  }
+  const date = new Date(started);
+  const time = date.getTime();
+  if (!Number.isFinite(time)) {
+    return '';
+  }
+  return date.toLocaleString();
+});
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $derived(
   await Promise.all(

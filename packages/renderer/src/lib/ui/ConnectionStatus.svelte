@@ -71,6 +71,12 @@ let statusStyle = $derived(
 let duration: string = $state('');
 let refreshTimeout: ReturnType<typeof setTimeout> | undefined;
 
+/**
+ * Calculates the next refresh interval based on current uptime.
+ *
+ * @param uptimeInMs Current uptime in milliseconds
+ * @returns Milliseconds until the next timer tick
+ */
 export function computeInterval(uptimeInMs: number): number {
   const SECOND = 1000;
   const MINUTE = SECOND * 60;
@@ -89,6 +95,7 @@ export function computeInterval(uptimeInMs: number): number {
   return Math.ceil((uptimeInMs + 1) / DAY) * DAY - uptimeInMs;
 }
 
+/** Updates the displayed uptime and schedules its next refresh when started. */
 function refreshDuration(): void {
   if (refreshTimeout) {
     clearTimeout(refreshTimeout);
@@ -99,7 +106,7 @@ function refreshDuration(): void {
     return;
   }
   const uptimeInMs = moment().diff(started);
-  if (uptimeInMs < 0) {
+  if (!Number.isFinite(uptimeInMs) || uptimeInMs < 0) {
     duration = '';
     return;
   }

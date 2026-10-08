@@ -728,6 +728,9 @@ export class ProviderRegistry {
     return this.getProviderConnectionInfo(connection) as ProviderVmConnectionInfo;
   }
 
+  /**
+   * Resolves connection details, falling back to registry lifecycle time when no valid provider start time is available.
+   */
   private getProviderConnectionInfo(connection: ProviderConnection): ProviderConnectionInfo {
     let providerConnection: ProviderConnectionInfo;
     const lifecycleError = this.connectionErrors.get(connection);
@@ -738,15 +741,23 @@ export class ProviderRegistry {
     const conn = connection as {
       started?: number | Date | string | (() => number | Date | string | undefined);
     };
-    const rawStarted = typeof conn.started === 'function' ? conn.started() : conn.started;
+    let rawStarted: number | Date | string | undefined;
+    try {
+      rawStarted = typeof conn.started === 'function' ? conn.started() : conn.started;
+    } catch (err: unknown) {
+      console.warn(`Cannot resolve started time for connection ${connection.name}`, err);
+    }
     if (rawStarted !== undefined && rawStarted !== null) {
-      if (typeof rawStarted === 'number' && !Number.isNaN(rawStarted)) {
+      if (typeof rawStarted === 'number' && Number.isFinite(rawStarted)) {
         started = rawStarted;
       } else if (rawStarted instanceof Date) {
-        started = rawStarted.getTime();
+        const time = rawStarted.getTime();
+        if (Number.isFinite(time)) {
+          started = time;
+        }
       } else if (typeof rawStarted === 'string') {
         const parsed = Date.parse(rawStarted);
-        if (!Number.isNaN(parsed)) {
+        if (Number.isFinite(parsed)) {
           started = parsed;
         }
       }

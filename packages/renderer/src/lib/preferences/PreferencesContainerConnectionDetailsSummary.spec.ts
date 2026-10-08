@@ -263,4 +263,19 @@ describe('resource metrics display', () => {
     expect(screen.queryByLabelText('Uptime')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Started at')).not.toBeInTheDocument();
   });
+
+  test('does not display invalid uptime or started dates', async () => {
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: {
+        ...podmanContainerConnection,
+        status: 'started',
+        started: Number.POSITIVE_INFINITY,
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getByLabelText('Uptime').textContent).toBe('');
+      expect(screen.getByLabelText('Started at').textContent).toBe('');
+    });
+  });
 });

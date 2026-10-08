@@ -3282,6 +3282,22 @@ describe('provider connection started property', () => {
     expect(providerRegistry.getProviderContainerConnectionInfo(connFn).started).toBe(fixedEpoch);
   });
 
+  test('handles started accessor function throwing an error safely', () => {
+    const connThrowing = {
+      name: 'conn-throw',
+      displayName: 'conn-throw',
+      type: 'podman' as const,
+      endpoint: { socketPath: '/throw.sock' },
+      status: (): ProviderConnectionStatus => 'started',
+      started: (): number => {
+        throw new Error('Failure accessing start time');
+      },
+    };
+    const info = providerRegistry.getProviderContainerConnectionInfo(connThrowing);
+    expect(info.started).toBeTypeOf('number');
+    expect(info.started).toBeGreaterThan(0);
+  });
+
   test('kubernetes and vm connections also resolve started', () => {
     const fixedIso = '2025-02-01T10:00:00.000Z';
     const k8sConn = {

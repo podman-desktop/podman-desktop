@@ -2678,6 +2678,7 @@ declare module '@podman-desktop/api' {
     ImageID: string;
     Command: string;
     Created: number;
+    StartedAt?: string;
     Ports: Port[];
     Labels: { [label: string]: string };
     State: string;
@@ -5324,4 +5325,3 @@ declare module '@podman-desktop/api' {
     onDidChange: Event<SecretStorageChangeEvent>;
   }
 }
-                        
