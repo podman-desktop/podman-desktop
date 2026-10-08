@@ -422,8 +422,10 @@ export class PodmanConfiguration {
     } else if (extensionApi.env.isWindows) {
       podmanConfigContainersPath = path.resolve(os.homedir(), 'AppData', 'Roaming', 'containers');
     } else if (extensionApi.env.isLinux) {
-      const xdgRuntimeDirectory = process.env['XDG_RUNTIME_DIR'] ?? '';
-      podmanConfigContainersPath = path.resolve(xdgRuntimeDirectory, 'containers');
+      const xdgConfigHome = process.env['XDG_CONFIG_HOME'];
+      podmanConfigContainersPath = xdgConfigHome
+        ? path.resolve(xdgConfigHome, 'containers')
+        : path.resolve(os.homedir(), '.config', 'containers');
     }
 
     // resolve the containers.conffile path
@@ -431,10 +433,6 @@ export class PodmanConfiguration {
   }
 
   private async writeNewContainersConfigFile(content: string): Promise<void> {
-    if (extensionApi.env.isLinux && !process.env['XDG_RUNTIME_DIR']) {
-      throw new Error('Cannot create containers.conf: XDG_RUNTIME_DIR is not set');
-    }
-
     const location = this.getContainersFileLocation();
     await fs.promises.mkdir(path.dirname(location), { recursive: true });
     await fs.promises.writeFile(location, content);
