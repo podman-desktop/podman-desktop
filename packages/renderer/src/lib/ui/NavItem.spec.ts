@@ -44,6 +44,26 @@ test('Expect correct role and href', async () => {
   expect(element).toHaveClass('focus-visible:outline-[var(--pd-global-nav-icon-selected-highlight)]');
 });
 
+test.each([
+  { expanded: true, expectedTitle: 'Hold to reorder' },
+  { expanded: false, expectedTitle: undefined },
+])('shows the native title only when the custom navigation tooltip is hidden', ({ expanded, expectedTitle }) => {
+  render(NavItem, {
+    tooltip: 'Dashboard',
+    href: '/test',
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded,
+    title: 'Hold to reorder',
+  });
+
+  const link = screen.getByRole('link', { name: 'Dashboard' });
+  if (expectedTitle) {
+    expect(link).toHaveAttribute('title', expectedTitle);
+  } else {
+    expect(link).not.toHaveAttribute('title');
+  }
+});
+
 test('Expect selection styling', async () => {
   const tooltip = 'Dashboard';
   const href = '/test';
