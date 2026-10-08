@@ -11,7 +11,7 @@ interface Props {
   ignoreFocusOut?: boolean;
   onclose?: () => void;
   children?: Snippet;
-  tabindex?: string;
+  tabindex?: number;
 }
 
 let modal: HTMLDivElement;

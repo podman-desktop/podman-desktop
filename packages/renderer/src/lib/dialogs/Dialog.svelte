@@ -12,7 +12,7 @@ interface Props {
   validation?: Snippet;
   buttons?: Snippet;
   initialButtonFocus?: InitialButtonFocus;
-  tabindex?: string;
+  tabindex?: number;
 }
 
 let { title, onclose, icon, content, validation, buttons, initialButtonFocus = 'none', tabindex }: Props = $props();
