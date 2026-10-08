@@ -3353,4 +3353,34 @@ describe('provider connection started property', () => {
     const infoStopped = providerRegistry.getProviderContainerConnectionInfo(conn);
     expect(infoStopped.started).toBeUndefined();
   });
+
+  test('preserves fallback started time when stopping a connection fails', async () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    }) as ProviderImpl;
+    const dateNow = vi.spyOn(Date, 'now').mockReturnValue(1000);
+    const conn: ContainerProviderConnection = {
+      name: 'lifecycle-conn',
+      displayName: 'lifecycle-conn',
+      type: 'podman',
+      endpoint: { socketPath: '/endpoint.sock' },
+      status: () => 'started',
+      lifecycle: {
+        stop: async () => {
+          throw new Error('stop failed');
+        },
+      },
+    };
+    provider.registerContainerProviderConnection(conn);
+
+    const infoStarted = providerRegistry.getProviderContainerConnectionInfo(conn);
+    expect(infoStarted.started).toBe(1000);
+
+    dateNow.mockReturnValue(2000);
+    await providerRegistry.stopProviderConnection(provider.internalId, infoStarted);
+
+    expect(providerRegistry.getProviderContainerConnectionInfo(conn).started).toBe(1000);
+  });
 });

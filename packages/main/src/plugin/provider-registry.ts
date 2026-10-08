@@ -1356,9 +1356,9 @@ export class ProviderRegistry {
     }
 
     try {
-      this.connectionStartedTimes.delete(connection);
       this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'stopped');
       await lifecycle.stop(context, logHandler);
+      this.connectionStartedTimes.delete(connection);
       this.connectionErrors.delete(connection);
     } catch (err) {
       console.warn(`Can't stop connection ${provider.id}.${providerConnectionInfo.name}`, err);

@@ -64,11 +64,16 @@ function refreshDuration(): void {
     return;
   }
   const uptimeInMs = moment().diff(containerConnectionInfo.started);
-  if (!Number.isFinite(uptimeInMs) || uptimeInMs < 0) {
+  if (!Number.isFinite(uptimeInMs)) {
     duration = '';
     return;
   }
-  duration = humanizeDuration(uptimeInMs, { round: true, largest: 1 });
+  if (uptimeInMs < 0) {
+    duration = '';
+    refreshTimeout = setTimeout(refreshDuration, Math.min(-uptimeInMs, 2_147_483_647));
+    return;
+  }
+  duration = humanizeDuration(uptimeInMs, { largest: 1 });
   const interval = computeInterval(uptimeInMs);
   refreshTimeout = setTimeout(refreshDuration, interval);
 }

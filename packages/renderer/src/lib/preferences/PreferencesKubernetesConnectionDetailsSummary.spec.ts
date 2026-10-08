@@ -38,6 +38,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   console.error = originalConsoleError;
 });
 
@@ -159,4 +160,44 @@ test('does not display invalid uptime or started dates', async () => {
     expect(screen.getByLabelText('Uptime').textContent).toBe('');
     expect(screen.getByLabelText('Started at').textContent).toBe('');
   });
+});
+
+test('retries the uptime when the started timestamp is in the future', async () => {
+  vi.useFakeTimers();
+  const now = new Date('2025-01-01T00:00:00.000Z');
+  vi.setSystemTime(now);
+
+  const { container } = render(PreferencesKubernetesConnectionDetailsSummary, {
+    kubernetesConnectionInfo: {
+      ...kubernetesConnection,
+      status: 'started',
+      started: now.getTime() + 1000,
+    },
+  });
+  await vi.waitFor(() => expect(container.querySelector('[aria-label="Uptime"]')).not.toBeNull());
+  expect(container.querySelector('[aria-label="Uptime"]')?.textContent).toBe('');
+
+  await vi.advanceTimersByTimeAsync(1000);
+
+  expect(container.querySelector('[aria-label="Uptime"]')?.textContent).not.toBe('');
+});
+
+test('refreshes uptime at the next displayed-unit boundary', async () => {
+  vi.useFakeTimers();
+  const now = new Date('2025-01-01T00:00:00.000Z');
+  vi.setSystemTime(now);
+
+  const { container } = render(PreferencesKubernetesConnectionDetailsSummary, {
+    kubernetesConnectionInfo: {
+      ...kubernetesConnection,
+      status: 'started',
+      started: now.getTime() - 90_000,
+    },
+  });
+  await vi.waitFor(() => expect(container.querySelector('[aria-label="Uptime"]')).not.toBeNull());
+  expect(container.querySelector('[aria-label="Uptime"]')).toHaveTextContent('1 minute');
+
+  await vi.advanceTimersByTimeAsync(30_000);
+
+  expect(container.querySelector('[aria-label="Uptime"]')).toHaveTextContent('2 minutes');
 });
