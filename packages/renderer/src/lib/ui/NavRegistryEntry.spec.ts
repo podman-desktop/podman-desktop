@@ -55,6 +55,7 @@ test('Expect entry is rendered', async () => {
 
   const content = screen.queryByLabelText('Item1');
   expect(content).toBeInTheDocument();
+  expect(content).not.toHaveAttribute('aria-keyshortcuts');
 });
 
 test('Expect hidden entry is not rendered', async () => {
@@ -116,4 +117,26 @@ test('Expect entry to not have title when collapsed', async () => {
 
   const content = screen.queryByLabelText('Item1 title');
   expect(content).not.toBeInTheDocument();
+});
+
+test('Forwards reorder shortcut metadata to the navigation link', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, {
+    entry,
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded: false,
+    'aria-keyshortcuts': 'Control+ArrowUp Control+ArrowDown',
+  });
+
+  const link = screen.getByRole('link', { name: 'Item1' });
+  expect(link).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
 });
