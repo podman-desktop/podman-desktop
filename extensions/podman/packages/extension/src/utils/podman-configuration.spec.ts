@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanConfiguration } from './podman-configuration';
@@ -39,10 +40,12 @@ class TestPodmanConfiguration extends PodmanConfiguration {
 let podmanConfiguration: TestPodmanConfiguration;
 
 beforeEach(() => {
+  vi.mocked(extensionApi.env).isLinux = false;
   podmanConfiguration = new TestPodmanConfiguration(extensionContext);
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.resetAllMocks();
   vi.restoreAllMocks();
 });
@@ -248,6 +251,23 @@ describe('when the containers configuration directory does not exist', () => {
       expect(writeFileMock).toHaveBeenCalledWith(location, expect.stringContaining(expected));
     }
     expect(mkdirMock.mock.invocationCallOrder[0]).toBeLessThan(writeFileMock.mock.invocationCallOrder[0]);
+  });
+
+  test('does not create a directory in the working directory when XDG_RUNTIME_DIR is unset on Linux', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    vi.stubEnv('XDG_RUNTIME_DIR', undefined);
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    await expect(
+      podmanConfiguration.updateProxySettings({
+        httpProxy: 'http://localhost:3128',
+        httpsProxy: undefined,
+        noProxy: undefined,
+      }),
+    ).rejects.toThrow('Cannot create containers.conf: XDG_RUNTIME_DIR is not set');
+
+    expect(fs.promises.mkdir).not.toHaveBeenCalled();
+    expect(fs.promises.writeFile).not.toHaveBeenCalled();
   });
 });
 
