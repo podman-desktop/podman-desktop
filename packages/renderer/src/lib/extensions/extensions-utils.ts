@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
-import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+import type { OverriddenExtension } from '@desktop-framework/api';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
+import type { FeaturedExtension } from '@desktop-framework/api/featured';
 
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -48,6 +49,8 @@ export class ExtensionsUtils {
 
     let removable: boolean;
     let devMode: boolean;
+    let bundled: boolean;
+    let overrides: OverriddenExtension | undefined;
     let state: string;
     let icon: undefined | string | { light: string; dark: string };
     let iconRef: undefined | string;
@@ -70,6 +73,8 @@ export class ExtensionsUtils {
       type = matchingInstalledExtension.type;
       removable = matchingInstalledExtension.removable;
       devMode = matchingInstalledExtension.devMode;
+      bundled = matchingInstalledExtension.bundled;
+      overrides = matchingInstalledExtension.overrides;
       state = matchingInstalledExtension.state;
       icon = matchingInstalledExtension.icon;
       name = matchingInstalledExtension.name;
@@ -81,6 +86,7 @@ export class ExtensionsUtils {
       type = 'pd';
       removable = true;
       devMode = false; // catalog extensions are not in dev mode
+      bundled = false;
       state = 'downloadable';
       name = matchingCatalogExtension.extensionName;
 
@@ -97,6 +103,7 @@ export class ExtensionsUtils {
       type = 'pd';
       removable = false;
       devMode = false;
+      bundled = false;
       state = 'unknown';
       name = 'unknown';
     }
@@ -136,6 +143,8 @@ export class ExtensionsUtils {
       type,
       removable,
       devMode,
+      bundled,
+      overrides,
       state,
       icon,
       iconRef,

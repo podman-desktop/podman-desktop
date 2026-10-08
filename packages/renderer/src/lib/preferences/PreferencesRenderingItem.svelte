@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -49,7 +49,7 @@ const recordUI = $derived.by(() => {
   const breadCrumbUI = breadCrumb.replace(/\./g, ' > ').concat(':');
 
   return {
-    title: startCase(key),
+    title: record.displayName ?? startCase(key),
     breadCrumb: breadCrumbUI,
     description: record.description,
     markdownDescription: record.markdownDescription,

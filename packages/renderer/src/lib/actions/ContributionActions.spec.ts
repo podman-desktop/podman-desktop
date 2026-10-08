@@ -266,3 +266,22 @@ test('Expect custom icon on the contributed action', async () => {
 
   expect(iconItem).toHaveClass('fas fa-podman-desktop-icon-dummyIcon');
 });
+
+test('Expect FontAwesome CSS icon class on the contributed action', async () => {
+  render(ContributionActions, {
+    args: [],
+    contributions: [
+      {
+        command: 'dummy.command',
+        title: 'dummy-title',
+        icon: 'fas fa-circle-arrow-up',
+      },
+    ],
+    onError: () => {},
+    dropdownMenu: true,
+  });
+
+  const iconItem = screen.getByRole('img', { hidden: true });
+  expect(iconItem).toBeInTheDocument();
+  expect(iconItem).toHaveClass('fas fa-circle-arrow-up');
+});

@@ -1,13 +1,14 @@
 <script lang="ts">
+import type { Menu } from '@desktop-framework/api';
+import { MenuContext } from '@desktop-framework/api';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { Menu } from '@podman-desktop/core-api';
-import { MenuContext } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { setNetworkStatus } from '/@/stores/networks';
 
 import type { NetworkInfoUI } from './NetworkInfoUI';
 import UpdateNetworkDialog from './UpdateNetworkDialog.svelte';
@@ -27,12 +28,12 @@ let showUpdateNetworkDialog = $state(false);
 
 async function removeNetwork(): Promise<void> {
   const oldStatus = object.status;
-  object.status = 'DELETING';
+  setNetworkStatus(object.engineId, object.id, 'DELETING');
 
   try {
     await window.removeNetwork(object.engineId, object.id);
   } catch (error) {
-    object.status = oldStatus;
+    setNetworkStatus(object.engineId, object.id, oldStatus);
     await window.showMessageBox({
       title: 'Delete Network Failed',
       message: `Error while deleting network ${object.name}: ${error instanceof Error ? error.message : String(error)}`,

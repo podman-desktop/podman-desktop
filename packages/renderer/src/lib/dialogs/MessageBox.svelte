@@ -1,7 +1,7 @@
 <script lang="ts">
+import { type ButtonsType, type DialogType, type DropdownType, type IconButtonType } from '@desktop-framework/api';
 import { faCircle, faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faCircleExclamation, faInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { type ButtonsType, type DialogType, type DropdownType, type IconButtonType } from '@podman-desktop/core-api';
 import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
@@ -117,7 +117,8 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} onclose={onClose}>
+  <!-- for danger MessageBox, the initial focus will be on the cancel button (first one) while in all others types the focus will be on the default button (last one) -->
+  <Dialog title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? 'first' : 'last'}>
     {#snippet icon()}
       
         {#if type === 'error' || type === 'danger'}

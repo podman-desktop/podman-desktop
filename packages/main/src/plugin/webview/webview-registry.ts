@@ -20,9 +20,9 @@ import { existsSync } from 'node:fs';
 import type * as http from 'node:http';
 import { resolve } from 'node:path';
 
-import type * as podmanDesktopAPI from '@podman-desktop/api';
-import type { WebviewInfo, WebviewSimpleInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { WebviewInfo, WebviewSimpleInfo } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type * as podmanDesktopAPI from '@desktop-framework/extension-api';
 import type { Application } from 'express';
 import express from 'express';
 import { inject, injectable } from 'inversify';

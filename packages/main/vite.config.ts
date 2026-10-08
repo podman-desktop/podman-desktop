@@ -57,7 +57,6 @@ export default defineConfig({
         'tar-fs',
         'ssh2',
         '@segment/analytics-node',
-        'express',
         'isomorphic-ws',
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
       ],

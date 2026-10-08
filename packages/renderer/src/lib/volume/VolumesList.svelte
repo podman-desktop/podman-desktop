@@ -23,9 +23,8 @@ import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { providerInfos } from '/@/stores/providers';
-import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '/@/stores/volumes';
+import { fetchVolumesWithData, filtered, searchPattern, setVolumeStatus, volumeListInfos } from '/@/stores/volumes';
 
-import { VolumeUtils } from './volume-utils';
 import VolumeColumnActions from './VolumeColumnActions.svelte';
 import VolumeColumnName from './VolumeColumnName.svelte';
 import VolumeColumnStatus from './VolumeColumnStatus.svelte';
@@ -56,15 +55,10 @@ let providerConnections = $derived(
     .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
 );
 
-const volumeUtils = new VolumeUtils();
-
 let volumesUnsubscribe: Unsubscriber;
 onMount(async () => {
   volumesUnsubscribe = filtered.subscribe(value => {
-    const computedVolumes = value
-      .map(volumeListInfo => volumeListInfo.Volumes)
-      .flat()
-      .map(volume => volumeUtils.toVolumeInfoUI(volume));
+    const computedVolumes = value.map(volume => ({ ...volume }));
 
     // Map engineName, engineId and engineType from currentContainers to EngineInfoUI[]
     const engines = computedVolumes.map(container => {
@@ -112,7 +106,9 @@ async function deleteSelectedVolumes(): Promise<void> {
 
   // mark volumes for deletion
   bulkDeleteInProgress = true;
-  selectedVolumes.forEach(volume => (volume.status = 'DELETING'));
+  selectedVolumes.forEach(volume => {
+    setVolumeStatus(volume.engineId, volume.name, 'DELETING');
+  });
   volumes = volumes;
 
   await Promise.all(
@@ -205,7 +201,7 @@ function label(obj: VolumeInfoUI): string {
 
 <NavPage bind:searchTerm={searchTerm} title="volumes">
   {#snippet additionalActions()}
-    {#if $volumeListInfos.map(volumeInfo => volumeInfo.Volumes).flat().length > 0}
+    {#if $volumeListInfos.length > 0}
       <Prune type="volumes" engines={enginesList} />
 
       <Button
@@ -244,7 +240,7 @@ function label(obj: VolumeInfoUI): string {
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
-    {:else if $filtered.map(volumeInfo => volumeInfo.Volumes).flat().length === 0}
+    {:else if $filtered.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen icon={VolumeIcon} kind="volumes" bind:searchTerm={searchTerm} />
       {:else}

@@ -48,7 +48,7 @@ function handleKeydown(event: KeyboardEvent): void {
 
   {#if icon}
     <div aria-hidden="true" class="shrink-0">
-      <Icon icon={icon} class="h-10 w-10" />
+      <Icon icon={icon} class="h-10 w-10" title="{displayName} logo" />
     </div>
   {/if}
 

@@ -21,7 +21,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   BuildImageOptions as InternalBuildImageOptions,
   ContributionInfo,
@@ -29,9 +28,10 @@ import type {
   OnboardingInfo,
   PodInspectInfo,
   WebviewInfo,
-} from '@podman-desktop/core-api';
-import { ExtensionLoaderSettings, NavigationPage } from '@podman-desktop/core-api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+} from '@desktop-framework/api';
+import { ExtensionLoaderSettings, NavigationPage } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -355,6 +355,7 @@ vi.mock(import('node:fs/promises'));
 const readdirMock = vi.mocked(
   fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent<string>[]>,
 );
+const mkdirMock = vi.mocked(fs.promises.mkdir);
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
@@ -502,11 +503,11 @@ test('Should watch for files and load them at startup', async () => {
   extensionLoader.setPluginsScanDirectory(fakeDirectory);
 
   // mock fs.watch
-  const fsWatchMock = vi.spyOn(fs, 'watch');
+  const fsWatchMock = vi.mocked(fs.watch);
   fsWatchMock.mockReturnValue({} as fs.FSWatcher);
 
   // mock fs.existsSync
-  const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+  const fsExistsSyncMock = vi.mocked(fs.existsSync);
   fsExistsSyncMock.mockReturnValue(true);
 
   const ent1 = {
@@ -555,7 +556,7 @@ test('Should load file from watching scanning folder', async () => {
   extensionLoader.setWatchTimeout(50);
 
   // mock fs.watch
-  const fsWatchMock = vi.spyOn(fs, 'watch');
+  const fsWatchMock = vi.mocked(fs.watch);
   fsWatchMock.mockImplementation((filename: fs.PathLike, listener?: fs.WatchListener<string>): fs.FSWatcher => {
     watchFilename = filename;
     if (listener) {
@@ -565,7 +566,7 @@ test('Should load file from watching scanning folder', async () => {
   });
 
   // mock fs.existsSync
-  const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+  const fsExistsSyncMock = vi.mocked(fs.existsSync);
   fsExistsSyncMock.mockReturnValue(true);
 
   // mock fs.promises.readdir
@@ -623,6 +624,41 @@ test('Verify extension error leads to failed state', async () => {
     },
   );
   expect(extensionLoader.getExtensionState().get(id)).toBe('failed');
+});
+
+test('creates extension storage before activation', async () => {
+  const id = 'extension.id';
+  let extensionContext: containerDesktopAPI.ExtensionContext | undefined;
+  const activateMock = vi.fn((context: containerDesktopAPI.ExtensionContext) => {
+    extensionContext = context;
+  });
+
+  await extensionLoader.activateExtension(
+    {
+      id,
+      name: id,
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      bundled: false,
+      manifest: {} as unknown as ExtensionManifest,
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    { activate: activateMock },
+  );
+
+  const storagePath = path.resolve('/fake-extensions-storage-directory', id);
+  expect(mkdirMock).toHaveBeenCalledWith(storagePath, { recursive: true });
+  expect(extensionContext?.storagePath).toBe(storagePath);
+  const mkdirInvocation = mkdirMock.mock.invocationCallOrder[0];
+  const activateInvocation = activateMock.mock.invocationCallOrder[0];
+  expect(mkdirInvocation).toBeDefined();
+  expect(activateInvocation).toBeDefined();
+  expect(mkdirInvocation!).toBeLessThan(activateInvocation!);
 });
 
 test('Verify extension subscriptions are disposed when failed state reached', async () => {
@@ -2436,15 +2472,6 @@ describe('containerEngine', async () => {
           pull: false,
         },
       },
-      {
-        name: 'pull options as non-true string',
-        options: {
-          pull: 'false',
-        },
-        expected: {
-          pull: false,
-        },
-      },
     ] as Array<TestCase>)('$name', async ({ options, expected }) => {
       await api.containerEngine.buildImage('context', vi.fn(), options);
 
@@ -2858,6 +2885,123 @@ test('reload extensions', async () => {
 
   // wait the notification is disposed
   await vi.waitFor(() => expect(fakeDisposableObject.dispose).toBeCalled(), { timeout: 5_000 });
+});
+
+test('listExtensions should expose the bundled flag', async () => {
+  const extensionId = 'my.bundled.extension';
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'bundled-extension',
+    },
+    removable: false,
+    devMode: false,
+    bundled: true,
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const extensions = await extensionLoader.listExtensions();
+
+  expect(extensions.length).toBe(1);
+  expect(extensions[0]?.bundled).toBeTruthy();
+  expect(extensions[0]?.removable).toBeFalsy();
+});
+
+describe.each([
+  { name: 'the bundled flag', removable: false, bundled: true, overrides: undefined },
+  {
+    name: 'overrides',
+    removable: true,
+    bundled: false,
+    overrides: { id: 'my.bundled.extension', version: '1.0.0' },
+  },
+])('should forward $name to analyzeExtension', ({ removable, bundled, overrides }) => {
+  test('reloadExtension', async () => {
+    const extension = {
+      path: 'fakePath',
+      manifest: {
+        displayName: 'My Extension Display Name',
+      },
+      id: 'my.extensionId',
+      devMode: false,
+      bundled,
+      overrides,
+    } as unknown as AnalyzedExtension;
+
+    vi.spyOn(extensionLoader, 'deactivateExtension').mockResolvedValue(undefined);
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+    vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+    vi.mocked(notificationRegistry.addNotification).mockReturnValue({ dispose: vi.fn() } as unknown as Disposable);
+
+    await extensionLoader.reloadExtension(extension, removable);
+
+    expect(analyzeExtensionSpy).toBeCalledWith({
+      extensionPath: extension.path,
+      removable,
+      devMode: false,
+      bundled,
+      overrides,
+    });
+  });
+
+  test('startExtension', async () => {
+    const extensionId = 'my.extensionId';
+
+    configurationRegistryGetConfigurationMock.mockReturnValue({
+      get: (): string[] => [],
+    });
+
+    extensionLoader.setAnalyzedExtension(extensionId, {
+      id: extensionId,
+      path: 'fakePath',
+      manifest: {
+        name: 'my-extension',
+      },
+      removable,
+      devMode: false,
+      bundled,
+      overrides,
+    } as unknown as AnalyzedExtensionWithApi);
+
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    analyzeExtensionSpy.mockResolvedValue({} as unknown as AnalyzedExtensionWithApi);
+    vi.spyOn(extensionLoader, 'loadExtension').mockResolvedValue(undefined);
+
+    await extensionLoader.startExtension(extensionId);
+
+    expect(analyzeExtensionSpy).toBeCalledWith({
+      extensionPath: 'fakePath',
+      removable,
+      devMode: false,
+      bundled,
+      overrides,
+    });
+  });
+});
+
+test('listExtensions should expose overrides', async () => {
+  const extensionId = 'my.overrides.extension';
+
+  extensionLoader.setAnalyzedExtension(extensionId, {
+    id: extensionId,
+    path: 'fakePath',
+    manifest: {
+      name: 'overriding-extension',
+    },
+    removable: true,
+    devMode: false,
+    bundled: false,
+    overrides: { id: 'my.bundled.extension', version: '1.0.0' },
+  } as unknown as AnalyzedExtensionWithApi);
+
+  const extensions = await extensionLoader.listExtensions();
+
+  expect(extensions.length).toBe(1);
+  expect(extensions[0]?.overrides).toEqual({ id: 'my.bundled.extension', version: '1.0.0' });
+  expect(extensions[0]?.bundled).toBeFalsy();
+  expect(extensions[0]?.removable).toBeTruthy();
 });
 
 describe('init', () => {

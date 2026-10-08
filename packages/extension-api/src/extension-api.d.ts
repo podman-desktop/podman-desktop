@@ -191,8 +191,7 @@ declare module '@podman-desktop/api' {
 
     /**
      * An absolute file path in which the extension can store state.
-     * The directory might not exist on disk and creation is
-     * up to the extension.
+     * The directory is created before the extension is activated.
      */
     readonly storagePath: string;
 

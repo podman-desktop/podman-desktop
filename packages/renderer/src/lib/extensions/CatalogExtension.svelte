@@ -8,9 +8,16 @@ import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 
-export let catalogExtensionUI: CatalogExtensionInfoUI;
-export let oninstall: (extensionId: string) => void = () => {};
-export let ondetails: (extensionId: string) => void = () => {};
+interface Props {
+  catalogExtensionUI: CatalogExtensionInfoUI;
+  oninstall?: (extensionId: string) => void;
+  ondetails?: (extensionId: string) => void;
+}
+let {
+  catalogExtensionUI,
+  oninstall = (_extensionId: string): void => {},
+  ondetails = (_extensionId: string): void => {},
+}: Props = $props();
 
 function openExtensionDetails(): void {
   ondetails(catalogExtensionUI.id);

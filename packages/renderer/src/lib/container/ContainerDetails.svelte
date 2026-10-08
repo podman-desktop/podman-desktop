@@ -32,9 +32,7 @@ let { containerID }: Props = $props();
 let displayTty: boolean = $state(false);
 let hadContainer = false;
 
-// copy rather than hand the store's own element to ContainerActions, which writes
-// actionInProgress, actionError and state onto the container it is given
-let container: ContainerInfoUI | undefined = $derived(copyOf($containersInfos.find(c => c.id === containerID)));
+let container: ContainerInfoUI | undefined = $derived($containersInfos.find(c => c.id === containerID));
 
 $effect(() => {
   if (container) {
@@ -58,10 +56,6 @@ $effect(() => {
     router.goto($lastPage.path);
   }
 });
-
-function copyOf(cont: ContainerInfoUI | undefined): ContainerInfoUI | undefined {
-  return cont ? { ...cont } : undefined;
-}
 </script>
 
 {#if container}
@@ -108,7 +102,7 @@ function copyOf(cont: ContainerInfoUI | undefined): ContainerInfoUI | undefined 
           selected={isTabSelected($router.path, 'terminal')}
           url={getTabUrl($router.path, 'terminal')} />
         {#if displayTty}
-          <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
+          <Tab title="TTY" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
         {/if}
       {/if}
     {/snippet}
@@ -129,7 +123,7 @@ function copyOf(cont: ContainerInfoUI | undefined): ContainerInfoUI | undefined 
         <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
           <ContainerDetailsTerminal container={container} />
         </Route>
-        <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
+        <Route path="/tty" breadcrumb="TTY" navigationHint="tab">
           <ContainerDetailsTtyTerminal container={container} />
         </Route>
       {/if}

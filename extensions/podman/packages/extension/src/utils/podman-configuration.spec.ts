@@ -66,7 +66,7 @@ memory = 4096
   expect(found).toBeFalsy();
 });
 
-test('when enable rosetta is set to true and there is already a file with rosetta = false, remove it.', async () => {
+test('when enable rosetta is set to true and there is already a file with rosetta = false, write rosetta = true.', async () => {
   const configFileContent = `
 [machine]
 memory = 4096
@@ -74,14 +74,13 @@ rosetta = false
     `;
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   await podmanConfiguration.updateRosettaSetting(true);
 
   expect(fs.promises.writeFile).toHaveBeenCalledWith(
     podmanConfiguration.getContainersFileLocation(),
-    // Expect that the write file did not contain any rosetta references
-    expect.not.stringContaining('rosetta'),
+    expect.stringContaining('rosetta = true'),
   );
 });
 
@@ -93,7 +92,7 @@ rosetta = true
     `;
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   await podmanConfiguration.updateRosettaSetting(false);
 
@@ -103,21 +102,37 @@ rosetta = true
   );
 });
 
-test('if rosetta is set to true and the file does NOT exist, do not try and create the file.', async () => {
+test('if rosetta is set to true and the file does NOT exist, create the file with rosetta = true.', async () => {
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   await podmanConfiguration.updateRosettaSetting(true);
 
-  expect(fs.promises.writeFile).not.toHaveBeenCalled();
+  expect(fs.promises.writeFile).toHaveBeenCalledWith(
+    podmanConfiguration.getContainersFileLocation(),
+    expect.stringContaining('rosetta = true'),
+  );
+});
+
+test('if rosetta is set to false and the file does NOT exist, create the file with rosetta = false.', async () => {
+  vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+  vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
+  vi.mocked(fs.existsSync).mockReturnValue(false);
+
+  await podmanConfiguration.updateRosettaSetting(false);
+
+  expect(fs.promises.writeFile).toHaveBeenCalledWith(
+    podmanConfiguration.getContainersFileLocation(),
+    expect.stringContaining('rosetta = false'),
+  );
 });
 
 describe('isRosettaEnabled', () => {
   test('check rosetta is enabled', async () => {
     vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
     vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nrosetta=true');
-    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.mocked(fs.existsSync).mockReturnValue(true);
 
     const isEnabled = await podmanConfiguration.isRosettaEnabled();
 
@@ -127,7 +142,7 @@ describe('isRosettaEnabled', () => {
   test('check rosetta is enabled if file is not containing rosetta setting (default value is true)', async () => {
     vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
     vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
-    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.mocked(fs.existsSync).mockReturnValue(true);
 
     const isEnabled = await podmanConfiguration.isRosettaEnabled();
 
@@ -138,7 +153,7 @@ describe('isRosettaEnabled', () => {
     vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
     vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nrosetta=false');
 
-    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.mocked(fs.existsSync).mockReturnValue(true);
 
     const isEnabled = await podmanConfiguration.isRosettaEnabled();
 
@@ -151,7 +166,7 @@ test('when provider is set to applehv provider and there is already a file with 
   vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nprovider = "libkrun"');
 
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   await podmanConfiguration.updateMachineProviderSettings(VMTYPE.APPLEHV);
 
@@ -167,7 +182,7 @@ test('should update provider', async () => {
   vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nprovider = "applehv"');
 
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   await podmanConfiguration.updateMachineProviderSettings(VMTYPE.LIBKRUN);
 
@@ -182,7 +197,7 @@ test('if provider is set default one (on CLI) and the file does NOT exist, do no
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   await podmanConfiguration.updateMachineProviderSettings(VMTYPE.APPLEHV);
 

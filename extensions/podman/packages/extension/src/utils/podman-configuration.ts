@@ -172,14 +172,14 @@ export class PodmanConfiguration {
       configmaps: {},
     };
 
-    // If the file does NOT exist and useRosetta is being set as false, we will have to create the file and write rosetta = false
-    if (!useRosetta && !fs.existsSync(this.getContainersFileLocation())) {
+    if (!fs.existsSync(this.getContainersFileLocation())) {
+      // File does not exist — create it with the explicit rosetta value
       containersConfContent['machine'] = {
-        rosetta: false as boolean,
+        rosetta: useRosetta,
       };
       const content = toml.stringify(containersConfContent);
       await fs.promises.writeFile(this.getContainersFileLocation(), content);
-    } else if (fs.existsSync(this.getContainersFileLocation())) {
+    } else {
       // Read the file
       const containersConfigFile = await this.readContainersConfigFile();
       const tomlConfigFile = toml.parse(containersConfigFile);
@@ -201,15 +201,12 @@ export class PodmanConfiguration {
         containersConfContent['configmaps'] = tomlConfigFile.configmaps;
       }
 
-      // If useRosetta is true, edit containersConfContent['machine'] and remove the rosetta key if found.
-      // this is because rosetta is true by default and we don't need to set it in the file
-      if (useRosetta && containersConfContent['machine'] && 'rosetta' in containersConfContent['machine']) {
-        delete containersConfContent['machine']['rosetta'];
-      } else if (!useRosetta && containersConfContent['machine']) {
-        // If rosetta key does not exist, we need to add it
+      // Always write the rosetta value explicitly so that Podman CLI does not
+      // have to rely on its own default (which may differ across versions).
+      if (containersConfContent['machine']) {
         containersConfContent['machine'] = {
-          ...containersConfContent['machine'], // MAKE SURE we copy over the previous configuration
-          rosetta: false as boolean,
+          ...containersConfContent['machine'],
+          rosetta: useRosetta,
         };
       }
 

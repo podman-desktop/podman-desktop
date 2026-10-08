@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 // Combine PD and DD extensions being installed
-import type { ExtensionInfo } from '@podman-desktop/core-api';
+import type { ExtensionInfo } from '@desktop-framework/api';
 import { derived, type Readable } from 'svelte/store';
 
 import { contributions } from './contribs';
@@ -50,6 +50,7 @@ export const combinedInstalledExtensions: Readable<CombinedExtensionInfoUI[]> = 
         state: 'started',
         removable: true,
         devMode: false,
+        bundled: false,
         path: ext.storagePath,
         readme: ext.readme ?? '',
       };

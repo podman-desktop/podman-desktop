@@ -48,7 +48,7 @@ export class ContainerDetailsPage extends DetailsPage {
   static readonly KUBE_TAB = 'Kube';
   static readonly TERMINAL_TAB = 'Terminal';
   static readonly INSPECT_TAB = 'Inspect';
-  static readonly Tty_TAB = 'Tty';
+  static readonly TTY_TAB = 'TTY';
 
   constructor(page: Page, name: string) {
     super(page, name);
@@ -135,7 +135,7 @@ export class ContainerDetailsPage extends DetailsPage {
 
   async executeCommandInTty(command: string): Promise<void> {
     return test.step('Execute command in TTY terminal', async () => {
-      await this.activateTab(ContainerDetailsPage.Tty_TAB);
+      await this.activateTab(ContainerDetailsPage.TTY_TAB);
 
       await this.terminalInput.pressSequentially(command, { delay: 10 });
       await this.terminalInput.press('Enter');

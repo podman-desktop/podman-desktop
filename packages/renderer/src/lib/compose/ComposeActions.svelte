@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { Menu } from '@desktop-framework/api';
+import { MenuContext } from '@desktop-framework/api';
 import { faArrowsRotate, faFileCode, faPlay, faRocket, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { Menu } from '@podman-desktop/core-api';
-import { MenuContext } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
@@ -10,6 +10,7 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+import { setContainerStatus } from '/@/stores/containers';
 
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
@@ -54,16 +55,21 @@ function inProgress(inProgress: boolean, state?: string): void {
     compose.status = state;
   }
 
-  for (const container of compose.containers) {
-    container.actionInProgress = inProgress;
+  compose.containers.forEach(container => {
+    let containerActionError = container.actionError;
+    let containerState = container.state;
+
     // reset error when starting task
     if (inProgress) {
-      container.actionError = '';
+      containerActionError = '';
     }
     if (state) {
-      container.state = state;
+      containerState = state;
     }
-  }
+
+    setContainerStatus(container.engineId, container.id, containerState, inProgress, containerActionError);
+  });
+
   onUpdate(compose);
 }
 

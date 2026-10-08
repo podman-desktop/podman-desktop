@@ -16,10 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
+
+import { NetworkUtils } from '/@/lib/network/network-utils';
+import type { NetworkInfoUI } from '/@/lib/network/NetworkInfoUI';
 
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';
@@ -51,13 +53,23 @@ async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const networksListInfo: Writable<NetworkInspectInfo[]> = writable([]);
+export const networksListInfo: Writable<NetworkInfoUI[]> = writable([]);
 
-const listNetworks = (): Promise<NetworkInspectInfo[]> => {
-  return window.listNetworks();
+const networkUtils = new NetworkUtils();
+
+const listNetworks = async (): Promise<NetworkInfoUI[]> => {
+  return (await window.listNetworks()).map(network => networkUtils.toNetworkInfoUI(network));
 };
 
-export const networksEventStore = new EventStore<NetworkInspectInfo[]>(
+export function setNetworkStatus(engineId: string, networkId: string, status: string): void {
+  networksListInfo.update(networks =>
+    networks.map(network =>
+      network.id === networkId && network.engineId === engineId ? { ...network, status } : network,
+    ),
+  );
+}
+
+export const networksEventStore = new EventStore<NetworkInfoUI[]>(
   'networks',
   networksListInfo,
   checkForUpdate,

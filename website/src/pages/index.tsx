@@ -5,13 +5,13 @@ import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
-import Banner from '../components/5MBanner';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import { ExpandableFAQ } from '../components/ExpandableFAQ';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
+import { VendorCards } from '../components/Vendors';
 
 function Hero(): JSX.Element {
   return (
@@ -436,12 +436,12 @@ export default function Home(): JSX.Element {
       title="Podman Desktop - Containers and Kubernetes"
       description="Podman Desktop - An open source graphical tool for developing on containers and Kubernetes">
       <TailWindThemeSelector />
-      <Banner />
       <Hero />
       <MainFeatures />
       <Pods />
       <AdditionalFeatures />
       <Testimonials />
+      <VendorCards />
       <FAQ />
     </Layout>
   );

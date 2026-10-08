@@ -20,14 +20,14 @@ import { existsSync } from 'node:fs';
 import * as promises from 'node:fs/promises';
 import path from 'node:path';
 
-import type { Configuration } from '@podman-desktop/api';
 import type {
   ContainerInfo,
   ExploreFeature,
   ExtensionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
-} from '@podman-desktop/core-api';
+} from '@desktop-framework/api';
+import type { Configuration } from '@desktop-framework/extension-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
@@ -140,6 +140,7 @@ const extensionInfoMock: ExtensionInfo = {
   publisher: '',
   removable: false,
   devMode: false,
+  bundled: false,
   version: '',
   state: '',
   path: '',

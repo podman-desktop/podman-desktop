@@ -150,11 +150,6 @@ const config = {
     }
 
     if (context.electronPlatformName === 'win32') {
-      // add the win-ca package
-      context.packager.config.extraResources.push({
-        from: 'node_modules/win-ca/lib/roots.exe',
-        to: 'win-ca/roots.exe',
-      });
       // add podman installer
       if (context.arch === Arch.x64) {
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-amd64.msi`);
@@ -237,7 +232,7 @@ const config = {
     ],
     useWaylandFlags: 'false',
     artifactName: `${product.artifactName}-\${version}.\${ext}`,
-    runtimeVersion: '25.08',
+    runtimeVersion: '26.08',
     branch: 'main',
     files: [
       ['.flatpak-appdata.xml', '/share/metainfo/io.podman_desktop.PodmanDesktop.metainfo.xml'],

@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ExtensionInfo } from '@podman-desktop/core-api';
+import type { ExtensionInfo } from '@desktop-framework/api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { expect, test } from 'vitest';
@@ -34,6 +34,7 @@ test('Expect started icon', async () => {
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: false,
     version: '',
     state: 'started',
     readme: '',
@@ -60,6 +61,7 @@ test('Expect faded icon for other states', async () => {
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: false,
     version: '',
     readme: '',
     state: 'stopped',
@@ -86,6 +88,7 @@ test('Expect puzzle for missing icon', async () => {
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: false,
     version: '',
     readme: '',
     state: 'started',

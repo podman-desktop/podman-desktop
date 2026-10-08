@@ -57,6 +57,42 @@ export const containersInfos: Writable<ContainerInfoUI[]> = writable([]);
 
 const containerUtils = new ContainerUtils();
 
+export function setContainerStatus(
+  engineId: string,
+  containerId: string,
+  state: string,
+  actionInProgress: boolean = true,
+  actionError?: string,
+): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, state, actionInProgress: actionInProgress, actionError: actionError ?? '' }
+        : container,
+    ),
+  );
+}
+
+export function clearContainerActionInProgress(engineId: string, containerId: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, actionInProgress: false }
+        : container,
+    ),
+  );
+}
+
+export function setContainerActionError(engineId: string, containerId: string, error: string): void {
+  containersInfos.update(containers =>
+    containers.map(container =>
+      container.id === containerId && container.engineId === engineId
+        ? { ...container, actionError: error, actionInProgress: false, state: 'ERROR' }
+        : container,
+    ),
+  );
+}
+
 // use helper here as window methods are initialized after the store in tests
 const listContainers = async (): Promise<ContainerInfoUI[]> => {
   return (await window.listContainers()).map(containerInfo => containerUtils.getContainerInfoUI(containerInfo));

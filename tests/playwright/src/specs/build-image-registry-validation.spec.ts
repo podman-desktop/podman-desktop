@@ -93,86 +93,86 @@ test.afterEach(async ({ page }) => {
   await deleteImage(page, BASE_IMAGE);
 });
 
-test.describe
-  .serial('Build image registry validation verification', () => {
-    test('Build succeeds with validation disabled and no credentials', async ({ navigationBar }) => {
-      test.setTimeout(120_000);
+test.describe('Build image registry validation verification', () => {
+  test.describe.configure({ mode: 'serial' });
+  test('Build succeeds with validation disabled and no credentials', async ({ navigationBar }) => {
+    test.setTimeout(120_000);
 
-      const imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
 
-      const buildImagePage = await imagesPage.openBuildImage();
-      await playExpect(buildImagePage.heading).toBeVisible();
+    const buildImagePage = await imagesPage.openBuildImage();
+    await playExpect(buildImagePage.heading).toBeVisible();
 
-      await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
-      await buildImagePage.toggleRegistryValidation(false);
-      await buildImagePage.toggleRegistryValidation(true);
-      await buildImagePage.toggleRegistryValidation(false);
+    await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
+    await buildImagePage.toggleRegistryValidation(false);
+    await buildImagePage.toggleRegistryValidation(true);
+    await buildImagePage.toggleRegistryValidation(false);
 
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
+    const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
-      await playExpect
-        .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
-          timeout: 0,
-        })
-        .toBeTruthy();
-    });
-
-    test('Build succeeds with bad credentials when validation is enabled', async ({ navigationBar }) => {
-      test.setTimeout(120_000);
-
-      let imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      let buildImagePage = await imagesPage.openBuildImage();
-      await playExpect(buildImagePage.heading).toBeVisible();
-
-      await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
-
-      await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
-      const settingsBar = await navigationBar.openSettings();
-      const registriesPage = await settingsBar.openTabPage(RegistriesPage);
-      await playExpect(registriesPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => (await registriesPage.getRegistryRowByName(TEST_REGISTRY_DISPLAY_NAME)).isVisible(), {
-          timeout: 30_000,
-        })
-        .toBe(true);
-
-      imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      buildImagePage = await imagesPage.openBuildImage();
-      await playExpect(buildImagePage.heading).toBeVisible();
-
-      await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
-
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
-
-      await playExpect
-        .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
-          timeout: 0,
-        })
-        .toBeTruthy();
-    });
-
-    test('Build fails with bad credentials when validation is disabled', async ({ navigationBar }) => {
-      test.setTimeout(120_000);
-
-      const imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-
-      const buildImagePage = await imagesPage.openBuildImage();
-      await playExpect(buildImagePage.heading).toBeVisible();
-
-      await buildImagePage.toggleRegistryValidation(false);
-
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
-
-      await playExpect
-        .poll(async () => await updatedImagesPage.getImageRowByName(BUILD_IMAGE), {
-          timeout: 30_000,
-        })
-        .toBeFalsy();
-    });
+    await playExpect
+      .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
+        timeout: 0,
+      })
+      .toBeTruthy();
   });
+
+  test('Build succeeds with bad credentials when validation is enabled', async ({ navigationBar }) => {
+    test.setTimeout(120_000);
+
+    let imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    let buildImagePage = await imagesPage.openBuildImage();
+    await playExpect(buildImagePage.heading).toBeVisible();
+
+    await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
+
+    await injectInvalidCredentials(TEST_REGISTRY_URL, INVALID_USERNAME, INVALID_PASSWORD);
+    const settingsBar = await navigationBar.openSettings();
+    const registriesPage = await settingsBar.openTabPage(RegistriesPage);
+    await playExpect(registriesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => (await registriesPage.getRegistryRowByName(TEST_REGISTRY_DISPLAY_NAME)).isVisible(), {
+        timeout: 30_000,
+      })
+      .toBe(true);
+
+    imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    buildImagePage = await imagesPage.openBuildImage();
+    await playExpect(buildImagePage.heading).toBeVisible();
+
+    await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
+
+    const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
+
+    await playExpect
+      .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
+        timeout: 0,
+      })
+      .toBeTruthy();
+  });
+
+  test('Build fails with bad credentials when validation is disabled', async ({ navigationBar }) => {
+    test.setTimeout(120_000);
+
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const buildImagePage = await imagesPage.openBuildImage();
+    await playExpect(buildImagePage.heading).toBeVisible();
+
+    await buildImagePage.toggleRegistryValidation(false);
+
+    const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
+
+    await playExpect
+      .poll(async () => await updatedImagesPage.getImageRowByName(BUILD_IMAGE), {
+        timeout: 30_000,
+      })
+      .toBeFalsy();
+  });
+});

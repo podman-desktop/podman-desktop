@@ -20,7 +20,7 @@ import type {
   Configuration,
   ConfigurationChangeEvent,
   ConfigurationScope as PodmanDesktopApiConfigurationScope,
-} from '@podman-desktop/api';
+} from '@desktop-framework/extension-api';
 import { z } from 'zod';
 
 import type { IDisposable } from '/@/disposable.js';
@@ -66,6 +66,7 @@ export type ConfigurationScope = z.output<typeof ConfigurationScopeSchema>;
 
 const IConfigurationPropertySchemaSchema = z.object({
   id: z.string().optional(),
+  displayName: z.string().trim().min(1).regex(/\S/).optional(),
   type: z.union([IConfigurationPropertySchemaTypeSchema, z.array(IConfigurationPropertySchemaTypeSchema)]).optional(),
   default: z.unknown().optional(),
   group: z.string().optional(),

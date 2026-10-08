@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,15 @@
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
-import type { PullEvent } from '@podman-desktop/api';
-import type { NotificationCardOptions, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import type {
+  ImageUpdateInfo,
+  NotificationCardOptions,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+} from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { PlayKubeInfo } from '@desktop-framework/api/libpod';
+import type { PullEvent } from '@desktop-framework/extension-api';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
@@ -166,6 +171,7 @@ beforeEach(async () => {
   } as unknown as Task);
   vi.mocked(NavigationManager.prototype.navigateToResources).mockResolvedValue(undefined);
   vi.mocked(NavigationManager.prototype.navigateToProviderTask).mockResolvedValue(undefined);
+  vi.mocked(NavigationManager.prototype.navigateToProviderConnection).mockReturnValue(undefined);
   vi.mocked(NavigationManager.prototype.navigateToImageBuild).mockResolvedValue(undefined);
 
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
@@ -757,7 +763,8 @@ describe.each<{
           _loggerId: string,
         ) => Promise<void>
       >(handler);
-    await handle(undefined, 'internal1', { name: 'name1' } as unknown as PlayKubeInfo, 'logger');
+    const connectionInfo = { name: 'name1' } as unknown as ProviderContainerConnectionInfo;
+    await handle(undefined, 'internal1', connectionInfo, 'logger');
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
     assert(params, 'params should be defined');
@@ -767,7 +774,15 @@ describe.each<{
     const execute = params.action?.execute;
     assert(execute, 'execute should be defined');
     execute(new TaskImpl('task1id', 'task1name'));
-    expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+    // delete navigates back to resources, start/stop deep-link to the connection page
+    if (expectedActionName === 'Go to resources') {
+      expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+    } else {
+      expect(NavigationManager.prototype.navigateToProviderConnection).toHaveBeenCalledWith(
+        'internal1',
+        connectionInfo,
+      );
+    }
   });
 
   test(`${methodName} is called and is resolved`, async () => {
@@ -868,7 +883,7 @@ describe.each<{
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
     assert(params, 'params should be defined');
-    expect(params.title).toEqual('Creating name1 provider');
+    expect(params.title).toEqual('Updating name1 provider');
     expect(params.action?.name).toEqual('Open task');
 
     const execute = params.action?.execute;
@@ -950,7 +965,7 @@ describe.each<{
     expect(onEndMock).toHaveBeenCalled();
     expect(errorMock).toHaveBeenCalledWith(rejectError);
     expect(originalTask.status).toEqual('in-progress');
-    expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
+    expect(originalTask.error).toEqual('Something went wrong while updating container provider: Error: an error');
   });
 });
 
@@ -1140,6 +1155,60 @@ describe('checkImageUpdateStatus handler', () => {
       updateAvailable: false,
       message: 'Image is already the latest version',
     });
+  });
+});
+
+describe('updateImages handler', () => {
+  test('should delegate image updates to the container provider registry', async () => {
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: ImageUpdateInfo[],
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images: ImageUpdateInfo[] = [
+      { engineId: 'podman.podman-machine-default', image: 'nginx', tag: 'latest' },
+      { engineId: 'podman.podman-machine-default', image: 'redis', tag: '7' },
+    ];
+    const expectedResults = [
+      { imageRef: 'nginx', updated: true, status: 'updated', message: 'Image updated successfully' },
+      { imageRef: 'redis', updated: false, status: 'normal', message: 'Already up to date' },
+    ] as const;
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([...expectedResults]);
+
+    const result = await handle(undefined, images);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images, undefined);
+    expect(result.result).toEqual(expectedResults);
+  });
+
+  test('should forward an abort signal when a cancellation token id is passed', async () => {
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+    const { result: tokenId } = await createTokenHandler();
+
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: ImageUpdateInfo[],
+        cancellableTokenId?: number,
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images: ImageUpdateInfo[] = [{ engineId: 'podman.podman-machine-default', image: 'nginx', tag: 'latest' }];
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
+
+    await handle(undefined, images, tokenId);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledOnce();
+    const abortSignal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
+    expect(abortSignal).toBeInstanceOf(AbortSignal);
+    expect(abortSignal?.aborted).toBe(false);
+
+    await cancelTokenHandler(undefined, tokenId);
+
+    expect(abortSignal?.aborted).toBe(true);
   });
 });
 

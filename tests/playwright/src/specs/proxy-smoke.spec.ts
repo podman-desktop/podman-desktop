@@ -43,105 +43,105 @@ test.afterAll(async ({ navigationBar, runner }) => {
   await runner.close();
 });
 
-test.describe
-  .serial('Proxy settings ', { tag: ['@smoke', '@macos_sanity'] }, () => {
-    test.beforeEach(async ({ navigationBar }) => {
-      await navigationBar.openDashboard();
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.proxyTab.click();
-      await playExpect(proxyPage.heading).toBeVisible();
-    });
-
-    test('Proxy page assets and System proxy setup', async () => {
-      await playExpect(proxyPage.toggleProxyButton).toBeVisible();
-      await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.System);
-      await playExpect(proxyPage.httpProxy).not.toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
-      await playExpect(proxyPage.noProxy).not.toBeEnabled();
-      await playExpect(proxyPage.updateButton).toBeEnabled();
-    });
-
-    test('Manual proxy setup, validation and update', async () => {
-      await proxyPage.selectProxy(ProxyTypes.Manual);
-      await playExpect(proxyPage.httpProxy).toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).toBeEnabled();
-      await playExpect(proxyPage.noProxy).toBeEnabled();
-      // validation for http proxy input
-      await proxyPage.fillHttpProxy(invalidProxyUrl);
-      await playExpect(proxyPage.proxyAlert).toBeVisible();
-      await playExpect(proxyPage.proxyAlert).toContainText(`value ${invalidProxyUrl} should be an URL`, {
-        ignoreCase: true,
-      });
-      await proxyPage.fillHttpProxy(httpProxyUrl);
-      await playExpect(proxyPage.proxyAlert).not.toBeVisible();
-      // validation for https proxy input
-      await proxyPage.fillHttpsProxy(invalidProxyUrl);
-      await playExpect(proxyPage.proxyAlert).toBeVisible();
-      await playExpect(proxyPage.proxyAlert).toContainText(`value ${invalidProxyUrl} should be an URL`, {
-        ignoreCase: true,
-      });
-      await proxyPage.fillHttpsProxy(httpsProxyUrl);
-      await playExpect(proxyPage.proxyAlert).not.toBeVisible();
-      // check domains for no proxy
-      await proxyPage.fillNoProxy(hostsDomains);
-      await proxyPage.updateProxySettings();
-    });
-
-    test('Proxy settings persists when proxy page is switched', async () => {
-      // given that we always switch to dashboard and back to the proxy page in before each hook
-      // we should check previous test setup - manual proxy
-      await playExpect(proxyPage.toggleProxyButton).toBeVisible();
-      await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.Manual);
-      await playExpect(proxyPage.httpProxy).toBeEnabled();
-      await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
-      await playExpect(proxyPage.httpsProxy).toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
-      await playExpect(proxyPage.noProxy).toBeEnabled();
-      await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
-    });
-
-    test('Disabled proxy setup', async () => {
-      await proxyPage.selectProxy(ProxyTypes.Disabled);
-      await playExpect(proxyPage.httpProxy).not.toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
-      await playExpect(proxyPage.noProxy).not.toBeEnabled();
-      await playExpect(proxyPage.updateButton).toBeEnabled();
-      await proxyPage.updateProxySettings();
-    });
-
-    test('Re-enabled Manual proxy settings persisted', async () => {
-      await proxyPage.selectProxy(ProxyTypes.Disabled);
-      await playExpect(proxyPage.httpProxy).not.toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
-      await playExpect(proxyPage.noProxy).not.toBeEnabled();
-
-      await proxyPage.selectProxy(ProxyTypes.Manual);
-      await playExpect(proxyPage.httpProxy).toBeEnabled();
-      await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
-      await playExpect(proxyPage.httpsProxy).toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
-      await playExpect(proxyPage.noProxy).toBeEnabled();
-      await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
-    });
-
-    test('System proxy preserves manual values for re-use', async ({ navigationBar }) => {
-      await proxyPage.selectProxy(ProxyTypes.System);
-      await proxyPage.updateProxySettings();
-      await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.System);
-      await playExpect(proxyPage.httpProxy).not.toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
-      await playExpect(proxyPage.noProxy).not.toBeEnabled();
-      // navigate away and back to verify persistence
-      await navigationBar.openDashboard();
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.proxyTab.click();
-      await playExpect(proxyPage.heading).toBeVisible();
-      // manual proxy values are preserved in System mode for easy re-enablement
-      await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
-      await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
-      await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
-      await playExpect(proxyPage.httpProxy).not.toBeEnabled();
-      await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
-      await playExpect(proxyPage.noProxy).not.toBeEnabled();
-    });
+test.describe('Proxy settings ', { tag: ['@smoke', '@macos_sanity'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+  test.beforeEach(async ({ navigationBar }) => {
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.proxyTab.click();
+    await playExpect(proxyPage.heading).toBeVisible();
   });
+
+  test('Proxy page assets and System proxy setup', async () => {
+    await playExpect(proxyPage.toggleProxyButton).toBeVisible();
+    await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.System);
+    await playExpect(proxyPage.httpProxy).not.toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
+    await playExpect(proxyPage.noProxy).not.toBeEnabled();
+    await playExpect(proxyPage.updateButton).toBeEnabled();
+  });
+
+  test('Manual proxy setup, validation and update', async () => {
+    await proxyPage.selectProxy(ProxyTypes.Manual);
+    await playExpect(proxyPage.httpProxy).toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).toBeEnabled();
+    await playExpect(proxyPage.noProxy).toBeEnabled();
+    // validation for http proxy input
+    await proxyPage.fillHttpProxy(invalidProxyUrl);
+    await playExpect(proxyPage.proxyAlert).toBeVisible();
+    await playExpect(proxyPage.proxyAlert).toContainText(`value ${invalidProxyUrl} should be an URL`, {
+      ignoreCase: true,
+    });
+    await proxyPage.fillHttpProxy(httpProxyUrl);
+    await playExpect(proxyPage.proxyAlert).not.toBeVisible();
+    // validation for https proxy input
+    await proxyPage.fillHttpsProxy(invalidProxyUrl);
+    await playExpect(proxyPage.proxyAlert).toBeVisible();
+    await playExpect(proxyPage.proxyAlert).toContainText(`value ${invalidProxyUrl} should be an URL`, {
+      ignoreCase: true,
+    });
+    await proxyPage.fillHttpsProxy(httpsProxyUrl);
+    await playExpect(proxyPage.proxyAlert).not.toBeVisible();
+    // check domains for no proxy
+    await proxyPage.fillNoProxy(hostsDomains);
+    await proxyPage.updateProxySettings();
+  });
+
+  test('Proxy settings persists when proxy page is switched', async () => {
+    // given that we always switch to dashboard and back to the proxy page in before each hook
+    // we should check previous test setup - manual proxy
+    await playExpect(proxyPage.toggleProxyButton).toBeVisible();
+    await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.Manual);
+    await playExpect(proxyPage.httpProxy).toBeEnabled();
+    await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
+    await playExpect(proxyPage.httpsProxy).toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
+    await playExpect(proxyPage.noProxy).toBeEnabled();
+    await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
+  });
+
+  test('Disabled proxy setup', async () => {
+    await proxyPage.selectProxy(ProxyTypes.Disabled);
+    await playExpect(proxyPage.httpProxy).not.toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
+    await playExpect(proxyPage.noProxy).not.toBeEnabled();
+    await playExpect(proxyPage.updateButton).toBeEnabled();
+    await proxyPage.updateProxySettings();
+  });
+
+  test('Re-enabled Manual proxy settings persisted', async () => {
+    await proxyPage.selectProxy(ProxyTypes.Disabled);
+    await playExpect(proxyPage.httpProxy).not.toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
+    await playExpect(proxyPage.noProxy).not.toBeEnabled();
+
+    await proxyPage.selectProxy(ProxyTypes.Manual);
+    await playExpect(proxyPage.httpProxy).toBeEnabled();
+    await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
+    await playExpect(proxyPage.httpsProxy).toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
+    await playExpect(proxyPage.noProxy).toBeEnabled();
+    await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
+  });
+
+  test('System proxy preserves manual values for re-use', async ({ navigationBar }) => {
+    await proxyPage.selectProxy(ProxyTypes.System);
+    await proxyPage.updateProxySettings();
+    await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.System);
+    await playExpect(proxyPage.httpProxy).not.toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
+    await playExpect(proxyPage.noProxy).not.toBeEnabled();
+    // navigate away and back to verify persistence
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.proxyTab.click();
+    await playExpect(proxyPage.heading).toBeVisible();
+    // manual proxy values are preserved in System mode for easy re-enablement
+    await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
+    await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
+    await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
+    await playExpect(proxyPage.httpProxy).not.toBeEnabled();
+    await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
+    await playExpect(proxyPage.noProxy).not.toBeEnabled();
+  });
+});

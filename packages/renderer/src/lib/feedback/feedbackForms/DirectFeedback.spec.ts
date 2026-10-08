@@ -53,6 +53,31 @@ test('Expect that the button is disabled when loading the page', async () => {
   expect(button).toBeDisabled();
 });
 
+test('Expect smiley rating group to be exposed as a single-choice control', async () => {
+  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+
+  const group = await screen.findByRole('group', { name: 'How was your experience with Podman Desktop' });
+  expect(group).toBeInTheDocument();
+
+  for (const name of ['very-sad-smiley', 'sad-smiley', 'happy-smiley', 'very-happy-smiley']) {
+    const smiley = screen.getByRole('button', { name });
+    expect(smiley).toHaveAttribute('aria-pressed', 'false');
+  }
+});
+
+test('Expect aria-pressed to reflect the selected smiley and only that smiley', async () => {
+  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+  await screen.findByRole('button', { name: 'Send feedback' });
+
+  const sadSmiley = screen.getByRole('button', { name: 'sad-smiley' });
+  await fireEvent.click(sadSmiley);
+
+  expect(sadSmiley).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: 'very-sad-smiley' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: 'happy-smiley' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: 'very-happy-smiley' })).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('Expect that the button is enabled after clicking on a smiley', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
   const button = await screen.findByRole('button', { name: 'Send feedback' });

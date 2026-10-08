@@ -24,25 +24,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import type {
-  Cluster,
-  Context as KubernetesContext,
-  KubernetesObject,
-  User,
-  V1ConfigMap,
-  V1CronJob,
-  V1Deployment,
-  V1Ingress,
-  V1Job,
-  V1NamespaceList,
-  V1Node,
-  V1PersistentVolumeClaim,
-  V1Pod,
-  V1PodList,
-  V1Secret,
-  V1Service,
-} from '@kubernetes/client-node';
-import type * as containerDesktopAPI from '@podman-desktop/api';
-import type {
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -79,6 +60,8 @@ import type {
   ImageSearchResult,
   ImagesSaveOptions,
   ImageTagsListOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   ImageUpdateStatus,
   KubeContext,
   KubernetesContextResources,
@@ -127,29 +110,48 @@ import type {
   VolumeListInfo,
   WebviewInfo,
   WelcomeMessages,
-} from '@podman-desktop/core-api';
-import type { ApiSenderChannelMap } from '@podman-desktop/core-api/api-sender';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { AuthenticationProviderInfo } from '@podman-desktop/core-api/authentication';
+} from '@desktop-framework/api';
+import type { ApiSenderChannelMap } from '@desktop-framework/api/api-sender';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { AuthenticationProviderInfo } from '@desktop-framework/api/authentication';
 import {
   type IConfigurationPropertyRecordedSchema,
   IConfigurationRegistry,
-} from '@podman-desktop/core-api/configuration';
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
-import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+} from '@desktop-framework/api/configuration';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
+import type { FeaturedExtension } from '@desktop-framework/api/featured';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
   KubernetesGeneratorInfo,
   KubernetesGeneratorSelector,
-} from '@podman-desktop/core-api/kubernetes';
+} from '@desktop-framework/api/kubernetes';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
   PlayKubeInput,
-} from '@podman-desktop/core-api/libpod';
-import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
-import type { PinOption } from '@podman-desktop/core-api/status-bar';
+} from '@desktop-framework/api/libpod';
+import type { ExtensionBanner, RecommendedRegistry } from '@desktop-framework/api/recommendations';
+import type { PinOption } from '@desktop-framework/api/status-bar';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
+import type {
+  Cluster,
+  Context as KubernetesContext,
+  KubernetesObject,
+  User,
+  V1ConfigMap,
+  V1CronJob,
+  V1Deployment,
+  V1Ingress,
+  V1Job,
+  V1NamespaceList,
+  V1Node,
+  V1PersistentVolumeClaim,
+  V1Pod,
+  V1PodList,
+  V1Secret,
+  V1Service,
+} from '@kubernetes/client-node';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent, WebContents } from 'electron';
@@ -215,6 +217,7 @@ import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
+import { ExtensionInstaller } from './extension/extension-installer.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -225,7 +228,6 @@ import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
-import { ExtensionInstaller } from './install/extension-installer.js';
 import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
@@ -246,6 +248,7 @@ import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js'
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
+import { CIDetection } from './telemetry/ci-detection.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
@@ -560,6 +563,7 @@ export class PluginSystem {
     const exec = new Exec(proxy);
     container.bind<Exec>(Exec).toConstantValue(exec);
 
+    container.bind<CIDetection>(CIDetection).toSelf().inSingletonScope();
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
@@ -669,6 +673,7 @@ export class PluginSystem {
     containerfileParser.init();
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
+    providerRegistry.init();
     providerRegistry.registerAutostartEngine(autoStartEngine);
 
     providerRegistry.addProviderListener((name: string, providerInfo: ProviderInfo) => {
@@ -1300,7 +1305,6 @@ export class PluginSystem {
     this.ipcHandle(
       'container-provider-registry:createAndStartContainer',
       async (_listener, engine: string, options: ContainerCreateOptions): Promise<{ id: string }> => {
-        options.start = true;
         return containerProviderRegistry.createContainer(engine, options);
       },
     );
@@ -1381,6 +1385,17 @@ export class PluginSystem {
         localDigests: string[],
       ): Promise<ImageUpdateStatus> => {
         return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:updateImages',
+      async (_listener, images: ImageUpdateInfo[], cancellableTokenId?: number): Promise<ImageUpdateResult[]> => {
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          cancellableTokenId,
+        );
+        return containerProviderRegistry.updateImages(images, abortController?.signal);
       },
     );
 
@@ -2395,6 +2410,13 @@ export class PluginSystem {
       return extensionsCatalog.refreshCatalog();
     });
 
+    this.ipcHandle(
+      'catalog:fetchReadme',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<string> => {
+        return extensionsCatalog.fetchReadme(extensionId);
+      },
+    );
+
     this.ipcHandle('documentation:getItems', async (): Promise<DocumentationInfo[]> => {
       return documentationService.getDocumentationItems();
     });
@@ -2525,7 +2547,7 @@ export class PluginSystem {
           action: {
             name: 'Go to task >',
             execute: () => {
-              navigationManager.navigateToResources().catch((err: unknown) => console.error(err));
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
             },
           },
         });
@@ -2561,7 +2583,7 @@ export class PluginSystem {
           action: {
             name: 'Go to task >',
             execute: () => {
-              navigationManager.navigateToResources().catch((err: unknown) => console.error(err));
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
             },
           },
         });
@@ -2604,7 +2626,7 @@ export class PluginSystem {
         }
 
         const task = taskManager.createTask({
-          title: `Creating ${providerConnectionInfo.name} provider`,
+          title: `Updating ${providerConnectionInfo.name} provider`,
           action: {
             name: 'Open task',
             execute: () => {
@@ -2620,7 +2642,7 @@ export class PluginSystem {
             return result;
           })
           .catch((err: unknown) => {
-            task.error = `Something went wrong while creating container provider: ${err}`;
+            task.error = `Something went wrong while updating container provider: ${err}`;
             logger.error(err);
             throw err;
           })

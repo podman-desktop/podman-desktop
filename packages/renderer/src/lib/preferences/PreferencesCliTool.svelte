@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { CliToolInfo } from '@desktop-framework/api';
 import { faCircleArrowDown, faCircleArrowUp, faCircleXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { CliToolInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -14,28 +14,29 @@ import {
 } from './preferences-connection-rendering-task';
 import type { ILoadingStatus } from './Util';
 
-export let cliTool: CliToolInfo;
-let showError = false;
-let errorMessage = '';
-let newVersion: string | undefined = cliTool.newVersion;
-let cliToolUpdateStatus: ILoadingStatus;
-$: cliToolUpdateStatus = {
+interface Props {
+  cliTool: CliToolInfo;
+}
+let { cliTool }: Props = $props();
+
+let showError = $state<boolean>(false);
+let errorMessage = $state<string>('');
+let newVersion = $derived<string | undefined>(cliTool.newVersion);
+let cliToolUpdateStatus = $derived<ILoadingStatus>({
   inProgress: false,
   status: cliTool.canUpdate ? 'toUpdate' : 'unknown',
   action: 'update',
-};
-let cliToolInstallStatus: ILoadingStatus;
-$: cliToolInstallStatus = {
+});
+let cliToolInstallStatus = $derived<ILoadingStatus>({
   inProgress: false,
   status: cliTool.canInstall ? 'toInstall' : 'unknown',
   action: 'install',
-};
-let cliToolUninstallStatus: ILoadingStatus;
-$: cliToolUninstallStatus = {
+});
+let cliToolUninstallStatus = $derived<ILoadingStatus>({
   inProgress: false,
   status: cliTool.canInstall ? 'toUninstall' : 'unknown',
   action: 'uninstall',
-};
+});
 
 async function showTaskManager(): Promise<void> {
   // call the command show-task-manager'

@@ -19,17 +19,17 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   Event,
   ExtensionError,
   ExtensionInfo,
   ExtensionUpdateInfo,
   ImageInspectInfo,
-} from '@podman-desktop/core-api';
-import { DEFAULT_TIMEOUT, ExtensionLoaderSettings, IAsyncDisposable, PodInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api';
+import { DEFAULT_TIMEOUT, ExtensionLoaderSettings, IAsyncDisposable, PodInfo } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
 import { inject, injectable, preDestroy } from 'inversify';
@@ -281,6 +281,8 @@ export class ExtensionLoader implements IAsyncDisposable {
       path: extension.path,
       removable: extension.removable,
       devMode: extension.devMode,
+      bundled: extension.bundled,
+      overrides: extension.overrides,
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
@@ -688,6 +690,8 @@ export class ExtensionLoader implements IAsyncDisposable {
         extensionPath: extension.path,
         removable,
         devMode: extension.devMode,
+        bundled: extension.bundled,
+        overrides: extension.overrides,
       });
 
       if (!updatedExtension.error) {
@@ -1739,6 +1743,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     if (fs.existsSync(oldStoragePath) && !fs.existsSync(storagePath)) {
       await fs.promises.rename(oldStoragePath, storagePath);
     }
+    await fs.promises.mkdir(storagePath, { recursive: true });
 
     const secrets = this.safeStorageRegistry.getExtensionStorage(extension.id);
 
@@ -1885,6 +1890,8 @@ export class ExtensionLoader implements IAsyncDisposable {
         extensionPath: extension.path,
         removable: extension.removable,
         devMode: extension.devMode,
+        bundled: extension.bundled,
+        overrides: extension.overrides,
       });
 
       if (!analyzedExtension.error) {

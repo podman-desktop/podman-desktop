@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type GoToInfo, NavigationPage } from '@podman-desktop/core-api';
+import { type GoToInfo, NavigationPage } from '@desktop-framework/api';
 
 import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import { networksListInfo } from '/@/stores/networks';
@@ -32,9 +32,9 @@ export function createNavigationNetworkEntry(): NavigationRegistryEntry {
     destinations = [
       ...networks.map(network => ({
         page: NavigationPage.NETWORK as const,
-        parameters: { name: network.Name, engineId: network.engineId },
+        parameters: { name: network.name, engineId: network.engineId },
         icon: { iconComponent: NetworkIcon },
-        name: `Network: ${network.Name}`,
+        name: `Network: ${network.name}`,
       })),
       {
         page: NavigationPage.NETWORKS as const,

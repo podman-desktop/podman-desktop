@@ -1,24 +1,23 @@
 <script lang="ts">
-import { afterUpdate, onMount } from 'svelte';
+import { onMount } from 'svelte';
 
 import Route from '/@/Route.svelte';
 import { contributions } from '/@/stores/contribs';
 
-export let name: string;
-let source: string | undefined;
-let arch: string;
-let hostname: string;
-let platform: string;
+interface Props {
+  name: string;
+}
+let { name }: Props = $props();
 
-let preloadPath: string;
-$: currentContrib = $contributions.find(contrib => contrib.name === name);
+let currentContrib = $derived($contributions.find(contrib => contrib.name === name));
+let source: string | undefined = $derived(currentContrib?.uiUri);
+let arch: string = $state('');
+let hostname: string = $state('');
+let platform: string = $state('');
 
-$: webviewId = name.replaceAll(' ', '-');
+let preloadPath: string = $state('');
 
-afterUpdate(() => {
-  console.log('contribution', currentContrib);
-  source = currentContrib?.uiUri;
-});
+let webviewId = $derived(name.replaceAll(' ', '-'));
 
 onMount(async () => {
   // grab hostname, arch and platform
@@ -26,7 +25,6 @@ onMount(async () => {
   hostname = await window.getOsHostname();
   platform = await window.getOsPlatform();
   preloadPath = await window.getDDPreloadPath();
-  source = currentContrib?.uiUri;
 });
 
 window.events?.receive('dev-tools:open-extension', (extensionId: unknown) => {

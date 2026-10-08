@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { ProviderConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
+import type { ProviderConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@desktop-framework/api';
+import { NavigationPage } from '@desktop-framework/api';
 import { Tab } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
@@ -84,7 +84,12 @@ async function startConnectionProvider(
   connectionInfo: ProviderVmConnectionInfo,
   loggerHandlerKey: symbol,
 ): Promise<void> {
-  await window.startProviderConnectionLifecycle(provider.internalId, connectionInfo, loggerHandlerKey, eventCollect);
+  await window.startProviderConnectionLifecycle(
+    provider.internalId,
+    $state.snapshot(connectionInfo),
+    loggerHandlerKey,
+    eventCollect,
+  );
 }
 
 function updateConnectionStatus(

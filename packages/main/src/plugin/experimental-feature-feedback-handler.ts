@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IDisposable } from '@podman-desktop/core-api';
-import { IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { IDisposable } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
@@ -49,6 +50,8 @@ export class ExperimentalFeatureFeedbackHandler {
     private messageBox: MessageBox,
     @inject(Telemetry)
     private telemetry: Telemetry,
+    @inject(ApiSenderType)
+    private apiSender: ApiSenderType,
   ) {
     this.#configurationRegistry = this.configurationRegistry;
   }
@@ -123,8 +126,18 @@ export class ExperimentalFeatureFeedbackHandler {
         this.setReminder(configurationKey);
       }
     }
-    // When are all features set, show dialog
-    await this.showFeedbackDialog();
+    // The dialog is drawn by the renderer, and the renderer only mounts
+    // <MessageBox /> once it has received 'starting-extensions'. Showing it from
+    // here fires the event while nothing is listening, which is why the dialog
+    // was never seen. Waiting for 'extensions-started' means the renderer has
+    // been up long enough to have mounted it.
+    this.#disposables.push(
+      this.apiSender.receive('extensions-started', () => {
+        this.showFeedbackDialog().catch((err: unknown) =>
+          console.error('Unable to show the experimental feature feedback dialog', err),
+        );
+      }),
+    );
   }
 
   /**

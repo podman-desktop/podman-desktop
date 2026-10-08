@@ -20,7 +20,7 @@
 import { existsSync, unlink } from 'node:fs';
 import path from 'node:path';
 import { app, type LaunchItems } from 'electron';
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
 
 /**
  * On Windows, launching program automatically on startup is done via %APPDATA%\Roaming\Microsoft\Windows\Start Menu\Programs\Startup folder

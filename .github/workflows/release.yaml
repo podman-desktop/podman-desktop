@@ -153,7 +153,7 @@ jobs:
         with:
           ref: ${{ needs.tag.outputs.githubTag}}
 
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         name: Install pnpm
         with:
           run_install: false
@@ -182,7 +182,7 @@ jobs:
           sudo apt-get install flatpak-builder -y
           sudo apt-get install elfutils -y
           flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install flathub --no-static-deltas --user -y org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+          flatpak install flathub --no-static-deltas --user -y org.freedesktop.Platform//26.08 org.freedesktop.Sdk//26.08
       - name: Set macOS environment variables
         if: startsWith(matrix.os, 'macos')
         run: |
@@ -242,12 +242,15 @@ jobs:
           ref: ${{ needs.tag.outputs.githubTag}}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - name: create the pnpm store from the dependencies
         run: |
-          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:24 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
+          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:24 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 XDG_CACHE_HOME=/project/pnpm-metadata pnpm install --frozen-lockfile --store-dir pnpm-store"
           # now the store is in the pnpm-store directory
-          # create a tarball of the store
+          # pnpm-metadata contains the registry metadata cache (required by pnpm 12+ for offline installs)
+          # nest it inside pnpm-store to avoid filename conflicts after flatpak-builder strip-components=1
+          cp -r pnpm-metadata pnpm-store/pnpm-metadata
+          # create a tarball of the store and metadata cache
           echo "Creating the archive store-cache-pnpm-${{ matrix.arch }}.tgz"
           tar -czf store-cache-pnpm-${{ matrix.arch }}.tgz pnpm-store
 

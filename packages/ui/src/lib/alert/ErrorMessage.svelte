@@ -40,6 +40,11 @@ onMount(() => {
     class="text-[var(--pd-state-error)] p-1 flex flex-row items-center {className}"
     class:opacity-0={error === undefined || error === ''}>
     <Icon icon={faExclamationCircle} size='1.1x' class="cursor-pointer text-[var(--pd-state-error)]" />
-    <div role="alert" aria-label={ariaLabel ?? 'Error Message Content'} class="ml-2">{error}</div>
+    <!-- wrap-anywhere: an error is text nobody chose the length of — an SSL
+         error, a file path, a registry URL. A run with no spaces in it cannot
+         wrap, so it widens whatever contains it and spills out of a dialog.
+         Not break-all, which chops ordinary words mid-word too; anywhere breaks
+         only what would otherwise overflow. -->
+    <div role="alert" aria-label={ariaLabel ?? 'Error Message Content'} class="ml-2 wrap-anywhere">{error}</div>
   </div>
 {/if}

@@ -22,9 +22,8 @@ import { homedir } from 'node:os';
 import * as path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
-import type { Event, IDisposable, NotificationCardOptions } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { Event, IAsyncDisposable, IDisposable, NotificationCardOptions } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type {
   ConfigurationScope,
   IConfigurationChangeEvent,
@@ -32,12 +31,13 @@ import type {
   IConfigurationPropertyRecordedSchema,
   IConfigurationPropertySchema,
   IConfigurationRegistry,
-} from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api/configuration';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
-} from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api/configuration';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import { inject, injectable } from 'inversify';
 
 import product from '/@product.json' with { type: 'json' };
@@ -49,9 +49,10 @@ import { Emitter } from './events/emitter.js';
 import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
+import { AtomicFileWriter } from './util/atomic-file-writer.js';
 
 @injectable()
-export class ConfigurationRegistry implements IConfigurationRegistry {
+export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisposable {
   private readonly configurationContributors: IConfigurationNode[];
   private readonly configurationProperties: Record<string, IConfigurationPropertyRecordedSchema>;
 
@@ -68,6 +69,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   // Contains the value of the current configuration
   private configurationValues: Map<string, { [key: string]: unknown }>;
   private lockedKeys: LockedKeys;
+  #atomicWriter: AtomicFileWriter | undefined;
 
   constructor(
     @inject(ApiSenderType)
@@ -151,6 +153,18 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
     // Set the updated configuration data, this doesn't "save-to-disk" yet until we run saveDefault()...
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
+
+    this.#atomicWriter = new AtomicFileWriter(settingsFile, () => {
+      const cloneConfig = { ...this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE) };
+      // for each key being already the default value, remove the entry
+      Object.keys(cloneConfig)
+        .filter(key => isDeepStrictEqual(cloneConfig[key], this.configurationProperties[key]?.default))
+        .filter(key => this.configurationProperties[key]?.type !== 'markdown')
+        .forEach(key => {
+          delete cloneConfig[key];
+        });
+      return JSON.stringify(cloneConfig, undefined, 2);
+    });
 
     // Note: saveDefault() will filter out any keys that match the schema default, so only non-default values will actually be persisted to settings.json
     if (listOfAppliedKeys.length > 0) {
@@ -456,15 +470,11 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   }
 
   public saveDefault(): void {
-    const cloneConfig = { ...this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE) };
-    // for each key being already the default value, remove the entry
-    Object.keys(cloneConfig)
-      .filter(key => isDeepStrictEqual(cloneConfig[key], this.configurationProperties[key]?.default))
-      .filter(key => this.configurationProperties[key]?.type !== 'markdown')
-      .forEach(key => {
-        delete cloneConfig[key];
-      });
-    fs.writeFileSync(this.getSettingsFile(), JSON.stringify(cloneConfig, undefined, 2));
+    this.#atomicWriter?.schedule();
+  }
+
+  async asyncDispose(): Promise<void> {
+    await this.#atomicWriter?.asyncDispose();
   }
 
   /**

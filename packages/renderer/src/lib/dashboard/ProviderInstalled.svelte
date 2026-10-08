@@ -1,9 +1,9 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
+import type { CheckStatus, ProviderInfo } from '@desktop-framework/api';
+import { TerminalSettings } from '@desktop-framework/api/terminal';
 import { faList } from '@fortawesome/free-solid-svg-icons';
-import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
-import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { Button, Spinner } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
@@ -29,6 +29,8 @@ export let initializationContext: InitializationContext;
 
 let initializationButtonVisible: boolean;
 let initializeInProgress = false;
+
+let userToggle: boolean | undefined = undefined;
 
 let initializeError: string | undefined = undefined;
 
@@ -69,7 +71,8 @@ async function runChecks(): Promise<void> {
 
 // no initialize support, hide the button
 $: initializationButtonVisible =
-  provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization;
+  userToggle ??
+  (provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization);
 
 function showLastExecutionError(): void {
   initializeError = initializationContext.error;
@@ -84,7 +87,7 @@ async function initializeProvider(): Promise<void> {
   initializationContext.promise = window.initializeProvider(provider.internalId);
   initializationContext.promise.catch((error: unknown) => {
     initializationContext.error = String(error);
-    initializationButtonVisible = true;
+    userToggle = true;
     logsTerminal.write(error + '\r');
     console.error('Error while initializing the provider', error);
   });
@@ -157,7 +160,7 @@ function updateOptionsMenu(visible: boolean): void {
 
 async function onInstallationClick(): Promise<void> {
   initializeInProgress = true;
-  initializationButtonVisible = false;
+  userToggle = false;
   initializationContext.mode = installationOptionSelected as InitializationMode;
   await initializeProvider();
 }

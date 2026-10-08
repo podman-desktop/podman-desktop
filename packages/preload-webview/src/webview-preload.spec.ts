@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ColorInfo, ThemeInfo, WebviewInfo } from '@podman-desktop/core-api';
+import type { ColorInfo, ThemeInfo, WebviewInfo } from '@desktop-framework/api';
 import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
@@ -167,13 +167,11 @@ describe('ipcInvoke', () => {
 });
 
 describe('changeContent', () => {
-  const originalDocument = document;
   beforeEach(() => {
-    // spy document.write method
-    document = originalDocument.implementation.createHTMLDocument('');
+    vi.stubGlobal('document', document.implementation.createHTMLDocument(''));
   });
   afterEach(() => {
-    document = originalDocument;
+    vi.unstubAllGlobals();
   });
 
   test('check with light theme', async () => {

@@ -25,7 +25,7 @@ async function fetch(): Promise<void> {
 }
 </script>
 
-<Dialog title="Details of {eventStoreInfo.name}" onclose={closeCallback}>
+<Dialog title="Details of {eventStoreInfo.name}" onclose={closeCallback} initialButtonFocus="first">
   {#snippet content()}
     <div  class="inline-block w-full overflow-hidden overflow-y-auto text-left transition-all">
       <div class="flex flex-col rounded-lg">

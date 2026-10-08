@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
-import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
+import type { FeaturedExtension } from '@desktop-framework/api/featured';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
@@ -314,6 +314,34 @@ describe('extractExtensionDetail', () => {
     expect(extensionDetail).toBeDefined();
     expect(extensionDetail?.error?.message).toBe('An error occurred');
     expect(extensionDetail?.error?.stack).toBe('line1\nline2');
+  });
+
+  test('Check overrides is taken from the installed extension', async () => {
+    const overridingExtensions = [
+      {
+        id: 'idOverriding',
+        displayName: 'Overriding Extension',
+        removable: true,
+        bundled: false,
+        overrides: { id: 'idBundled', version: '1.0.0' },
+      },
+    ] as unknown[] as CombinedExtensionInfoUI[];
+
+    const extensionDetail = extensionsUtils.extractExtensionDetail(
+      catalogExtensions,
+      overridingExtensions,
+      'idOverriding',
+    );
+    expect(extensionDetail?.overrides).toEqual({ id: 'idBundled', version: '1.0.0' });
+  });
+
+  test('Check overrides is undefined for an extension only in the catalog', async () => {
+    const extensionDetail = extensionsUtils.extractExtensionDetail(
+      catalogExtensions,
+      installedExtensions,
+      'idZNotInstalled',
+    );
+    expect(extensionDetail?.overrides).toBeUndefined();
   });
 });
 

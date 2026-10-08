@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ConfigurationScope } from '@podman-desktop/api';
 import type {
   ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
-} from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@desktop-framework/api/configuration';
+import type { ConfigurationScope } from '@desktop-framework/extension-api';
 import type { Terminal } from '@xterm/xterm';
 
 import type { ContextUI } from '/@/lib/context/context';
@@ -167,6 +167,18 @@ export function isContainerConnection(
   connection: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
 ): connection is ProviderContainerConnectionInfo {
   return (connection as ProviderContainerConnectionInfo).endpoint.socketPath !== undefined;
+}
+
+// matches the native <input type="range"> default: midpoint when no value is set
+export function calcSliderFillPercent(minimum?: number, maximum?: number | string, current?: number): string {
+  const min = minimum ?? 0;
+  const max = maximum === undefined ? 100 : uncertainStringToNumber(maximum);
+
+  if (max <= min) return '0';
+
+  const clamped = Math.min(Math.max(current ?? (min + max) / 2, min), max);
+
+  return (((clamped - min) / (max - min)) * 100).toFixed(2);
 }
 
 export function calcHalfCpuCores(osCpu: string): number {

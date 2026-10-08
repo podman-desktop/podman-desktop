@@ -39,6 +39,9 @@ test('Expect correct role and href', async () => {
   const element = screen.getByLabelText(tooltip);
   expect(element).toBeInTheDocument();
   expect(element).toHaveAttribute('href', href);
+  expect(element).toHaveClass('focus-visible:outline-2');
+  expect(element).toHaveClass('focus-visible:-outline-offset-2');
+  expect(element).toHaveClass('focus-visible:outline-[var(--pd-global-nav-icon-selected-highlight)]');
 });
 
 test('Expect selection styling', async () => {

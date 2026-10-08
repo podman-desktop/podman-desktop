@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -84,6 +84,21 @@ test('record should have short title by default', async () => {
     expect(element).toBeDefined();
     expect(element).toHaveClass('font-semibold');
   });
+});
+
+test.each(['short', 'full'] as const)('displayName overrides the %s title and follows record updates', async title => {
+  const record = { ...EXPERIMENTAL_RECORD, displayName: 'Path to Podman Binary' };
+  const { getByText, queryByText, rerender } = render(PreferencesRenderingItem, { record, title });
+
+  expect(getByText('Path to Podman Binary')).toHaveClass('font-semibold');
+
+  await rerender({ record: { ...record, displayName: 'Binary location' }, title });
+  expect(getByText('Binary location')).toHaveClass('font-semibold');
+  expect(queryByText('Path to Podman Binary')).not.toBeInTheDocument();
+
+  await rerender({ record: EXPERIMENTAL_RECORD, title });
+  expect(getByText(title === 'short' ? 'Foo Bar' : 'Hello world foo Bar')).toHaveClass('font-semibold');
+  expect(queryByText('Binary location')).not.toBeInTheDocument();
 });
 
 test('props title full should use full record id', async () => {
