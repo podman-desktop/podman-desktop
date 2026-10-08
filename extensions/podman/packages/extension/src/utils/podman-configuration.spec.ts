@@ -17,11 +17,10 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 
 import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanConfiguration } from './podman-configuration';
 import { VMTYPE } from './util';
@@ -207,51 +206,48 @@ test('if provider is set default one (on CLI) and the file does NOT exist, do no
 });
 
 describe('when the containers configuration directory does not exist', () => {
-  let actualFs: typeof fs;
-  let tempDirectory: string;
-  let configFile: string;
+  test.each<{
+    name: string;
+    update: (configuration: PodmanConfiguration) => Promise<void>;
+    expectedContent: string[];
+  }>([
+    {
+      name: 'Rosetta setting',
+      update: (configuration): Promise<void> => configuration.updateRosettaSetting(true),
+      expectedContent: ['rosetta = true'],
+    },
+    {
+      name: 'machine provider setting',
+      update: (configuration): Promise<void> => configuration.updateMachineProviderSettings(VMTYPE.LIBKRUN),
+      expectedContent: ['provider = "libkrun"'],
+    },
+    {
+      name: 'proxy settings',
+      update: (configuration): Promise<void> =>
+        configuration.updateProxySettings({
+          httpProxy: 'http://localhost:3128',
+          httpsProxy: 'http://localhost:3129',
+          noProxy: 'localhost,127.0.0.1',
+        }),
+      expectedContent: [
+        'http_proxy=http://localhost:3128',
+        'https_proxy=http://localhost:3129',
+        'no_proxy=localhost,127.0.0.1',
+      ],
+    },
+  ])('$name creates the directory before writing containers.conf', async ({ update, expectedContent }) => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
 
-  beforeAll(async () => {
-    actualFs = await vi.importActual<typeof fs>('node:fs');
-  });
+    await update(podmanConfiguration);
 
-  beforeEach(async () => {
-    tempDirectory = await actualFs.promises.mkdtemp(path.join(os.tmpdir(), 'podman-configuration-'));
-    configFile = path.join(tempDirectory, 'config', 'containers', 'containers.conf');
-    vi.spyOn(podmanConfiguration, 'getContainersFileLocation').mockReturnValue(configFile);
-    vi.mocked(fs.existsSync).mockImplementation(actualFs.existsSync);
-    vi.mocked(fs.promises.mkdir).mockImplementation(actualFs.promises.mkdir);
-    vi.mocked(fs.promises.writeFile).mockImplementation(actualFs.promises.writeFile);
-    expect(actualFs.existsSync(path.dirname(configFile))).toBe(false);
-  });
-
-  afterEach(async () => {
-    await actualFs.promises.rm(tempDirectory, { recursive: true, force: true });
-  });
-
-  test('updateRosettaSetting creates the directory and writes the requested value', async () => {
-    await podmanConfiguration.updateRosettaSetting(true);
-
-    expect(await actualFs.promises.readFile(configFile, 'utf8')).toContain('rosetta = true');
-  });
-
-  test('updateMachineProviderSettings creates the directory and writes the requested provider', async () => {
-    await podmanConfiguration.updateMachineProviderSettings(VMTYPE.LIBKRUN);
-
-    expect(await actualFs.promises.readFile(configFile, 'utf8')).toContain('provider = "libkrun"');
-  });
-
-  test('updateProxySettings creates the directory and writes the proxy values', async () => {
-    await podmanConfiguration.updateProxySettings({
-      httpProxy: 'http://localhost:3128',
-      httpsProxy: 'http://localhost:3129',
-      noProxy: 'localhost,127.0.0.1',
-    });
-
-    const content = await actualFs.promises.readFile(configFile, 'utf8');
-    expect(content).toContain('http_proxy=http://localhost:3128');
-    expect(content).toContain('https_proxy=http://localhost:3129');
-    expect(content).toContain('no_proxy=localhost,127.0.0.1');
+    const location = podmanConfiguration.getContainersFileLocation();
+    const mkdirMock = vi.mocked(fs.promises.mkdir);
+    const writeFileMock = vi.mocked(fs.promises.writeFile);
+    expect(mkdirMock).toHaveBeenCalledWith(path.dirname(location), { recursive: true });
+    for (const expected of expectedContent) {
+      expect(writeFileMock).toHaveBeenCalledWith(location, expect.stringContaining(expected));
+    }
+    expect(mkdirMock.mock.invocationCallOrder[0]).toBeLessThan(writeFileMock.mock.invocationCallOrder[0]);
   });
 });
 
