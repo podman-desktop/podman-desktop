@@ -32,6 +32,13 @@ import {
 
 vi.mock(import('winreg'));
 
+// Widens the protected parseUninstallCommand to public so it can be unit-tested directly.
+class TestPodmanWindowsLegacyInstaller extends PodmanWindowsLegacyInstaller {
+  public override parseUninstallCommand(uninstallString: string): [executable: string, args: string[]] {
+    return super.parseUninstallCommand(uninstallString);
+  }
+}
+
 const TELEMETRY_LOGGER_MOCK = {
   logUsage: vi.fn(),
 } as unknown as extensionApi.TelemetryLogger;
@@ -124,15 +131,92 @@ describe('isInstalled', () => {
   });
 });
 
+describe('parseUninstallCommand', () => {
+  let installer: TestPodmanWindowsLegacyInstaller;
+
+  beforeEach(() => {
+    installer = new TestPodmanWindowsLegacyInstaller(TELEMETRY_LOGGER_MOCK);
+  });
+
+  test.each([
+    {
+      name: 'a bare executable with no arguments',
+      input: 'C:\\podman.exe',
+      expected: ['C:\\podman.exe', []],
+    },
+    {
+      name: 'a quoted executable path containing spaces',
+      input: '"C:\\Program Files\\Podman\\setup.exe"',
+      expected: ['C:\\Program Files\\Podman\\setup.exe', []],
+    },
+    {
+      name: 'a quoted executable followed by bare flags (the real Podman shape)',
+      input: '"C:\\Program Files\\Podman\\setup.exe" /uninstall /quiet',
+      expected: ['C:\\Program Files\\Podman\\setup.exe', ['/uninstall', '/quiet']],
+    },
+    {
+      name: 'a bare executable followed by flags',
+      input: 'C:\\podman.exe /uninstall /quiet',
+      expected: ['C:\\podman.exe', ['/uninstall', '/quiet']],
+    },
+    {
+      name: 'leading whitespace before the executable',
+      input: '   "C:\\a b\\setup.exe" /quiet',
+      expected: ['C:\\a b\\setup.exe', ['/quiet']],
+    },
+    {
+      name: 'trailing whitespace after the last flag',
+      input: '"C:\\a b\\setup.exe" /uninstall   ',
+      expected: ['C:\\a b\\setup.exe', ['/uninstall']],
+    },
+    {
+      name: 'tab characters as flag separators',
+      input: '"C:\\a b\\setup.exe"\t/uninstall\t/quiet',
+      expected: ['C:\\a b\\setup.exe', ['/uninstall', '/quiet']],
+    },
+    {
+      name: 'runs of whitespace between flags',
+      input: 'C:\\podman.exe    /uninstall',
+      expected: ['C:\\podman.exe', ['/uninstall']],
+    },
+  ])('should parse $name', ({ input, expected }) => {
+    expect(installer.parseUninstallCommand(input)).toEqual(expected);
+  });
+
+  test.each([
+    { name: 'an empty string', input: '' },
+    { name: 'a whitespace-only string', input: '   \t  ' },
+  ])('should throw on $name', ({ input }) => {
+    expect(() => installer.parseUninstallCommand(input)).toThrowError(/empty command line/);
+  });
+
+  test('does not preserve a quoted flag value containing spaces (known, unsupported shape)', () => {
+    // The parser only handles `"<exe>" <flag> <flag>...`. A quoted flag value with spaces is split
+    // on whitespace and keeps its quotes; the resulting `"` tokens are later rejected by
+    // escapeWindowsAdminArg. The legacy Podman uninstall command never uses this shape.
+    expect(installer.parseUninstallCommand('"C:\\a b\\setup.exe" /log "C:\\c d\\u.log"')).toEqual([
+      'C:\\a b\\setup.exe',
+      ['/log', '"C:\\c', 'd\\u.log"'],
+    ]);
+  });
+});
+
 describe('uninstall', () => {
-  const UNINSTALL_CMD_MOCK = 'uninstall.exe /a /b /c';
+  // A WiX Burn bundle writes QuietUninstallString as a quoted exe path followed by flags.
+  const UNINSTALL_EXE_MOCK = 'C:\\ProgramData\\Package Cache\\{a1b2c3d4}\\podman-5.0.0-setup.exe';
+  const UNINSTALL_CMD_MOCK = `"${UNINSTALL_EXE_MOCK}" /uninstall /quiet`;
 
   const PODMAN_UNINSTALL_REGISTRY: Registry = {
     valueExists: vi.fn(),
     get: vi.fn(),
   } as unknown as Registry;
 
+  // The `QuietUninstallString` value returned by the registry mock; individual tests override it.
+  let quietUninstallString: string;
+
   beforeEach(() => {
+    quietUninstallString = UNINSTALL_CMD_MOCK;
+
     vi.mocked(WinReg.prototype.keys).mockImplementation(function (
       this: Registry,
       cb: (err: Error | undefined, result: Registry[]) => void,
@@ -146,6 +230,7 @@ describe('uninstall', () => {
       name: string,
       cb: (err: Error, exists: boolean) => void,
     ): Registry {
+      // @types/winreg types the callback err as a non-nullable Error, so a success path needs a cast.
       cb(undefined as unknown as Error, true);
       return this;
     });
@@ -157,20 +242,10 @@ describe('uninstall', () => {
     ): Registry {
       switch (name) {
         case UNINSTALL_REGISTRY_DISPLAY_NAME_KEY:
-          cb(
-            undefined as unknown as Error,
-            {
-              value: 'podman',
-            } as RegistryItem,
-          );
+          cb(undefined as unknown as Error, { value: 'podman' } as RegistryItem);
           break;
         case UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY:
-          cb(
-            undefined as unknown as Error,
-            {
-              value: UNINSTALL_CMD_MOCK,
-            } as RegistryItem,
-          );
+          cb(undefined as unknown as Error, { value: quietUninstallString } as RegistryItem);
           break;
         default:
           throw new Error(`unknown key ${name}`);
@@ -179,10 +254,12 @@ describe('uninstall', () => {
     });
   });
 
-  test('should execute expected uninstall cmd in shell', async () => {
+  test('should invoke the uninstall executable directly with parsed args', async () => {
     await podmanWindowsLegacyInstaller.uninstall();
 
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('cmd.exe', ['/s', '/c', `"${UNINSTALL_CMD_MOCK}"`], {
+    // the quoted exe path and its flags are passed as discrete args (no cmd.exe wrapper),
+    // so each token is individually escaped by the admin exec path rather than shell-quoted
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(UNINSTALL_EXE_MOCK, ['/uninstall', '/quiet'], {
       isAdmin: true,
       logger: expect.anything(),
     });
