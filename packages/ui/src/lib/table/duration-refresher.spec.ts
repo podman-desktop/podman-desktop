@@ -113,4 +113,30 @@ describe('DurationRefresher', () => {
 
     expect(onTick).toHaveBeenCalledOnce();
   });
+
+  test('stopping from onTick prevents further refreshes', () => {
+    const refresher = new DurationRefresher();
+    const onTick = vi.fn(() => refresher.stop());
+
+    refresher.start(Date.now(), onTick);
+    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(10_000);
+
+    expect(onTick).toHaveBeenCalledOnce();
+  });
+
+  test('starting from onTick replaces the pending schedule', () => {
+    const refresher = new DurationRefresher();
+    const onTick = vi.fn(() => {
+      if (onTick.mock.calls.length === 1) {
+        refresher.start(Date.now(), onTick);
+      }
+    });
+
+    refresher.start(Date.now(), onTick);
+    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2000);
+
+    expect(onTick).toHaveBeenCalledTimes(2);
+  });
 });

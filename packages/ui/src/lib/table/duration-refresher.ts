@@ -39,8 +39,8 @@ export class DurationRefresher {
     this.stop();
     const tick = (): void => {
       const now = Date.now();
-      onTick(now);
       this.#timeout = setTimeout(tick, this.computeInterval(now - startedAt));
+      onTick(now);
     };
     this.#timeout = setTimeout(tick, this.computeInterval(Date.now() - startedAt));
   }
