@@ -29,6 +29,7 @@ import { router } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { handleNavigation } from '/@/navigation';
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 
@@ -753,4 +754,16 @@ describe('Preferred Registries', () => {
       expect(window.searchImageInRegistry).toHaveBeenCalledWith(expect.objectContaining({ registry: 'docker.io' }));
     });
   });
+});
+
+test('Expect Close button to navigate to last page when clicked', async () => {
+  lastPage.set({ name: 'Images', path: '/images' });
+  const goToMock = vi.spyOn(router, 'goto');
+  render(PullImage);
+
+  const closeButton = screen.getByRole('button', { name: 'Close' });
+  expect(closeButton).toBeInTheDocument();
+  await userEvent.click(closeButton);
+
+  expect(goToMock).toHaveBeenCalledWith('/images');
 });

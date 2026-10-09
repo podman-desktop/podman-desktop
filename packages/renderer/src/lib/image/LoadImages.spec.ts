@@ -25,6 +25,7 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 
 import LoadImages from './LoadImages.svelte';
@@ -148,4 +149,17 @@ test('Expect error shown if loadImages function fails', async () => {
   const errorDiv = screen.getByLabelText('Error Message Content');
   expect(errorDiv).toBeInTheDocument();
   expect((errorDiv as HTMLDivElement).innerHTML).toContain('load failed');
+});
+
+test('Expect Cancel button to navigate to last page when clicked', async () => {
+  providerInfos.set([providerInfo]);
+  lastPage.set({ name: 'Images', path: '/images' });
+  const goToMock = vi.spyOn(router, 'goto');
+  render(LoadImages);
+
+  const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+  expect(cancelButton).toBeInTheDocument();
+  await userEvent.click(cancelButton);
+
+  expect(goToMock).toHaveBeenCalledWith('/images');
 });
