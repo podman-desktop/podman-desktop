@@ -131,8 +131,9 @@ export class ExtensionsUpdater {
     const installedExtensions = await this.extensionLoader.listExtensions();
 
     // now, for each installed extension that is not a built-in extension, check if there is a newer version available
+    // an extension replacing a bundled one is not updated, like the bundled extension it replaces
     const extensionsToUpdate = installedExtensions
-      .filter(extension => extension.removable === true)
+      .filter(extension => extension.removable === true && !extension.overrides)
       .map(installedExtension => {
         // find the extension in the list of available extensions
         const availableExtension = availableExtensions.find(extension => extension.id === installedExtension.id);
