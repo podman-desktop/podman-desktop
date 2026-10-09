@@ -39,6 +39,19 @@ test('Expect the displayed duration to be refreshed', async () => {
   expect(screen.getByText('1 minute')).toBeInTheDocument();
 });
 
+test('updates the duration immediately when the object changes', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+  vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+
+  const { rerender } = render(DurationColumn, { object: new Date(Date.now() - 30 * 60_000) });
+  expect(screen.getByText('30 minutes')).toBeInTheDocument();
+
+  vi.setSystemTime(new Date('2026-01-01T00:03:00.000Z'));
+  await rerender({ object: new Date(Date.now() - 3_599_900) });
+
+  expect(screen.getByText('1 hour')).toBeInTheDocument();
+});
+
 test('Expect simple column styling', () => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));

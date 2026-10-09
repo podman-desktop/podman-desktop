@@ -11,10 +11,17 @@ interface Props {
 let { object }: Props = $props();
 
 let now: number = $state(Date.now());
+let hasPreviousObject = false;
+let previousObject: Date | undefined;
 
 let duration: string = $derived(object ? humanizeDuration(now - object.getTime(), { round: true, largest: 1 }) : '');
 
 $effect(() => {
+  if (hasPreviousObject && previousObject !== object) {
+    now = Date.now();
+  }
+  hasPreviousObject = true;
+  previousObject = object;
   if (!object) {
     return;
   }
