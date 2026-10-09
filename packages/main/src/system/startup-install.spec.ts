@@ -18,8 +18,8 @@
 
 import * as os from 'node:os';
 
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import type { Configuration } from '@podman-desktop/api';
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { app } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
