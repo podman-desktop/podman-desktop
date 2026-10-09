@@ -67,9 +67,15 @@ export function getProxyUrl(proxy: Proxy, secure: boolean, hostname?: string, po
 
 type ProxyOptions = { agent?: http.Agent | https.Agent };
 
-export function getOptions(proxy: Proxy, secure: boolean, certificates: Certificates): ProxyOptions {
+export function getOptions(
+  proxy: Proxy,
+  secure: boolean,
+  certificates: Certificates,
+  hostname?: string,
+  port?: string,
+): ProxyOptions {
   const options: ProxyOptions = {};
-  const proxyUrl = getProxyUrl(proxy, secure);
+  const proxyUrl = getProxyUrl(proxy, secure, hostname, port);
   if (proxyUrl) {
     options.agent = createProxyAgent(secure, proxyUrl, certificates);
   } else if (secure) {
@@ -137,9 +143,9 @@ function createHttpPatch(
         }
 
         const host = options.hostname ?? options.host;
-        const isLocalhost = !host || host === 'localhost' || host === '127.0.0.1';
-        if (!isLocalhost) {
-          options = { ...options, ...getOptions(proxy, options.protocol === 'https:', certificates) };
+        if (host) {
+          const port = options.port?.toString();
+          options = { ...options, ...getOptions(proxy, options.protocol === 'https:', certificates, host, port) };
         }
 
         return original(options, callback);
