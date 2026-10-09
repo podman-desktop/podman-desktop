@@ -20,27 +20,13 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import DurationColumn from './DurationColumn.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
-});
-
-afterEach(() => {
   vi.useRealTimers();
-});
-
-test('Expect simple column styling', async () => {
-  // pick a date an hour ago
-  const date = new Date();
-  date.setTime(date.getTime() - 3600000);
-  render(DurationColumn, { object: date });
-
-  const text = screen.getByText('1 hour');
-  expect(text).toBeInTheDocument();
-  expect(text).toHaveClass('text-[var(--pd-table-body-text)]');
 });
 
 test('Expect the displayed duration to be refreshed', async () => {
@@ -54,6 +40,17 @@ test('Expect the displayed duration to be refreshed', async () => {
   await vi.advanceTimersByTimeAsync(2000);
 
   expect(screen.getByText('1 minute')).toBeInTheDocument();
+});
+
+test('Expect simple column styling', async () => {
+  // pick a date an hour ago
+  const date = new Date();
+  date.setTime(date.getTime() - 3600000);
+  render(DurationColumn, { object: date });
+
+  const text = screen.getByText('1 hour');
+  expect(text).toBeInTheDocument();
+  expect(text).toHaveClass('text-[var(--pd-table-body-text)]');
 });
 
 test('Expect an empty duration without a date', async () => {
