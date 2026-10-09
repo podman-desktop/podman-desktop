@@ -146,6 +146,33 @@ export async function cleanSetup(onboardings: OnboardingInfo[], globalContext: C
 }
 
 /*
+ *   it resets only the current onboarding, leaving all other onboardings intact
+ */
+export async function retryCurrentOnboarding(
+  activeStep: ActiveOnboardingStep,
+  globalContext: ContextUI,
+): Promise<void> {
+  const currentOnboarding = activeStep.onboarding;
+
+  // Reset onboarding on backend for only the current onboarding
+  await window.resetOnboarding([currentOnboarding.extension]);
+
+  // Clean ui context only for the current onboarding
+  const contextValues = globalContext.collectAllValues();
+  for (const key in contextValues) {
+    if (key.startsWith(`${currentOnboarding.extension}.${SCOPE_ONBOARDING}`)) {
+      globalContext.removeValue(key);
+    }
+  }
+
+  // Reset the current onboarding's status and all its steps
+  currentOnboarding.status = undefined;
+  currentOnboarding.steps.forEach(step => {
+    step.status = undefined;
+  });
+}
+
+/*
  * it replace all context key placeholders with their context values and return the new string
  * e.g onboardingContext:contextitem.key will be replaced by the corresponding contextitem.value
  * if there are no context key placeholder, the original string is returned

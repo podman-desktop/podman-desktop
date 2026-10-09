@@ -32,6 +32,7 @@ import {
   normalizeOnboardingWhenClause,
   replaceContextKeyPlaceholders,
   replaceContextKeyPlaceHoldersByRegex,
+  retryCurrentOnboarding,
   updateOnboardingStepStatus,
 } from './onboarding-utils';
 
@@ -676,4 +677,53 @@ test('Expect the replacement is used when defined even if the value is in contex
     'replacement',
   );
   expect(newString).equal('replacement');
+});
+
+test('Expect retryCurrentOnboarding to reset all steps of the current onboarding only', async () => {
+  const step1: OnboardingStep = {
+    id: 'id1',
+    title: 'title 1',
+    status: 'completed',
+  };
+  const step2: OnboardingStep = {
+    id: 'id2',
+    title: 'title 2',
+    status: 'failed',
+  };
+  const step3: OnboardingStep = {
+    id: 'id3',
+    title: 'title 3',
+    status: undefined,
+  };
+
+  const onboarding: OnboardingInfo = {
+    extension: 'id',
+    removable: true,
+    name: 'name',
+    displayName: 'displayName',
+    icon: 'icon',
+    steps: [step1, step2, step3],
+    title: 'onboarding',
+    status: undefined,
+    enablement: 'true',
+  };
+
+  const context = new ContextUI();
+  context.setValue('id.onboarding.key1', 'value');
+
+  const activeStep: ActiveOnboardingStep = {
+    onboarding,
+    step: step2,
+  };
+
+  await retryCurrentOnboarding(activeStep, context);
+
+  // Expect all steps of the current onboarding to be reset
+  expect(step1.status).toBeUndefined();
+  expect(step2.status).toBeUndefined();
+  expect(step3.status).toBeUndefined();
+  expect(onboarding.status).toBeUndefined();
+  // Expect context to be cleared for this onboarding
+  const contextValues = context.collectAllValues();
+  expect(Object.keys(contextValues).length).toBe(0);
 });

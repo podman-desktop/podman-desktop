@@ -20,6 +20,7 @@ import {
   isStepCompleted,
   normalizeOnboardingWhenClause,
   replaceContextKeyPlaceholders,
+  retryCurrentOnboarding,
   STATUS_COMPLETED,
   STATUS_SKIPPED,
   updateOnboardingStepStatus,
@@ -245,6 +246,18 @@ async function restartSetup(): Promise<void> {
   await setActiveStep();
 }
 
+async function retryFailedStep(): Promise<void> {
+  if (!activeStep) {
+    return;
+  }
+  // Reset only the current onboarding (all its steps), leaving other onboardings intact
+  await retryCurrentOnboarding(activeStep, globalContext);
+  // Reset executed commands list to allow commands to execute again
+  executedCommands = [];
+  // Re-execute from the beginning of the current onboarding
+  await setActiveStep();
+}
+
 // If the user hits escape, prompt them to exit the onboarding
 function handleEscape({ key }: KeyboardEvent): void {
   if (key === 'Escape') {
@@ -387,7 +400,7 @@ let sidebarTitle = $derived(
 
           {#if activeStep.step.state === 'failed'}
             <div class="mx-auto mt-4">
-              <Button on:click={restartSetup}>Try again</Button>
+              <Button on:click={retryFailedStep}>Try again</Button>
             </div>
           {/if}
 
