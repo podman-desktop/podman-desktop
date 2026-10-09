@@ -12,13 +12,21 @@ interface NavRegistryEntryProps {
   entry: NavigationRegistryEntry;
   meta: TinroRouteMeta;
   expanded: boolean;
+  title?: string;
 }
 
-let { entry, meta = $bindable(), expanded = false }: NavRegistryEntryProps = $props();
+let { entry, meta = $bindable(), expanded = false, title }: NavRegistryEntryProps = $props();
 </script>
 
 {#if !entry.hidden}
-  <NavItem href={entry.link} counter={entry.counter} tooltip={entry.tooltip} ariaLabel={entry.name} bind:meta={meta} {expanded}>
+  <NavItem
+    href={entry.link}
+    counter={entry.counter}
+    tooltip={entry.tooltip}
+    ariaLabel={entry.name}
+    {title}
+    bind:meta={meta}
+    {expanded}>
     <div class="flex items-center w-full">
       <div class="flex-shrink-0 flex items-center justify-center w-6">
         {#if entry.icon === undefined}
