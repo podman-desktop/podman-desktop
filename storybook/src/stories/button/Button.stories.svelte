@@ -13,6 +13,7 @@ import {
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '@podman-desktop/ui-svelte/Button';
+import DropdownMenu from '@podman-desktop/ui-svelte/DropdownMenu';
 import { defineMeta } from '@storybook/addon-svelte-csf';
 import { fn } from 'storybook/test';
 
@@ -171,6 +172,19 @@ const tabVariants: ButtonVariant[] = [
   { name: 'Tab With Custom Class', args: { type: 'tab', content: 'Custom Tab', class: 'capitalize' } },
 ];
 
+const menuItemVariants: ButtonVariant[] = [
+  { name: 'Default Row', args: { type: 'link', menuItem: true, content: 'Rename', icon: faPlay } },
+  { name: 'Danger Row', args: { type: 'danger', menuItem: true, content: 'Delete', icon: faTrash } },
+  { name: 'Primary Row', args: { type: 'primary', menuItem: true, content: 'Promote', icon: faRocket } },
+  { name: 'Disabled Row', args: { type: 'link', menuItem: true, content: 'Rename', icon: faPlay, disabled: true } },
+  {
+    name: 'Loading Row',
+    args: { type: 'link', menuItem: true, content: 'Deleting...', icon: faTrash, inProgress: true },
+  },
+  { name: 'Icon Only Row', args: { type: 'link', menuItem: true, icon: faTrash, 'aria-label': 'Delete' } },
+  { name: 'Icon + Label Row', args: { type: 'link', menuItem: true, content: 'Delete', icon: faTrash } },
+];
+
 const toggleVariants: ButtonVariant[] = [
   { name: 'Toggle Pressed', args: { type: 'primary', content: 'Notifications', pressed: true } },
   { name: 'Toggle Unpressed', args: { type: 'primary', content: 'Notifications', pressed: false } },
@@ -197,6 +211,7 @@ const groupKinds: Record<string, { label: string; variants: ButtonVariant[] }> =
   edges: { label: 'Edge Cases', variants: edgeVariants },
   toggles: { label: 'Toggle Buttons', variants: toggleVariants },
   tabs: { label: 'Tabs', variants: tabVariants },
+  menuItem: { label: 'Menu Item (Flat)', variants: menuItemVariants },
 };
 </script>
 
@@ -230,3 +245,15 @@ const groupKinds: Record<string, { label: string; variants: ButtonVariant[] }> =
 <Story name="Edge Cases" args={{ kind: 'edges' }} />
 <Story name="Toggle Buttons" args={{ kind: 'toggles' }} />
 <Story name="Tabs" args={{ kind: 'tabs' }} />
+<Story name="Menu Item Flat" args={{ kind: 'menuItem' }} />
+
+<Story name="Menu Item In Dropdown" asChild>
+  <div class="flex min-h-52 justify-center p-10">
+    <DropdownMenu>
+      <Button menuItem type="link" icon={faPlay} onclick={onclickFn}>Rename</Button>
+      <Button menuItem type="link" icon={faRocket} onclick={onclickFn}>Promote</Button>
+      <Button menuItem type="danger" icon={faTrash} onclick={onclickFn}>Delete</Button>
+      <Button menuItem type="link" icon={faBell} disabled onclick={onclickFn}>Notify (disabled)</Button>
+    </DropdownMenu>
+  </div>
+</Story>
