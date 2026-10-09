@@ -69,7 +69,7 @@ export const imagesEventStore = new EventStore<ImageInfo[]>(
   listImages,
   ImageIcon,
 );
-imagesEventStore.setupWithDebounce();
+export const imagesEventStoreInfo = imagesEventStore.setupWithDebounce();
 
 export const searchPattern = writable('');
 

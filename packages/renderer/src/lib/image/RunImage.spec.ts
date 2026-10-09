@@ -52,6 +52,7 @@ beforeAll(() => {
   });
   vi.mocked(window.listNetworks).mockResolvedValue([]);
   vi.mocked(window.listContainers).mockResolvedValue([]);
+  vi.mocked(window.listImages).mockResolvedValue([]);
   vi.mocked(window.listVolumes).mockResolvedValue([]);
   vi.mocked(window.createAndStartContainer).mockResolvedValue({ id: '1234' });
 
@@ -83,6 +84,8 @@ async function waitRender(): Promise<void> {
 
 async function createRunImage(entrypoint?: string | string[], cmd?: string[]): Promise<void> {
   imagesInfos.set([MY_IMAGE]);
+  // the page refreshes the images store on mount, so the refresh has to return the image too
+  vi.mocked(window.listImages).mockResolvedValue([MY_IMAGE]);
   const imageInfo: ImageInspectInfo = {
     Architecture: '',
     Author: '',
@@ -1004,5 +1007,54 @@ describe('RunImage volume mounts', () => {
         }),
       }),
     );
+  });
+});
+
+describe('RunImage images store refresh', () => {
+  // the page only needs enough of the inspect payload to finish mounting
+  const MINIMAL_INSPECT = {
+    Config: { Cmd: [], Entrypoint: '', ExposedPorts: {} },
+  } as unknown as ImageInspectInfo;
+
+  test('Expect the page to open when the images store has not caught up with the image yet', async () => {
+    const gotoSpy = vi.spyOn(router, 'goto');
+    // the store is still empty, as right after the image was pulled or built
+    imagesInfos.set([]);
+    vi.mocked(window.listImages).mockResolvedValue([MY_IMAGE]);
+    vi.mocked(window.getImageInspect).mockResolvedValue(MINIMAL_INSPECT);
+
+    await waitRender();
+
+    // refreshing the store on mount finds the image, so we stay on the page
+    // instead of bouncing back to the images list
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Create and start' })).toBeInTheDocument());
+    expect(gotoSpy).not.toHaveBeenCalledWith('/images/');
+  });
+
+  test('Expect to go back to the images list when the image really does not exist', async () => {
+    const gotoSpy = vi.spyOn(router, 'goto');
+    imagesInfos.set([]);
+    vi.mocked(window.listImages).mockResolvedValue([]);
+
+    await waitRender();
+
+    await vi.waitFor(() => expect(gotoSpy).toHaveBeenCalledWith('/images/'));
+  });
+
+  test('Expect a failing store refresh not to prevent the page from opening', async () => {
+    // the image is already in the store, so the refresh is only an optimisation
+    imagesInfos.set([MY_IMAGE]);
+    vi.mocked(window.listImages).mockRejectedValue(new Error('refresh failed'));
+    vi.mocked(window.getImageInspect).mockResolvedValue(MINIMAL_INSPECT);
+
+    await waitRender();
+
+    await vi.waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith(
+        'Unable to refresh the images list before opening the Run Image page',
+        expect.any(Error),
+      );
+      expect(screen.getByRole('button', { name: 'Create and start' })).toBeInTheDocument();
+    });
   });
 });
