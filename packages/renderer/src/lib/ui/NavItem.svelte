@@ -2,11 +2,11 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
 import { getContext, onDestroy, onMount } from 'svelte';
-import type { MouseEventHandler } from 'svelte/elements';
+import type { HTMLAnchorAttributes, MouseEventHandler } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 
-interface Props {
+interface Props extends HTMLAnchorAttributes {
   href: string;
   tooltip: string;
   ariaLabel?: string;
@@ -17,7 +17,17 @@ interface Props {
   children?: Snippet;
 }
 
-let { href, tooltip, ariaLabel, meta = $bindable(), onClick, counter, expanded = false, children }: Props = $props();
+let {
+  href,
+  tooltip,
+  ariaLabel,
+  meta = $bindable(),
+  onClick,
+  counter,
+  expanded = false,
+  children,
+  ...props
+}: Props = $props();
 
 const navItems: Writable<number> = getContext('nav-items');
 const inSection = $navItems !== undefined;
@@ -45,7 +55,8 @@ onDestroy(() => {
   href={onClick ? '#top' : uri}
   class="focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--pd-global-nav-icon-selected-highlight)]"
   aria-label={ariaLabel ?? tooltip}
-  onclick={handleClick}>
+  onclick={handleClick}
+  {...props}>
   <div
     class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
     class:border-l-[4px]={!inSection}

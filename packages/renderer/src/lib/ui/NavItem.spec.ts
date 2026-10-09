@@ -44,6 +44,19 @@ test('Expect correct role and href', async () => {
   expect(element).toHaveClass('focus-visible:outline-[var(--pd-global-nav-icon-selected-highlight)]');
 });
 
+test('Forwards aria-keyshortcuts to the link', () => {
+  const href = '/test';
+  render(NavItem, {
+    tooltip: 'Dashboard',
+    href,
+    meta: { url: href } as TinroRouteMeta,
+    'aria-keyshortcuts': 'Control+ArrowUp',
+  });
+
+  const link = screen.getByRole('link', { name: 'Dashboard' });
+  expect(link).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp');
+});
+
 test('Expect selection styling', async () => {
   const tooltip = 'Dashboard';
   const href = '/test';
