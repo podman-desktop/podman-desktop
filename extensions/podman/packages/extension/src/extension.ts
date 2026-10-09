@@ -66,6 +66,7 @@ import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-hel
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { QemuHelper } from './helpers/qemu-helper';
 import { WslHelper } from './helpers/wsl-helper';
+import { HyperVPrep } from './hyperv/hyperv-prep';
 import { InversifyBinding } from './inject/inversify-binding';
 import { PodmanInstall } from './installer/podman-install';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
@@ -120,6 +121,7 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
 let rosettaProvisioner: RosettaProvisioner;
+let hyperVPrep: HyperVPrep;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -1208,6 +1210,10 @@ export async function initCheckAndRegisterUpdate(
   // register onDidUpdateVersion
   provider.onDidUpdateVersion(async () => {
     podmanBinary.invalidate();
+    hyperVPrep.refreshContext().catch((error: unknown) => {
+      telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
+      console.warn('Unable to refresh Hyper-V prep status after Podman version change', error);
+    });
     await checkForUpdate();
   });
 
@@ -1425,6 +1431,7 @@ export async function initInversify(
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
+  hyperVPrep = await inversifyContainer.getAsync(HyperVPrep);
 
   return { podmanInstall, winPlatform, podmanProvider };
 }
