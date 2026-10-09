@@ -1,6 +1,4 @@
 <script lang="ts">
-import { SvelteMap } from 'svelte/reactivity';
-
 import { providerInfos } from '/@/stores/providers';
 
 import ProviderConfigured from './ProviderConfigured.svelte';
@@ -12,15 +10,18 @@ import ProviderReady from './ProviderReady.svelte';
 import ProviderStarting from './ProviderStarting.svelte';
 import ProviderStopped from './ProviderStopped.svelte';
 
-const providerInitContexts = new SvelteMap<string, InitializationContext>();
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const providerInitContexts = new Map<string, InitializationContext>();
 
-$: providersNotInstalled = $providerInfos.filter(provider => provider.status === 'not-installed');
-$: providersInstalled = $providerInfos.filter(provider => provider.status === 'installed');
-$: providersConfiguring = $providerInfos.filter(provider => provider.status === 'configuring');
-$: providersConfigured = $providerInfos.filter(provider => provider.status === 'configured');
-$: providersReady = $providerInfos.filter(provider => provider.status === 'ready' || provider.status === 'started');
-$: providersStarting = $providerInfos.filter(provider => provider.status === 'starting');
-$: providersStopped = $providerInfos.filter(provider => provider.status === 'stopped');
+let providersNotInstalled = $derived($providerInfos.filter(provider => provider.status === 'not-installed'));
+let providersInstalled = $derived($providerInfos.filter(provider => provider.status === 'installed'));
+let providersConfiguring = $derived($providerInfos.filter(provider => provider.status === 'configuring'));
+let providersConfigured = $derived($providerInfos.filter(provider => provider.status === 'configured'));
+let providersReady = $derived(
+  $providerInfos.filter(provider => provider.status === 'ready' || provider.status === 'started'),
+);
+let providersStarting = $derived($providerInfos.filter(provider => provider.status === 'starting'));
+let providersStopped = $derived($providerInfos.filter(provider => provider.status === 'stopped'));
 
 function getInitializationContext(id: string): InitializationContext {
   let context: InitializationContext | undefined = providerInitContexts.get(id);
