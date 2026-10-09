@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2026 Red Hat, Inc.
+ * Copyright (C) 2023-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import DurationColumn from './DurationColumn.svelte';
 
 beforeEach(() => {
-  vi.resetAllMocks();
   vi.useRealTimers();
 });
 
@@ -34,7 +32,6 @@ test('Expect the displayed duration to be refreshed', async () => {
   vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
 
   render(DurationColumn, { object: new Date(Date.now() - 59_000) });
-  await tick();
   expect(screen.getByText('59 seconds')).toBeInTheDocument();
 
   await vi.advanceTimersByTimeAsync(2000);
@@ -42,9 +39,12 @@ test('Expect the displayed duration to be refreshed', async () => {
   expect(screen.getByText('1 minute')).toBeInTheDocument();
 });
 
-test('Expect simple column styling', async () => {
+test('Expect simple column styling', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+
   // pick a date an hour ago
-  const date = new Date();
+  const date = new Date(Date.now());
   date.setTime(date.getTime() - 3600000);
   render(DurationColumn, { object: date });
 
@@ -53,9 +53,8 @@ test('Expect simple column styling', async () => {
   expect(text).toHaveClass('text-[var(--pd-table-body-text)]');
 });
 
-test('Expect an empty duration without a date', async () => {
+test('Expect an empty duration without a date', () => {
   const { container } = render(DurationColumn, { object: undefined });
-  await tick();
 
   expect(container).toHaveTextContent('');
 });

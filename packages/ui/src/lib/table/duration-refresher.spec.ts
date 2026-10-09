@@ -18,13 +18,19 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { computeInterval, DurationRefresher } from './duration-refresher';
+import { DurationRefresher } from './duration-refresher';
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
 });
+
+class TestDurationRefresher extends DurationRefresher {
+  getComputeInterval(uptimeInMs: number): number {
+    return this.computeInterval(uptimeInMs);
+  }
+}
 
 describe('computeInterval', () => {
   test.each([
@@ -48,15 +54,18 @@ describe('computeInterval', () => {
     // 1d1m: refresh in 1d minus 1m
     [86_460_000, 86_340_000],
   ])('returns the delay for %i ms of uptime', (uptime, expected) => {
-    expect(computeInterval(uptime)).toBe(expected);
+    expect(new TestDurationRefresher().getComputeInterval(uptime)).toBe(expected);
   });
 });
 
 describe('DurationRefresher', () => {
-  test('notifies right away with the current time', () => {
+  test('notifies when the displayed duration changes', () => {
     const onTick = vi.fn<(now: number) => void>();
 
     new DurationRefresher().start(Date.now(), onTick);
+    expect(onTick).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(2000);
 
     expect(onTick).toHaveBeenCalledOnce();
     expect(onTick).toHaveBeenCalledWith(Date.now());
@@ -68,7 +77,7 @@ describe('DurationRefresher', () => {
     new DurationRefresher().start(Date.now(), onTick);
     vi.advanceTimersByTime(4000);
 
-    expect(onTick).toHaveBeenCalledTimes(3);
+    expect(onTick).toHaveBeenCalledTimes(2);
   });
 
   test('waits for the next minute once past the first minute', () => {
@@ -77,10 +86,10 @@ describe('DurationRefresher', () => {
     // started 1m30s ago: the next refresh is due at 2m, in 30s
     new DurationRefresher().start(Date.now() - 90_000, onTick);
     vi.advanceTimersByTime(29_999);
-    expect(onTick).toHaveBeenCalledTimes(1);
+    expect(onTick).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(1);
-    expect(onTick).toHaveBeenCalledTimes(2);
+    expect(onTick).toHaveBeenCalledOnce();
   });
 
   test('stops refreshing after stop', () => {
@@ -91,7 +100,7 @@ describe('DurationRefresher', () => {
     refresher.stop();
     vi.advanceTimersByTime(10_000);
 
-    expect(onTick).toHaveBeenCalledOnce();
+    expect(onTick).not.toHaveBeenCalled();
   });
 
   test('starting again replaces the previous schedule', () => {
@@ -102,7 +111,6 @@ describe('DurationRefresher', () => {
     refresher.start(Date.now(), onTick);
     vi.advanceTimersByTime(2000);
 
-    // two immediate calls, then a single refresh
-    expect(onTick).toHaveBeenCalledTimes(3);
+    expect(onTick).toHaveBeenCalledOnce();
   });
 });

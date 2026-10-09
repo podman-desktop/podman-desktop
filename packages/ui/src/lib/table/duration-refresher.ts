@@ -16,46 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-const SECOND = 1000;
-const MINUTE = SECOND * 60;
-const HOUR = MINUTE * 60;
-const DAY = HOUR * 24;
-
-/**
- * Computes how long to wait before a displayed duration needs to be refreshed.
- *
- * @param uptimeInMs the elapsed time, in milliseconds
- * @returns the delay, in milliseconds, before the next refresh
- */
-export function computeInterval(uptimeInMs: number): number {
-  // if less than a minute, refresh every 2s
-  if (uptimeInMs < MINUTE - 2 * SECOND) {
-    return 2 * SECOND;
-  }
-
-  // if less than an hour, refresh on the next minute
-  if (uptimeInMs < HOUR) {
-    return Math.ceil((uptimeInMs + 1) / MINUTE) * MINUTE - uptimeInMs;
-  }
-
-  // if less than a day, refresh on the next hour
-  if (uptimeInMs < DAY) {
-    return Math.ceil((uptimeInMs + 1) / HOUR) * HOUR - uptimeInMs;
-  }
-
-  // otherwise, refresh on the next day
-  return Math.ceil((uptimeInMs + 1) / DAY) * DAY - uptimeInMs;
-}
-
 /**
  * Calls a callback with the current time, now and then, so that a duration
  * computed from a start time stays up to date without refreshing more often than needed.
  */
 export class DurationRefresher {
+  protected static readonly SECOND = 1000;
+  protected static readonly MINUTE = DurationRefresher.SECOND * 60;
+  protected static readonly HOUR = DurationRefresher.MINUTE * 60;
+  protected static readonly DAY = DurationRefresher.HOUR * 24;
+
   #timeout: number | undefined;
 
   /**
-   * Calls onTick right away, then again each time the displayed duration changes.
+   * Calls onTick each time the displayed duration changes.
    * Starting again replaces the previous schedule.
    *
    * @param startedAt the start time, in milliseconds since the epoch
@@ -66,9 +40,9 @@ export class DurationRefresher {
     const tick = (): void => {
       const now = Date.now();
       onTick(now);
-      this.#timeout = setTimeout(tick, computeInterval(now - startedAt));
+      this.#timeout = setTimeout(tick, this.computeInterval(now - startedAt));
     };
-    tick();
+    this.#timeout = setTimeout(tick, this.computeInterval(Date.now() - startedAt));
   }
 
   stop(): void {
@@ -76,5 +50,31 @@ export class DurationRefresher {
       clearTimeout(this.#timeout);
       this.#timeout = undefined;
     }
+  }
+
+  /**
+   * Computes how long to wait before a displayed duration needs to be refreshed.
+   *
+   * @param uptimeInMs the elapsed time, in milliseconds
+   * @returns the delay, in milliseconds, before the next refresh
+   */
+  protected computeInterval(uptimeInMs: number): number {
+    // if less than a minute, refresh every 2s
+    if (uptimeInMs < DurationRefresher.MINUTE - 2 * DurationRefresher.SECOND) {
+      return 2 * DurationRefresher.SECOND;
+    }
+
+    // if less than an hour, refresh on the next minute
+    if (uptimeInMs < DurationRefresher.HOUR) {
+      return Math.ceil((uptimeInMs + 1) / DurationRefresher.MINUTE) * DurationRefresher.MINUTE - uptimeInMs;
+    }
+
+    // if less than a day, refresh on the next hour
+    if (uptimeInMs < DurationRefresher.DAY) {
+      return Math.ceil((uptimeInMs + 1) / DurationRefresher.HOUR) * DurationRefresher.HOUR - uptimeInMs;
+    }
+
+    // otherwise, refresh on the next day
+    return Math.ceil((uptimeInMs + 1) / DurationRefresher.DAY) * DurationRefresher.DAY - uptimeInMs;
   }
 }
