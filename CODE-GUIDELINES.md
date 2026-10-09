@@ -682,6 +682,8 @@ For more details, see the [Vitest snapshot guide](https://vitest.dev/guide/snaps
 
 All dialogs (`showMessageBox` calls) must follow consistent language patterns for titles, body text, and buttons.
 
+For button layout and ordering in dialogs, modals, and forms, see [Button layout in dialogs, modals, and forms](#button-layout-in-dialogs-modals-and-forms).
+
 ### Titles
 
 Use `[Verb] [Object]` format. Add `?` for confirmations. No articles ("a", "the").
@@ -762,3 +764,169 @@ Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and 
 - Direct and clear
 - Active voice
 - Specific, not generic
+
+## Button layout in dialogs, modals, and forms
+
+All dialogs, modals, and forms must adhere to the following guidelines to ensure accessibility, keyboard navigation, and visual coherence.
+
+### ButtonRow component usage
+
+Action rows must use the shared `ButtonRow` component from `@podman-desktop/ui-svelte`, even for a single button.
+Custom button layouts are prohibited.
+
+Note: the `Dialog` component is already using `ButtonRow`, so no need to declare it again in the `buttons` snippet.
+
+✅ **Use this pattern:**
+
+```svelte
+<script lang="ts">
+import { ButtonRow } from '@podman-desktop/ui-svelte';
+</script>
+
+<ButtonRow>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="primary" on:click={onSave}>Save</Button>
+</ButtonRow>
+```
+
+🚫 **Instead of:**
+
+```svelte
+<div class="flex justify-end gap-2">
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="primary" on:click={onSave}>Save</Button>
+</div>
+```
+
+### Form alignment
+
+The `ButtonRow` component is already right aligned within itself, so any usage must ensure this styling is preserved, including in single-button forms. No centered or full-width standalone buttons.
+
+✅ **Use this pattern:**
+
+```svelte
+<form on:submit={onSubmit}>
+  <ButtonRow>
+    <Button type="primary">Submit</Button>
+  </ButtonRow>
+</form>
+```
+
+🚫 **Instead of:**
+
+```svelte
+<form on:submit={onSubmit}>
+  <ButtonRow >
+    <Button type="primary" class="w-full">Submit</Button>
+  </ButtonRow>
+</form>
+```
+
+### Explicit cancel buttons
+
+Every dialog, modal, or form must have a labeled Cancel/Dismiss button that will either cancel the action or close the component, even when an icon-only close button exists. Screen readers and keyboard users rely on focusable, labeled controls.
+
+✅ **Use this pattern:**
+
+```svelte
+<Dialog title="Duplicate Container?" onclose={onCancel}>
+  {#snippet content()}
+    <p>Do you want to duplicate this container?</p>
+  {/snippet}
+  {#snippet buttons()}
+    <Button type="link" on:click={onCancel}>Cancel</Button>
+    <Button type="primary" on:click={onConfirm}>Continue</Button>
+  {/snippet}
+</Dialog>
+```
+
+🚫 **Instead of:**
+
+```svelte
+<Dialog title="Duplicate Container?" onclose={onCancel}>
+  {#snippet content()}
+    <p>Do you want to duplicate this container?</p>
+  {/snippet}
+  {#snippet buttons()}
+    <Button type="primary" on:click={onConfirm}>Continue</Button>
+  {/snippet}
+</Dialog>
+```
+
+### Button sequencing
+
+Cancel/secondary buttons appear first, while primary actions should be positioned last (right in LTR layouts, mirrored for RTL).
+
+✅ **Use this pattern:**
+
+```svelte
+<ButtonRow>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="primary" on:click={onDelete}>Delete</Button>
+</ButtonRow>
+```
+
+🚫 **Instead of:**
+
+```svelte
+<ButtonRow>
+  <Button type="primary" on:click={onDelete}>Delete</Button>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+</ButtonRow>
+```
+
+### DOM/tab order
+
+Visual order must match DOM sequence. Never use CSS `order` property to manipulate visual order. Tab navigation must proceed left-to-right (LTR) through the button row.
+
+✅ **Use this pattern:**
+
+```svelte
+<ButtonRow>
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="primary" on:click={onSave}>Save</Button>
+</ButtonRow>
+```
+
+🚫 **Instead of:**
+
+```svelte
+<ButtonRow>
+  <Button type="primary" on:click={onSave} class="order-2">Save</Button>
+  <Button type="link" on:click={onCancel} class="order-1">Cancel</Button>
+</ButtonRow>
+```
+
+### Focus management
+
+Non-destructive dialogs, forms, or modals may focus primary actions on open. Destructive components must default focus to Cancel buttons to prevent accidental data loss or destructive action execution. If there is no Cancel, use `initialFocus="none"` so focus never falls through to the destructive action.
+
+✅ **Use this pattern (destructive action):**
+
+```svelte
+<ButtonRow initialFocus="first">
+  <Button type="link" on:click={onCancel}>Cancel</Button>
+  <Button type="danger" on:click={onDelete}>Delete</Button>
+</ButtonRow>
+```
+
+For Dialog components, follow the previous instructions by using the `initialButtonFocus` prop.
+
+✅ **Use this pattern (destructive action):**
+
+```svelte
+<Dialog title="Duplicate Container?" onclose={onCancel} initialButtonFocus="last">
+  {#snippet content()}
+    <p>Do you want to duplicate this container?</p>
+  {/snippet}
+  {#snippet buttons()}
+    <Button type="link" on:click={onCancel}>Cancel</Button>
+    <Button type="primary" on:click={onConfirm}>Continue</Button>
+  {/snippet}
+</Dialog>
+```
+
+MessageBox components (using Dialog) handle focus management internally as follows:
+
+- `initialButtonFocus="first"` for type `danger` if there is a cancel/dismiss button, otherwise `initialFocus="none"`
+- `initialButtonFocus="last"` for all other cases
