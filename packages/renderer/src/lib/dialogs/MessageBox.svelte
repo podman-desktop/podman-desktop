@@ -114,11 +114,12 @@ function getButtonType(b: boolean): ButtonType {
     return 'secondary';
   }
 }
+
+const initialFocus = $derived(type === 'danger' ? (cancelId < 0 ? 'none' : 'first') : 'last');
 </script>
 
 {#if display}
-  <!-- for danger MessageBox, the initial focus will be on the cancel button (first one) if available, otherwise none, while in all others types the focus will be on the default button (last one) -->
-  <Dialog tabindex={-1} title={title} onclose={onClose} initialButtonFocus={type === 'danger' ? (cancelId < 0 ? 'none' : 'first') : 'last'}>
+  <Dialog title={title} onclose={onClose} initialButtonFocus={initialFocus}>
     {#snippet icon()}
       
         {#if type === 'error' || type === 'danger'}
@@ -180,7 +181,7 @@ function getButtonType(b: boolean): ButtonType {
             <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttonsType[i]}</Button>
           {/if}
         {/each}
-
+      
       {/snippet}
   </Dialog>
 {/if}

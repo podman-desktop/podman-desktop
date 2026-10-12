@@ -20,10 +20,14 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import MessageBox from './MessageBox.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 describe('MessageBox', () => {
   test('Expect that title, message, and buttons are displayed', async () => {
@@ -435,11 +439,9 @@ describe('MessageBox', () => {
     render(MessageBox, {});
 
     const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
-    const dialog = await screen.findByRole('dialog');
 
     // Cancel button should have focus, not the dialog
     expect(cancelButton).toHaveFocus();
-    expect(document.activeElement).not.toBe(dialog);
   });
 
   test('Expect non-danger MessageBox to focus default button on mount', async () => {
@@ -486,22 +488,18 @@ describe('MessageBox', () => {
 
     render(MessageBox, {});
 
-    const deleteButton = await screen.findByRole('button', { name: 'Delete' });
     const dialog = await screen.findByRole('dialog');
 
-    // Dialog should have focus instead of the button
-    await vi.waitFor(() => {
-      expect(document.activeElement).toBe(dialog);
-      expect(deleteButton).not.toHaveFocus();
-    });
+    await vi.waitFor(() => expect(dialog).toHaveFocus());
   });
 
-  test('Expect MessageBox dialog container to have tabindex="-1"', async () => {
+  test('Expect danger MessageBox without Cancel to have dialog with tabindex="-1"', async () => {
     const messageBoxOptions: MessageBoxOptions = {
       id: 712,
-      title: 'Any MessageBox',
-      message: 'Test message',
-      buttons: ['OK'],
+      title: 'Danger without cancel',
+      message: 'This is dangerous',
+      type: 'danger',
+      buttons: ['Delete'],
     };
 
     vi.mocked(window.events.receive).mockImplementation(

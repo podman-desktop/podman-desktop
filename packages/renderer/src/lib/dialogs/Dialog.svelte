@@ -1,11 +1,10 @@
 <script lang="ts">
 import { ButtonRow, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
-import type { HTMLAttributes } from 'svelte/elements';
 
 type InitialButtonFocus = 'first' | 'last' | 'none';
 
-interface Props extends HTMLAttributes<HTMLDivElement> {
+interface Props {
   title: string;
   onclose: () => void;
   icon?: Snippet;
@@ -15,10 +14,10 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   initialButtonFocus?: InitialButtonFocus;
 }
 
-let { title, onclose, icon, content, validation, buttons, initialButtonFocus = 'none', ...restProps }: Props = $props();
+let { title, onclose, icon, content, validation, buttons, initialButtonFocus = 'none' }: Props = $props();
 </script>
 
-<Modal name={title} onclose={onclose} initialFocus={initialButtonFocus} {...restProps}>
+<Modal name={title} onclose={onclose} focusContainer={initialButtonFocus === 'none'}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     {@render icon?.()}
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>

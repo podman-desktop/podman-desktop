@@ -80,20 +80,23 @@ describe('translation-y', () => {
   });
 });
 
-test('tabindex attribute should be applied to dialog element', async () => {
-  render(Modal, { tabindex: -1 });
+test('focusContainer=true should apply tabindex="-1" and focus the dialog element', async () => {
+  render(Modal, { focusContainer: true });
 
   const dialog = screen.getByRole('dialog');
+
+  // Modal should automatically apply tabindex="-1" when focusContainer=true
   expect(dialog).toHaveAttribute('tabindex', '-1');
-});
-
-test('initialFocus="none" should focus the dialog element', async () => {
-  render(Modal, { tabindex: -1, initialFocus: 'none' });
-
-  const dialog = screen.getByRole('dialog');
 
   // Wait for the focus to be applied
   await vi.waitFor(() => {
     expect(document.activeElement).toBe(dialog);
   });
+});
+
+test('focusContainer=false should not apply tabindex', async () => {
+  render(Modal, { focusContainer: false });
+
+  const dialog = screen.getByRole('dialog');
+  expect(dialog).not.toHaveAttribute('tabindex');
 });
