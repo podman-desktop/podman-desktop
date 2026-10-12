@@ -1,17 +1,20 @@
 <script lang="ts">
 import { createEventDispatcher, onDestroy, type Snippet } from 'svelte';
+import type { HTMLAttributes } from 'svelte/elements';
 
 import { tabWithinParent } from '../utils/dialog-utils';
 
 const dispatch = createEventDispatcher();
 
-interface Props {
+type InitialFocus = 'first' | 'last' | 'none';
+
+interface Props extends HTMLAttributes<HTMLDivElement> {
   name?: string;
   top?: boolean;
   ignoreFocusOut?: boolean;
   onclose?: () => void;
   children?: Snippet;
-  tabindex?: number;
+  initialFocus?: InitialFocus;
 }
 
 let modal: HTMLDivElement;
@@ -23,8 +26,16 @@ let {
     dispatch('close');
   },
   children,
-  tabindex,
+  initialFocus,
+  ...restProps
 }: Props = $props();
+
+// Focus the dialog container when no button should be focused
+$effect(() => {
+  if (initialFocus === 'none' && modal) {
+    modal.focus();
+  }
+});
 
 const handle_keydown = (e: KeyboardEvent): void => {
   if (e.key === 'Escape') {
@@ -72,8 +83,8 @@ function handleMousedown(e: MouseEvent): void {
     role="dialog"
     aria-label={name}
     aria-modal="true"
-    tabindex={tabindex}
-    bind:this={modal}>
+    bind:this={modal}
+    {...restProps}>
     {@render children?.()}
   </div>
 </div>

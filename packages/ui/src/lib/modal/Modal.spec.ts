@@ -79,3 +79,21 @@ describe('translation-y', () => {
     expect(dialog.classList).toContain('my-[32px]');
   });
 });
+
+test('tabindex attribute should be applied to dialog element', async () => {
+  render(Modal, { tabindex: -1 });
+
+  const dialog = screen.getByRole('dialog');
+  expect(dialog).toHaveAttribute('tabindex', '-1');
+});
+
+test('initialFocus="none" should focus the dialog element', async () => {
+  render(Modal, { tabindex: -1, initialFocus: 'none' });
+
+  const dialog = screen.getByRole('dialog');
+
+  // Wait for the focus to be applied
+  await vi.waitFor(() => {
+    expect(document.activeElement).toBe(dialog);
+  });
+});
