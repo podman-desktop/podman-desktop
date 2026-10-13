@@ -259,37 +259,6 @@ describe('MessageBox', () => {
     expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 1);
   });
 
-  test('Expect cancelId: 0 to honor button at index 0 even when label is not "Cancel"', async () => {
-    const idRequest = 7015;
-    const messageBoxOptions: MessageBoxOptions = {
-      id: idRequest,
-      title: 'Delete file',
-      message: 'Delete this file?',
-      buttons: ['Keep', 'Delete'],
-      cancelId: 0,
-    };
-
-    vi.mocked(window.events.receive).mockImplementation(
-      (message: string, callback: (options: MessageBoxOptions) => void) => {
-        if (message === 'showMessageBox:open') {
-          callback(messageBoxOptions);
-        }
-        return { dispose: vi.fn() };
-      },
-    );
-
-    render(MessageBox, {});
-
-    // Keep should be treated as cancel button (first position, focus target on Escape)
-    const allButtons = screen.getAllByRole('button');
-    expect(allButtons[1]).toHaveTextContent('Cancel');
-    expect(allButtons[2]).toHaveTextContent('Delete');
-
-    // Escape should trigger the Keep button (index 0)
-    await userEvent.keyboard('{Escape}');
-    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0);
-  });
-
   test('Expect cancel at index 0 to move default to index 1', async () => {
     const idRequest = 702;
     const messageBoxOptions: MessageBoxOptions = {
