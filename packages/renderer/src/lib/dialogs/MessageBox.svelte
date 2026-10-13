@@ -57,6 +57,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   }
 
   // use the provided default (primary) id, otherwise the first non-cancel button is the default
+  // negative defaultId means no default button
   if (options?.defaultId !== undefined) {
     defaultId = options.defaultId;
   } else if (cancelId === 0) {
