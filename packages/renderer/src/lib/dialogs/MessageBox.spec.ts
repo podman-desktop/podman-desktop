@@ -382,4 +382,61 @@ describe('MessageBox', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Run' }));
     expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
   });
+
+  test('Expect cancelId: 0 to honor button at index 0 even when label is not "Cancel"', async () => {
+    const idRequest = 7015;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Delete file',
+      message: 'Delete this file?',
+      buttons: ['Keep', 'Delete'],
+      cancelId: 0,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    // Keep should be treated as cancel button (first position, focus target on Escape)
+    const allButtons = screen.getAllByRole('button');
+    expect(allButtons[1]).toHaveTextContent('Cancel');
+    expect(allButtons[2]).toHaveTextContent('Delete');
+
+    // Escape should trigger the Keep button (index 0)
+    await userEvent.keyboard('{Escape}');
+    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0);
+  });
+
+  test('Expect explicit defaultId: 0 to be honored', async () => {
+    const idRequest = 710;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Default at zero',
+      message: 'Message',
+      buttons: ['Delete', 'Proceed', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    expect(deleteButton.className).toContain('pd-button-primary-bg');
+  });
 });

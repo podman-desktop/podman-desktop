@@ -47,7 +47,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   buttonOrder = Array.from(buttonsType, (value, index) => index);
 
   // use the provided cancel id, otherwise try to find a button labelled 'cancel'
-  if (options?.cancelId) {
+  if (options?.cancelId !== undefined && options.cancelId >= 0) {
     cancelId = options.cancelId;
   } else {
     cancelId = buttonsType.findIndex(b => {
@@ -57,7 +57,7 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   }
 
   // use the provided default (primary) id, otherwise the first non-cancel button is the default
-  if (options?.defaultId) {
+  if (options?.defaultId !== undefined) {
     defaultId = options.defaultId;
   } else if (cancelId === 0) {
     defaultId = 1;
