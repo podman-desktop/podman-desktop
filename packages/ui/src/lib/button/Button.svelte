@@ -60,6 +60,13 @@ interface BaseProps extends Omit<HTMLButtonAttributes, 'type'> {
    */
   'aria-label'?: string;
 
+  /**
+   * Marks this button as the default action of its Modal: pressing Enter anywhere in the modal
+   * (except on a control that consumes Enter, such as another button or a textarea) clicks it.
+   * Use on at most one button per modal, and never on a destructive action.
+   */
+  default?: boolean;
+
   /** Click handler. Prefer it over the legacy `on:click` event, which is kept for Svelte 4 callers. */
   onclick?: () => void;
 
@@ -110,6 +117,7 @@ let {
   class: classNames,
   hidden,
   'aria-label': ariaLabel,
+  default: isDefault = false,
   onclick = dispatch.bind(undefined, 'click'),
   children,
 
@@ -192,6 +200,7 @@ let classes = $derived.by(() => {
   aria-disabled={disabled || inProgress}
   aria-busy={inProgress}
   aria-pressed={pressed ?? ariaPressed}
+  data-default={isDefault || undefined}
   {...restProps}>
   {#if icon ?? inProgress}
     <div
