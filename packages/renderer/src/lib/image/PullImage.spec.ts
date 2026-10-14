@@ -29,6 +29,7 @@ import { router } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { handleNavigation } from '/@/navigation';
+import { imagesInfos } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 
@@ -89,6 +90,7 @@ beforeEach(() => {
   vi.mocked(window.pullImage).mockResolvedValue(undefined);
   vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
   vi.mocked(window.listImages).mockResolvedValue([]);
+  imagesInfos.set([]);
   vi.mocked(window.searchImageInRegistry).mockResolvedValue([]);
 
   providerInfos.set([PROVIDER_INFO_MOCK]);
@@ -435,12 +437,48 @@ test('Expect run action to set image info and go to run page', async () => {
     engineName: 'podman',
   } as unknown as ImageInfo;
   vi.mocked(window.listImages).mockResolvedValue([image]);
+  // the page waits for the images store before navigating to Run Image
+  imagesInfos.set([image]);
   render(PullImage, { imageToPull: 'docker.io/alpine' });
 
   const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
   await userEvent.click(pullImagebutton);
   const runButton = await screen.findByRole('button', { name: 'Run' });
   await userEvent.click(runButton);
+
+  await vi.waitFor(() => {
+    expect(handleNavigation).toHaveBeenCalledWith({
+      page: NavigationPage.IMAGE_RUN,
+      parameters: {
+        tag: image.RepoTags?.[0],
+        engineId: image.engineId,
+        id: image.Id,
+      },
+    });
+  });
+});
+
+test('Expect run action to wait for the images store to catch up before going to the run page', async () => {
+  const image = {
+    Id: 'sha256:1234567890123',
+    RepoTags: ['docker.io/library/alpine:latest'],
+    Created: 1644009612,
+    Size: 123,
+    engineId: 'podman',
+    engineName: 'podman',
+  } as unknown as ImageInfo;
+  vi.mocked(window.listImages).mockResolvedValue([image]);
+  // the debounced listener has not refreshed the store with the pulled image yet
+  imagesInfos.set([]);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: 'Pull image' }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Run' }));
+
+  // navigating now would land on a Run Image page that bounces straight back to the images list
+  expect(handleNavigation).not.toHaveBeenCalled();
+
+  imagesInfos.set([image]);
 
   await vi.waitFor(() => {
     expect(handleNavigation).toHaveBeenCalledWith({
