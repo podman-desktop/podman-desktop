@@ -17,7 +17,9 @@ import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { imagesInfos } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
+import { StoreUtil } from '/@/stores/store-util';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
@@ -33,6 +35,7 @@ let logsPull = $state<Terminal>();
 let pullError = $state('');
 let pullInProgress = $state(false);
 let pullFinished = $state(false);
+let runInProgress = $state(false);
 let pullCancellableTokenId = $state<number | undefined>();
 let pullCancellationRequested = $state(false);
 let shortnameImages: string[] = [];
@@ -228,8 +231,22 @@ async function gotoImageDetails(): Promise<void> {
 }
 
 async function gotoImageRun(): Promise<void> {
-  const image = await getFirstPulledImageInfo();
-  if (image) {
+  runInProgress = true;
+  try {
+    const image = await getFirstPulledImageInfo();
+    if (!image) {
+      return;
+    }
+
+    // the Run Image page resolves the image from the images store, which is only refreshed by a
+    // debounced listener, so it has not necessarily caught up with the image we just pulled yet
+    await StoreUtil.waitFor(imagesInfos, images =>
+      images.some(({ Id, engineId }) => Id === image.id && engineId === image.engineId),
+    ).catch((error: unknown) => {
+      // navigate anyway, rather than leaving the button doing nothing
+      console.warn('The images list did not catch up with the pulled image', error);
+    });
+
     handleNavigation({
       page: NavigationPage.IMAGE_RUN,
       parameters: {
@@ -238,6 +255,8 @@ async function gotoImageRun(): Promise<void> {
         tag: image.tag ? `${image.name}:${image.tag}` : image.name,
       },
     });
+  } finally {
+    runInProgress = false;
   }
 }
 async function cancelPullImage(): Promise<void> {
@@ -516,7 +535,7 @@ async function searchFunction(value: string): Promise<void> {
           {:else}
             <Button type='link' on:click={pullImageFinished}>Close</Button>
             <Button type='secondary' on:click={gotoImageDetails}>View details</Button>
-            <Button type='primary' on:click={gotoImageRun}>Run</Button>
+            <Button type='primary' on:click={gotoImageRun} inProgress={runInProgress} disabled={runInProgress}>Run</Button>
           {/if}
         </ButtonRow>
         {#if pullError}
