@@ -26,3 +26,25 @@ const FOCUSABLE_SELECTOR =
 export function getTooltipAriaTarget(root: HTMLElement): HTMLElement {
   return root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? root;
 }
+
+function getDescribedByIds(target: HTMLElement): string[] {
+  return (target.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+}
+
+/** Adds the id to the target's aria-describedby, keeping any ids already referenced. */
+export function addAriaDescribedBy(target: HTMLElement, id: string): void {
+  const ids = getDescribedByIds(target);
+  if (!ids.includes(id)) {
+    target.setAttribute('aria-describedby', [...ids, id].join(' '));
+  }
+}
+
+/** Removes only the id from the target's aria-describedby, leaving ids set by others untouched. */
+export function removeAriaDescribedBy(target: HTMLElement, id: string): void {
+  const ids = getDescribedByIds(target).filter(describedById => describedById !== id);
+  if (ids.length) {
+    target.setAttribute('aria-describedby', ids.join(' '));
+  } else {
+    target.removeAttribute('aria-describedby');
+  }
+}

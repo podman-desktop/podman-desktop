@@ -52,9 +52,10 @@ import { Column as TableColumn, Row as TableRow, type TablePersistence } from '.
 import Table from './table/Table.svelte';
 import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
+import { tooltip, type TooltipOptions } from './tooltip/tooltip-attachment.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType, IconType, ListOrganizerItem, TablePersistence, ThemedIconImage };
+export type { ButtonType, IconType, ListOrganizerItem, TablePersistence, ThemedIconImage, TooltipOptions };
 export {
   Button,
   ButtonRow,
@@ -90,5 +91,6 @@ export {
   TableRow,
   TableSimpleColumn,
   Tooltip,
+  tooltip,
 };
 export { isFontAwesomeIcon, tablePersistence };
