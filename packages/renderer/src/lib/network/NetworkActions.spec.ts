@@ -65,11 +65,11 @@ test('Expect non-podman unused network to have delete option and disabled edit',
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(NetworkActions, { object: network1 });
 
-  expect(screen.getByTitle('Delete Network')).toBeInTheDocument();
-  expect(screen.getByTitle('Update Network')).toBeInTheDocument();
-  expect(screen.queryByTitle('Update Network')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Delete Network' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Update Network' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Update Network' })).toBeDisabled();
 
-  const deleteButton = screen.getByTitle('Delete Network');
+  const deleteButton = screen.getByRole('button', { name: 'Delete Network' });
   await fireEvent.click(deleteButton);
   expect(window.removeNetwork).toHaveBeenCalledWith(network1.engineId, network1.id);
 });
@@ -82,7 +82,7 @@ test('Expect error dialog when network deletion fails', async () => {
   const network: NetworkInfoUI = { ...network1, status: 'UNUSED' };
   render(NetworkActions, { object: network });
 
-  const deleteButton = screen.getByTitle('Delete Network');
+  const deleteButton = screen.getByRole('button', { name: 'Delete Network' });
   await fireEvent.click(deleteButton);
 
   await waitFor(() => {
@@ -99,11 +99,11 @@ test('Expect error dialog when network deletion fails', async () => {
 test('Expect podman used network to have edit option and disabled delete', async () => {
   render(NetworkActions, { object: network2 });
 
-  expect(screen.getByTitle('Delete Network')).toBeInTheDocument();
-  expect(screen.queryByTitle('Delete Network')).toBeDisabled();
-  expect(screen.getByTitle('Update Network')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Delete Network' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Delete Network' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Update Network' })).toBeInTheDocument();
 
-  const updateButton = screen.getByTitle('Update Network');
+  const updateButton = screen.getByRole('button', { name: 'Update Network' });
   await fireEvent.click(updateButton);
 
   await tick();

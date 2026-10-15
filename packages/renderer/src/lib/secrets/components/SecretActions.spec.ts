@@ -41,9 +41,9 @@ beforeEach(() => {
 test('Expect delete button to be visible and trigger confirmation', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
-  const { getByTitle } = render(SecretActions, { object: secret });
+  const { getByRole } = render(SecretActions, { object: secret });
 
-  const deleteButton = getByTitle('Delete Secret');
+  const deleteButton = getByRole('button', { name: 'Delete Secret' });
   expect(deleteButton).toBeInTheDocument();
 
   await fireEvent.click(deleteButton);
