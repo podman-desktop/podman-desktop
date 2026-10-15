@@ -10,7 +10,6 @@ import {
   faSync,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import { Tooltip } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -226,25 +225,14 @@ const updateTooltip = $derived.by(() => {
     detailed={detailed}
     icon={faDownload} />
 
-  {#if dropdownMenu}
-    <ListItemButtonIcon
-      title="Update Image"
-      tooltip={updateTooltip}
-      onClick={confirmUpdateImage}
-      menu={true}
-      detailed={detailed}
-      icon={faSync}
-      enabled={isUpdateCandidate(image)} />
-  {:else}
-    <Tooltip bottom tip={updateTooltip}>
-      <ListItemButtonIcon
-        title="Update Image"
-        onClick={confirmUpdateImage}
-        detailed={detailed}
-        icon={faSync}
-        enabled={isUpdateCandidate(image)} />
-    </Tooltip>
-  {/if}
+  <ListItemButtonIcon
+    title="Update Image"
+    tooltip={updateTooltip}
+    onClick={confirmUpdateImage}
+    menu={dropdownMenu}
+    detailed={detailed}
+    icon={faSync}
+    enabled={isUpdateCandidate(image)} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions
