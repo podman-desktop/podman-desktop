@@ -25,6 +25,13 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
 
+// an empty, '.' or '..' path component cannot be looked up: the engine rejects it and it cannot be
+// put in a request path either. this is not about the name being a valid reference, which only the
+// engine decides, so it silences the lookup instead of reporting anything to the user
+function hasUnresolvableComponent(name: string): boolean {
+  return name.split('/').some(component => component === '' || component === '.' || component === '..');
+}
+
 // Get the preferred registries from configuration
 let preferredRegistries = $state<string[]>([DOCKER_PREFIX]);
 const imageUtils = new ImageUtils();
@@ -64,9 +71,16 @@ async function resolveShortname(): Promise<void> {
   if (selectedProviderConnection?.type !== 'podman') {
     return;
   }
-  if (imageToPull && !imageToPull.includes('/')) {
-    shortnameImages =
-      (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+  if (imageToPull && !imageToPull.includes('/') && !hasUnresolvableComponent(imageToPull)) {
+    try {
+      shortnameImages =
+        (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+    } catch (error: unknown) {
+      // the engine rejects a name it cannot parse, such as ':', and is unreachable when its machine
+      // is stopped. there is no shortname to propose then, and pulling reports the reason if tried
+      console.debug(`Could not resolve shortname '${imageToPull}':`, error);
+      shortnameImages = [];
+    }
     // not a shortname
   } else {
     podmanFQN = '';
