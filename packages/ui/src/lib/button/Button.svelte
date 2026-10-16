@@ -5,15 +5,13 @@ import { createEventDispatcher, untrack } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
-import type { ButtonType } from './Button';
+import type { ActionButtonType } from './Button';
 
-interface Props {
+interface BaseProps {
   title?: string;
   inProgress?: boolean;
   disabled?: boolean;
-  type?: ButtonType;
   icon?: IconDefinition | Component | string;
-  selected?: boolean;
   pressed?: boolean;
   padding?: string;
   class?: string;
@@ -22,6 +20,9 @@ interface Props {
   onclick?: () => void;
   children?: Snippet;
 }
+
+// A tab button must say whether it is the active tab, so `selected` is required (checked by svelte-check) for type 'tab'
+type Props = BaseProps & ({ type?: ActionButtonType; selected?: boolean } | { type: 'tab'; selected: boolean });
 
 // support legacy usage (on:click)
 const dispatch = createEventDispatcher<{ click: undefined }>();
