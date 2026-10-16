@@ -23,7 +23,26 @@ import { expect, test } from 'vitest';
 
 import StatusDotIcon from './StatusDotIcon.svelte';
 
-const allStatuses = ['running', 'terminated', 'waiting', 'stopped', 'paused', 'exited', 'dead', 'created', 'degraded'];
+const allStatuses = [
+  'running',
+  'terminated',
+  'waiting',
+  'stopped',
+  'paused',
+  'exited',
+  'dead',
+  'created',
+  'degraded',
+  'upgrading',
+  'downgrading',
+  'downloadable',
+];
+
+const statusColors: Record<string, string> = {
+  upgrading: 'var(--pd-status-waiting)',
+  downgrading: 'var(--pd-status-waiting)',
+  downloadable: 'var(--pd-status-ready)',
+};
 
 test.each(allStatuses)('Expect SVG icon to render for %s status', (status: string) => {
   render(StatusDotIcon, { status });
@@ -50,7 +69,23 @@ test.each(allStatuses)('Expect correct fill color for %s status', (status: strin
   const svg = screen.getByTestId('status-dot-icon');
   const path = svg.querySelector('path');
   expect(path).not.toBeNull();
-  expect(path).toHaveAttribute('fill', `var(--pd-status-${status})`);
+  expect(path).toHaveAttribute('fill', statusColors[status] ?? `var(--pd-status-${status})`);
+});
+
+test.each([
+  [
+    'upgrading',
+    'M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m0 2L2.875 5.125a.884.884 0 0 0 1.25 1.25L5 5.5v3.75a.75.75 0 0 0 .75.75h.5A.75.75 0 0 0 7 9.25V5.5l.875.875a.884.884 0 0 0 1.25-1.25z',
+  ],
+  [
+    'downgrading',
+    'M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m-.25 2a.75.75 0 0 0-.75.75v3.752l-.875-.875a.884.884 0 0 0-1.25 1.25L6 10.002l3.125-3.125a.884.884 0 0 0-1.25-1.25L7 6.502V2.75A.75.75 0 0 0 6.25 2z',
+  ],
+  ['downloadable', 'M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0'],
+])('Expect the designed glyph path for %s status', (status, pathData) => {
+  render(StatusDotIcon, { status });
+
+  expect(screen.getByTestId('status-dot-icon').querySelector('path')).toHaveAttribute('d', pathData);
 });
 
 test('Expect unknown status to use unknown fill color', () => {

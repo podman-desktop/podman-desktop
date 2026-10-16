@@ -19,6 +19,9 @@ const statusCssVars: Record<string, string> = {
   dead: 'var(--pd-status-dead)',
   created: 'var(--pd-status-created)',
   degraded: 'var(--pd-status-degraded)',
+  upgrading: 'var(--pd-status-waiting)',
+  downgrading: 'var(--pd-status-waiting)',
+  downloadable: 'var(--pd-status-ready)',
   unknown: 'var(--pd-status-unknown)',
   starting: 'var(--pd-status-starting)',
   'not-running': 'var(--pd-status-not-running)',
@@ -67,6 +70,18 @@ let label = $derived(capitalize(status));
 {:else if status === 'degraded'}
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
     <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m-.25 2a.75.75 0 0 0-.75.75v3.752l-.875-.875a.884.884 0 0 0-1.25 1.25L6 10.002l3.125-3.125a.884.884 0 0 0-1.25-1.25L7 6.502V2.75A.75.75 0 0 0 6.25 2z" />
+  </svg>
+{:else if status === 'upgrading'}
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
+    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m0 2L2.875 5.125a.884.884 0 0 0 1.25 1.25L5 5.5v3.75a.75.75 0 0 0 .75.75h.5A.75.75 0 0 0 7 9.25V5.5l.875.875a.884.884 0 0 0 1.25-1.25z" />
+  </svg>
+{:else if status === 'downgrading'}
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
+    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m-.25 2a.75.75 0 0 0-.75.75v3.752l-.875-.875a.884.884 0 0 0-1.25 1.25L6 10.002l3.125-3.125a.884.884 0 0 0-1.25-1.25L7 6.502V2.75A.75.75 0 0 0 6.25 2z" />
+  </svg>
+{:else if status === 'downloadable'}
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
+    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0" />
   </svg>
 {:else}
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
