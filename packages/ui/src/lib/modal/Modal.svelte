@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createEventDispatcher, onDestroy, type Snippet } from 'svelte';
+import { createEventDispatcher, onDestroy, onMount, type Snippet } from 'svelte';
 
 import { tabWithinParent } from '../utils/dialog-utils';
 
@@ -11,6 +11,7 @@ interface Props {
   ignoreFocusOut?: boolean;
   onclose?: () => void;
   children?: Snippet;
+  focusContainer?: boolean;
 }
 
 let modal: HTMLDivElement;
@@ -22,7 +23,14 @@ let {
     dispatch('close');
   },
   children,
+  focusContainer = false,
 }: Props = $props();
+
+onMount(() => {
+  if (focusContainer) {
+    modal.focus();
+  }
+});
 
 const handle_keydown = (e: KeyboardEvent): void => {
   if (e.key === 'Escape') {
@@ -70,6 +78,7 @@ function handleMousedown(e: MouseEvent): void {
     role="dialog"
     aria-label={name}
     aria-modal="true"
+    tabindex={focusContainer ? -1 : undefined}
     bind:this={modal}>
     {@render children?.()}
   </div>
