@@ -19,9 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import DropdownMenu from './DropdownMenu.svelte';
+import DropdownMenuTest from './DropdownMenuTest.svelte';
 
 class ResizeObserver {
   observe = vi.fn();
@@ -50,4 +52,20 @@ test('Expect the onBeforeToggle function to be called when the menu is clicked',
   await fireEvent.click(toggleMenuButton);
 
   expect(onBeforeToggleMock).toHaveBeenCalled();
+});
+
+test.each(['{Enter}', ' '])('Expect keyboard selection of an item with %s to run it and close the menu', async key => {
+  const onClick = vi.fn();
+  render(DropdownMenuTest, { onClick });
+
+  await userEvent.tab();
+  expect(screen.getByRole('button', { name: 'kebab menu' })).toHaveFocus();
+  await userEvent.keyboard('{Enter}');
+
+  await userEvent.tab();
+  expect(screen.getByRole('button', { name: 'Item 1' })).toHaveFocus();
+  await userEvent.keyboard(key);
+
+  expect(onClick).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('button', { name: 'Item 1' })).not.toBeInTheDocument();
 });
