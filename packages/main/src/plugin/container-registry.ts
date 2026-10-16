@@ -37,6 +37,7 @@ import type {
   ContainerStatsInfo,
   Event,
   HistoryInfo,
+  HostConfigPortBinding,
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
@@ -1776,7 +1777,47 @@ export class ContainerProviderRegistry {
       volumes: containerToReplicate.Mounts.filter(mount => (mount as any).Type === 'volume').map(mount => {
         return { Name: mount.Name, Dest: mount.Destination };
       }),
+      portmappings: this.convertPortBindings(containerToReplicate.HostConfig?.PortBindings),
     };
+  }
+
+  /**
+   * Convert Docker-style HostConfig.PortBindings into the libpod portmappings format.
+   *
+   * Keys are in the format "port/protocol" (e.g. "80/tcp"). Each key maps to an
+   * array of bindings, so a single container port can be exposed on multiple host ports.
+   * An empty HostPort means the host should pick a random available port.
+   */
+  protected convertPortBindings(
+    portBindings: HostConfigPortBinding | undefined,
+  ): ContainerCreatePortMappingOption[] | undefined {
+    if (!portBindings || Object.keys(portBindings).length === 0) {
+      return undefined;
+    }
+
+    const portmappings: ContainerCreatePortMappingOption[] = [];
+    for (const [key, value] of Object.entries(portBindings)) {
+      const [portStr, protocol] = key.split('/');
+      const containerPort = Number.parseInt(portStr ?? '', 10);
+      if (Number.isNaN(containerPort) || String(containerPort) !== portStr || !Array.isArray(value)) continue;
+
+      for (const binding of value) {
+        let hostPort: number | undefined;
+        if (binding.HostPort) {
+          hostPort = Number.parseInt(binding.HostPort, 10);
+          if (Number.isNaN(hostPort) || String(hostPort) !== binding.HostPort) continue;
+        }
+
+        portmappings.push({
+          container_port: containerPort,
+          host_port: hostPort,
+          host_ip: binding.HostIp ?? undefined,
+          protocol,
+        });
+      }
+    }
+
+    return portmappings.length > 0 ? portmappings : undefined;
   }
 
   async stopPod(engineId: string, podId: string): Promise<void> {
