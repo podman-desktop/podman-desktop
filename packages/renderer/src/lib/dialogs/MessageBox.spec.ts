@@ -382,4 +382,143 @@ describe('MessageBox', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Run' }));
     expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
   });
+
+  test('Expect cancelId: 0 to honor button at index 0 even when label is not "Cancel"', async () => {
+    const idRequest = 7015;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Delete file',
+      message: 'Delete this file?',
+      buttons: ['Keep', 'Delete'],
+      cancelId: 0,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    // Keep should be treated as cancel button (first position, focus target on Escape)
+    const allButtons = screen.getAllByRole('button');
+    expect(allButtons[1]).toHaveTextContent('Cancel');
+    expect(allButtons[2]).toHaveTextContent('Delete');
+
+    // Escape should trigger the Keep button (index 0)
+    await userEvent.keyboard('{Escape}');
+    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0);
+  });
+
+  test('Expect explicit defaultId: 0 to be honored', async () => {
+    const idRequest = 710;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Default at zero',
+      message: 'Message',
+      buttons: ['Delete', 'Proceed', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    expect(deleteButton.className).toContain('pd-button-primary-bg');
+  });
+
+  test('Expect cancelId: -1 to fall back to auto-detecting Cancel button', async () => {
+    const idRequest = 711;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Negative cancel with Cancel button',
+      message: 'Message',
+      buttons: ['Proceed', 'Cancel'],
+      cancelId: -1,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    // With cancelId: -1, should auto-detect "Cancel" button at index 1
+    await userEvent.keyboard('{Escape}');
+    expect(window.sendShowMessageBoxOnSelect).toHaveBeenCalledWith(idRequest, 1);
+  });
+
+  test('Expect cancelId: -1 with no Cancel button to send undefined on Escape', async () => {
+    const idRequest = 712;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'No cancel button found',
+      message: 'Message',
+      buttons: ['Proceed', 'Abort'],
+      cancelId: -1,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    // With cancelId: -1 and no "Cancel" button, Escape should send undefined
+    await userEvent.keyboard('{Escape}');
+    expect(window.sendShowMessageBoxOnSelect).toHaveBeenCalledWith(idRequest, undefined);
+  });
+
+  test('Expect defaultId: -1 to use no primary button styling', async () => {
+    const idRequest = 713;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Negative default',
+      message: 'Message',
+      buttons: ['Option A', 'Option B', 'Cancel'],
+      defaultId: -1,
+      cancelId: 2,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: MessageBoxOptions) => void) => {
+        if (message === 'showMessageBox:open') {
+          callback(messageBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(MessageBox, {});
+
+    const optionAButton = screen.getByRole('button', { name: 'Option A' });
+    const optionBButton = screen.getByRole('button', { name: 'Option B' });
+
+    // With defaultId: -1, neither action button should have primary styling
+    expect(optionAButton.className).toContain('pd-button-secondary-bg');
+    expect(optionBButton.className).toContain('pd-button-secondary-bg');
+  });
 });
