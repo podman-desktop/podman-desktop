@@ -48,6 +48,46 @@ class RunErrorImpl extends Error implements RunError {
 export class Exec {
   constructor(private proxy: Proxy) {}
 
+  /**
+   * Escapes one command/arg token for the string @expo/sudo-prompt writes verbatim
+   * into an elevated Windows batch file (CWE-78). Rejects CR/LF and embedded double
+   * quotes (cannot be neutralized by quoting); wraps a token containing cmd.exe
+   * metacharacters or whitespace in double quotes; doubles `%` so batch parsing yields
+   * a literal percent sign. A token already wrapped in quotes with no inner quotes is
+   * passed through (backward compatibility with callers that pre-quote paths), and a
+   * token with none of these characters (e.g. the `del`/`copy` built-ins) is returned
+   * unchanged.
+   *
+   * The `%` doubling neutralizes a single batch-expansion layer (sudo-prompt's `.bat`).
+   * A command that itself re-enters `cmd.exe /c` would re-expand `%VAR%` a second time, so
+   * callers should invoke the target executable directly rather than through a nested shell.
+   */
+  protected escapeWindowsAdminArg(value: string): string {
+    if (/[\r\n]/.test(value)) {
+      throw new Error('Invalid argument for elevated command: line breaks are not allowed');
+    }
+    // Backward compatibility: a token already fully wrapped in double quotes with no
+    // inner quotes is handed through as-is (only doubling %), so callers that
+    // pre-quote a path containing spaces keep working.
+    if (/^"[^"]*"$/.test(value)) {
+      return value.replace(/%/g, '%%');
+    }
+    if (value.includes('"')) {
+      throw new Error('Invalid argument for elevated command: double quotes are not allowed');
+    }
+    // `+` (copy concatenation) and `=` (cmd token separator) are also metacharacters
+    // that must be quoted when they appear in a path.
+    if (!/[\s&|<>^()%,;+=]/.test(value)) {
+      return value;
+    }
+    // A value ending in backslash(es) would escape the closing quote for executables that
+    // parse their command line with CommandLineToArgvW (e.g. `C:\dir\` -> `"C:\dir\"`),
+    // merging this token with the next. Double a trailing backslash run so the closing
+    // quote stays literal.
+    const escaped = value.replace(/%/g, '%%').replace(/\\+$/, match => match + match);
+    return `"${escaped}"`;
+  }
+
   async exec(command: string, args?: string[], options?: RunOptions): Promise<RunResult> {
     let env = { ...process.env };
 
@@ -75,54 +115,76 @@ export class Exec {
     // if yes, will use sudo-prompt on windows and osascript on mac and pkexec on linux
     if (options?.isAdmin) {
       if (isWindows()) {
-        return new Promise<RunResult>((resolve, reject) => {
-          // Convert the command array to a string for sudo prompt
-          // the name is used for the prompt
-
-          // convert process.env to { [key: string]: string; }'
-          const sudoEnv = env as { [key: string]: string };
-          /*
-           * sudo prompt verify keys and does not support keys with special characters
-           * ( or ) on Windows
-           * See https://github.com/jorangreef/sudo-prompt/blob/c3cc31a51bc50fe21fadcbf76a88609c0c77026f/index.js#L96
-           */
-          for (const key of Object.keys(sudoEnv)) {
-            if (!/^[a-zA-Z_]\w*$/.test(key)) {
-              delete sudoEnv[key];
-            }
+        // convert process.env to { [key: string]: string; }
+        const sudoEnv = env as { [key: string]: string };
+        /*
+         * sudo prompt verify keys and does not support keys with special characters
+         * ( or ) on Windows
+         * See https://github.com/jorangreef/sudo-prompt/blob/c3cc31a51bc50fe21fadcbf76a88609c0c77026f/index.js#L96
+         */
+        for (const key of Object.keys(sudoEnv)) {
+          if (!/^[a-zA-Z_]\w*$/.test(key)) {
+            delete sudoEnv[key];
           }
-          const sudoOptions = {
-            name: 'Admin usage',
-            env: sudoEnv,
-          };
-          const sudoCommand = `${command} ${(args ?? []).join(' ')}`;
+        }
+        const sudoOptions = {
+          name: 'Admin usage',
+          env: sudoEnv,
+        };
 
-          const callback = (error?: Error, stdout?: string | Buffer, stderr?: string | Buffer): void => {
-            if (error) {
-              // need to return a RunError
-              const errResult: RunError = new RunErrorImpl(
-                error.name,
-                `Failed to execute command: ${error.message}`,
-                1,
-                sudoCommand,
-                stdout?.toString() ?? '',
-                stderr?.toString() ?? '',
-                false,
-                false,
-              );
+        // Escape command and args individually (see escapeWindowsAdminArg) so that
+        // argument boundaries and literal metacharacters survive sudo-prompt's
+        // flattening into an elevated batch file (CWE-78). A validation failure is
+        // surfaced with the same RunErrorImpl shape as a real execution failure.
+        let sudoCommand: string;
+        try {
+          sudoCommand = [command, ...(args ?? [])].map(arg => this.escapeWindowsAdminArg(arg)).join(' ');
+        } catch (error) {
+          // escapeWindowsAdminArg only ever throws Error; narrow once, no dead fallback branch.
+          if (!(error instanceof Error)) {
+            throw error;
+          }
+          return Promise.reject(
+            new RunErrorImpl(
+              error.name,
+              `Failed to execute command: ${error.message}`,
+              1,
+              [command, ...(args ?? [])].join(' '),
+              '',
+              '',
+              false,
+              false,
+            ),
+          );
+        }
 
-              reject(errResult);
-            }
-            const result: RunResult = {
-              command,
-              stdout: stdout?.toString() ?? '',
-              stderr: stderr?.toString() ?? '',
-            };
-            // in case of success
-            resolve(result);
-          };
-
-          sudo.exec(sudoCommand, sudoOptions, callback);
+        return new Promise<RunResult>((resolve, reject) => {
+          sudo.exec(
+            sudoCommand,
+            sudoOptions,
+            (error?: Error, stdout?: string | Buffer, stderr?: string | Buffer): void => {
+              if (error) {
+                reject(
+                  new RunErrorImpl(
+                    error.name,
+                    `Failed to execute command: ${error.message}`,
+                    1,
+                    sudoCommand,
+                    stdout?.toString() ?? '',
+                    stderr?.toString() ?? '',
+                    false,
+                    false,
+                  ),
+                );
+                return;
+              }
+              resolve({
+                command,
+                stdout: stdout?.toString() ?? '',
+                stderr: stderr?.toString() ?? '',
+              });
+            },
+          );
         });
       } else if (isMac()) {
         const escapedArgs = (args ?? []).map(arg =>

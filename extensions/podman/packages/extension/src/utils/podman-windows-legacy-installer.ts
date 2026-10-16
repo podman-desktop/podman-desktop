@@ -96,9 +96,13 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
           const uninstallString = await this.getUninstallCMD();
 
           /**
-           * We cannot directly invoke the uninstallation command as it need a shell
+           * The QuietUninstallString is a full command line (`"<exe>" <args>`). We parse it
+           * into the executable and its arguments and invoke it directly instead of going
+           * through `cmd.exe`, so every token is passed as a discrete, individually escaped
+           * argument rather than relying on shell quoting.
            */
-          await processAPI.exec('cmd.exe', ['/s', '/c', `"${uninstallString}"`], {
+          const [executable, args] = this.parseUninstallCommand(uninstallString);
+          await processAPI.exec(executable, args, {
             logger: {
               error: console.error,
               log: console.log,
@@ -116,6 +120,33 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
         }
       },
     );
+  }
+
+  /**
+   * Split a registry `QuietUninstallString` into its executable and arguments.
+   *
+   * A WiX Burn bundle always writes it in the fixed shape `"<path to exe>" <flag> <flag>...`: the
+   * executable path wrapped in double quotes (it usually contains spaces), followed by
+   * whitespace-separated flags. We match the quoted executable (or, defensively, a bare one with no
+   * spaces) and split the remaining flags on whitespace.
+   *
+   * This is deliberately minimal — it only handles that fixed shape. A flag value quoted because it
+   * contains spaces is **not** supported (it would be split, and the resulting `"` tokens would then
+   * be rejected by `escapeWindowsAdminArg`); the legacy Podman uninstall command never uses one.
+   *
+   * @throws if no executable can be extracted (empty or whitespace-only command line).
+   */
+  protected parseUninstallCommand(uninstallString: string): [executable: string, args: string[]] {
+    // group 1: executable inside double quotes; group 2: bare executable (no whitespace/quotes);
+    // group 3: the remaining flags.
+    const match = /^\s*(?:"([^"]+)"|([^\s"]+))\s*(.*)$/.exec(uninstallString);
+    const executable = match?.[1] ?? match?.[2];
+    if (executable === undefined) {
+      throw new Error('malformed uninstall command: empty command line');
+    }
+    const rest = (match?.[3] ?? '').trim();
+    const args = rest.length > 0 ? rest.split(/\s+/) : [];
+    return [executable, args];
   }
 
   /**
