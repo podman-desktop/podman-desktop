@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
+import { HyperVPrep } from '/@/hyperv/hyperv-prep';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
@@ -59,6 +60,13 @@ describe('inversifyBinding', () => {
 
     const value = container.get(RosettaProvisioner);
     expect(value).toBeInstanceOf(RosettaProvisioner);
+  });
+
+  test('should bind HyperVPrep', async () => {
+    const container = await inversifyBinding.init();
+
+    const value = await container.getAsync(HyperVPrep);
+    expect(value).toBeInstanceOf(HyperVPrep);
   });
 
   describe('windows', () => {

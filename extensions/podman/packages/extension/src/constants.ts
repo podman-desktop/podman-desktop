@@ -38,3 +38,7 @@ export const PODMAN_EDIT_IMPORT_NATIVE_CA = 'podman.podmanMachineEditImportNativ
  * Command ID to uninstall a version of podman installed with non-msi installer
  */
 export const UNINSTALL_LEGACY_INSTALLER_COMMAND = 'podman.uninstallLegacyPodmanInstaller';
+
+export const HYPERV_PREP_COMMAND = 'podman.hypervPrep';
+export const HYPERV_PREP_SUPPORTED_KEY = 'podman.hypervPrepSupported';
+export const HYPERV_PREP_NOT_APPLIED_KEY = 'podman.hypervPrepNotApplied';
