@@ -1,7 +1,7 @@
 <script lang="ts">
 import { createEventDispatcher, onDestroy, type Snippet } from 'svelte';
 
-import { tabWithinParent } from '../utils/dialog-utils';
+import { activateDefaultButton, registerModal, tabWithinParent } from '../utils/dialog-utils';
 
 const dispatch = createEventDispatcher();
 
@@ -24,6 +24,10 @@ let {
   children,
 }: Props = $props();
 
+$effect(() => {
+  return registerModal(modal);
+});
+
 const handle_keydown = (e: KeyboardEvent): void => {
   if (e.key === 'Escape') {
     onclose();
@@ -32,6 +36,11 @@ const handle_keydown = (e: KeyboardEvent): void => {
 
   if (e.key === 'Tab') {
     tabWithinParent(e, modal);
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    activateDefaultButton(e, modal);
   }
 };
 
