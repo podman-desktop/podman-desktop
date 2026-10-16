@@ -124,8 +124,6 @@ let rosettaProvisioner: RosettaProvisioner;
 let podmanMachineLifecycle: PodmanMachineLifecycle;
 let socketCompatibility: SocketCompatibility | undefined;
 
-let certificateDetectionService: CertificateDetectionService | undefined;
-
 const wslHelper = new WslHelper();
 const qemuHelper = new QemuHelper();
 const krunkitHelper = new KrunkitHelper();
@@ -2034,8 +2032,6 @@ export async function deactivate(): Promise<void> {
 
   await inversifyBinding?.dispose();
   inversifyBinding = undefined;
-
-  certificateDetectionService = undefined;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';
@@ -2458,8 +2454,8 @@ export function updateWSLHyperVEnabledContextValue(value: boolean): void {
 }
 
 async function initializeCertificateDetection(telemetryLogger: extensionApi.TelemetryLogger): Promise<void> {
-  certificateDetectionService = new CertificateDetectionService(telemetryLogger, {
-    enableTelemetry: true,
+  const certificateDetectionService = new CertificateDetectionService(telemetryLogger, {
+    enableTelemetry: extensionApi.env.isTelemetryEnabled,
   });
 
   certificateDetectionService.detectCustomCertificates().catch((error: unknown) => {
