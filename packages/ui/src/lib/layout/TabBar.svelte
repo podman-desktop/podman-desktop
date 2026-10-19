@@ -227,7 +227,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
 }
 </script>
 
-<div class="flex items-stretch border-b border-[var(--pd-content-divider)] bg-[var(--pd-content-card-bg)] min-w-0">
+<div class="flex items-stretch border-b border-[var(--pd-global-nav-bg-border)] bg-[var(--pd-content-card-bg)] min-w-0">
   <div
     bind:this={scrollEl}
     onwheel={onWheel}
@@ -263,7 +263,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
               onSelect(tab.id);
             }
           }}
-          class="group flex items-center gap-2 px-3 py-1.5 border-r border-[var(--pd-content-divider)] whitespace-nowrap select-none max-w-[220px]"
+          class="group flex items-center gap-2 px-3 py-1.5 border-r border-[var(--pd-global-nav-bg-border)] whitespace-nowrap select-none max-w-[220px]"
           class:cursor-pointer={!tab.pinned}
           class:cursor-not-allowed={tab.pinned}
           class:bg-[var(--pd-content-bg)]={tab.id === activeTabId}
@@ -308,7 +308,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
         <button
           type="button"
           aria-label="Open a new tab"
-          class="flex items-center px-2.5 border-r border-[var(--pd-content-divider)] hover:bg-[var(--pd-action-button-details-bg)]"
+          class="flex items-center px-2.5 border-r border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
           onclick={(event: MouseEvent): void => onAddTab?.(event)}>
           <Icon class="w-3 text-xs" icon={faPlus} />
         </button>
@@ -317,7 +317,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
   </div>
 
   {#if overflowing}
-    <div class="relative flex items-center border-l border-[var(--pd-content-divider)] px-1">
+    <div class="relative flex items-center border-l border-[var(--pd-global-nav-bg-border)] px-1">
       <button
         type="button"
         aria-label="Show all open tabs"
@@ -358,7 +358,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
       <button
         type="button"
         aria-label="Close all tabs"
-        class="flex items-center px-2.5 border-l border-[var(--pd-content-divider)] hover:bg-[var(--pd-action-button-details-bg)]"
+        class="flex items-center px-2.5 border-l border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
         onclick={onCloseAllInPanel}>
         <Icon class="w-3 text-xs" icon={faXmark} />
       </button>
