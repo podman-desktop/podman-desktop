@@ -31,6 +31,9 @@ import { extensionInfos } from '/@/stores/extensions';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
+import { tabPreferences } from './layout/tab-preferences.svelte';
+import { activeTab, prepareTabForRoute } from './layout/tabs.svelte';
+
 export const BACK = 'back';
 export const FORWARD = 'forward';
 
@@ -50,13 +53,30 @@ export interface HistoryEntry {
  * @property stack - An array of history stack entries
  * @property index - The current index in the stack
  */
-export const navigationHistory = $state<{
+const productionHistory = $state<{
   stack: HistoryStackEntry[];
   index: number;
 }>({
   stack: [],
   index: -1,
 });
+
+// The existing navigation controls always read the active history. Production keeps
+// its independent stack; switching tabs never appends to another tab's stack.
+export const navigationHistory = {
+  get stack(): HistoryStackEntry[] {
+    return (tabPreferences.tabsEnabled ? activeTab() : productionHistory).stack;
+  },
+  set stack(value: HistoryStackEntry[]) {
+    (tabPreferences.tabsEnabled ? activeTab() : productionHistory).stack = value;
+  },
+  get index(): number {
+    return (tabPreferences.tabsEnabled ? activeTab() : productionHistory).index;
+  },
+  set index(value: number) {
+    (tabPreferences.tabsEnabled ? activeTab() : productionHistory).index = value;
+  },
+};
 
 let isNavigatingHistory = false;
 
@@ -290,7 +310,7 @@ function matchesRoute(url: string, routeHref: string): boolean {
  * getEntryInfo('/preferences/default/resources')
  * // => { name: 'Resources', icon: { iconComponent: SettingsIcon } }
  */
-function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
+export function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
   const { path } = parseUrl(url);
 
   // Handle Dashboard
@@ -535,13 +555,29 @@ function isSubmenuBaseRoute(url: string): boolean {
   return registry.some(entry => entry.type === 'submenu' && entry.link === url);
 }
 
+let currentNavigationUrl = '/';
+
+/** Keep the visible page and its history aligned when Appearance switches modes. */
+export function synchronizeHistoryForTabsPreference(enabled: boolean): void {
+  if (enabled) prepareTabForRoute(currentNavigationUrl);
+  if (navigationHistory.stack[navigationHistory.index]?.url === currentNavigationUrl) return;
+  navigationHistory.stack = [
+    ...navigationHistory.stack.slice(0, navigationHistory.index + 1),
+    { url: currentNavigationUrl },
+  ];
+  navigationHistory.index = navigationHistory.stack.length - 1;
+}
+
 // Initialize router subscription
 router.subscribe(navigation => {
+  currentNavigationUrl = navigation.url;
   if (navigation.url) {
     if (isNavigatingHistory) {
       isNavigatingHistory = false;
       return;
     }
+
+    prepareTabForRoute(navigation.url);
 
     // Skip submenu base routes - they immediately redirect to a sub-page
     // and shouldn't be in the history stack
@@ -569,6 +605,9 @@ router.subscribe(navigation => {
     if (urlPath.startsWith('/webviews/') || urlPath.startsWith('/contribs/')) {
       return;
     }
+
+    // Selecting an existing tab must preserve its forward history.
+    if (navigationHistory.stack[navigationHistory.index]?.url === navigation.url) return;
 
     // Truncate forward history if we're not at the end
     if (navigationHistory.index < navigationHistory.stack.length - 1) {

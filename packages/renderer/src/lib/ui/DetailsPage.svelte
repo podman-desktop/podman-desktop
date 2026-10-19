@@ -4,6 +4,8 @@ import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import { currentPage, lastPage } from '/@/stores/breadcrumb';
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { activeTab, MAIN_TAB } from '/@/stores/layout/tabs.svelte';
 
 interface Props {
   title: string;
@@ -30,12 +32,17 @@ const {
   detailSnippet: localDetailSnippet,
 }: Props = $props();
 
+$effect(() => {
+  if (tabPreferences.tabsEnabled && activeTab().id !== MAIN_TAB) activeTab().title = title;
+});
+
 export function close(): void {
   router.goto($lastPage.path);
 }
 </script>
 
 <DetailsPage
+  hasClose={!tabPreferences.tabsEnabled}
   title={title}
   titleDetail={titleDetail}
   subtitle={subtitle}

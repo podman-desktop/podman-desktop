@@ -24,6 +24,7 @@
 // own trigger button) since this one anchors to an arbitrary click point.
 import Icon from '../icons/Icon.svelte';
 import type { ContextMenuAction } from './types';
+import { onDestroy, onMount } from 'svelte';
 
 interface Props {
   x: number;
@@ -37,6 +38,14 @@ let { x, y, actions, onClose }: Props = $props();
 let menuEl: HTMLDivElement | undefined = $state();
 let top = $state(0);
 let left = $state(0);
+
+onMount(() => {
+  window.dispatchEvent(new Event('tooltip-hide'));
+});
+
+onDestroy(() => {
+  window.dispatchEvent(new Event('tooltip-show'));
+});
 
 $effect(() => {
   top = y;

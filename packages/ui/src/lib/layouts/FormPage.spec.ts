@@ -132,3 +132,8 @@ test('Expect progress', async () => {
   const progress = screen.getByRole('progressbar');
   expect(progress).toBeInTheDocument();
 });
+
+test('can hide the in-page close control in tabs mode', () => {
+  render(FormPage, { title: 'Run image', hasClose: false });
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+});

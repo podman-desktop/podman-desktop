@@ -38,7 +38,7 @@ const minWidth = 50;
 const maxWidth = 240;
 const expandedThreshold = 70;
 
-let navWidth = $state(160);
+let navWidth = $state(minWidth);
 let expanded = $derived(navWidth > expandedThreshold);
 let isDragging = $state(false);
 
@@ -158,7 +158,8 @@ let scrollRegionCleanup: (() => void) | undefined;
 onMount(async () => {
   const commandRegistry = new CommandRegistry();
   commandRegistry.init();
-  navWidth = (await window.getConfigurationValue<number>(NAV_BAR_WIDTH_KEY)) ?? maxWidth;
+  // Start the review prototype with icons only; resizing remains available.
+  navWidth = minWidth;
   await tick();
   const el = scrollRegionEl;
   if (el) {

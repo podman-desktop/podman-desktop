@@ -4,6 +4,7 @@ import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import { currentPage, lastPage } from '/@/stores/breadcrumb';
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
 
 interface Props {
   title: string;
@@ -21,6 +22,7 @@ export function goToPreviousPage(): void {
 </script>
 
 <FormPage
+  hasClose={!tabPreferences.tabsEnabled}
   title={title}
   inProgress={inProgress}
   breadcrumbLeftPart={$lastPage.name}

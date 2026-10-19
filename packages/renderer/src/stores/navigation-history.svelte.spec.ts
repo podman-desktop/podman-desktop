@@ -23,6 +23,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 
 import { extensionInfos } from '/@/stores/extensions';
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
+import { setTabsEnabled, tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { activeTab, closeResourceTab, selectResourceTab, tabsState } from '/@/stores/layout/tabs.svelte';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import {
   getBackEntries,
@@ -32,6 +34,7 @@ import {
   goToHistoryIndex,
   navigationHistory,
   replaceCurrentUrl,
+  synchronizeHistoryForTabsPreference,
 } from '/@/stores/navigation-history.svelte';
 
 // The store registers a `window.events.receive('navigation-history-push', ...)` listener at
@@ -726,4 +729,103 @@ describe('extension history entry display names', () => {
 
     expect(getBackEntries()).toEqual([{ index: 0, name: 'An Extremely Long Histor...', icon: undefined }]);
   });
+});
+
+describe('per-tab history', () => {
+  beforeEach(() => {
+    tabsState.tabs = [{ id: 'main', title: 'Main', pinned: true, stack: [], index: -1 }];
+    tabsState.activeId = 'main';
+    setTabsEnabled(true);
+    vi.mocked(router.goto).mockImplementation(url => {
+      routerSubscribeCallback({ url } as TinroRoute);
+    });
+  });
+
+  afterEach(() => {
+    setTabsEnabled(false);
+  });
+
+  test('back and forward affect only the active resource tab', () => {
+    router.goto('/containers');
+    router.goto('/containers/alpha/summary');
+    router.goto('/containers/alpha/logs');
+    router.goto('/containers/beta/summary');
+    router.goto('/containers/beta/inspect');
+    goBack();
+    expect(activeTab().id).toBe('/containers/beta');
+    expect(navigationHistory.stack[navigationHistory.index]?.url).toBe('/containers/beta/summary');
+    expect(tabsState.tabs.find(tab => tab.id === '/containers/alpha')?.index).toBe(1);
+    goForward();
+    expect(navigationHistory.stack[navigationHistory.index]?.url).toBe('/containers/beta/inspect');
+  });
+
+  test('switching away and back preserves forward history', () => {
+    router.goto('/containers/alpha/summary');
+    router.goto('/containers/alpha/logs');
+    goBack();
+    router.goto('/containers/beta/summary');
+    selectResourceTab('/containers/alpha');
+    expect(navigationHistory.index).toBe(0);
+    expect(getForwardEntries()).toHaveLength(1);
+    goForward();
+    expect(navigationHistory.stack[navigationHistory.index]?.url).toBe('/containers/alpha/logs');
+  });
+
+  test('top-level pages share Main while resource tabs stay open', () => {
+    router.goto('/containers');
+    router.goto('/containers/alpha/summary');
+    router.goto('/images');
+    expect(activeTab().id).toBe('main');
+    expect(navigationHistory.stack.map(entry => entry.url)).toEqual(['/containers', '/images']);
+    expect(tabsState.tabs).toHaveLength(2);
+    goBack();
+    expect(navigationHistory.stack[navigationHistory.index]?.url).toBe('/containers');
+    expect(tabsState.tabs.find(tab => tab.id === '/containers/alpha')?.index).toBe(0);
+  });
+
+  test('a new navigation truncates only that tab forward history', () => {
+    router.goto('/containers/alpha/summary');
+    router.goto('/containers/alpha/logs');
+    goBack();
+    router.goto('/containers/alpha/inspect');
+    expect(navigationHistory.stack.map(entry => entry.url)).toEqual([
+      '/containers/alpha/summary',
+      '/containers/alpha/inspect',
+    ]);
+    expect(getForwardEntries()).toHaveLength(0);
+  });
+
+  test('closing the active resource returns to Main; Main cannot be closed', () => {
+    router.goto('/containers');
+    router.goto('/containers/alpha/summary');
+    closeResourceTab('/containers/alpha');
+    expect(activeTab().id).toBe('main');
+    closeResourceTab('main');
+    expect(tabsState.tabs).toHaveLength(1);
+  });
+
+  test('disabled tabs use production history without opening tabs', () => {
+    setTabsEnabled(false);
+    router.goto('/containers');
+    router.goto('/containers/alpha/summary');
+    router.goto('/images');
+    expect(tabPreferences.tabsEnabled).toBe(false);
+    expect(tabsState.tabs).toHaveLength(1);
+    expect(navigationHistory.stack.map(entry => entry.url)).toEqual([
+      '/containers',
+      '/containers/alpha/summary',
+      '/images',
+    ]);
+  });
+});
+
+test('enabling tabs immediately labels the shared tab with the visible page', () => {
+  setTabsEnabled(false);
+  routerSubscribeCallback({ url: '/preferences/default/preferences.appearance' } as TinroRoute);
+  tabsState.tabs = [{ id: 'main', title: 'Main', pinned: true, stack: [], index: -1 }];
+  tabsState.activeId = 'main';
+  setTabsEnabled(true);
+  synchronizeHistoryForTabsPreference(true);
+  expect(navigationHistory.stack[navigationHistory.index]?.url).toBe('/preferences/default/preferences.appearance');
+  setTabsEnabled(false);
 });

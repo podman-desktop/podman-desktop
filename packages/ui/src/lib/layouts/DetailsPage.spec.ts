@@ -125,3 +125,13 @@ test('props and slots should be displayed', () => {
   screen.getByText('My detail slot');
   screen.getByText('My content slot');
 });
+
+test.each([true, false])('can hide the close control with breadcrumb=%s', showBreadcrumb => {
+  render(DetailsPage, {
+    title: 'Container',
+    hasClose: false,
+    breadcrumbLeftPart: showBreadcrumb ? 'Containers' : undefined,
+    breadcrumbRightPart: showBreadcrumb ? 'Details' : undefined,
+  });
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+});

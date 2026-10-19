@@ -5,6 +5,7 @@ import Page from './Page.svelte';
 
 interface Props {
   title: string;
+  hasClose?: boolean;
   inProgress?: boolean;
   breadcrumbLeftPart?: string;
   breadcrumbRightPart?: string;
@@ -17,6 +18,7 @@ interface Props {
 
 const {
   title,
+  hasClose = true,
   inProgress = false,
   breadcrumbLeftPart = undefined,
   breadcrumbRightPart = undefined,
@@ -29,6 +31,7 @@ const {
 </script>
 
 <Page
+  {hasClose}
   title={title}
   breadcrumbLeftPart={breadcrumbLeftPart}
   breadcrumbRightPart={breadcrumbRightPart}

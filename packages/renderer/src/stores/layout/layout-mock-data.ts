@@ -24,8 +24,9 @@
 // vision doc's "two containers + a database" debugging scenario) and patches
 // the underlying window.list* calls so periodic engine-health refreshes don't
 // wipe the demo data back to an empty list. Never runs in production builds.
-import type { ContainerInfo, ImageInfo, PodInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ContainerInfo, ImageInfo, PodInfo, ProviderInfo } from '@desktop-framework/api';
 
+import { ContainerUtils } from '/@/lib/container/container-utils';
 import { PodUtils } from '/@/lib/pod/pod-utils';
 import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
@@ -245,7 +246,7 @@ function seedMockWorkspaceResources(): void {
 
   const reassert = (): void => {
     providerInfos.set(mockProviders);
-    containersInfos.set(mockContainers);
+    containersInfos.set(mockContainers.map(container => new ContainerUtils().getContainerInfoUI(container)));
     podsInfos.set(mockPodsUI);
     imagesInfos.set(mockImages);
   };

@@ -5,6 +5,7 @@ import Page from './Page.svelte';
 
 interface Props {
   title: string;
+  hasClose?: boolean;
   titleDetail?: string;
   subtitle?: string;
   breadcrumbLeftPart?: string;
@@ -21,6 +22,7 @@ interface Props {
 
 const {
   title,
+  hasClose = true,
   titleDetail = undefined,
   subtitle = undefined,
   breadcrumbLeftPart = undefined,
@@ -37,6 +39,7 @@ const {
 </script>
 
 <Page
+  {hasClose}
   title={title}
   titleDetail={titleDetail}
   subtitle={subtitle}

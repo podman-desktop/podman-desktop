@@ -9,6 +9,7 @@ import Route from '/@/Route.svelte';
 import { context } from '/@/stores/context';
 
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
+import PreferencesTabs from './PreferencesTabs.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import { isDefaultScope, isPropertyValidInContext } from './Util';
 
@@ -77,6 +78,9 @@ function updateSearchValue(event: any): void {
         <SearchInput  title="preferences" class="mt-4" oninput={updateSearchValue} />
       {/snippet}
     <div class="flex flex-col space-y-5 text-[var(--pd-content-header)] pb-2">
+      {#if key === 'preferences.appearance' && (!searchValue || 'tabs'.includes(searchValue.toLowerCase()))}
+        <PreferencesTabs />
+      {/if}
       {#if matchingRecords.size === 0}
         <div>No Settings Found</div>
       {:else}

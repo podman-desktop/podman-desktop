@@ -132,7 +132,7 @@ function handleKeydown(e: KeyboardEvent): void {
               {@render detail?.()}
             </div>
           </div>
-          {#if !showBreadcrumb}
+          {#if !showBreadcrumb && hasClose}
             <CloseButton class="justify-self-end" onclick={onclose} />
           {/if}
         </div>

@@ -22,8 +22,10 @@
 // moving a tab in from another panel. Resource-agnostic - operates purely on
 // TabDescriptor[].
 import { faChevronDown, faPlus, faThumbtack, faXmark } from '@fortawesome/free-solid-svg-icons';
+import type { Snippet } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
+import Tooltip from '../tooltip/Tooltip.svelte';
 import ContextMenu from './ContextMenu.svelte';
 import type { ContextMenuAction, TabDescriptor } from './types';
 
@@ -35,6 +37,7 @@ interface DragPayload {
 }
 
 interface Props {
+  tabIconSnippet?: Snippet<[TabDescriptor]>;
   panelId: string;
   tabs: TabDescriptor[];
   activeTabId?: string;
@@ -45,16 +48,16 @@ interface Props {
   onPinToggle: (tabId: string) => void;
   onReorder: (tabId: string, beforeTabId: string | undefined) => void;
   onMoveFromOtherPanel: (sourcePanelId: string, tabId: string, beforeTabId: string | undefined) => void;
-  onSplitRight: (tabId: string) => void;
-  onSplitDown: (tabId: string) => void;
-  onMoveToNewPanel: (tabId: string) => void;
-  /** When provided, renders a "+" button after the tabs that opens a new-tab picker (other
-   * views of the active resource, any pod/container/image, or a free-text ask-the-agent
-   * entry) - instead of cluttering every tab's content with a static row of sub-views. */
-  onAddTab?: () => void;
+  onSplitRight?: (tabId: string) => void;
+  onSplitDown?: (tabId: string) => void;
+  onMoveToNewPanel?: (tabId: string) => void;
+  showCloseAllButton?: boolean;
+  /** When provided, renders a "+" button beside the last tab to open the resource search. */
+  onAddTab?: (event?: MouseEvent) => void;
 }
 
 let {
+  tabIconSnippet,
   panelId,
   tabs,
   activeTabId,
@@ -69,6 +72,7 @@ let {
   onSplitDown,
   onMoveToNewPanel,
   onAddTab,
+  showCloseAllButton = false,
 }: Props = $props();
 
 let scrollEl: HTMLDivElement | undefined = $state();
@@ -96,6 +100,11 @@ function onWheel(event: WheelEvent): void {
 }
 
 function onDragStart(event: DragEvent, tabId: string): void {
+  if (tabs.find(tab => tab.id === tabId)?.pinned) {
+    event.preventDefault();
+    dragOverTabId = undefined;
+    return;
+  }
   const payload: DragPayload = { panelId, tabId };
   event.dataTransfer?.setData(TAB_DRAG_MIME, JSON.stringify(payload));
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
@@ -126,6 +135,7 @@ function onDropOnTab(event: DragEvent, beforeTabId: string): void {
   const payload = readPayload(event);
   if (!payload) return;
   if (payload.panelId === panelId) {
+    if (tabs.find(tab => tab.id === payload.tabId)?.pinned) return;
     if (payload.tabId !== beforeTabId) onReorder(payload.tabId, beforeTabId);
   } else {
     onMoveFromOtherPanel(payload.panelId, payload.tabId, beforeTabId);
@@ -138,6 +148,7 @@ function onDropOnEnd(event: DragEvent): void {
   const payload = readPayload(event);
   if (!payload) return;
   if (payload.panelId === panelId) {
+    if (tabs.find(tab => tab.id === payload.tabId)?.pinned) return;
     onReorder(payload.tabId, undefined);
   } else {
     onMoveFromOtherPanel(payload.panelId, payload.tabId, undefined);
@@ -146,52 +157,56 @@ function onDropOnEnd(event: DragEvent): void {
 
 function openContextMenu(event: MouseEvent, tabId: string): void {
   event.preventDefault();
+  event.stopPropagation();
   contextMenu = { x: event.clientX, y: event.clientY, tabId };
 }
 
 function contextMenuActions(tabId: string): ContextMenuAction[] {
   const tab = tabs.find(t => t.id === tabId);
-  return [
-    { id: 'close', title: 'Close', iconClass: 'fas fa-xmark', onSelect: (): void => onClose(tabId) },
+  const actions: ContextMenuAction[] = [
     {
       id: 'close-others',
-      title: 'Close Others',
+      title: 'Close Other Tabs',
       iconClass: 'fas fa-xmark',
       onSelect: (): void => onCloseOthers(tabId),
     },
-    {
-      id: 'close-all',
-      title: 'Close All in Panel',
-      iconClass: 'fas fa-xmark',
-      onSelect: (): void => onCloseAllInPanel(),
-    },
-    {
+  ];
+  if (tabId !== 'main') {
+    actions.push({
       id: 'pin',
+      disabled: tabId === 'main',
       title: tab?.pinned ? 'Unpin Tab' : 'Pin Tab',
       iconClass: 'fas fa-thumbtack',
       separatorBefore: true,
       onSelect: (): void => onPinToggle(tabId),
-    },
+    });
+  }
+  actions.push(
     {
       id: 'split-right',
       title: 'Split Right',
       iconClass: 'fas fa-table-columns',
       separatorBefore: true,
-      onSelect: (): void => onSplitRight(tabId),
+      onSelect: (): void => onSplitRight?.(tabId),
     },
     {
       id: 'split-down',
       title: 'Split Down',
       iconClass: 'fas fa-table-columns',
-      onSelect: (): void => onSplitDown(tabId),
+      onSelect: (): void => onSplitDown?.(tabId),
     },
     {
       id: 'move-new-panel',
       title: 'Move to New Panel',
       iconClass: 'fas fa-up-right-from-square',
-      onSelect: (): void => onMoveToNewPanel(tabId),
+      onSelect: (): void => onMoveToNewPanel?.(tabId),
     },
-  ];
+  );
+  return actions.filter(
+    action =>
+      !['split-right', 'split-down', 'move-new-panel'].includes(action.id) ||
+      (action.id === 'split-right' ? !!onSplitRight : action.id === 'split-down' ? !!onSplitDown : !!onMoveToNewPanel),
+  );
 }
 </script>
 
@@ -205,70 +220,82 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
     ondragover={(e: DragEvent): void => e.preventDefault()}
     ondrop={onDropOnEnd}>
     {#each tabs as tab (tab.id)}
-      <div
-        role="tab"
-        tabindex="0"
-        aria-selected={tab.id === activeTabId}
-        draggable="true"
-        ondragstart={(e: DragEvent): void => onDragStart(e, tab.id)}
-        ondragover={(e: DragEvent): void => onDragOverTab(e, tab.id)}
-        ondragleave={onDragLeaveTab}
-        ondrop={(e: DragEvent): void => onDropOnTab(e, tab.id)}
-        oncontextmenu={(e: MouseEvent): void => openContextMenu(e, tab.id)}
-        onclick={(): void => onSelect(tab.id)}
-        onkeydown={(e: KeyboardEvent): void => {
-          if (e.key === 'Enter' || e.key === ' ') onSelect(tab.id);
-        }}
-        class="group flex items-center gap-2 px-3 py-1.5 border-r border-[var(--pd-content-divider)] whitespace-nowrap cursor-pointer select-none max-w-[220px]"
-        class:bg-[var(--pd-content-bg)]={tab.id === activeTabId}
-        class:border-l-2={dragOverTabId === tab.id}
-        class:border-l-[var(--pd-tab-highlight)]={dragOverTabId === tab.id}
-        class:text-[var(--pd-tab-text-highlight)]={tab.id === activeTabId}
-        class:text-[var(--pd-tab-text)]={tab.id !== activeTabId}
-        class:opacity-70={!!tab.stale}
-        title={tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title}>
-        {#if tab.pinned}
-          <Icon class="w-3 text-xs opacity-70" icon={faThumbtack} />
-        {/if}
-        {#if tab.agentCreated}
-          <span
-            class="w-1.5 h-1.5 rounded-full bg-[var(--pd-status-running)] shrink-0"
-            title="Opened by an agent"></span>
-        {/if}
-        <span class="overflow-hidden text-ellipsis">{tab.title}</span>
-        {#if tab.stale}
-          <span class="text-[10px] uppercase tracking-wide text-[var(--pd-status-degraded)]">missing</span>
-        {/if}
-        {#if !tab.pinned}
-          <button
-            type="button"
-            aria-label="Close tab {tab.title}"
-            class="ml-1 opacity-0 group-hover:opacity-100 hover:bg-[var(--pd-action-button-details-bg)] rounded-sm p-0.5"
-            class:opacity-100={tab.id === activeTabId}
-            onclick={(e: MouseEvent): void => {
-              e.stopPropagation();
-              onClose(tab.id);
-            }}>
-            <Icon class="w-3 text-xs" icon={faXmark} />
-          </button>
-        {/if}
-      </div>
+      <Tooltip
+        tip={tab.tooltip ?? (tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title)}
+        top
+        containerClass="flex shrink-0 items-stretch"
+        class="flex items-stretch">
+        <div
+          role="tab"
+          tabindex="0"
+          aria-selected={tab.id === activeTabId}
+          draggable={!tab.pinned}
+          ondragstart={(e: DragEvent): void => onDragStart(e, tab.id)}
+          ondragover={(e: DragEvent): void => onDragOverTab(e, tab.id)}
+          ondragleave={onDragLeaveTab}
+          ondrop={(e: DragEvent): void => onDropOnTab(e, tab.id)}
+          oncontextmenu={(e: MouseEvent): void => openContextMenu(e, tab.id)}
+          onclick={(): void => onSelect(tab.id)}
+          onkeydown={(e: KeyboardEvent): void => {
+            if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+              e.preventDefault();
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              contextMenu = { x: rect.left, y: rect.bottom, tabId: tab.id };
+            } else if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelect(tab.id);
+            }
+          }}
+          class="group flex items-center gap-2 px-3 py-1.5 border-r border-[var(--pd-content-divider)] whitespace-nowrap select-none max-w-[220px]"
+          class:cursor-pointer={!tab.pinned}
+          class:cursor-not-allowed={tab.pinned}
+          class:bg-[var(--pd-content-bg)]={tab.id === activeTabId}
+          class:border-l-2={dragOverTabId === tab.id}
+          class:border-l-[var(--pd-tab-highlight)]={dragOverTabId === tab.id}
+          class:text-[var(--pd-tab-text-highlight)]={tab.id === activeTabId}
+          class:text-[var(--pd-tab-text)]={tab.id !== activeTabId}
+          class:opacity-70={!!tab.stale}>
+          {@render tabIconSnippet?.(tab)}
+          {#if tab.pinned && tab.id !== 'main'}
+            <Icon class="w-3 text-xs opacity-70" icon={faThumbtack} />
+          {/if}
+          {#if tab.agentCreated}
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-[var(--pd-status-running)] shrink-0"
+              title="Opened by an agent"></span>
+          {/if}
+          <span class="overflow-hidden text-ellipsis">{tab.title}</span>
+          {#if tab.stale}
+            <span class="text-[10px] uppercase tracking-wide text-[var(--pd-status-degraded)]">missing</span>
+          {/if}
+          {#if tab.id !== 'main'}
+            <button
+              type="button"
+              aria-label="Close tab {tab.title}"
+              class="ml-1 opacity-0 group-hover:opacity-100 hover:bg-[var(--pd-action-button-details-bg)] rounded-sm p-0.5"
+              class:opacity-100={tab.id === activeTabId}
+              onclick={(e: MouseEvent): void => {
+                e.stopPropagation();
+                onClose(tab.id);
+              }}>
+              <Icon class="w-3 text-xs" icon={faXmark} />
+            </button>
+          {/if}
+        </div>
+      </Tooltip>
     {/each}
+    {#if onAddTab && tabs.length > 0}
+      <Tooltip tip="Open a new tab" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
+        <button
+          type="button"
+          aria-label="Open a new tab"
+          class="flex items-center px-2.5 border-r border-[var(--pd-content-divider)] hover:bg-[var(--pd-action-button-details-bg)]"
+          onclick={(event: MouseEvent): void => onAddTab?.(event)}>
+          <Icon class="w-3 text-xs" icon={faPlus} />
+        </button>
+      </Tooltip>
+    {/if}
   </div>
-
-  {#if onAddTab && tabs.length > 0}
-    <!-- Nothing to offer "another view" of with zero tabs open - the empty state already
-         covers that case, so skip the button rather than leave it floating alone in an
-         otherwise-empty bar. -->
-    <button
-      type="button"
-      aria-label="Open a new tab"
-      title="Open a new tab"
-      class="flex items-center px-2.5 border-l border-[var(--pd-content-divider)] hover:bg-[var(--pd-action-button-details-bg)]"
-      onclick={onAddTab}>
-      <Icon class="w-3 text-xs" icon={faPlus} />
-    </button>
-  {/if}
 
   {#if overflowing}
     <div class="relative flex items-center border-l border-[var(--pd-content-divider)] px-1">
@@ -306,6 +333,17 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
         </div>
       {/if}
     </div>
+  {/if}
+  {#if showCloseAllButton}
+    <Tooltip tip="Close all tabs" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
+      <button
+        type="button"
+        aria-label="Close all tabs"
+        class="flex items-center px-2.5 border-l border-[var(--pd-content-divider)] hover:bg-[var(--pd-action-button-details-bg)]"
+        onclick={onCloseAllInPanel}>
+        <Icon class="w-3 text-xs" icon={faXmark} />
+      </button>
+    </Tooltip>
   {/if}
 </div>
 

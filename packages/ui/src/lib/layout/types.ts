@@ -29,6 +29,8 @@ export interface TabDescriptor {
   key: string;
   title: string;
   subtitle?: string;
+  /** Optional full hover label, for example `Container: my-container`. */
+  tooltip?: string;
   /** Font Awesome icon class list, e.g. 'fa-solid fa-box' */
   iconClass?: string;
   pinned?: boolean;

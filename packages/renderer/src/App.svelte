@@ -8,6 +8,7 @@ import './stores/layout/layout-mock-data';
 
 import type { KubernetesNavigationRequest, NavigationRequest } from '@desktop-framework/api';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
+import { untrack } from 'svelte';
 import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
@@ -18,7 +19,8 @@ import SecretsList from '/@/lib/secrets/SecretsList.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
-import { initSessionAutosave, restoreSession } from '/@/stores/layout/layout-persistence.svelte';
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { synchronizeHistoryForTabsPreference } from '/@/stores/navigation-history.svelte';
 
 import AppNavigation from './AppNavigation.svelte';
 import { navigateTo } from './kubernetesNavigation';
@@ -27,6 +29,7 @@ import ComposeDetails from './lib/compose/ComposeDetails.svelte';
 import ConfigMapDetails from './lib/configmaps-secrets/ConfigMapDetails.svelte';
 import ConfigMapSecretList from './lib/configmaps-secrets/ConfigMapSecretList.svelte';
 import KubernetesSecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
+import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
 import CreateContainerFromExistingImage from './lib/container/CreateContainerFromExistingImage.svelte';
@@ -45,6 +48,7 @@ import ExtensionList from './lib/extensions/ExtensionList.svelte';
 import SendFeedback from './lib/feedback/SendFeedback.svelte';
 import HelpActions from './lib/help/HelpActions.svelte';
 import BuildImageFromContainerfile from './lib/image/BuildImageFromContainerfile.svelte';
+import ImageDetails from './lib/image/ImageDetails.svelte';
 import ImagesList from './lib/image/ImagesList.svelte';
 import ImportContainersImages from './lib/image/ImportContainersImages.svelte';
 import LoadImages from './lib/image/LoadImages.svelte';
@@ -61,12 +65,7 @@ import KubernetesDashboard from './lib/kube/KubernetesDashboard.svelte';
 import KubePodDetails from './lib/kube/pods/PodDetails.svelte';
 import KubePodsList from './lib/kube/pods/PodsList.svelte';
 import PortForwardingList from './lib/kubernetes-port-forward/PortForwardingList.svelte';
-import ContainerWorkspaceEntry from './lib/layout/ContainerWorkspaceEntry.svelte';
 import GlobalTabBar from './lib/layout/GlobalTabBar.svelte';
-import ImageWorkspaceEntry from './lib/layout/ImageWorkspaceEntry.svelte';
-import LayoutToolbar from './lib/layout/LayoutToolbar.svelte';
-import PodWorkspaceEntry from './lib/layout/PodWorkspaceEntry.svelte';
-import WorkspaceLayout from './lib/layout/WorkspaceLayout.svelte';
 import ManifestDetails from './lib/manifest/ManifestDetails.svelte';
 import CreateNetwork from './lib/network/CreateNetwork.svelte';
 import NetworkDetails from './lib/network/NetworkDetails.svelte';
@@ -76,6 +75,7 @@ import NodesList from './lib/node/NodesList.svelte';
 import Onboarding from './lib/onboarding/Onboarding.svelte';
 import DeployPodToKube from './lib/pod/DeployPodToKube.svelte';
 import PodCreateFromContainers from './lib/pod/PodCreateFromContainers.svelte';
+import PodDetails from './lib/pod/PodDetails.svelte';
 import PodsList from './lib/pod/PodsList.svelte';
 import PreferencesPage from './lib/preferences/PreferencesPage.svelte';
 import PVCDetails from './lib/pvc/PVCDetails.svelte';
@@ -171,13 +171,10 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 
 // Initialize table persistence callbacks immediately
 tablePersistence.storage = new PodmanDesktopStoragePersist();
-
-// Tabs & Flexible Layout prototype: restore any tabs/panels left open from the last
-// session immediately at app startup, not lazily when the user first visits /workspace.
-// Otherwise the global tab strip (rendered on every non-workspace page, see below) would
-// stay empty until that first visit, even though a session exists in storage.
-restoreSession();
-initSessionAutosave();
+$effect(() => {
+  const enabled = tabPreferences.tabsEnabled;
+  untrack(() => synchronizeHistoryForTabsPreference(enabled));
+});
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>
@@ -211,30 +208,11 @@ initSessionAutosave();
         <SendFeedback />
         <ToastHandler />
         <ToastTaskNotifications />
-        {#if !meta.url.startsWith('/preferences')}
-          <!-- Tabs & Flexible Layout prototype: the "Layout" menu is mounted once, here, so
-               it's consistent, persistent chrome on every page (Dashboard, Containers, Pods,
-               Images, ...) - not a separate destination you have to navigate to. -->
-          <LayoutToolbar />
-          {#if !meta.url.startsWith('/workspace')}
-            <!-- The flat "everything I have open" tab strip only makes sense OUTSIDE the
-                 workspace itself: it's how you jump back into any tab from any other page.
-                 Once inside /workspace, the panel(s) below already show their own tab bar(s)
-                 - a single one normally, or one per split - so repeating the same tabs here
-                 would just be a second, redundant row. -->
-            <GlobalTabBar />
-          {/if}
+        {#if tabPreferences.tabsEnabled}
+          <GlobalTabBar />
         {/if}
         <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
           <DashboardPage />
-        </Route>
-
-        <!-- Single, persistent tabbed workspace (Tabs & Flexible Layout prototype): its tab
-             strip and panels live at this one route so they stay visible regardless of which
-             resource type (Container/Pod/Image) a tab was opened from. Resource list rows and
-             legacy detail routes redirect here after opening/focusing their tab. -->
-        <Route path="/workspace" breadcrumb="Workspace" navigationHint="root">
-          <WorkspaceLayout />
         </Route>
 
         <Route path="/containers/*" breadcrumb="Containers" navigationHint="root" firstmatch>
@@ -246,7 +224,7 @@ initSessionAutosave();
               <ContainerExport containerID={meta.params.id} />
             </Route>
             <Route breadcrumb="Container Details" navigationHint="details" path="/*">
-              <ContainerWorkspaceEntry containerID={meta.params.id} />
+              <ContainerDetails containerID={meta.params.id} />
             </Route>
           </Route>
         </Route>
@@ -286,7 +264,7 @@ initSessionAutosave();
             firstmatch>
             <Route path="/run/*" breadcrumb="Run Image">
               <RunImage
-                imageID={meta.params.id}
+                imageID={decodeURIComponent(meta.params.id)}
                 engineId={decodeURI(meta.params.engineId)}
                 base64RepoTag={meta.params.base64RepoTag}
               />
@@ -295,8 +273,8 @@ initSessionAutosave();
               path="/*"
               breadcrumb="Image Details"
               navigationHint="details">
-              <ImageWorkspaceEntry
-                imageID={meta.params.id}
+              <ImageDetails
+                imageID={decodeURIComponent(meta.params.id)}
                 engineId={decodeURI(meta.params.engineId)}
                 base64RepoTag={meta.params.base64RepoTag} />
             </Route>
@@ -308,7 +286,7 @@ initSessionAutosave();
           let:meta
           navigationHint="details">
           <ManifestDetails
-            imageID={meta.params.id}
+            imageID={decodeURIComponent(meta.params.id)}
             engineId={decodeURI(meta.params.engineId)}
             base64RepoTag={meta.params.base64RepoTag} />
         </Route>
@@ -345,7 +323,7 @@ initSessionAutosave();
           <ComposeDetails composeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
         </Route>
         <Route path="/pods/podman/:name/:engineId/*" breadcrumb="Pod Details" let:meta navigationHint="details">
-          <PodWorkspaceEntry
+          <PodDetails
             podName={decodeURI(meta.params.name)}
             engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
