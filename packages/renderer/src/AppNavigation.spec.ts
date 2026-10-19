@@ -24,13 +24,14 @@ import type { KubernetesObject } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
+import { setTabsEnabled } from './stores/layout/tab-preferences.svelte';
 import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
@@ -46,6 +47,10 @@ beforeAll(() => {
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
+});
+
+beforeEach(() => {
+  setTabsEnabled(false);
 });
 
 test('Test rendering of the navigation bar with empty items', async (_arg: unknown) => {
@@ -120,7 +125,8 @@ test('Test contributions', () => {
   expect(navigationBar).toBeInTheDocument();
 });
 
-test('Navigation bar shows title when expanded', async () => {
+test('Navigation bar shows title when the saved width is expanded', async () => {
+  const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
   const meta = {
     url: '/',
   } as unknown as TinroRouteMeta;
@@ -132,9 +138,8 @@ test('Navigation bar shows title when expanded', async () => {
     exitSettingsCallback: () => {},
   });
 
-  // Default width is 160px (expanded) — title should be in the DOM
-  const dashboardTitle = screen.getByLabelText('Dashboard title');
-  await vi.waitFor(() => expect(dashboardTitle).toHaveTextContent('Dashboard'));
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 160 } });
+  await vi.waitFor(() => expect(screen.getByLabelText('Dashboard title')).toHaveTextContent('Dashboard'));
 });
 
 test('Navigation bar width updates on configuration change', async () => {
@@ -150,7 +155,7 @@ test('Navigation bar width updates on configuration change', async () => {
     exitSettingsCallback: () => {},
   });
 
-  // Default width is 160px (expanded) — titles visible
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 160 } });
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 
   // Simulate width change to expanded (200px) — title still visible
@@ -175,7 +180,7 @@ test('Expanded threshold controls text visibility', async () => {
     exitSettingsCallback: () => {},
   });
 
-  // Default is 160px (expanded)
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 160 } });
   await vi.waitFor(() => screen.getByLabelText('Dashboard title'));
 
   // Shrink to 80px — still above threshold (70), should stay expanded
@@ -195,9 +200,6 @@ test('resize handle captures pointer and persists width on drag end', async () =
   const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
   const meta = { url: '/' } as unknown as TinroRouteMeta;
 
-  // Use a non-default width so waiting for it proves onMount finished (avoids mid-drag overwrite)
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(150);
-
   await fetchNavigationRegistries();
   render(AppNavigation, {
     meta,
@@ -207,6 +209,7 @@ test('resize handle captures pointer and persists width on drag end', async () =
   const handle = screen.getByRole('separator', { name: 'Resize navigation bar' });
   const setPointerCapture = vi.fn();
   handle.setPointerCapture = setPointerCapture;
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 150 } });
   await vi.waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '150'));
 
   handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 150, pointerId: 1 }));
@@ -217,4 +220,25 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+test('tabbed navigation always keeps the navigation bar collapsed', async () => {
+  const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+
+  setTabsEnabled(true);
+  await fetchNavigationRegistries();
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const navigationBar = screen.getByRole('navigation', { name: 'AppNavigation' });
+  callbacks.get(NAV_BAR_WIDTH_KEY)?.({ detail: { key: NAV_BAR_WIDTH_KEY, value: 200 } });
+
+  await vi.waitFor(() => expect(navigationBar).toHaveStyle({ width: '50px' }));
+  expect(screen.queryByLabelText('Dashboard title')).not.toBeInTheDocument();
+  expect(screen.queryByRole('separator', { name: 'Resize navigation bar' })).not.toBeInTheDocument();
+
+  setTabsEnabled(false);
 });

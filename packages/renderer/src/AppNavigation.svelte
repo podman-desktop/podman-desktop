@@ -19,6 +19,7 @@ import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
+import { tabPreferences } from './stores/layout/tab-preferences.svelte';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 
 interface Props {
@@ -39,11 +40,12 @@ const maxWidth = 240;
 const expandedThreshold = 70;
 
 let navWidth = $state(minWidth);
-let expanded = $derived(navWidth > expandedThreshold);
+let displayedNavWidth = $derived(tabPreferences.tabsEnabled ? minWidth : navWidth);
+let expanded = $derived(displayedNavWidth > expandedThreshold);
 let isDragging = $state(false);
 
 $effect(() => {
-  document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
+  document.documentElement.style.setProperty('--spacing-leftnavbar', `${displayedNavWidth}px`);
 });
 
 /** Custom overlay scrollbar: thumb position and height (0–1) */
@@ -158,7 +160,7 @@ let scrollRegionCleanup: (() => void) | undefined;
 onMount(async () => {
   const commandRegistry = new CommandRegistry();
   commandRegistry.init();
-  // Start the review prototype with icons only; resizing remains available.
+  // Start collapsed; saved width is applied in non-tabbed navigation mode.
   navWidth = minWidth;
   await tick();
   const el = scrollRegionEl;
@@ -208,7 +210,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
   class="group w-leftnavbar relative h-full flex-shrink-0 flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
   aria-label="AppNavigation"
   class:select-none={isDragging}
-  style:width="{navWidth}px">
+  style:width="{displayedNavWidth}px">
   <NavItem href="/" tooltip="Dashboard" bind:meta={meta} {expanded}>
     <div class="flex items-center w-full">
       <div class="flex items-center justify-center flex-shrink-0 w-6 relative">
@@ -293,17 +295,19 @@ function onDidChangeConfigurationCallback(e: Event): void {
     </div>
   </NavItem>
 
-  <!-- Resize handle -->
-  <div
-    class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-40 hover:bg-[var(--pd-global-nav-icon-selected-highlight)] transition-colors duration-150"
-    class:bg-[var(--pd-global-nav-icon-selected-highlight)]={isDragging}
-    role="separator"
-    aria-orientation="vertical"
-    aria-label="Resize navigation bar"
-    aria-valuenow={navWidth}
-    aria-valuemin={minWidth}
-    aria-valuemax={maxWidth}
-    {@attach longPress(toggleNavWidth)}
-    onpointerdown={onResizeHandlePointerDown}
-    ondblclick={onResizeHandleDblClick}></div>
+  {#if !tabPreferences.tabsEnabled}
+    <!-- Resize handle -->
+    <div
+      class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-40 hover:bg-[var(--pd-global-nav-icon-selected-highlight)] transition-colors duration-150"
+      class:bg-[var(--pd-global-nav-icon-selected-highlight)]={isDragging}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize navigation bar"
+      aria-valuenow={navWidth}
+      aria-valuemin={minWidth}
+      aria-valuemax={maxWidth}
+      {@attach longPress(toggleNavWidth)}
+      onpointerdown={onResizeHandlePointerDown}
+      ondblclick={onResizeHandleDblClick}></div>
+  {/if}
 </nav>
