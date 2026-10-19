@@ -46,6 +46,15 @@ const matchingRecords = $derived(
       return map;
     }, new Map<string, IConfigurationPropertyRecordedSchema[]>()),
 );
+const tabsPreferenceTitle = 'Tabbed navigation';
+const tabsPreferenceDescription = 'Open resources in separate tabs instead of the current page.';
+const showTabsPreference = $derived(
+  key === 'preferences.appearance' &&
+    (!searchValue ||
+      matchValue('tabs', searchValue) ||
+      matchValue(tabsPreferenceTitle, searchValue) ||
+      matchValue(tabsPreferenceDescription, searchValue)),
+);
 
 onMount(async () => {
   contextsUnsubscribe = context.subscribe(value => {
@@ -78,11 +87,15 @@ function updateSearchValue(event: any): void {
         <SearchInput  title="preferences" class="mt-4" oninput={updateSearchValue} />
       {/snippet}
     <div class="flex flex-col space-y-5 text-[var(--pd-content-header)] pb-2">
-      {#if key === 'preferences.appearance' && (!searchValue || 'tabs'.includes(searchValue.toLowerCase()))}
-        <PreferencesTabs />
-      {/if}
       {#if matchingRecords.size === 0}
-        <div>No Settings Found</div>
+        {#if showTabsPreference}
+          <div>
+            <div class="text-lg font-medium first-letter:uppercase">Appearance</div>
+            <PreferencesTabs />
+          </div>
+        {:else}
+          <div>No Settings Found</div>
+        {/if}
       {:else}
         {#each [...matchingRecords.keys()].toSorted((a, b) => a.localeCompare(b)) as configSection, index (index)}
           {@const records = matchingRecords.get(configSection)}
@@ -94,6 +107,9 @@ function updateSearchValue(event: any): void {
                   <PreferencesRenderingItem record={configItem} />
                 </div>
               {/each}
+              {#if showTabsPreference}
+                <PreferencesTabs />
+              {/if}
             </div>
           {/if}
         {/each}

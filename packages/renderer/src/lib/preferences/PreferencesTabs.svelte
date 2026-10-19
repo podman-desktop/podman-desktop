@@ -7,15 +7,14 @@ function changeTabs(event: CustomEvent<boolean>): void {
 }
 </script>
 
-<section aria-label="Tabs">
-  <h2 class="text-lg font-medium">Tabs</h2>
+<section aria-label="Tabbed navigation">
   <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2 p-3 text-[var(--pd-invert-content-card-text)]">
     <div class="flex items-center justify-between gap-4">
       <div>
-        <div class="font-semibold">Enable tabs</div>
-        <p class="pt-1 text-sm">Open resources in separate tabs, each with its own back and forward history. Turn off to use standard page navigation.</p>
+        <div class="font-semibold">Tabbed navigation</div>
+        <p class="pt-1 text-sm">Open resources in separate tabs instead of the current page.</p>
       </div>
-      <SlideToggle id="tabs-enabled" aria-label="Enable tabs" checked={tabPreferences.tabsEnabled} on:checked={changeTabs} />
+      <SlideToggle id="tabs-enabled" aria-label="Tabbed navigation" checked={tabPreferences.tabsEnabled} on:checked={changeTabs} />
     </div>
   </div>
 </section>

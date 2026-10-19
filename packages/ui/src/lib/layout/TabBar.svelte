@@ -79,6 +79,7 @@ let scrollEl: HTMLDivElement | undefined = $state();
 let overflowing = $state(false);
 let showOverflowMenu = $state(false);
 let dragOverTabId: string | undefined = $state();
+let dragOverPosition: 'before' | 'after' = $state('before');
 let contextMenu: { x: number; y: number; tabId: string } | undefined = $state();
 
 function checkOverflow(_tabCount: number): void {
@@ -113,6 +114,7 @@ function onDragStart(event: DragEvent, tabId: string): void {
 function onDragOverTab(event: DragEvent, tabId: string): void {
   event.preventDefault();
   dragOverTabId = tabId;
+  dragOverPosition = getDropPosition(event);
 }
 
 function onDragLeaveTab(): void {
@@ -129,17 +131,32 @@ function readPayload(event: DragEvent): DragPayload | undefined {
   }
 }
 
-function onDropOnTab(event: DragEvent, beforeTabId: string): void {
+function getDropPosition(event: DragEvent): 'before' | 'after' {
+  const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  return bounds.width > 0 && event.clientX >= bounds.left + bounds.width / 2 ? 'after' : 'before';
+}
+
+function onDropOnTab(event: DragEvent, targetTabId: string): void {
   event.preventDefault();
+  // Keep the drop from reaching the tab strip's end target, which would
+  // immediately reorder the same tab a second time to the end of the list.
+  event.stopPropagation();
   dragOverTabId = undefined;
   const payload = readPayload(event);
   if (!payload) return;
   if (payload.panelId === panelId) {
     if (tabs.find(tab => tab.id === payload.tabId)?.pinned) return;
+    const targetIndex = tabs.findIndex(tab => tab.id === targetTabId);
+    const dropPosition = getDropPosition(event);
+    const beforeTabId = dropPosition === 'before' ? targetTabId : tabs[targetIndex + 1]?.id;
     if (payload.tabId !== beforeTabId) onReorder(payload.tabId, beforeTabId);
   } else {
+    const targetIndex = tabs.findIndex(tab => tab.id === targetTabId);
+    const dropPosition = getDropPosition(event);
+    const beforeTabId = dropPosition === 'before' ? targetTabId : tabs[targetIndex + 1]?.id;
     onMoveFromOtherPanel(payload.panelId, payload.tabId, beforeTabId);
   }
+  dragOverTabId = undefined;
 }
 
 function onDropOnEnd(event: DragEvent): void {
@@ -250,8 +267,10 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
           class:cursor-pointer={!tab.pinned}
           class:cursor-not-allowed={tab.pinned}
           class:bg-[var(--pd-content-bg)]={tab.id === activeTabId}
-          class:border-l-2={dragOverTabId === tab.id}
-          class:border-l-[var(--pd-tab-highlight)]={dragOverTabId === tab.id}
+          class:border-l-2={dragOverTabId === tab.id && dragOverPosition === 'before'}
+          class:border-l-[var(--pd-tab-highlight)]={dragOverTabId === tab.id && dragOverPosition === 'before'}
+          class:border-r-2={dragOverTabId === tab.id && dragOverPosition === 'after'}
+          class:border-r-[var(--pd-tab-highlight)]={dragOverTabId === tab.id && dragOverPosition === 'after'}
           class:text-[var(--pd-tab-text-highlight)]={tab.id === activeTabId}
           class:text-[var(--pd-tab-text)]={tab.id !== activeTabId}
           class:opacity-70={!!tab.stale}>
