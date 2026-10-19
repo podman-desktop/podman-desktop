@@ -17,6 +17,14 @@ onMount(async () => {
   platform = await window.getOsPlatform();
 });
 
+onMount(() => {
+  const openNewTabPalette = (): void => {
+    commandPaletteVisible = true;
+  };
+  window.addEventListener('open-new-tab-palette', openNewTabPalette);
+  return (): void => window.removeEventListener('open-new-tab-palette', openNewTabPalette);
+});
+
 function openCommandPalette(): void {
   commandPaletteVisible = true;
 }

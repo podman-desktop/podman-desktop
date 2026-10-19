@@ -26,6 +26,8 @@ import { isPropertyValidInContext } from '/@/lib/preferences/Util';
 import { handleNavigation, resolveRoute } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { context } from '/@/stores/context';
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { openNavigationActionInNewTab, openRouteInNewTab } from '/@/stores/layout/tabs.svelte';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { navigationSearchEntries } from '/@/stores/navigation-search-entries';
 
@@ -64,7 +66,7 @@ let searchOptions: CommandPaletteSearchOption[] = $state([]);
 let isMac: boolean = $state(false);
 let modifierC: string = $derived(isMac ? '⌘' : 'Ctrl+');
 let modifierS: string = $derived(isMac ? '⇧' : 'Shift+');
-let shortcuts = $derived([[`${modifierC}${modifierS}P`], [`${F1}`, '>'], [`${modifierC}K`], [`${modifierC}F`]]);
+let shortcuts = $derived([[`${modifierC}${modifierS}P`, `${F1}`], ['>'], [`${modifierC}K`], [`${modifierC}F`]]);
 let searchOptionsWithShortcuts = $derived(
   searchOptions.map((searchOption, index) => {
     return { ...searchOption, shortCut: index < shortcuts.length ? shortcuts[index] : undefined };
@@ -106,9 +108,13 @@ let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
   ),
 );
 
-let filteredGoToItems = $derived(
-  goToItems.filter(item => (inputValue ? item.name.toLowerCase().includes(inputValue.toLowerCase()) : true)),
-);
+let filteredGoToItems = $derived.by(() => {
+  return goToItems
+    .filter(
+      (item, index, items) => items.findIndex(candidate => resolveRoute(candidate) === resolveRoute(item)) === index,
+    )
+    .filter(item => (inputValue ? item.name.toLowerCase().includes(inputValue.toLowerCase()) : true));
+});
 
 let filteredExtensionRouteItems: NavigationSearchEntryInfo[] = $derived(
   $navigationSearchEntries.filter(item =>
@@ -144,6 +150,11 @@ onMount(async () => {
   searchOptions = await window.getCommandPaletteSearchOptions();
 });
 
+onMount(() => {
+  window.addEventListener('open-new-tab-palette', openAllSearch);
+  return (): void => window.removeEventListener('open-new-tab-palette', openAllSearch);
+});
+
 // Focus the input when the command palette becomes visible
 $effect(() => {
   if (display && inputElement) {
@@ -174,8 +185,12 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     return;
   }
 
-  // toggle display using F1 or ESC keys
-  if (e.key === `${F1}` || e.key === '>') {
+  // F1 opens all results so page destinations are available alongside commands.
+  if (e.key === `${F1}`) {
+    openAllSearch();
+    e.preventDefault();
+    return;
+  } else if (e.key === '>') {
     selectedFilteredIndex = 0;
     searchOptionsSelectedIndex = 1;
     displaySearchBar();
@@ -244,6 +259,12 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
   }
 }
 
+function openAllSearch(): void {
+  selectedFilteredIndex = 0;
+  searchOptionsSelectedIndex = 0;
+  displaySearchBar();
+}
+
 function switchSearchOption(direction: 1 | -1): void {
   const searchOptionsLength = searchOptionsWithShortcuts.length;
   const offset = direction === 1 ? 0 : searchOptionsLength;
@@ -271,13 +292,18 @@ async function executeAction(index: number): Promise<void> {
     pageLink = item.url;
   } else if (isExtensionRouteItem(item)) {
     try {
-      await window.navigateToRoute(item.routeId);
+      if (tabPreferences.tabsEnabled) {
+        await openNavigationActionInNewTab(() => window.navigateToRoute(item.routeId));
+      } else {
+        await window.navigateToRoute(item.routeId);
+      }
     } catch (error) {
       console.error('Error navigating to extension route', error);
     }
     itemType = 'ExtensionRoute';
   } else if (isGoToItem(item)) {
-    handleNavigation(item);
+    if (tabPreferences.tabsEnabled) openRouteInNewTab(resolveRoute(item));
+    else handleNavigation(item);
     itemType = item.page;
   } else {
     // Command item
@@ -358,11 +384,11 @@ function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
 
 function getItemKey(item: CommandPaletteItem, index: number): string {
   if (isExtensionRouteItem(item)) {
-    return `route:${item.routeId}`;
+    return `route:${item.routeId}:${index}`;
   }
 
   if (isGoToItem(item)) {
-    return `goto:${resolveRoute(item)}`;
+    return `goto:${resolveRoute(item)}:${index}`;
   }
 
   if (isDocItem(item)) {

@@ -267,7 +267,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
     aria-hidden="true"></div>
 
     <div bind:this={outsideWindow}>
-      <NavItem href="/accounts" tooltip="Accounts" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)} {expanded}>
+      <NavItem href="/accounts" tooltip="Accounts" bind:meta={meta} newTabOnModifier={false} onClick={(event): void => authActions?.onButtonClick(event)} {expanded}>
           <div class="flex items-center w-full">
             <div class="flex-shrink-0 flex items-center justify-center w-6">
               <AccountIcon size={iconSize} />

@@ -86,6 +86,21 @@ describe('Command Palette', () => {
     expect(input).toBeInTheDocument();
   });
 
+  test('Open a new tab button event displays the command palette in All mode', async () => {
+    render(CommandPalette);
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
+    await fireEvent(window, new Event('open-new-tab-palette'));
+
+    expect(screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ctrl+Shift+P F1 Category 1 text' })).toHaveClass(
+      'text-[var(--pd-button-tab-text-selected)]',
+    );
+  });
+
   test('Expect that esc key is hiding the widget', async () => {
     render(CommandPalette, { display: true });
 
@@ -432,19 +447,19 @@ describe('Command Palette', () => {
     {
       description: 'Ctrl+Shift+P',
       shortcut: '{Control>}{Shift>}p{/Shift}{/Control}',
-      expectedTabText: 'Ctrl+Shift+P Category 1 text',
+      expectedTabText: 'Ctrl+Shift+P F1 Category 1 text',
       shouldOpen: false,
     },
     {
       description: 'F1 key',
       shortcut: '{F1}',
-      expectedTabText: 'F1 > Category 2 text',
+      expectedTabText: 'Ctrl+Shift+P F1 Category 1 text',
       shouldOpen: true,
     },
     {
       description: '> key',
       shortcut: '>',
-      expectedTabText: 'F1 > Category 2 text',
+      expectedTabText: '> Category 2 text',
       shouldOpen: false,
     },
     {
@@ -481,8 +496,8 @@ describe('Command Palette', () => {
       expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
       expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
-      const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
-      const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+      const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P F1 Category 1 text' });
+      const commandsTab = screen.getByRole('button', { name: '> Category 2 text' });
       const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
       const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 
@@ -541,8 +556,8 @@ describe('Command Palette', () => {
 
     await screen.findByRole('button', { name: 'Test Command 1' });
 
-    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
-    const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P F1 Category 1 text' });
+    const commandsTab = screen.getByRole('button', { name: '> Category 2 text' });
     const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
     const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 
@@ -593,8 +608,8 @@ describe('Command Palette', () => {
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
-    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
-    const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P F1 Category 1 text' });
+    const commandsTab = screen.getByRole('button', { name: '> Category 2 text' });
     const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
     const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 

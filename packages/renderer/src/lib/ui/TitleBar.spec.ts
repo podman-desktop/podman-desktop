@@ -35,6 +35,9 @@ beforeAll(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getTitleBarText).mockResolvedValue('Podman Desktop');
+  vi.mocked(window.getDocumentationItems).mockResolvedValue([]);
+  vi.mocked(window.getCommandPaletteSearchOptions).mockResolvedValue([]);
+  vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -68,6 +71,14 @@ describe('macOS', () => {
 
     const searchButton = screen.queryByText('Search');
     expect(searchButton).toBeInTheDocument();
+  });
+
+  test('opens the command palette when a new tab is requested', async () => {
+    await waitRender({});
+
+    window.dispatchEvent(new Event('open-new-tab-palette'));
+
+    expect(await screen.findByRole('textbox', { name: 'Command palette command input' })).toBeInTheDocument();
   });
 });
 

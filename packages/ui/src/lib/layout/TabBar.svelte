@@ -52,7 +52,7 @@ interface Props {
   onSplitDown?: (tabId: string) => void;
   onMoveToNewPanel?: (tabId: string) => void;
   showCloseAllButton?: boolean;
-  /** When provided, renders a "+" button beside the last tab to open the resource search. */
+  /** When provided, renders a "+" button beside the last tab to open the new-tab palette. */
   onAddTab?: (event?: MouseEvent) => void;
 }
 
@@ -81,6 +81,8 @@ let showOverflowMenu = $state(false);
 let dragOverTabId: string | undefined = $state();
 let dragOverPosition: 'before' | 'after' = $state('before');
 let contextMenu: { x: number; y: number; tabId: string } | undefined = $state();
+let previousTabCount = 0;
+let tabCountInitialized = false;
 
 function checkOverflow(_tabCount: number): void {
   if (!scrollEl) return;
@@ -90,14 +92,47 @@ function checkOverflow(_tabCount: number): void {
 $effect(() => {
   // reading tabs.length here makes this effect re-run whenever the tab list changes
   const tabCount = tabs.length;
-  requestAnimationFrame(() => checkOverflow(tabCount));
+  const tabsWereAdded = tabCountInitialized && tabCount > previousTabCount;
+  tabCountInitialized = true;
+  previousTabCount = tabCount;
+  requestAnimationFrame(() => {
+    checkOverflow(tabCount);
+    // New background tabs should be visible even though opening them leaves
+    // the current page and active tab unchanged.
+    if (tabsWereAdded && scrollEl) {
+      scrollEl.scrollLeft = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+    }
+  });
+});
+
+$effect(() => {
+  const selectedId = activeTabId;
+  if (!selectedId || !scrollEl) return;
+
+  requestAnimationFrame(() => {
+    const selectedTab = Array.from(scrollEl?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []).find(
+      tab => tab.dataset.tabId === selectedId,
+    );
+    if (!selectedTab || !scrollEl) return;
+
+    const viewport = scrollEl.getBoundingClientRect();
+    const selectedBounds = selectedTab.getBoundingClientRect();
+    if (selectedBounds.left < viewport.left) {
+      scrollEl.scrollLeft -= viewport.left - selectedBounds.left;
+    } else if (selectedBounds.right > viewport.right) {
+      scrollEl.scrollLeft += selectedBounds.right - viewport.right;
+    }
+  });
 });
 
 function onWheel(event: WheelEvent): void {
   if (!scrollEl) return;
-  if (event.deltaY === 0) return;
-  scrollEl.scrollLeft += event.deltaY;
+  if (scrollEl.scrollWidth <= scrollEl.clientWidth + 1) return;
+  const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+  if (delta === 0) return;
+  scrollEl.scrollLeft += delta;
   event.preventDefault();
+  event.stopPropagation();
 }
 
 function onDragStart(event: DragEvent, tabId: string): void {
@@ -228,22 +263,25 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
 </script>
 
 <div class="flex items-stretch border-b border-[var(--pd-global-nav-bg-border)] bg-[var(--pd-content-card-bg)] min-w-0">
-  <div
-    bind:this={scrollEl}
-    onwheel={onWheel}
-    class="flex flex-row overflow-x-auto min-w-0 grow scrollbar-hide"
-    role="tablist"
-    tabindex="-1"
-    ondragover={(e: DragEvent): void => e.preventDefault()}
-    ondrop={onDropOnEnd}>
-    {#each tabs as tab (tab.id)}
-      <Tooltip
-        tip={tab.tooltip ?? (tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title)}
-        top
-        containerClass="flex shrink-0 items-stretch"
-        class="flex items-stretch">
-        <div
+  <div class="flex flex-row min-w-0 grow items-stretch">
+    <div
+      bind:this={scrollEl}
+      onwheel={onWheel}
+      class="flex flex-row overflow-x-auto min-w-0 scrollbar-hide overscroll-x-contain overscroll-y-none"
+      style="flex: 0 1 max-content; max-width: calc(100% - 40px);"
+      role="tablist"
+      tabindex="-1"
+      ondragover={(e: DragEvent): void => e.preventDefault()}
+      ondrop={onDropOnEnd}>
+      {#each tabs as tab (tab.id)}
+        <Tooltip
+          tip={tab.tooltip ?? (tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title)}
+          top
+          containerClass="flex shrink-0 items-stretch"
+          class="flex items-stretch">
+          <div
           role="tab"
+          data-tab-id={tab.id}
           tabindex="0"
           aria-selected={tab.id === activeTabId}
           draggable={!tab.pinned}
@@ -263,10 +301,12 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
               onSelect(tab.id);
             }
           }}
-          class="group flex items-center gap-2 px-3 py-1.5 border-r border-[var(--pd-global-nav-bg-border)] whitespace-nowrap select-none max-w-[220px]"
+          class="group flex items-center gap-2 px-3 py-1.5 border-r border-b-2 border-[var(--pd-global-nav-bg-border)] whitespace-nowrap select-none max-w-[220px]"
           class:cursor-pointer={!tab.pinned}
           class:cursor-not-allowed={tab.pinned}
           class:bg-[var(--pd-content-bg)]={tab.id === activeTabId}
+          class:border-b-[var(--pd-tab-highlight)]={tab.id === activeTabId}
+          class:border-b-transparent={tab.id !== activeTabId}
           class:border-l-2={dragOverTabId === tab.id && dragOverPosition === 'before'}
           class:border-l-[var(--pd-tab-highlight)]={dragOverTabId === tab.id && dragOverPosition === 'before'}
           class:border-r-2={dragOverTabId === tab.id && dragOverPosition === 'after'}
@@ -300,15 +340,16 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
               <Icon class="w-3 text-xs" icon={faXmark} />
             </button>
           {/if}
-        </div>
-      </Tooltip>
-    {/each}
+          </div>
+        </Tooltip>
+      {/each}
+    </div>
     {#if onAddTab && tabs.length > 0}
       <Tooltip tip="Open a new tab" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
         <button
           type="button"
           aria-label="Open a new tab"
-          class="flex items-center px-2.5 border-r border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
+          class="flex items-center px-2.5 border-l border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
           onclick={(event: MouseEvent): void => onAddTab?.(event)}>
           <Icon class="w-3 text-xs" icon={faPlus} />
         </button>
@@ -354,10 +395,10 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
     </div>
   {/if}
   {#if showCloseAllButton}
-    <Tooltip tip="Close all tabs" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
+    <Tooltip tip="Close unpinned tabs" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
       <button
         type="button"
-        aria-label="Close all tabs"
+        aria-label="Close unpinned tabs"
         class="flex items-center px-2.5 border-l border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
         onclick={onCloseAllInPanel}>
         <Icon class="w-3 text-xs" icon={faXmark} />

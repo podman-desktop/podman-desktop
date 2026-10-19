@@ -9,6 +9,7 @@ import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScr
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 import { filtered, searchPattern, setNetworkStatus } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
 
@@ -111,6 +112,11 @@ const columns = [
 const row = new TableRow<NetworkInfoUI>({
   selectable: (network): boolean => network.status === 'UNUSED',
   disabledText: 'Network is used by a container',
+  onModifierClick: (network): void =>
+    openRouteInBackgroundTab(
+      `/networks/${encodeURIComponent(network.name)}/${encodeURIComponent(network.engineId)}/summary`,
+      network.name,
+    ),
 });
 
 /**

@@ -31,6 +31,8 @@ export interface TabDescriptor {
   subtitle?: string;
   /** Optional full hover label, for example `Container: my-container`. */
   tooltip?: string;
+  /** Resource state shown using the status color on the tab icon. */
+  status?: string;
   /** Font Awesome icon class list, e.g. 'fa-solid fa-box' */
   iconClass?: string;
   pinned?: boolean;

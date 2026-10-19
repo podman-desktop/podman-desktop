@@ -19,6 +19,7 @@ import PodIcon from '/@/lib/images/PodIcon.svelte';
 import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 import { filtered, podsInfos, searchPattern, setPodStatus } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 
@@ -162,7 +163,14 @@ const columns = [
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),
 ];
 
-const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
+const row = new TableRow<PodInfoUI>({
+  selectable: (_pod): boolean => true,
+  onModifierClick: (pod): void =>
+    openRouteInBackgroundTab(
+      `/pods/podman/${encodeURIComponent(pod.name)}/${encodeURIComponent(pod.engineId)}/summary`,
+      pod.name,
+    ),
+});
 
 /**
  * Utility function for the Table to get the key to use for each item

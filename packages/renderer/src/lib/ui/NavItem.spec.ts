@@ -22,10 +22,17 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import type { TinroRouteMeta } from 'tinro';
-import { expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
+
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { MAIN_TAB, tabsState } from '/@/stores/layout/tabs.svelte';
 
 import NavItem from './NavItem.svelte';
 import NavItemTest from './NavItemTest.svelte';
+
+afterEach(() => {
+  tabPreferences.tabsEnabled = false;
+});
 
 function renderIt(tooltip: string, href: string, meta: any, onClick?: any): void {
   render(NavItem, { tooltip: tooltip, href: href, meta: meta, onClick: onClick });
@@ -138,6 +145,18 @@ test('Expect that having an onClick handler overrides href and works', async () 
   await fireEvent.click(element);
 
   expect(clicked).toBe(true);
+});
+
+test('Ctrl-click opens a navigation page in a background tab when tabbed navigation is enabled', async () => {
+  tabPreferences.tabsEnabled = true;
+  tabsState.tabs = [{ id: MAIN_TAB, title: 'Dashboard', pinned: true, stack: [], index: -1 }];
+  tabsState.activeId = MAIN_TAB;
+  renderIt('Containers', '/containers', { url: '/' });
+
+  await fireEvent.click(screen.getByLabelText('Containers'), { ctrlKey: true });
+
+  expect(tabsState.activeId).toBe(MAIN_TAB);
+  expect(tabsState.tabs.some(tab => tab.id === 'page:/containers')).toBe(true);
 });
 
 test('Expect that counter is rendered', async () => {

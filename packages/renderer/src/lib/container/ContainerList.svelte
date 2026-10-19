@@ -32,6 +32,7 @@ import {
 } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { podCreationHolder } from '/@/stores/creation-from-containers-store';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 import { podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 import { findMatchInLeaves } from '/@/stores/search-util';
@@ -435,6 +436,21 @@ const columns = [
 
 const row = new TableRow<ContainerGroupInfoUI | ContainerInfoUI>({
   selectable: (_container): boolean => true,
+  onModifierClick: (object): void => {
+    if (containerUtils.isContainerInfoUI(object)) {
+      openRouteInBackgroundTab(`/containers/${encodeURIComponent(object.id)}/summary`, object.name);
+    } else if (object.type === ContainerGroupInfoTypeUI.POD && object.engineId) {
+      openRouteInBackgroundTab(
+        `/pods/podman/${encodeURIComponent(object.name)}/${encodeURIComponent(object.engineId)}/summary`,
+        object.name,
+      );
+    } else if (object.engineId) {
+      openRouteInBackgroundTab(
+        `/compose/details/${encodeURIComponent(object.name)}/${encodeURIComponent(object.engineId)}/logs`,
+        object.name,
+      );
+    }
+  },
   children: (object): ContainerInfoUI[] => {
     if ('type' in object && object.type !== ContainerGroupInfoTypeUI.STANDALONE) {
       return object.containers;

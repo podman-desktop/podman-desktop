@@ -50,6 +50,111 @@ test('the shared page tab cannot be closed', () => {
   expect(screen.queryByRole('button', { name: 'Close tab Containers' })).not.toBeInTheDocument();
 });
 
+test('keeps the add-tab action beside the scrollable tabs and close-all at the far edge', () => {
+  render(TabBar, { ...props, onAddTab: vi.fn(), showCloseAllButton: true });
+
+  const tabList = screen.getByRole('tablist');
+  expect(tabList).not.toContainElement(screen.getByRole('button', { name: 'Open a new tab' }));
+  expect(tabList).not.toContainElement(screen.getByRole('button', { name: 'Close unpinned tabs' }));
+  expect(tabList.parentElement).toContainElement(screen.getByRole('button', { name: 'Open a new tab' }));
+  expect(screen.getByRole('button', { name: 'Close unpinned tabs' })).toBeInTheDocument();
+  expect(
+    screen
+      .getByRole('button', { name: 'Open a new tab' })
+      .compareDocumentPosition(screen.getByRole('button', { name: 'Close unpinned tabs' })),
+  ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+});
+
+test('marks the selected tab with the tab highlight underline', () => {
+  render(TabBar, props);
+
+  expect(screen.getByRole('tab', { name: /demo-nginx/ })).toHaveClass('border-b-[var(--pd-tab-highlight)]');
+  expect(screen.getByRole('tab', { name: /Containers/ })).toHaveClass('border-b-transparent');
+});
+
+test('scrolls the selected tab into view when it is outside the visible strip', async () => {
+  const frameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+    callback(0);
+    return 0;
+  });
+  const { rerender } = render(TabBar, {
+    ...props,
+    activeTabId: 'main',
+    tabs: [
+      { id: 'main', key: 'main', title: 'Main', pinned: true },
+      { id: 'second', key: 'second', title: 'Second' },
+      { id: 'third', key: 'third', title: 'Third' },
+    ],
+  });
+
+  const tabList = screen.getByRole('tablist');
+  Object.defineProperty(tabList, 'clientWidth', { configurable: true, value: 100 });
+  vi.spyOn(tabList, 'getBoundingClientRect').mockReturnValue({ left: 0, right: 100 } as DOMRect);
+  vi.spyOn(screen.getByRole('tab', { name: 'Third' }), 'getBoundingClientRect').mockReturnValue({
+    left: 100,
+    right: 150,
+  } as DOMRect);
+
+  await rerender({
+    ...props,
+    activeTabId: 'third',
+    tabs: [
+      { id: 'main', key: 'main', title: 'Main', pinned: true },
+      { id: 'second', key: 'second', title: 'Second' },
+      { id: 'third', key: 'third', title: 'Third' },
+    ],
+  });
+
+  expect(tabList.scrollLeft).toBe(50);
+  frameSpy.mockRestore();
+});
+
+test('scrolls newly added background tabs into view without selecting them', async () => {
+  const frameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+    callback(0);
+    return 0;
+  });
+  const { rerender } = render(TabBar, {
+    ...props,
+    activeTabId: 'main',
+    tabs: [{ id: 'main', key: 'main', title: 'Containers', pinned: true }],
+  });
+
+  const tabList = screen.getByRole('tablist');
+  Object.defineProperty(tabList, 'clientWidth', { configurable: true, value: 100 });
+  Object.defineProperty(tabList, 'scrollWidth', { configurable: true, value: 300 });
+
+  await rerender({
+    ...props,
+    activeTabId: 'main',
+    tabs: [
+      { id: 'main', key: 'main', title: 'Containers', pinned: true },
+      { id: 'background', key: 'background', title: 'New resource' },
+    ],
+  });
+
+  expect(tabList.scrollLeft).toBe(200);
+  expect(screen.getByRole('tab', { name: 'Containers' })).toHaveAttribute('aria-selected', 'true');
+  frameSpy.mockRestore();
+});
+
+test('scrolling an overflowing tab strip does not scroll the page', () => {
+  render(TabBar, props);
+
+  const tabList = screen.getByRole('tablist');
+  Object.defineProperty(tabList, 'clientWidth', { configurable: true, value: 100 });
+  Object.defineProperty(tabList, 'scrollWidth', { configurable: true, value: 300 });
+  const pageWheelHandler = vi.fn();
+  tabList.parentElement?.addEventListener('wheel', pageWheelHandler);
+  const event = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 60 });
+
+  tabList.dispatchEvent(event);
+
+  expect(tabList.scrollLeft).toBe(60);
+  expect(event.defaultPrevented).toBe(true);
+  expect(pageWheelHandler).not.toHaveBeenCalled();
+});
+
 test('dropping a tab on another tab reorders it once at that position', async () => {
   const onReorder = vi.fn();
   const dataTransfer = {

@@ -129,9 +129,12 @@ export interface RowInformation<Type, ChildType> {
    */
   readonly onClick?: (object: Type, event: Event) => void;
 
+  /** Handler for Cmd/Ctrl-clicks on non-interactive cells in a row. */
+  readonly onModifierClick?: (object: Type, event: MouseEvent) => void;
+
   /**
    * Returns true if the row should respond to clicks.
-   * Defaults to true when onClick is set.
+   * Defaults to true when a row click handler is set.
    */
   readonly clickable?: (object: Type) => boolean;
 }

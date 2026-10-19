@@ -842,6 +842,28 @@ describe('Table#rowClick', () => {
     expect(onClick).toHaveBeenCalledWith(DATA[0], expect.any(MouseEvent));
   });
 
+  test('Cmd/Ctrl-click in a data cell calls onModifierClick without the normal row click', async () => {
+    const onClick = vi.fn();
+    const onModifierClick = vi.fn();
+    const ROW = new Row<Item>({ onClick, onModifierClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-modifier-click-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const cell = within(getByRole('row', { name: 'Alice' })).getByText('Alice');
+    await fireEvent.click(cell, { ctrlKey: true });
+
+    expect(onModifierClick).toHaveBeenCalledOnce();
+    expect(onModifierClick).toHaveBeenCalledWith(DATA[0], expect.any(MouseEvent));
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   test('click directly on row element calls onClick', async () => {
     const onClick = vi.fn();
     const ROW = new Row<Item>({ onClick });

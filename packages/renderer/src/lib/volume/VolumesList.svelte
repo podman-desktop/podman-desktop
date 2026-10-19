@@ -22,6 +22,7 @@ import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScr
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { fetchVolumesWithData, filtered, searchPattern, setVolumeStatus, volumeListInfos } from '/@/stores/volumes';
 
@@ -183,6 +184,11 @@ const columns = [
 const row = new TableRow<VolumeInfoUI>({
   selectable: (volume): boolean => volume.status === 'UNUSED',
   disabledText: 'Volume is used by a container',
+  onModifierClick: (volume): void =>
+    openRouteInBackgroundTab(
+      `/volumes/${encodeURIComponent(volume.name)}/${encodeURIComponent(volume.engineId)}/summary`,
+      volume.name,
+    ),
 });
 /**
  * Utility function for the Table to get the key to use for each item

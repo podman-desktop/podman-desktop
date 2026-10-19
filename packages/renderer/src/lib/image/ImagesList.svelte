@@ -35,6 +35,7 @@ import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { filtered, imagesInfos, searchPattern } from '/@/stores/images';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import { viewsContributions } from '/@/stores/views';
@@ -291,6 +292,11 @@ const columns = [
 const row = new TableRow<ImageInfoUI>({
   // If it is a manifest, it is not selectable (no delete functionality yet)
   selectable: (image): boolean => image.status === 'UNUSED' && !image.isManifest,
+  onModifierClick: (image): void =>
+    openRouteInBackgroundTab(
+      `/${image.isManifest ? 'manifests' : 'images'}/${encodeURIComponent(image.id)}/${encodeURIComponent(image.engineId)}/${image.base64RepoTag}/summary`,
+      `${image.name}:${image.tag}`,
+    ),
   disabledText: 'Image is used by a container',
   children: (image): ImageInfoUI[] => {
     return image.children ?? [];

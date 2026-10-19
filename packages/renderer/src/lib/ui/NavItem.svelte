@@ -6,18 +6,32 @@ import type { MouseEventHandler } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
+
 interface Props {
   href: string;
   tooltip: string;
   ariaLabel?: string;
   meta: TinroRouteMeta;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
+  newTabOnModifier?: boolean;
   counter?: number;
   expanded?: boolean;
   children?: Snippet;
 }
 
-let { href, tooltip, ariaLabel, meta = $bindable(), onClick, counter, expanded = false, children }: Props = $props();
+let {
+  href,
+  tooltip,
+  ariaLabel,
+  meta = $bindable(),
+  onClick,
+  newTabOnModifier = true,
+  counter,
+  expanded = false,
+  children,
+}: Props = $props();
 
 const navItems: Writable<number> = getContext('nav-items');
 const inSection = $navItems !== undefined;
@@ -27,6 +41,11 @@ let selected = $derived(meta.url === uri || (uri !== '/' && meta.url.startsWith(
 let tooltipText = $derived(counter ? `${tooltip} (${counter})` : tooltip);
 
 function handleClick(e: MouseEvent & { currentTarget: EventTarget & HTMLAnchorElement }): void {
+  if (newTabOnModifier && tabPreferences.tabsEnabled && (e.metaKey || e.ctrlKey) && !e.altKey) {
+    e.preventDefault();
+    openRouteInBackgroundTab(uri, tooltip);
+    return;
+  }
   if (onClick) {
     e.preventDefault();
     onClick(e);

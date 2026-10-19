@@ -20,24 +20,36 @@ import type { ContextMenuAction, OpenMode } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 
-export function openContainerInWorkspace(container: { id: string; name: string }, _mode: OpenMode): void {
-  router.goto(`/containers/${encodeURIComponent(container.id)}/${tabPreferences.tabsEnabled ? 'summary' : ''}`);
+export function openContainerInWorkspace(container: { id: string; name: string }, mode: OpenMode): void {
+  const url = `/containers/${encodeURIComponent(container.id)}/${tabPreferences.tabsEnabled ? 'summary' : ''}`;
+  if (mode === 'newTab' && tabPreferences.tabsEnabled) {
+    openRouteInBackgroundTab(url, container.name);
+    return;
+  }
+  router.goto(url);
 }
 
-export function openPodInWorkspace(pod: { name: string; engineId: string }, _mode: OpenMode): void {
-  router.goto(
-    `/pods/podman/${encodeURIComponent(pod.name)}/${encodeURIComponent(pod.engineId)}/${tabPreferences.tabsEnabled ? 'summary' : ''}`,
-  );
+export function openPodInWorkspace(pod: { name: string; engineId: string }, mode: OpenMode): void {
+  const url = `/pods/podman/${encodeURIComponent(pod.name)}/${encodeURIComponent(pod.engineId)}/${tabPreferences.tabsEnabled ? 'summary' : ''}`;
+  if (mode === 'newTab' && tabPreferences.tabsEnabled) {
+    openRouteInBackgroundTab(url, pod.name);
+    return;
+  }
+  router.goto(url);
 }
 
 export function openImageInWorkspace(
   image: { id: string; engineId: string; name: string; tag: string; base64RepoTag: string },
-  _mode: OpenMode,
+  mode: OpenMode,
 ): void {
-  router.goto(
-    `/images/${encodeURIComponent(image.id)}/${encodeURIComponent(image.engineId)}/${image.base64RepoTag}/summary`,
-  );
+  const url = `/images/${encodeURIComponent(image.id)}/${encodeURIComponent(image.engineId)}/${image.base64RepoTag}/summary`;
+  if (mode === 'newTab' && tabPreferences.tabsEnabled) {
+    openRouteInBackgroundTab(url, `${image.name}:${image.tag}`);
+    return;
+  }
+  router.goto(url);
 }
 
 export function buildOpenContextMenuActions(open: (mode: OpenMode) => void): ContextMenuAction[] {

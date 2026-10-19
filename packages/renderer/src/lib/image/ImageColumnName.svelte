@@ -5,6 +5,7 @@ import { ContextMenu } from '@podman-desktop/ui-svelte';
 import { buildOpenContextMenuActions, openImageInWorkspace } from '/@/lib/layout/resource-open-actions';
 import Badge from '/@/lib/ui/Badge.svelte';
 import { handleNavigation } from '/@/navigation';
+import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 
@@ -27,11 +28,16 @@ function openManifestDetails(image: ImageInfoUI): void {
 // A plain click opens straight into the workspace tab (replacing whatever was showing),
 // same destination Cmd/Ctrl+click uses for a new tab - no intermediate detail route/flash.
 function onClick(event: MouseEvent): void {
+  if (event.metaKey || event.ctrlKey) {
+    const url = `/${object.isManifest ? 'manifests' : 'images'}/${encodeURIComponent(object.id)}/${encodeURIComponent(object.engineId)}/${object.base64RepoTag}/summary`;
+    openRouteInBackgroundTab(url, `${object.name}:${object.tag}`);
+    return;
+  }
   if (object.isManifest) {
     openManifestDetails(object);
     return;
   }
-  openImageInWorkspace(object, event.metaKey || event.ctrlKey ? 'newTab' : 'replace');
+  openImageInWorkspace(object, 'replace');
 }
 
 function onContextMenu(event: MouseEvent): void {

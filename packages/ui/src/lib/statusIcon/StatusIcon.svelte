@@ -1,7 +1,5 @@
 <script lang="ts">
-import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import type { Component } from 'svelte';
-
+import type { IconType } from '../icons/Icon';
 import Icon from '../icons/Icon.svelte';
 import StarIcon from '../icons/StarIcon.svelte';
 import Spinner from '../progress/Spinner.svelte';
@@ -10,7 +8,7 @@ interface Props {
   // status: one of RUNNING, STARTING, USED, CREATED, DELETING, UPDATING, or DEGRADED
   // any other status will result in a standard outlined box
   status?: 'RUNNING' | 'STARTING' | 'USED' | 'DEGRADED' | 'DELETING' | 'UPDATING' | 'CREATED' | string;
-  icon?: IconDefinition | Component | string;
+  icon?: IconType;
   size?: number;
 }
 let { status = 'UNKNOWN', icon, size = 20 }: Props = $props();

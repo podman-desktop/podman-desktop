@@ -370,7 +370,7 @@ const INTERACTIVE_SELECTOR =
   'button, a, input, select, textarea, label, [role="button"], [role="menuitem"], [role="checkbox"], [role="switch"]';
 
 function isRowClickable(object: T): boolean {
-  return !!row.info.onClick && (row.info.clickable?.(object) ?? true);
+  return !!(row.info.onClick ?? row.info.onModifierClick) && (row.info.clickable?.(object) ?? true);
 }
 
 function eventTargetElement(event: MouseEvent): Element | undefined {
@@ -443,7 +443,18 @@ function invokeRowClick(object: T, rowElement: HTMLElement, event: Event): void 
 }
 
 function handleRowClick(object: T, event: MouseEvent): void {
-  invokeRowClick(object, event.currentTarget as HTMLElement, event);
+  const rowElement = event.currentTarget as HTMLElement;
+  if (
+    (event.metaKey || event.ctrlKey) &&
+    row.info.onModifierClick &&
+    isRowClickable(object) &&
+    !shouldIgnoreRowClick(rowElement, event)
+  ) {
+    event.preventDefault();
+    row.info.onModifierClick(object, event);
+    return;
+  }
+  invokeRowClick(object, rowElement, event);
 }
 
 function handleRowKeyDown(object: T, event: KeyboardEvent): void {
@@ -541,8 +552,8 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
         <div
           class="grid grid-table gap-x-0.5 min-h-[48px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
-          class:group={!!row.info.onClick}
-          class:hover:bg-[var(--pd-content-card-hover-bg)]={!row.info.onClick}
+          class:group={!!(row.info.onClick ?? row.info.onModifierClick)}
+          class:hover:bg-[var(--pd-content-card-hover-bg)]={!(row.info.onClick ?? row.info.onModifierClick)}
           class:rounded-t-lg={!collapsed.includes(itemKey) &&
             children.length > 0}
           class:rounded-lg={collapsed.includes(itemKey) ||
@@ -555,7 +566,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
           on:keydown={handleRowKeyDown.bind(undefined, object)}>
           <div
             class="whitespace-nowrap place-self-center"
-            class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick && isRowClickable(object)}
+            class:group-hover:bg-[var(--pd-content-card-hover-bg)]={(row.info.onClick ?? row.info.onModifierClick) && isRowClickable(object)}
             role="cell">
             {#if children.length > 0}
               <button
@@ -590,10 +601,10 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
               class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
-              class:group-hover:bg-[var(--pd-content-card-hover-bg)]={row.info.onClick &&
+              class:group-hover:bg-[var(--pd-content-card-hover-bg)]={(row.info.onClick ?? row.info.onModifierClick) &&
                 isRowClickable(object) &&
                 !column.info.excludeFromRowClick}
-              class:opacity-50={row.info.onClick && !isRowClickable(object) && !column.info.excludeFromRowClick}
+              class:opacity-50={(row.info.onClick ?? row.info.onModifierClick) && !isRowClickable(object) && !column.info.excludeFromRowClick}
               class:cursor-default={column.info.excludeFromRowClick && isRowClickable(object)}
               role="cell">
               {#if column.info.renderer}
