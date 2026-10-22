@@ -17,11 +17,16 @@
  ***********************************************************************/
 
 import type { Disposable, TelemetryLogger } from '@podman-desktop/api';
-import { context } from '@podman-desktop/api';
+import { commands, context, ProgressLocation, window } from '@podman-desktop/api';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { gte, valid } from 'semver';
 
-import { HYPERV_PREP_NOT_APPLIED_KEY, HYPERV_PREP_SUPPORTED_KEY } from '/@/constants';
+import {
+  HYPERV_PREP_COMMAND,
+  HYPERV_PREP_NOT_APPLIED_KEY,
+  HYPERV_PREP_RELOGIN_MESSAGE,
+  HYPERV_PREP_SUPPORTED_KEY,
+} from '/@/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
@@ -46,10 +51,12 @@ export class HyperVPrep {
   @inject(TelemetryLoggerSymbol)
   private readonly telemetryLogger!: TelemetryLogger;
 
+  #command: Disposable | undefined;
   #updateVersionListener: Disposable | undefined;
 
   @postConstruct()
   async init(): Promise<void> {
+    this.#command = commands.registerCommand(HYPERV_PREP_COMMAND, this.prepare.bind(this));
     this.#updateVersionListener = this.podmanProvider.provider.onDidUpdateVersion(() => {
       // listeners are called in registration order and this one is registered before the one
       // invalidating the cache in extension.ts, so drop the cached version before reading it
@@ -61,6 +68,8 @@ export class HyperVPrep {
 
   @preDestroy()
   dispose(): void {
+    this.#command?.dispose();
+    this.#command = undefined;
     this.#updateVersionListener?.dispose();
     this.#updateVersionListener = undefined;
   }
@@ -118,5 +127,75 @@ export class HyperVPrep {
 
     context.setValue(HYPERV_PREP_NOT_APPLIED_KEY, status !== HyperVPrepStatus.APPLIED);
     return status;
+  }
+
+  protected async run(): Promise<void> {
+    await execPodman(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+  }
+
+  private async prepare(): Promise<void> {
+    if (!(await this.isSupported())) {
+      await window.showInformationMessage(
+        `Hyper-V preparation requires Podman ${HyperVPrep.PODMAN_MINIMUM_VERSION} or later.`,
+      );
+      return;
+    }
+
+    try {
+      const currentStatus = await this.getStatus();
+      if (currentStatus === HyperVPrepStatus.APPLIED) {
+        await window.showInformationMessage('Hyper-V preparation is already applied.');
+        return;
+      }
+    } catch (error) {
+      console.error('Hyper-V preparation status check failed', error);
+      this.telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
+      const message = this.getErrorMessage(error, 'Unknown error while checking Hyper-V preparation status.');
+      await window.showErrorMessage(`Hyper-V preparation status check failed: ${message}`);
+      return;
+    }
+
+    const confirmation = await window.showInformationMessage(
+      'Prepare Hyper-V now? Administrator approval (UAC) is required.',
+      'Yes',
+      'No',
+    );
+    if (confirmation !== 'Yes') {
+      return;
+    }
+
+    try {
+      await window.withProgress(
+        {
+          location: ProgressLocation.TASK_WIDGET,
+          title: 'Preparing Hyper-V',
+        },
+        () => this.run(),
+      );
+    } catch (error) {
+      console.error('Hyper-V preparation failed', error);
+      this.telemetryLogger.logError('hypervPrepFailed', { error });
+      const message = this.getErrorMessage(error, 'Unknown error while preparing Hyper-V.');
+      await window.showErrorMessage(`Hyper-V preparation failed: ${message}`);
+      return;
+    }
+
+    this.telemetryLogger.logUsage('podman.hypervPrep');
+    await window.showInformationMessage(
+      `Hyper-V preparation completed successfully.\n\n${HYPERV_PREP_RELOGIN_MESSAGE}`,
+    );
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (
+      error instanceof Error &&
+      'stderr' in error &&
+      typeof error.stderr === 'string' &&
+      error.stderr.trim().length > 0
+    ) {
+      return error.stderr;
+    }
+
+    return error instanceof Error ? error.message || fallback : fallback;
   }
 }

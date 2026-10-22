@@ -1426,7 +1426,7 @@ export async function initInversify(
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
-  // resolving HyperVPrep starts keeping its context keys up to date (Windows only)
+  // resolving HyperVPrep registers its command and keeps its context keys up to date (Windows only)
   await inversifyContainer.getAsync(HyperVPrep, { optional: true });
 
   return { podmanInstall, winPlatform, podmanProvider };
