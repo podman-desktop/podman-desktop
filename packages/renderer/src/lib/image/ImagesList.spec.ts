@@ -432,14 +432,30 @@ describe('Contributions', () => {
   );
 });
 
-test('Expect importImage button redirects to image import page', async () => {
+test('Open import modal over images and preserve the search when canceled', async () => {
   const goToMock = vi.spyOn(router, 'goto');
-  render(ImagesList);
+  goToMock.mockClear();
+  render(ImagesList, { searchTerm: 'hello' });
   const btnImportImage = screen.getByRole('button', { name: 'Import Image' });
   expect(btnImportImage).toBeInTheDocument();
 
   await userEvent.click(btnImportImage);
-  expect(goToMock).toBeCalledWith('/images/import');
+  const dialog = screen.getByRole('dialog', { name: 'Import Containers' });
+  expect(screen.getByRole('region', { name: 'images' })).toBeInTheDocument();
+  expect(goToMock).not.toHaveBeenCalled();
+
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Add images to import' }));
+  expect(within(dialog).getByRole('textbox', { name: 'container image path' })).toHaveValue('path/file.tar');
+
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  expect(screen.queryByRole('dialog', { name: 'Import Containers' })).not.toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'search images' })).toHaveValue('hello');
+  expect(btnImportImage).toHaveFocus();
+
+  await userEvent.click(btnImportImage);
+  expect(screen.getByRole('dialog', { name: 'Import Containers' })).toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'container image path' })).not.toBeInTheDocument();
 });
 
 test('expect redirect to saveImage page when at least one image is selected and the multiple save button is clicked', async () => {
