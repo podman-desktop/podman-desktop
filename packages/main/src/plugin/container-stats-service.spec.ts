@@ -262,6 +262,21 @@ describe('Podman engines', () => {
     expect(containerRegistry.getAllContainersStatsStream).toHaveBeenCalledTimes(3);
   });
 
+  test('drops the readings of an engine and opens its stream again when the connection fails', async () => {
+    await subscribe();
+    await vi.waitFor(() => expect(streams.size).toBe(2));
+    write('podman1', podmanReport({ id: 'a', cpu: 1, memory: 100 }));
+    write('podman2', podmanReport({ id: 'c', cpu: 2, memory: 200 }));
+    await vi.waitFor(() => expect(lastUpdate()).toHaveLength(2));
+    vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    streams.get('podman1')?.destroy(new Error('socket hang up'));
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(lastUpdate()).toEqual([{ engineId: 'podman2', containerId: 'c', cpuPercentage: 2, memoryUsage: 200 }]);
+    expect(containerRegistry.getAllContainersStatsStream).toHaveBeenCalledTimes(3);
+  });
+
   test('opens the streams again when the refresh interval changes', async () => {
     await subscribe();
     await vi.waitFor(() => expect(streams.size).toBe(2));
@@ -439,6 +454,19 @@ describe('subscriptions', () => {
     expect(streams.get('podman1')?.destroyed).toBe(true);
   });
 
+  test('readings still arriving after the last subscriber left are ignored', async () => {
+    await subscribe();
+    await vi.waitFor(() => expect(streams.size).toBe(1));
+    // data already buffered can still be delivered after the stream is destroyed
+    vi.spyOn(streams.get('podman1') as PassThrough, 'destroy').mockReturnThis();
+
+    await unsubscribe();
+    write('podman1', podmanReport({ id: 'a', cpu: 1, memory: 100 }));
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(updateCount()).toBe(0);
+  });
+
   test('a stream opened after the last subscriber left is closed right away', async () => {
     let resolveStream: (stream: PassThrough) => void = () => {};
     vi.mocked(containerRegistry.getAllContainersStatsStream).mockReturnValue(
@@ -519,6 +547,18 @@ test('a stream that cannot be opened does not prevent reading the others', async
   await vi.waitFor(() => expect(streams.size).toBe(1));
   write('b', dockerStats(1_000, 10_000));
   await vi.waitFor(() => expect(lastUpdate()?.map(usage => usage.containerId)).toEqual(['b']));
+});
+
+test('a stream that cannot be opened is tried again later', async () => {
+  vi.mocked(containerRegistry.listSimpleContainers).mockResolvedValue([container('podman1', 'podman', 'a')]);
+  vi.mocked(containerRegistry.getAllContainersStatsStream).mockRejectedValueOnce(new Error('connection refused'));
+  vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+  await subscribe();
+  await vi.advanceTimersByTimeAsync(5_000);
+
+  expect(containerRegistry.getAllContainersStatsStream).toHaveBeenCalledTimes(2);
+  expect(streams.has('podman1')).toBe(true);
 });
 
 test('dispose closes the streams', async () => {

@@ -172,8 +172,8 @@ export class ContainerStatsService implements IDisposable {
     }
   }
 
-  setRefreshInterval(seconds: number): void {
-    seconds = Math.max(0, Math.round(seconds));
+  setRefreshInterval(requestedSeconds: number): void {
+    const seconds = Math.max(0, Math.round(requestedSeconds));
     if (seconds === this.#refreshInterval) {
       return;
     }
@@ -298,9 +298,10 @@ export class ContainerStatsService implements IDisposable {
         }
         this.#streams.set(key, stream);
 
+        // the streams closed by #stop can still deliver buffered data or end afterwards
+        const isClosed = (): boolean => this.#streams.get(key) !== stream;
         const end = (): void => {
-          // ignore the streams closed by #stop
-          if (this.#streams.get(key) !== stream) {
+          if (isClosed()) {
             return;
           }
           this.#streams.delete(key);
@@ -309,22 +310,29 @@ export class ContainerStatsService implements IDisposable {
           // the stream may have ended while its engine is still running: try again later
           this.#scheduleResync(RETRY_DELAY);
         };
-        const pipeline = stream.pipe(streamValues.withParserAsStream());
-        pipeline.on('data', (data: { value: T }) => {
-          onReading(data.value);
-          this.#scheduleUpdate();
-        });
-        pipeline.on('error', (error: unknown) => {
+        const onError = (error: unknown): void => {
           console.debug(`Error while reading the statistics of ${key}`, error);
           stream.destroy();
           end();
+        };
+        // pipe() does not forward the errors of the engine connection
+        stream.on('error', onError);
+        const pipeline = stream.pipe(streamValues.withParserAsStream());
+        pipeline.on('data', (data: { value: T }) => {
+          if (isClosed()) {
+            return;
+          }
+          onReading(data.value);
+          this.#scheduleUpdate();
         });
+        pipeline.on('error', onError);
         stream.on('close', end);
       })
       .catch((error: unknown) => {
         console.debug(`Unable to read the statistics of ${key}`, error);
         if (generation === this.#generation) {
           this.#streams.delete(key);
+          this.#scheduleResync(RETRY_DELAY);
         }
       });
   }
