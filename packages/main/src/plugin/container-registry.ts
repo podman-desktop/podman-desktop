@@ -2853,6 +2853,18 @@ export class ContainerProviderRegistry {
     }
   }
 
+  // statistics of all the running containers of a Podman engine, read every `interval` seconds by the engine
+  async getAllContainersStatsStream(engineId: string, interval: number): Promise<Readable> {
+    const stream = await this.getMatchingPodmanEngineLibPod(engineId).podmanStreamStats(interval);
+    return stream as Readable;
+  }
+
+  // statistics of one container, read every second by Docker and every 5 seconds by Podman
+  async getContainerStatsStream(engineId: string, containerId: string): Promise<Readable> {
+    const stream = await this.getMatchingContainer(engineId, containerId).stats({ stream: true });
+    return stream as unknown as Readable;
+  }
+
   async getContainerStats(
     engineId: string,
     id: string,

@@ -196,6 +196,7 @@ import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
 import { ContainerProviderRegistry } from './container-registry.js';
+import { ContainerStatsService } from './container-stats-service.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
@@ -686,6 +687,10 @@ export class PluginSystem {
     const kubeGeneratorRegistry = container.get<KubeGeneratorRegistry>(KubeGeneratorRegistry);
     const containerProviderRegistry = container.get<ContainerProviderRegistry>(ContainerProviderRegistry);
     containerProviderRegistry.init();
+
+    container.bind<ContainerStatsService>(ContainerStatsService).toSelf().inSingletonScope();
+    container.get<ContainerStatsService>(ContainerStatsService);
+
     kubeGeneratorRegistry.registerDefaultKubeGenerator({
       name: 'PodmanKube',
       types: ['Compose', 'Container', 'Pod'],

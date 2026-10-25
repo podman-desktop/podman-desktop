@@ -8510,3 +8510,27 @@ describe('updateImages', () => {
     });
   });
 });
+
+describe('statistics streams', () => {
+  test('getAllContainersStatsStream streams the statistics of all running containers of a Podman engine', async () => {
+    const stream = {} as NodeJS.ReadableStream;
+    const libPod = { podmanStreamStats: vi.fn().mockResolvedValue(stream) } as unknown as LibPod;
+    vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(libPod);
+
+    await expect(containerRegistry.getAllContainersStatsStream('podman1', 5)).resolves.toBe(stream);
+
+    expect(containerRegistry.getMatchingPodmanEngineLibPod).toHaveBeenCalledWith('podman1');
+    expect(libPod.podmanStreamStats).toHaveBeenCalledWith(5);
+  });
+
+  test('getContainerStatsStream streams the statistics of one container', async () => {
+    const stream = {} as NodeJS.ReadableStream;
+    const container = { stats: vi.fn().mockResolvedValue(stream) } as unknown as Dockerode.Container;
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(container);
+
+    await expect(containerRegistry.getContainerStatsStream('docker1', 'container1')).resolves.toBe(stream);
+
+    expect(containerRegistry.getMatchingContainer).toHaveBeenCalledWith('docker1', 'container1');
+    expect(container.stats).toHaveBeenCalledWith({ stream: true });
+  });
+});
