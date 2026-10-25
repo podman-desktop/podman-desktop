@@ -33,7 +33,7 @@ let containerState = $derived(container.state);
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 let onDataDisposable: IDisposable | undefined;
 let reconnecting = false;
-let resizeListener: (() => void) | undefined;
+let resizeListener: () => void;
 
 function registerInputHandler(callbackId: number): void {
   onDataDisposable?.dispose();
@@ -205,9 +205,7 @@ onMount(async () => {
 });
 
 onDestroy(() => {
-  if (resizeListener) {
-    window.removeEventListener('resize', resizeListener);
-  }
+  window.removeEventListener('resize', resizeListener);
   clearReconnectTimer();
   onDataDisposable?.dispose();
   terminalContent = serializeAddon.serialize();

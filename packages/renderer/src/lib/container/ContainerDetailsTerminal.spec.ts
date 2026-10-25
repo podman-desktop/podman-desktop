@@ -19,14 +19,18 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen, waitFor } from '@testing-library/svelte';
+import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { get } from 'svelte/store';
+import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containerTerminals } from '/@/stores/container-terminal-store';
 
 import ContainerDetailsTerminal from './ContainerDetailsTerminal.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
+
+vi.mock(import('@xterm/addon-fit'));
 
 let shellInContainerMock = vi.fn();
 
@@ -726,31 +730,26 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
   });
 });
 
-test('resize listener is removed when the terminal is destroyed', async () => {
-  const container: ContainerInfoUI = {
+test('resize does not refit the terminal once it is destroyed', async () => {
+  router.goto('/containers/myContainer/terminal');
+  const container = {
     id: 'myContainer',
     state: 'RUNNING',
     engineId: 'podman',
-  } as unknown as ContainerInfoUI;
-
-  const sendCallbackId = 12345;
-  shellInContainerMock.mockResolvedValue(sendCallbackId);
-
-  const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-  const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+  } as ContainerInfoUI;
+  shellInContainerMock.mockResolvedValue(12345);
+  vi.mocked(window.shellInContainerResize).mockResolvedValue(undefined);
 
   const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
   await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledOnce());
 
-  const added = addEventListenerSpy.mock.calls.filter(([type]) => type === 'resize').map(([, listener]) => listener);
-  expect(added.length).toBeGreaterThan(0);
+  vi.mocked(FitAddon.prototype.fit).mockClear();
+  window.dispatchEvent(new Event('resize'));
+  expect(FitAddon.prototype.fit).toHaveBeenCalledOnce();
 
-  // destroy the terminal tab
   renderObject.unmount();
 
-  // every resize listener put on window must be gone, otherwise it keeps running after unmount
-  const removed = removeEventListenerSpy.mock.calls
-    .filter(([type]) => type === 'resize')
-    .map(([, listener]) => listener);
-  expect(removed).toEqual(expect.arrayContaining(added));
+  vi.mocked(FitAddon.prototype.fit).mockClear();
+  window.dispatchEvent(new Event('resize'));
+  expect(FitAddon.prototype.fit).not.toHaveBeenCalled();
 });
