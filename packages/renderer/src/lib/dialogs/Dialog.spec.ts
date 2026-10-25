@@ -38,6 +38,7 @@ test('dialog should be visible and have basic styling', async () => {
   expect(titleElem).toHaveClass('grow');
   expect(titleElem).toHaveClass('text-lg ');
   expect(titleElem).toHaveClass('font-bold');
+  expect(titleElem).not.toHaveClass('capitalize');
   expect(titleElem.parentElement).toHaveClass('text-[var(--pd-modal-header-text)]');
 });
 
