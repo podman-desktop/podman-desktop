@@ -24,7 +24,6 @@
 // what happened and lets the user undo it.
 import { get } from 'svelte/store';
 
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
@@ -40,8 +39,7 @@ export function dismissAgentBanner(): void {
 }
 
 function debugContainersLayout(promptLabel?: string): void {
-  const containerUtils = new ContainerUtils();
-  const containers = get(containersInfos).map(c => containerUtils.getContainerInfoUI(c));
+  const containers = get(containersInfos);
   const running = containers.filter(c => c.state === 'RUNNING');
   const pick = (running.length >= 2 ? running : containers).slice(0, 2);
 

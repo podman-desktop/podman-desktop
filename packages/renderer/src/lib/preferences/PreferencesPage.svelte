@@ -41,7 +41,7 @@ onMount(async () => {
 });
 </script>
 
-<div class="flex flex-col h-full bg-[var(--pd-invert-content-bg)]">
+<div class="flex flex-col h-full bg-[var(--pd-content-bg)]">
   <Route path="/*" breadcrumb="Preferences">
     {#if defaultPrefPageId !== undefined}
       <PreferencesRendering key={defaultPrefPageId} properties={properties} />

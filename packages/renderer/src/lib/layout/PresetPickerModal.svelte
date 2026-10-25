@@ -22,7 +22,6 @@
 import { Button } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import { containersInfos } from '/@/stores/containers';
@@ -43,10 +42,9 @@ interface Props {
 
 let { presetId, onClose }: Props = $props();
 
-const containerUtils = new ContainerUtils();
 const imageUtils = new ImageUtils();
 
-const containerOptions = $derived($containersInfos.map(c => containerUtils.getContainerInfoUI(c)));
+const containerOptions = $derived($containersInfos);
 const podOptions = $derived($podsInfos);
 const imageOptions = $derived(
   $imagesInfos.flatMap(i => imageUtils.getImagesInfoUI(i, $containersInfos, undefined, [], $imagesInfos)),

@@ -28,7 +28,6 @@
 // rather than a duplicate open, since tabs are deduplicated by key.
 import { router } from 'tinro';
 
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import { containersInfos } from '/@/stores/containers';
 import { findAnyTabForResource, openTab } from '/@/stores/layout/layout-store.svelte';
 
@@ -38,12 +37,7 @@ interface Props {
 
 let { containerID }: Props = $props();
 
-const containerUtils = new ContainerUtils();
-
-let container = $derived.by(() => {
-  const found = $containersInfos.find(c => c.Id === containerID);
-  return found ? containerUtils.getContainerInfoUI(found) : undefined;
-});
+let container = $derived($containersInfos.find(container => container.id === containerID));
 
 $effect(() => {
   if (!container) return;

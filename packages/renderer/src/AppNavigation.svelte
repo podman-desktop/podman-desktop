@@ -31,6 +31,7 @@ let { exitSettingsCallback, meta = $bindable() }: Props = $props();
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
 let scrollRegionEl = $state<HTMLDivElement>();
+let navigationEl = $state<HTMLElement>();
 
 const iconSize = '24';
 const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
@@ -192,6 +193,51 @@ function handleClick(): void {
   }
 }
 
+function onNavigationKeydown(event: KeyboardEvent): void {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !navigationEl) return;
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const current = target.closest<HTMLAnchorElement>('[data-navigation-page]');
+  if (!current || !navigationEl.contains(current)) return;
+  if (event.key === 'ArrowRight' && tabPreferences.tabsEnabled) {
+    const mainTab = document.querySelector<HTMLElement>('[data-tab-panel="main-tabs"] [data-tab-id="main"]');
+    if (!mainTab) return;
+    event.preventDefault();
+    event.stopPropagation();
+    clearKeyboardNavigationFocus();
+    mainTab.focus();
+    mainTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    return;
+  }
+  if (event.key === 'Tab') clearKeyboardNavigationFocus();
+  if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+  const items = Array.from(navigationEl.querySelectorAll<HTMLAnchorElement>('[data-navigation-page]'));
+  const index = items.indexOf(current);
+  if (index < 0) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const next = items[(index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+  if (next) focusKeyboardNavigationItem(next);
+  next?.scrollIntoView({ block: 'nearest' });
+  next?.click();
+}
+
+function focusKeyboardNavigationItem(item: HTMLElement): void {
+  clearKeyboardNavigationFocus();
+  item.classList.add('keyboard-navigation-focus');
+  item.focus();
+}
+
+function clearKeyboardNavigationFocus(): void {
+  navigationEl
+    ?.querySelectorAll('.keyboard-navigation-focus')
+    .forEach(item => item.classList.remove('keyboard-navigation-focus'));
+}
+
+function onNavigationPointerDown(): void {
+  clearKeyboardNavigationFocus();
+}
+
 // --- Configuration persistence ---
 onDidChangeConfiguration.addEventListener(NAV_BAR_WIDTH_KEY, onDidChangeConfigurationCallback);
 
@@ -205,8 +251,9 @@ function onDidChangeConfigurationCallback(e: Event): void {
 }
 </script>
 
-<svelte:window />
+<svelte:window onkeydown={onNavigationKeydown} onpointerdown={onNavigationPointerDown} />
 <nav
+  bind:this={navigationEl}
   class="group w-leftnavbar relative h-full flex-shrink-0 flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
   aria-label="AppNavigation"
   class:select-none={isDragging}

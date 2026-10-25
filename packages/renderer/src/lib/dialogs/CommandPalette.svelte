@@ -7,7 +7,6 @@ import type {
   NavigationSearchEntryInfo,
 } from '@desktop-framework/api';
 import {
-  faArrowUpRightFromSquare,
   faChevronRight,
   faFileLines,
   faFilePen,
@@ -280,13 +279,11 @@ async function executeAction(index: number): Promise<void> {
   let commandHash: string | undefined = undefined;
 
   if (isDocItem(item)) {
-    // Documentation item
     if (item.url) {
-      try {
-        await window.openExternal(item.url);
-      } catch (error) {
-        console.error('Error opening documentation URL', error);
-      }
+      const documentationUrl = new URL('/documentation', window.location.origin);
+      documentationUrl.searchParams.set('url', item.url);
+      documentationUrl.searchParams.set('title', item.name);
+      openRouteInNewTab(`${documentationUrl.pathname}${documentationUrl.search}`);
     }
     itemType = item.category;
     pageLink = item.url;
@@ -476,7 +473,6 @@ function getIcon(item: CommandPaletteItem): IconType {
           {#each filteredItems as item, i (getItemKey(item, i))}
             {@const extensionRouteItem = isExtensionRouteItem(item)}
             {@const goToItem = isGoToItem(item)}
-            {@const docItem = isDocItem(item)}
             {@const itemIcon = getIcon(item)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={extensionRouteItem ? item.label : goToItem ? item.name : (item.id)}>
               <button
@@ -491,9 +487,6 @@ function getIcon(item: CommandPaletteItem): IconType {
                       <span>
                         <TextHighLight text={getTextToHighlight(item)} query={inputValue ?? ''} />
                       </span>
-                      {#if docItem}
-                        <Icon icon={faArrowUpRightFromSquare}/>
-                      {/if}
                     </div>
                   </div>
                 </div>

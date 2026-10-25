@@ -3,6 +3,7 @@ import type { SecretInfo } from '@desktop-framework/api';
 import { StatusIcon, TabBar } from '@podman-desktop/ui-svelte';
 import { ContainerIcon, Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
+import { router } from 'tinro';
 
 import { ImageUtils } from '/@/lib/image/image-utils';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
@@ -19,8 +20,10 @@ import {
   closeOtherTabs,
   closeResourceTab,
   MAIN_TAB,
+  recentlyClosedTabs,
   reorderResourceTab,
   resourceTabId,
+  restoreRecentlyClosedTab,
   selectResourceTab,
   tabsState,
   togglePin,
@@ -57,7 +60,9 @@ onMount(() => {
 });
 
 const mainTab = $derived(tabsState.tabs[0]!);
-const mainInfo = $derived(getEntryInfo(mainTab.stack[mainTab.index]?.url ?? '/'));
+const mainInfo = $derived(
+  getEntryInfo(tabsState.activeId === MAIN_TAB ? $router.url : (mainTab.stack[mainTab.index]?.url ?? '/')),
+);
 const tabs = $derived(
   tabsState.tabs.map(tab => {
     const currentUrl =
@@ -97,6 +102,24 @@ const tabs = $derived(
     };
   }),
 );
+const recentlyClosed = $derived(
+  recentlyClosedTabs.map(({ tab }) => {
+    const currentUrl =
+      tab.stack[tab.index]?.url ?? (tab.id.startsWith('page:') ? tab.id.slice('page:'.length) : undefined);
+    const title = currentUrl
+      ? tab.id.startsWith('page:')
+        ? (getEntryInfo(currentUrl).name ?? tab.title)
+        : (resourceNameForUrl(currentUrl) ?? tab.title)
+      : tab.title;
+    return {
+      id: tab.id,
+      key: tab.id,
+      title,
+      tooltip: title,
+      status: currentUrl ? statusForUrl(currentUrl) : undefined,
+    };
+  }),
+);
 
 function resourceTypeForUrl(url: string): string | undefined {
   const route = url.split('?')[0]!.split('/').filter(Boolean)[0];
@@ -133,8 +156,12 @@ function resourceNameForUrl(url: string): string | undefined {
     return $podsInfos.find(pod => pod.name === parts[2] && pod.engineId === parts[3])?.name;
   }
   if ((parts[0] === 'images' || parts[0] === 'manifests') && parts[1] && parts[2]) {
-    const image = $imagesInfos.find(info => info.id === parts[1] && info.engineId === parts[2]);
-    if (image) return `${image.name}:${image.tag}`;
+    const image = $imagesInfos.find(info => info.Id === parts[1] && info.engineId === parts[2]);
+    if (image) {
+      const variants = imageUtils.getImagesInfoUI(image, $containersInfos, undefined, [], $imagesInfos);
+      const variant = variants.find(item => item.base64RepoTag === parts[3]) ?? variants[0];
+      if (variant) return `${variant.name}:${variant.tag}`;
+    }
   }
   if (parts[0] === 'volumes' && parts[1] && parts[2]) {
     return $volumeListInfos.find(volume => volume.name === parts[1] && volume.engineId === parts[2])?.name;
@@ -214,6 +241,21 @@ function openPicker(): void {
 function moveTab(_sourcePanel: string, id: string, beforeId?: string): void {
   reorderResourceTab(id, beforeId);
 }
+function focusNavigation(): void {
+  const navigation = document.querySelector('nav[aria-label="AppNavigation"]');
+  const item =
+    navigation?.querySelector<HTMLElement>('[data-navigation-page][aria-current="page"]') ??
+    navigation?.querySelector<HTMLElement>('[data-navigation-page]');
+  if (item) {
+    navigation
+      ?.querySelectorAll('.keyboard-navigation-focus')
+      .forEach(element => element.classList.remove('keyboard-navigation-focus'));
+    item.classList.add('keyboard-navigation-focus');
+    item.focus();
+  }
+  item?.scrollIntoView({ block: 'nearest' });
+}
+
 function onKeydown(event: KeyboardEvent): void {
   if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
   if (event.key.toLowerCase() === 'w') {
@@ -237,10 +279,10 @@ function onKeydown(event: KeyboardEvent): void {
 <div aria-label="Main tabs">
   <TabBar panelId="main-tabs" {tabs} activeTabId={tabsState.activeId}
     onSelect={selectResourceTab} onClose={closeResourceTab} onCloseOthers={closeOtherTabs}
-    onCloseAllInPanel={closeAllResourceTabs} onPinToggle={togglePin}
-    onReorder={reorderResourceTab} onMoveFromOtherPanel={moveTab} onAddTab={openPicker} showCloseAllButton={true}>
+    onCloseAllInPanel={closeAllResourceTabs} recentlyClosedTabs={recentlyClosed} onRestoreClosedTab={restoreRecentlyClosedTab} onPinToggle={togglePin}
+    onReorder={reorderResourceTab} onMoveFromOtherPanel={moveTab} onAddTab={openPicker} onFocusNavigation={focusNavigation} showCloseAllButton={true}>
     {#snippet tabIconSnippet(tab)}
-      {@const currentTab = tabsState.tabs.find(item => item.id === tab.id)}
+      {@const currentTab = tabsState.tabs.find(item => item.id === tab.id) ?? recentlyClosedTabs.find(item => item.tab.id === tab.id)?.tab}
       {@const currentUrl = currentTab?.stack[currentTab.index]?.url ?? (tab.id.startsWith('page:') ? tab.id.slice('page:'.length) : undefined)}
       {@const icon = tabIcon(tab.id, currentUrl)}
       {@const resolvedIcon = icon?.iconComponent ?? icon?.iconImage ?? icon?.faIcon?.definition}
@@ -248,7 +290,7 @@ function onKeydown(event: KeyboardEvent): void {
         {#if tab.status}
           <StatusIcon status={tab.status} icon={resolvedIcon} size={12} />
         {:else}
-          <Icon icon={resolvedIcon} size={16} class="w-4 h-4 shrink-0" />
+          <Icon icon={resolvedIcon} size={icon?.faIcon ? '1x' : 16} class="w-4 h-4 shrink-0" />
         {/if}
       {/if}
     {/snippet}

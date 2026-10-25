@@ -22,12 +22,15 @@ import { NavigationPage } from '@desktop-framework/api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
+import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { MAIN_TAB, tabsState } from '/@/stores/layout/tabs.svelte';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { navigationSearchEntries } from '/@/stores/navigation-search-entries';
 
@@ -67,6 +70,41 @@ beforeEach(() => {
 });
 
 describe('Command Palette', () => {
+  test('opens documentation items in a new in-app tab without opening an external browser', async () => {
+    const previousTabsEnabled = tabPreferences.tabsEnabled;
+    tabPreferences.tabsEnabled = true;
+    tabsState.activeId = MAIN_TAB;
+    tabsState.tabs = [{ id: MAIN_TAB, title: 'Dashboard', pinned: true, stack: [], index: -1 }];
+    vi.mocked(window.getDocumentationItems).mockResolvedValue([
+      {
+        id: 'intro',
+        name: 'Introduction',
+        description: 'Getting started',
+        category: 'Documentation',
+        url: 'https://podman-desktop.io/docs/intro',
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Ctrl+K Category 3 text' })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole('button', { name: 'Ctrl+K Category 3 text' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Documentation: Introduction' }));
+
+    const documentationTab = tabsState.tabs.find(tab => tab.id.startsWith('page:/documentation'));
+    expect(documentationTab?.stack[0]?.url).toContain(
+      '/documentation?url=https%3A%2F%2Fpodman-desktop.io%2Fdocs%2Fintro',
+    );
+    expect(documentationTab?.stack[0]?.url).toContain('title=Introduction');
+    expect(tabsState.activeId).toBe(documentationTab?.id);
+    expect(router.goto).toHaveBeenCalledWith(documentationTab?.stack[0]?.url);
+    expect(window.openExternal).not.toHaveBeenCalled();
+
+    tabPreferences.tabsEnabled = previousTabsEnabled;
+    tabsState.activeId = MAIN_TAB;
+    tabsState.tabs = [{ id: MAIN_TAB, title: 'Main', pinned: true, stack: [], index: -1 }];
+  });
+
   test('Expect that F1 key is displaying the widget', async () => {
     render(CommandPalette);
 

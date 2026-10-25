@@ -21,7 +21,7 @@
 // Renders one image sub-view (Summary/History/Inspect) inside a workspace
 // tab, reusing the leaf components the pre-existing (non-tabbed)
 // ImageDetails.svelte uses.
-import type { ViewInfoUI } from '@podman-desktop/core-api';
+import type { ViewInfoUI } from '@desktop-framework/api';
 
 import { ImageUtils } from '/@/lib/image/image-utils';
 import ImageDetailsHistory from '/@/lib/image/ImageDetailsHistory.svelte';

@@ -17,9 +17,10 @@
  ***********************************************************************/
 
 import type { HistoryStackEntry, NavigationHistoryPushInfo } from '@desktop-framework/api';
+import { faFileLines } from '@fortawesome/free-solid-svg-icons';
 // svelte subpaths share one types entry, not real duplicates
 /* eslint-disable import/no-duplicates */
-import { SvelteSet } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
@@ -32,7 +33,8 @@ import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-cont
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import { tabPreferences } from './layout/tab-preferences.svelte';
-import { activeTab, prepareTabForRoute } from './layout/tabs.svelte';
+import { activeTab, MAIN_TAB, prepareTabForRoute, tabsState } from './layout/tabs.svelte';
+import { webviews } from './webviews';
 
 export const BACK = 'back';
 export const FORWARD = 'forward';
@@ -83,6 +85,8 @@ let isNavigatingHistory = false;
 // Extensions being navigated to via back/forward — ignore their pushes
 // until the navigation settles (webview re-mounts and replays initial route)
 const extensionsNavigatingHistory = new SvelteSet<string>();
+const extensionTabIds = new SvelteMap<string, string>();
+const extensionRouteUrls = new SvelteMap<string, string>();
 
 interface ParsedUrl {
   path: string;
@@ -313,6 +317,14 @@ function matchesRoute(url: string, routeHref: string): boolean {
 export function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
   const { path } = parseUrl(url);
 
+  if (path === '/documentation') {
+    const title = new SvelteURLSearchParams(url.split('?')[1] ?? '').get('title');
+    return {
+      name: title?.length ? title : 'Documentation',
+      icon: { faIcon: { definition: faFileLines, size: '1x' } },
+    };
+  }
+
   // Handle Dashboard
   if (path === '/') {
     return { name: 'Dashboard', icon: { iconComponent: DashboardIcon } };
@@ -327,8 +339,15 @@ export function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIc
   const registry = get(navigationRegistry);
   const result = findNavigationEntry(url, registry);
   if (result) {
+    const normalizedPath = path.replace(/\/$/, '');
+    const normalizedEntryLink = result.entry.link.replace(/\/$/, '');
+    const isExtensionPage = path.startsWith('/webviews/') || path.startsWith('/contribs/');
     // Always use urlToDisplayName, passing registry breadcrumb for base routes
-    return { name: urlToDisplayName(url, result.breadcrumb), icon: result.entry.icon };
+    const name =
+      isExtensionPage && normalizedPath === normalizedEntryLink
+        ? result.entry.name
+        : urlToDisplayName(url, result.breadcrumb);
+    return { name, icon: result.entry.icon };
   }
 
   // Check settings navigation entries (sorted by specificity)
@@ -394,6 +413,9 @@ function navigateToIndex(index: number): boolean {
   const entry = navigationHistory.stack[index];
   if (entry?.extensionEntry) {
     extensionsNavigatingHistory.add(entry.extensionEntry.extensionId);
+    if (entry.url.startsWith('/webviews/') || entry.url.startsWith('/contribs/')) {
+      router.goto(entry.url);
+    }
     window
       .navigateToExtensionHistoryEntry(entry.extensionEntry.extensionId, entry.extensionEntry.id)
       .catch(console.error);
@@ -568,6 +590,27 @@ export function synchronizeHistoryForTabsPreference(enabled: boolean): void {
   navigationHistory.index = navigationHistory.stack.length - 1;
 }
 
+function captureExtensionTabForRoute(url: string): void {
+  const match = /^\/webviews\/([^/]+)/.exec(url.split('?')[0] ?? '');
+  if (!match?.[1]) return;
+
+  const webview = get(webviews).find(view => view.id === decodeURIComponent(match[1]!));
+  const extension = webview && get(extensionInfos).find(info => info.path === webview.sourcePath);
+  if (!extension) return;
+
+  extensionTabIds.set(extension.id, activeTab().id);
+  extensionRouteUrls.set(extension.id, `/webviews/${match[1]}`);
+}
+
+function appendRouteToActiveHistory(url: string): void {
+  if (navigationHistory.stack[navigationHistory.index]?.url === url) return;
+  if (navigationHistory.index < navigationHistory.stack.length - 1) {
+    navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
+  }
+  navigationHistory.stack = [...navigationHistory.stack, { url }];
+  navigationHistory.index = navigationHistory.stack.length - 1;
+}
+
 // Initialize router subscription
 router.subscribe(navigation => {
   currentNavigationUrl = navigation.url;
@@ -578,6 +621,7 @@ router.subscribe(navigation => {
     }
 
     prepareTabForRoute(navigation.url);
+    captureExtensionTabForRoute(navigation.url);
 
     // Skip submenu base routes - they immediately redirect to a sub-page
     // and shouldn't be in the history stack
@@ -598,11 +642,13 @@ router.subscribe(navigation => {
       return;
     }
 
-    // Skip webview/contribs URLs — extensions push their own history entries via
-    // navigation.pushHistoryEntry, so recording the plain URL too would cause
-    // duplicate/interleaved entries for the same navigation.
+    // Extension views push their own history entries. Keep a base route in the
+    // main tab so it can restore the extension page after another tab is selected.
     const urlPath = navigation.url.split('?')[0];
     if (urlPath.startsWith('/webviews/') || urlPath.startsWith('/contribs/')) {
+      if (tabPreferences.tabsEnabled && activeTab().id === MAIN_TAB) {
+        appendRouteToActiveHistory(navigation.url);
+      }
       return;
     }
 
@@ -642,21 +688,27 @@ window.events?.receive('navigation-history-push', (entry: NavigationHistoryPushI
     return;
   }
 
-  // Truncate forward history if we're not at the end
-  if (navigationHistory.index < navigationHistory.stack.length - 1) {
-    navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
-  }
-
-  const currentEntry = navigationHistory.stack[navigationHistory.index];
+  const mappedTabId = extensionTabIds.get(entry.extensionId);
+  const mappedTab = tabsState.tabs.find(tab => tab.id === mappedTabId);
+  if (tabPreferences.tabsEnabled && mappedTabId && !mappedTab) return;
+  const owningTab = tabPreferences.tabsEnabled
+    ? (mappedTab ??
+      tabsState.tabs.find(tab => tab.stack.some(item => item.extensionEntry?.extensionId === entry.extensionId)) ??
+      activeTab())
+    : productionHistory;
+  const currentEntry = owningTab.stack[owningTab.index];
   const isSameEntry =
     currentEntry?.extensionEntry?.extensionId === entry.extensionId && currentEntry?.extensionEntry?.id === entry.id;
 
   if (!isSameEntry) {
     const stackEntry: HistoryStackEntry = {
-      url: `/__extension__/${entry.extensionId}/${entry.id}`,
+      url: extensionRouteUrls.get(entry.extensionId) ?? `/__extension__/${entry.extensionId}/${entry.id}`,
       extensionEntry: entry,
     };
-    navigationHistory.stack = [...navigationHistory.stack, stackEntry];
-    navigationHistory.index = navigationHistory.stack.length - 1;
+    if (owningTab.index < owningTab.stack.length - 1) {
+      owningTab.stack = owningTab.stack.slice(0, owningTab.index + 1);
+    }
+    owningTab.stack = [...owningTab.stack, stackEntry];
+    owningTab.index = owningTab.stack.length - 1;
   }
 });

@@ -21,7 +21,6 @@
 // Renders one container sub-view (Summary/Logs/Inspect/Terminal/Tty/Kube)
 // inside a workspace tab, reusing the same leaf components the pre-existing
 // (non-tabbed) ContainerDetails.svelte uses.
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import ContainerDetailsInspect from '/@/lib/container/ContainerDetailsInspect.svelte';
 import ContainerDetailsKube from '/@/lib/container/ContainerDetailsKube.svelte';
 import ContainerDetailsLogs from '/@/lib/container/ContainerDetailsLogs.svelte';
@@ -42,12 +41,7 @@ interface Props {
 
 let { tabId, containerId, subView = 'summary' }: Props = $props();
 
-const containerUtils = new ContainerUtils();
-
-let container = $derived.by(() => {
-  const found = $containersInfos.find(c => c.Id === containerId);
-  return found ? containerUtils.getContainerInfoUI(found) : undefined;
-});
+let container = $derived($containersInfos.find(container => container.id === containerId));
 
 $effect(() => {
   markTabStale(tabId, !container);

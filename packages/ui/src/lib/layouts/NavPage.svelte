@@ -24,8 +24,8 @@ let {
 }: Props = $props();
 </script>
 
-<div class="flex flex-col w-full h-full">
-  <div class="flex flex-col w-full h-full pt-4" role="region" aria-label={title}>
+<div class="flex flex-col w-full flex-1 min-h-0">
+  <div class="flex flex-col w-full flex-1 min-h-0 pt-4" role="region" aria-label={title}>
     <div class="flex pb-2" role="region" aria-label="header">
       <div class="px-5">
         <h1 class="text-xl font-bold capitalize text-[var(--pd-content-header)]">{title}</h1>
@@ -61,7 +61,7 @@ let {
       </div>
     {/if}
 
-    <div class="flex flex-col w-full h-full overflow-auto" role="region" aria-label="content">
+    <div class="flex flex-col w-full flex-1 min-h-0 overflow-auto" role="region" aria-label="content">
       {@render content?.()}
     </div>
   </div>

@@ -21,15 +21,13 @@
 // Multi-tab strip: reorder by drag, close, pin, overflow, and drop targets for
 // moving a tab in from another panel. Resource-agnostic - operates purely on
 // TabDescriptor[].
-import { faChevronDown, faPlus, faThumbtack, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faEllipsisVertical, faPlus, faThumbtack, faXmark } from '@fortawesome/free-solid-svg-icons';
 import type { Snippet } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 import Tooltip from '../tooltip/Tooltip.svelte';
 import ContextMenu from './ContextMenu.svelte';
 import type { ContextMenuAction, TabDescriptor } from './types';
-
-export const TAB_DRAG_MIME = 'application/x-podman-desktop-tab';
 
 interface DragPayload {
   panelId: string;
@@ -45,6 +43,8 @@ interface Props {
   onClose: (tabId: string) => void;
   onCloseOthers: (tabId: string) => void;
   onCloseAllInPanel: () => void;
+  recentlyClosedTabs?: TabDescriptor[];
+  onRestoreClosedTab?: (tabId: string) => void;
   onPinToggle: (tabId: string) => void;
   onReorder: (tabId: string, beforeTabId: string | undefined) => void;
   onMoveFromOtherPanel: (sourcePanelId: string, tabId: string, beforeTabId: string | undefined) => void;
@@ -54,6 +54,7 @@ interface Props {
   showCloseAllButton?: boolean;
   /** When provided, renders a "+" button beside the last tab to open the new-tab palette. */
   onAddTab?: (event?: MouseEvent) => void;
+  onFocusNavigation?: () => void;
 }
 
 let {
@@ -65,6 +66,8 @@ let {
   onClose,
   onCloseOthers,
   onCloseAllInPanel,
+  recentlyClosedTabs = [],
+  onRestoreClosedTab,
   onPinToggle,
   onReorder,
   onMoveFromOtherPanel,
@@ -72,37 +75,85 @@ let {
   onSplitDown,
   onMoveToNewPanel,
   onAddTab,
+  onFocusNavigation,
   showCloseAllButton = false,
 }: Props = $props();
 
 let scrollEl: HTMLDivElement | undefined = $state();
+let addTabButton: HTMLButtonElement | undefined = $state();
 let overflowing = $state(false);
 let showOverflowMenu = $state(false);
-let dragOverTabId: string | undefined = $state();
-let dragOverPosition: 'before' | 'after' = $state('before');
+let overflowButton: HTMLButtonElement | undefined = $state();
+let overflowMenu: HTMLDivElement | undefined = $state();
+let showTabActionsMenu = $state(false);
+let tabActionsButton: HTMLButtonElement | undefined = $state();
+let tabActionsMenu: HTMLDivElement | undefined = $state();
+let draggedTabId: string | undefined = $state();
+let dropPlaceholderIndex: number | undefined = $state();
+let draggedTabWidth = $state(0);
+let dragOffset = $state(0);
+let dragSourceIndex = $state(-1);
+let suppressDragClick = false;
+let pointerDrag:
+  | {
+      pointerId: number;
+      element: HTMLElement;
+      tabId: string;
+      startX: number;
+      scrollLeft: number;
+      clientX: number;
+      clientY: number;
+      bounds: { id: string; left: number; right: number }[];
+    }
+  | undefined;
+let dragScrollFrame: number | undefined;
 let contextMenu: { x: number; y: number; tabId: string } | undefined = $state();
 let previousTabCount = 0;
 let tabCountInitialized = false;
+let previousTabLayout = '';
 
-function checkOverflow(_tabCount: number): void {
-  if (!scrollEl) return;
-  overflowing = scrollEl.scrollWidth > scrollEl.clientWidth + 1;
+function checkOverflow(): void {
+  if (!scrollEl) {
+    overflowing = false;
+    return;
+  }
+
+  // Measure layout wrappers, not translated tabs or their decorative corner overhang.
+  const contentWidth = Array.from(scrollEl.children).reduce(
+    (width, child) => width + child.getBoundingClientRect().width,
+    0,
+  );
+  overflowing = contentWidth > scrollEl.clientWidth + 1;
+  if (!overflowing) showOverflowMenu = false;
 }
 
 $effect(() => {
   // reading tabs.length here makes this effect re-run whenever the tab list changes
   const tabCount = tabs.length;
+  const tabLayout = tabs.map(tab => `${tab.id}:${tab.title}`).join('\0');
   const tabsWereAdded = tabCountInitialized && tabCount > previousTabCount;
+  const tabsChanged = tabLayout !== previousTabLayout;
   tabCountInitialized = true;
   previousTabCount = tabCount;
-  requestAnimationFrame(() => {
-    checkOverflow(tabCount);
-    // New background tabs should be visible even though opening them leaves
-    // the current page and active tab unchanged.
-    if (tabsWereAdded && scrollEl) {
-      scrollEl.scrollLeft = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
-    }
-  });
+  previousTabLayout = tabLayout;
+  if (tabsChanged) {
+    requestAnimationFrame(() => {
+      checkOverflow();
+      // New background tabs should be visible even though opening them leaves
+      // the current page and active tab unchanged.
+      if (tabsWereAdded && scrollEl) {
+        scrollEl.scrollLeft = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+        requestAnimationFrame(checkOverflow);
+      }
+    });
+  }
+});
+
+$effect(() => {
+  if (!scrollEl) return;
+  const observer = new ResizeObserver(checkOverflow);
+  observer.observe(scrollEl);
+  return (): void => observer.disconnect();
 });
 
 $effect(() => {
@@ -122,6 +173,7 @@ $effect(() => {
     } else if (selectedBounds.right > viewport.right) {
       scrollEl.scrollLeft += selectedBounds.right - viewport.right;
     }
+    requestAnimationFrame(checkOverflow);
   });
 });
 
@@ -135,82 +187,347 @@ function onWheel(event: WheelEvent): void {
   event.stopPropagation();
 }
 
-function onDragStart(event: DragEvent, tabId: string): void {
-  if (tabs.find(tab => tab.id === tabId)?.pinned) {
-    event.preventDefault();
-    dragOverTabId = undefined;
+function focusAdjacentTabStripItem(event: KeyboardEvent): void {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const current = event.currentTarget as HTMLElement;
+  if (event.key === 'ArrowLeft' && current.dataset.tabId === 'main' && onFocusNavigation) {
+    onFocusNavigation();
     return;
   }
-  const payload: DragPayload = { panelId, tabId };
-  event.dataTransfer?.setData(TAB_DRAG_MIME, JSON.stringify(payload));
-  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+
+  const items = Array.from(scrollEl?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []);
+  if (onAddTab && addTabButton) items.push(addTabButton);
+  if (overflowing && overflowButton) items.push(overflowButton);
+  if (showCloseAllButton && tabActionsButton) items.push(tabActionsButton);
+  if (items.length < 2) return;
+
+  const currentIndex = items.indexOf(event.currentTarget as HTMLElement);
+  if (currentIndex < 0) return;
+  const offset = event.key === 'ArrowRight' ? 1 : -1;
+  const nextItem = items[(currentIndex + offset + items.length) % items.length]!;
+  nextItem.focus();
+
+  const nextTabId = nextItem.dataset.tabId;
+  if (nextTabId) onSelect(nextTabId);
 }
 
-function onDragOverTab(event: DragEvent, tabId: string): void {
+function onTabPointerDown(tabId: string, event: PointerEvent): void {
+  suppressDragClick = false;
+  // Touch gestures scroll the strip; mouse/pen pointers reorder tabs.
+  if (event.pointerType === 'touch' || event.button !== 0 || tabs.find(tab => tab.id === tabId)?.pinned || !scrollEl)
+    return;
+  if ((event.target as Element).closest('button')) return;
+  const element = event.currentTarget as HTMLElement;
+  pointerDrag = {
+    pointerId: event.pointerId,
+    element,
+    tabId,
+    startX: event.clientX,
+    scrollLeft: scrollEl.scrollLeft,
+    clientX: event.clientX,
+    clientY: event.clientY,
+    bounds: Array.from(scrollEl.querySelectorAll<HTMLElement>('[role="tab"]')).map(tab => {
+      const rect = tab.getBoundingClientRect();
+      return { id: tab.dataset.tabId!, left: rect.left, right: rect.right };
+    }),
+  };
+  element.setPointerCapture(event.pointerId);
+}
+
+function preventNativeDrag(event: DragEvent): void {
   event.preventDefault();
-  dragOverTabId = tabId;
-  dragOverPosition = getDropPosition(event);
 }
 
-function onDragLeaveTab(): void {
-  dragOverTabId = undefined;
-}
-
-function readPayload(event: DragEvent): DragPayload | undefined {
-  const raw = event.dataTransfer?.getData(TAB_DRAG_MIME);
-  if (!raw) return undefined;
-  try {
-    return JSON.parse(raw) as DragPayload;
-  } catch {
-    return undefined;
+function onTabPointerMove(event: PointerEvent): void {
+  const drag = pointerDrag;
+  if (drag?.pointerId !== event.pointerId || !scrollEl) return;
+  const offset = event.clientX - drag.startX + scrollEl.scrollLeft - drag.scrollLeft;
+  if (!draggedTabId && Math.abs(offset) < 5) return;
+  event.preventDefault();
+  if (!draggedTabId) {
+    draggedTabId = drag.tabId;
+    drag.element.focus({ preventScroll: true });
+    onSelect(drag.tabId);
+    dragSourceIndex = drag.bounds.findIndex(tab => tab.id === drag.tabId);
+    const source = drag.bounds[dragSourceIndex]!;
+    draggedTabWidth = source.right - source.left;
+    showOverflowMenu = false;
+    showTabActionsMenu = false;
+    contextMenu = undefined;
+    suppressDragClick = true;
   }
+  drag.clientX = event.clientX;
+  drag.clientY = event.clientY;
+  updateDragPosition();
+  dragScrollFrame ??= requestAnimationFrame(scrollWhileDragging);
 }
 
-function getDropPosition(event: DragEvent): 'before' | 'after' {
-  const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  return bounds.width > 0 && event.clientX >= bounds.left + bounds.width / 2 ? 'after' : 'before';
+function scrollWhileDragging(): void {
+  dragScrollFrame = undefined;
+  if (!pointerDrag || !draggedTabId || !scrollEl) return;
+  const viewport = scrollEl.getBoundingClientRect();
+  if (pointerDrag.clientY >= viewport.top && pointerDrag.clientY <= viewport.bottom) {
+    if (pointerDrag.clientX < viewport.left + 24) scrollEl.scrollLeft -= 12;
+    else if (pointerDrag.clientX > viewport.right - 24) scrollEl.scrollLeft += 12;
+    updateDragPosition();
+  }
+  dragScrollFrame = requestAnimationFrame(scrollWhileDragging);
 }
 
-function onDropOnTab(event: DragEvent, targetTabId: string): void {
-  event.preventDefault();
-  // Keep the drop from reaching the tab strip's end target, which would
-  // immediately reorder the same tab a second time to the end of the list.
-  event.stopPropagation();
-  dragOverTabId = undefined;
-  const payload = readPayload(event);
-  if (!payload) return;
-  if (payload.panelId === panelId) {
-    if (tabs.find(tab => tab.id === payload.tabId)?.pinned) return;
-    const targetIndex = tabs.findIndex(tab => tab.id === targetTabId);
-    const dropPosition = getDropPosition(event);
-    const beforeTabId = dropPosition === 'before' ? targetTabId : tabs[targetIndex + 1]?.id;
-    if (payload.tabId !== beforeTabId) onReorder(payload.tabId, beforeTabId);
+function updateDragPosition(): void {
+  const drag = pointerDrag;
+  if (!drag || !scrollEl) return;
+  const offset = drag.clientX - drag.startX + scrollEl.scrollLeft - drag.scrollLeft;
+  const source = drag.bounds[dragSourceIndex]!;
+  // Stable original midpoints prevent the shifting neighbors from making
+  // the insertion gap oscillate back and forth beneath the pointer.
+  let index = dragSourceIndex;
+  if (offset > 0) {
+    while (index + 1 < drag.bounds.length) {
+      const next = drag.bounds[index + 1]!;
+      if (source.right + offset <= (next.left + next.right) / 2) break;
+      index++;
+    }
   } else {
-    const targetIndex = tabs.findIndex(tab => tab.id === targetTabId);
-    const dropPosition = getDropPosition(event);
-    const beforeTabId = dropPosition === 'before' ? targetTabId : tabs[targetIndex + 1]?.id;
-    onMoveFromOtherPanel(payload.panelId, payload.tabId, beforeTabId);
+    while (index > 0) {
+      const previous = drag.bounds[index - 1]!;
+      if (
+        tabs.find(tab => tab.id === previous.id)?.pinned ||
+        source.left + offset >= (previous.left + previous.right) / 2
+      )
+        break;
+      index--;
+    }
   }
-  dragOverTabId = undefined;
+  dragOffset = offset;
+  dropPlaceholderIndex = index;
 }
 
-function onDropOnEnd(event: DragEvent): void {
-  event.preventDefault();
-  dragOverTabId = undefined;
-  const payload = readPayload(event);
-  if (!payload) return;
-  if (payload.panelId === panelId) {
-    if (tabs.find(tab => tab.id === payload.tabId)?.pinned) return;
-    onReorder(payload.tabId, undefined);
-  } else {
-    onMoveFromOtherPanel(payload.panelId, payload.tabId, undefined);
+function tabDragTransform(tabId: string, index: number): string {
+  if (!draggedTabId || dropPlaceholderIndex === undefined) return '';
+  if (tabId === draggedTabId) return `translateX(${dragOffset}px)`;
+  if (index > dragSourceIndex && index <= dropPlaceholderIndex) return `translateX(${-draggedTabWidth}px)`;
+  if (index < dragSourceIndex && index >= dropPlaceholderIndex) return `translateX(${draggedTabWidth}px)`;
+  return '';
+}
+
+function onTabPointerUp(event: PointerEvent): void {
+  const drag = pointerDrag;
+  if (drag?.pointerId !== event.pointerId) return;
+  if (draggedTabId) {
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-tab-panel]');
+    if (target && target !== scrollEl) {
+      target.dispatchEvent(
+        new CustomEvent('tab-pointer-drop', {
+          detail: {
+            panelId,
+            tabId: draggedTabId,
+            clientX: event.clientX,
+          },
+        }),
+      );
+    } else {
+      const remaining = tabs.filter(tab => tab.id !== draggedTabId);
+      onReorder(draggedTabId, remaining[dropPlaceholderIndex ?? dragSourceIndex]?.id);
+    }
   }
+  clearDragState();
+}
+
+function onTabPointerCancel(): void {
+  clearDragState();
+}
+
+function focusTab(id: string): void {
+  requestAnimationFrame(() =>
+    scrollEl?.querySelectorAll<HTMLElement>('[role="tab"]').forEach(tab => {
+      if (tab.dataset.tabId === id) tab.focus({ preventScroll: true });
+    }),
+  );
+}
+
+function onDragKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    if (showTabActionsMenu) {
+      showTabActionsMenu = false;
+      tabActionsButton?.focus();
+      event.preventDefault();
+    }
+    if (showOverflowMenu) {
+      showOverflowMenu = false;
+      overflowButton?.focus();
+      event.preventDefault();
+    }
+  }
+  if (event.key === 'Tab') {
+    if (showTabActionsMenu) tabActionsButton?.focus();
+    else if (showOverflowMenu) overflowButton?.focus();
+    showTabActionsMenu = false;
+    showOverflowMenu = false;
+  }
+  if (event.key === 'Escape' && pointerDrag) {
+    event.preventDefault();
+    clearDragState();
+  }
+}
+
+function selectTabAfterPointer(tabId: string): void {
+  if (suppressDragClick) {
+    suppressDragClick = false;
+    return;
+  }
+  onSelect(tabId);
+}
+
+$effect(() => {
+  const strip = scrollEl;
+  if (!strip) return;
+  function receiveTab(event: Event): void {
+    const detail = (event as CustomEvent<DragPayload & { clientX: number }>).detail;
+    const before = Array.from(strip!.querySelectorAll<HTMLElement>('[role="tab"]')).find(tab => {
+      const bounds = tab.getBoundingClientRect();
+      return detail.clientX < bounds.left + bounds.width / 2;
+    });
+    onMoveFromOtherPanel(detail.panelId, detail.tabId, before?.dataset.tabId);
+  }
+  strip.addEventListener('tab-pointer-drop', receiveTab);
+  return (): void => {
+    strip.removeEventListener('tab-pointer-drop', receiveTab);
+    clearDragState();
+  };
+});
+
+function clearDragState(): void {
+  if (dragScrollFrame !== undefined) cancelAnimationFrame(dragScrollFrame);
+  dragScrollFrame = undefined;
+  const drag = pointerDrag;
+  pointerDrag = undefined;
+  if (drag?.element.hasPointerCapture(drag.pointerId)) drag.element.releasePointerCapture(drag.pointerId);
+  draggedTabId = undefined;
+  dropPlaceholderIndex = undefined;
+  draggedTabWidth = 0;
+  dragOffset = 0;
+  dragSourceIndex = -1;
+}
+
+function focusOverflowItem(direction: 'up' | 'down'): void {
+  if (!overflowMenu) return;
+  const items = Array.from(overflowMenu.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]'));
+  if (items.length === 0) return;
+  const activeIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+  const nextIndex =
+    activeIndex < 0
+      ? direction === 'down'
+        ? 0
+        : items.length - 1
+      : (activeIndex + (direction === 'down' ? 1 : -1) + items.length) % items.length;
+  items[nextIndex]?.focus();
+}
+
+function onOverflowMenuKeydown(event: KeyboardEvent): void {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    focusOverflowItem(event.key === 'ArrowDown' ? 'down' : 'up');
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    const activeItem = (document.activeElement as HTMLElement | null)?.closest<HTMLButtonElement>(
+      'button[role="menuitem"]',
+    );
+    if (activeItem && overflowMenu?.contains(activeItem)) activeItem.click();
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    showOverflowMenu = false;
+    overflowButton?.focus();
+  }
+}
+
+function toggleOverflowMenu(): void {
+  window.dispatchEvent(new Event('tooltip-hide'));
+  window.dispatchEvent(new Event('tooltip-show'));
+  const shouldOpen = !showOverflowMenu;
+  showTabActionsMenu = false;
+  contextMenu = undefined;
+  showOverflowMenu = shouldOpen;
+  if (showOverflowMenu) requestAnimationFrame(() => focusOverflowItem('down'));
 }
 
 function openContextMenu(event: MouseEvent, tabId: string): void {
   event.preventDefault();
   event.stopPropagation();
+  (event.currentTarget as HTMLElement).focus({ preventScroll: true });
+  showOverflowMenu = false;
+  showTabActionsMenu = false;
   contextMenu = { x: event.clientX, y: event.clientY, tabId };
+}
+
+function onAuxClick(event: MouseEvent, tabId: string): void {
+  if (event.button !== 1 || tabId === 'main') return;
+  event.preventDefault();
+  event.stopPropagation();
+  onClose(tabId);
+}
+
+function closeTabActionsOnOutsidePointer(event: PointerEvent): void {
+  if (!showTabActionsMenu && !showOverflowMenu) return;
+  const target = event.target;
+  if (!(target instanceof Node)) return;
+  if (tabActionsButton?.contains(target) || tabActionsMenu?.contains(target)) return;
+  if (overflowButton?.contains(target) || overflowMenu?.contains(target)) return;
+  showTabActionsMenu = false;
+  showOverflowMenu = false;
+}
+
+function focusTabActionsItem(direction: 'up' | 'down'): void {
+  if (!tabActionsMenu) return;
+  const items = Array.from(
+    tabActionsMenu.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]:not(:disabled)'),
+  );
+  if (items.length === 0) {
+    tabActionsMenu.focus();
+    return;
+  }
+
+  const activeIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+  const nextIndex =
+    activeIndex < 0
+      ? direction === 'down'
+        ? 0
+        : items.length - 1
+      : (activeIndex + (direction === 'down' ? 1 : -1) + items.length) % items.length;
+  items[nextIndex]?.focus();
+}
+
+function toggleTabActionsMenu(): void {
+  window.dispatchEvent(new Event('tooltip-hide'));
+  window.dispatchEvent(new Event('tooltip-show'));
+  const shouldOpen = !showTabActionsMenu;
+  showOverflowMenu = false;
+  contextMenu = undefined;
+  showTabActionsMenu = shouldOpen;
+  if (showTabActionsMenu) requestAnimationFrame(() => focusTabActionsItem('down'));
+}
+
+function onTabActionsMenuKeydown(event: KeyboardEvent): void {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    focusTabActionsItem(event.key === 'ArrowDown' ? 'down' : 'up');
+  } else if (event.key === 'Enter') {
+    const activeItem = (document.activeElement as HTMLElement | null)?.closest<HTMLButtonElement>(
+      'button[role="menuitem"]:not(:disabled)',
+    );
+    if (activeItem && tabActionsMenu?.contains(activeItem)) {
+      event.preventDefault();
+      activeItem.click();
+    }
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    showTabActionsMenu = false;
+    tabActionsButton?.focus();
+  }
 }
 
 function contextMenuActions(tabId: string): ContextMenuAction[] {
@@ -218,6 +535,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
   const actions: ContextMenuAction[] = [
     {
       id: 'close-others',
+      disabled: !tabs.some(t => t.id !== tabId && !t.pinned),
       title: 'Close Other Tabs',
       iconClass: 'fas fa-xmark',
       onSelect: (): void => onCloseOthers(tabId),
@@ -229,7 +547,6 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
       disabled: tabId === 'main',
       title: tab?.pinned ? 'Unpin Tab' : 'Pin Tab',
       iconClass: 'fas fa-thumbtack',
-      separatorBefore: true,
       onSelect: (): void => onPinToggle(tabId),
     });
   }
@@ -238,7 +555,6 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
       id: 'split-right',
       title: 'Split Right',
       iconClass: 'fas fa-table-columns',
-      separatorBefore: true,
       onSelect: (): void => onSplitRight?.(tabId),
     },
     {
@@ -262,18 +578,19 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
 }
 </script>
 
-<div class="flex items-stretch border-b border-[var(--pd-global-nav-bg-border)] bg-[var(--pd-content-card-bg)] min-w-0">
+<div class="flex items-stretch bg-[var(--pd-content-card-bg)] min-w-0">
   <div class="flex flex-row min-w-0 grow items-stretch">
     <div
       bind:this={scrollEl}
       onwheel={onWheel}
+      onscroll={checkOverflow}
       class="flex flex-row overflow-x-auto min-w-0 scrollbar-hide overscroll-x-contain overscroll-y-none"
       style="flex: 0 1 max-content; max-width: calc(100% - 40px);"
       role="tablist"
+      data-tab-panel={panelId}
       tabindex="-1"
-      ondragover={(e: DragEvent): void => e.preventDefault()}
-      ondrop={onDropOnEnd}>
-      {#each tabs as tab (tab.id)}
+>
+      {#each tabs as tab, index (tab.id)}
         <Tooltip
           tip={tab.tooltip ?? (tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title)}
           top
@@ -284,36 +601,46 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
           data-tab-id={tab.id}
           tabindex="0"
           aria-selected={tab.id === activeTabId}
-          draggable={!tab.pinned}
-          ondragstart={(e: DragEvent): void => onDragStart(e, tab.id)}
-          ondragover={(e: DragEvent): void => onDragOverTab(e, tab.id)}
-          ondragleave={onDragLeaveTab}
-          ondrop={(e: DragEvent): void => onDropOnTab(e, tab.id)}
+          draggable={false}
+          ondragstart={preventNativeDrag}
+          onpointerdown={onTabPointerDown.bind(undefined, tab.id)}
+          onpointermove={onTabPointerMove}
+          onpointerup={onTabPointerUp}
+          onpointercancel={onTabPointerCancel}
+          onlostpointercapture={onTabPointerCancel}
           oncontextmenu={(e: MouseEvent): void => openContextMenu(e, tab.id)}
-          onclick={(): void => onSelect(tab.id)}
+          onauxclick={(e: MouseEvent): void => onAuxClick(e, tab.id)}
+          onclick={selectTabAfterPointer.bind(undefined, tab.id)}
           onkeydown={(e: KeyboardEvent): void => {
             if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
               e.preventDefault();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              showOverflowMenu = false;
+              showTabActionsMenu = false;
               contextMenu = { x: rect.left, y: rect.bottom, tabId: tab.id };
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              focusAdjacentTabStripItem(e);
             } else if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               onSelect(tab.id);
             }
           }}
-          class="group flex items-center gap-2 px-3 py-1.5 border-r border-b-2 border-[var(--pd-global-nav-bg-border)] whitespace-nowrap select-none max-w-[220px]"
-          class:cursor-pointer={!tab.pinned}
-          class:cursor-not-allowed={tab.pinned}
-          class:bg-[var(--pd-content-bg)]={tab.id === activeTabId}
-          class:border-b-[var(--pd-tab-highlight)]={tab.id === activeTabId}
-          class:border-b-transparent={tab.id !== activeTabId}
-          class:border-l-2={dragOverTabId === tab.id && dragOverPosition === 'before'}
-          class:border-l-[var(--pd-tab-highlight)]={dragOverTabId === tab.id && dragOverPosition === 'before'}
-          class:border-r-2={dragOverTabId === tab.id && dragOverPosition === 'after'}
-          class:border-r-[var(--pd-tab-highlight)]={dragOverTabId === tab.id && dragOverPosition === 'after'}
+          class="group relative flex items-center gap-2 px-3 py-1.5 whitespace-nowrap select-none max-w-[220px] focus-visible:outline-hidden"
+          class:rounded-[6px]={tab.id !== activeTabId}
+          class:tab-active={tab.id === activeTabId}
+          class:tab-divider={tab.id !== activeTabId && tabs[index + 1]?.id !== activeTabId && index < tabs.length - 1}
+          class:rounded-t-[6px]={tab.id === activeTabId}
+          style:background-color={
+            tab.id === activeTabId ? 'var(--pd-content-bg)' : 'var(--pd-content-card-bg)'
+          }
+          class:cursor-pointer={true}
+          class:tab-dragging={tab.id === draggedTabId}
+          class:tab-shifting={!!draggedTabId && tab.id !== draggedTabId}
+          style:transform={tabDragTransform(tab.id, index)}
+          style:touch-action="pan-x pan-y pinch-zoom"
           class:text-[var(--pd-tab-text-highlight)]={tab.id === activeTabId}
           class:text-[var(--pd-tab-text)]={tab.id !== activeTabId}
-          class:opacity-70={!!tab.stale}>
+          class:opacity-70={!!tab.stale && tab.id !== draggedTabId}>
           {@render tabIconSnippet?.(tab)}
           {#if tab.pinned && tab.id !== 'main'}
             <Icon class="w-3 text-xs opacity-70" icon={faThumbtack} />
@@ -331,8 +658,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
             <button
               type="button"
               aria-label="Close tab {tab.title}"
-              class="ml-1 opacity-0 group-hover:opacity-100 hover:bg-[var(--pd-action-button-details-bg)] rounded-sm p-0.5"
-              class:opacity-100={tab.id === activeTabId}
+              class="ml-1 hover:bg-[var(--pd-action-button-details-bg)] rounded-sm p-0.5"
               onclick={(e: MouseEvent): void => {
                 e.stopPropagation();
                 onClose(tab.id);
@@ -340,6 +666,9 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
               <Icon class="w-3 text-xs" icon={faXmark} />
             </button>
           {/if}
+          <span
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 z-20 rounded-[6px] border-2 border-transparent opacity-0 group-focus-visible:border-[var(--pd-button-focus-ring)] group-focus-visible:opacity-100"></span>
           </div>
         </Tooltip>
       {/each}
@@ -348,8 +677,11 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
       <Tooltip tip="Open a new tab" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
         <button
           type="button"
+          bind:this={addTabButton}
           aria-label="Open a new tab"
-          class="flex items-center px-2.5 border-l border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
+          class="flex w-10 shrink-0 items-center justify-center text-[var(--pd-tab-text)] hover:bg-[var(--pd-action-button-details-bg)] focus-visible:relative focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
+          class:tab-add-divider={tabs[tabs.length - 1]?.id !== activeTabId}
+          onkeydown={focusAdjacentTabStripItem}
           onclick={(event: MouseEvent): void => onAddTab?.(event)}>
           <Icon class="w-3 text-xs" icon={faPlus} />
         </button>
@@ -358,54 +690,122 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
   </div>
 
   {#if overflowing}
-    <div class="relative flex items-center border-l border-[var(--pd-global-nav-bg-border)] px-1">
+    <div class="relative flex w-10 shrink-0 items-stretch justify-center tab-overflow-divider">
       <button
         type="button"
+        bind:this={overflowButton}
         aria-label="Show all open tabs"
-        class="px-2 py-1 hover:bg-[var(--pd-action-button-details-bg)] rounded-sm"
+        aria-haspopup="menu"
+        aria-expanded={showOverflowMenu}
+        class="flex h-full w-full items-center justify-center text-[var(--pd-tab-text)] hover:bg-[var(--pd-action-button-details-bg)] rounded-sm focus-visible:relative focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
+        onkeydown={focusAdjacentTabStripItem}
         onclick={(): void => {
-          showOverflowMenu = !showOverflowMenu;
+          toggleOverflowMenu();
         }}>
         <Icon class="w-3 text-xs" icon={faChevronDown} />
       </button>
       {#if showOverflowMenu}
         <div
-          class="absolute right-0 top-8 z-20 max-h-72 overflow-y-auto min-w-[220px] rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] divide-y divide-[var(--pd-dropdown-divider)]">
+          bind:this={overflowMenu}
+          role="menu"
+          tabindex="-1"
+          aria-label="Open tabs"
+          onkeydown={onOverflowMenuKeydown}
+          class="absolute right-0 top-full z-20 max-h-[min(18rem,calc(100vh-100px))] overflow-auto min-w-[220px] max-w-[calc(100vw-32px)] rounded-md shadow-lg bg-[var(--pd-content-card-bg)] ring-2 ring-[var(--pd-dropdown-ring)]">
           {#each tabs as tab (tab.id)}
-            <div
+            <button
+              type="button"
               role="menuitem"
               tabindex="-1"
-              class="px-3 py-2 text-sm whitespace-nowrap cursor-pointer hover:bg-[var(--pd-dropdown-item-hover-bg)]"
+              class="flex w-full px-3 py-2 text-sm whitespace-nowrap text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-bg)] focus-visible:bg-[var(--pd-modal-dropdown-highlight)] focus-visible:text-[var(--pd-modal-dropdown-text)] focus:outline-hidden"
               class:text-[var(--pd-tab-text-highlight)]={tab.id === activeTabId}
               onclick={(): void => {
                 onSelect(tab.id);
                 showOverflowMenu = false;
-              }}
-              onkeydown={(e: KeyboardEvent): void => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  onSelect(tab.id);
-                  showOverflowMenu = false;
-                }
+                focusTab(tab.id);
               }}>
-              {tab.title}
-            </div>
+              <span class="flex items-center gap-2 min-w-0">
+                {@render tabIconSnippet?.(tab)}
+                <span class="overflow-hidden text-ellipsis">{tab.title}</span>
+              </span>
+            </button>
           {/each}
         </div>
       {/if}
     </div>
   {/if}
   {#if showCloseAllButton}
-    <Tooltip tip="Close unpinned tabs" top containerClass="flex shrink-0 items-stretch" class="flex items-stretch">
+    <div class="relative flex shrink-0 items-stretch tab-close-divider focus-within:z-20">
       <button
         type="button"
-        aria-label="Close unpinned tabs"
-        class="flex items-center px-2.5 border-l border-[var(--pd-global-nav-bg-border)] hover:bg-[var(--pd-action-button-details-bg)]"
-        onclick={onCloseAllInPanel}>
-        <Icon class="w-3 text-xs" icon={faXmark} />
+        bind:this={tabActionsButton}
+        aria-label="Tab actions"
+        aria-haspopup="menu"
+        aria-expanded={showTabActionsMenu}
+        class="flex w-10 shrink-0 items-center justify-center text-[var(--pd-tab-text)] hover:bg-[var(--pd-action-button-details-bg)] focus-visible:relative focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
+        onkeydown={focusAdjacentTabStripItem}
+        onclick={(): void => {
+          toggleTabActionsMenu();
+        }}>
+        <Icon class="w-3 text-xs" icon={faEllipsisVertical} />
       </button>
-    </Tooltip>
+      {#if showTabActionsMenu}
+        <div
+          bind:this={tabActionsMenu}
+          role="menu"
+          tabindex="-1"
+          aria-label="Tab actions"
+          onkeydown={onTabActionsMenuKeydown}
+          class="absolute right-2 top-full z-20 min-w-[240px] max-w-[min(320px,calc(100vw-32px))] max-h-[calc(100vh-100px)] overflow-auto rounded-md shadow-lg bg-[var(--pd-content-card-bg)] ring-2 ring-[var(--pd-dropdown-ring)] py-1">
+          <button
+            type="button"
+            role="menuitem"
+            tabindex="-1"
+            disabled={!tabs.some(tab => tab.id !== 'main' && !tab.pinned)}
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-bg)] focus-visible:bg-[var(--pd-modal-dropdown-highlight)] focus-visible:text-[var(--pd-modal-dropdown-text)] focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
+            onclick={(): void => {
+              onCloseAllInPanel();
+              showTabActionsMenu = false;
+              tabActionsButton?.focus();
+            }}>
+            <Icon class="w-3 text-xs" icon={faXmark} />
+            <span>Close unpinned tabs</span>
+          </button>
+          <div class="my-1 border-t border-[var(--pd-content-divider)]" role="separator"></div>
+          <div
+            class="px-3 py-2 text-xs font-semibold text-[var(--pd-dropdown-item-text)]">
+            Recently closed
+          </div>
+          {#if recentlyClosedTabs.length > 0}
+            {#each recentlyClosedTabs.slice(0, 5) as tab (tab.id)}
+              <button
+                type="button"
+                role="menuitem"
+              tabindex="-1"
+                class="flex w-full items-center gap-2 overflow-hidden px-3 py-2 text-left text-sm text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-bg)] focus-visible:bg-[var(--pd-modal-dropdown-highlight)] focus-visible:text-[var(--pd-modal-dropdown-text)] focus:outline-hidden"
+                title={tab.tooltip ?? tab.title}
+                onclick={(): void => {
+                  onRestoreClosedTab?.(tab.id);
+                  showTabActionsMenu = false;
+                  focusTab(tab.id);
+                }}>
+                {@render tabIconSnippet?.(tab)}
+                <span class="overflow-hidden text-ellipsis whitespace-nowrap">{tab.title}</span>
+              </button>
+            {/each}
+          {:else}
+            <div
+              class="px-3 py-2 text-sm text-[var(--pd-dropdown-item-text)] opacity-70">
+              No recently closed tabs
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
   {/if}
 </div>
+
+<svelte:window onpointerdown={closeTabActionsOnOutsidePointer} onkeydown={onDragKeydown} onblur={onTabPointerCancel} />
 
 {#if contextMenu}
   <ContextMenu
@@ -418,6 +818,103 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
 {/if}
 
 <style>
+  .tab-dragging {
+    z-index: 50;
+    cursor: grabbing;
+    pointer-events: none;
+    border-radius: 6px;
+    background: var(--pd-content-bg) !important;
+  }
+
+  .tab-shifting {
+    transition: transform 120ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tab-shifting { transition: none; }
+  }
+
+  .tab-active {
+    position: relative;
+    z-index: 1;
+  }
+
+  .tab-active::before,
+  .tab-active::after {
+    position: absolute;
+    bottom: 0;
+    width: 6px;
+    height: 6px;
+    content: '';
+    pointer-events: none;
+  }
+
+  .tab-active::before {
+    left: -6px;
+    border-bottom-right-radius: 6px;
+    box-shadow: 3px 3px 0 3px var(--pd-content-bg);
+  }
+
+  .tab-active::after {
+    right: -6px;
+    border-bottom-left-radius: 6px;
+    box-shadow: -3px 3px 0 3px var(--pd-content-bg);
+  }
+
+  .tab-divider {
+    position: relative;
+  }
+
+  .tab-divider::after {
+    position: absolute;
+    top: 25%;
+    right: 0;
+    width: 1px;
+    height: 50%;
+    background: var(--pd-global-nav-bg-border);
+    content: '';
+    pointer-events: none;
+  }
+
+  .tab-add-divider {
+    position: relative;
+  }
+
+  .tab-add-divider::before {
+    position: absolute;
+    top: 25%;
+    left: 0;
+    width: 1px;
+    height: 50%;
+    background: var(--pd-global-nav-bg-border);
+    content: '';
+    pointer-events: none;
+  }
+
+  .tab-close-divider::before {
+    position: absolute;
+    z-index: 0;
+    top: 25%;
+    left: 0;
+    width: 1px;
+    height: 50%;
+    background: var(--pd-global-nav-bg-border);
+    content: '';
+    pointer-events: none;
+  }
+
+  .tab-overflow-divider::before {
+    position: absolute;
+    z-index: 0;
+    top: 25%;
+    left: 0;
+    width: 1px;
+    height: 50%;
+    background: var(--pd-global-nav-bg-border);
+    content: '';
+    pointer-events: none;
+  }
+
   .scrollbar-hide {
     scrollbar-width: none;
   }

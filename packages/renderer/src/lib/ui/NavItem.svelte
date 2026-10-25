@@ -7,7 +7,7 @@ import type { Writable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 
 import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
-import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
+import { activateMainTab, openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
 
 interface Props {
   href: string;
@@ -46,6 +46,9 @@ function handleClick(e: MouseEvent & { currentTarget: EventTarget & HTMLAnchorEl
     openRouteInBackgroundTab(uri, tooltip);
     return;
   }
+  if (href !== '/accounts' && e.currentTarget.closest('nav[aria-label="AppNavigation"]')) {
+    activateMainTab();
+  }
   if (onClick) {
     e.preventDefault();
     onClick(e);
@@ -64,6 +67,8 @@ onDestroy(() => {
   href={onClick ? '#top' : uri}
   class="focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--pd-global-nav-icon-selected-highlight)]"
   aria-label={ariaLabel ?? tooltip}
+  data-navigation-page={href !== '/accounts' ? uri : undefined}
+  aria-current={selected ? 'page' : undefined}
   onclick={handleClick}>
   <div
     class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
@@ -82,3 +87,10 @@ onDestroy(() => {
     </Tooltip>
   </div>
 </a>
+
+<style>
+  :global(.keyboard-navigation-focus) {
+    outline: 2px solid var(--pd-global-nav-icon-selected-highlight);
+    outline-offset: -2px;
+  }
+</style>

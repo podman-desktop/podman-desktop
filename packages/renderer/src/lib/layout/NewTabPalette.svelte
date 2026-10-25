@@ -26,7 +26,6 @@
 import { Modal } from '@podman-desktop/ui-svelte';
 import { tick } from 'svelte';
 
-import { ContainerUtils } from '/@/lib/container/container-utils';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
@@ -53,7 +52,6 @@ interface PaletteEntry {
   onSelect: () => void;
 }
 
-const containerUtils = new ContainerUtils();
 const imageUtils = new ImageUtils();
 
 let query = $state('');
@@ -115,30 +113,28 @@ const podEntries = $derived(
 );
 
 const containerEntries = $derived(
-  $containersInfos
-    .map(c => containerUtils.getContainerInfoUI(c))
-    .map(
-      (container): PaletteEntry => ({
-        id: `container-${container.id}`,
-        title: container.name,
-        subtitle: 'Container',
-        iconClass: 'fas fa-cube',
-        group: 'Containers',
-        onSelect: (): void => {
-          openTab(
-            {
-              resourceType: 'container',
-              resourceId: container.id,
-              subView: 'summary',
-              title: `${container.name} · Summary`,
-            },
-            'newTab',
-            panelId,
-          );
-          onClose();
-        },
-      }),
-    ),
+  $containersInfos.map(
+    (container): PaletteEntry => ({
+      id: `container-${container.id}`,
+      title: container.name,
+      subtitle: 'Container',
+      iconClass: 'fas fa-cube',
+      group: 'Containers',
+      onSelect: (): void => {
+        openTab(
+          {
+            resourceType: 'container',
+            resourceId: container.id,
+            subView: 'summary',
+            title: `${container.name} · Summary`,
+          },
+          'newTab',
+          panelId,
+        );
+        onClose();
+      },
+    }),
+  ),
 );
 
 const imageEntries = $derived(

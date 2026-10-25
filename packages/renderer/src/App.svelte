@@ -20,6 +20,7 @@ import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { MAIN_TAB, tabsState } from '/@/stores/layout/tabs.svelte';
 import { synchronizeHistoryForTabsPreference } from '/@/stores/navigation-history.svelte';
 
 import AppNavigation from './AppNavigation.svelte';
@@ -43,6 +44,7 @@ import CustomPick from './lib/dialogs/CustomPick.svelte';
 import MessageBox from './lib/dialogs/MessageBox.svelte';
 import QuickPickInput from './lib/dialogs/QuickPickInput.svelte';
 import DockerExtension from './lib/docker-extension/DockerExtension.svelte';
+import DocumentationPage from './lib/documentation/DocumentationPage.svelte';
 import ExtensionDetails from './lib/extensions/ExtensionDetails.svelte';
 import ExtensionList from './lib/extensions/ExtensionList.svelte';
 import SendFeedback from './lib/feedback/SendFeedback.svelte';
@@ -101,6 +103,11 @@ import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 router.mode.memory();
+
+const mainTabUrl = $derived.by(() => {
+  const mainTab = tabsState.tabs.find(tab => tab.id === MAIN_TAB);
+  return mainTab?.stack[mainTab.index]?.url;
+});
 
 const LAST_ROUTE_KEY = 'last-route';
 const SETTINGS_PAGE_KEY = 'settings-page';
@@ -186,13 +193,15 @@ $effect(() => {
 
     <WelcomePage />
 
-    <div class="flex flex-row w-full h-full overflow-hidden">
+    <div class="flex flex-row w-full flex-1 min-h-0 overflow-hidden">
       <QuickPickInput />
       <CustomPick />
       <MessageBox />
       <AppNavigation meta={meta} exitSettingsCallback={(): void => router.goto(nonSettingsPage)} />
-      {#if meta.url.startsWith('/preferences')}
-        <PreferencesNavigation meta={meta} />
+      <!-- eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -->
+      {#if meta.url.startsWith('/preferences') || (tabPreferences.tabsEnabled && (mainTabUrl?.startsWith('/preferences') ?? false))}
+        {@const preferencesMeta = meta.url.startsWith('/preferences') ? meta : { ...meta, url: mainTabUrl! }}
+        <PreferencesNavigation meta={preferencesMeta} />
       {/if}
       {#each $navigationRegistry.filter(item => item.type === 'submenu') as navigationRegistryItem, index (index)}
         {#if meta.url.startsWith(navigationRegistryItem.link) && navigationRegistryItem.items?.length}
@@ -201,9 +210,7 @@ $effect(() => {
       {/each}
 
       <div
-        class="flex flex-col w-full min-w-0 h-full overflow-hidden"
-        class:bg-[var(--pd-content-bg)]={!meta.url.startsWith('/preferences')}
-        class:bg-[var(--pd-invert-content-bg)]={meta.url.startsWith('/preferences')}>
+        class="flex flex-col w-full min-w-0 h-full overflow-hidden bg-[var(--pd-content-bg)]">
         <TaskManager />
         <SendFeedback />
         <ToastHandler />
@@ -213,6 +220,9 @@ $effect(() => {
         {/if}
         <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
           <DashboardPage />
+        </Route>
+        <Route path="/documentation" breadcrumb="Documentation" let:meta>
+          <DocumentationPage url={new URL(meta.url, window.location.origin).searchParams.get('url') ?? undefined} />
         </Route>
 
         <Route path="/containers/*" breadcrumb="Containers" navigationHint="root" firstmatch>

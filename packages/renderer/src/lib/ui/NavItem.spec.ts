@@ -22,7 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import type { TinroRouteMeta } from 'tinro';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 
 import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
 import { MAIN_TAB, tabsState } from '/@/stores/layout/tabs.svelte';
@@ -188,4 +188,29 @@ test('Expect that counter is rendered', async () => {
 
   const tooltipContent = await screen.findByText(/Foo \(4\)/);
   expect(tooltipContent).toBeInTheDocument();
+});
+
+test('sidebar navigation selects Main without changing an open resource tab', async () => {
+  const previous = tabPreferences.tabsEnabled;
+  tabPreferences.tabsEnabled = true;
+  tabsState.tabs = [
+    { id: MAIN_TAB, title: 'Main', pinned: true, stack: [{ url: '/preferences/resources' }], index: 0 },
+    { id: 'secret', title: 'Secret', pinned: false, stack: [{ url: '/secrets/engine/name/summary' }], index: 0 },
+  ];
+  tabsState.activeId = 'secret';
+  const nav = document.createElement('nav');
+  nav.setAttribute('aria-label', 'AppNavigation');
+  document.body.append(nav);
+  const onClick = vi.fn();
+  const { unmount } = render(NavItem, {
+    target: nav,
+    props: { href: '/webviews/1', tooltip: 'Kreate', meta: { url: '/' } as any, onClick },
+  });
+  await fireEvent.click(screen.getByLabelText('Kreate'));
+  expect(tabsState.activeId).toBe(MAIN_TAB);
+  expect(tabsState.tabs[1]!.stack).toEqual([{ url: '/secrets/engine/name/summary' }]);
+  expect(onClick).toHaveBeenCalledOnce();
+  unmount();
+  nav.remove();
+  tabPreferences.tabsEnabled = previous;
 });

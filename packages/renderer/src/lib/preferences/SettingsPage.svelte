@@ -12,7 +12,7 @@ interface Props {
 let { title, subtitle, actions, header, children }: Props = $props();
 </script>
 
-<div class="flex flex-col w-full h-full" role="region" aria-label={title}>
+<div class="flex flex-col w-full h-full bg-[var(--pd-content-bg)]" role="region" aria-label={title}>
   <div class="w-full px-5 py-4" role="region" aria-label="Header">
     <div class="flex flex-row">
       <div class="grow">

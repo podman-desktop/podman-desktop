@@ -22,9 +22,10 @@
 // New Tab / Split Right / Split Down" affordances on list rows and tabs.
 // Deliberately independent from DropdownMenu.svelte (which anchors to its
 // own trigger button) since this one anchors to an arbitrary click point.
+import { onDestroy, onMount } from 'svelte';
+
 import Icon from '../icons/Icon.svelte';
 import type { ContextMenuAction } from './types';
-import { onDestroy, onMount } from 'svelte';
 
 interface Props {
   x: number;
@@ -38,9 +39,13 @@ let { x, y, actions, onClose }: Props = $props();
 let menuEl: HTMLDivElement | undefined = $state();
 let top = $state(0);
 let left = $state(0);
+let returnFocus: HTMLElement | undefined;
 
 onMount(() => {
+  returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
   window.dispatchEvent(new Event('tooltip-hide'));
+  const frame = requestAnimationFrame(() => focusMenuItem('down'));
+  return (): void => cancelAnimationFrame(frame);
 });
 
 onDestroy(() => {
@@ -60,7 +65,7 @@ $effect(() => {
   }
 });
 
-function handleWindowClick(event: MouseEvent): void {
+function handleWindowClick(event: MouseEvent | PointerEvent): void {
   if (menuEl && !menuEl.contains(event.target as Node)) {
     onClose();
   }
@@ -68,46 +73,87 @@ function handleWindowClick(event: MouseEvent): void {
 
 function handleKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
+    event.preventDefault();
+    event.stopPropagation();
+    returnFocus?.focus();
     onClose();
+  } else if (event.key === 'Tab') {
+    onClose();
+    returnFocus?.focus();
+  }
+}
+
+function focusMenuItem(direction: 'up' | 'down'): void {
+  if (!menuEl) return;
+  const items = Array.from(menuEl.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]:not(:disabled)'));
+  if (items.length === 0) {
+    menuEl.focus();
+    return;
+  }
+
+  const activeIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+  const nextIndex =
+    activeIndex < 0
+      ? direction === 'down'
+        ? 0
+        : items.length - 1
+      : (activeIndex + (direction === 'down' ? 1 : -1) + items.length) % items.length;
+  items[nextIndex]?.focus();
+}
+
+function handleMenuKeydown(event: KeyboardEvent): void {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    focusMenuItem(event.key === 'ArrowDown' ? 'down' : 'up');
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    const activeItem = (document.activeElement as HTMLElement | null)?.closest<HTMLButtonElement>(
+      'button[role="menuitem"]:not(:disabled)',
+    );
+    if (activeItem && menuEl?.contains(activeItem)) activeItem.click();
   }
 }
 
 function select(action: ContextMenuAction): void {
   if (action.disabled) return;
+  returnFocus?.focus();
   action.onSelect();
   onClose();
 }
 </script>
 
-<svelte:window onmousedown={handleWindowClick} onkeydown={handleKeydown} oncontextmenu={handleWindowClick} />
+<svelte:window onpointerdown={handleWindowClick} onkeydown={handleKeydown} oncontextmenu={handleWindowClick} />
 
 <div
   bind:this={menuEl}
   role="menu"
+  tabindex="-1"
+  onkeydown={handleMenuKeydown}
   style="position: fixed; top: {top}px; left: {left}px; z-index: 100;"
-  class="min-w-[180px] py-1 rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] divide-y divide-[var(--pd-dropdown-divider)] focus:outline-hidden">
+  class="min-w-[180px] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)] overflow-auto py-1 rounded-md shadow-lg bg-[var(--pd-content-card-bg)] ring-2 ring-[var(--pd-dropdown-ring)] focus:outline-hidden">
   {#each actions as action (action.id)}
     {#if action.separatorBefore}
       <div class="border-t border-[var(--pd-dropdown-divider)]"></div>
     {/if}
-    <div
+    <button
+      type="button"
       role="menuitem"
       tabindex="-1"
-      class="px-3 py-2 flex items-center gap-2 whitespace-nowrap text-sm"
+      disabled={action.disabled}
+      class="w-full px-3 py-2 flex items-center gap-2 whitespace-nowrap text-sm text-left focus:outline-hidden"
       class:opacity-50={action.disabled}
       class:cursor-not-allowed={action.disabled}
       class:cursor-pointer={!action.disabled}
-      class:hover:bg-[var(--pd-dropdown-item-hover-bg)]={!action.disabled}
+      class:hover:bg-[var(--pd-dropdown-bg)]={!action.disabled}
+      class:focus-visible:bg-[var(--pd-modal-dropdown-highlight)]={!action.disabled}
+      class:focus-visible:text-[var(--pd-modal-dropdown-text)]={!action.disabled && !action.danger}
       class:text-[var(--pd-dropdown-item-text)]={!action.danger}
       class:text-[var(--pd-danger-text)]={!!action.danger && !action.disabled}
-      onclick={(): void => select(action)}
-      onkeydown={(e: KeyboardEvent): void => {
-        if (e.key === 'Enter' || e.key === ' ') select(action);
-      }}>
+      onclick={(): void => select(action)}>
       {#if action.iconClass}
         <Icon class="w-4 text-md" icon={action.iconClass} />
       {/if}
       <span>{action.title}</span>
-    </div>
+    </button>
   {/each}
 </div>
