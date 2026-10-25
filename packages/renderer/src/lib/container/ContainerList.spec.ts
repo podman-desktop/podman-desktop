@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo, ProviderInfo } from '@desktop-framework/api';
+import type { ContainerInfo, ContainerUsageInfo, ProviderInfo } from '@desktop-framework/api';
 import { fireEvent, render, type RenderResult, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
@@ -26,7 +26,7 @@ import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
@@ -37,8 +37,13 @@ import ContainerList from './ContainerList.svelte';
 
 vi.mock(import('tinro'));
 
+const STATS_UPDATE_CHANNEL = 'container-stats:update';
+// sends a `container-stats:update` event, as the main process does
+let sendStatsUpdate: ((usages: ContainerUsageInfo[]) => void) | undefined;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  sendStatsUpdate = undefined;
   // vi.resetAllMocks does not touch Svelte stores; a test that sets one would
   // otherwise leak its contributions into every test declared after it
   viewsContributions.set([]);
@@ -61,10 +66,17 @@ beforeEach(() => {
       ],
     } as ProviderInfo,
   ]);
-  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    func();
+  vi.mocked(window.events.receive).mockImplementation((channel, func) => {
+    // container statistics updates always carry the usages, the tests send them through sendStatsUpdate
+    if (channel === STATS_UPDATE_CHANNEL) {
+      sendStatsUpdate = (usages): void => func(usages);
+    } else {
+      func();
+    }
     return { dispose: vi.fn() };
   });
+  vi.mocked(window.subscribeContainerStats).mockResolvedValue([]);
+  vi.mocked(window.unsubscribeContainerStats).mockResolvedValue(undefined);
 });
 
 async function waitRender(
@@ -1464,4 +1476,92 @@ test('Expect search not to match the raw compose-prefixed container name', async
   // the raw prefixed name must not
   await waitRender({ searchTerm: 'myproject-web-1' });
   expect(screen.queryByText('web-1')).not.toBeInTheDocument();
+});
+
+describe('container statistics', () => {
+  function runningContainer(id: string): ContainerInfo {
+    return {
+      Id: id,
+      Image: `sha256:${id}`,
+      Names: [`${id}-container`],
+      State: 'running',
+      engineId: 'podman',
+      engineName: 'podman',
+      engineType: 'podman',
+      ImageID: 'dummy-image-id',
+    } as unknown as ContainerInfo;
+  }
+
+  function usage(containerId: string, memoryUsage: number, cpuPercentage?: number): ContainerUsageInfo {
+    return { engineId: 'podman', containerId, memoryUsage, cpuPercentage };
+  }
+
+  async function renderWithRunningContainers(
+    ids: string[],
+  ): Promise<RenderResult<Component<ComponentProps<typeof ContainerList>>>> {
+    vi.mocked(window.listContainers).mockResolvedValue(ids.map(runningContainer));
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
+    window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+    window.dispatchEvent(new CustomEvent('tray:update-provider'));
+    await waitFor(() => expect(get(containersInfos)).toHaveLength(ids.length));
+    return waitRender({});
+  }
+
+  test('Expect CPU and Memory columns with placeholders while there is no reading', async () => {
+    await renderWithRunningContainers(['busy', 'idle']);
+
+    expect(screen.getByRole('columnheader', { name: 'CPU' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Memory' })).toBeInTheDocument();
+    expect(screen.getAllByText('-')).toHaveLength(4);
+  });
+
+  test('Expect CPU and Memory usages of the running containers', async () => {
+    vi.mocked(window.subscribeContainerStats).mockResolvedValue([usage('busy', 2_000_000, 80)]);
+    await renderWithRunningContainers(['busy']);
+
+    const row = screen.getByRole('row', { name: 'busy-container' });
+    await waitFor(() => expect(within(row).getByText('80.0%')).toBeInTheDocument());
+    expect(within(row).getByText('2 MB')).toBeInTheDocument();
+
+    sendStatsUpdate?.([usage('busy', 3_000_000, 40)]);
+
+    await waitFor(() => expect(within(row).getByText('40.0%')).toBeInTheDocument());
+    expect(within(row).getByText('3 MB')).toBeInTheDocument();
+  });
+
+  test('Expect the statistics to be subscribed once and unsubscribed when the list is closed', async () => {
+    const { unmount } = await renderWithRunningContainers(['busy', 'idle']);
+
+    expect(window.subscribeContainerStats).toHaveBeenCalledOnce();
+    expect(window.unsubscribeContainerStats).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(window.unsubscribeContainerStats).toHaveBeenCalledOnce();
+  });
+
+  test('Expect containers to be sortable by CPU and memory usage, the ones without a reading last', async () => {
+    vi.mocked(window.subscribeContainerStats).mockResolvedValue([
+      usage('busy', 100, 80),
+      usage('idle', 900, 5),
+      // no CPU percentage before the second reading
+      usage('fresh', 50),
+    ]);
+    await renderWithRunningContainers(['unread', 'fresh', 'idle', 'busy']);
+    await waitFor(() => expect(screen.getByText('80.0%')).toBeInTheDocument());
+
+    const rowNames = (): string[] =>
+      screen
+        .getAllByRole('row')
+        .map(row => row.getAttribute('aria-label') ?? '')
+        .filter(name => name.endsWith('-container'));
+
+    // the heaviest containers come first
+    await fireEvent.click(screen.getByRole('columnheader', { name: 'CPU' }));
+    expect(rowNames().slice(0, 2)).toEqual(['busy-container', 'idle-container']);
+    expect(rowNames().slice(2)).toEqual(expect.arrayContaining(['fresh-container', 'unread-container']));
+
+    await fireEvent.click(screen.getByRole('columnheader', { name: 'Memory' }));
+    expect(rowNames()).toEqual(['idle-container', 'busy-container', 'fresh-container', 'unread-container']);
+  });
 });

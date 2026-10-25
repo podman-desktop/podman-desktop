@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,15 @@ beforeAll(() => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
-  vi.mocked(window.events.receive).mockImplementation((_channel, func) => {
-    func();
+  vi.mocked(window.events.receive).mockImplementation((channel, func) => {
+    // container statistics updates always carry the usages, they are covered by ContainerList.spec.ts
+    if (channel !== 'container-stats:update') {
+      func();
+    }
     return { dispose: vi.fn() };
   });
+  vi.mocked(window.subscribeContainerStats).mockResolvedValue([]);
+  vi.mocked(window.unsubscribeContainerStats).mockResolvedValue(undefined);
 });
 
 async function waitRender(customProperties: object): Promise<void> {
