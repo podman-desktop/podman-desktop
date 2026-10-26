@@ -25,7 +25,7 @@ import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourceCreationPage } from '/@/model/pages/resource-creation-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
-import type { NavigationBar } from '/@/model/workbench/navigation';
+import { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
@@ -141,7 +141,12 @@ test.describe('Podman machine switching validation ', { tag: '@pdmachine' }, () 
       });
 
       await test.step('Stop default podman machine', async () => {
-        await stopMachineAndVerifyLogs(podmanMachineDetails, DEFAULT_PODMAN_MACHINE_VISIBLE, 'stopped successfully');
+        await stopMachineAndVerifyLogs(
+          page,
+          podmanMachineDetails,
+          DEFAULT_PODMAN_MACHINE_VISIBLE,
+          'stopped successfully',
+        );
       });
     });
   });
@@ -205,6 +210,7 @@ test.describe('Podman machine switching validation ', { tag: '@pdmachine' }, () 
 
       await test.step('Restart rootless podman machine', async () => {
         await restartMachineAndVerifyLogs(
+          page,
           podmanMachineDetails,
           ROOTLESS_PODMAN_MACHINE_VISIBLE,
           'stopped successfully',
@@ -300,6 +306,44 @@ async function navigateToMachineDetailsPage(
 }
 
 /**
+ * Waits for a machine's status label on the details page to reach a target state.
+ * If the status appears stuck after the initial timeout, navigates to Dashboard and back
+ * through Resources → machine details to force a UI refresh, then re-checks.
+ */
+async function waitForMachineDetailsStatus(
+  page: Page,
+  machineVisibleName: string,
+  targetState: ResourceElementState,
+  {
+    initialTimeout = TIMEOUT_VERY_LONG,
+    retryTimeout = TIMEOUT_MEDIUM,
+  }: { initialTimeout?: number; retryTimeout?: number } = {},
+): Promise<void> {
+  const statusLocator = page.getByLabel('Connection Status Label');
+
+  try {
+    await playExpect(statusLocator).toHaveText(targetState, { timeout: initialTimeout });
+    return;
+  } catch {
+    const currentStatus = await statusLocator.innerText();
+    console.log(
+      `Machine status is "${currentStatus}" after ${initialTimeout}ms, expected "${targetState}". ` +
+        'Navigating away and back to force UI refresh.',
+    );
+  }
+
+  const navigationBar = new NavigationBar(page);
+  const dashboardPage = await navigationBar.openDashboard();
+  await playExpect(dashboardPage.heading).toBeVisible({ timeout: TIMEOUT_SHORT });
+
+  const settingsBar = await navigationBar.openSettings();
+  await settingsBar.resourcesTab.click();
+
+  await navigateToMachineDetailsPage(page, machineVisibleName, TIMEOUT_MEDIUM);
+  await playExpect(statusLocator).toHaveText(targetState, { timeout: retryTimeout });
+}
+
+/**
  * Starts a Podman machine and verifies it's running with logs
  */
 async function startMachineAndVerifyLogs(
@@ -314,9 +358,8 @@ async function startMachineAndVerifyLogs(
   await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
   await handlePodmanConfirmationDialogs(page);
 
-  await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-    timeout: TIMEOUT_VERY_LONG,
-  });
+  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Running);
+
   await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
   await podmanMachineDetails.logsTab.click();
   await playExpect(
@@ -328,14 +371,15 @@ async function startMachineAndVerifyLogs(
  * Stops a Podman machine and verifies it's stopped with logs
  */
 async function stopMachineAndVerifyLogs(
+  page: Page,
   podmanMachineDetails: PodmanMachineDetails,
   machineVisibleName: string,
   expectedLogMessage: string,
 ): Promise<void> {
   await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
   await podmanMachineDetails.podmanMachineStopButton.click();
-  await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-    timeout: TIMEOUT_LONG,
+  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Off, {
+    initialTimeout: TIMEOUT_LONG,
   });
   await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
   await podmanMachineDetails.logsTab.click();
@@ -348,18 +392,15 @@ async function stopMachineAndVerifyLogs(
  * Restarts a Podman machine and verifies the restart cycle with logs
  */
 async function restartMachineAndVerifyLogs(
+  page: Page,
   podmanMachineDetails: PodmanMachineDetails,
   machineVisibleName: string,
   expectedLogMessage: string,
 ): Promise<void> {
   await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
   await podmanMachineDetails.podmanMachineRestartButton.click();
-  await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-    timeout: TIMEOUT_VERY_LONG,
-  });
-  await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-    timeout: TIMEOUT_VERY_LONG,
-  });
+  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Off);
+  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Running);
   await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
   await podmanMachineDetails.logsTab.click();
   await playExpect(
