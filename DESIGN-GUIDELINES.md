@@ -124,7 +124,8 @@ Data or configuration they cannot recreate, or that takes other resources with i
 
 - Examples: Clear / Purge Data, delete a connection or machine, delete the current Kubernetes context.
 - Confirmation: required, cannot be turned off.
-- Use `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`, or `window.showMessageBox` with `type: 'danger'`.
+- Delete actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`.
+- Other actions (Clear, Purge): `window.showMessageBox` with `type: 'danger'` and the action verb as the button label. `withConfirmation()` cannot do this: `variant: 'delete'` always labels the button `Delete`.
 
 ### Button styling
 
