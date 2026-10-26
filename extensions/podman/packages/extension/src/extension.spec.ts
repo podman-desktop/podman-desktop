@@ -282,7 +282,6 @@ beforeEach(async () => {
   });
 
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue(undefined);
-  vi.mocked(hyperVPrepMock.refreshContext).mockResolvedValue(undefined);
 
   function getBind(identifier: ServiceIdentifier<unknown>): unknown {
     switch (identifier) {
@@ -305,7 +304,7 @@ beforeEach(async () => {
   // configure inversify
   vi.mocked(InversifyBinding.prototype.init).mockResolvedValue({
     get: getBind,
-    getAsync: getBind,
+    getAsync: vi.fn(getBind),
   } as unknown as InversifyContainer);
   await extension.initInversify({ subscriptions: [] } as unknown as extensionApi.ExtensionContext, telemetryLogger);
 });
@@ -2499,6 +2498,15 @@ test('No updates of machines in parallel', async () => {
   expect(podmanMachineListAfterCalls.length).toBe(2);
 });
 
+describe('initInversify', () => {
+  test('resolves the optional HyperVPrep service', async () => {
+    const container = await vi.mocked(InversifyBinding.prototype.init).mock.results[0]?.value;
+    assert(container, 'inversify container should be initialized');
+
+    expect(container.getAsync).toHaveBeenCalledWith(HyperVPrep, { optional: true });
+  });
+});
+
 describe('initCheckAndRegisterUpdate', () => {
   test('check there is an update', async () => {
     const podmanInstall = {
@@ -2689,7 +2697,6 @@ describe('initCheckAndRegisterUpdate', () => {
     } as unknown as extensionApi.RunResult);
 
     expect(PODMAN_BINARY_MOCK.invalidate).not.toHaveBeenCalled();
-    expect(hyperVPrepMock.refreshContext).not.toHaveBeenCalled();
 
     // call the updateVersion
     await func('v1');
@@ -2703,7 +2710,6 @@ describe('initCheckAndRegisterUpdate', () => {
 
     // PodmanBinary cache should be invalidate after on update event
     expect(PODMAN_BINARY_MOCK.invalidate).toHaveBeenCalledOnce();
-    expect(hyperVPrepMock.refreshContext).toHaveBeenCalledOnce();
   });
 });
 

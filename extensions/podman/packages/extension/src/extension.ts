@@ -121,7 +121,6 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
 let rosettaProvisioner: RosettaProvisioner;
-let hyperVPrep: HyperVPrep | undefined;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -1211,7 +1210,6 @@ export async function initCheckAndRegisterUpdate(
   provider.onDidUpdateVersion(async () => {
     podmanBinary.invalidate();
     await checkForUpdate();
-    await hyperVPrep?.refreshContext();
   });
 
   extensionApi.provider.onDidRegisterContainerConnection(event => {
@@ -1428,7 +1426,8 @@ export async function initInversify(
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
-  hyperVPrep = await inversifyContainer.getAsync(HyperVPrep, { optional: true });
+  // resolving HyperVPrep starts keeping its context keys up to date (Windows only)
+  await inversifyContainer.getAsync(HyperVPrep, { optional: true });
 
   return { podmanInstall, winPlatform, podmanProvider };
 }

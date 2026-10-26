@@ -16,13 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { TelemetryLogger } from '@podman-desktop/api';
+import type { Disposable, TelemetryLogger } from '@podman-desktop/api';
 import { context } from '@podman-desktop/api';
-import { inject, injectable, postConstruct } from 'inversify';
+import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { gte, valid } from 'semver';
 
 import { HYPERV_PREP_NOT_APPLIED_KEY, HYPERV_PREP_SUPPORTED_KEY } from '/@/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
 import { execPodman } from '/@/utils/util';
 
@@ -39,12 +40,29 @@ export class HyperVPrep {
   @inject(PodmanBinary)
   private readonly podmanBinary!: PodmanBinary;
 
+  @inject(PodmanProvider)
+  private readonly podmanProvider!: PodmanProvider;
+
   @inject(TelemetryLoggerSymbol)
   private readonly telemetryLogger!: TelemetryLogger;
 
+  #updateVersionListener: Disposable | undefined;
+
   @postConstruct()
   async init(): Promise<void> {
+    this.#updateVersionListener = this.podmanProvider.provider.onDidUpdateVersion(() => {
+      // listeners are called in registration order and this one is registered before the one
+      // invalidating the cache in extension.ts, so drop the cached version before reading it
+      this.podmanBinary.invalidate();
+      this.refreshContext().catch(console.error);
+    });
     await this.refreshContext();
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.#updateVersionListener?.dispose();
+    this.#updateVersionListener = undefined;
   }
 
   async isSupported(): Promise<boolean> {

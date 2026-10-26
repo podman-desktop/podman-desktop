@@ -16,14 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { RunError, TelemetryLogger } from '@podman-desktop/api';
+import type { Provider, RunError, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Container } from 'inversify';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { HYPERV_PREP_NOT_APPLIED_KEY, HYPERV_PREP_SUPPORTED_KEY } from '/@/constants';
 import { HyperVPrep, type HyperVPrepStatus } from '/@/hyperv/hyperv-prep';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
 import { execPodman } from '/@/utils/util';
 
@@ -32,6 +33,14 @@ vi.mock(import('/@/utils/util'));
 vi.mock(import('/@/utils/podman-binary'));
 
 const podmanBinaryMock = new PodmanBinary();
+
+const providerMock = {
+  onDidUpdateVersion: vi.fn(),
+} as unknown as Provider;
+
+const podmanProviderMock = {
+  provider: providerMock,
+} as unknown as PodmanProvider;
 
 const telemetryLoggerMock: TelemetryLogger = {
   onDidChangeEnableStates: vi.fn(() => ({ dispose: vi.fn() })),
@@ -78,12 +87,14 @@ beforeEach(() => {
     stderr: '',
     command: 'podman system hyperv-prep --status',
   });
+  vi.mocked(providerMock.onDidUpdateVersion).mockReturnValue({ dispose: vi.fn() });
 });
 
 async function createHyperVPrep(): Promise<HyperVPrep> {
   const container = new Container();
   container.bind(PodmanBinary).toConstantValue(podmanBinaryMock);
   container.bind(TelemetryLoggerSymbol).toConstantValue(telemetryLoggerMock);
+  container.bind(PodmanProvider).toConstantValue(podmanProviderMock);
   container.bind(HyperVPrep).toSelf();
 
   return container.getAsync(HyperVPrep);
@@ -242,6 +253,53 @@ Hyper-V Administrators group membership:
     await createHyperVPrep();
 
     expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--status']);
+    expectLastHyperVContextValues(true, true);
+  });
+});
+
+describe('HyperVPrep version updates', () => {
+  function getUpdateVersionListener(): (version: string) => unknown {
+    const listener = vi.mocked(providerMock.onDidUpdateVersion).mock.calls[0]?.[0];
+    assert(listener, 'onDidUpdateVersion listener should be registered');
+    return listener;
+  }
+
+  test('registers a version update listener and disposes it', async () => {
+    const disposable = { dispose: vi.fn() };
+    vi.mocked(providerMock.onDidUpdateVersion).mockReturnValue(disposable);
+
+    const hyperVPrep = await createHyperVPrep();
+    expect(providerMock.onDidUpdateVersion).toHaveBeenCalledOnce();
+
+    hyperVPrep.dispose();
+    expect(disposable.dispose).toHaveBeenCalledOnce();
+  });
+
+  test('reads the updated Podman version when the version changes', async () => {
+    // emulate the PodmanBinary cache: the version is read once and kept until invalidated
+    let installedVersion = '5.4.0';
+    let cachedVersion: string | undefined;
+    vi.mocked(podmanBinaryMock.getBinaryInfo).mockImplementation(async () => {
+      cachedVersion ??= installedVersion;
+      return { version: cachedVersion };
+    });
+    vi.mocked(podmanBinaryMock.invalidate).mockImplementation(() => {
+      cachedVersion = undefined;
+    });
+    await createHyperVPrep();
+    expectLastHyperVContextValues(false, false);
+
+    installedVersion = '6.0.0';
+    vi.mocked(execPodman).mockResolvedValueOnce({
+      stdout: NEEDED_STATUS_OUTPUT,
+      stderr: '',
+      command: 'podman system hyperv-prep --status',
+    });
+    getUpdateVersionListener()('6.0.0');
+
+    await vi.waitFor(() =>
+      expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(HYPERV_PREP_NOT_APPLIED_KEY, true),
+    );
     expectLastHyperVContextValues(true, true);
   });
 });
