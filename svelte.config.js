@@ -23,6 +23,8 @@ const config = {
     experimental: {
       async: true,
     },
+    // Runes everywhere in our code; libraries keep their own mode.
+    runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true),
   },
 };
 
