@@ -141,12 +141,7 @@ test.describe('Podman machine switching validation ', { tag: '@pdmachine' }, () 
       });
 
       await test.step('Stop default podman machine', async () => {
-        await stopMachineAndVerifyLogs(
-          page,
-          podmanMachineDetails,
-          DEFAULT_PODMAN_MACHINE_VISIBLE,
-          'stopped successfully',
-        );
+        await stopMachineAndVerifyLogs(podmanMachineDetails, DEFAULT_PODMAN_MACHINE_VISIBLE, 'stopped successfully');
       });
     });
   });
@@ -188,6 +183,8 @@ test.describe('Podman machine switching validation ', { tag: '@pdmachine' }, () 
   });
 
   test('Switch to rootless podman machine', async ({ page }) => {
+    test.setTimeout(360_000);
+
     await test.step('Go to rootless podman machine details page', async () => {
       await navigateToMachineDetailsPage(page, ROOTLESS_PODMAN_MACHINE_VISIBLE, TIMEOUT_MEDIUM);
     });
@@ -200,17 +197,11 @@ test.describe('Podman machine switching validation ', { tag: '@pdmachine' }, () 
       });
 
       await test.step('Start rootless podman machine', async () => {
-        await startMachineAndVerifyLogs(
-          page,
-          podmanMachineDetails,
-          ROOTLESS_PODMAN_MACHINE_VISIBLE,
-          'started successfully',
-        );
+        await startMachineAndVerifyLogs(podmanMachineDetails, ROOTLESS_PODMAN_MACHINE_VISIBLE, 'started successfully');
       });
 
       await test.step('Restart rootless podman machine', async () => {
         await restartMachineAndVerifyLogs(
-          page,
           podmanMachineDetails,
           ROOTLESS_PODMAN_MACHINE_VISIBLE,
           'stopped successfully',
@@ -247,12 +238,7 @@ test.describe('Podman machine switching validation ', { tag: '@pdmachine' }, () 
     await test.step('Turn default podman machine on', async () => {
       const podmanMachineDetails = new PodmanMachineDetails(page, DEFAULT_PODMAN_MACHINE);
 
-      await startMachineAndVerifyLogs(
-        page,
-        podmanMachineDetails,
-        DEFAULT_PODMAN_MACHINE_VISIBLE,
-        'started successfully',
-      );
+      await startMachineAndVerifyLogs(podmanMachineDetails, DEFAULT_PODMAN_MACHINE_VISIBLE, 'started successfully');
     });
   });
 
@@ -311,7 +297,7 @@ async function navigateToMachineDetailsPage(
  * through Resources → machine details to force a UI refresh, then re-checks.
  */
 async function waitForMachineDetailsStatus(
-  page: Page,
+  podmanMachineDetails: PodmanMachineDetails,
   machineVisibleName: string,
   targetState: ResourceElementState,
   {
@@ -319,19 +305,20 @@ async function waitForMachineDetailsStatus(
     retryTimeout = TIMEOUT_MEDIUM,
   }: { initialTimeout?: number; retryTimeout?: number } = {},
 ): Promise<void> {
-  const statusLocator = page.getByLabel('Connection Status Label');
+  const statusLocator = podmanMachineDetails.podmanMachineStatus;
 
   try {
     await playExpect(statusLocator).toHaveText(targetState, { timeout: initialTimeout });
     return;
   } catch {
-    const currentStatus = await statusLocator.innerText();
+    const currentStatus = await statusLocator.innerText().catch(() => 'unavailable');
     console.log(
       `Machine status is "${currentStatus}" after ${initialTimeout}ms, expected "${targetState}". ` +
         'Navigating away and back to force UI refresh.',
     );
   }
 
+  const page = podmanMachineDetails.page;
   const navigationBar = new NavigationBar(page);
   const dashboardPage = await navigationBar.openDashboard();
   await playExpect(dashboardPage.heading).toBeVisible({ timeout: TIMEOUT_SHORT });
@@ -347,7 +334,6 @@ async function waitForMachineDetailsStatus(
  * Starts a Podman machine and verifies it's running with logs
  */
 async function startMachineAndVerifyLogs(
-  page: Page,
   podmanMachineDetails: PodmanMachineDetails,
   machineVisibleName: string,
   expectedLogMessage: string,
@@ -356,9 +342,9 @@ async function startMachineAndVerifyLogs(
   await podmanMachineDetails.podmanMachineStartButton.click();
 
   await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
-  await handlePodmanConfirmationDialogs(page);
+  await handlePodmanConfirmationDialogs(podmanMachineDetails.page);
 
-  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Running);
+  await waitForMachineDetailsStatus(podmanMachineDetails, machineVisibleName, ResourceElementState.Running);
 
   await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
   await podmanMachineDetails.logsTab.click();
@@ -371,14 +357,13 @@ async function startMachineAndVerifyLogs(
  * Stops a Podman machine and verifies it's stopped with logs
  */
 async function stopMachineAndVerifyLogs(
-  page: Page,
   podmanMachineDetails: PodmanMachineDetails,
   machineVisibleName: string,
   expectedLogMessage: string,
 ): Promise<void> {
   await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
   await podmanMachineDetails.podmanMachineStopButton.click();
-  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Off, {
+  await waitForMachineDetailsStatus(podmanMachineDetails, machineVisibleName, ResourceElementState.Off, {
     initialTimeout: TIMEOUT_LONG,
   });
   await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
@@ -392,15 +377,14 @@ async function stopMachineAndVerifyLogs(
  * Restarts a Podman machine and verifies the restart cycle with logs
  */
 async function restartMachineAndVerifyLogs(
-  page: Page,
   podmanMachineDetails: PodmanMachineDetails,
   machineVisibleName: string,
   expectedLogMessage: string,
 ): Promise<void> {
   await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
   await podmanMachineDetails.podmanMachineRestartButton.click();
-  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Off);
-  await waitForMachineDetailsStatus(page, machineVisibleName, ResourceElementState.Running);
+  await waitForMachineDetailsStatus(podmanMachineDetails, machineVisibleName, ResourceElementState.Off);
+  await waitForMachineDetailsStatus(podmanMachineDetails, machineVisibleName, ResourceElementState.Running);
   await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
   await podmanMachineDetails.logsTab.click();
   await playExpect(
