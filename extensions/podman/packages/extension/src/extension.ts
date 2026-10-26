@@ -1938,6 +1938,20 @@ async function stopAutoStartedMachine(): Promise<void> {
   await execPodman(['machine', 'stop', autoMachineName], currentMachine.VMType);
 }
 
+export async function stopRunningMachines(): Promise<void> {
+  const { list } = await getJSONMachineList();
+  const machinesToStop = list.filter(machine => machine.Running || machine.Starting);
+
+  const results = await Promise.allSettled(
+    machinesToStop.map(machine => execPodman(['machine', 'stop', machine.Name], machine.VMType)),
+  );
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(`failed to stop machine ${machinesToStop[index].Name}`, result.reason);
+    }
+  });
+}
+
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const installedPodman = await podmanBinary.getBinaryInfo();
 
@@ -2006,11 +2020,21 @@ export function resetStopLoop(): void {
 export async function deactivate(): Promise<void> {
   stopLoop = true;
   console.log('stopping podman extension');
-  await stopAutoStartedMachine().then(() => {
-    if (autoMachineStarted) {
-      console.log('stopped autostarted machine', autoMachineName);
+  try {
+    const stopMachinesOnExit =
+      extensionApi.configuration.getConfiguration('podman').get<boolean>('setting.stopMachinesOnExit') ?? false;
+    if (stopMachinesOnExit) {
+      await stopRunningMachines();
+    } else {
+      await stopAutoStartedMachine();
+      if (autoMachineStarted) {
+        console.log('stopped autostarted machine', autoMachineName);
+      }
     }
-  });
+  } catch (error: unknown) {
+    // the rest of the cleanup must still run
+    console.error('failed to stop machines', error);
+  }
 
   // cleanup
   listeners.clear();

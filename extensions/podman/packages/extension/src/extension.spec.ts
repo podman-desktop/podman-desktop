@@ -4614,3 +4614,103 @@ function getContextMock() {
     },
   } as unknown as extensionApi.ExtensionContext;
 }
+
+describe('stop machines on exit', () => {
+  const machines: MachineJSON[] = [
+    {
+      Name: 'podman-machine-default',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: true,
+      Starting: false,
+      Default: true,
+      VMType: VMTYPE.APPLEHV,
+      Port: 123,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+    {
+      Name: 'podman-machine-starting',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: false,
+      Starting: true,
+      Default: false,
+      VMType: VMTYPE.LIBKRUN,
+      Port: 456,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+    {
+      Name: 'podman-machine-stopped',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: false,
+      Starting: false,
+      Default: false,
+      VMType: VMTYPE.APPLEHV,
+      Port: 789,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+  ];
+
+  function mockStopMachinesOnExitSetting(value: boolean | undefined): void {
+    vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+      ...config,
+      get: <T>(key: string): T | undefined =>
+        (key === 'setting.stopMachinesOnExit' ? value : undefined) as T | undefined,
+    });
+  }
+
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+  });
+
+  test('stops every running or starting machine when the setting is enabled', async () => {
+    mockStopMachinesOnExitSetting(true);
+    const execPodmanSpy = vi.spyOn(util, 'execPodman').mockImplementation(async args => ({
+      stdout: args[1] === 'list' ? JSON.stringify(machines) : '',
+      stderr: '',
+      command: '',
+    }));
+
+    await extension.deactivate();
+
+    expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'stop', 'podman-machine-default'], VMTYPE.APPLEHV);
+    expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'stop', 'podman-machine-starting'], VMTYPE.LIBKRUN);
+    expect(execPodmanSpy).not.toHaveBeenCalledWith(['machine', 'stop', 'podman-machine-stopped'], expect.anything());
+  });
+
+  test('keeps stopping the other machines when one fails to stop', async () => {
+    mockStopMachinesOnExitSetting(true);
+    const execPodmanSpy = vi.spyOn(util, 'execPodman').mockImplementation(async args => {
+      if (args[1] === 'stop' && args[2] === 'podman-machine-default') {
+        throw new Error('stop failed');
+      }
+      return { stdout: args[1] === 'list' ? JSON.stringify(machines) : '', stderr: '', command: '' };
+    });
+
+    await extension.deactivate();
+
+    expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'stop', 'podman-machine-starting'], VMTYPE.LIBKRUN);
+    expect(console.error).toHaveBeenCalledWith('failed to stop machine podman-machine-default', expect.any(Error));
+  });
+
+  test('does not stop machines it did not start when the setting is disabled', async () => {
+    mockStopMachinesOnExitSetting(undefined);
+    const execPodmanSpy = vi.spyOn(util, 'execPodman').mockResolvedValue({
+      stdout: JSON.stringify(machines),
+      stderr: '',
+      command: '',
+    });
+
+    await extension.deactivate();
+
+    expect(execPodmanSpy).not.toHaveBeenCalledWith(['machine', 'stop', expect.any(String)], expect.anything());
+  });
+});

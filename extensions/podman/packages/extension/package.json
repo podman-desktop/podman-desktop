@@ -263,6 +263,12 @@
           "description": "Use macOS Rosetta to run x86_64 Linux binaries on Podman 5.1.0 and above, disabling will use qemu. NOTE: This setting is only applied when creating new machines.",
           "when": "isMac"
         },
+        "podman.setting.stopMachinesOnExit": {
+          "type": "boolean",
+          "default": false,
+          "description": "Stop running Podman machines when Podman Desktop exits",
+          "when": "!isLinux"
+        },
         "third-party.docker.tool.compatibility.enabled": {
           "type": "boolean",
           "default": true,
