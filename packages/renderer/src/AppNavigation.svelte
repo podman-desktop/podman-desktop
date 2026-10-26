@@ -20,12 +20,14 @@ import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
+import { NavigationUtils } from './stores/navigation/navigation-utils';
 
 interface Props {
   exitSettingsCallback: () => void;
   meta: TinroRouteMeta;
 }
 let { exitSettingsCallback, meta = $bindable() }: Props = $props();
+const navigationUtils = new NavigationUtils();
 
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
@@ -41,6 +43,9 @@ const expandedThreshold = 70;
 let navWidth = $state(160);
 let expanded = $derived(navWidth > expandedThreshold);
 let isDragging = $state(false);
+
+// Single main-nav list sorted by index (defaults and pinned share one sequence)
+let allVisibleEntries = $derived(navigationUtils.getVisibleOrderedEntries($navigationRegistry));
 
 $effect(() => {
   document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
@@ -231,15 +236,8 @@ function onDidChangeConfigurationCallback(e: Event): void {
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
       onpointerdown={onScrollRegionPointerDown}>
-      {#each $navigationRegistry as navigationRegistryItem, index (index)}
-        {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-          <!-- This is a group, list all items from the entry -->
-          {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
-          {/each}
-        {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
-        {/if}
+      {#each allVisibleEntries as entry (entry.link)}
+        <NavRegistryEntry {entry} bind:meta={meta} {expanded} />
       {/each}
     </div>
     {#if scrollThumbVisible}
