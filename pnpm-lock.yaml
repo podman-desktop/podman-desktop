@@ -1208,8 +1208,8 @@ importers:
         specifier: ^10.6.3
         version: 10.6.3(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))
       '@storybook/addon-docs':
-        specifier: ^10.6.2
-        version: 10.6.2(@types/react@18.3.12)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))
+        specifier: ^10.6.3
+        version: 10.6.3(@types/react@18.3.12)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))
       '@storybook/addon-links':
         specifier: ^10.6.3
         version: 10.6.3(@types/react@18.3.12)(react@18.2.0)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))
@@ -4733,11 +4733,11 @@ packages:
     peerDependencies:
       storybook: ^10.6.3
 
-  '@storybook/addon-docs@10.6.2':
-    resolution: {integrity: sha512-f7Rv/rzX1sk4lUDTeoIRkXWcWvNwLv7vBnfpFGb3f88MliB+M4ZekGKNiKtrmi44uLFt52gzwwPzj2eGDu0DQQ==}
+  '@storybook/addon-docs@10.6.3':
+    resolution: {integrity: sha512-365f712au4w/xvFqEKY6TIvTeGGAY7FKRB8zP4CFa3VSv9oyxHaq/ublFg4YDbCeRagppwl1PZ6k4+PoUor3+A==}
     peerDependencies:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-      storybook: ^10.6.2
+      storybook: ^10.6.3
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -4785,14 +4785,14 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@storybook/react-dom-shim@10.6.2':
-    resolution: {integrity: sha512-k0262Vqxjk3wHeg3g/QO/ENDrkC7kkbuwsFSXOdYr7Sl888tsF1DAS7uQ/gr+s/BRz1FLYRX7wBY3smEUV4MJg==}
+  '@storybook/react-dom-shim@10.6.3':
+    resolution: {integrity: sha512-cJUuPrieiTl06kzlgaU89iG+CtLAgUTt0Xdvm8qFT9yR2qwafSaswhwYWlZCNX4nWuOu7eK7uzWTwzKqyDBOWQ==}
     peerDependencies:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       '@types/react-dom': ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-      storybook: ^10.6.2
+      storybook: ^10.6.3
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -16209,7 +16209,7 @@ snapshots:
 
   '@napi-rs/wasm-runtime@1.0.7':
     dependencies:
-      '@emnapi/core': 1.10.0
+      '@emnapi/core': 1.11.0
       '@emnapi/runtime': 1.11.3
       '@tybys/wasm-util': 0.10.3
     optional: true
@@ -17085,11 +17085,11 @@ snapshots:
       axe-core: 4.13.0
       storybook: 10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0)
 
-  '@storybook/addon-docs@10.6.2(@types/react@18.3.12)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))':
+  '@storybook/addon-docs@10.6.3(@types/react@18.3.12)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@18.3.12)(react@18.2.0)
       '@storybook/icons': 2.1.0(react@18.2.0)
-      '@storybook/react-dom-shim': 10.6.2(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))
+      '@storybook/react-dom-shim': 10.6.3(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       storybook: 10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0)
@@ -17146,7 +17146,7 @@ snapshots:
     dependencies:
       react: 18.2.0
 
-  '@storybook/react-dom-shim@10.6.2(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))':
+  '@storybook/react-dom-shim@10.6.3(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@10.6.3(@types/react@18.3.12)(prettier@3.9.10)(react@18.2.0))':
     dependencies:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)

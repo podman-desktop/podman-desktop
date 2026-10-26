@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^10.6.3",
-    "@storybook/addon-docs": "^10.6.2",
+    "@storybook/addon-docs": "^10.6.3",
     "@storybook/addon-links": "^10.6.3",
     "@storybook/addon-svelte-csf": "5.1.5",
     "@storybook/addon-themes": "^10.6.3",
