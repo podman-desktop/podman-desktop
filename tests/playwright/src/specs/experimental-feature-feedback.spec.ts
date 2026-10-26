@@ -57,7 +57,10 @@ test.describe('Experimental feature feedback dialog', { tag: ['@smoke'] }, () =>
     // the dialog survives startup on its own, without anybody asking for it.
     const dialog = page.getByRole('dialog', { name: 'Share Feedback' });
 
-    await playExpect(dialog).toBeVisible({ timeout: 30_000 });
+    // The dialog depends on the 'extensions-started' IPC event which is sent
+    // only after all extensions finish activating. On slower CI runners
+    // (especially Windows 10 with nightly Podman builds) this can exceed 30s.
+    await playExpect(dialog).toBeVisible({ timeout: 60_000 });
 
     // 'Remind me later' opens the choices rather than answering; the answers are
     // the RemindOption values the handler knows.

@@ -102,6 +102,22 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
 
   test('Can install Compose locally', async ({ page, navigationBar }) => {
     const onboardingPage = await openComposeOnboarding(page, navigationBar);
+
+    // Re-entering onboarding repeats the version check. Wait for it to
+    // complete (or fail due to rate limiting) before clicking "Next Step",
+    // otherwise the button stays disabled and the click times out.
+    const onboardingVersionPage = new ComposeVersionPage(page);
+    await playExpect(onboardingVersionPage.onboardingStatusMessage).toContainText(
+      /Compose download|Unable to retrieve Compose version/,
+      { timeout: 10_000 },
+    );
+
+    const statusText = await onboardingVersionPage.onboardingStatusMessage.innerText();
+    if (statusText.includes('Unable to retrieve Compose version') || cliToolsPage.wasRateLimitReached()) {
+      test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
+      return;
+    }
+
     await onboardingPage.nextStepButton.click();
 
     const onboardigLocalPage = new ComposeLocalInstallPage(page);
