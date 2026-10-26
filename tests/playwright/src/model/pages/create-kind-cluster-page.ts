@@ -53,7 +53,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
       exact: true,
     });
     this.configFileBrowseButton = this.clusterPropertiesInformation.getByRole('button', { name: 'browse' });
-    this.warning = this.page.getByRole('status', { name: 'warning' });
+    this.warning = this.page.getByRole('status').filter({ hasText: 'Warning:' });
   }
 
   private async validateKindClusterDefaultSettings(): Promise<void> {
