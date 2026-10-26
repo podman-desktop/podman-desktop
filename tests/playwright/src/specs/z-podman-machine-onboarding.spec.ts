@@ -275,6 +275,10 @@ test.describe('Podman Machine verification', { tag: '@pdmachine' }, () => {
 
   test('Podman machine operations - EDIT privileges', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
+    test.skip(
+      getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
+      'HyperV machine update is broken, see https://github.com/podman-desktop/podman-desktop/issues/19887',
+    );
     test.setTimeout(TIMEOUT_SETUP + TIMEOUT_LONG);
 
     const TOGGLE_TIMEOUT = 120_000;
