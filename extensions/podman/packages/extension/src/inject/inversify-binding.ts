@@ -35,6 +35,7 @@ import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
+import { HyperVPrep } from '/@/hyperv/hyperv-prep';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
@@ -42,6 +43,7 @@ import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
+import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
@@ -66,6 +68,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanBinary).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(PodmanMachineLifecycle).toSelf().inSingletonScope();
 
     this.#inversifyContainer.bind(WinBitCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinVersionCheck).toSelf().inSingletonScope();
@@ -87,6 +90,7 @@ export class InversifyBinding {
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupWindows).inSingletonScope();
+      this.#inversifyContainer.bind(HyperVPrep).toSelf().inSingletonScope();
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupMacOS).inSingletonScope();

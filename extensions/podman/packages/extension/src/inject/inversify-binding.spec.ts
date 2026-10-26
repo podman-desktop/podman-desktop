@@ -23,9 +23,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
+import { HyperVPrep } from '/@/hyperv/hyperv-prep';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
+import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
 import { InversifyBinding } from './inversify-binding';
@@ -61,6 +63,16 @@ describe('inversifyBinding', () => {
     expect(value).toBeInstanceOf(RosettaProvisioner);
   });
 
+  test('should bind PodmanMachineLifecycle as a singleton', async () => {
+    const container: InversifyContainer = await inversifyBinding.init();
+
+    const first = container.get(PodmanMachineLifecycle);
+    const second = container.get(PodmanMachineLifecycle);
+
+    expect(first).toBeInstanceOf(PodmanMachineLifecycle);
+    expect(first).toBe(second);
+  });
+
   describe('windows', () => {
     let container: InversifyContainer;
     beforeEach(async () => {
@@ -80,6 +92,10 @@ describe('inversifyBinding', () => {
       expect(value).not.toBeUndefined();
 
       expect(value).toBeInstanceOf(PodmanCleanupWindows);
+    });
+
+    test('InversifyBinding#init should bind HyperVPrep', async () => {
+      expect(container.isBound(HyperVPrep)).toBeTruthy();
     });
   });
 
@@ -103,6 +119,10 @@ describe('inversifyBinding', () => {
 
       expect(value).toBeInstanceOf(PodmanCleanupMacOS);
     });
+
+    test('InversifyBinding#init should not bind HyperVPrep', async () => {
+      expect(container.isBound(HyperVPrep)).toBeFalsy();
+    });
   });
 
   describe('linux', () => {
@@ -122,6 +142,10 @@ describe('inversifyBinding', () => {
       expect(() => {
         container.get(ProviderCleanupSymbol);
       }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
+    });
+
+    test('InversifyBinding#init should not bind HyperVPrep', async () => {
+      expect(container.isBound(HyperVPrep)).toBeFalsy();
     });
   });
 });
