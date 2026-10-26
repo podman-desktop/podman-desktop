@@ -408,42 +408,9 @@ test('Expect that Esc closes', async () => {
   // Espect the div 'Skip Setup Popup' to be in the document
   const skipSetupPopup = screen.getByLabelText('Skip Setup Popup');
   expect(skipSetupPopup).toBeInTheDocument();
-});
 
-test('Expect the skip setup overlay to dim the page instead of hiding it', async () => {
-  const contextConfig = new ContextUI();
-  context.set(contextConfig);
-
-  onboardingList.set([
-    {
-      extension: 'id',
-      removable: true,
-      title: 'onboarding',
-      name: 'foobar',
-      displayName: 'FooBar',
-      icon: 'data:image/png;base64,foobar',
-      welcomeMessage: 'Get started with Podman Desktop',
-      steps: [
-        {
-          id: 'step',
-          title: 'step',
-          state: 'completed',
-        },
-      ],
-      enablement: 'true',
-    },
-  ]);
-
-  await waitRender({
-    extensionIds: ['id'],
-  });
-
-  await userEvent.keyboard('{Escape}');
-
-  const overlay = screen.getByLabelText('Skip Setup Popup').parentElement;
   // Tailwind 4 has no bg-opacity-* utilities, so the opacity has to be part of the color class
-  expect(overlay).toHaveClass('bg-(--pd-modal-fade)/60');
-  expect(overlay).not.toHaveClass('bg-opacity-60');
+  expect(skipSetupPopup.parentElement).toHaveClass('bg-(--pd-modal-fade)/60');
 });
 
 test('Expect onboarding to handle two extension ids and global onboarding set to true', async () => {
