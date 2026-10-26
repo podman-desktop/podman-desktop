@@ -118,6 +118,69 @@ test('Expect entry to not have title when collapsed', async () => {
   expect(content).not.toBeInTheDocument();
 });
 
+test('Expect pinned entry to show pin badge', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Resources',
+    parentName: 'Settings',
+    hidden: false,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Resources',
+    link: '/preferences/resources',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+    index: 0,
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: false });
+
+  screen.getByRole('link', { name: 'Settings > Resources' });
+  screen.getByTestId('nav-pin-badge');
+});
+
+test('Expect non-pinned entry to omit pin badge', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item > 1',
+    hidden: false,
+    icon: {
+      faIcon: { definition: faPuzzlePiece, size: 'lg' },
+    },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+    index: 0,
+  };
+  const meta = { url: '/test' } as TinroRouteMeta;
+  render(NavRegistryEntry, { entry, meta, expanded: false });
+
+  expect(screen.queryByTestId('nav-pin-badge')).not.toBeInTheDocument();
+});
+
+test('Expect unindexed secondary-navigation entry to omit pin badge', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Resources',
+    parentName: 'Settings',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Resources',
+    link: '/preferences/resources',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, {
+    entry,
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded: false,
+  });
+
+  expect(screen.queryByTestId('nav-pin-badge')).not.toBeInTheDocument();
+});
+
 test('forwards aria-keyshortcuts to the navigation link', () => {
   const entry: NavigationRegistryEntry = {
     name: 'Item1',
