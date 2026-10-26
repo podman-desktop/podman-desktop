@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,11 @@ import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
+import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
 import { InversifyBinding } from './inversify-binding';
-import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
@@ -81,6 +82,16 @@ describe('inversifyBinding', () => {
 
       expect(value).toBeInstanceOf(PodmanCleanupWindows);
     });
+
+    test('InversifyBinding#init should bind HyperVPrep', async () => {
+      expect(container.isBound(HyperVPrep)).toBeTruthy();
+    });
+
+    test('InversifyBinding#init should register HyperVPrep as a startup service', async () => {
+      const startupServices = await container.getAllAsync(StartupSymbol);
+
+      expect(startupServices).toEqual([container.get(HyperVPrep)]);
+    });
   });
 
   describe('macos', () => {
@@ -103,6 +114,14 @@ describe('inversifyBinding', () => {
 
       expect(value).toBeInstanceOf(PodmanCleanupMacOS);
     });
+
+    test('InversifyBinding#init should not bind HyperVPrep', async () => {
+      expect(container.isBound(HyperVPrep)).toBeFalsy();
+    });
+
+    test('InversifyBinding#init should not register any startup service', async () => {
+      expect(await container.getAllAsync(StartupSymbol)).toEqual([]);
+    });
   });
 
   describe('linux', () => {
@@ -122,6 +141,14 @@ describe('inversifyBinding', () => {
       expect(() => {
         container.get(ProviderCleanupSymbol);
       }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
+    });
+
+    test('InversifyBinding#init should not bind HyperVPrep', async () => {
+      expect(container.isBound(HyperVPrep)).toBeFalsy();
+    });
+
+    test('InversifyBinding#init should not register any startup service', async () => {
+      expect(await container.getAllAsync(StartupSymbol)).toEqual([]);
     });
   });
 });
