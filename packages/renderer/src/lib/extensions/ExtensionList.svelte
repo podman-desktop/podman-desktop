@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
-import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
+import { Button, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -72,7 +72,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'catalog'} title="extensions">
   {#snippet additionalActions()}
     {#if enableCustomExtensions}
       <Button
@@ -90,10 +90,6 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
     {#if filteredInstalledItems > 0 && screen === 'installed'}
       <div class="text-sm text-[var(--pd-content-text)]">
         Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
-      </div>
-    {:else if filteredCatalogItems > 0 && screen === 'catalog'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
       </div>
     {/if}
   {/snippet}
@@ -124,6 +120,18 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
  {/snippet}
 
   {#snippet content()}
+  {#if screen === 'catalog' && enableCatalog}
+    <div class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
+      <div class="pl-5 w-72">
+        <SearchInput bind:searchTerm={searchTerm} title="extensions" />
+      </div>
+      {#if filteredCatalogItems > 0}
+        <div class="flex flex-1 items-center px-5 text-sm text-[var(--pd-content-text)]">
+          Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
+        </div>
+      {/if}
+    </div>
+  {/if}
   <div class="flex min-w-full grow">
     {#if screen === 'installed'}
       {#if searchTerm && filteredInstalledExtensions.length === 0}
