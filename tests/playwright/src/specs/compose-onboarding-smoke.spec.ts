@@ -34,6 +34,9 @@ const RESOURCE_NAME: string = 'Compose';
 let cliToolsPage: CLIToolsPage;
 
 let composeVersion: string;
+// Set when the Compose version check fails (e.g. GitHub API unreachable).
+// Downstream serial tests depend on a successful download, so they must skip.
+let composeVersionCheckFailed = false;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
 const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ?? false;
 const skipComposeOnboardingTest = process.env.SKIP_COMPOSE_ONBOARDING_TEST ?? false;
@@ -54,9 +57,12 @@ test.afterAll(async ({ runner }) => {
 test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
   test.describe.configure({ mode: 'serial' });
   test.beforeEach(async () => {
-    if (cliToolsPage.wasRateLimitReached()) {
-      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
-      test.skip(true, 'Rate limit exceeded; skipping remaining compose onboarding checks');
+    if (cliToolsPage.wasRateLimitReached() || composeVersionCheckFailed) {
+      const reason = cliToolsPage.wasRateLimitReached()
+        ? 'Rate limit exceeded for current environment'
+        : 'Compose version check failed; download prerequisite not met';
+      test.info().annotations.push({ type: 'skip', description: reason });
+      test.skip(true, reason);
     }
   });
   test.afterEach(async ({ navigationBar }) => {
@@ -92,6 +98,7 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
     const statusText = await onboardingVersionPage.onboardingStatusMessage.innerText();
 
     if (statusText.includes('Unable to retrieve Compose version') || cliToolsPage.wasRateLimitReached()) {
+      composeVersionCheckFailed = true;
       test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
       return;
     }
@@ -114,6 +121,7 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
 
     const statusText = await onboardingVersionPage.onboardingStatusMessage.innerText();
     if (statusText.includes('Unable to retrieve Compose version') || cliToolsPage.wasRateLimitReached()) {
+      composeVersionCheckFailed = true;
       test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
       return;
     }
