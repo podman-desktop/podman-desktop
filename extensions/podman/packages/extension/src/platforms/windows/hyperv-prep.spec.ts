@@ -20,7 +20,7 @@ import type { RunError } from '@podman-desktop/api';
 import { Container } from 'inversify';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { HyperVPrep, type HyperVPrepStatus } from '/@/hyperv/hyperv-prep';
+import { HyperVPrep, type HyperVPrepStatus } from '/@/platforms/windows/hyperv-prep';
 import { PodmanBinary } from '/@/utils/podman-binary';
 import { execPodman } from '/@/utils/util';
 
