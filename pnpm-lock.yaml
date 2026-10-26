@@ -464,8 +464,8 @@ importers:
   extensions/kind:
     dependencies:
       '@kubernetes/client-node':
-        specifier: ^2.0.0
-        version: 2.0.0(supports-color@8.1.1)
+        specifier: ^2.0.1
+        version: 2.0.1(supports-color@8.1.1)
       '@octokit/rest':
         specifier: ^22.0.1
         version: 22.0.1
@@ -749,8 +749,8 @@ importers:
         specifier: ^9.3.2
         version: 9.3.2
       '@kubernetes/client-node':
-        specifier: ^2.0.0
-        version: 2.0.0(supports-color@8.1.1)
+        specifier: ^2.0.1
+        version: 2.0.1(supports-color@8.1.1)
       '@segment/analytics-node':
         specifier: ^3.1.0
         version: 3.1.0
@@ -3639,8 +3639,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@kubernetes/client-node@2.0.0':
-    resolution: {integrity: sha512-Jx2cRxEVb4XkDNiR/cg8SX9dH6ZHdMhKmZdQcfhn2vdBWHdb2ldwM0P3I0dK4msYhFmC6TCODsNHH144IpA06w==}
+  '@kubernetes/client-node@2.0.1':
+    resolution: {integrity: sha512-evJgmEtgArEYlj6DNkMGjK41IrFK/hEwb5lWVxx0VRBWybQpnvi+2TtA19mLgVfRHfqX5yjHObX6e9W7LEZBjw==}
 
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
@@ -15977,7 +15977,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@kubernetes/client-node@2.0.0(supports-color@8.1.1)':
+  '@kubernetes/client-node@2.0.1(supports-color@8.1.1)':
     dependencies:
       '@types/js-yaml': 4.0.9
       '@types/node': 26.2.0
@@ -16209,7 +16209,7 @@ snapshots:
 
   '@napi-rs/wasm-runtime@1.0.7':
     dependencies:
-      '@emnapi/core': 1.10.0
+      '@emnapi/core': 1.11.0
       '@emnapi/runtime': 1.11.3
       '@tybys/wasm-util': 0.10.3
     optional: true
@@ -17960,7 +17960,7 @@ snapshots:
 
   '@types/stream-buffers@3.0.8':
     dependencies:
-      '@types/node': 26.2.0
+      '@types/node': 24.19.2
 
   '@types/tar-fs@2.0.4':
     dependencies:
