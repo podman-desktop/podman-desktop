@@ -99,13 +99,32 @@ Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and 
 
 Every action that deletes, removes, clears, or uninstalls something belongs to one of three tiers. The tier is decided by what the user loses, not if a dialog follows. It sets the button style, if a confirmation is required, and if the user may turn the confirmation off. Clearing a view that refills when reopened (such as a log terminal) is not a destructive action and gets a neutral control.
 
-| Tier             | What the user loses                                                                | Examples                                                                                   | Confirmation                                                                                             | How to call the action                                                                                                                 |
-| ---------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Mild             | UI state, or something the user can get back by reinstalling or re-adding it.      | Clear all tasks, uninstall an extension, untrack a local extension folder.                 | None                                                                                                     | Call it directly                                                                                                                       |
-| Destructive      | A resource they cannot undo but can recreate, usually routine.                     | Delete a container, image, pod, volume or network, bulk delete.                            | Required by default. For bulk deletes the user may turn it off in Preferences (`userConfirmation.bulk`). | Bulk: `withBulkConfirmation()` from `/@/lib/actions/BulkActions`. Single: `withConfirmation()` for now (see below).                    |
-| Very destructive | Data or configuration they cannot recreate, or that takes other resources with it. | Clear / Purge Data, delete a connection or machine, delete the current Kubernetes context. | Required, cannot be turned off.                                                                          | `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`, or `window.showMessageBox` with `type: 'danger'` |
+### Tiers
 
-Today, only bulk deletes follow the preference; single deletes in the Destructive tier still use `withConfirmation()`. Moving them is tracked per action - do not migrate them as a side effect of another change.
+#### 🟪 Mild
+
+UI state, or something the user can get back by reinstalling or re-adding it.
+
+- Examples: clear all tasks, uninstall an extension, untrack a local extension folder.
+- Confirmation: none.
+- Call the action directly.
+
+#### 🟧 Destructive
+
+A resource they cannot undo but can recreate, usually routine.
+
+- Examples: delete a container, image, pod, volume or network, bulk delete.
+- Confirmation: required by default. For bulk deletes the user may turn it off in Preferences (`userConfirmation.bulk`).
+- Bulk deletes: `withBulkConfirmation()` from `/@/lib/actions/BulkActions`.
+- Single deletes: `withConfirmation()` for now. Moving them to the preference is tracked per action - do not migrate them as a side effect of another change.
+
+#### 🟥 Very destructive
+
+Data or configuration they cannot recreate, or that takes other resources with it.
+
+- Examples: Clear / Purge Data, delete a connection or machine, delete the current Kubernetes context.
+- Confirmation: required, cannot be turned off.
+- Use `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`, or `window.showMessageBox` with `type: 'danger'`.
 
 ### Button styling
 
@@ -118,7 +137,7 @@ Today, only bulk deletes follow the preference; single deletes in the Destructiv
 
 ### Assigning a tier
 
-Decide the tier in the action's issue before opening the PR, naming the row of the table it matches. Do not reopen the decision in PR review. When an action sits between two tiers, pick the more protective one.
+Decide the tier in the action's issue before opening the PR, naming the tier it matches. Do not reopen the decision in PR review. When an action sits between two tiers, pick the more protective one.
 
 ## Button layout in dialogs, modals, and forms
 
