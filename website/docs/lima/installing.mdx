@@ -1,25 +1,37 @@
 ---
 sidebar_position: 1
-title: Installing the CLI
-description: Installing Lima
+title: Installing Lima
+description: Install the Lima CLI and the Lima extension for Podman Desktop.
 keywords: [podman desktop, podman, containers, migrating, kubernetes, lima]
 tags: [migrating-to-kubernetes, lima]
 ---
 
-# Installing the `lima` CLI
+# Installing Lima
+
+Starting with Podman Desktop 1.31.0, Lima is no longer a built-in extension. Earlier versions include the Lima extension by default.
 
 #### Procedure
 
-- The `limactl` executable is installed.
-  See [Installing Lima](https://lima-vm.io/docs/installation/).
+1. Install the Lima CLI for your operating system. See [Installing Lima](https://lima-vm.io/docs/installation/).
 
-  ```shell-session
-  $ brew install lima
-  ```
+   On macOS, run:
+
+   ```shell-session
+   $ brew install lima
+   ```
+
+1. If you use Podman Desktop 1.31.0 or later, install the Lima extension from the catalog:
+   1. Open **Extensions > Catalog** in Podman Desktop.
+   1. Search for `Lima`.
+   1. Click **Install** on the **Lima** extension.
+
+For more information, see [Installing a Podman Desktop extension](/docs/extensions/install).
 
 #### Verification
 
-1. You can run the `limactl` CLI:
+1. Open **Extensions > Installed** and make sure that **Lima** appears in the list.
+
+1. Run the `limactl` CLI:
 
    ```shell-session
    $ limactl list
