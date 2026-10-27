@@ -146,7 +146,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.20",
-    "@biomejs/biome": "^2.5.15",
+    "@biomejs/biome": "^2.6.3",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@electron/fuses": "^2.1.3",
