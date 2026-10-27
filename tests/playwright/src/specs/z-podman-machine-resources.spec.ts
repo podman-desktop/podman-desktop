@@ -147,7 +147,11 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   await waitUntil(
     async () =>
       (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-    { timeout: TIMEOUT_SHORT, sendError: true },
+    {
+      timeout: TIMEOUT_MEDIUM,
+      sendError: true,
+      message: `Default machine "${DEFAULT_PODMAN_MACHINE_NAME}" did not reach OFF state within ${TIMEOUT_MEDIUM}ms after stop`,
+    },
   );
 });
 
