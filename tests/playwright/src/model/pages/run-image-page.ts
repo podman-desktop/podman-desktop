@@ -24,6 +24,7 @@ import { waitWhile } from '/@/utility/wait';
 import { BasePage } from './base-page';
 import { ContainerDetailsPage } from './container-details-page';
 import { ContainersPage } from './containers-page';
+import { ImagesPage } from './images-page';
 
 export class RunImagePage extends BasePage {
   readonly name: Locator;
@@ -32,6 +33,8 @@ export class RunImagePage extends BasePage {
   readonly backToImageDetailsLink: Locator;
   readonly imageName: string;
   readonly startContainerButton: Locator;
+  readonly createContainerButton: Locator;
+  readonly cancelButton: Locator;
   readonly errorAlert: Locator;
   readonly containerNameInput: Locator;
   readonly containerEntryPointInput: Locator;
@@ -53,6 +56,8 @@ export class RunImagePage extends BasePage {
     this.startContainerButton = page.getByLabel('Create and start', {
       exact: true,
     });
+    this.createContainerButton = page.getByLabel('Create', { exact: true });
+    this.cancelButton = page.getByLabel('Cancel', { exact: true });
     this.containerNameInput = page.getByLabel('Container Name');
     this.containerEntryPointInput = page.getByLabel('Entrypoint');
     this.containerComamndInput = page.getByLabel('Command');
@@ -171,6 +176,27 @@ export class RunImagePage extends BasePage {
         throw Error(`Starting the container ${message} error: ${await this.errorAlert.innerText()}`);
       }
       return new ContainersPage(this.page);
+    });
+  }
+
+  async createContainer(customName: string): Promise<ContainerDetailsPage> {
+    return test.step(`Create container without starting it from image: ${this.imageName}`, async () => {
+      await this.activateTab('Basic');
+      await playExpect(this.containerNameInput).toBeVisible();
+      await this.containerNameInput.fill(customName);
+      await playExpect(this.containerNameInput).toHaveValue(customName);
+
+      await playExpect(this.createContainerButton).toBeEnabled();
+      await this.createContainerButton.click();
+      return new ContainerDetailsPage(this.page, customName);
+    });
+  }
+
+  async cancel(): Promise<ImagesPage> {
+    return test.step('Cancel running of the image', async () => {
+      await playExpect(this.cancelButton).toBeEnabled();
+      await this.cancelButton.click();
+      return new ImagesPage(this.page);
     });
   }
 

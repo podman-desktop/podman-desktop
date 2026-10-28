@@ -31,6 +31,7 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
 const containerToRun = 'alpine-container';
+const createdContainer = 'alpine-created-container';
 const containerList = ['first', 'second', 'third'];
 const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
@@ -55,6 +56,7 @@ test.afterAll(async ({ runner, page }) => {
 
   try {
     await deleteContainer(page, containerToRun);
+    await deleteContainer(page, createdContainer);
     for (const container of containerList) {
       await deleteContainer(page, container);
     }
@@ -297,6 +299,39 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     await playExpect(containersPage.heading).toBeVisible();
     await playExpect
       .poll(async () => await containersPage.containerExists(containerToRun), { timeout: 30_000 })
+      .toBeFalsy();
+  });
+
+  test('Cancel running of an image returns to the Images page', async ({ navigationBar }) => {
+    const images = await navigationBar.openImages();
+    const imageDetails = await images.openImageDetails(imageToPull);
+    const runImage = await imageDetails.openRunImage();
+    await playExpect(runImage.cancelButton).toBeVisible();
+
+    const imagesPage = await runImage.cancel();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect(runImage.cancelButton).not.toBeVisible();
+  });
+
+  test('Create a container from image without starting it', async ({ navigationBar }) => {
+    const images = await navigationBar.openImages();
+    const imageDetails = await images.openImageDetails(imageToPull);
+    const runImage = await imageDetails.openRunImage();
+
+    const containerDetails = await runImage.createContainer(createdContainer);
+    await playExpect(containerDetails.heading).toBeVisible();
+    await playExpect(containerDetails.heading).toContainText(createdContainer);
+    await playExpect
+      .poll(async () => await containerDetails.getState(), { timeout: 15_000 })
+      .toContain(ContainerState.Created);
+
+    const containers = await navigationBar.openContainers();
+    await playExpect
+      .poll(async () => await containers.containerExists(createdContainer), { timeout: 10_000 })
+      .toBeTruthy();
+    const containersPage = await containers.deleteContainer(createdContainer);
+    await playExpect
+      .poll(async () => await containersPage.containerExists(createdContainer), { timeout: 30_000 })
       .toBeFalsy();
   });
 
