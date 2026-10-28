@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -31,7 +32,7 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
 const containerToRun = 'alpine-container';
-const createdContainer = 'alpine-created-container';
+const createdContainer = `alpine-created-${randomUUID().slice(0, 8)}`;
 const containerList = ['first', 'second', 'third'];
 const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
