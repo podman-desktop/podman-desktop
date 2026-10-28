@@ -195,6 +195,10 @@ test.describe
     }) => {
       const containers = await navigationBar.openContainers();
       await playExpect(containers.heading).toBeVisible();
+      // the environment getters throw when the row is missing and expect.poll does not retry on throw
+      await playExpect
+        .poll(async () => await containers.containerExists(environmentFilterContainer), { timeout: 15_000 })
+        .toBeTruthy();
       await playExpect
         .poll(async () => (await containers.getContainerEnvironment(environmentFilterContainer)).trim(), {
           timeout: 15_000,
@@ -203,6 +207,7 @@ test.describe
 
       const pods = await navigationBar.openPods();
       await playExpect(pods.heading).toBeVisible();
+      await playExpect.poll(async () => await pods.podExists(environmentFilterPod), { timeout: 15_000 }).toBeTruthy();
       await playExpect
         .poll(async () => (await pods.getPodEnvironment(environmentFilterPod)).trim(), { timeout: 15_000 })
         .toBe(defaultMachineDisplayName);
