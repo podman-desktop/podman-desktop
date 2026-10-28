@@ -37,7 +37,7 @@ import {
   verifyVirtualizationProvider,
   waitForMachineStatus,
 } from '/@/utility/operations';
-import { isLinux } from '/@/utility/platform';
+import { isLinux, isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
@@ -276,8 +276,8 @@ test.describe('Podman Machine verification', { tag: '@pdmachine' }, () => {
   test('Podman machine operations - EDIT privileges', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
     test.skip(
-      getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
-      'HyperV machine update is broken, see https://github.com/podman-desktop/podman-desktop/issues/19887',
+      !!isWindows,
+      'Machine privilege editing is broken on Windows (WSL and HyperV), see https://github.com/podman-desktop/podman-desktop/issues/19887',
     );
     test.setTimeout(TIMEOUT_SETUP + TIMEOUT_LONG);
 

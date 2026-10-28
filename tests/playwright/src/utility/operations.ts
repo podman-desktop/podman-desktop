@@ -562,7 +562,7 @@ export async function waitForMachineStatus(
     if (machineDetails) {
       await playExpect(podmanConnections.resourceElementDetailsButton).toBeVisible({ timeout: 30_000 });
       await podmanConnections.resourceElementDetailsButton.click();
-      await playExpect(machineDetails.podmanMachineName).toBeVisible({ timeout: 10_000 });
+      await playExpect(machineDetails.podmanMachineStatus).toBeVisible({ timeout: 10_000 });
     }
 
     // Second attempt after the hard refresh
