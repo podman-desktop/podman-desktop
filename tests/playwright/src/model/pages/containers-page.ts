@@ -33,6 +33,7 @@ export class ContainersPage extends MainPage {
   readonly createContainerButton: Locator;
   readonly pruneConfirmationButton: Locator;
   readonly runAllContainersButton: Locator;
+  readonly stopAllContainersButton: Locator;
   readonly createDialog: Locator;
   readonly createDialogCloseButton: Locator;
   readonly createDialogContainerOrDockerfileButton: Locator;
@@ -50,6 +51,7 @@ export class ContainersPage extends MainPage {
       name: 'Yes',
     });
     this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
+    this.stopAllContainersButton = this.page.getByLabel('Stop selected containers and pods');
     this.createDialog = this.page.getByRole('dialog', {
       name: 'Create a new container',
       exact: true,
@@ -184,6 +186,14 @@ export class ContainersPage extends MainPage {
     return test.step('Start all containers', async () => {
       await this.checkAllRows();
       await this.runAllContainersButton.click();
+      return this;
+    });
+  }
+
+  async stopAllContainers(): Promise<ContainersPage> {
+    return test.step('Stop all containers', async () => {
+      await this.checkAllRows();
+      await this.stopAllContainersButton.click();
       return this;
     });
   }
