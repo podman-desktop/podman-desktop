@@ -41,7 +41,16 @@ test.use({
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('experimental-feature-feedback-e2e');
-  await welcomePage.handleWelcomePage(true);
+  // Dismiss the welcome page so the renderer fully initializes and mounts
+  // <MessageBox />. We only need it gone — telemetry state is irrelevant here,
+  // so we skip handleWelcomePage (whose turnOffTelemetry step can fail on some
+  // CI configurations) and click Skip directly.
+  try {
+    await welcomePage.skipOnBoarding.waitFor({ state: 'visible' });
+    await welcomePage.closeWelcomePage();
+  } catch {
+    // Welcome page not present — already dismissed or not shown.
+  }
 });
 
 test.afterAll(async ({ runner }) => {
