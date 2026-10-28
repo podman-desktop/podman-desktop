@@ -190,6 +190,24 @@ test.describe
       await pods.clearFilterByEnvironment();
     });
 
+    test('Environment column shows the connection display name with multiple connections', async ({
+      navigationBar,
+    }) => {
+      const containers = await navigationBar.openContainers();
+      await playExpect(containers.heading).toBeVisible();
+      await playExpect
+        .poll(async () => (await containers.getContainerEnvironment(environmentFilterContainer)).trim(), {
+          timeout: 15_000,
+        })
+        .toBe(defaultMachineDisplayName);
+
+      const pods = await navigationBar.openPods();
+      await playExpect(pods.heading).toBeVisible();
+      await playExpect
+        .poll(async () => (await pods.getPodEnvironment(environmentFilterPod)).trim(), { timeout: 15_000 })
+        .toBe(defaultMachineDisplayName);
+    });
+
     test('Environment filter is visible on the Volumes page', async ({ navigationBar }) => {
       const volumes = await navigationBar.openVolumes();
       await playExpect(volumes.heading).toBeVisible();
