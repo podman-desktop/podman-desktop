@@ -21,10 +21,17 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
+
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { MAIN_TAB, tabsState } from '/@/stores/layout/tabs.svelte';
 
 import VolumeColumnName from './VolumeColumnName.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
+
+afterEach(() => {
+  tabPreferences.tabsEnabled = false;
+});
 
 const volume: VolumeInfoUI = {
   name: 'my-name',
@@ -60,6 +67,30 @@ test('Expect clicking works', async () => {
   // test click
   const routerGotoSpy = vi.spyOn(router, 'goto');
   fireEvent.click(text);
+
+  expect(routerGotoSpy).toBeCalledWith('/volumes/my-name/engine-id/summary');
+});
+
+test('Expect middle-click opens the volume in a background tab', async () => {
+  tabPreferences.tabsEnabled = true;
+  tabsState.tabs = [{ id: MAIN_TAB, title: 'Main', pinned: true, stack: [], index: -1 }];
+  tabsState.activeId = MAIN_TAB;
+  render(VolumeColumnName, { object: volume });
+
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+  fireEvent(screen.getByText(volume.shortName), new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+  expect(tabsState.activeId).toBe(MAIN_TAB);
+  expect(tabsState.tabs.some(tab => tab.id === '/volumes/my-name/engine-id')).toBe(true);
+  expect(routerGotoSpy).not.toHaveBeenCalled();
+});
+
+test('Expect middle-click falls back to navigation when tabs are disabled', async () => {
+  tabPreferences.tabsEnabled = false;
+  render(VolumeColumnName, { object: volume });
+
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+  fireEvent(screen.getByText(volume.shortName), new MouseEvent('auxclick', { bubbles: true, button: 1 }));
 
   expect(routerGotoSpy).toBeCalledWith('/volumes/my-name/engine-id/summary');
 });

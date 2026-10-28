@@ -442,19 +442,30 @@ function invokeRowClick(object: T, rowElement: HTMLElement, event: Event): void 
   row.info.onClick(object, event);
 }
 
+function handleRowModifierClick(object: T, rowElement: HTMLElement, event: MouseEvent): boolean {
+  if (!row.info.onModifierClick || !isRowClickable(object) || shouldIgnoreRowClick(rowElement, event)) {
+    return false;
+  }
+
+  event.preventDefault();
+  row.info.onModifierClick(object, event);
+  return true;
+}
+
 function handleRowClick(object: T, event: MouseEvent): void {
   const rowElement = event.currentTarget as HTMLElement;
-  if (
-    (event.metaKey || event.ctrlKey) &&
-    row.info.onModifierClick &&
-    isRowClickable(object) &&
-    !shouldIgnoreRowClick(rowElement, event)
-  ) {
-    event.preventDefault();
-    row.info.onModifierClick(object, event);
+  if ((event.metaKey || event.ctrlKey) && handleRowModifierClick(object, rowElement, event)) {
     return;
   }
   invokeRowClick(object, rowElement, event);
+}
+
+/** Middle-click opens the row destination in a background tab, like a browser. */
+function handleRowAuxClick(object: T, event: MouseEvent): void {
+  if (event.button !== 1) {
+    return;
+  }
+  handleRowModifierClick(object, event.currentTarget as HTMLElement, event);
 }
 
 function handleRowKeyDown(object: T, event: KeyboardEvent): void {
@@ -563,6 +574,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
           tabindex={isRowClickable(object) ? 0 : undefined}
           aria-label={label(object)}
           on:click={handleRowClick.bind(undefined, object)}
+          on:auxclick={handleRowAuxClick.bind(undefined, object)}
           on:keydown={handleRowKeyDown.bind(undefined, object)}>
           <div
             class="whitespace-nowrap place-self-center"

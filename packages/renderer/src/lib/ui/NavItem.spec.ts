@@ -159,6 +159,29 @@ test('Ctrl-click opens a navigation page in a background tab when tabbed navigat
   expect(tabsState.tabs.some(tab => tab.id === 'page:/containers')).toBe(true);
 });
 
+test('Middle-click opens a navigation page in a background tab when tabbed navigation is enabled', async () => {
+  tabPreferences.tabsEnabled = true;
+  tabsState.tabs = [{ id: MAIN_TAB, title: 'Dashboard', pinned: true, stack: [], index: -1 }];
+  tabsState.activeId = MAIN_TAB;
+  renderIt('Containers', '/containers', { url: '/' });
+
+  await fireEvent(screen.getByLabelText('Containers'), new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+  expect(tabsState.activeId).toBe(MAIN_TAB);
+  expect(tabsState.tabs.some(tab => tab.id === 'page:/containers')).toBe(true);
+});
+
+test('Middle-click is ignored when tabbed navigation is disabled', async () => {
+  tabPreferences.tabsEnabled = false;
+  tabsState.tabs = [{ id: MAIN_TAB, title: 'Dashboard', pinned: true, stack: [], index: -1 }];
+  tabsState.activeId = MAIN_TAB;
+  renderIt('Containers', '/containers', { url: '/' });
+
+  await fireEvent(screen.getByLabelText('Containers'), new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+  expect(tabsState.tabs).toHaveLength(1);
+});
+
 test('Expect that counter is rendered', async () => {
   const tooltip = 'Foo';
   const href = '/href';

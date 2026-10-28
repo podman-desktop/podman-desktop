@@ -21,10 +21,17 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
+
+import { tabPreferences } from '/@/stores/layout/tab-preferences.svelte';
+import { MAIN_TAB, tabsState } from '/@/stores/layout/tabs.svelte';
 
 import PodColumnName from './PodColumnName.svelte';
 import type { PodInfoUI } from './PodInfoUI';
+
+afterEach(() => {
+  tabPreferences.tabsEnabled = false;
+});
 
 const pod: PodInfoUI = {
   id: 'pod-id',
@@ -68,4 +75,18 @@ test('Expect clicking works', async () => {
   fireEvent.click(text);
 
   expect(routerGotoSpy).toBeCalledWith('/pods/podman/my-pod/podman/');
+});
+
+test('Expect middle-click opens the pod in a background tab', async () => {
+  tabPreferences.tabsEnabled = true;
+  tabsState.tabs = [{ id: MAIN_TAB, title: 'Main', pinned: true, stack: [], index: -1 }];
+  tabsState.activeId = MAIN_TAB;
+  render(PodColumnName, { object: pod });
+
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+  fireEvent(screen.getByText(pod.name), new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+  expect(tabsState.activeId).toBe(MAIN_TAB);
+  expect(tabsState.tabs.some(tab => tab.id === '/pods/podman/my-pod/podman')).toBe(true);
+  expect(routerGotoSpy).not.toHaveBeenCalled();
 });

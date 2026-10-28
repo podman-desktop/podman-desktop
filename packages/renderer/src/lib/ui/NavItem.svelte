@@ -55,6 +55,15 @@ function handleClick(e: MouseEvent & { currentTarget: EventTarget & HTMLAnchorEl
   }
 }
 
+/** Middle-click opens the page in a background tab, like a browser. */
+function handleAuxClick(e: MouseEvent): void {
+  if (!newTabOnModifier || !tabPreferences.tabsEnabled || e.button !== 1) {
+    return;
+  }
+  e.preventDefault();
+  openRouteInBackgroundTab(uri, tooltip);
+}
+
 onMount(() => {
   navItems?.update(i => i + 1);
 });
@@ -69,7 +78,8 @@ onDestroy(() => {
   aria-label={ariaLabel ?? tooltip}
   data-navigation-page={href !== '/accounts' ? uri : undefined}
   aria-current={selected ? 'page' : undefined}
-  onclick={handleClick}>
+  onclick={handleClick}
+  onauxclick={handleAuxClick}>
   <div
     class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
     class:border-l-[4px]={!inSection}

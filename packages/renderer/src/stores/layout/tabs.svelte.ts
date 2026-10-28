@@ -92,6 +92,14 @@ export function prepareTabForRoute(url: string): void {
   tabsState.activeId = id;
 }
 
+/**
+ * Browser-like "open in a new tab" gesture: middle-click, Cmd+click or Ctrl+click.
+ * A plain click reports button 0, a middle-click reports button 1.
+ */
+export function opensInNewTab(event: MouseEvent): boolean {
+  return event.button === 1 || event.metaKey || event.ctrlKey;
+}
+
 /** Open a navigation destination in its own tab when tabbed navigation is enabled. */
 export function openRouteInNewTab(url: string): void {
   if (!tabPreferences.tabsEnabled) {

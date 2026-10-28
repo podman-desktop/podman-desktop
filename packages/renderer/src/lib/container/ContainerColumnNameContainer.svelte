@@ -2,6 +2,7 @@
 import { ContextMenu } from '@podman-desktop/ui-svelte';
 
 import { buildOpenContextMenuActions, openContainerInWorkspace } from '/@/lib/layout/resource-open-actions';
+import { opensInNewTab } from '/@/stores/layout/tabs.svelte';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
@@ -14,9 +15,16 @@ let { object }: Props = $props();
 let contextMenu: { x: number; y: number } | undefined = $state();
 
 // A plain click opens straight into the workspace tab (replacing whatever was showing),
-// same destination Cmd/Ctrl+click uses for a new tab - no intermediate detail route/flash.
+// same destination Cmd/Ctrl+click and middle-click use for a new tab - no intermediate
+// detail route/flash.
 function onClick(event: MouseEvent): void {
-  openContainerInWorkspace(object, event.metaKey || event.ctrlKey ? 'newTab' : 'replace');
+  openContainerInWorkspace(object, opensInNewTab(event) ? 'newTab' : 'replace');
+}
+
+function onAuxClick(event: MouseEvent): void {
+  if (event.button !== 1) return;
+  event.preventDefault();
+  onClick(event);
 }
 
 function onContextMenu(event: MouseEvent): void {
@@ -28,6 +36,7 @@ function onContextMenu(event: MouseEvent): void {
 <button
   class="flex flex-col whitespace-nowrap max-w-full"
   onclick={onClick}
+  onauxclick={onAuxClick}
   oncontextmenu={onContextMenu}>
   <div class="flex items-center max-w-full">
     <div class="max-w-full">

@@ -129,7 +129,10 @@ export interface RowInformation<Type, ChildType> {
    */
   readonly onClick?: (object: Type, event: Event) => void;
 
-  /** Handler for Cmd/Ctrl-clicks on non-interactive cells in a row. */
+  /**
+   * Handler for Cmd/Ctrl-clicks and middle-clicks on non-interactive cells in a row,
+   * used to open the row destination in a new tab.
+   */
   readonly onModifierClick?: (object: Type, event: MouseEvent) => void;
 
   /**

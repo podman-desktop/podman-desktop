@@ -3,6 +3,7 @@ import { ContextMenu } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import { buildOpenContextMenuActions, openPodInWorkspace } from '/@/lib/layout/resource-open-actions';
+import { openRouteInBackgroundTab, opensInNewTab } from '/@/stores/layout/tabs.svelte';
 
 import type { ContainerGroupInfoUI } from './ContainerInfoUI';
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
@@ -31,19 +32,32 @@ function openComposeDetails(containerGroup: ContainerGroupInfoUI): void {
   router.goto(`/compose/details/${encodeURI(containerGroup.name)}/${encodeURI(containerGroup.engineId)}/logs`);
 }
 
+function composeDetailsUrl(containerGroup: ContainerGroupInfoUI): string | undefined {
+  if (!containerGroup.engineId) {
+    return undefined;
+  }
+  return `/compose/details/${encodeURIComponent(containerGroup.name)}/${encodeURIComponent(containerGroup.engineId)}/logs`;
+}
+
 // A plain click on a pod group opens straight into the workspace tab (replacing whatever
-// was showing), same destination Cmd/Ctrl+click uses for a new tab - no intermediate
-// detail route/flash.
+// was showing), same destination Cmd/Ctrl+click and middle-click use for a new tab - no
+// intermediate detail route/flash.
 function onClick(event: MouseEvent): void {
   if (!object.engineId) return;
   if (object.type === ContainerGroupInfoTypeUI.POD) {
-    openPodInWorkspace(
-      { name: object.name, engineId: object.engineId },
-      event.metaKey || event.ctrlKey ? 'newTab' : 'replace',
-    );
+    openPodInWorkspace({ name: object.name, engineId: object.engineId }, opensInNewTab(event) ? 'newTab' : 'replace');
+  } else if (opensInNewTab(event)) {
+    const url = composeDetailsUrl(object);
+    if (url) openRouteInBackgroundTab(url, object.name);
   } else {
     openComposeDetails(object);
   }
+}
+
+function onAuxClick(event: MouseEvent): void {
+  if (event.button !== 1) return;
+  event.preventDefault();
+  onClick(event);
 }
 
 function onContextMenu(event: MouseEvent): void {
@@ -57,6 +71,7 @@ function onContextMenu(event: MouseEvent): void {
   class="flex flex-col text-[var(--pd-table-body-text-highlight)] max-w-full text-left"
   title={object.type}
   onclick={onClick}
+  onauxclick={onAuxClick}
   oncontextmenu={onContextMenu}>
   <div class="max-w-full overflow-hidden text-ellipsis">
     {object.name} ({object.type})

@@ -864,6 +864,71 @@ describe('Table#rowClick', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  test('middle-click in a data cell calls onModifierClick without the normal row click', async () => {
+    const onClick = vi.fn();
+    const onModifierClick = vi.fn();
+    const ROW = new Row<Item>({ onClick, onModifierClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-middle-click-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const cell = within(getByRole('row', { name: 'Alice' })).getByText('Alice');
+    const middleClick = new MouseEvent('auxclick', { bubbles: true, button: 1 });
+    const preventDefaultSpy = vi.spyOn(middleClick, 'preventDefault');
+    await fireEvent(cell, middleClick);
+
+    expect(onModifierClick).toHaveBeenCalledOnce();
+    expect(onModifierClick).toHaveBeenCalledWith(DATA[0], expect.any(MouseEvent));
+    expect(onClick).not.toHaveBeenCalled();
+    expect(preventDefaultSpy).toHaveBeenCalled();
+  });
+
+  test('middle-click is ignored when the row has no modifier handler', async () => {
+    const onClick = vi.fn();
+    const ROW = new Row<Item>({ onClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-middle-click-without-handler-test',
+      data: DATA,
+      columns: [NAME_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const cell = within(getByRole('row', { name: 'Alice' })).getByText('Alice');
+    await fireEvent(cell, new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test('middle-click on an excluded column does not call onModifierClick', async () => {
+    const onClick = vi.fn();
+    const onModifierClick = vi.fn();
+    const ROW = new Row<Item>({ onClick, onModifierClick });
+
+    const { getByRole } = render(Table<Item>, {
+      kind: 'row-middle-click-excluded-column-test',
+      data: DATA,
+      columns: [NAME_COLUMN, ACTIONS_COLUMN],
+      row: ROW,
+      key: (item: Item): string => item.id,
+      label: (item: Item): string => item.name,
+    });
+
+    const actionCell = within(getByRole('row', { name: 'Alice' })).getAllByText('Alice')[1];
+    await fireEvent(actionCell, new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+    expect(onModifierClick).not.toHaveBeenCalled();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   test('click directly on row element calls onClick', async () => {
     const onClick = vi.fn();
     const ROW = new Row<Item>({ onClick });

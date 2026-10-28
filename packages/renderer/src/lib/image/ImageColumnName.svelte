@@ -5,7 +5,7 @@ import { ContextMenu } from '@podman-desktop/ui-svelte';
 import { buildOpenContextMenuActions, openImageInWorkspace } from '/@/lib/layout/resource-open-actions';
 import Badge from '/@/lib/ui/Badge.svelte';
 import { handleNavigation } from '/@/navigation';
-import { openRouteInBackgroundTab } from '/@/stores/layout/tabs.svelte';
+import { openRouteInBackgroundTab, opensInNewTab } from '/@/stores/layout/tabs.svelte';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 
@@ -26,9 +26,10 @@ function openManifestDetails(image: ImageInfoUI): void {
 }
 
 // A plain click opens straight into the workspace tab (replacing whatever was showing),
-// same destination Cmd/Ctrl+click uses for a new tab - no intermediate detail route/flash.
+// same destination Cmd/Ctrl+click and middle-click use for a new tab - no intermediate
+// detail route/flash.
 function onClick(event: MouseEvent): void {
-  if (event.metaKey || event.ctrlKey) {
+  if (opensInNewTab(event)) {
     const url = `/${object.isManifest ? 'manifests' : 'images'}/${encodeURIComponent(object.id)}/${encodeURIComponent(object.engineId)}/${object.base64RepoTag}/summary`;
     openRouteInBackgroundTab(url, `${object.name}:${object.tag}`);
     return;
@@ -40,6 +41,12 @@ function onClick(event: MouseEvent): void {
   openImageInWorkspace(object, 'replace');
 }
 
+function onAuxClick(event: MouseEvent): void {
+  if (event.button !== 1) return;
+  event.preventDefault();
+  onClick(event);
+}
+
 function onContextMenu(event: MouseEvent): void {
   if (object.isManifest) return;
   event.preventDefault();
@@ -47,7 +54,7 @@ function onContextMenu(event: MouseEvent): void {
 }
 </script>
 
-<button class="flex flex-col max-w-full" onclick={onClick} oncontextmenu={onContextMenu}>
+<button class="flex flex-col max-w-full" onclick={onClick} onauxclick={onAuxClick} oncontextmenu={onContextMenu}>
   <div class="flex flex-row gap-1 items-center max-w-full">
     <div class="text-[var(--pd-table-body-text-highlight)] overflow-hidden text-ellipsis">
       {object.name}
