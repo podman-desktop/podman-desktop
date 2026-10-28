@@ -35,6 +35,7 @@ import {
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
+  waitForMachineStatus,
 } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
@@ -236,40 +237,39 @@ test.describe('Podman Machine verification', { tag: '@pdmachine' }, () => {
     });
     await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStopButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: TIMEOUT_LONG,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off, {
+      machineDetails: podmanMachineDetails,
     });
   });
 
   test('Podman machine operations - START', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_STANDARD);
+    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_SETUP);
 
     const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
     await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
+      initialTimeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      machineDetails: podmanMachineDetails,
     });
   });
 
   test('Podman machine operations - RESTART', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_STANDARD);
+    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_SETUP + TIMEOUT_LONG);
 
     const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
     await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineRestartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: TIMEOUT_LONG,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off, {
+      machineDetails: podmanMachineDetails,
     });
-
-    await openMachineDetailsPage(page, navigationBar);
-
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
+      initialTimeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      machineDetails: podmanMachineDetails,
     });
   });
 
