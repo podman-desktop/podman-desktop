@@ -421,7 +421,7 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     }
   });
 
-  test('Bulk action stop all containers', async ({ navigationBar }) => {
+  test('Bulk action stop selected containers', async ({ navigationBar }) => {
     test.setTimeout(210_000);
 
     const stopStatusArray = [ContainerState.Stopped, ContainerState.Exited];
@@ -444,10 +444,10 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
         .toContain(ContainerState.Running);
     }
 
-    //Stop all containers
+    //Stop only the containers created by this test
     let containersPage = await navigationBar.openContainers();
     await playExpect(containersPage.heading).toBeVisible();
-    await containersPage.stopAllContainers();
+    await containersPage.stopSelectedContainers(containerList);
 
     for (const container of containerList) {
       containersPage = await navigationBar.openContainers();

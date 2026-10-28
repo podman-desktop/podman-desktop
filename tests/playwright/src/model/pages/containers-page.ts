@@ -33,7 +33,7 @@ export class ContainersPage extends MainPage {
   readonly createContainerButton: Locator;
   readonly pruneConfirmationButton: Locator;
   readonly runAllContainersButton: Locator;
-  readonly stopAllContainersButton: Locator;
+  readonly stopSelectedContainersButton: Locator;
   readonly createDialog: Locator;
   readonly createDialogCloseButton: Locator;
   readonly createDialogContainerOrDockerfileButton: Locator;
@@ -51,7 +51,7 @@ export class ContainersPage extends MainPage {
       name: 'Yes',
     });
     this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
-    this.stopAllContainersButton = this.page.getByLabel('Stop selected containers and pods');
+    this.stopSelectedContainersButton = this.page.getByLabel('Stop selected containers and pods');
     this.createDialog = this.page.getByRole('dialog', {
       name: 'Create a new container',
       exact: true,
@@ -190,10 +190,18 @@ export class ContainersPage extends MainPage {
     });
   }
 
-  async stopAllContainers(): Promise<ContainersPage> {
-    return test.step('Stop all containers', async () => {
-      await this.checkAllRows();
-      await this.stopAllContainersButton.click();
+  async stopSelectedContainers(names: string[]): Promise<ContainersPage> {
+    return test.step(`Stop selected containers: ${names}`, async () => {
+      for (const containerName of names) {
+        const containerRow = await this.getContainerRowByName(containerName);
+        if (containerRow === undefined) {
+          throw Error(`Container: '${containerName}' does not exist`);
+        }
+        const checkbox = containerRow.getByRole('checkbox');
+        await checkbox.check();
+        await playExpect(checkbox).toBeChecked();
+      }
+      await this.stopSelectedContainersButton.click();
       return this;
     });
   }
