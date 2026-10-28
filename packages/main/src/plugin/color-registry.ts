@@ -1268,6 +1268,13 @@ export class ColorRegistry {
       hcLight: black,
     });
 
+    this.registerColor(`${tab}active-bg`, {
+      dark: charcoal[700],
+      light: gray[100],
+      hcDark: accent1[800],
+      hcLight: accent1[200],
+    });
+
     this.registerColor(`${tab}text-highlight`, {
       dark: white,
       light: charcoal[300],

@@ -78,12 +78,16 @@ test('keeps the add-tab action beside the scrollable tabs and close-all at the f
   ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 });
 
-test('marks the selected tab with a page-colored surface and no underline', () => {
+test('marks the selected tab with the selection surface and no underline', () => {
   render(TabBar, props);
 
-  expect(screen.getByRole('tab', { name: /demo-nginx/ })).toHaveClass('tab-active');
-  expect(screen.getByRole('tab', { name: /Containers/ })).not.toHaveClass('tab-active');
-  expect(screen.getByRole('tab', { name: /demo-nginx/ })).not.toHaveClass('border-b-[var(--pd-tab-highlight)]');
+  const activeTab = screen.getByRole('tab', { name: /demo-nginx/ });
+  const inactiveTab = screen.getByRole('tab', { name: /Containers/ });
+  expect(activeTab).toHaveClass('tab-active');
+  expect(inactiveTab).not.toHaveClass('tab-active');
+  expect(activeTab.getAttribute('style')).toContain('--pd-tab-active-bg');
+  expect(inactiveTab.getAttribute('style')).toContain('--pd-content-card-bg');
+  expect(activeTab).not.toHaveClass('border-b-[var(--pd-tab-highlight)]');
 });
 
 test('scrolls the selected tab into view when it is outside the visible strip', async () => {
@@ -250,6 +254,98 @@ test('dragging left creates the gap before the crossed neighbor', async () => {
   expect(props.onReorder).toHaveBeenCalledExactlyOnceWith('third', 'second');
 });
 
+test('dragging is clamped so a tab cannot leave the strip or cross the pinned Main tab', async () => {
+  const { source } = renderDragStrip();
+  await pointer(source, 'pointerdown', 150);
+
+  // far right: the tab right edge stops at the end of the tab list
+  await pointer(source, 'pointermove', 650);
+  expect(source.style.transform).toBe('translateX(200px)');
+
+  // far left: the tab left edge stops at the right edge of the pinned Main tab
+  await pointer(source, 'pointermove', -350);
+  expect(source.style.transform).toBe('translateX(0px)');
+
+  await pointer(source, 'pointerup', 150);
+});
+
+test('a clamped drag past the end still moves the tab to the end of the list', async () => {
+  const { source } = renderDragStrip();
+  await pointer(source, 'pointerdown', 150);
+  await pointer(source, 'pointermove', 900);
+  await pointer(source, 'pointerup', 900);
+  expect(props.onReorder).toHaveBeenCalledExactlyOnceWith('first', undefined);
+});
+
+test('a lone resource tab next to the pinned Main tab cannot be dragged', async () => {
+  render(TabBar, {
+    ...props,
+    activeTabId: 'main',
+    tabs: [props.tabs[0]!, { id: 'first', key: 'first', title: 'first' }],
+  });
+  const source = screen.getByRole('tab', { name: 'first' });
+  vi.spyOn(source, 'getBoundingClientRect').mockReturnValue({ left: 100, right: 200, width: 100 } as DOMRect);
+  Object.assign(source, { setPointerCapture: vi.fn(), hasPointerCapture: () => false });
+
+  await pointer(source, 'pointerdown', 150);
+  expect(source).toHaveClass('tab-drag-blocked');
+  await pointer(source, 'pointermove', 400);
+
+  expect(source.setPointerCapture).not.toHaveBeenCalled();
+  expect(source.style.transform).toBe('');
+  expect(props.onReorder).not.toHaveBeenCalled();
+
+  await pointer(source, 'pointerup', 400);
+  expect(source).not.toHaveClass('tab-drag-blocked');
+
+  // the tab is still selectable
+  await fireEvent.click(source);
+  expect(props.onSelect).toHaveBeenCalledWith('first');
+});
+
+test('pressing a pinned tab shows the blocked cursor until the pointer is released', async () => {
+  const { source } = renderDragStrip();
+  const mainTab = screen.getByRole('tab', { name: 'Containers' });
+
+  await pointer(mainTab, 'pointerdown', 50);
+  expect(mainTab).toHaveClass('tab-drag-blocked');
+  expect(source).not.toHaveClass('tab-drag-blocked');
+
+  await pointer(mainTab, 'pointerup', 50);
+  expect(mainTab).not.toHaveClass('tab-drag-blocked');
+});
+
+test('pressing a draggable tab does not show the blocked cursor', async () => {
+  const { source } = renderDragStrip();
+  await pointer(source, 'pointerdown', 150);
+  expect(source).not.toHaveClass('tab-drag-blocked');
+  await pointer(source, 'pointerup', 150);
+  expect(source).not.toHaveClass('tab-drag-blocked');
+});
+
+test('a lone resource tab can still be dragged into another panel', async () => {
+  const otherPanel = document.createElement('div');
+  otherPanel.dataset.tabPanel = 'other-panel';
+  document.body.appendChild(otherPanel);
+  try {
+    render(TabBar, {
+      ...props,
+      activeTabId: 'main',
+      tabs: [props.tabs[0]!, { id: 'first', key: 'first', title: 'first' }],
+    });
+    const source = screen.getByRole('tab', { name: 'first' });
+    Object.assign(source, { setPointerCapture: vi.fn(), hasPointerCapture: () => false });
+
+    await pointer(source, 'pointerdown', 150);
+    await pointer(source, 'pointermove', 400);
+
+    expect(source.setPointerCapture).toHaveBeenCalled();
+    expect(source.style.transform).not.toBe('');
+  } finally {
+    otherPanel.remove();
+  }
+});
+
 test('Escape cancels a drag without reordering', async () => {
   const { source } = renderDragStrip();
   await pointer(source, 'pointerdown', 150);
@@ -399,4 +495,34 @@ test('only shows the overflow arrow when natural tab widths exceed the available
   await fireEvent.scroll(strip);
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Show all open tabs' })).not.toBeInTheDocument();
+});
+
+test('does not show a tab tooltip while the whole title is visible', async () => {
+  render(TabBar, props);
+  const tab = screen.getByRole('tab', { name: 'demo-nginx' });
+  const trigger = tab.closest<HTMLElement>('[data-testid="tooltip-trigger"]')!;
+
+  await fireEvent.mouseEnter(trigger);
+
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+});
+
+test('shows the tab tooltip once the title is cut by the ellipsis', async () => {
+  render(TabBar, props);
+  const tab = screen.getByRole('tab', { name: 'demo-nginx' });
+  const trigger = tab.closest<HTMLElement>('[data-testid="tooltip-trigger"]')!;
+  const strip = screen.getByRole('tablist');
+
+  await fireEvent.mouseEnter(trigger);
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  await fireEvent.mouseLeave(trigger);
+
+  // jsdom has no layout: fake a title wider than the space it is given
+  const title = tab.querySelector<HTMLElement>('[data-tab-title]')!;
+  Object.defineProperty(title, 'scrollWidth', { configurable: true, value: 300 });
+  Object.defineProperty(title, 'clientWidth', { configurable: true, value: 120 });
+  await fireEvent.scroll(strip);
+
+  await fireEvent.mouseEnter(trigger);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('demo-nginx');
 });

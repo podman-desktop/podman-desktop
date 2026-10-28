@@ -103,6 +103,10 @@ class TestColorRegistry extends ColorRegistry {
     super.initButton();
   }
 
+  override initTab(): void {
+    super.initTab();
+  }
+
   override initProviderInfo(): void {
     super.initProviderInfo();
   }
@@ -1398,6 +1402,27 @@ describe('initButton', () => {
 
     expect(tabHoverBorderLight?.value).toBe(hoverItemLight?.value);
     expect(tabHoverBorderDark?.value).toBe(hoverItemDark?.value);
+  });
+});
+
+describe('initTab', () => {
+  test('keeps the active tab on the content surface except in high contrast, where it uses the selection color', () => {
+    colorRegistry.initContent();
+    colorRegistry.initTab();
+
+    const lightColors = colorRegistry.listColors('light');
+    const darkColors = colorRegistry.listColors('dark');
+    const hcLightColors = colorRegistry.listColors('hc-light');
+    const hcDarkColors = colorRegistry.listColors('hc-dark');
+
+    expect(lightColors.find(c => c.id === 'tab-active-bg')?.value).toBe(
+      lightColors.find(c => c.id === 'content-bg')?.value,
+    );
+    expect(darkColors.find(c => c.id === 'tab-active-bg')?.value).toBe(
+      darkColors.find(c => c.id === 'content-bg')?.value,
+    );
+    expect(hcLightColors.find(c => c.id === 'tab-active-bg')?.value).toBe(tailwindColorPalette.accent1[200]);
+    expect(hcDarkColors.find(c => c.id === 'tab-active-bg')?.value).toBe(tailwindColorPalette.accent1[800]);
   });
 });
 

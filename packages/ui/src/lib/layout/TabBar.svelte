@@ -89,6 +89,7 @@ let showTabActionsMenu = $state(false);
 let tabActionsButton: HTMLButtonElement | undefined = $state();
 let tabActionsMenu: HTMLDivElement | undefined = $state();
 let draggedTabId: string | undefined = $state();
+let blockedDragTabId: string | undefined = $state();
 let dropPlaceholderIndex: number | undefined = $state();
 let draggedTabWidth = $state(0);
 let dragOffset = $state(0);
@@ -111,6 +112,28 @@ let contextMenu: { x: number; y: number; tabId: string } | undefined = $state();
 let previousTabCount = 0;
 let tabCountInitialized = false;
 let previousTabLayout = '';
+// A tab tooltip only helps when the title is cut short by the ellipsis; when the whole
+// title is visible the same text repeated in a tooltip is just noise.
+let truncatedTabIds: Record<string, boolean> = $state({});
+
+function measureTabTitles(): void {
+  if (!scrollEl) return;
+  const next: Record<string, boolean> = {};
+  scrollEl.querySelectorAll<HTMLElement>('[role="tab"]').forEach(tabEl => {
+    const tabId = tabEl.dataset.tabId;
+    const title = tabEl.querySelector<HTMLElement>('[data-tab-title]');
+    if (tabId && title) next[tabId] = title.scrollWidth > title.clientWidth + 1;
+  });
+  const unchanged =
+    Object.keys(next).length === Object.keys(truncatedTabIds).length &&
+    Object.entries(next).every(([tabId, truncated]) => truncatedTabIds[tabId] === truncated);
+  if (!unchanged) truncatedTabIds = next;
+}
+
+function tabTooltip(tab: TabDescriptor): string | undefined {
+  if (!truncatedTabIds[tab.id]) return undefined;
+  return tab.tooltip ?? (tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title);
+}
 
 function checkOverflow(): void {
   if (!scrollEl) {
@@ -125,6 +148,7 @@ function checkOverflow(): void {
   );
   overflowing = contentWidth > scrollEl.clientWidth + 1;
   if (!overflowing) showOverflowMenu = false;
+  measureTabTitles();
 }
 
 $effect(() => {
@@ -215,12 +239,30 @@ function focusAdjacentTabStripItem(event: KeyboardEvent): void {
   if (nextTabId) onSelect(nextTabId);
 }
 
+/**
+ * A drag only makes sense when the tab could actually land somewhere else: there is
+ * another unpinned tab in this strip, or another panel that accepts dropped tabs. With a
+ * single resource tab next to the pinned Main tab nothing can change, so keep it still.
+ */
+function canDragTabs(): boolean {
+  if (tabs.filter(tab => !tab.pinned).length > 1) return true;
+  return Array.from(document.querySelectorAll('[data-tab-panel]')).some(
+    element => element.getAttribute('data-tab-panel') !== panelId,
+  );
+}
+
 function onTabPointerDown(tabId: string, event: PointerEvent): void {
   suppressDragClick = false;
+  blockedDragTabId = undefined;
   // Touch gestures scroll the strip; mouse/pen pointers reorder tabs.
-  if (event.pointerType === 'touch' || event.button !== 0 || tabs.find(tab => tab.id === tabId)?.pinned || !scrollEl)
-    return;
+  if (event.pointerType === 'touch' || event.button !== 0 || !scrollEl) return;
   if ((event.target as Element).closest('button')) return;
+  if (tabs.find(tab => tab.id === tabId)?.pinned || !canDragTabs()) {
+    // Pinned tabs and a lone resource tab have nowhere to move to: signal the blocked
+    // drag with a not-allowed cursor while the pointer is held down.
+    blockedDragTabId = tabId;
+    return;
+  }
   const element = event.currentTarget as HTMLElement;
   pointerDrag = {
     pointerId: event.pointerId,
@@ -278,11 +320,38 @@ function scrollWhileDragging(): void {
   dragScrollFrame = requestAnimationFrame(scrollWhileDragging);
 }
 
+/**
+ * Keep a dragged tab inside the strip. A tab may never move before a pinned tab or past
+ * the end of the tab list, otherwise the translate extends the scrollable area and the
+ * strip can scroll into empty space between the last tab and the "add tab" button.
+ */
+function clampDragOffset(
+  drag: NonNullable<typeof pointerDrag>,
+  source: { left: number; right: number },
+  offset: number,
+): number {
+  let leftLimit = drag.bounds[0]!.left;
+  for (let index = dragSourceIndex - 1; index >= 0; index--) {
+    if (tabs.find(tab => tab.id === drag.bounds[index]!.id)?.pinned) {
+      leftLimit = drag.bounds[index]!.right;
+      break;
+    }
+  }
+  let rightLimit = drag.bounds[drag.bounds.length - 1]!.right;
+  for (let index = dragSourceIndex + 1; index < drag.bounds.length; index++) {
+    if (tabs.find(tab => tab.id === drag.bounds[index]!.id)?.pinned) {
+      rightLimit = drag.bounds[index]!.left;
+      break;
+    }
+  }
+  return Math.min(rightLimit - source.right, Math.max(leftLimit - source.left, offset));
+}
+
 function updateDragPosition(): void {
   const drag = pointerDrag;
   if (!drag || !scrollEl) return;
-  const offset = drag.clientX - drag.startX + scrollEl.scrollLeft - drag.scrollLeft;
   const source = drag.bounds[dragSourceIndex]!;
+  const offset = clampDragOffset(drag, source, drag.clientX - drag.startX + scrollEl.scrollLeft - drag.scrollLeft);
   // Stable original midpoints prevent the shifting neighbors from making
   // the insertion gap oscillate back and forth beneath the pointer.
   let index = dragSourceIndex;
@@ -401,6 +470,10 @@ $effect(() => {
   };
 });
 
+function clearBlockedDrag(): void {
+  blockedDragTabId = undefined;
+}
+
 function clearDragState(): void {
   if (dragScrollFrame !== undefined) cancelAnimationFrame(dragScrollFrame);
   dragScrollFrame = undefined;
@@ -408,6 +481,7 @@ function clearDragState(): void {
   pointerDrag = undefined;
   if (drag?.element.hasPointerCapture(drag.pointerId)) drag.element.releasePointerCapture(drag.pointerId);
   draggedTabId = undefined;
+  blockedDragTabId = undefined;
   dropPlaceholderIndex = undefined;
   draggedTabWidth = 0;
   dragOffset = 0;
@@ -592,7 +666,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
 >
       {#each tabs as tab, index (tab.id)}
         <Tooltip
-          tip={tab.tooltip ?? (tab.subtitle ? `${tab.title} — ${tab.subtitle}` : tab.title)}
+          tip={tabTooltip(tab)}
           top
           containerClass="flex shrink-0 items-stretch"
           class="flex items-stretch">
@@ -631,10 +705,11 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
           class:tab-divider={tab.id !== activeTabId && tabs[index + 1]?.id !== activeTabId && index < tabs.length - 1}
           class:rounded-t-[6px]={tab.id === activeTabId}
           style:background-color={
-            tab.id === activeTabId ? 'var(--pd-content-bg)' : 'var(--pd-content-card-bg)'
+            tab.id === activeTabId ? 'var(--pd-tab-active-bg)' : 'var(--pd-content-card-bg)'
           }
           class:cursor-pointer={true}
           class:tab-dragging={tab.id === draggedTabId}
+          class:tab-drag-blocked={tab.id === blockedDragTabId}
           class:tab-shifting={!!draggedTabId && tab.id !== draggedTabId}
           style:transform={tabDragTransform(tab.id, index)}
           style:touch-action="pan-x pan-y pinch-zoom"
@@ -650,7 +725,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
               class="w-1.5 h-1.5 rounded-full bg-[var(--pd-status-running)] shrink-0"
               title="Opened by an agent"></span>
           {/if}
-          <span class="overflow-hidden text-ellipsis">{tab.title}</span>
+          <span data-tab-title class="overflow-hidden text-ellipsis">{tab.title}</span>
           {#if tab.stale}
             <span class="text-[10px] uppercase tracking-wide text-[var(--pd-status-degraded)]">missing</span>
           {/if}
@@ -805,7 +880,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
   {/if}
 </div>
 
-<svelte:window onpointerdown={closeTabActionsOnOutsidePointer} onkeydown={onDragKeydown} onblur={onTabPointerCancel} />
+<svelte:window onpointerdown={closeTabActionsOnOutsidePointer} onpointerup={clearBlockedDrag} onpointercancel={clearBlockedDrag} onkeydown={onDragKeydown} onblur={onTabPointerCancel} />
 
 {#if contextMenu}
   <ContextMenu
@@ -823,11 +898,15 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
     cursor: grabbing;
     pointer-events: none;
     border-radius: 6px;
-    background: var(--pd-content-bg) !important;
+    background: var(--pd-tab-active-bg) !important;
   }
 
   .tab-shifting {
     transition: transform 120ms ease;
+  }
+
+  .tab-drag-blocked {
+    cursor: not-allowed;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -837,28 +916,6 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
   .tab-active {
     position: relative;
     z-index: 1;
-  }
-
-  .tab-active::before,
-  .tab-active::after {
-    position: absolute;
-    bottom: 0;
-    width: 6px;
-    height: 6px;
-    content: '';
-    pointer-events: none;
-  }
-
-  .tab-active::before {
-    left: -6px;
-    border-bottom-right-radius: 6px;
-    box-shadow: 3px 3px 0 3px var(--pd-content-bg);
-  }
-
-  .tab-active::after {
-    right: -6px;
-    border-bottom-left-radius: 6px;
-    box-shadow: -3px 3px 0 3px var(--pd-content-bg);
   }
 
   .tab-divider {
