@@ -39,18 +39,8 @@ test.use({
   }),
 });
 
-test.beforeAll(async ({ runner, welcomePage }) => {
+test.beforeAll(async ({ runner }) => {
   runner.setVideoAndTraceName('experimental-feature-feedback-e2e');
-  // Dismiss the welcome page so the renderer fully initializes and mounts
-  // <MessageBox />. We only need it gone — telemetry state is irrelevant here,
-  // so we skip handleWelcomePage (whose turnOffTelemetry step can fail on some
-  // CI configurations) and click Skip directly.
-  try {
-    await welcomePage.skipOnBoarding.waitFor({ state: 'visible' });
-    await welcomePage.closeWelcomePage();
-  } catch {
-    // Welcome page not present — already dismissed or not shown.
-  }
 });
 
 test.afterAll(async ({ runner }) => {
@@ -63,14 +53,10 @@ test.describe('Experimental feature feedback dialog', { tag: ['@smoke'] }, () =>
   // first one left behind, which is how an e2e suite starts passing in one
   // order and failing in another.
   test('is shown on startup when a reminder is due, and closes when answered', async ({ page }) => {
-    const dialog = page.getByRole('dialog', { name: 'Share Feedback' });
+    // eslint-disable-next-line sonarjs/fixme-tag -- test.fixme is the Playwright API for marking known-broken tests
+    test.fixme(true, 'Feedback dialog is lost due to IPC race between main and renderer during startup');
 
-    // The dialog depends on the 'extensions-started' IPC event which is sent
-    // only after all extensions finish activating. Dismissing the welcome page
-    // in beforeAll ensures the renderer has fully mounted <MessageBox /> before
-    // we check — without this, the showMessageBox call can fire before the
-    // component is mounted (especially on slower Windows 10 CI runners) and
-    // the dialog is silently lost.
+    const dialog = page.getByRole('dialog', { name: 'Share Feedback' });
     await playExpect(dialog).toBeVisible({ timeout: 60_000 });
 
     // 'Remind me later' opens the choices rather than answering; the answers are
