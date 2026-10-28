@@ -537,7 +537,7 @@ export async function waitForMachineStatus(
       await playExpect(statusLocator).toContainText(targetState, { timeout: initialTimeout });
       return;
     } catch {
-      const currentStatus = await statusLocator.innerText().catch(() => 'unavailable');
+      const currentStatus = await statusLocator.innerText({ timeout: 5_000 }).catch(() => 'unavailable');
       console.log(
         `Machine ${machineName} status is "${currentStatus}" after ${initialTimeout}ms, expected "${targetState}". ` +
           'Navigating away and back to force UI refresh.',
