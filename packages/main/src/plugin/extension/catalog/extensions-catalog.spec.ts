@@ -436,7 +436,7 @@ test('should sort extension versions by semver from newest to oldest', async () 
   server = setupServer(
     http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [unorderedExtension] })),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions[0]?.versions.map(v => v.version)).toStrictEqual([
@@ -459,7 +459,7 @@ test('should keep versions that are not valid semver after the other versions', 
       HttpResponse.json({ extensions: [extensionWithInvalidVersion] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions[0]?.versions.map(v => v.version)).toStrictEqual(['0.2.0', '0.1.0', 'preview']);
@@ -483,7 +483,7 @@ test('should pick the highest compatible non-preview version as fetchable versio
   server = setupServer(
     http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [unorderedExtension] })),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
   expect(fetchableExtensions).toStrictEqual([
@@ -505,7 +505,7 @@ test('should skip extensions with only incompatible versions in fetchable list',
       HttpResponse.json({ extensions: [incompatibleExtension] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
   expect(fetchableExtensions).toStrictEqual([]);
@@ -522,7 +522,7 @@ test('should pick a valid semver version over a non-preview version that is not 
       HttpResponse.json({ extensions: [extensionWithInvalidVersionFirst] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
   expect(fetchableExtensions).toStrictEqual([
@@ -541,7 +541,7 @@ test('should keep the catalog order of versions that are not valid semver', asyn
       HttpResponse.json({ extensions: [extensionWithInvalidVersions] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions[0]?.versions.map(v => v.version)).toStrictEqual(['0.1.0', 'nightly-b', 'nightly-a']);
@@ -857,7 +857,7 @@ test('should fetch README from the highest non-preview version', async () => {
     ),
     http.get(latestReadmeUri, () => HttpResponse.text(latestReadmeContent)),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const result = await extensionsCatalog.fetchReadme('foo.fooName');
 
