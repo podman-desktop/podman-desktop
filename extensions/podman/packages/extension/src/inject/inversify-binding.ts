@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,14 @@ import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
+import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
+import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
-import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
 export class InversifyBinding {
   #inversifyContainer: InversifyContainer | undefined;
@@ -66,6 +68,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanBinary).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(PodmanMachineLifecycle).toSelf().inSingletonScope();
 
     this.#inversifyContainer.bind(WinBitCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinVersionCheck).toSelf().inSingletonScope();
@@ -87,10 +90,15 @@ export class InversifyBinding {
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupWindows).inSingletonScope();
+      this.#inversifyContainer.bind(HyperVPrep).toSelf().inSingletonScope();
+      this.#inversifyContainer.bind(StartupSymbol).toService(HyperVPrep);
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupMacOS).inSingletonScope();
     }
+
+    // instantiate all startup services
+    await this.#inversifyContainer.getAllAsync(StartupSymbol, { optional: true });
 
     return this.#inversifyContainer;
   }

@@ -31,11 +31,14 @@ function onSelectedLayer(event: CustomEvent<ImageFilesystemLayerUI>): void {
   selectedLayer = event.detail;
 }
 
-async function fetchImageLayers(provider: ImageFilesInfo, img: ImageInfo): Promise<void> {
+async function fetchImageLayers(provider: ImageFilesInfo): Promise<void> {
+  if (imageInfo === undefined) {
+    return;
+  }
   try {
     loading = true;
     cancellableTokenId = await window.getCancellableTokenSource();
-    imageLayers = await window.imageGetFilesystemLayers(provider.id, $state.snapshot(img), cancellableTokenId);
+    imageLayers = await window.imageGetFilesystemLayers(provider.id, $state.snapshot(imageInfo), cancellableTokenId);
   } catch (err: unknown) {
     error = String(err);
   } finally {
@@ -45,8 +48,8 @@ async function fetchImageLayers(provider: ImageFilesInfo, img: ImageInfo): Promi
 
 async function onFetchLayers(): Promise<void> {
   showFetchButton = false;
-  if (filesProvider !== undefined && imageInfo !== undefined) {
-    await fetchImageLayers(filesProvider, imageInfo);
+  if (filesProvider !== undefined) {
+    await fetchImageLayers(filesProvider);
   }
 }
 
@@ -64,7 +67,7 @@ onMount(async () => {
         if (askFetchLayers) {
           showFetchButton = true;
         } else {
-          fetchImageLayers(filesProvider, imageInfo).catch((err: unknown) =>
+          fetchImageLayers(filesProvider).catch((err: unknown) =>
             console.error(`Error fetching image layers ${imageInfo.Id}`, err),
           );
         }

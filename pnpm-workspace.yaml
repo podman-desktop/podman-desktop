@@ -53,9 +53,9 @@ overrides:
   ajv@^8: ^8.18.0
   svelte>devalue: ^5.9.3
   protobufjs: ^7.6.5
-  follow-redirects: ^1.16.0
+  follow-redirects: ^1.16.1
   uuid: ^14.0.0
-  ip-address@^10: ^10.5.1
+  ip-address@^10: ^10.7.4
   fast-uri: '>=4.1.5'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.16.1'
@@ -65,8 +65,8 @@ overrides:
   form-data: '>=4.0.6'
   '@docusaurus/utils@3>gray-matter': npm:@11ty/gray-matter@^2.1.0
   '@docusaurus/types>joi': ^17.13.6
-  markdown-it: ^14.3.2
-  launch-editor: '>=2.14.1'
+  markdown-it: ^14.3.3
+  launch-editor: ^2.14.2
   webpack-dev-server: '>=5.2.6'
   '@babel/core': '>=7.29.6 <8.0.0'
   websocket-driver: '>=0.7.5'

@@ -150,9 +150,12 @@ const config = {
             to: '/docs/migrating-from-docker/managing-docker-compatibility',
             from: [
               '/docs/migrating-from-docker/using-podman-mac-helper',
-              '/docs/migrating-from-docker/emulating-docker-cli-with-podman',
               '/docs/migrating-from-docker/verifying-your-tools-are-using-podman',
             ],
+          },
+          {
+            to: '/docs/migrating-from-docker/aliasing-the-docker-cli',
+            from: '/docs/migrating-from-docker/emulating-docker-cli-with-podman',
           },
           {
             to: '/docs/openshift/developer-sandbox',
@@ -325,6 +328,10 @@ const config = {
             ],
           },
           {
+            to: '/docs/extensions',
+            from: '/extend',
+          },
+          {
             to: '/',
             from: '/core-values',
           },
@@ -467,7 +474,7 @@ const config = {
             items: [
               { to: '/features', label: 'Features' },
               { to: '/tutorial', label: 'Tutorials' },
-              { to: '/extend', label: 'Extend' },
+              { to: '/docs/extensions', label: 'Extend' },
             ],
           },
           { to: '/blog', label: 'Blog', position: 'left' },

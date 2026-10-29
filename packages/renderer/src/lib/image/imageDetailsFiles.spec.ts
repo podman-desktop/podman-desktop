@@ -99,6 +99,15 @@ describe('ImageDetailsFiles component', () => {
       }
     });
 
+    test('imageGetFilesystemLayers is not called if imageInfo is undefined', async () => {
+      getCancellableTokenSourceMock.mockResolvedValue(101010);
+      imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
+      render(ImageDetailsFiles, {});
+      imageFilesProviders.set([{ id: 'provider1', label: 'Provider 1' }]);
+      await waitFor(() => expect(getConfigurationValueMock).toHaveBeenCalled());
+      expect(imageGetFilesystemLayersMock).not.toHaveBeenCalled();
+    });
+
     test('token is canceled when component is unmounted', async () => {
       const TOKEN_ID = 101010;
       getCancellableTokenSourceMock.mockResolvedValue(TOKEN_ID);
@@ -124,7 +133,7 @@ describe('ImageDetailsFiles component', () => {
       imageFilesProviders.set([{ id: 'provider1', label: 'Provider 1' }]);
       await tick();
       await tick();
-      expect(imageGetFilesystemLayersMock).toHaveBeenCalledWith(expect.anything(), expect.anything(), TOKEN_ID);
+      expect(imageGetFilesystemLayersMock).toHaveBeenCalledWith('provider1', imageInfo, TOKEN_ID);
       component.unmount();
       expect(cancelTokenMock).toHaveBeenCalledWith(TOKEN_ID);
     });

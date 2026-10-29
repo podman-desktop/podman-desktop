@@ -35,8 +35,9 @@ import {
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
+  waitForMachineStatus,
 } from '/@/utility/operations';
-import { isLinux } from '/@/utility/platform';
+import { isLinux, isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
@@ -236,45 +237,48 @@ test.describe('Podman Machine verification', { tag: '@pdmachine' }, () => {
     });
     await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStopButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: TIMEOUT_LONG,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off, {
+      machineDetails: podmanMachineDetails,
     });
   });
 
   test('Podman machine operations - START', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_STANDARD);
+    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_SETUP);
 
     const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
     await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
+      initialTimeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      machineDetails: podmanMachineDetails,
     });
   });
 
   test('Podman machine operations - RESTART', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_STANDARD);
+    test.setTimeout(PODMAN_MACHINE_STARTUP_TIMEOUT + TIMEOUT_SETUP + TIMEOUT_LONG);
 
     const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
     await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineRestartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: TIMEOUT_LONG,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off, {
+      machineDetails: podmanMachineDetails,
     });
-
-    await openMachineDetailsPage(page, navigationBar);
-
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+    await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
+      initialTimeout: PODMAN_MACHINE_STARTUP_TIMEOUT,
+      machineDetails: podmanMachineDetails,
     });
   });
 
   test('Podman machine operations - EDIT privileges', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
+    test.skip(
+      !!isWindows,
+      'Machine privilege editing is broken on Windows (WSL and HyperV), see https://github.com/podman-desktop/podman-desktop/issues/19887',
+    );
     test.setTimeout(TIMEOUT_SETUP + TIMEOUT_LONG);
 
     const TOGGLE_TIMEOUT = 120_000;
@@ -328,7 +332,7 @@ test.describe('Podman Machine verification', { tag: '@pdmachine' }, () => {
 
 async function verifyPodmanOnboardingPageVisible(page: Page): Promise<void> {
   const onboardingPage = new PodmanOnboardingPage(page);
-  await playExpect(onboardingPage.header).toBeVisible();
+  await playExpect(onboardingPage.contentSection).toBeVisible();
   await playExpect(onboardingPage.mainPage).toBeVisible();
 }
 
