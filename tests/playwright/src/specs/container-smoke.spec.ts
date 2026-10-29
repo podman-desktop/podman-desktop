@@ -421,6 +421,53 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     }
   });
 
+  test('Bulk action stop selected containers', async ({ navigationBar }) => {
+    test.setTimeout(210_000);
+
+    const stopStatusArray = [ContainerState.Stopped, ContainerState.Exited];
+    const stopStatusRegex = new RegExp(`${stopStatusArray.join('|')}`);
+
+    //Start 3 containers and check they are running
+    for (const container of containerList) {
+      const images = await navigationBar.openImages();
+      await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
+
+      const containersPage = await images.startContainerWithImage(imageToPull, container, containerStartParams);
+      await playExpect(containersPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
+        .toBeTruthy();
+
+      const containersDetailsPage = await containersPage.openContainersDetails(container);
+      await playExpect
+        .poll(async () => containersDetailsPage.getState(), { timeout: 30_000 })
+        .toContain(ContainerState.Running);
+    }
+
+    //Stop only the containers created by this test
+    let containersPage = await navigationBar.openContainers();
+    await playExpect(containersPage.heading).toBeVisible();
+    await containersPage.stopSelectedContainers(containerList);
+
+    for (const container of containerList) {
+      containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const containersDetailsPage = await containersPage.openContainersDetails(container);
+      await playExpect(containersDetailsPage.heading).toBeVisible();
+      await playExpect.poll(async () => containersDetailsPage.getState(), { timeout: 30_000 }).toMatch(stopStatusRegex);
+    }
+
+    //Delete all containers
+    for (const container of containerList) {
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      await containersPage.deleteContainer(container);
+      await playExpect
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
+        .toBeFalsy();
+    }
+  });
+
   test('Create container using existing image option from dialog', async ({ navigationBar }) => {
     test.setTimeout(90_000);
     const containerName = 'create-container-from-dialog';
