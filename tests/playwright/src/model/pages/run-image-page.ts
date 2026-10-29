@@ -162,21 +162,25 @@ export class RunImagePage extends BasePage {
       // 2. Opening Containers page with new container on it
       // 3. staying on the run image page with an error
       // 4. Starting a container without entrypoint or command creates a container, but it stays on Run Image Page without error
-      await waitWhile(
-        async () => {
-          return await this.name.isVisible();
-        },
-        { sendError: false },
-      );
-
-      const errorCount = await this.errorAlert.count();
-      if (errorCount > 0) {
-        const runImagePageActive = await this.name.isVisible();
-        const message = runImagePageActive ? 'threw an ' : 'redirected to another page with an ';
-        throw Error(`Starting the container ${message} error: ${await this.errorAlert.innerText()}`);
-      }
+      await this.waitForSubmitResult('Starting');
       return new ContainersPage(this.page);
     });
+  }
+
+  private async waitForSubmitResult(action: string): Promise<void> {
+    await waitWhile(
+      async () => {
+        return await this.name.isVisible();
+      },
+      { sendError: false },
+    );
+
+    const errorCount = await this.errorAlert.count();
+    if (errorCount > 0) {
+      const runImagePageActive = await this.name.isVisible();
+      const message = runImagePageActive ? 'threw an ' : 'redirected to another page with an ';
+      throw Error(`${action} the container ${message} error: ${await this.errorAlert.innerText()}`);
+    }
   }
 
   async createContainer(customName: string): Promise<ContainerDetailsPage> {
@@ -188,6 +192,7 @@ export class RunImagePage extends BasePage {
 
       await playExpect(this.createContainerButton).toBeEnabled();
       await this.createContainerButton.click();
+      await this.waitForSubmitResult('Creating');
       return new ContainerDetailsPage(this.page, customName);
     });
   }
@@ -196,7 +201,9 @@ export class RunImagePage extends BasePage {
     return test.step('Cancel running of the image', async () => {
       await playExpect(this.cancelButton).toBeEnabled();
       await this.cancelButton.click();
-      return new ImagesPage(this.page);
+      const imagesPage = new ImagesPage(this.page);
+      await playExpect(imagesPage.heading).toBeVisible();
+      return imagesPage;
     });
   }
 
