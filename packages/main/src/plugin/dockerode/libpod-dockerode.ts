@@ -240,6 +240,7 @@ export interface LibPod {
   listPodmanContainers(opts?: { all: boolean }): Promise<PodmanContainerInfo[]>;
   prunePods(): Promise<void>;
   podmanAttach(containerId: string): Promise<NodeJS.ReadWriteStream>;
+  podmanInitContainer(containerId: string): Promise<void>;
   getPodInspect(podId: string): Promise<LibPodPodInspectInfo>;
   startPod(podId: string): Promise<void>;
   unpausePod(podId: string): Promise<void>;
@@ -427,6 +428,31 @@ export class LibpodDockerode {
             return reject(err);
           }
           resolve(wrapAs<NodeJS.ReadWriteStream>(stream));
+        });
+      });
+    };
+
+    // add init
+    prototypeOfDockerode.podmanInitContainer = function (containerId: string): Promise<void> {
+      const optsf = {
+        path: `/v4.2.0/libpod/containers/${containerId}/init?`,
+        method: 'POST',
+        statusCodes: {
+          200: true,
+          204: true,
+          304: 'container already initialized',
+          404: 'no such container',
+          500: 'server error',
+        },
+        options: {},
+      };
+
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
         });
       });
     };

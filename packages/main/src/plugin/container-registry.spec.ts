@@ -3819,9 +3819,11 @@ describe('attachToContainer', () => {
 
   test('container attach stream LIBPOD API', async () => {
     const attachMock = vi.fn();
+    const initMock = vi.fn().mockResolvedValue(undefined);
 
     const fakeLibPod = {
       podmanAttach: attachMock,
+      podmanInitContainer: initMock,
     } as unknown as LibPod;
 
     const engine = {
@@ -3848,6 +3850,7 @@ describe('attachToContainer', () => {
     //send some data
     stream.write(data);
 
+    expect(initMock).toBeCalledWith(container.id);
     expect(attachMock).toBeCalledWith(container.id);
 
     const streams = containerRegistry.getStreamsOutputPerContainerId().get(container.id);
@@ -3868,6 +3871,46 @@ describe('attachToContainer', () => {
     // check that the data has been cleaned-up
     expect(containerRegistry.getStreamsOutputPerContainerId().get(container.id)).toBeUndefined();
     expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
+  });
+
+  test('container attach stream LIBPOD API does not attach when init fails', async () => {
+    const attachMock = vi.fn();
+    const initMock = vi.fn().mockRejectedValue(new Error('address already in use'));
+
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: { podmanAttach: attachMock, podmanInitContainer: initMock } as unknown as LibPod,
+    } as InternalContainerProvider;
+
+    const container = { id: '1234' } as unknown as Dockerode.Container;
+
+    await expect(containerRegistry.attachToContainer(engine, container, true, true)).rejects.toThrow(
+      'address already in use',
+    );
+    expect(attachMock).not.toBeCalled();
+  });
+
+  test('container attach stream LIBPOD API ignores already initialized container', async () => {
+    const attachMock = vi.fn().mockResolvedValue(new PassThrough());
+    const initMock = vi.fn().mockRejectedValue({ statusCode: 304 });
+
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: { podmanAttach: attachMock, podmanInitContainer: initMock } as unknown as LibPod,
+    } as InternalContainerProvider;
+
+    const container = { id: '1234' } as unknown as Dockerode.Container;
+
+    await containerRegistry.attachToContainer(engine, container, true, true);
+    expect(attachMock).toBeCalledWith(container.id);
   });
 
   test('container do not attach stream as no tty', async () => {

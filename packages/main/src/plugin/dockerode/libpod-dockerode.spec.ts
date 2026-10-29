@@ -262,6 +262,18 @@ test('Check attach API', async () => {
   expect(stream.on).toBeDefined();
 });
 
+test('Check init container API', async () => {
+  const containerId = '12345678';
+  const initHandler = vi.fn(() => new HttpResponse(null, { status: 204 }));
+
+  server = setupServer(http.post(`http://localhost/v4.2.0/libpod/containers/${containerId}/init`, initHandler));
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+  await (api as unknown as LibPod).podmanInitContainer(containerId);
+  expect(initHandler).toHaveBeenCalledOnce();
+});
+
 test('Check info', async () => {
   server = setupServer(http.get('http://localhost/v4.2.0/libpod/info', () => HttpResponse.json(podmanInfo)));
   server.listen({ onUnhandledFrame: 'error' });
