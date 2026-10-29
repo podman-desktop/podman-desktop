@@ -128,3 +128,48 @@ test('Expect to display the dot if active page is not Dashboard and there is a n
   const dot = screen.getByLabelText('New content available');
   expect(dot).toBeInTheDocument();
 });
+
+test('Expect to do not display the dot when leaving Dashboard if content existed at startup', async () => {
+  router.goto('/');
+  notificationQueue.set([notification1]);
+  providerInfos.set([providerInfo]);
+  await waitRender();
+
+  router.goto('/pods');
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  const dot = screen.queryByLabelText('New content available');
+  expect(dot).not.toBeInTheDocument();
+});
+
+test('Expect to do not display the dot when leaving Dashboard if content arrived while on Dashboard', async () => {
+  router.goto('/');
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  providerInfos.set([providerInfo]);
+  router.goto('/pods');
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  const dot = screen.queryByLabelText('New content available');
+  expect(dot).not.toBeInTheDocument();
+});
+
+test('Expect to display the dot if a new notification arrives after leaving Dashboard', async () => {
+  router.goto('/');
+  notificationQueue.set([]);
+  providerInfos.set([providerInfo]);
+  await waitRender();
+
+  router.goto('/pods');
+  notificationQueue.set([notification1]);
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  const dot = screen.getByLabelText('New content available');
+  expect(dot).toBeInTheDocument();
+});

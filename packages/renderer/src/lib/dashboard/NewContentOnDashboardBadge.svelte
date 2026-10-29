@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
+import { router } from 'tinro';
 
 import NewContentBadge from '/@/lib/ui/NewContentBadge.svelte';
 import { notificationQueue } from '/@/stores/notifications';
@@ -19,7 +20,7 @@ onMount(() => {
   // if there is a new provider we display the dot
   providersUnsubscribe = providerInfos.subscribe(updatedProviders => {
     const updatedProvidersId = updatedProviders.map(prov => prov.internalId).toSorted();
-    if (!hasNewProviders) {
+    if (!isOnDashboard() && !hasNewProviders) {
       // if the user is in the dashboard page we do not check for new providers
       hasNewProviders = hasNewProvider(providersId, updatedProvidersId);
     }
@@ -28,7 +29,7 @@ onMount(() => {
 
   // if there is a new notification we display the dot
   notificationsUnsubscribe = notificationQueue.subscribe(notifications => {
-    if (!hasNewNotifications) {
+    if (!isOnDashboard() && !hasNewNotifications) {
       // if the user is in the dashboard page we do not check for new notifications
       hasNewNotifications = notifications.length > notificationCount;
     }
@@ -40,6 +41,11 @@ onDestroy(() => {
   providersUnsubscribe?.();
   notificationsUnsubscribe?.();
 });
+
+// content that arrives while the user is on the dashboard has been seen, so it is not new
+function isOnDashboard(): boolean {
+  return $router.path === '/';
+}
 
 function hasNewProvider(oldProvidersId: string[], newProvidersId: string[]): boolean {
   if (oldProvidersId.length < newProvidersId.length) {
