@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NotificationOptions } from '@podman-desktop/api';
-import type { NotificationTaskInfo, TaskInfo } from '@podman-desktop/core-api';
-import { ExperimentalTasksSettings } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { NotificationTaskInfo, TaskInfo } from '@desktop-framework/api';
+import { ExperimentalTasksSettings } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import type { NotificationOptions } from '@desktop-framework/extension-api';
 import { inject, injectable } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
@@ -70,7 +70,7 @@ export class TaskManager {
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Toast}`]: {
             description: 'Display a notification toast when task is created',
             type: 'boolean',
-            default: false,
+            default: true,
           },
         },
       },

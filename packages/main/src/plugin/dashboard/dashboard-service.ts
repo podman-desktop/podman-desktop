@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IDisposable } from '@podman-desktop/core-api';
+import type { IDisposable } from '@desktop-framework/api';
 import {
   ENHANCED_DASHBOARD_CONFIGURATION_KEY,
   HEALTH_MONITOR_STATUS,
@@ -25,11 +25,12 @@ import {
   SYSTEM_OVERVIEW_EXPANDED,
   SystemOverviewStatus,
   SystemOverviewStatusInfo,
-} from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
+import dashboardImage from '/@/assets/dashboard.enhancedDashboard.webp';
 import { IPCHandle } from '/@/plugin/api.js';
 import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
@@ -84,6 +85,7 @@ export class DashboardService implements IDisposable {
           default: false,
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
+            image: dashboardImage,
           },
         },
         [SYSTEM_OVERVIEW_EXPANDED]: {

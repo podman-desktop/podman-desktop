@@ -19,8 +19,8 @@
 import * as nodeHttp from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import type { Configuration } from '@podman-desktop/api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { Configuration } from '@desktop-framework/extension-api';
 import { delay, http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import { createProxy } from 'proxy';
@@ -166,7 +166,10 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleError;
-  server?.close();
+  // msw 3 throws when closing a server that is not listening
+  if (server?.readyState) {
+    server.close();
+  }
 });
 
 test('should skip extensions with only preview versions in fetchable list', async () => {
@@ -186,7 +189,7 @@ test('should skip extensions with only preview versions in fetchable list', asyn
       HttpResponse.json({ extensions: [fakePublishedExtension1, previewOnlyExtension] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
   expect(fetchableExtensions.length).toBe(1);
@@ -199,7 +202,7 @@ test('should fetch fetchable extensions', async () => {
       HttpResponse.json({ extensions: [fakePublishedExtension1] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
   expect(fetchableExtensions).toBeDefined();
@@ -224,7 +227,7 @@ test('should not fetch fetchable extensions if internet connection is taking too
       return HttpResponse.json({ extensions: [fakePublishedExtension1] });
     }),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   // no error, but array should be empty as it is taking too much time to download
   const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
@@ -238,7 +241,7 @@ test('should not fetch fetchable extensions if internet connection is taking too
 
 test('should return empty array when catalog has no extensions', async () => {
   server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [] })));
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions).toStrictEqual([]);
@@ -247,7 +250,7 @@ test('should return empty array when catalog has no extensions', async () => {
 
 test('should return empty array when catalog fetch fails', async () => {
   server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.error()));
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions).toStrictEqual([]);
@@ -262,7 +265,7 @@ test('should use cached catalog and not fetch again within cache timeout', async
       return HttpResponse.json({ extensions: [fakePublishedExtension1] });
     }),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const first = await extensionsCatalog.getExtensions();
   expect(first.length).toBe(1);
@@ -275,7 +278,7 @@ test('should use cached catalog and not fetch again within cache timeout', async
 
 test('should throw with message when fetch fails due to network error', async () => {
   server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.error()));
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow('Unable to fetch the available extensions:');
 });
@@ -284,7 +287,7 @@ test('should throw with status when server returns non-ok response', async () =>
   server = setupServer(
     http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => new HttpResponse(null, { status: 500 })),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow(
     'Unable to fetch the available extensions: HTTP 500:',
@@ -295,7 +298,7 @@ test('should throw when server returns 404', async () => {
   server = setupServer(
     http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => new HttpResponse(null, { status: 404 })),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow(
     'Unable to fetch the available extensions: HTTP 404:',
@@ -320,7 +323,7 @@ test('should refetch catalog after cache timeout expires', async () => {
       return HttpResponse.json({ extensions: [fakePublishedExtension1] });
     }),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const first = await extensionsCatalog.getExtensions();
   expect(first.length).toBe(1);
@@ -343,7 +346,7 @@ test('should get all extensions', async () => {
       HttpResponse.json({ extensions: [fakePublishedExtension1] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions).toBeDefined();
@@ -379,7 +382,7 @@ test('should filter incompatible extension versions', async () => {
       HttpResponse.json({ extensions: [fakePublishedExtension4] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions).toBeDefined();
@@ -409,7 +412,7 @@ test('should get proper unlisted fields', async () => {
       HttpResponse.json({ extensions: [fakePublishedExtension1, fakePublishedExtension2, fakePublishedExtension3] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const allExtensions = await extensionsCatalog.getExtensions();
   expect(allExtensions).toBeDefined();
@@ -438,7 +441,7 @@ test('should fetch alternate link', async () => {
   server = setupServer(
     http.get(customPathToCatalog, () => HttpResponse.json({ extensions: [fakePublishedExtension1] })),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   // change the configuration reply to be our custom path
   vi.mocked(configurationRegistry.getConfiguration).mockClear();
@@ -490,7 +493,7 @@ test('should use global fetch for catalog requests so proxy settings are respect
       HttpResponse.json({ extensions: [fakePublishedExtension1] }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
@@ -538,4 +541,158 @@ test('should route catalog request through proxy when proxy is configured', asyn
   }
 
   expect(connectDone).toBe(true);
+});
+
+test('should fetch README content successfully by extension ID', async () => {
+  const readmeContent = '# Extension README\n\nThis is the README content.';
+  const readmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
+
+  const extensionWithReadme = {
+    publisher: {
+      publisherName: 'foo',
+      displayName: 'Foo publisher',
+    },
+    extensionName: 'fooName',
+    displayName: 'Foo Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: readmeUri }, fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [extensionWithReadme] })),
+    http.get(readmeUri, () => HttpResponse.text(readmeContent)),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const result = await extensionsCatalog.fetchReadme('foo.fooName');
+
+  expect(result).toBe(readmeContent);
+});
+
+test('should throw error when extension not found', async () => {
+  server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [] })));
+  server.listen({ onUnhandledFrame: 'error' });
+
+  await expect(extensionsCatalog.fetchReadme('nonexistent.extension')).rejects.toThrow(
+    'No extension with id nonexistent.extension found',
+  );
+});
+
+test('should throw error when extension has no README', async () => {
+  const extensionWithoutReadme = {
+    publisher: {
+      publisherName: 'bar',
+      displayName: 'Bar publisher',
+    },
+    extensionName: 'barName',
+    displayName: 'Bar Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.bar/bar/baz',
+        files: [fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [extensionWithoutReadme] }),
+    ),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  await expect(extensionsCatalog.fetchReadme('bar.barName')).rejects.toThrow('Extension bar.barName has no README');
+});
+
+test('should throw error when fetching README fails', async () => {
+  const readmeUri = 'https://registry.podman-desktop.io/api/extensions/foo/fooName/1.0.0/README.md';
+
+  const extensionWithReadme = {
+    publisher: {
+      publisherName: 'foo',
+      displayName: 'Foo publisher',
+    },
+    extensionName: 'fooName',
+    displayName: 'Foo Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: readmeUri }, fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [extensionWithReadme] })),
+    http.get(readmeUri, () => new HttpResponse(null, { status: 404 })),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  await expect(extensionsCatalog.fetchReadme('foo.fooName')).rejects.toThrow(
+    `Failed to fetch README from ${readmeUri}`,
+  );
+});
+
+test('should fetch README from first non-preview version', async () => {
+  const previewReadmeUri = 'https://example.com/extensions/foo/fooName/2.0.0-preview/README.md';
+  const stableReadmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
+  const stableReadmeContent = '# Stable README';
+
+  const extensionWithPreviewFirst = {
+    publisher: {
+      publisherName: 'foo',
+      displayName: 'Foo publisher',
+    },
+    extensionName: 'fooName',
+    displayName: 'Foo Extension',
+    shortDescription: 'Test extension',
+    categories: ['Other'],
+    versions: [
+      {
+        version: '2.0.0-preview',
+        preview: true,
+        lastUpdated: '2021-02-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: previewReadmeUri }, fooAssetIcon],
+      },
+      {
+        version: '1.0.0',
+        preview: false,
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/bar',
+        files: [{ assetType: 'README', data: stableReadmeUri }, fooAssetIcon],
+      },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [extensionWithPreviewFirst] }),
+    ),
+    http.get(stableReadmeUri, () => HttpResponse.text(stableReadmeContent)),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const result = await extensionsCatalog.fetchReadme('foo.fooName');
+
+  expect(result).toBe(stableReadmeContent);
 });

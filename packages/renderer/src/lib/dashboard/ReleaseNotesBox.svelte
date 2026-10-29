@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { ReleaseNotes } from '@desktop-framework/api';
 import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
-import type { ReleaseNotes } from '@podman-desktop/core-api';
 import { Button, ButtonRow, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
@@ -88,6 +88,7 @@ onDestroy(async () => {
           </div>
         {/if}
         <ButtonRow class="mt-2">
+          <Button type="secondary" on:click={onClose}>Dismiss</Button>
           <Link on:click={openReleaseNotes}>Learn more</Link>
           <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>Update</Button>
         </ButtonRow>

@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContextGeneralState, KubeContext } from '@podman-desktop/core-api';
+import type { ContextGeneralState, KubeContext } from '@desktop-framework/api';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -410,6 +410,8 @@ describe.each([
     if (implemented.errorMessage) {
       const context5 = screen.getAllByRole('row')[4];
       expect(within(context5).queryByText('ERROR')).toBeInTheDocument();
+      expect(within(context5).getByText('an error')).toBeInTheDocument();
+      expect(within(context5).queryByLabelText('Error')).not.toBeInTheDocument();
       expect(within(context5).queryByText('PODS')).not.toBeInTheDocument();
       expect(within(context5).queryByText('DEPLOYMENTS')).not.toBeInTheDocument();
     }

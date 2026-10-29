@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { ProviderConnectionInfo, ProviderInfo } from '@desktop-framework/api';
 import { faEdit, faPlay, faRotateRight, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { Buffer } from 'buffer';
 import type { Snippet } from 'svelte';
 import { router } from 'tinro';
@@ -153,7 +153,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
     <div class="mt-2 relative">
       <!-- TODO: see action available like machine infos -->
       <div
-        class="flex bg-[var(--pd-action-button-details-bg)] w-fit rounded-lg m-auto"
+        class="flex bg-[var(--pd-button-detailed-bg)] w-fit rounded-lg m-auto"
         role="group"
         aria-label="Connection Actions">
         {#if connection.canStart}

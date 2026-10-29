@@ -15,6 +15,14 @@
     {
       "event": "shellInContainer.error",
       "frequency": "dailyPerInstance"
+    },
+    {
+      "event": "containerStats",
+      "frequency": "dailyPerInstance"
+    },
+    {
+      "event": "registerKubernetesProviderConnection",
+      "frequency": "dailyPerInstance"
     }
   ]
 }

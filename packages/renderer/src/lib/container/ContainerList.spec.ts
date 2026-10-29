@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ContainerInfo, ProviderInfo } from '@desktop-framework/api';
 import { fireEvent, render, type RenderResult, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
@@ -1372,6 +1372,25 @@ test('Expect clicking Existing image button closes dialog', async () => {
   });
 });
 
+test('Expect clicking Close button closes create container dialog', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const createButton = screen.getByTitle('Create a container');
+  await fireEvent.click(createButton);
+
+  const closeButton = await screen.findByText('Close');
+  await fireEvent.click(closeButton);
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
 test('Expect contributed icon to be applied to the container row', async () => {
   // the containers store converts without the context and the view contributions, so this
   // icon can only appear if ContainerList overlays it after reading the store
@@ -1439,7 +1458,7 @@ test('Expect search not to match the raw compose-prefixed container name', async
 
   // the stripped name still matches, as it did before the store held ContainerInfoUI
   const { unmount } = await waitRender({ searchTerm: 'web-1' });
-  expect(screen.queryByText('web-1')).toBeInTheDocument();
+  expect(screen.getByText('web-1')).toBeInTheDocument();
   unmount();
 
   // the raw prefixed name must not

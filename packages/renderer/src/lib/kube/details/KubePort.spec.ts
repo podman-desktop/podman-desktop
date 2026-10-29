@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { type ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
+import { type ForwardConfig, WorkloadKind } from '@desktop-framework/api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -173,7 +173,7 @@ describe('port forwarding', () => {
     await fireEvent.click(port80);
 
     await vi.waitFor(() => {
-      const error = getByRole('alert', { name: 'Error Message Content' });
+      const error = getByRole('alert');
       expect(error.textContent).toBe('Dummy error');
     });
   });
@@ -240,7 +240,7 @@ describe('port forwarding', () => {
     await fireEvent.click(removeBtn);
 
     await vi.waitFor(() => {
-      const error = getByRole('alert', { name: 'Error Message Content' });
+      const error = getByRole('alert');
       expect(error.textContent).toBe('Dummy error');
     });
 
@@ -248,7 +248,7 @@ describe('port forwarding', () => {
     await fireEvent.click(removeBtn);
 
     await vi.waitFor(() => {
-      const error = queryByRole('alert', { name: 'Error Message Content' });
+      const error = queryByRole('alert');
       expect(error).toBeNull();
     });
   });

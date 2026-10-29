@@ -26,9 +26,11 @@ export class RunnerOptions {
   public readonly _extensionsDisabled: string[];
   public readonly _aiLabModelUploadDisabled: boolean;
   public readonly _binaryPath: string | undefined;
+  public readonly _electronLaunchTimeout: number;
   public readonly _saveTracesOnPass: boolean;
   public readonly _saveVideosOnPass: boolean;
   public readonly _customSettings: { [key: string]: unknown } = {};
+  public readonly _useDefaultHomeDirectory: boolean;
 
   constructor({
     profile = '',
@@ -40,9 +42,11 @@ export class RunnerOptions {
     extensionsDisabled = [],
     aiLabModelUploadDisabled = false,
     binaryPath = undefined,
+    electronLaunchTimeout = 90_000,
     saveTracesOnPass = false,
     saveVideosOnPass = false,
     customSettings = {},
+    useDefaultHomeDirectory = false,
   }: {
     profile?: string;
     customFolder?: string;
@@ -53,9 +57,18 @@ export class RunnerOptions {
     extensionsDisabled?: string[];
     aiLabModelUploadDisabled?: boolean;
     binaryPath?: string;
+    electronLaunchTimeout?: number;
     saveTracesOnPass?: boolean;
     saveVideosOnPass?: boolean;
     customSettings?: { [key: string]: unknown };
+    /**
+     * When true, skip the PODMAN_DESKTOP_HOME_DIR sandbox override so the app resolves its
+     * data/config directories the same way a real install would (from its bundled
+     * product.json, against the real host home directory). Only meaningful when driving a
+     * real installed binary (PODMAN_DESKTOP_BINARY) on a disposable test host -- it writes
+     * into the real home directory of whatever machine runs the test.
+     */
+    useDefaultHomeDirectory?: boolean;
   } = {}) {
     this._profile = profile;
     this._customFolder = customFolder;
@@ -66,9 +79,11 @@ export class RunnerOptions {
     this._extensionsDisabled = extensionsDisabled;
     this._aiLabModelUploadDisabled = aiLabModelUploadDisabled;
     this._binaryPath = binaryPath;
+    this._electronLaunchTimeout = electronLaunchTimeout;
     this._saveTracesOnPass = saveTracesOnPass;
     this._saveVideosOnPass = saveVideosOnPass;
     this._customSettings = customSettings;
+    this._useDefaultHomeDirectory = useDefaultHomeDirectory;
   }
 
   public createSettingsJson(): string {

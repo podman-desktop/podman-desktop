@@ -1,6 +1,6 @@
 <script lang="ts">
+import { NavigationPage } from '@desktop-framework/api';
 import { faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { NavigationPage } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -574,6 +574,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
       {/snippet}
     {#snippet buttons()}
 
+        <Button type="link" on:click={(): void => {openChoiceModal = false;}}>Close</Button>
         <Button type="secondary" on:click={fromExistingImage}>Use existing image</Button>
         <Button type="secondary" on:click={fromDockerfile}>Use Containerfile</Button>
 

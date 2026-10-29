@@ -1,0 +1,63 @@
+[
+  {
+    "name": "Bundled Podman installer (darwin/x64)",
+    "platforms": ["darwin"],
+    "architectures": ["x64"],
+    "root": "resources",
+    "directory": "extensions/podman/packages/extension/assets",
+    "pattern": "podman-installer-macos-amd64-*.pkg",
+    "presence": "present"
+  },
+  {
+    "name": "Bundled Podman installer (darwin/arm64)",
+    "platforms": ["darwin"],
+    "architectures": ["arm64"],
+    "root": "resources",
+    "directory": "extensions/podman/packages/extension/assets",
+    "pattern": "podman-installer-macos-aarch64-*.pkg",
+    "presence": "present"
+  },
+  {
+    "name": "Bundled Podman installer (win32/x64)",
+    "platforms": ["win32"],
+    "architectures": ["x64"],
+    "root": "resources",
+    "directory": "extensions/podman/packages/extension/assets",
+    "pattern": "podman-installer-windows-amd64.msi",
+    "presence": "present"
+  },
+  {
+    "name": "Bundled Podman installer (win32/arm64)",
+    "platforms": ["win32"],
+    "architectures": ["arm64"],
+    "root": "resources",
+    "directory": "extensions/podman/packages/extension/assets",
+    "pattern": "podman-installer-windows-arm64.msi",
+    "presence": "present"
+  },
+  {
+    "name": "Podman machine image matches the airgap variant",
+    "platforms": ["darwin", "win32"],
+    "architectures": ["x64", "arm64"],
+    "root": "resources",
+    "directory": "extensions/podman/packages/extension/assets",
+    "pattern": "podman-image-{arch}.zst",
+    "presence": "airgap"
+  },
+  {
+    "name": "Red Hat EULA matches the installed product",
+    "platforms": ["darwin"],
+    "root": "application",
+    "directory": "License",
+    "pattern": "Red Hat Standard EULA *.pdf",
+    "presence": "redhat"
+  },
+  {
+    "name": "Red Hat EULA matches the installed product",
+    "platforms": ["win32", "linux"],
+    "root": "application",
+    "directory": ".",
+    "pattern": "Red Hat Standard EULA *.pdf",
+    "presence": "redhat"
+  }
+]

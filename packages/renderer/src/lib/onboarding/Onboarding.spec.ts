@@ -69,8 +69,8 @@ test('Expect to have the "Try again" and Cancel buttons if the step represent a 
   expect(button).toBeInTheDocument();
   const buttonCancel = screen.getByRole('button', { name: 'Cancel Setup' });
   expect(buttonCancel).toBeInTheDocument();
-  const infoMessage = screen.queryByLabelText('Next Info Message');
-  expect(infoMessage).not.toBeInTheDocument();
+  const nextButton = screen.getByRole('button', { name: 'Next Step' });
+  expect(nextButton).toBeDisabled();
 });
 
 test('Expect not to have the "Try again" and "Cancel" buttons if the step represent a completed state', async () => {
@@ -102,8 +102,8 @@ test('Expect not to have the "Try again" and "Cancel" buttons if the step repres
   expect(buttonTryAgain).not.toBeInTheDocument();
   const buttonCancel = screen.queryByRole('button', { name: 'Cancel Setup' });
   expect(buttonCancel).not.toBeInTheDocument();
-  const infoMessage = screen.getByLabelText('Next Info Message');
-  expect(infoMessage).toBeInTheDocument();
+  const nextButton = screen.getByRole('button', { name: 'Next Step' });
+  expect(nextButton).toBeInTheDocument();
 });
 
 test('Expect to have the "Step Body" div if the step does not include a component', async () => {
@@ -642,11 +642,11 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
    ** Checking the first extension
    */
 
-  // Expect the onboarding title 'Foobar Onboarding' to be in the document
-  const displayName = screen.getByText('Foobar Onboarding');
-  expect(displayName).toBeInTheDocument();
+  // Sidebar is hidden for non-global onboarding, so the title is not rendered
+  const displayName = screen.queryByText('Foobar Onboarding');
+  expect(displayName).not.toBeInTheDocument();
 
-  // Expect the first step 'helloworld' to be in the document
+  // Expect the first step content to be in the document
   const helloExists = screen.getAllByText('foobar1stepcontent');
   expect(helloExists[0]).toBeInTheDocument();
 
@@ -669,8 +669,9 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
   await vi.waitFor(() => expect(screen.queryAllByText('foobar2stepcontent').length).toBe(0));
 
   await tick();
+  // Sidebar still hidden for non-global
   const displayName2 = screen.queryByText('Foobar2 Onboarding');
-  expect(displayName2).toBeInTheDocument();
+  expect(displayName2).not.toBeInTheDocument();
 
   // Click next again
   await fireEvent.click(nextButton);
@@ -762,4 +763,152 @@ test('Expect onboarding to be reset when starting completed onboarding', async (
   });
   const helloDoesntExist = screen.queryAllByText('helloworld');
   expect(helloDoesntExist.length).toBeGreaterThan(0);
+});
+
+test('Expect per-extension Skip button to call updateStepState for each step', async () => {
+  const contextConfig = new ContextUI();
+  context.set(contextConfig);
+
+  onboardingList.set([
+    {
+      extension: 'id',
+      removable: true,
+      title: 'Foobar Onboarding',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
+      steps: [
+        {
+          id: 'step1',
+          title: 'step1',
+          content: [[{ value: 'foobar1stepcontent' }]],
+        },
+        {
+          id: 'step2',
+          title: 'step2',
+          content: [[{ value: 'foobar1step2content' }]],
+        },
+      ],
+      enablement: 'true',
+    },
+    {
+      extension: 'id2',
+      removable: true,
+      title: 'Second Onboarding',
+      name: 'foobar2',
+      displayName: 'FooBar2',
+      icon: 'data:image/png;base64,foobar2',
+      welcomeMessage: 'Get started with Podman Desktop',
+      steps: [
+        {
+          id: 'step',
+          title: 'step',
+          content: [[{ value: 'foobar2stepcontent' }]],
+        },
+      ],
+      enablement: 'true',
+    },
+  ]);
+
+  await waitRender({
+    extensionIds: ['id', 'id2'],
+    global: true,
+  });
+
+  // First extension content should be visible
+  expect(screen.getAllByText('foobar1stepcontent')[0]).toBeInTheDocument();
+
+  // The per-extension Skip button should be present in the sidebar
+  const skipButtons = screen.getAllByRole('button', { name: /Skip/ });
+  const perExtensionSkip = skipButtons.find(btn => btn.textContent?.trim() === 'Skip');
+  expect(perExtensionSkip).toBeDefined();
+
+  // Click Skip and verify updateStepState was called for each step of the skipped extension
+  const updateStepStateMock = vi.mocked(window.updateStepState);
+  const callCountBefore = updateStepStateMock.mock.calls.length;
+  await fireEvent.click(perExtensionSkip!);
+  await tick();
+
+  // Should have called updateStepState for both steps of the first extension
+  const newCalls = updateStepStateMock.mock.calls.slice(callCountBefore);
+  expect(newCalls.length).toBeGreaterThanOrEqual(2);
+});
+
+test('Expect "Try again" to reset only the current onboarding, not other onboarding contexts', async () => {
+  const contextConfig = new ContextUI();
+  context.set(contextConfig);
+
+  onboardingList.set([
+    {
+      extension: 'first-ext',
+      removable: true,
+      title: 'First Onboarding',
+      name: 'first',
+      displayName: 'First',
+      icon: 'data:image/png;base64,first',
+      welcomeMessage: 'First Onboarding',
+      steps: [
+        {
+          id: 'step1',
+          title: 'step 1',
+          state: 'completed',
+          completionEvents: [],
+        },
+      ],
+      enablement: 'true',
+    },
+    {
+      extension: 'second-ext',
+      removable: true,
+      title: 'Second Onboarding',
+      name: 'second',
+      displayName: 'Second',
+      icon: 'data:image/png;base64,second',
+      welcomeMessage: 'Second Onboarding',
+      steps: [
+        {
+          id: 'step2',
+          title: 'step 2',
+          state: 'failed',
+          completionEvents: [],
+        },
+      ],
+      enablement: 'true',
+    },
+  ]);
+
+  await waitRender({
+    extensionIds: ['first-ext', 'second-ext'],
+  });
+
+  // Show the first step
+  expect(screen.getByText('step 1')).toBeInTheDocument();
+
+  // Simulate context being set during the first onboarding
+  contextConfig.setValue('first-ext.onboarding.key1', 'first-value');
+
+  // Complete the first onboarding by clicking Next
+  const nextButton = screen.getByRole('button', { name: 'Next Step' });
+  await fireEvent.click(nextButton);
+
+  // Wait for the second onboarding to become active with its failed step
+  await screen.findByText('step 2');
+
+  // Simulate context being set during the second onboarding
+  contextConfig.setValue('second-ext.onboarding.key1', 'second-value');
+
+  // The failed step should show the "Try again" button
+  const tryAgainButton = screen.getByRole('button', { name: 'Try again' });
+  expect(tryAgainButton).toBeInTheDocument();
+
+  await fireEvent.click(tryAgainButton);
+
+  // Verify that resetOnboarding was called with only the second extension
+  expect(vi.mocked(window.resetOnboarding)).toHaveBeenLastCalledWith(['second-ext']);
+
+  // Verify context: first onboarding's context should remain, second onboarding's should be cleared
+  const contextValues = contextConfig.collectAllValues();
+  expect(contextValues['first-ext.onboarding.key1']).toBe('first-value');
+  expect(contextValues['second-ext.onboarding.key1']).toBeUndefined();
 });

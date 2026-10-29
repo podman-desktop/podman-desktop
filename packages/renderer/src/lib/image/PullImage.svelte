@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@desktop-framework/api';
+import { NavigationPage, PreferredRegistriesSettings } from '@desktop-framework/api';
 import { faArrowCircleDown, faBan, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
-import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { Button, ButtonRow, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
@@ -17,6 +17,7 @@ import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -65,8 +66,14 @@ async function resolveShortname(): Promise<void> {
     return;
   }
   if (imageToPull && !imageToPull.includes('/')) {
-    shortnameImages =
-      (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+    shortnameImages = [];
+    try {
+      shortnameImages =
+        (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
+    } catch (error: unknown) {
+      // the engine rejects a name it cannot parse, such as ':', and is unreachable when its machine is stopped
+      console.debug(`Could not resolve shortname '${imageToPull}':`, error);
+    }
     // not a shortname
   } else {
     podmanFQN = '';
@@ -503,6 +510,9 @@ async function searchFunction(value: string): Promise<void> {
       <div class="w-full flex flex-col justify-end">
         <ButtonRow>
           {#if !pullFinished}
+            {#if !pullInProgress}
+              <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+            {/if}
             <Button
               icon={faArrowCircleDown}
               disabled={imageNameIsInvalid || pullInProgress}

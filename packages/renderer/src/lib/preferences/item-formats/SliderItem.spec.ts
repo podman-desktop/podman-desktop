@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -80,8 +80,8 @@ test('Expect track to render a two-tone gradient reflecting the current value, t
   expect(input).toHaveClass('accent-(--pd-input-toggle-on-bg)');
 
   // (15 - 4) / (34 - 4) * 100 = 36.67%
-  expect(input).toHaveStyle(
-    'background: linear-gradient(to right, var(--pd-input-toggle-on-bg) 36.67%, var(--pd-input-slider-track-bg) 36.67%)',
+  expect(input.style.background).toBe(
+    'linear-gradient(to right, var(--pd-input-toggle-on-bg) 36.67%, var(--pd-input-slider-track-bg) 36.67%)',
   );
 });
 
@@ -103,8 +103,8 @@ test('Expect track gradient to update live as the slider is dragged', async () =
   await fireEvent.input(input, { target: { value: '75' } });
 
   await waitFor(() => {
-    expect(input).toHaveStyle(
-      'background: linear-gradient(to right, var(--pd-input-toggle-on-bg) 75.00%, var(--pd-input-slider-track-bg) 75.00%)',
+    expect(input.style.background).toBe(
+      'linear-gradient(to right, var(--pd-input-toggle-on-bg) 75.00%, var(--pd-input-slider-track-bg) 75.00%)',
     );
   });
   expect(onChange).toHaveBeenCalledWith('record', 75);
@@ -124,8 +124,8 @@ test('Expect track fill to default to the midpoint when value is omitted, matchi
   render(SliderItem, { record });
   const input = screen.getByLabelText('record-description');
 
-  expect(input).toHaveStyle(
-    'background: linear-gradient(to right, var(--pd-input-toggle-on-bg) 50.00%, var(--pd-input-slider-track-bg) 50.00%)',
+  expect(input.style.background).toBe(
+    'linear-gradient(to right, var(--pd-input-toggle-on-bg) 50.00%, var(--pd-input-slider-track-bg) 50.00%)',
   );
 });
 

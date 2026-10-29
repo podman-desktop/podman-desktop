@@ -26,7 +26,6 @@ import { PassThrough, Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { StringDecoder } from 'node:string_decoder';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   BuildImageOptions,
   ContainerCreateOptions,
@@ -38,6 +37,7 @@ import type {
   ContainerStatsInfo,
   Event,
   HistoryInfo,
+  HostConfigPortBinding,
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
@@ -66,18 +66,19 @@ import type {
   VolumeInfo,
   VolumeInspectInfo,
   VolumeListInfo,
-} from '@podman-desktop/core-api';
-import { ContainerRegistrySettings } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
+} from '@desktop-framework/api';
+import { ContainerRegistrySettings } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { IConfigurationNode } from '@desktop-framework/api/configuration';
 import type {
   ContainerCreateMountOption,
   ContainerCreateNetNSOption,
   ContainerCreateOptions as PodmanContainerCreateOptions,
   ContainerCreatePortMappingOption,
   PodmanDevice,
-} from '@podman-desktop/core-api/libpod';
-import { PlayKubeInfo, PlayKubeInput } from '@podman-desktop/core-api/libpod';
+} from '@desktop-framework/api/libpod';
+import { PlayKubeInfo, PlayKubeInput } from '@desktop-framework/api/libpod';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
@@ -1032,7 +1033,12 @@ export class ContainerProviderRegistry {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const volumeListInfo: any = await provider.api.listVolumes();
 
-          let storageDefinition = {
+          // the unversioned /system/df endpoint reports the volume usage either as a
+          // top-level Volumes array (docker) or nested inside VolumeUsage.Items (podman)
+          let storageDefinition: {
+            Volumes?: unknown[];
+            VolumeUsage?: { Items?: unknown[] };
+          } = {
             Volumes: [],
           };
 
@@ -1065,7 +1071,11 @@ export class ContainerProviderRegistry {
 
             // do we have a matching volume in storage definition ?
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const matchingVolume: any = (storageDefinition?.Volumes || []).find(
+            const matchingVolume: any = (
+              storageDefinition?.VolumeUsage?.Items ??
+              storageDefinition?.Volumes ??
+              []
+            ).find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (volumeStorage: any) => volumeStorage.Name === volumeInfo.Name,
             );
@@ -1421,52 +1431,89 @@ export class ContainerProviderRegistry {
   }
 
   async updateImages(images: ImageUpdateInfo[], abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
-    const results = await Promise.all(
-      images.map(async (info): Promise<ImageUpdateResult> => {
-        try {
-          const matchingEngine = this.getMatchingEngine(info.engineId);
-          const imageInspect = await matchingEngine.getImage(info.image).inspect();
-          const localDigests = imageInspect.RepoDigests ?? [];
-          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
-
-          if (status.status === 'error') {
-            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
-          }
-
-          if (status.status === 'skipped' || !status.updateAvailable) {
-            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
-          }
-
-          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
-          const pullStream = await matchingEngine.pull(info.image, {
-            authconfig,
-            abortSignal,
-          });
-
-          const { resolve, reject, promise } = Promise.withResolvers<void>();
-          matchingEngine.modem.followProgress(
-            pullStream,
-            (err: Error | null) => (err ? reject(err) : resolve()),
-            () => {},
-          );
-          await promise;
-
-          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
-        } catch (error: unknown) {
-          console.error(`Error updating image ${info.image}`, error);
-          const message = error instanceof Error ? error.message : String(error);
-          return { imageRef: info.image, updated: false, status: 'error', message };
-        }
-      }),
-    );
+    // the same image can be selected several times, once per tag: update it only once
+    const seenImages = new Set<string>();
+    const uniqueImages = images.filter(({ engineId, id }) => {
+      const key = JSON.stringify([engineId, id]);
+      if (seenImages.has(key)) return false;
+      seenImages.add(key);
+      return true;
+    });
+    const results = (
+      await Promise.all(uniqueImages.map(({ engineId, id }) => this.updateImage(engineId, id, abortSignal)))
+    ).flat();
     this.telemetryService.track('updateImages', {
-      count: images.length,
+      count: results.length,
       updated: results.filter(result => result.updated).length,
       upToDate: results.filter(result => result.status === 'normal' && !result.updated).length,
       skipped: results.filter(result => result.status === 'skipped').length,
       failed: results.filter(result => result.status === 'error').length,
     });
     return results;
+  }
+
+  /**
+   * Update every tag of the image: an image id can be referenced by several tags (e.g. nginx:latest and nginx:1.29)
+   */
+  protected async updateImage(engineId: string, id: string, abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
+    try {
+      const engine = this.getMatchingEngine(engineId);
+      const inspected = await engine.getImage(id).inspect();
+      const tags = inspected.RepoTags ?? [];
+      const digests = inspected.RepoDigests ?? [];
+      if (tags.length === 0) {
+        return [
+          {
+            imageRef: id,
+            updated: false,
+            status: 'skipped',
+            message: ImageRegistry.DANGLING_IMAGE_MESSAGE,
+          },
+        ];
+      }
+      return await Promise.all(tags.map(imageRef => this.updateImageTag(engine, imageRef, digests, abortSignal)));
+    } catch (error: unknown) {
+      return [this.toUpdateError(id, error)];
+    }
+  }
+
+  protected async updateImageTag(
+    engine: Dockerode,
+    imageRef: string,
+    localDigests: string[],
+    abortSignal?: AbortSignal,
+  ): Promise<ImageUpdateResult> {
+    try {
+      const { tag } = this.imageRegistry.extractImageDataFromImageName(imageRef);
+      const { status, updateAvailable, message } = await this.imageRegistry.checkImageUpdateStatus(
+        imageRef,
+        tag,
+        localDigests,
+      );
+      if (!updateAvailable) {
+        return { imageRef, updated: false, status, message };
+      }
+
+      abortSignal?.throwIfAborted();
+      const authconfig = this.imageRegistry.getAuthconfigForImage(imageRef);
+      const pullStream = await engine.pull(imageRef, { authconfig, abortSignal });
+      const { resolve, reject, promise } = Promise.withResolvers<void>();
+      engine.modem.followProgress(
+        pullStream,
+        (err: Error | null) => (err ? reject(err) : resolve()),
+        () => {},
+      );
+      await promise;
+      return { imageRef, updated: true, status: 'updated', message: 'Image updated successfully' };
+    } catch (error: unknown) {
+      return this.toUpdateError(imageRef, error);
+    }
+  }
+
+  protected toUpdateError(imageRef: string, error: unknown): ImageUpdateResult {
+    console.error(`Error updating image ${imageRef}`, error);
+    const message = error instanceof Error ? error.message : String(error);
+    return { imageRef, updated: false, status: 'error', message };
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
@@ -1730,7 +1777,12 @@ export class ContainerProviderRegistry {
       const updatedEnv = this.extractContainerEnvironment(containerToReplicate);
 
       // build create container configuration
-      const originalConfiguration = this.getCreateContainsOptionsFromOriginal(containerToReplicate, updatedEnv);
+      const includePortMappings = overrideParameters.pod === undefined;
+      const originalConfiguration = this.getCreateContainsOptionsFromOriginal(
+        containerToReplicate,
+        updatedEnv,
+        includePortMappings,
+      );
 
       // add extra information
       const configuration: ContainerCreateOptions = {
@@ -1755,7 +1807,12 @@ export class ContainerProviderRegistry {
   private getCreateContainsOptionsFromOriginal(
     containerToReplicate: ContainerInspectInfo,
     updatedEnv: { [p: string]: string },
+    includePortMappings: boolean,
   ): Record<string, unknown> {
+    const portmappings = includePortMappings
+      ? this.convertPortBindings(containerToReplicate.Id, containerToReplicate.HostConfig?.PortBindings)
+      : undefined;
+
     return {
       command: containerToReplicate.Config.Cmd,
       entrypoint: containerToReplicate.Config.Entrypoint,
@@ -1767,7 +1824,56 @@ export class ContainerProviderRegistry {
       volumes: containerToReplicate.Mounts.filter(mount => (mount as any).Type === 'volume').map(mount => {
         return { Name: mount.Name, Dest: mount.Destination };
       }),
+      ...(portmappings && { portmappings }),
     };
+  }
+
+  /**
+   * Convert Docker-style HostConfig.PortBindings into the libpod portmappings format.
+   *
+   * Keys are in the format "port/protocol" (e.g. "80/tcp"). Each key maps to an
+   * array of bindings, so a single container port can be exposed on multiple host ports.
+   * An empty HostPort means the host should pick a random available port.
+   */
+  private convertPortBindings(
+    containerId: string,
+    portBindings: HostConfigPortBinding | undefined,
+  ): ContainerCreatePortMappingOption[] | undefined {
+    if (!portBindings || Object.keys(portBindings).length === 0) {
+      return undefined;
+    }
+
+    const portmappings: ContainerCreatePortMappingOption[] = [];
+    for (const [key, value] of Object.entries(portBindings)) {
+      const [portStr, protocol] = key.split('/');
+      const containerPort = Number.parseInt(portStr ?? '', 10);
+      if (Number.isNaN(containerPort) || String(containerPort) !== portStr || !Array.isArray(value)) {
+        console.warn(`Skipping invalid port binding "${key}" for container ${containerId}`);
+        continue;
+      }
+
+      for (const binding of value) {
+        let hostPort: number | undefined;
+        if (binding.HostPort) {
+          hostPort = Number.parseInt(binding.HostPort, 10);
+          if (Number.isNaN(hostPort) || String(hostPort) !== binding.HostPort) {
+            console.warn(
+              `Skipping invalid host port "${binding.HostPort}" in port binding "${key}" for container ${containerId}`,
+            );
+            continue;
+          }
+        }
+
+        portmappings.push({
+          container_port: containerPort,
+          host_port: hostPort,
+          host_ip: binding.HostIp === '' ? undefined : binding.HostIp,
+          protocol,
+        });
+      }
+    }
+
+    return portmappings.length > 0 ? portmappings : undefined;
   }
 
   async stopPod(engineId: string, podId: string): Promise<void> {

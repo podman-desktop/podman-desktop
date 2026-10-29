@@ -15,8 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { ProviderDetectionCheck } from '@desktop-framework/extension-api';
 import { faPlay, faWrench } from '@fortawesome/free-solid-svg-icons';
-import type { ProviderDetectionCheck } from '@podman-desktop/api';
 import Fa from 'svelte-fa';
 
 export const DoNothingMode = 'Do nothing';
@@ -29,6 +29,19 @@ export interface InitializationContext {
   mode: InitializationMode;
   promise?: Promise<ProviderDetectionCheck[]>;
   error?: string;
+}
+
+export class ProviderInitializationContexts {
+  private readonly contexts = new Map<string, InitializationContext>();
+
+  get(internalId: string): InitializationContext {
+    let context = this.contexts.get(internalId);
+    if (!context) {
+      context = { mode: DoNothingMode };
+      this.contexts.set(internalId, context);
+    }
+    return context;
+  }
 }
 
 export const InitializationSteps = [

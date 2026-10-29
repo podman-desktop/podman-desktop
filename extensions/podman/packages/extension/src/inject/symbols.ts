@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,3 +21,7 @@ export const TelemetryLoggerSymbol = Symbol.for('TelemetryLogger');
  * Symbol for {@link import('@podman-desktop/api').ProviderCleanup}
  */
 export const ProviderCleanupSymbol = Symbol.for('ProviderCleanup');
+/**
+ * Symbol for services instantiated when the inversify container is initialized
+ */
+export const StartupSymbol = Symbol.for('Startup');

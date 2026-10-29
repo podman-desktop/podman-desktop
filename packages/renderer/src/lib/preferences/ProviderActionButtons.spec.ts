@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { Menu, ProviderInfo } from '@podman-desktop/core-api';
+import type { Menu, ProviderInfo } from '@desktop-framework/api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
@@ -213,6 +213,10 @@ describe('ProviderActionButtons', () => {
 
     const createButton = screen.getByText('Initialize...');
     expect(createButton).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Initialize Podman Machine' })).toBe(createButton.closest('button'));
+
+    await fireEvent.mouseEnter(screen.getByTestId('tooltip-trigger'));
+    expect(screen.getByText('Initialize Podman Machine')).toBeInTheDocument();
   });
 
   test('shows Create new button for kubernetesProviderConnectionCreation', async () => {

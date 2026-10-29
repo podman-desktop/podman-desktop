@@ -17,12 +17,12 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { cp } from 'node:fs/promises';
+import { cp, rm } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { ExtensionInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { ExtensionInfo } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { IpcMainEvent } from 'electron';
 import { inject, injectable } from 'inversify';
 
@@ -37,7 +37,9 @@ import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalo
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
+import { MessageBox } from '/@/plugin/message-box.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 @injectable()
@@ -63,6 +65,8 @@ export class ExtensionInstaller {
     private readonly ipcMainOn: IPCMainOn,
     @inject(TaskManager)
     private taskManager: TaskManager,
+    @inject(MessageBox)
+    private messageBox: MessageBox,
   ) {
     this.#dockerDesktopInstaller = new DockerDesktopInstaller(contributionManager);
   }
@@ -211,9 +215,13 @@ export class ExtensionInstaller {
         sendError('Could not load extension: ' + analyzedExtension?.error);
         return;
       }
-      if (extensions.find(extension => extension.id === analyzedExtension?.id)) {
+      // a bundled extension is replaced by the one being installed, any other one blocks the installation
+      if (extensions.some(extension => extension.id === analyzedExtension?.id && !extension.bundled)) {
         sendError(`Extension ${analyzedExtension?.id} is already installed.`);
         return;
+      }
+      if (analyzedExtension) {
+        this.extensionLoader.markIfOverriding(analyzedExtension);
       }
       return analyzedExtension;
     } else if (isDDExtension) {
@@ -305,7 +313,30 @@ export class ExtensionInstaller {
     const task = this.taskManager.createTask({
       title: `Installing extension ${imageName}`,
     });
+    return this.installFromImageInTask(
+      task,
+      sendLog,
+      sendError,
+      sendEnd,
+      imageName,
+      extensionAnalyzed,
+      catalogExtensionId,
+    );
+  }
 
+  /**
+   * Install the extension from the image, reporting the installation in the given task,
+   * e.g. the task of an update which also covers the removal of the current version.
+   */
+  async installFromImageInTask(
+    task: Task,
+    sendLog: (message: string) => void,
+    sendError: (message: string) => void,
+    sendEnd: (message: string) => void,
+    imageName: string,
+    extensionAnalyzed?: (extension: AnalyzedExtension) => void,
+    catalogExtensionId?: string,
+  ): Promise<void> {
     const wrappedSendError = (message: string): void => {
       sendError(message);
       task.error = message;
@@ -369,19 +400,29 @@ export class ExtensionInstaller {
 
     // if we have some undefined objects, it is an error, cleanup extensions
     if (errors.length > 0) {
-      analyzedExtensions
-        .filter(extension => extension !== undefined)
-        .forEach(extension => {
-          if (extension?.path) {
-            fs.rmdirSync(extension.path, { recursive: true });
-          }
-        });
+      await this.removeAnalyzedExtensions(analyzedExtensions);
       sendError(`Error while installing extension ${imageName}: ${errors.join('\n')}`);
       return;
     }
 
     if (!analyzeSuccessful) {
       return;
+    }
+
+    if (!(await this.confirmOverrides(analyzedExtensions))) {
+      await this.removeAnalyzedExtensions(analyzedExtensions);
+      sendError(`Installation of ${imageName} cancelled.`);
+      return;
+    }
+
+    // stop the bundled extensions being replaced before loading the extensions replacing them
+    for (const extension of analyzedExtensions) {
+      if (extension.overrides) {
+        sendLog(
+          `Extension ${extension.id} replaces the bundled extension ${extension.overrides.id}, which is restored if you uninstall it.`,
+        );
+        await this.extensionLoader.replaceBundledExtension(extension.overrides.id);
+      }
     }
 
     // load all extensions
@@ -391,6 +432,51 @@ export class ExtensionInstaller {
 
     sendEnd('Extension Successfully installed.');
     this.apiSender.send('extension-started');
+  }
+
+  protected async removeAnalyzedExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
+    await Promise.all(
+      analyzedExtensions
+        .filter(extension => extension?.path)
+        .map(extension => {
+          return rm(extension.path, { recursive: true, force: true });
+        }),
+    );
+  }
+
+  /**
+   * Ask the user to confirm replacing each loaded bundled extension: a failure to ask counts as a refusal,
+   * otherwise the extracted extension would replace the bundled one at the next start.
+   */
+  protected async confirmOverrides(analyzedExtensions: AnalyzedExtension[]): Promise<boolean> {
+    if (!analyzedExtensions.some(extension => extension.overrides)) {
+      return true;
+    }
+    try {
+      const extensions = await this.extensionLoader.listExtensions();
+      for (const extension of analyzedExtensions) {
+        const bundledExtension = extensions.find(
+          installed => installed.id === extension.overrides?.id && installed.bundled,
+        );
+        if (!bundledExtension) {
+          continue;
+        }
+        const result = await this.messageBox.showMessageBox({
+          title: 'Replace Extension?',
+          message: `Are you sure you want to replace extension ${bundledExtension.displayName}?`,
+          detail: `Uninstalling the new extension restores the bundled ${bundledExtension.displayName} extension.`,
+          buttons: ['Replace', 'Cancel'],
+          type: 'question',
+        });
+        if (result.response !== 'Replace') {
+          return false;
+        }
+      }
+      return true;
+    } catch (error: unknown) {
+      console.error('Error while asking to replace a bundled extension', error);
+      return false;
+    }
   }
 
   async init(): Promise<void> {

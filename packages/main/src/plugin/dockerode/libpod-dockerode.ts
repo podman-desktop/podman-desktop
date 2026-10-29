@@ -18,9 +18,9 @@
 
 import type { RequestOptions } from 'node:http';
 
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@podman-desktop/api';
-import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@podman-desktop/core-api';
-import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
+import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@desktop-framework/api';
+import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@desktop-framework/api/libpod';
+import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@desktop-framework/extension-api';
 import type DockerModem from 'docker-modem';
 import type { DialOptions } from 'docker-modem';
 import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
@@ -947,8 +947,13 @@ export class LibpodDockerode {
     prototypeOfDockerode.resolveShortnameImage = function (shortname: string): Promise<{
       Names: string[];
     }> {
+      // encodeURIComponent leaves dots untouched, and a '.' or '..' segment makes the Podman API
+      // answer with a redirect that docker-modem is unable to follow (it throws an uncaught
+      // 'TypeError: Invalid URL'), so dots are encoded as well to keep the segment as-is.
+      const encodedShortname = encodeURIComponent(shortname).replaceAll('.', '%2E');
+
       const optsf = {
-        path: `/v5.0.0/libpod/images/${shortname}/resolve`,
+        path: `/v5.0.0/libpod/images/${encodedShortname}/resolve`,
         method: 'GET',
         statusCodes: {
           // in the documentation it says code 204, but only code 200 works as intended

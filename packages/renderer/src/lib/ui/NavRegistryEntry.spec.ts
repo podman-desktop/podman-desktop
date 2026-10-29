@@ -117,3 +117,85 @@ test('Expect entry to not have title when collapsed', async () => {
   const content = screen.queryByLabelText('Item1 title');
   expect(content).not.toBeInTheDocument();
 });
+
+test('forwards aria-keyshortcuts to the navigation link', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, {
+    entry,
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded: false,
+    'aria-keyshortcuts': 'Control+ArrowUp Control+ArrowDown',
+  });
+
+  const link = screen.getByRole('link', { name: 'Item1' });
+  expect(link).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
+});
+
+test('does not add aria-keyshortcuts when it is not provided', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, { entry, meta: { url: '/test' } as TinroRouteMeta, expanded: false });
+
+  expect(screen.getByRole('link', { name: 'Item1' })).not.toHaveAttribute('aria-keyshortcuts');
+});
+
+test('forwards class to the navigation link', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, {
+    entry,
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded: false,
+    class: 'custom-nav-item',
+  });
+
+  const link = screen.getByRole('link', { name: 'Item1' });
+  expect(link).toHaveClass('custom-nav-item');
+  expect(link).toHaveClass('focus-visible:outline-2');
+});
+
+test('forwards title to the navigation link when expanded', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    hidden: false,
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, {
+    entry,
+    meta: { url: '/test' } as TinroRouteMeta,
+    expanded: true,
+    title: 'Hold to reorder',
+  });
+
+  expect(screen.getByRole('link', { name: 'Item1' })).toHaveAttribute('title', 'Hold to reorder');
+});

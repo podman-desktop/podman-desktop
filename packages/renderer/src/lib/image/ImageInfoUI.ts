@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ViewContributionBadgeValue } from '@desktop-framework/api';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import type { ViewContributionBadgeValue } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 
 export interface ImageInfoUI {
@@ -36,7 +36,7 @@ export interface ImageInfoUI {
   // no tag, we encode <none>
   base64RepoTag: string;
   selected: boolean;
-  status: 'USED' | 'UNUSED' | 'DELETING';
+  status: 'USED' | 'UNUSED' | 'DELETING' | 'UPDATING';
   icon?: string | IconDefinition | Component;
   labels?: { [label: string]: string };
   badges: ViewContributionBadgeValue[];
