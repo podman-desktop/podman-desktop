@@ -33,6 +33,7 @@ const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
 const containerToRun = 'alpine-container';
 const createdContainer = `alpine-created-${randomUUID().slice(0, 8)}`;
+const cancelledContainer = `alpine-cancelled-${randomUUID().slice(0, 8)}`;
 const containerList = ['first', 'second', 'third'];
 const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
@@ -303,15 +304,22 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
       .toBeFalsy();
   });
 
-  test('Cancel running of an image returns to the Images page', async ({ navigationBar }) => {
+  test('Cancel running of an image does not create a container', async ({ navigationBar }) => {
     const images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
     const runImage = await imageDetails.openRunImage();
-    await playExpect(runImage.cancelButton).toBeVisible();
+    await runImage.activateTab('Basic');
+    await runImage.containerNameInput.fill(cancelledContainer);
+    await playExpect(runImage.containerNameInput).toHaveValue(cancelledContainer);
 
-    const imagesPage = await runImage.cancel();
-    await playExpect(imagesPage.heading).toBeVisible();
+    await runImage.cancel();
     await playExpect(runImage.cancelButton).not.toBeVisible();
+
+    const containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await containers.containerExists(cancelledContainer), { timeout: 10_000 })
+      .toBeFalsy();
   });
 
   test('Create a container from image without starting it', async ({ navigationBar }) => {
@@ -325,6 +333,11 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     await playExpect
       .poll(async () => await containerDetails.getState(), { timeout: 15_000 })
       .toContain(ContainerState.Created);
+    // "Create" opens the Summary tab ("Create and start" opens the TTY tab)
+    await playExpect(containerDetails.tabContent.getByRole('cell', { name: 'Engine ID', exact: true })).toBeVisible();
+
+    const imagesPage = await navigationBar.openImages();
+    playExpect(await imagesPage.getCurrentStatusOfImage(imageToPull)).toBe(ImageState.Used);
 
     const containers = await navigationBar.openContainers();
     await playExpect
