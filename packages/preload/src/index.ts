@@ -34,6 +34,7 @@ import type {
   ContainerInfo,
   ContainerInspectInfo,
   ContainerStatsInfo,
+  ContainerUsageInfo,
   ContextGeneralState,
   ContextHealth,
   ContextPermission,
@@ -934,6 +935,15 @@ export function initExposure(): void {
   );
   contextBridge.exposeInMainWorld('stopContainerStats', async (containerStatsId: number): Promise<void> => {
     return ipcInvoke('container-provider-registry:stopContainerStats', containerStatsId);
+  });
+
+  // CPU and memory usage of all the running containers, then sent in `container-stats:update` events
+  contextBridge.exposeInMainWorld('subscribeContainerStats', async (): Promise<ContainerUsageInfo[]> => {
+    return ipcInvoke('container-stats:subscribe');
+  });
+
+  contextBridge.exposeInMainWorld('unsubscribeContainerStats', async (): Promise<void> => {
+    return ipcInvoke('container-stats:unsubscribe');
   });
 
   contextBridge.exposeInMainWorld(

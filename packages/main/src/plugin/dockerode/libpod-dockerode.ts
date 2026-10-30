@@ -60,6 +60,21 @@ export interface PodmanContainerInfo {
   Ports: { host_ip: string; container_port: number; host_port: number; range?: string; protocol: string }[];
 }
 
+// subset of the statistics of a container returned by the libpod API
+export interface PodmanContainerStats {
+  ContainerID: string;
+  // percentage of one CPU since the previous reading, over 100% when using several CPUs
+  CPU: number;
+  MemUsage: number;
+  MemLimit: number;
+}
+
+// one reading of all the running containers, as streamed by the libpod API
+export interface PodmanContainersStatsReport {
+  Error: unknown;
+  Stats: PodmanContainerStats[] | null;
+}
+
 export interface Info {
   host: Host;
   store: Store;
@@ -255,6 +270,8 @@ export interface LibPod {
   pruneAllImages(dangling: boolean): Promise<void>;
   podmanInfo(): Promise<Info>;
   getImages(options: GetImagesOptions): Promise<NodeJS.ReadableStream>;
+  // streams a PodmanContainersStatsReport for all the running containers every `interval` seconds
+  podmanStreamStats(interval: number): Promise<NodeJS.ReadableStream>;
   podmanListImages(options?: ListImagesOptions): Promise<ImageInfo[]>;
   podmanCreateManifest(manifestOptions: ManifestCreateOptions): Promise<{ engineId: string; Id: string }>;
   podmanInspectManifest(manifestName: string): Promise<ManifestInspectInfo>;
@@ -786,6 +803,29 @@ export class LibpodDockerode {
             return reject(err);
           }
           resolve(wrapAs<Info>(data));
+        });
+      });
+    };
+
+    // statistics of all the running containers, including the ones started after the request
+    prototypeOfDockerode.podmanStreamStats = function (interval: number): Promise<NodeJS.ReadableStream> {
+      const optsf = {
+        path: `/v4.2.0/libpod/containers/stats?stream=true&interval=${interval}&`,
+        method: 'GET',
+        options: {},
+        isStream: true,
+        statusCodes: {
+          200: true,
+          404: 'no such container',
+          500: 'server error',
+        },
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<NodeJS.ReadableStream>(data));
         });
       });
     };
