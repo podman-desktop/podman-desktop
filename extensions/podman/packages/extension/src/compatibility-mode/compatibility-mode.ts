@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
-import { LinuxSocketCompatibility } from '/@/compatibility-mode/linux-socket-compatibility';
 import type { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 
 // TODO: Windows
@@ -25,8 +24,6 @@ export function getSocketCompatibility(): SocketCompatibility {
   switch (process.platform) {
     case 'darwin':
       return new DarwinSocketCompatibility();
-    case 'linux':
-      return new LinuxSocketCompatibility();
     default:
       throw new Error(`Unsupported platform ${process.platform}`);
   }

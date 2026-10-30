@@ -27,6 +27,7 @@ import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
 import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
@@ -71,6 +72,15 @@ describe('inversifyBinding', () => {
 
     expect(first).toBeInstanceOf(PodmanMachineLifecycle);
     expect(first).toBe(second);
+  });
+
+  test('should bind ExtensionNotifications as a singleton', async () => {
+    const container: InversifyContainer = await inversifyBinding.init();
+
+    const first = container.get(ExtensionNotifications);
+
+    expect(first).toBeInstanceOf(ExtensionNotifications);
+    expect(container.get(ExtensionNotifications)).toBe(first);
   });
 
   describe('windows', () => {

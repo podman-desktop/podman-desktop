@@ -42,6 +42,7 @@ import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
 import { PodmanProvider } from '/@/providers/podman-provider';
+import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanBinary } from '/@/utils/podman-binary';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
@@ -86,6 +87,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(PodmanDesktopElevatedCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanProvider).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(RosettaProvisioner).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(ExtensionNotifications).toSelf().inSingletonScope();
 
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();

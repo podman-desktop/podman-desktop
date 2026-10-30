@@ -75,6 +75,7 @@ import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
 import type { PodmanRemoteConnections } from './remote/podman-remote-connections';
+import { ExtensionNotifications } from './utils/notifications';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import { RosettaProvisioner } from './utils/rosetta';
@@ -267,8 +268,6 @@ beforeEach(async () => {
   });
 
   extension.initTelemetryLogger();
-  extension.initExtensionNotification();
-  extension.resetShouldNotifySetup();
   extension.resetWSLWarningFlag();
   extension.initPodmanRemoteConnections(undefined as unknown as PodmanRemoteConnections);
 
@@ -279,27 +278,37 @@ beforeEach(async () => {
 
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue(undefined);
 
-  function getBind(identifier: ServiceIdentifier<unknown>): unknown {
-    switch (identifier) {
-      case PodmanInstall:
-        return PODMAN_INSTALL_MOCK;
-      case WinPlatform:
-        return WIN_PLATFORM_MOCK;
-      case PodmanBinary:
-        return PODMAN_BINARY_MOCK;
-      case PodmanProvider:
-        return PODMAN_PROVIDER_MOCK;
-      case RosettaProvisioner:
-        return ROSETTA_PROVISIONER_MOCK;
+  // each init() returns a new container, with its own ExtensionNotifications singleton
+  function createContainer(): InversifyContainer {
+    let extensionNotifications: ExtensionNotifications | undefined;
+
+    function getBind(identifier: ServiceIdentifier<unknown>): unknown {
+      switch (identifier) {
+        case PodmanInstall:
+          return PODMAN_INSTALL_MOCK;
+        case WinPlatform:
+          return WIN_PLATFORM_MOCK;
+        case PodmanBinary:
+          return PODMAN_BINARY_MOCK;
+        case PodmanProvider:
+          return PODMAN_PROVIDER_MOCK;
+        case RosettaProvisioner:
+          return ROSETTA_PROVISIONER_MOCK;
+        case ExtensionNotifications:
+          extensionNotifications ??= new ExtensionNotifications(telemetryLogger);
+          return extensionNotifications;
+      }
+      throw new Error(`Unknown identifier ${String(identifier)}`);
     }
-    throw new Error(`Unknown identifier ${String(identifier)}`);
+
+    return {
+      get: getBind,
+      getAsync: getBind,
+    } as unknown as InversifyContainer;
   }
 
   // configure inversify
-  vi.mocked(InversifyBinding.prototype.init).mockResolvedValue({
-    get: getBind,
-    getAsync: getBind,
-  } as unknown as InversifyContainer);
+  vi.mocked(InversifyBinding.prototype.init).mockImplementation(async () => createContainer());
   await extension.initInversify({ subscriptions: [] } as unknown as extensionApi.ExtensionContext, telemetryLogger);
 });
 

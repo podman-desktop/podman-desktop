@@ -1176,10 +1176,6 @@ export function initExtensionContext(extensionContext: extensionApi.ExtensionCon
   storedExtensionContext = extensionContext;
 }
 
-export function initExtensionNotification(): void {
-  extensionNotifications = new ExtensionNotifications(telemetryLogger);
-}
-
 export function initPodmanRemoteConnections(remoteConnections: PodmanRemoteConnections): void {
   podmanRemoteConnections = remoteConnections;
 }
@@ -1424,6 +1420,7 @@ export async function initInversify(
   winPlatform = inversifyContainer.get(WinPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
+  extensionNotifications = inversifyContainer.get(ExtensionNotifications);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
   return { podmanInstall, winPlatform, podmanProvider };
@@ -1435,8 +1432,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   initExtensionContext(extensionContext);
 
   initTelemetryLogger();
-
-  initExtensionNotification();
 
   if (telemetryLogger) {
     await initializeCertificateDetection(telemetryLogger);
@@ -2413,10 +2408,6 @@ export async function createMachine(
 
   extensionApi.context.setValue('podmanMachineExists', true, 'onboarding');
   extensionNotifications.disposeNotification();
-}
-
-export function resetShouldNotifySetup(): void {
-  extensionNotifications.shouldNotifySetup = true;
 }
 
 export function resetWSLWarningFlag(): void {

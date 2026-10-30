@@ -17,13 +17,19 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
 import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
+import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { isDisguisedPodman } from './warnings';
 
+@injectable()
 export class ExtensionNotifications {
-  constructor(private readonly telemetryLogger: extensionApi.TelemetryLogger) {}
+  constructor(
+    @inject(TelemetryLoggerSymbol)
+    private readonly telemetryLogger: extensionApi.TelemetryLogger,
+  ) {}
   // Configuration buttons
   private static readonly configurationCompatibilityModeMacSetupNotificationDoNotShow =
     'setting.doNotShowMacHelperNotification';
