@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { DisplayItem, GoToInfo } from '@desktop-framework/api';
+import type { DisplayItem, DragPayload, GoToInfo } from '@desktop-framework/api';
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
@@ -32,10 +32,14 @@ import { createNavigationKubernetesGroup } from './navigation-registry-kubernete
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 import { createNavigationSecretEntry } from './navigation-registry-secret.svelte';
+import { createNavigationSettingsEntries } from './navigation-registry-settings.svelte';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
+import { NavigationUtils } from './navigation-utils';
 
 export interface NavigationRegistryEntry {
   name: string;
+  /** The parent name, composed with `name` only when a qualified label or identifier is needed. */
+  parentName?: string;
   icon: {
     iconImage?: string | { readonly light: string; readonly dark: string };
     iconComponent?: Component;
@@ -56,8 +60,10 @@ const windowEvents: string[] = [];
 const windowListeners = ['extensions-already-started', 'system-ready'];
 
 export const navigationRegistry: Writable<NavigationRegistryEntry[]> = writable([]);
+const navigationUtils = new NavigationUtils();
 
 let hiddenItems: string[] = [];
+let itemOrder: string[] = [];
 
 let values: NavigationRegistryEntry[] = [];
 let initialized = false;
@@ -70,26 +76,36 @@ const init = (): void => {
   values.push(createNavigationSecretEntry());
   values.push(createNavigationExtensionEntry());
   values.push(createNavigationExtensionGroup());
+  values.push(...createNavigationSettingsEntries());
   handleKubernetesGroup();
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
-function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[]): void {
-  if (navigationRegistryEntry.items && navigationRegistryEntry.type === 'group') {
+function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[], parentName?: string): void {
+  const resolvedParentName = parentName ?? navigationRegistryEntry.parentName;
+  const name = navigationUtils.formatNavigationName(navigationRegistryEntry.name, resolvedParentName);
+  if (navigationRegistryEntry.items) {
+    const childParentName = navigationRegistryEntry.type === 'submenu' ? name : resolvedParentName;
     navigationRegistryEntry.items.forEach(item => {
-      collecItem(item, items);
+      collecItem(item, items, childParentName);
     });
+  }
+  if (
+    navigationRegistryEntry.type === 'group' ||
+    (navigationRegistryEntry.index === undefined && resolvedParentName === undefined)
+  ) {
+    return;
   }
 
   // add only if it does not exist
-  if (items.find(i => i.name === navigationRegistryEntry.name)) {
+  if (items.find(i => i.name === name)) {
     return;
   }
 
   items.push({
-    name: navigationRegistryEntry.name,
+    name,
     visible: navigationRegistryEntry.hidden ? false : true,
-    index: navigationRegistryEntry.index ?? 0,
+    index: navigationRegistryEntry.index,
   });
 }
 
@@ -121,9 +137,53 @@ export const fetchNavigationRegistries = async (): Promise<void> => {
   await navigationRegistryEventStoreInfo.fetch();
 };
 
-function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void {
-  if (hiddenItems?.includes(navigationRegistryEntry.name)) {
+export function pinToNavbar(payload: DragPayload): number | undefined {
+  const entry = navigationUtils.findNavigationEntryByLink(values, payload.link);
+  if (!entry) {
+    return undefined;
+  }
+  const identifier = navigationUtils.formatNavigationName(entry.name, entry.parentName);
+
+  const currentOrder = navigationUtils
+    .getVisibleOrderedEntries(values)
+    .map(entry => navigationUtils.formatNavigationName(entry.name, entry.parentName));
+  const existingIndex = currentOrder.indexOf(identifier);
+  if (existingIndex !== -1) {
+    return existingIndex + 1;
+  }
+
+  setNavigationItemOrder([identifier, ...currentOrder]);
+  return 1;
+}
+
+function assignNavigationIndices(
+  navigationRegistryEntry: NavigationRegistryEntry,
+  order: string[],
+  parentName?: string,
+): void {
+  const itemOrderName = navigationUtils.formatNavigationName(
+    navigationRegistryEntry.name,
+    parentName ?? navigationRegistryEntry.parentName,
+  );
+  const index = order.indexOf(itemOrderName);
+  navigationRegistryEntry.index = index === -1 ? undefined : index;
+
+  const childParentName =
+    navigationRegistryEntry.type === 'submenu' ? itemOrderName : (parentName ?? navigationRegistryEntry.parentName);
+  for (const item of navigationRegistryEntry.items ?? []) {
+    assignNavigationIndices(item, order, childParentName);
+  }
+}
+
+function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry, parentName?: string): void {
+  const itemOrderName = navigationUtils.formatNavigationName(
+    navigationRegistryEntry.name,
+    parentName ?? navigationRegistryEntry.parentName,
+  );
+  if (hiddenItems?.includes(itemOrderName)) {
     navigationRegistryEntry.hidden = true;
+  } else if (parentName !== undefined || navigationRegistryEntry.parentName !== undefined) {
+    navigationRegistryEntry.hidden = navigationRegistryEntry.index === undefined;
   } else {
     navigationRegistryEntry.hidden = false;
   }
@@ -131,12 +191,23 @@ function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void 
   // iterate on all the items
   if (navigationRegistryEntry.items) {
     navigationRegistryEntry.items.forEach(item => {
-      hideSingleItem(item);
+      const childParentName =
+        navigationRegistryEntry.type === 'submenu' ? itemOrderName : (parentName ?? navigationRegistryEntry.parentName);
+      hideSingleItem(item, childParentName);
     });
   }
 }
 
 async function hideItems(): Promise<void> {
+  const defaultOrder = navigationUtils
+    .flattenNavigationEntries(values)
+    .filter(entry => entry.parentName === undefined)
+    .map(entry => entry.name);
+  const order = [...itemOrder, ...defaultOrder.filter(name => !itemOrder.includes(name))];
+  values.forEach(item => {
+    assignNavigationIndices(item, order);
+  });
+
   // for each item, set the hidden property to true
   values.forEach(item => {
     hideSingleItem(item);
@@ -153,6 +224,25 @@ async function hideItems(): Promise<void> {
   navigationRegistry.set(values);
 }
 
+// Update navbar item order in-memory and persist (avoids stale UI before config round-trip).
+export function setNavigationItemOrder(ids: string[]): void {
+  // The UI submits visible entries. Preserve the slots belonging to hidden or unavailable entries.
+  const visibleNames = navigationUtils
+    .getVisibleOrderedEntries(values)
+    .map(entry => navigationUtils.formatNavigationName(entry.name, entry.parentName));
+  const currentOrder = [...itemOrder, ...visibleNames.filter(name => !itemOrder.includes(name))];
+  let next = 0;
+  const order = currentOrder.flatMap(name => {
+    if (visibleNames.includes(name) || ids.includes(name)) {
+      return next < ids.length ? [ids[next++]] : [];
+    }
+    return [name];
+  });
+  itemOrder = ids.length > 0 ? [...order, ...ids.slice(next)] : [];
+  hideItems().catch((err: unknown) => console.error('Error applying navigation item order', err));
+  window.updateConfigurationValue('navbar.itemOrder', itemOrder)?.catch(console.error);
+}
+
 // update the items by looking at the disabled items each time we update the configuration properties
 configurationProperties.subscribe(() => {
   if (window.getConfigurationValue) {
@@ -166,6 +256,14 @@ configurationProperties.subscribe(() => {
       .then(() => hideItems())
       .catch((err: unknown) => console.error('Error getting configuration value navbar.disabledItems', err));
 
+    window
+      .getConfigurationValue<string[]>('navbar.itemOrder')
+      ?.then(value => {
+        itemOrder = value ?? [];
+      })
+      .then(() => hideItems())
+      .catch((err: unknown) => console.error('Error getting configuration value navbar.itemOrder', err));
+
     handleKubernetesGroup();
   }
 });
@@ -175,14 +273,14 @@ function handleKubernetesGroup(): void {
     .getConfigurationValue<boolean>('kubernetes.useInternalKubernetes')
     ?.then(value => {
       if (value) {
-        if (!values.find(item => item.name === 'Kubernetes')) {
+        if (!values.find(item => item.name === 'Kubernetes' && item.parentName === undefined)) {
           const extensionsIndex = values.findIndex(item => item.name === 'Extensions');
           if (extensionsIndex !== -1) {
             values.splice(extensionsIndex, 0, createNavigationKubernetesGroup());
           }
         }
       } else {
-        values = values.filter(item => item.name !== 'Kubernetes');
+        values = values.filter(item => item.name !== 'Kubernetes' || item.parentName !== undefined);
       }
     })
     .then(() => hideItems())

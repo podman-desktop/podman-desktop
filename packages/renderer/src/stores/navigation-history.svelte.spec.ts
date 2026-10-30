@@ -97,6 +97,15 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
             counter: 0,
             type: 'entry',
           },
+          {
+            name: 'Resources',
+            parentName: 'Settings',
+            icon: {},
+            link: '/preferences/resources',
+            tooltip: 'Resources',
+            counter: 0,
+            type: 'entry',
+          },
         ] as NavigationRegistryEntry[]);
         return vi.fn();
       }),
@@ -140,6 +149,12 @@ beforeEach(() => {
   // Reset navigation history state
   navigationHistory.stack = [];
   navigationHistory.index = -1;
+});
+
+test('preserves the registered parent path in history for a Settings destination', () => {
+  navigationHistory.stack = [{ url: '/preferences/resources' }, { url: '/containers' }];
+  navigationHistory.index = 1;
+  expect(getBackEntries()[0]?.name).toBe('Settings → Resources');
 });
 
 describe('goBack', () => {

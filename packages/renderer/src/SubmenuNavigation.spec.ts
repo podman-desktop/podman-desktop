@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
@@ -58,13 +58,15 @@ test('SubmenuNavigation displays a title and builds SettingsNavItem components',
     title: 'entry 1',
     href: '/link1',
     selected: true,
-    onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    onKeyDown: expect.any(Function),
   });
   expect(SettingsNavItemMock).toHaveBeenNthCalledWith(2, expect.anything(), {
     title: 'entry 2',
     href: '/link2',
     selected: false,
-    onClick: expect.any(Function),
+    ariaKeyShortcuts: 'Control+ArrowLeft Meta+ArrowLeft',
+    onKeyDown: expect.any(Function),
   });
 });
 
@@ -81,4 +83,30 @@ test('set up and update lastSubmenuPages store for each submenu', async () => {
   await tick();
 
   expect(get(lastSubmenuPages)['page 1']).toBe('/page1');
+});
+
+test('remembers the clicked destination for a submenu', async () => {
+  lastSubmenuPages.set({});
+  render(SubmenuNavigation, {
+    title: 'page 1',
+    items: [
+      {
+        name: 'entry 1',
+        tooltip: 'entry 1',
+        link: '/link1',
+        icon: {},
+        counter: 0,
+        destinations: [],
+        type: 'entry',
+      },
+    ],
+    meta: {
+      url: '/link1/subpath',
+    } as TinroRouteMeta,
+    link: '/page1',
+  });
+  await tick();
+
+  await fireEvent.click(screen.getByRole('listitem'));
+  expect(get(lastSubmenuPages)['page 1']).toBe('/link1');
 });
