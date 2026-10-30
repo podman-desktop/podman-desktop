@@ -33,6 +33,8 @@ import { RosettaProvisioner } from '/@/utils/rosetta';
 import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
+vi.mock(import('/@/platforms/windows/hyperv-prep'));
+
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
 
