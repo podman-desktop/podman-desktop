@@ -29,7 +29,7 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '@podman-desktop/podma
 import { Mutex } from 'async-mutex';
 import { compare } from 'semver';
 
-import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
@@ -120,6 +120,7 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
 let rosettaProvisioner: RosettaProvisioner;
+let socketCompatibility: SocketCompatibility | undefined;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -1420,6 +1421,7 @@ export async function initInversify(
   winPlatform = inversifyContainer.get(WinPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
+  socketCompatibility = inversifyContainer.get(SocketCompatibility, { optional: true });
   extensionNotifications = inversifyContainer.get(ExtensionNotifications);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
@@ -1457,25 +1459,25 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const provider = podmanProvider.provider;
 
   // Compatibility mode status bar item
-  // only available for macOS
-  if (extensionApi.env.isMac) {
+  // only available for macOS, the only platform where SocketCompatibility is bound
+  // (local const so the narrowed type is kept inside the command closures below)
+  const socketCompatibilityMode = socketCompatibility;
+  if (socketCompatibilityMode) {
     // Register the command for disabling the do not show mac helper setting permanently
     extensionContext.subscriptions.push(extensionNotifications.setupNotificationMacPodman());
 
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(
       extensionApi.commands.registerCommand('podman.disableCompatibilityMode', async () => {
-        await switchCompatibilityMode(false);
+        await switchCompatibilityMode(socketCompatibilityMode, false);
       }),
     );
     extensionContext.subscriptions.push(
       extensionApi.commands.registerCommand('podman.enableCompatibilityMode', async () => {
-        await switchCompatibilityMode(true);
+        await switchCompatibilityMode(socketCompatibilityMode, true);
       }),
     );
 
-    // Get the socketCompatibilityClass for the current OS.
-    const socketCompatibilityMode = getSocketCompatibility();
     // update the initial context value
     const compatibilityEnabled = socketCompatibilityMode.isEnabled();
     extensionApi.context.setValue(PODMAN_DOCKER_COMPAT_ENABLE_KEY, compatibilityEnabled);
@@ -1501,7 +1503,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         );
 
         if (result === 'Enable') {
-          await switchCompatibilityMode(true);
+          await switchCompatibilityMode(socketCompatibilityMode, true);
         }
       } else {
         const result = await extensionApi.window.showInformationMessage(
@@ -1511,7 +1513,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         );
 
         if (result === 'Disable') {
-          await switchCompatibilityMode(false);
+          await switchCompatibilityMode(socketCompatibilityMode, false);
         }
       }
     });
@@ -2414,9 +2416,7 @@ export function resetWSLWarningFlag(): void {
   wslWarningShown = false;
 }
 
-async function switchCompatibilityMode(enabled: boolean): Promise<void> {
-  const socketCompatibilityMode = getSocketCompatibility();
-
+async function switchCompatibilityMode(socketCompatibilityMode: SocketCompatibility, enabled: boolean): Promise<void> {
   if (enabled) {
     await socketCompatibilityMode.enable();
   } else {

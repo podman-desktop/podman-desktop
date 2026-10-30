@@ -33,7 +33,8 @@ import type { Container as InversifyContainer, ServiceIdentifier } from 'inversi
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode';
+import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
@@ -214,6 +215,13 @@ const ROSETTA_PROVISIONER_MOCK: RosettaProvisioner = {
   enableRosettaInMachine: vi.fn(),
   provisionAndRestartForRosetta: vi.fn(),
 } as unknown as RosettaProvisioner;
+const SOCKET_COMPATIBILITY_MOCK: SocketCompatibility = {
+  isEnabled: vi.fn(),
+  enable: vi.fn(),
+  disable: vi.fn(),
+  details: '',
+  tooltipText: vi.fn(),
+} as unknown as SocketCompatibility;
 
 beforeEach(async () => {
   fakeMachineJSON = [
@@ -294,6 +302,9 @@ beforeEach(async () => {
           return PODMAN_PROVIDER_MOCK;
         case RosettaProvisioner:
           return ROSETTA_PROVISIONER_MOCK;
+        case SocketCompatibility:
+          // only bound on macOS
+          return extensionApi.env.isMac ? SOCKET_COMPATIBILITY_MOCK : undefined;
         case ExtensionNotifications:
           extensionNotifications ??= new ExtensionNotifications(telemetryLogger);
           return extensionNotifications;
@@ -384,16 +395,9 @@ beforeEach(() => {
     on: vi.fn(),
   } as unknown as proc.ChildProcess);
 
-  const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
-  mock.mockReturnValue({
-    isEnabled: () => false,
-    enable: vi.fn(),
-    disable: vi.fn(),
-    details: '',
-    tooltipText: (): string => {
-      return '';
-    },
-  });
+  // ExtensionNotifications still gets the socket compatibility through getSocketCompatibility()
+  vi.mocked(getSocketCompatibility).mockReturnValue(SOCKET_COMPATIBILITY_MOCK);
+  vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
 
   vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockResolvedValue(undefined);
 });
@@ -3126,6 +3130,51 @@ describe('socketCompatibilityMode command', () => {
     expect(telemetryLogger.logError).toBeCalledWith('checkIfSocketDisguisedFailed', expect.objectContaining({ error }));
     expect(telemetryLogger.logUsage).not.toBeCalled();
   });
+
+  async function getSocketCompatibilityCommand(): Promise<() => Promise<void>> {
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    await extension.activate(getContextMock());
+
+    const func = vi
+      .mocked(extensionApi.commands.registerCommand)
+      .mock.calls.find(([command]) => command === 'podman.socketCompatibilityMode')?.[1];
+    assert(func, 'podman.socketCompatibilityMode should have been registered');
+    return func;
+  }
+
+  test('should enable compatibility mode with the injected SocketCompatibility', async () => {
+    const func = await getSocketCompatibilityCommand();
+    vi.mocked(isDisguisedPodman).mockResolvedValue(false);
+    vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
+    vi.mocked(SOCKET_COMPATIBILITY_MOCK.enable).mockImplementation(async () => {
+      vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(true);
+    });
+    vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Enable');
+
+    await func();
+
+    expect(SOCKET_COMPATIBILITY_MOCK.enable).toHaveBeenCalledOnce();
+    expect(SOCKET_COMPATIBILITY_MOCK.disable).not.toHaveBeenCalled();
+    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith('podman.podmanDockerCompatibilityEnabled', true);
+  });
+
+  test('should disable compatibility mode with the injected SocketCompatibility', async () => {
+    const func = await getSocketCompatibilityCommand();
+    vi.mocked(isDisguisedPodman).mockResolvedValue(true);
+    vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(true);
+    vi.mocked(SOCKET_COMPATIBILITY_MOCK.disable).mockImplementation(async () => {
+      vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
+    });
+    vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Disable');
+
+    await func();
+
+    expect(SOCKET_COMPATIBILITY_MOCK.disable).toHaveBeenCalledOnce();
+    expect(SOCKET_COMPATIBILITY_MOCK.enable).not.toHaveBeenCalled();
+    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith('podman.podmanDockerCompatibilityEnabled', false);
+  });
 });
 
 test('isIncompatibleMachineOutput', () => {
@@ -3578,20 +3627,10 @@ test('activate on mac register commands for setting compatibility moide ', async
     hasUpdate: false,
   } as unknown as UpdateCheck);
   const contextMock = getContextMock();
-  // mock getSocketCompatibility
-  const disableMock = vi.fn();
-  const enableMock = vi.fn();
-  const isEnabledMock = vi.fn().mockReturnValue(false);
-  const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
-  mock.mockReturnValue({
-    isEnabled: isEnabledMock,
-    enable: enableMock,
-    disable: disableMock,
-    details: '',
-    tooltipText: (): string => {
-      return '';
-    },
-  });
+  // mock socket compatibility
+  const disableMock = vi.mocked(SOCKET_COMPATIBILITY_MOCK.disable);
+  const enableMock = vi.mocked(SOCKET_COMPATIBILITY_MOCK.enable);
+  const isEnabledMock = vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
 
   const api = await extension.activate(contextMock);
   expect(api).toBeDefined();
@@ -3640,6 +3679,23 @@ test('activate on mac register commands for setting compatibility moide ', async
   // expect we have set the context value as well
   expect(extensionApi.context.setValue).toBeCalledWith('podman.podmanDockerCompatibilityEnabled', true);
   expect(enableMock).toBeCalled();
+});
+
+test('activate does not register compatibility mode commands when SocketCompatibility is not bound', async () => {
+  vi.mocked(extensionApi.env).isMac = false;
+  vi.mocked(extensionApi.env).isWindows = false;
+  vi.mocked(extensionApi.env).isLinux = true;
+  vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
+    hasUpdate: false,
+  } as unknown as UpdateCheck);
+
+  await extension.activate(getContextMock());
+
+  const registeredCommands = vi.mocked(extensionApi.commands.registerCommand).mock.calls.map(([command]) => command);
+  expect(registeredCommands).not.toContain('podman.socketCompatibilityMode');
+  expect(registeredCommands).not.toContain('podman.enableCompatibilityMode');
+  expect(registeredCommands).not.toContain('podman.disableCompatibilityMode');
+  expect(SOCKET_COMPATIBILITY_MOCK.isEnabled).not.toHaveBeenCalled();
 });
 
 describe.each(['windows', 'mac', 'linux'])('podman machine properties audit on %s', os => {
@@ -4074,21 +4130,6 @@ test('activate and autostart should not duplicate machines ', async () => {
   } as unknown as UpdateCheck);
   const contextMock = getContextMock();
 
-  // mock getSocketCompatibility
-  const disableMock = vi.fn();
-  const enableMock = vi.fn();
-  const isEnabledMock = vi.fn().mockReturnValue(false);
-  const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
-  mock.mockReturnValue({
-    isEnabled: isEnabledMock,
-    enable: enableMock,
-    disable: disableMock,
-    details: '',
-    tooltipText: (): string => {
-      return '';
-    },
-  });
-
   let podmanMachineListCalls = 0;
 
   vi.mocked(extensionApi.process.exec).mockImplementation(
@@ -4147,17 +4188,8 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   beforeEach(() => {
     contextMock = getContextMock();
 
-    // Mock the get compatibility functionality.
-    // we will always assuming it's "disabled" for the tests
-    vi.spyOn(compatibilityModeLib, 'getSocketCompatibility').mockReturnValue({
-      isEnabled: vi.fn().mockReturnValue(true),
-      enable: vi.fn().mockReturnValue(true),
-      disable: vi.fn(),
-      details: '',
-      tooltipText: (): string => {
-        return '';
-      },
-    });
+    // Mock the compatibility mode as enabled for the tests
+    vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(true);
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {
@@ -4189,17 +4221,8 @@ describe('podman-mac-helper tests', () => {
     // Mock the context
     contextMock = getContextMock();
 
-    // Mock the get compatibility functionality.
-    // we just assume that it's false / not enabled by default to test the functionality.
-    vi.spyOn(compatibilityModeLib, 'getSocketCompatibility').mockReturnValue({
-      isEnabled: vi.fn(),
-      enable: vi.fn().mockReturnValue(false),
-      disable: vi.fn(),
-      details: '',
-      tooltipText: (): string => {
-        return '';
-      },
-    });
+    // we just assume that compatibility mode is not enabled by default to test the functionality.
+    vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
   });
 
   test('mock that the provider is "stopped" and make sure that the notification is NOT shown', async () => {
