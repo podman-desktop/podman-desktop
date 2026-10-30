@@ -758,8 +758,8 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1
       check-disk-space:
-        specifier: ^3.4.0
-        version: 3.4.0
+        specifier: ^4.0.0
+        version: 4.0.0
       chokidar:
         specifier: ^3.6.0
         version: 3.6.0
@@ -6590,9 +6590,8 @@ packages:
   character-reference-invalid@2.0.1:
     resolution: {integrity: sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw==}
 
-  check-disk-space@3.4.0:
-    resolution: {integrity: sha512-drVkSqfwA+TvuEhFipiR1OC9boEGZL5RrWvVsOthdcvQNXyCCuKkEiTOTXZ7qxSf/GLwq4GvzfrQD/Wz325hgw==}
-    engines: {node: '>=16'}
+  check-disk-space@4.0.0:
+    resolution: {integrity: sha512-IopHYYq3Y+QOZpJJ2OiqNqrA9nS0FSB0B6kDgC52cWAOGC7WnsaIJoUCxpQ/980Z1Cox2FhtKXeaJBx3Yv7ncA==}
 
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
@@ -19011,7 +19010,7 @@ snapshots:
 
   character-reference-invalid@2.0.1: {}
 
-  check-disk-space@3.4.0: {}
+  check-disk-space@4.0.0: {}
 
   check-error@2.1.1: {}
 
