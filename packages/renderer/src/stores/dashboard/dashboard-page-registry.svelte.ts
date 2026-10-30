@@ -29,6 +29,7 @@ import { createReleaseNotesBox } from './dashboard-page-registry-release-notes.s
 
 export interface DashboardPageRegistryEntry {
   id: string;
+  label: string; // human-readable, sentence-case name; ids stay stable because saved layouts key on them
   hidden?: boolean;
   originalOrder: number;
   component?: Component;
@@ -37,6 +38,10 @@ export interface DashboardPageRegistryEntry {
 export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntry[] }>({ entries: [] });
 
 const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
+
+export function isEnhancedDashboard(): boolean {
+  return enhancedDashboard.enabled;
+}
 
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
   const systemOverview = enhancedDashboard.enabled ? [createSystemOverview()] : [];
@@ -78,6 +83,7 @@ export function convertFromListOrganizerItems(
     const originalEntry = originalEntries.find(entry => entry.id === item.id);
     return {
       id: item.id,
+      label: originalEntry?.label ?? item.label,
       hidden: !item.enabled, // hidden is opposite of enabled
       originalOrder: originalEntry?.originalOrder ?? 0, // Keep original registration order
       component: originalEntry?.component,

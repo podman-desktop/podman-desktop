@@ -23,6 +23,7 @@ import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelt
 export function createReleaseNotesBox(): DashboardPageRegistryEntry {
   return {
     id: 'Release Notes',
+    label: 'Release notes',
     originalOrder: 0,
     component: ReleaseNotesBox,
   };
