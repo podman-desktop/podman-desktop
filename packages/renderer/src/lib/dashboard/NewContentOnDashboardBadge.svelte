@@ -20,8 +20,9 @@ onMount(() => {
   // if there is a new provider we display the dot
   providersUnsubscribe = providerInfos.subscribe(updatedProviders => {
     const updatedProvidersId = updatedProviders.map(prov => prov.internalId).toSorted();
+    // content arriving while the user is on the dashboard is already seen:
+    // only flag changes made while away, the baseline is always updated
     if (!isOnDashboard() && !hasNewProviders) {
-      // if the user is in the dashboard page we do not check for new providers
       hasNewProviders = hasNewProvider(providersId, updatedProvidersId);
     }
     providersId = updatedProvidersId;
@@ -29,8 +30,9 @@ onMount(() => {
 
   // if there is a new notification we display the dot
   notificationsUnsubscribe = notificationQueue.subscribe(notifications => {
+    // content arriving while the user is on the dashboard is already seen:
+    // only flag changes made while away, the baseline is always updated
     if (!isOnDashboard() && !hasNewNotifications) {
-      // if the user is in the dashboard page we do not check for new notifications
       hasNewNotifications = notifications.length > notificationCount;
     }
     notificationCount = notifications.length;
@@ -42,7 +44,7 @@ onDestroy(() => {
   notificationsUnsubscribe?.();
 });
 
-// content that arrives while the user is on the dashboard has been seen, so it is not new
+// true when the dashboard page is displayed
 function isOnDashboard(): boolean {
   return $router.path === '/';
 }
