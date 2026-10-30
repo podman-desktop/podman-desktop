@@ -2413,13 +2413,6 @@ export class ContainerProviderRegistry {
     // if tty, attach a terminal using compat API or Podman API
     let attachStream;
     if (engine.libpodApi) {
-      // the attach never answers when the container cannot be set up (stdin is kept open),
-      // so initialize it first to get the failure right away (304: already initialized)
-      await engine.libpodApi.podmanInitContainer(container.id).catch((error: unknown) => {
-        if (typeof error !== 'object' || error === null || !('statusCode' in error) || error.statusCode !== 304) {
-          throw error;
-        }
-      });
       attachStream = await engine.libpodApi.podmanAttach(container.id);
     } else {
       const attachOptions: ContainerAttachOptions = {

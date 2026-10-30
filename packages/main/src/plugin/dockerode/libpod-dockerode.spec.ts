@@ -19,13 +19,14 @@
 /* eslint-disable no-null/no-null */
 
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import type { RequestOptions } from 'node:http';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import type { Duplex } from 'node:stream';
 
 import type { ListImagesOptions } from '@desktop-framework/api';
 import type { PlayKubeInfo } from '@desktop-framework/api/libpod';
-import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
 import type { DefaultBodyType, HttpResponseResolver, PathParams, ResponseResolverReturnType } from 'msw';
 import { http, HttpResponse } from 'msw';
@@ -232,46 +233,76 @@ test('Check list of containers using Podman API and all true options', async () 
   expect(firstContainer?.Id).toBe('37a54a845ef27a212634ef00c994c0793b5f19ec16853d606beb1c929461c1cd');
 });
 
-test('Check attach API', async () => {
-  const containerPrompt = `#`;
+test('Check attach API upgrades connection and sets Content-Length 0', async () => {
   const containerId = '12345678';
+  let capturedHeaders: NodeJS.Dict<string | string[]> | undefined;
+  let serverSocket: Duplex | undefined;
 
-  server = setupServer(
-    http.post(`http://localhost/v4.2.0/libpod/containers/${containerId}/attach`, () =>
-      HttpResponse.json(containerPrompt),
-    ),
-  );
-  server.listen({ onUnhandledFrame: 'error' });
+  const testServer = createServer();
+  testServer.on('upgrade', (req, socket) => {
+    serverSocket = socket;
+    capturedHeaders = req.headers;
+    socket.write('HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\n');
+    socket.resume();
+    socket.on('data', data => {
+      socket.write(`echo: ${data.toString()}`);
+    });
+  });
 
-  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
-  const libPod = api as unknown as DockerodeInternals;
+  await new Promise<void>(resolve => testServer.listen(0, '127.0.0.1', resolve));
+  const port = (testServer.address() as AddressInfo).port;
+  let stream: NodeJS.ReadWriteStream | undefined;
 
-  // patch libpod to not wait for the test as websocket is not supported by mock server
-  const originalBuildRequest = libPod.modem.buildRequest;
-  libPod.modem.buildRequest = function (
-    options: RequestOptions,
-    context: DockerModem.DialOptions,
-    data?: string | Buffer | NodeJS.ReadableStream,
-    callback?: DockerModem.RequestCallback,
-  ): void {
-    context.openStdin = false;
-    originalBuildRequest.call(this, options, context, data, callback);
-  };
+  try {
+    const api = new Dockerode({ protocol: 'http', host: '127.0.0.1', port });
+    stream = await (api as unknown as LibPod).podmanAttach(containerId);
 
-  const stream = await (api as unknown as LibPod).podmanAttach(containerId);
-  expect(stream.on).toBeDefined();
+    expect(stream).toBeDefined();
+    expect(capturedHeaders).toBeDefined();
+    expect(capturedHeaders?.['upgrade']).toBe('tcp');
+    expect(String(capturedHeaders?.['connection']).toLowerCase()).toBe('upgrade');
+    expect(capturedHeaders?.['content-length']).toBe('0');
+
+    const receivedData = await new Promise<string>(resolve => {
+      stream?.on('data', chunk => resolve(chunk.toString()));
+      stream?.write('ping');
+    });
+    expect(receivedData).toBe('echo: ping');
+  } finally {
+    serverSocket?.destroy();
+    if (stream && 'destroy' in stream && typeof stream.destroy === 'function') {
+      stream.destroy();
+    }
+    await new Promise<void>(resolve => testServer.close(() => resolve()));
+  }
 });
 
-test('Check init container API', async () => {
+test('Check attach API rejects on server error without hanging', async () => {
   const containerId = '12345678';
-  const initHandler = vi.fn(() => new HttpResponse(null, { status: 204 }));
+  let capturedHeaders: NodeJS.Dict<string | string[]> | undefined;
+  const errorBody = JSON.stringify({ message: 'address in use' });
 
-  server = setupServer(http.post(`http://localhost/v4.2.0/libpod/containers/${containerId}/init`, initHandler));
-  server.listen({ onUnhandledFrame: 'error' });
+  const testServer = createServer();
+  testServer.on('upgrade', (req, socket) => {
+    capturedHeaders = req.headers;
+    socket.end(
+      `HTTP/1.1 500 Internal Server Error\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: ${Buffer.byteLength(errorBody)}\r\n\r\n${errorBody}`,
+    );
+  });
 
-  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
-  await (api as unknown as LibPod).podmanInitContainer(containerId);
-  expect(initHandler).toHaveBeenCalledOnce();
+  await new Promise<void>(resolve => testServer.listen(0, '127.0.0.1', resolve));
+  const port = (testServer.address() as AddressInfo).port;
+
+  try {
+    const api = new Dockerode({ protocol: 'http', host: '127.0.0.1', port });
+    await expect((api as unknown as LibPod).podmanAttach(containerId)).rejects.toThrow('address in use');
+
+    expect(capturedHeaders).toBeDefined();
+    expect(capturedHeaders?.['content-length']).toBe('0');
+  } finally {
+    testServer.closeAllConnections?.();
+    await new Promise<void>(resolve => testServer.close(() => resolve()));
+  }
 });
 
 test('Check info', async () => {
