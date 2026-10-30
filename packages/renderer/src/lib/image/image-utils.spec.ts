@@ -231,6 +231,27 @@ describe('inUse', () => {
     const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', []);
     expect(isUsed).toBeFalsy();
   });
+
+  test.each([
+    ['engine-a', true],
+    ['engine-b', false],
+  ])('should evaluate inUse when container runs on %s (expected: %s)', async (containerEngineId, expected) => {
+    const imageOnEngineA = {
+      Id: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+      RepoTags: ['quay.io/podman/hello:latest'],
+      engineId: 'engine-a',
+    } as unknown as ImageInfo;
+
+    const container = {
+      Id: 'container1',
+      image: 'quay.io/podman/hello:latest',
+      imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+      engineId: containerEngineId,
+    } as unknown as ContainerInfoUI;
+
+    const isUsed = imageUtils.getInUse(imageOnEngineA, 'quay.io/podman/hello:latest', [container]);
+    expect(isUsed).toBe(expected);
+  });
 });
 
 describe('getImagesFromManifest and construct ImageInfoUI', () => {
