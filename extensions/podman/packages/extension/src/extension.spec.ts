@@ -33,7 +33,6 @@ import type { Container as InversifyContainer, ServiceIdentifier } from 'inversi
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -183,12 +182,6 @@ vi.mock(import('ps-list'), async () => {
   };
 });
 
-vi.mock(import('/@/compatibility-mode/compatibility-mode'), async () => {
-  return {
-    getSocketCompatibility: vi.fn(),
-  };
-});
-
 vi.mock(import('./configuration/registry-configuration'), async () => {
   const RegistryConfigurationImpl = vi.fn();
   RegistryConfigurationImpl.prototype.init = vi.fn(() => []);
@@ -306,7 +299,10 @@ beforeEach(async () => {
           // only bound on macOS
           return extensionApi.env.isMac ? SOCKET_COMPATIBILITY_MOCK : undefined;
         case ExtensionNotifications:
-          extensionNotifications ??= new ExtensionNotifications(telemetryLogger);
+          extensionNotifications ??= new ExtensionNotifications(
+            telemetryLogger,
+            getBind(SocketCompatibility) as SocketCompatibility | undefined,
+          );
           return extensionNotifications;
       }
       throw new Error(`Unknown identifier ${String(identifier)}`);
@@ -395,8 +391,6 @@ beforeEach(() => {
     on: vi.fn(),
   } as unknown as proc.ChildProcess);
 
-  // ExtensionNotifications still gets the socket compatibility through getSocketCompatibility()
-  vi.mocked(getSocketCompatibility).mockReturnValue(SOCKET_COMPATIBILITY_MOCK);
   vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
 
   vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockResolvedValue(undefined);
