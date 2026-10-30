@@ -130,6 +130,61 @@ This configuration maps to the [registries.conf](https://github.com/containers/i
 }
 ```
 
+## Default remote Podman connections
+
+At startup, Podman Desktop creates SSH system connections from `podman.system.connections.defaults`, equivalent to [`podman system connection add`](https://docs.podman.io/en/latest/markdown/podman-system-connection-add.1.html).
+
+Existing names, including local machines, take precedence and produce a warning. Defaults never update or delete existing connections. Changes apply after a restart.
+
+Remote hosts require SSH access and an active [Podman socket](https://docs.podman.io/en/latest/markdown/podman-system-service.1.html). The [remote access guide](/docs/podman/podman-remote) describes the setup.
+
+### Connection properties
+
+All five properties are required.
+
+| Property   | Type   | Description                                               |
+| ---------- | ------ | --------------------------------------------------------- |
+| `name`     | string | The name of the Podman connection                         |
+| `identity` | string | The local private SSH key path (Ed25519 recommended)      |
+| `user`     | string | The SSH username                                          |
+| `host`     | string | The hostname or IP address, with an optional SSH port     |
+| `socket`   | string | The absolute path to the Podman socket on the remote host |
+
+Both `~/` and `~\` expand to the local home directory. Absolute paths remain unchanged. JSON requires escaped Windows backslashes, for example `C:\\Users\\developer\\.ssh\\id_ed25519`.
+
+### Example: Root and non-root connections
+
+The following example enables remote discovery and defines two connections in `default-settings.json`.
+
+```json title="default-settings.json"
+{
+  "podman.system.connections.remote": true,
+  "podman.system.connections.defaults": [
+    {
+      "name": "shared-build-server",
+      "identity": "~/.ssh/id_ed25519",
+      "user": "developer",
+      "host": "build.example.com",
+      "socket": "/run/user/1000/podman/podman.sock"
+    },
+    {
+      "name": "shared-root-server",
+      "identity": "~/.ssh/id_ed25519",
+      "user": "root",
+      "host": "root.example.com:2222",
+      "socket": "/run/podman/podman.sock"
+    }
+  ]
+}
+```
+
+The equivalent commands create these system connections:
+
+```shell-session
+$ podman system connection add --identity ~/.ssh/id_ed25519 shared-build-server ssh://developer@build.example.com/run/user/1000/podman/podman.sock
+$ podman system connection add --identity ~/.ssh/id_ed25519 shared-root-server ssh://root@root.example.com:2222/run/podman/podman.sock
+```
+
 ## Additional resources
 
 - [Configuring a managed user environment](/docs/configuration/managed-configuration)

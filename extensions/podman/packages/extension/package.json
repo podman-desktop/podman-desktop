@@ -77,6 +77,12 @@
           "default": false,
           "description": "Load remote system connections (ssh)"
         },
+        "podman.system.connections.defaults": {
+          "type": "array",
+          "default": [],
+          "description": "Default SSH system connections to create at startup. Each entry requires name, identity, user, host, and socket. Existing connections are not modified.",
+          "hidden": true
+        },
         "podman.machine.cpus": {
           "type": "number",
           "format": "cpu",
