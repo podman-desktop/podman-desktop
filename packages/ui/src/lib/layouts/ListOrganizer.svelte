@@ -273,6 +273,8 @@ function handleReset(): void {
               class:bg-[var(--pd-dropdown-item-hover-bg)]={isDraggingActive && dragOverIndex === index}
               class:opacity-60={isDraggingActive && draggedIndex === originalIndex}
               data-item-id={item.id}
+              aria-label={item.label}
+              aria-pressed={enabledItems.has(item.id)}
               onclick={(): void => handleItemToggle(item)}
             >
               <div class="flex items-center justify-start gap-3 flex-1">
