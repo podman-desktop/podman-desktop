@@ -22,7 +22,7 @@ import type { ProviderStatus } from '@desktop-framework/extension-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { router } from 'tinro';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
@@ -137,7 +137,8 @@ test('Expect to do not display the dot when leaving Dashboard if content existed
 
   router.goto('/pods');
 
-  await new Promise(resolve => setTimeout(resolve, 200));
+  // let Svelte apply all pending updates before asserting the dot is absent
+  await tick();
 
   const dot = screen.queryByLabelText('New content available');
   expect(dot).not.toBeInTheDocument();
@@ -153,7 +154,8 @@ test('Expect to do not display the dot when leaving Dashboard if content arrived
   providerInfos.set([providerInfo]);
   router.goto('/pods');
 
-  await new Promise(resolve => setTimeout(resolve, 200));
+  // let Svelte apply all pending updates before asserting the dot is absent
+  await tick();
 
   const dot = screen.queryByLabelText('New content available');
   expect(dot).not.toBeInTheDocument();
@@ -168,8 +170,5 @@ test('Expect to display the dot if a new notification arrives after leaving Dash
   router.goto('/pods');
   notificationQueue.set([notification1]);
 
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const dot = screen.getByLabelText('New content available');
-  expect(dot).toBeInTheDocument();
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
 });
