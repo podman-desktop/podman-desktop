@@ -216,6 +216,9 @@ const ROSETTA_PROVISIONER_MOCK: RosettaProvisioner = {
 } as unknown as RosettaProvisioner;
 
 beforeEach(async () => {
+  // Keep background monitors under test control so they cannot outlive a test.
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+
   fakeMachineJSON = [
     {
       Name: machineDefaultName,
@@ -403,6 +406,9 @@ afterEach(async () => {
   console.warn = originalConsoleWarn;
   console.trace = originalConsoleTrace;
   await extension.deactivate();
+  // Finish pending monitor callbacks before restoring real timers.
+  await vi.runOnlyPendingTimersAsync();
+  vi.clearAllTimers();
   vi.useRealTimers();
 });
 
@@ -4493,7 +4499,6 @@ describe('getImportNativeCAFromConfig', () => {
 
 describe('provider status updates on podman socket liveness change', () => {
   function setupSocketMonitorWithStatus(alive: boolean): void {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
     resetStopLoop();
     if (alive) {
       vi.mocked(http.get).mockImplementation(((_options: unknown, callback?: (res: http.IncomingMessage) => void) => {

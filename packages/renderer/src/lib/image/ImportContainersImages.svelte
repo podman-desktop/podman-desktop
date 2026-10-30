@@ -3,15 +3,19 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
 import { faCircleArrowDown, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { get } from 'svelte/store';
-import { router } from 'tinro';
 
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
-import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
-import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
+
+interface Props {
+  closeCallback: () => void;
+}
+
+let { closeCallback }: Props = $props();
 
 let containersToImport: { imagePath: string; nameWhenImporting: string }[] = $state([]);
 let importError: string = $state('');
@@ -61,14 +65,17 @@ async function addContainersToImport(): Promise<void> {
   containersToImport = [...containersToImport, ...imagesInfo];
 }
 
-function onHostContainerPortMappingInput(event: Event, index: number): void {
-  const target = event.currentTarget as HTMLInputElement;
-  containersToImport[index].nameWhenImporting = target.value;
-  containersToImport = containersToImport;
-}
-
 function deleteContainerToImport(index: number): void {
   containersToImport = containersToImport.filter((_, i) => i !== index);
+}
+
+function closeModal(): void {
+  // The import API cannot cancel an active operation.
+  if (inProgress) {
+    return;
+  }
+
+  closeCallback();
 }
 
 async function importContainers(): Promise<void> {
@@ -94,70 +101,69 @@ async function importContainers(): Promise<void> {
 
   inProgress = false;
   if (importError === '') {
-    router.goto('/images');
+    closeCallback();
   }
 }
 </script>
 
-<EngineFormPage title="Import Containers">
-  {#snippet icon()}
-    <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-  {/snippet}
+<Dialog title="Import Containers" onclose={closeModal} initialButtonFocus="none">
   {#snippet content()}
-  <div class="space-y-2">
-    {#if providerConnections.length > 1}
-    <div class="mb-4">
-      <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Container engine</label>
-      <ContainerConnectionDropdown
-        id="providerChoice"
-        name="providerChoice"
-        bind:value={selectedProvider}
-        connections={providerConnections}/>
-    </div>
-    {/if}
+    <div class="space-y-4">
+      {#if providerConnections.length > 1}
+        <div>
+          <label for="providerChoice" class="block mb-2 font-semibold">Container engine</label>
+          <ContainerConnectionDropdown
+            id="providerChoice"
+            name="providerChoice"
+            bind:value={selectedProvider}
+            connections={providerConnections}
+            disabled={inProgress} />
+        </div>
+      {/if}
 
-    <label for="modalContainersImport" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-      >Containers to import</label>
-    <Button on:click={addContainersToImport} icon={faPlusCircle} type="link">Add images to import</Button>
-    <!-- Display the list of existing containersToImport -->
-    {#if containersToImport.length > 0}
-      <div class="flex flex-row justify-center w-full py-1 text-sm font-semibold text-[var(--pd-content-card-text)]">
-        <div class="flex flex-col grow pl-2">Image Path</div>
-        <div class="flex flex-col w-2/4 mr-2.5">Image Name when importing (e.g quay.io/podman/hello)</div>
+      <div>
+        <p class="mb-2 font-semibold">Containers to import</p>
+        <Button onclick={addContainersToImport} icon={faPlusCircle} type="link" disabled={inProgress}>Add images to import</Button>
       </div>
-    {/if}
-    {#each containersToImport as containerToImport, index (index)}
-      <div class="flex flex-row justify-center w-full py-1">
-        <Input bind:value={containerToImport.imagePath} aria-label="container image path" readonly={true} />
-        <Input
-          bind:value={containerToImport.nameWhenImporting}
-          on:input={(event): void => onHostContainerPortMappingInput(event, index)}
-          aria-label="container importing name"
-          placeholder="Image Name when Importing (e.g. quay.io/namespace/my-image-name)"
-          class="ml-2" />
-        <Button type="link" on:click={(): void => deleteContainerToImport(index)} icon={faMinusCircle} aria-label="Remove container" />
-      </div>
-    {/each}
 
-    <div class="pt-5">
-      <ButtonRow>
-        <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
-        <Button
-          on:click={importContainers}
-          inProgress={inProgress}
-          icon={faCircleArrowDown}
-          aria-label="Import containers"
-          disabled={importDisabled}>
-          Import Containers
-        </Button>
-      </ButtonRow>
-      <div aria-label="importError">
-        {#if importError !== ''}
-          <ErrorMessage class="py-2 text-sm" error={importError} />
-        {/if}
-      </div>
+      {#if containersToImport.length > 0}
+        <!-- Keep file paths and editable image names aligned within the modal. -->
+        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
+          <span class="text-sm font-semibold">Image path</span>
+          <span class="text-sm font-semibold">Image name</span>
+          <span></span>
+          {#each containersToImport as containerToImport, index (index)}
+            <Input bind:value={containerToImport.imagePath} aria-label="container image path" readonly />
+            <Input
+              bind:value={containerToImport.nameWhenImporting}
+              disabled={inProgress}
+              aria-label="container importing name"
+              placeholder="quay.io/podman/hello" />
+            <Button
+              type="link"
+              onclick={deleteContainerToImport.bind(undefined, index)}
+              disabled={inProgress}
+              icon={faMinusCircle}
+              aria-label="Remove container" />
+          {/each}
+        </div>
+      {/if}
+
+      {#if importError !== ''}
+        <ErrorMessage error={importError} />
+      {/if}
     </div>
-  </div>
   {/snippet}
-</EngineFormPage>
+  {#snippet buttons()}
+    <Button type="link" onclick={closeModal} disabled={inProgress}>Cancel</Button>
+    <Button
+      type="primary"
+      onclick={importContainers}
+      inProgress={inProgress}
+      icon={faCircleArrowDown}
+      aria-label="Import containers"
+      disabled={importDisabled}>
+      Import containers
+    </Button>
+  {/snippet}
+</Dialog>
