@@ -46,8 +46,6 @@ export class ListOrganizerRegistry implements IDisposable {
     try {
       // Auto-register the list if not already registered
       if (!this.registeredLists[listKind]) {
-        this.registeredLists[listKind] = availableColumns;
-
         // Register the configuration with the configuration registry
         const listConfiguration: IConfigurationNode = {
           id: 'preferences',
@@ -65,6 +63,8 @@ export class ListOrganizerRegistry implements IDisposable {
 
         this.#disposables.push(this.configurationRegistry.registerConfigurations([listConfiguration]));
       }
+      // Available columns can change at runtime (e.g. dashboard sections depending on a feature flag), keep defaults in sync
+      this.registeredLists[listKind] = availableColumns;
 
       const config = this.configurationRegistry.getConfiguration('list');
       const savedConfig = config.get<SavedListOrganizerConfig[]>(`${listKind}`, []);

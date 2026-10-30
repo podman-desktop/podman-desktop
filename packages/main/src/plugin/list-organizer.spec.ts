@@ -223,4 +223,27 @@ describe('ListOrganizerRegistry', () => {
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
     ]);
   });
+
+  test('should update defaults when available columns change between loads', async () => {
+    mockConfiguration.get.mockReturnValue([]);
+    await listOrganizerRegistry.loadListConfig('dashboard', ['Release Notes', 'Learning Center', 'Providers']);
+
+    const result = await listOrganizerRegistry.loadListConfig('dashboard', [
+      'Release Notes',
+      'System Overview',
+      'Learning Center',
+    ]);
+
+    expect(mockConfigurationRegistry.registerConfigurations).toHaveBeenCalledOnce();
+    expect(listOrganizerRegistry.getDefaultListConfig('dashboard')).toEqual([
+      { id: 'Release Notes', enabled: true },
+      { id: 'System Overview', enabled: true },
+      { id: 'Learning Center', enabled: true },
+    ]);
+    expect(result).toEqual([
+      { id: 'Release Notes', label: 'Release Notes', enabled: true, originalOrder: 0 },
+      { id: 'System Overview', label: 'System Overview', enabled: true, originalOrder: 1 },
+      { id: 'Learning Center', label: 'Learning Center', enabled: true, originalOrder: 2 },
+    ]);
+  });
 });
