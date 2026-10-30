@@ -21,8 +21,9 @@ import type { NotificationCard, ProviderContainerConnectionInfo, ProviderInfo } 
 import type { ProviderStatus } from '@desktop-framework/extension-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
@@ -127,4 +128,44 @@ test('Expect to display the dot if active page is not Dashboard and there is a n
 
   const dot = screen.getByLabelText('New content available');
   expect(dot).toBeInTheDocument();
+});
+
+test('Expect to do not display the dot when leaving Dashboard if content existed at startup', async () => {
+  router.goto('/');
+  notificationQueue.set([notification1]);
+  providerInfos.set([providerInfo]);
+  await waitRender();
+
+  router.goto('/pods');
+
+  // wait for the navigation, so the dot absence is checked after the route change is rendered
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to do not display the dot when leaving Dashboard if content arrived while on Dashboard', async () => {
+  router.goto('/');
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  providerInfos.set([providerInfo]);
+  router.goto('/pods');
+
+  // wait for the navigation, so the dot absence is checked after the route change is rendered
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to display the dot if a new notification arrives after leaving Dashboard', async () => {
+  router.goto('/');
+  notificationQueue.set([]);
+  providerInfos.set([providerInfo]);
+  await waitRender();
+
+  router.goto('/pods');
+  notificationQueue.set([notification1]);
+
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
 });
