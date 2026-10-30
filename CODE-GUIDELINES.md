@@ -683,6 +683,7 @@ For more details, see the [Vitest snapshot guide](https://vitest.dev/guide/snaps
 All dialogs (`showMessageBox` calls) must follow consistent language patterns for titles, body text, and buttons.
 
 For button layout and ordering in dialogs, modals, and forms, see [Button layout in dialogs, modals, and forms](#button-layout-in-dialogs-modals-and-forms).
+For which actions need a confirmation at all, and which buttons must be styled as danger, see [Destructive actions](#destructive-actions).
 
 ### Titles
 
@@ -765,6 +766,51 @@ Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and 
 - Direct and clear
 - Active voice
 - Specific, not generic
+
+## Destructive actions
+
+Every action that deletes, removes, clears, or uninstalls something belongs to one of three tiers. The tier is decided by what the user loses, not if a dialog follows. It sets the button style, if a confirmation is required, and if the user may turn the confirmation off. Clearing a view that refills when reopened (such as a log terminal) is not a destructive action and gets a neutral control.
+
+### Tiers
+
+#### 🟪 Mild
+
+UI state, or something the user can get back by reinstalling or re-adding it.
+
+- Examples: clear all tasks, uninstall an extension, untrack a local extension folder.
+- Confirmation: none.
+- Call the action directly.
+
+#### 🟧 Destructive
+
+A resource they cannot undo but can recreate, usually routine.
+
+- Examples: delete a container, image, pod, volume or network, bulk delete.
+- Confirmation: required by default. For bulk deletes the user may turn it off in Preferences (`userConfirmation.bulk`).
+- Bulk deletes: `withBulkConfirmation()` from `/@/lib/actions/BulkActions`.
+- Single deletes: `withConfirmation()` for now. Moving them to the preference is tracked per action - do not migrate them as a side effect of another change.
+
+#### 🟥 Very destructive
+
+Data or configuration they cannot recreate, or that takes other resources with it.
+
+- Examples: Clear / Purge Data, delete a connection or machine, delete the current Kubernetes context.
+- Confirmation: required, cannot be turned off.
+- Delete actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`.
+- Other actions (Clear, Purge): `window.showMessageBox` with `type: 'danger'` and the action verb as the button label. `withConfirmation()` cannot do this: `variant: 'delete'` always labels the button `Delete`.
+
+### Button styling
+
+- The control that starts the action uses `type="danger"` in every tier, whether or not a confirmation follows. The dialog does not make the page button less dangerous: `Clear / Purge Data` is danger on the page and in the dialog.
+- Exception: icon-only actions in table rows and action columns (`ListItemButtonIcon`, `LoadingIconButton`) keep the neutral icon color at rest and switch to the danger color on hover and on keyboard focus. A column of red trash icons would overfill the page. The icon and its accessible name carry the meaning, the color reinforces it.
+- Styling never depends on the confirmation preference. A delete button looks the same no matter if the user turned confirmations off or not.
+- There is one danger style. Do not add outlined, lighter, or "soft" danger variants.
+- The confirmation dialog's action button is danger too, labeled with the action verb (see [Button text](#button-text)), and focus starts on Cancel (see [Focus management](#focus-management)).
+- Any component that can host a destructive action must support the danger style. `Button` does. `DropdownMenu.Item`, `ListItemButtonIcon`, and `LoadingIconButton` do not yet. Add the support in the component rather than styling a single call site.
+
+### Assigning a tier
+
+Decide the tier in the action's issue before opening the PR, naming the tier it matches. Do not reopen the decision in PR review. When an action sits between two tiers, pick the more protective one.
 
 ## Button layout in dialogs, modals, and forms
 
