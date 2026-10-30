@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { IConfigurationChangeEvent } from '/@/configuration/models.js';
+import type { ContainerUsageInfo } from '/@/container-usage-info.js';
 import type { ContributionInfo } from '/@/contribution-info.js';
 import type { CheckingState, ContextGeneralState } from '/@/kubernetes-contexts-states.js';
 import type { ForwardConfig } from '/@/kubernetes-port-forward-model.js';
@@ -49,6 +50,7 @@ export interface ApiSenderChannelMap {
   'container-kill-event': string;
   'container-removed-event': string;
   'container-started-event': string;
+  'container-stats:update': ContainerUsageInfo[];
   'container-stopped-event': string;
   'context-key-removed': { key: string };
   'context-menu:visible': boolean;
