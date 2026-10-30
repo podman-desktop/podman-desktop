@@ -103,7 +103,7 @@ function onUserStateChange(key: unknown): void {
 </script>
 
 <Dialog
-    title="Edit Context"
+    title="Edit context"
     onclose={closeCallback}>
     {#snippet content()}
     <div  class="w-full">

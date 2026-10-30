@@ -73,6 +73,15 @@ beforeEach(() => {
 });
 
 describe('UpdateContext', () => {
+  test('dialog title is Edit context', () => {
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback: closeCallback,
+    });
+
+    expect(screen.getByRole('dialog', { name: 'Edit context' })).toBeInTheDocument();
+  });
+
   test('Expect that modal has and save button displays', async () => {
     render(PreferencesKubernetesContextsRenderingEditModal, {
       contextToEdit: mockContext1,

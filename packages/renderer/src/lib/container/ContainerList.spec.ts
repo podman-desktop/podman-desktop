@@ -1305,7 +1305,7 @@ test('Expect create container dialog opens when Create button is clicked', async
   await fireEvent.click(createButton);
 
   await waitFor(() => {
-    expect(screen.getByRole('dialog', { name: 'Create a new container' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Create container' })).toBeInTheDocument();
   });
 });
 
@@ -1320,9 +1320,9 @@ test('Expect create container dialog has both choice buttons styled as secondary
   const createButton = screen.getByTitle('Create a container');
   await fireEvent.click(createButton);
 
-  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const existingImageButton = within(dialog).getByRole('button', { name: 'Existing image' });
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Containerfile' });
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create container' }));
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Build from Containerfile' });
 
   expect(existingImageButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
   expect(containerfileButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
@@ -1344,8 +1344,8 @@ test('Expect clicking Containerfile button navigates to build image page', async
   const createButton = screen.getByTitle('Create a container');
   await fireEvent.click(createButton);
 
-  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Containerfile' });
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create container' }));
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Build from Containerfile' });
   await fireEvent.click(containerfileButton);
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
@@ -1363,8 +1363,8 @@ test('Expect clicking Existing image button closes dialog', async () => {
   const createButton = screen.getByTitle('Create a container');
   await fireEvent.click(createButton);
 
-  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const existingImageButton = within(dialog).getByRole('button', { name: 'Existing image' });
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create container' }));
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
   await fireEvent.click(existingImageButton);
 
   await waitFor(() => {

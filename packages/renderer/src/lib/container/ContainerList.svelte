@@ -559,24 +559,24 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
 
 {#if openChoiceModal}
   <Dialog
-    title="Create a new container"
+    title="Create container"
     onclose={(): void => {
       openChoiceModal = false;
     }}>
     {#snippet content()}
         <div  class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
-        <span class="pb-3">Choose the following:</span>
+        <span class="pb-3">How do you want to create the container?</span>
         <ul class="list-disc ml-8 space-y-2">
-          <li>Create a container from a Containerfile</li>
-          <li>Create a container from an existing image stored in the local registry</li>
+          <li>Create a container from an image you already have locally.</li>
+          <li>Build an image from a Containerfile, then create a container from it.</li>
         </ul>
       </div>
       {/snippet}
     {#snippet buttons()}
 
         <Button type="link" on:click={(): void => {openChoiceModal = false;}}>Close</Button>
-        <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
-        <Button type="secondary" on:click={fromDockerfile}>Containerfile</Button>
+        <Button type="secondary" on:click={fromExistingImage}>Use existing image</Button>
+        <Button type="secondary" on:click={fromDockerfile}>Build from Containerfile</Button>
 
       {/snippet}
   </Dialog>

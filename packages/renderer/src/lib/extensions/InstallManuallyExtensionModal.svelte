@@ -68,7 +68,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
 <svelte:window onkeydown={handleKeydown} />
 
 <Dialog
-  title="Install Custom Extension"
+  title="Install custom extension"
   onclose={closeCallback}>
   {#snippet content()}
     <div  class="flex flex-col leading-5 space-y-5">
