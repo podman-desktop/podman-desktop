@@ -17,9 +17,9 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 
-import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { isDisguisedPodman } from './warnings';
@@ -29,6 +29,9 @@ export class ExtensionNotifications {
   constructor(
     @inject(TelemetryLoggerSymbol)
     private readonly telemetryLogger: extensionApi.TelemetryLogger,
+    @inject(SocketCompatibility)
+    @optional()
+    private readonly socketCompatibilityMode: SocketCompatibility | undefined,
   ) {}
   // Configuration buttons
   private static readonly configurationCompatibilityModeMacSetupNotificationDoNotShow =
@@ -128,10 +131,8 @@ export class ExtensionNotifications {
   // Check that the socket is indeed a disguised podman socket, if it is NOT, we should
   // alert the user that compatibility was not ran.
   private async checkAndNotifyDisguisedPodman(): Promise<void> {
-    const socketCompatibilityMode = getSocketCompatibility();
-
     // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
-    if (!socketCompatibilityMode.isEnabled()) {
+    if (!this.socketCompatibilityMode?.isEnabled()) {
       return;
     }
 
@@ -177,9 +178,6 @@ export class ExtensionNotifications {
       return;
     }
 
-    // We do one last check to see if the socket is truly disguised or not by checking isEnabled for socketCompatibilityMode
-    const socketCompatibilityMode = getSocketCompatibility();
-
     // Check to see if we actually have a disguised podman socket, if it's false, we should notify.
     let isDisguisedPodmanSocket: boolean;
     try {
@@ -193,7 +191,7 @@ export class ExtensionNotifications {
     // Notify if we need to run podman-mac-helper only if isDisguisedPodmanSocket is set to false
     // and we are on macOS, as the helper is only required for macOS.
     // We also only notify if the actual notification is undefined (already disposed / not exists)
-    if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
+    if (!isDisguisedPodmanSocket && !this.socketCompatibilityMode?.isEnabled()) {
       this.notifySetupPodmanMacHelper();
     } else {
       // If it's already enabled, just dispose the notification
@@ -202,8 +200,8 @@ export class ExtensionNotifications {
   }
 
   public async checkMacSocket(): Promise<void> {
-    // This check specifically applies to macOS environments.
-    if (extensionApi.env.isMac) {
+    // This check specifically applies to macOS environments, the only platform with socket compatibility.
+    if (this.socketCompatibilityMode) {
       // On macOS, verify if the Podman socket requires the podman-mac-helper.
       // This notification should ideally occur only once upon initial extension activation
       // to prevent repetitive user prompts.
