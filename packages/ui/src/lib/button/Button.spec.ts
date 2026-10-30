@@ -23,10 +23,19 @@ import '@testing-library/jest-dom/vitest';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { createRawSnippet } from 'svelte';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ButtonType } from './Button';
 import Button from './Button.svelte';
+
+const textSnippet = (text: string): ReturnType<typeof createRawSnippet> =>
+  createRawSnippet(() => ({ render: () => `<span>${text}</span>` }));
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+});
 
 interface CommonClassOptions {
   hasBorder?: boolean;
@@ -335,3 +344,49 @@ test.each(RING_TYPES.flatMap(([type, ring]) => [false, true].map(pressed => [typ
     expect(button).toHaveClass('focus-visible:outline-offset-2');
   },
 );
+
+test('warns once when the aria-label does not contain the visible text', () => {
+  render(Button, { 'aria-label': 'Remove', children: textSnippet('Delete') });
+  expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+  expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+    'Button aria-label "Remove" does not contain its visible text "Delete"',
+  );
+});
+
+test('does not warn when the aria-label contains the visible text', () => {
+  render(Button, { 'aria-label': 'Delete container', children: textSnippet('delete') });
+  expect(screen.getByRole('button', { name: 'Delete container' })).toBeInTheDocument();
+  expect(console.warn).not.toHaveBeenCalled();
+});
+
+test('does not warn when the button has no visible text', () => {
+  render(Button, { icon: faTrash, 'aria-label': 'Delete' });
+  expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  expect(console.warn).not.toHaveBeenCalled();
+});
+
+test('checks the label once an in-progress button is done', async () => {
+  const { rerender } = render(Button, { inProgress: true, 'aria-label': 'Remove', children: textSnippet('Delete') });
+  expect(console.warn).not.toHaveBeenCalled();
+
+  await rerender({ inProgress: false });
+  expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+    'Button aria-label "Remove" does not contain its visible text "Delete"',
+  );
+});
+
+test('checks the label again when the aria-label changes', async () => {
+  const { rerender } = render(Button, { 'aria-label': 'Delete', children: textSnippet('Delete') });
+  expect(console.warn).not.toHaveBeenCalled();
+
+  await rerender({ 'aria-label': 'Remove' });
+  expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+    'Button aria-label "Remove" does not contain its visible text "Delete"',
+  );
+});
+
+test('does not check the label while the button is in progress', () => {
+  render(Button, { inProgress: true, 'aria-label': 'Remove', children: textSnippet('Delete') });
+  expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+  expect(console.warn).not.toHaveBeenCalled();
+});
