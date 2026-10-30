@@ -8,30 +8,23 @@ import { providerInfos } from '/@/stores/providers';
 
 let providersId: string[] = $state([]);
 let notificationCount: number = $state(0);
-let hasNewProviders = $state(false);
-let hasNewNotifications = $state(false);
+// content as it was the last time the user visited the dashboard
+let seenProvidersId: string[] = $state([]);
+let seenNotificationCount: number = $state(0);
+// computed against the content seen, so the dot disappears if the new content is removed
+let hasNewProviders = $derived(hasNewProvider(seenProvidersId, providersId));
+let hasNewNotifications = $derived(notificationCount > seenNotificationCount);
 let hasNew = $derived(hasNewProviders || hasNewNotifications);
 
 let providersUnsubscribe: Unsubscriber;
 let notificationsUnsubscribe: Unsubscriber;
 
 onMount(() => {
-  // if there is a new provider we display the dot
   providersUnsubscribe = providerInfos.subscribe(updatedProviders => {
-    const updatedProvidersId = updatedProviders.map(prov => prov.internalId).toSorted();
-    if (!hasNewProviders) {
-      // if the user is in the dashboard page we do not check for new providers
-      hasNewProviders = hasNewProvider(providersId, updatedProvidersId);
-    }
-    providersId = updatedProvidersId;
+    providersId = updatedProviders.map(prov => prov.internalId).toSorted();
   });
 
-  // if there is a new notification we display the dot
   notificationsUnsubscribe = notificationQueue.subscribe(notifications => {
-    if (!hasNewNotifications) {
-      // if the user is in the dashboard page we do not check for new notifications
-      hasNewNotifications = notifications.length > notificationCount;
-    }
     notificationCount = notifications.length;
   });
 });
@@ -42,20 +35,12 @@ onDestroy(() => {
 });
 
 function hasNewProvider(oldProvidersId: string[], newProvidersId: string[]): boolean {
-  if (oldProvidersId.length < newProvidersId.length) {
-    return true;
-  }
-  for (let [index, id] of newProvidersId.entries()) {
-    if (id !== oldProvidersId[index]) {
-      return true;
-    }
-  }
-  return false;
+  return newProvidersId.some(id => !oldProvidersId.includes(id));
 }
 
 function onHide(): void {
-  hasNewProviders = false;
-  hasNewNotifications = false;
+  seenProvidersId = providersId;
+  seenNotificationCount = notificationCount;
 }
 </script>
 

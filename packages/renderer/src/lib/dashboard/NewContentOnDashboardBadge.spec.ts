@@ -22,7 +22,7 @@ import type { ProviderStatus } from '@desktop-framework/extension-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { router } from 'tinro';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
@@ -127,4 +127,63 @@ test('Expect to display the dot if active page is not Dashboard and there is a n
 
   const dot = screen.getByLabelText('New content available');
   expect(dot).toBeInTheDocument();
+});
+
+test('Expect to hide the dot if the new provider is removed before visiting the Dashboard', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  providerInfos.set([providerInfo]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  providerInfos.set([]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to hide the dot if the new notification is removed before visiting the Dashboard', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  notificationQueue.set([]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to keep the dot if only part of the new content is removed', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  providerInfos.set([providerInfo]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  providerInfos.set([]);
+  await tick();
+
+  expect(screen.getByLabelText('New content available')).toBeInTheDocument();
+});
+
+test('Expect to hide the dot after visiting the Dashboard, even if the content is still there', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  router.goto('/');
+  await tick();
+  router.goto('/pods');
+  await tick();
+
+  expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument();
 });
