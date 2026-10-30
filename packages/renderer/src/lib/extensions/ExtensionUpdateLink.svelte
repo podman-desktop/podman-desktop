@@ -4,9 +4,10 @@ import type { ComponentProps } from 'svelte';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-interface Props extends ComponentProps<typeof Button> {
+// always renders a link button, so the tab variant of the Button props (which requires `selected`) does not apply
+type Props = Exclude<ComponentProps<typeof Button>, { type: 'tab' }> & {
   extension: CombinedExtensionInfoUI;
-}
+};
 
 let { extension, ...restProps }: Props = $props();
 
