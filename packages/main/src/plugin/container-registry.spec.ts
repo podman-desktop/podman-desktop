@@ -3870,6 +3870,30 @@ describe('attachToContainer', () => {
     expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
   });
 
+  test('container attach stream LIBPOD API fails when podmanAttach rejects', async () => {
+    const attachMock = vi.fn().mockRejectedValue(new Error('attach failed'));
+
+    const fakeLibPod = {
+      podmanAttach: attachMock,
+    } as unknown as LibPod;
+
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: fakeLibPod,
+    } as InternalContainerProvider;
+
+    const container = {
+      id: '1234',
+    } as unknown as Dockerode.Container;
+
+    await expect(containerRegistry.attachToContainer(engine, container, true, true)).rejects.toThrow('attach failed');
+    expect(attachMock).toBeCalledWith(container.id);
+  });
+
   test('container do not attach stream as no tty', async () => {
     const fakeDockerode = {} as Dockerode;
 
