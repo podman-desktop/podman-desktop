@@ -21,6 +21,7 @@ import type { NotificationCard, ProviderContainerConnectionInfo, ProviderInfo } 
 import type { ProviderStatus } from '@desktop-framework/extension-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
@@ -137,11 +138,9 @@ test('Expect to do not display the dot when leaving Dashboard if content existed
 
   router.goto('/pods');
 
-  // let Svelte apply all pending updates before asserting the dot is absent
-  await tick();
-
-  const dot = screen.queryByLabelText('New content available');
-  expect(dot).not.toBeInTheDocument();
+  // wait for the navigation, so the dot absence is checked after the route change is rendered
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
 });
 
 test('Expect to do not display the dot when leaving Dashboard if content arrived while on Dashboard', async () => {
@@ -154,11 +153,9 @@ test('Expect to do not display the dot when leaving Dashboard if content arrived
   providerInfos.set([providerInfo]);
   router.goto('/pods');
 
-  // let Svelte apply all pending updates before asserting the dot is absent
-  await tick();
-
-  const dot = screen.queryByLabelText('New content available');
-  expect(dot).not.toBeInTheDocument();
+  // wait for the navigation, so the dot absence is checked after the route change is rendered
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
 });
 
 test('Expect to display the dot if a new notification arrives after leaving Dashboard', async () => {
