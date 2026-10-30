@@ -159,7 +159,7 @@ export class ExtensionsCatalog {
               return {
                 version: version.version,
                 podmanDesktopVersion: version.podmanDesktopVersion,
-                preview: version.preview,
+                preview: version.preview === true,
                 ociUri: version.ociUri,
                 files: version.files,
                 lastUpdated: new Date(version.lastUpdated),
@@ -242,7 +242,7 @@ interface InternalCatalogExtensionVersionJSON {
   version: string;
   podmanDesktopVersion?: string;
   ociUri: string;
-  preview: boolean;
+  preview?: boolean;
   lastUpdated: string;
   files: InternalCatalogExtensionVersionFileJSON[];
 }
