@@ -11,6 +11,19 @@ This file provides **Podman Desktop-specific** guidance for E2E test automation 
 1. **Start with the skill**: [`playwright-testing`](../../.agents/skills/playwright-testing/SKILL.md) → [examples](../../.agents/skills/playwright-testing/examples.md) → [reference](../../.agents/skills/playwright-testing/reference.md)
 2. **Apply PD-specific patterns** documented below
 3. **Check existing tests** in [src/specs/](src/specs/) for reference
+4. **Keep the test inventory current**: follow [Test specification maintenance](#test-specification-maintenance) when changing specs or their execution requirements.
+
+## Test specification maintenance
+
+Read [TESTS_SPECIFICATION.md](TESTS_SPECIFICATION.md) before adding or changing a suite to find related specs and shared prerequisites. Update it in the same change when:
+
+- Adding, renaming, moving, or removing a `.spec.ts` file in `src/specs` or `src/special-specs`.
+- Changing documented coverage, tags, platform support, skip/expected-failure conditions, environment variables (including accepted values and defaults), runner settings, prerequisites, or cleanup behavior.
+- Changing shared fixtures, helpers, runner configuration, or execution scripts in a way that affects documented suites; update all affected entries and shared guidance.
+
+Keep each spec linked once in the appropriate requirement group. Group by shared host/engine requirements, environment variables, or runner settings; use a separate group when setup or cleanup conflicts. Follow the document's metadata, purpose, preconditions, inputs, execution, and notes structure, using shared tables where appropriate. Distinguish externally provisioned prerequisites from hook setup, and skipped/intended coverage from executed assertions. Keep detailed test steps in the specs.
+
+Before finishing, check that spec links resolve, execution examples match the current scripts/tags, and Markdown formatting passes. Internal locator refactors or assertion changes that leave the documented contract unchanged do not require a specification edit.
 
 ## Overview
 
