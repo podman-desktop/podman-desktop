@@ -23,6 +23,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
+import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
@@ -115,6 +117,10 @@ describe('inversifyBinding', () => {
 
       expect(startupServices).toEqual([container.get(HyperVPrep)]);
     });
+
+    test('InversifyBinding#init should not bind SocketCompatibility', async () => {
+      expect(container.isBound(SocketCompatibility)).toBeFalsy();
+    });
   });
 
   describe('macos', () => {
@@ -136,6 +142,13 @@ describe('inversifyBinding', () => {
       expect(value).not.toBeUndefined();
 
       expect(value).toBeInstanceOf(PodmanCleanupMacOS);
+    });
+
+    test('InversifyBinding#init should bind DarwinSocketCompatibility for SocketCompatibility as a singleton', async () => {
+      const first = container.get(SocketCompatibility);
+
+      expect(first).toBeInstanceOf(DarwinSocketCompatibility);
+      expect(container.get(SocketCompatibility)).toBe(first);
     });
 
     test('InversifyBinding#init should not bind HyperVPrep', async () => {
@@ -164,6 +177,10 @@ describe('inversifyBinding', () => {
       expect(() => {
         container.get(ProviderCleanupSymbol);
       }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
+    });
+
+    test('InversifyBinding#init should not bind SocketCompatibility', async () => {
+      expect(container.isBound(SocketCompatibility)).toBeFalsy();
     });
 
     test('InversifyBinding#init should not bind HyperVPrep', async () => {
