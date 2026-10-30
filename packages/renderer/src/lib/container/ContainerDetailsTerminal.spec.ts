@@ -19,14 +19,18 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen, waitFor } from '@testing-library/svelte';
+import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { get } from 'svelte/store';
+import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containerTerminals } from '/@/stores/container-terminal-store';
 
 import ContainerDetailsTerminal from './ContainerDetailsTerminal.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
+
+vi.mock(import('@xterm/addon-fit'));
 
 let shellInContainerMock = vi.fn();
 
@@ -724,4 +728,28 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
     const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
     expect(terminalLinesLiveRegion).toHaveTextContent('prompt$ hello world prompt$');
   });
+});
+
+test('resize does not refit the terminal once it is destroyed', async () => {
+  router.goto('/containers/myContainer/terminal');
+  const container = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as ContainerInfoUI;
+  shellInContainerMock.mockResolvedValue(12345);
+  vi.mocked(window.shellInContainerResize).mockResolvedValue(undefined);
+
+  const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledOnce());
+
+  vi.mocked(FitAddon.prototype.fit).mockClear();
+  window.dispatchEvent(new Event('resize'));
+  expect(FitAddon.prototype.fit).toHaveBeenCalledOnce();
+
+  renderObject.unmount();
+
+  vi.mocked(FitAddon.prototype.fit).mockClear();
+  window.dispatchEvent(new Event('resize'));
+  expect(FitAddon.prototype.fit).not.toHaveBeenCalled();
 });
