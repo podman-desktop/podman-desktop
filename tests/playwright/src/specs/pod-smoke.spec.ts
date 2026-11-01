@@ -258,19 +258,19 @@ test.describe('Verification of pod creation workflow', { tag: '@smoke' }, () => 
   });
 
   test('Checking infra container of the pod', async ({ navigationBar }) => {
+    // podman names the infra container <first 12 chars of the pod id>-infra
+    const pods = await navigationBar.openPods();
+    await playExpect.poll(async () => await pods.podExists(podToRun), { timeout: 10_000 }).toBeTruthy();
+    const podDetails = await pods.openPodDetails(podToRun);
+    const podId = await podDetails.getPodId();
+    playExpect(podId, `Could not read the id of pod ${podToRun}`).not.toBe('');
+    const infraContainerName = `${podId.substring(0, 12)}-infra`;
+
     const containers = await navigationBar.openContainers();
-    await playExpect.poll(async () => containers.containerExists(podToRun), { timeout: 10_000 }).toBeTruthy();
+    await playExpect.poll(async () => containers.containerExists(infraContainerName), { timeout: 10_000 }).toBeTruthy();
 
-    // podman names the infra container <short pod id>-infra
-    await playExpect
-      .poll(async () => (await containers.getRowByName('-infra', false)) !== undefined, { timeout: 10_000 })
-      .toBeTruthy();
-    const infraRow = await containers.getRowByName('-infra', false);
-    const infraContainerName = await infraRow?.getAttribute('aria-label');
-    playExpect(infraContainerName, 'Infra container row has no name').toBeTruthy();
-
-    const infraDetailsPage = await containers.openContainersDetails(infraContainerName as string);
-    await playExpect(infraDetailsPage.heading).toContainText('-infra');
+    const infraDetailsPage = await containers.openContainersDetails(infraContainerName);
+    await playExpect(infraDetailsPage.heading).toContainText(infraContainerName);
     await infraDetailsPage.activateTab(ContainerDetailsPage.SUMMARY_TAB);
     await playExpect(infraDetailsPage.infraContainerBanner).toBeVisible();
     await playExpect(infraDetailsPage.tabContent.getByRole('cell', { name: podToRun, exact: true })).toBeVisible();
