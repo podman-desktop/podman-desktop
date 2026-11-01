@@ -652,13 +652,13 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
 }
 </script>
 
-<div class="flex items-stretch bg-[var(--pd-content-card-bg)] min-w-0">
+<div class="flex items-stretch bg-[var(--pd-content-card-bg)] min-w-0 pt-1.5 pl-1.5">
   <div class="flex flex-row min-w-0 grow items-stretch">
     <div
       bind:this={scrollEl}
       onwheel={onWheel}
       onscroll={checkOverflow}
-      class="flex flex-row overflow-x-auto min-w-0 scrollbar-hide overscroll-x-contain overscroll-y-none"
+      class="flex flex-row overflow-x-auto min-w-0 px-2 scrollbar-hide overscroll-x-contain overscroll-y-none"
       style="flex: 0 1 max-content; max-width: calc(100% - 40px);"
       role="tablist"
       data-tab-panel={panelId}
@@ -703,7 +703,6 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
           class:rounded-[6px]={tab.id !== activeTabId}
           class:tab-active={tab.id === activeTabId}
           class:tab-divider={tab.id !== activeTabId && tabs[index + 1]?.id !== activeTabId && index < tabs.length - 1}
-          class:rounded-t-[6px]={tab.id === activeTabId}
           style:background-color={
             tab.id === activeTabId ? 'var(--pd-tab-active-bg)' : 'var(--pd-content-card-bg)'
           }
@@ -733,7 +732,7 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
             <button
               type="button"
               aria-label="Close tab {tab.title}"
-              class="ml-1 hover:bg-[var(--pd-action-button-details-bg)] rounded-sm p-0.5"
+              class="tab-close ml-1 rounded-sm p-0.5"
               onclick={(e: MouseEvent): void => {
                 e.stopPropagation();
                 onClose(tab.id);
@@ -916,6 +915,39 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
   .tab-active {
     position: relative;
     z-index: 1;
+    --tab-corner-radius: 8px;
+    border-radius: var(--tab-corner-radius) var(--tab-corner-radius) 0 0;
+  }
+
+  .tab-close:hover {
+    background-color: var(--pd-button-close-hover-bg);
+  }
+
+  .tab-active .tab-close:hover {
+    background-color: var(--pd-action-button-details-bg);
+  }
+
+  .tab-active::before,
+  .tab-active::after {
+    position: absolute;
+    bottom: 0;
+    width: var(--tab-corner-radius);
+    height: var(--tab-corner-radius);
+    background: transparent;
+    content: '';
+    pointer-events: none;
+  }
+
+  .tab-active::before {
+    left: calc(-1 * var(--tab-corner-radius));
+    border-bottom-right-radius: var(--tab-corner-radius);
+    box-shadow: 4px 4px 0 4px var(--pd-tab-active-bg);
+  }
+
+  .tab-active::after {
+    right: calc(-1 * var(--tab-corner-radius));
+    border-bottom-left-radius: var(--tab-corner-radius);
+    box-shadow: -4px 4px 0 4px var(--pd-tab-active-bg);
   }
 
   .tab-divider {
