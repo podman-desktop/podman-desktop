@@ -4497,7 +4497,7 @@ test('setupConnectionAPI reconnect chain via msw continues past the second attem
   server = setupServer(
     http.get('http://localhost/events', () => new HttpResponse(stream1 as unknown as ReadableStream)),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const internalContainerProvider: InternalContainerProvider = {
     name: 'podman',
