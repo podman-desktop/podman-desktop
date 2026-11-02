@@ -4587,8 +4587,10 @@ test('two errors close together schedule exactly one reconnect', () => {
   expect(attempts).toHaveLength(1);
 
   // two errors in close succession must schedule exactly one pending reconnect
-  attempts[0]?.(new Error('first close error'));
-  attempts[0]?.(new Error('second close error'));
+  const onError = attempts[0];
+  assert(onError);
+  onError(new Error('first close error'));
+  onError(new Error('second close error'));
 
   expect(internalContainerProvider.api).toBeUndefined();
   expect(internalContainerProvider.reconnectTimer).toBeDefined();
@@ -4646,7 +4648,9 @@ describe('reconnect chain lifecycle', () => {
     expect(attempts).toHaveLength(1);
 
     // an error schedules a pending reconnect
-    attempts[0]?.(new Error('boom'));
+    const onError = attempts[0];
+    assert(onError);
+    onError(new Error('boom'));
     expect(internal.reconnectTimer).toBeDefined();
 
     // dispose while the reconnect is pending
@@ -4671,7 +4675,9 @@ describe('reconnect chain lifecycle', () => {
     disposable.dispose();
 
     // the event stream is still open and reports an error after dispose
-    attempts[0]?.(new Error('boom'));
+    const onError = attempts[0];
+    assert(onError);
+    onError(new Error('boom'));
     expect(internal.reconnectTimer).toBeUndefined();
 
     // past the retry delay, no reconnect must have happened
@@ -4691,7 +4697,9 @@ describe('reconnect chain lifecycle', () => {
 
     // the connection's status is now unknown, e.g. the podman machine was removed
     statusMock.mockReturnValue('unknown');
-    attempts[0]?.(new Error('boom'));
+    const onError = attempts[0];
+    assert(onError);
+    onError(new Error('boom'));
 
     // past the retry delay, the chain must terminate rather than keep retrying
     vi.advanceTimersByTime(retryDelay);
