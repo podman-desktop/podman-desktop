@@ -5408,53 +5408,60 @@ describe('createContainerLibPod', () => {
     expect(createPodmanContainerMock).toBeCalledWith(expectedOptions);
   });
 
-  test('check that Tty and OpenStdin are kept when libPod is forced by request for nvidia device', async () => {
-    const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
+  test.each([
+    { tty: true, openStdin: true },
+    { tty: false, openStdin: true },
+    { tty: true, openStdin: false },
+  ])(
+    'check that Tty=$tty and OpenStdin=$openStdin are kept when libPod is forced by request for nvidia device',
+    async ({ tty, openStdin }) => {
+      const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 
-    const libpod = new LibpodDockerode();
-    libpod.enhancePrototypeWithLibPod();
-    containerRegistry.addInternalProvider('podman1', {
-      name: 'podman',
-      id: 'podman1',
-      api: dockerAPI,
-      libpodApi: dockerAPI,
-      connection: {
-        type: 'podman',
-      },
-    } as unknown as InternalContainerProvider);
+      const libpod = new LibpodDockerode();
+      libpod.enhancePrototypeWithLibPod();
+      containerRegistry.addInternalProvider('podman1', {
+        name: 'podman',
+        id: 'podman1',
+        api: dockerAPI,
+        libpodApi: dockerAPI,
+        connection: {
+          type: 'podman',
+        },
+      } as unknown as InternalContainerProvider);
 
-    const createPodmanContainerMock = vi
-      .spyOn(dockerAPI as unknown as LibPod, 'createPodmanContainer')
-      .mockResolvedValue({ Id: 'id', Warnings: [] });
-    vi.spyOn(dockerAPI as unknown as Dockerode, 'getContainer').mockReturnValue({
-      start: () => {},
-    } as unknown as Dockerode.Container);
-    const attachToContainerMock = vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+      const createPodmanContainerMock = vi
+        .spyOn(dockerAPI as unknown as LibPod, 'createPodmanContainer')
+        .mockResolvedValue({ Id: 'id', Warnings: [] });
+      vi.spyOn(dockerAPI as unknown as Dockerode, 'getContainer').mockReturnValue({
+        start: () => {},
+      } as unknown as Dockerode.Container);
+      const attachToContainerMock = vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
 
-    const options: ContainerCreateOptions = {
-      Image: 'image',
-      Tty: true,
-      OpenStdin: true,
-      HostConfig: {
-        Devices: [
-          {
-            PathOnHost: 'nvidia.com/gpu=all',
-            PathInContainer: '',
-            CgroupPermissions: '',
-          },
-        ],
-      },
-    };
-    await containerRegistry.createContainer('podman1', options);
-    expect(createPodmanContainerMock).toBeCalledWith(
-      expect.objectContaining({
-        devices: [{ path: 'nvidia.com/gpu=all' }],
-        terminal: true,
-        stdin: true,
-      }),
-    );
-    expect(attachToContainerMock).toBeCalledWith(expect.anything(), expect.anything(), true, true);
-  });
+      const options: ContainerCreateOptions = {
+        Image: 'image',
+        Tty: tty,
+        OpenStdin: openStdin,
+        HostConfig: {
+          Devices: [
+            {
+              PathOnHost: 'nvidia.com/gpu=all',
+              PathInContainer: '',
+              CgroupPermissions: '',
+            },
+          ],
+        },
+      };
+      await containerRegistry.createContainer('podman1', options);
+      expect(createPodmanContainerMock).toBeCalledWith(
+        expect.objectContaining({
+          devices: [{ path: 'nvidia.com/gpu=all' }],
+          terminal: tty,
+          stdin: openStdin,
+        }),
+      );
+      expect(attachToContainerMock).toBeCalledWith(expect.anything(), expect.anything(), tty, openStdin);
+    },
+  );
 
   test('expect createContainer to use compat api for non-podman options', async () => {
     vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
