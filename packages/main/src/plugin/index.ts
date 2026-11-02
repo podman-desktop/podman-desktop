@@ -152,7 +152,7 @@ import type {
   V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
-import checkDiskSpacePkg from 'check-disk-space';
+import { checkDiskSpace } from 'check-disk-space';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
@@ -263,11 +263,6 @@ import { ViewRegistry } from './view-registry.js';
 import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
-
-// workaround for ESM
-const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
-  path: string,
-) => Promise<{ free: number }>;
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
