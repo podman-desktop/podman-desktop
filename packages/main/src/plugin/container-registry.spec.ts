@@ -4659,6 +4659,27 @@ describe('reconnect chain lifecycle', () => {
     expect(attempts).toHaveLength(1);
   });
 
+  test('an error after dispose does not schedule a reconnect', () => {
+    const disposable = containerRegistry.registerContainerConnection(
+      podmanProvider,
+      containerProviderConnection,
+      providerRegistry,
+    );
+    const internal = containerRegistry.getMatchingPodmanEngine('podman.podman');
+    expect(attempts).toHaveLength(1);
+
+    disposable.dispose();
+
+    // the event stream is still open and reports an error after dispose
+    attempts[0]?.(new Error('boom'));
+    expect(internal.reconnectTimer).toBeUndefined();
+
+    // past the retry delay, no reconnect must have happened
+    vi.advanceTimersByTime(retryDelay);
+    expect(internal.api).toBeUndefined();
+    expect(attempts).toHaveLength(1);
+  });
+
   test('a reconnect chain whose status went unknown stops', () => {
     const disposable = containerRegistry.registerContainerConnection(
       podmanProvider,

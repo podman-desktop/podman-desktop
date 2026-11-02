@@ -116,6 +116,8 @@ export interface InternalContainerProvider {
   api?: Dockerode;
   libpodApi?: LibPod;
   reconnectTimer?: ReturnType<typeof setTimeout>;
+  // set on dispose so a late stream error cannot schedule a reconnect
+  disposed?: boolean;
 }
 
 interface JSONEvent {
@@ -379,8 +381,8 @@ export class ContainerProviderRegistry {
       internalProvider.api = undefined;
       internalProvider.libpodApi = undefined;
 
-      // at most one reconnect is pending per provider
-      if (internalProvider.reconnectTimer) {
+      // at most one reconnect is pending per provider, and none once disposed
+      if (internalProvider.disposed || internalProvider.reconnectTimer) {
         return;
       }
 
@@ -460,6 +462,7 @@ export class ContainerProviderRegistry {
 
     return Disposable.create(() => {
       clearInterval(timer);
+      internalProvider.disposed = true;
       clearTimeout(internalProvider.reconnectTimer);
       internalProvider.reconnectTimer = undefined;
       onBeforeUpdateDisposable.dispose();
