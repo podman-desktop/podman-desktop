@@ -115,10 +115,6 @@ export interface InternalContainerProvider {
   // api not there if status is stopped
   api?: Dockerode;
   libpodApi?: LibPod;
-  // the pending reconnect for this provider, or undefined when none is
-  // scheduled. Cleared at the top of setupConnectionAPI, before anything
-  // that can throw (status() is extension-supplied), so a throw never leaves
-  // this set forever and suppresses every future reconnect.
   reconnectTimer?: ReturnType<typeof setTimeout>;
 }
 
@@ -346,7 +342,7 @@ export class ContainerProviderRegistry {
     internalProvider: InternalContainerProvider,
     containerProviderConnection: containerDesktopAPI.ContainerProviderConnection,
   ): void {
-    // clear the pending reconnect first (see InternalContainerProvider.reconnectTimer)
+    // clear first: status() is extension code and may throw, which would leave the timer set forever
     clearTimeout(internalProvider.reconnectTimer);
     internalProvider.reconnectTimer = undefined;
 
