@@ -61,23 +61,23 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-installer-x64
           path: ./dist/podman-desktop*-setup-x64.exe
+          archive: false
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-installer-arm64
           path: ./dist/podman-desktop*-setup-arm64.exe
+          archive: false
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-exe-x64
           path: ./dist/podman-desktop*-next-x64.exe
+          archive: false
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-exe-arm64
           path: ./dist/podman-desktop*-next-arm64.exe
+          archive: false
 
   linux:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
@@ -125,8 +125,8 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: flatpak
           path: ./dist/podman-desktop-*.flatpak
+          archive: false
 
   darwin:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
@@ -160,16 +160,16 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: macos-x64-dmg
           path: ./dist/podman-desktop-*x64.dmg
+          archive: false
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: macos-arm64-dmg
           path: ./dist/podman-desktop-*arm64.dmg
+          archive: false
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: macos-universal-dmg
           path: ./dist/podman-desktop-*universal.dmg
+          archive: false
 
   website-build:
     if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
