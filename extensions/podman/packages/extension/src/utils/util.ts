@@ -141,6 +141,22 @@ export function execPodman(
   return extensionApi.process.exec(getPodmanCli(), args, finalOptions);
 }
 
+/**
+ * Ask the podman CLI which machine provider it uses when none is given explicitly
+ * (resolved from CONTAINERS_MACHINE_PROVIDER or containers.conf, e.g. set by the podman installer).
+ * @returns the provider name (wsl, hyperv, ...) or undefined if it cannot be determined
+ */
+export async function getDefaultMachineProvider(): Promise<string | undefined> {
+  try {
+    const { stdout } = await execPodman(['machine', 'info', '--format', 'json']);
+    const vmType = JSON.parse(stdout)?.Host?.VMType;
+    return typeof vmType === 'string' && vmType.length > 0 ? vmType : undefined;
+  } catch (error: unknown) {
+    console.warn('Unable to resolve the default podman machine provider', error);
+    return undefined;
+  }
+}
+
 export enum VMTYPE {
   WSL = 'wsl',
   HYPERV = 'hyperv',
@@ -154,6 +170,8 @@ export const LIBKRUN_LABEL = 'default GPU enabled (LibKrun)';
 export const HYPERV_LABEL = 'Hyper-V';
 export const WSL_LABEL = 'WSL';
 export const QEMU_LABEL = 'QEMU';
+// windows provider option letting the podman CLI pick the provider (containers.conf, env)
+export const DEFAULT_PROVIDER_LABEL = 'default (Podman configuration)';
 
 export function getProviderLabel(provider: string): string {
   switch (provider) {

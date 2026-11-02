@@ -78,8 +78,10 @@ import { ROSETTA_ENABLE_FILE, RosettaProvisioner } from './utils/rosetta';
 import {
   appConfigDir,
   appHomeDir,
+  DEFAULT_PROVIDER_LABEL,
   execPodman,
   getAssetsFolder,
+  getDefaultMachineProvider,
   getMultiplePodmanInstallationsWarnings,
   getProviderByLabel,
   getProviderLabel,
@@ -1865,9 +1867,12 @@ export async function connectionAuditor(items: extensionApi.AuditRequestItems): 
     }
   }
 
-  const winProvider = items['podman.factory.machine.win.provider'];
-  // set createWSLMachineOptionSelected if the user actively selected wsl from the list in the UI, or
-  // if the list is not visible (so only one provider is active) and the provider is wsl
+  let winProvider = items['podman.factory.machine.win.provider'];
+  if (winProvider === DEFAULT_PROVIDER_LABEL) {
+    winProvider = await getDefaultMachineProvider();
+  }
+  // set createWSLMachineOptionSelected if the user actively selected wsl from the list in the UI
+  // (or the default option resolves to wsl), or if the list is not visible (so only one provider is active) and the provider is wsl
   const isWSL = winProvider === 'wsl' || (winProvider === undefined && wslEnabled);
   if (createWSLMachineOptionSelected !== isWSL) {
     createWSLMachineOptionSelected = isWSL;
@@ -2201,6 +2206,11 @@ export async function createMachine(
     typeof params['podman.factory.machine.win.provider'] === 'string'
   ) {
     provider = params['podman.factory.machine.win.provider'];
+    if (provider === DEFAULT_PROVIDER_LABEL) {
+      // let the podman CLI decide (e.g. hyperv selected in the podman installer), fallback to not setting any provider
+      provider = await getDefaultMachineProvider();
+      telemetryRecords.defaultProviderOption = true;
+    }
     telemetryRecords.provider = provider;
   } else {
     if (extensionApi.env.isWindows) {
