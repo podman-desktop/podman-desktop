@@ -344,6 +344,23 @@ test('initContent registers content-sub-header with high contrast values', async
   }
 });
 
+test('initContent registers the dashboard card colors, white in the light theme', async () => {
+  colorRegistry.initColors();
+
+  const expected = {
+    light: tailwindColorPalette.white,
+    dark: tailwindColorPalette.charcoal[600],
+    'hc-light': tailwindColorPalette.accent1[50],
+    'hc-dark': tailwindColorPalette.neutral[800],
+  };
+  for (const id of ['content-dashboard-card-bg', 'content-dashboard-card-hover-bg']) {
+    for (const [theme, value] of Object.entries(expected)) {
+      const color = colorRegistry.listColors(theme).find(c => c.id === id);
+      expect(color?.value, `${id} ${theme}`).toBe(value);
+    }
+  }
+});
+
 test('initDropdown registers dropdown-border', async () => {
   colorRegistry.initColors();
 
