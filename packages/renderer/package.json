@@ -36,7 +36,7 @@
     "micromark-extension-directive": "^4.0.0",
     "moment": "^2.31.0",
     "monaco-editor": "^0.57.0",
-    "svelte": "^5.57.2",
+    "svelte": "^5.57.3",
     "svelte-check": "^4.7.7",
     "svelte-eslint-parser": "^1.9.0",
     "svelte-fa": "^4.0.4",
