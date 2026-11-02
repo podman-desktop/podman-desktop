@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
-import { Button, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -11,6 +11,7 @@ import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { CatalogInstallStatusFilter } from './catalog-install-status-filter';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { ExtensionsUtils } from './extensions-utils';
@@ -56,6 +57,12 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 );
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
+
+const installStatusFilter = $derived(new CatalogInstallStatusFilter(searchTerm));
+
+function changeInstallStatus(status: string): void {
+  searchTerm = installStatusFilter.withStatus(status);
+}
 
 function closeModal(): void {
   installManualImageModal = false;
@@ -121,9 +128,19 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 
   {#snippet content()}
   {#if screen === 'catalog' && enableCatalog}
-    <div class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
+    <div class="sticky top-0 z-10 flex shrink-0 flex-row flex-wrap items-center gap-y-2 bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
       <div class="pl-5 w-72">
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
+      </div>
+      <div class="flex items-center gap-2 pl-5">
+        <label for="catalog-install-status" class="sr-only">Install status</label>
+        <Dropdown
+          id="catalog-install-status"
+          name="catalog-install-status"
+          class="w-40"
+          value={installStatusFilter.value}
+          options={CatalogInstallStatusFilter.OPTIONS}
+          onChange={changeInstallStatus} />
       </div>
       {#if filteredCatalogItems > 0}
         <div class="flex flex-1 items-center px-5 text-sm text-[var(--pd-content-text)]">
