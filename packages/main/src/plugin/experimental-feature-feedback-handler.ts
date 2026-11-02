@@ -236,8 +236,10 @@ export class ExperimentalFeatureFeedbackHandler {
         })
         .then(async response => {
           if (response) {
-            const telemetryOptions = { option: 'Share Feedback on GitHub' };
+            // closing the dialog (x) resolves without any response
+            const telemetryOptions = { option: 'Dismissed' };
             if (response.response === 'Share Feedback on GitHub') {
+              telemetryOptions.option = 'Share Feedback on GitHub';
               await shell.openExternal(featureGitHubLink);
               this.setTimestamp(key, undefined);
             } else if (response.response === 'Remind me later' && typeof response.dropdownIndex === 'number') {
