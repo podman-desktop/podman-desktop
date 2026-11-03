@@ -22,7 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import type { ButtonType } from './Button';
@@ -271,6 +271,11 @@ test('Icon-only button with aria-label should not throw', () => {
   expect(screen.getByRole('button')).toBeInTheDocument();
 });
 
+test('Icon-only button with aria-labelledby should not throw', () => {
+  expect(() => render(Button, { icon: faTrash, 'aria-labelledby': 'delete-label' })).not.toThrow();
+  expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
 test('Icon button with title should not throw', () => {
   expect(() => render(Button, { icon: faTrash, title: 'Delete' })).not.toThrow();
   expect(screen.getByRole('button')).toBeInTheDocument();
@@ -341,4 +346,21 @@ test('Tab button without the selected prop is rejected by the types and still re
   // @ts-expect-error a tab button without `selected` must not typecheck
   render(Button, { type: 'tab' });
   expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
+test('Button passes data attributes and native attributes to the button element', () => {
+  render(Button, { 'data-testid': 'my-button', 'data-default': '', name: 'my-name' });
+
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('data-testid', 'my-button');
+  expect(button).toHaveAttribute('data-default');
+  expect(button).toHaveAttribute('name', 'my-name');
+});
+
+test('Button onclick receives the native click event', async () => {
+  const onclick = vi.fn();
+  render(Button, { onclick });
+
+  await fireEvent.click(screen.getByRole('button'));
+  expect(onclick).toHaveBeenCalledWith(expect.any(MouseEvent));
 });
