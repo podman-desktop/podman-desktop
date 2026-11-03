@@ -41,6 +41,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImagesSaveOptions,
   ImageUpdateInfo,
   ImageUpdateResult,
@@ -1457,6 +1458,35 @@ export class ContainerProviderRegistry {
     // the reason is string of wrapped errors: 'outer: inner: root cause'
     // pop the last layer, which is the root cause
     return reason.split(/:\s+/).pop()?.trim();
+  }
+
+  /**
+   * Asks a connection's engine which of its images a reference points at. The engine resolves the
+   * reference the same way its CLI does, so short names, tags and digests all work, and it answers
+   * with the image id the images list reports. Returns undefined when the engine holds no such image.
+   */
+  async resolveImage(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+    reference: string,
+  ): Promise<ImageLocation | undefined> {
+    let telemetryOptions = {};
+    const provider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    try {
+      const { Id } = await provider.api.getImage(reference).inspect();
+      return { Id, engineId: provider.id };
+    } catch (error: unknown) {
+      // a 404 means the engine holds no such image, which is an answer; anything else went wrong
+      if ((error as { statusCode?: number })?.statusCode !== 404) {
+        telemetryOptions = { error: error };
+        throw error;
+      }
+      return undefined;
+    } finally {
+      this.telemetryService.track('resolveImage', telemetryOptions);
+    }
   }
 
   getImageHash(imageName: string): string {

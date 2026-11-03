@@ -56,6 +56,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImageSearchOptions,
   ImageSearchResult,
   ImagesSaveOptions,
@@ -501,6 +502,16 @@ export function initExposure(): void {
     'resolveShortnameImage',
     async (providerContainerConnectionInfo: ProviderContainerConnectionInfo, shortName: string): Promise<string[]> => {
       return ipcInvoke('container-provider-registry:resolveShortnameImage', providerContainerConnectionInfo, shortName);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'resolveImage',
+    async (
+      providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+      reference: string,
+    ): Promise<ImageLocation | undefined> => {
+      return ipcInvoke('container-provider-registry:resolveImage', providerContainerConnectionInfo, reference);
     },
   );
 
