@@ -143,18 +143,25 @@ test.describe('Terminal scrollback size is applied to the container terminal', (
       return Math.min(...numbers);
     };
 
-    // scroll up a page at a time until the top of the terminal buffer is on the screen
+    // scroll up a page at a time; the top of the buffer is reached once the oldest number on screen stops changing
+    let previousOldestNumber: number | undefined;
+    let unchangedReads = 0;
     await playExpect
       .poll(
         async () => {
           await containerDetails.terminalInput.press('Shift+PageUp');
-          return getOldestNumberOnScreen();
+          const oldestNumber = await getOldestNumberOnScreen();
+          unchangedReads =
+            Number.isFinite(oldestNumber) && oldestNumber === previousOldestNumber ? unchangedReads + 1 : 0;
+          previousOldestNumber = oldestNumber;
+          return unchangedReads;
         },
         { intervals: [250], timeout: 30_000, message: 'Could not scroll to the top of the terminal' },
       )
-      .toBeLessThanOrEqual(oldestKeptNumber + tolerance);
+      .toBeGreaterThanOrEqual(3);
 
-    // every number printed before the oldest kept one must have been discarded
-    playExpect(await getOldestNumberOnScreen()).toBeGreaterThanOrEqual(oldestKeptNumber - tolerance);
+    // the top of the buffer must hold the oldest kept number, every number printed before it must have been discarded
+    playExpect(previousOldestNumber).toBeGreaterThanOrEqual(oldestKeptNumber - tolerance);
+    playExpect(previousOldestNumber).toBeLessThanOrEqual(oldestKeptNumber + tolerance);
   });
 });
