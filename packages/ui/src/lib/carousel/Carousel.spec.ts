@@ -119,6 +119,56 @@ test('scroll right button scrolls to show next cards', async () => {
   });
 });
 
+test('default carousel has no overflow classes', () => {
+  const { container } = render(CarouselTest);
+
+  const track = container.querySelector('[id^="carousel-cards-"]');
+  expect(track?.className).not.toContain('cqw');
+  const left = screen.getByRole('button', { name: 'Scroll left' });
+  expect(left.querySelector('.h-8')).not.toBeNull();
+});
+
+test('overflow carousel breaks out of the column and fades to the page background', async () => {
+  const { container } = render(CarouselTest, { props: { overflow: true } });
+
+  const track = container.querySelector('[id^="carousel-cards-"]');
+  // breaks out on both sides; the left padding keeps the first card on the column edge at rest
+  expect(track).toHaveClass(
+    'w-[calc(100cqw+3rem)]',
+    '-ml-[calc((100cqw-100%)/2+1.5rem)]',
+    'pl-[calc((100cqw-100%)/2+1.5rem)]',
+  );
+
+  // narrow track, scrolled right: both edge fades are shown and fade to the page background
+  callback([{ contentRect: { width: 360 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
+  await fireEvent.click(screen.getByRole('button', { name: 'Scroll right' }));
+
+  await waitFor(() => expect(container.querySelectorAll('.from-\\(--pd-content-bg\\)\\/75')).toHaveLength(2));
+
+  // each fade sits outside the column, 75% page color on the column edge, solid at the window edge
+  const [left, right] = container.querySelectorAll('.from-\\(--pd-content-bg\\)\\/75');
+  expect(left).toHaveClass('right-full', 'bg-gradient-to-l', 'to-(--pd-content-bg)');
+  expect(right).toHaveClass('left-full', 'bg-gradient-to-r', 'to-(--pd-content-bg)');
+});
+
+test('overflow nav buttons are 24px circles straddling the column edges', () => {
+  render(CarouselTest, { props: { overflow: true } });
+
+  expect(screen.getByRole('button', { name: 'Scroll left' })).toHaveClass('w-6', 'h-6', '-translate-x-1/2');
+  expect(screen.getByRole('button', { name: 'Scroll right' })).toHaveClass('w-6', 'h-6', 'translate-x-1/2');
+});
+
+test('overflow nav buttons keep a page-colored plate under the nav fill', () => {
+  render(CarouselTest, { props: { overflow: true } });
+
+  for (const name of ['Scroll left', 'Scroll right']) {
+    const button = screen.getByRole('button', { name });
+    // the nav token is transparent in high contrast, so the plate is what keeps the circle visible
+    expect(button).toHaveClass('bg-(--pd-content-bg)');
+    expect(button.firstElementChild).toHaveClass('rounded-full', 'bg-(--pd-content-card-carousel-nav)');
+  }
+});
+
 test('carousel left and right buttons visibility based on scroll state', async () => {
   render(CarouselTest);
 
@@ -316,4 +366,44 @@ test('carousel does not prevent vertical wheel event default behavior', async ()
     const card1 = screen.getByText('card 1');
     expect(card1).toBeVisible();
   });
+});
+
+test('overflow cards are sized so exactly three span the column', () => {
+  // 924px column: (924 - 2 * 12px gaps) / 3 = 300px per card
+  const clientWidth = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(924);
+  try {
+    render(CarouselTest, { props: { overflow: true } });
+
+    const slot = screen.getByText('card 1').parentElement;
+    expect(slot).toHaveStyle({ width: '300px' });
+    expect(slot).not.toHaveClass('min-w-[360px]');
+  } finally {
+    clientWidth.mockRestore();
+  }
+});
+
+test('default cards keep their 360px minimum slot', () => {
+  render(CarouselTest);
+
+  expect(screen.getByText('card 1').parentElement).toHaveClass('min-w-[360px]');
+});
+
+test('overflow carousel scrolls until the last card ends on the column edge, not the window edge', async () => {
+  // 924px column: 300px cards, one step is 312px; four cards need exactly one step
+  const clientWidth = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(924);
+  try {
+    const { container } = render(CarouselTest, {
+      props: { overflow: true, cards: ['card 1', 'card 2', 'card 3', 'card 4'] },
+    });
+    // the track runs past the column to the window edge: 924px column + 176px breakout
+    callback([{ contentRect: { width: 1100 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Scroll right' }));
+
+    const row = container.querySelector('[id^="carousel-cards-"] > div:last-of-type');
+    await waitFor(() => expect(row).toHaveStyle({ transform: 'translateX(-312px)' }));
+    expect(screen.getByRole('button', { name: 'Scroll right' })).toHaveClass('opacity-0');
+  } finally {
+    clientWidth.mockRestore();
+  }
 });
