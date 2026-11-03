@@ -641,3 +641,26 @@ describe('resolveShortnameImage', () => {
     expect(dialOptions.path).toBe(`/v5.0.0/libpod/images/${expected}/resolve`);
   });
 });
+
+test('Check statistics of all running containers are streamed at the given interval', async () => {
+  const lines = '{"Error":null,"Stats":[]}\n{"Error":null,"Stats":[]}\n';
+  let requestedUrl: URL | undefined;
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/containers/stats', info => {
+      requestedUrl = new URL(info.request.url);
+      return HttpResponse.text(lines);
+    }),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+  const stream = await (api as unknown as LibPod).podmanStreamStats(2);
+
+  let content = '';
+  for await (const chunk of stream) {
+    content += chunk.toString();
+  }
+  expect(content).toBe(lines);
+  expect(requestedUrl?.searchParams.get('stream')).toBe('true');
+  expect(requestedUrl?.searchParams.get('interval')).toBe('2');
+});

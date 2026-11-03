@@ -37,9 +37,12 @@ import { providerInfos } from '/@/stores/providers';
 import { findMatchInLeaves } from '/@/stores/search-util';
 import { viewsContributions } from '/@/stores/views';
 
+import { getContainerUsage } from './container-usage.svelte';
 import { ContainerUtils } from './container-utils';
 import ContainerColumnActions from './ContainerColumnActions.svelte';
+import ContainerColumnCpu from './ContainerColumnCpu.svelte';
 import ContainerColumnImage from './ContainerColumnImage.svelte';
+import ContainerColumnMemory from './ContainerColumnMemory.svelte';
 import ContainerColumnName from './ContainerColumnName.svelte';
 import ContainerColumnStatus from './ContainerColumnStatus.svelte';
 import ContainerEmptyScreen from './ContainerEmptyScreen.svelte';
@@ -419,15 +422,30 @@ let uptimeColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI, Date 
   },
 });
 
+// heaviest containers first, the ones without a reading last
+let cpuColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('CPU', {
+  width: '70px',
+  renderer: ContainerColumnCpu,
+  comparator: (a, b): number => (getContainerUsage(b).cpuPercentage ?? -1) - (getContainerUsage(a).cpuPercentage ?? -1),
+});
+
+let memoryColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Memory', {
+  width: '70px',
+  renderer: ContainerColumnMemory,
+  comparator: (a, b): number => (getContainerUsage(b).memoryUsage ?? -1) - (getContainerUsage(a).memoryUsage ?? -1),
+});
+
 const columns = [
   statusColumn,
   nameColumn,
   envColumn,
   imageColumn,
   uptimeColumn,
+  cpuColumn,
+  memoryColumn,
   new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Actions', {
     align: 'right',
-    width: '150px',
+    width: '100px',
     renderer: ContainerColumnActions,
     overflow: true,
   }),
