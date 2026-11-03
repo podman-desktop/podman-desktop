@@ -243,3 +243,16 @@ test('enhanced layout uses the rounded-lg corners', async () => {
   const title = await screen.findByText(responseJSON.title);
   expect(title.closest('.h-\\[200px\\]')).toHaveClass('rounded-lg');
 });
+
+test('enhanced layout uses rounded-lg for the unavailable notes card', async () => {
+  podmanDesktopGetReleaseNotesMock.mockResolvedValue({
+    releaseNotesAvailable: false,
+    notesURL: `appRepo/release-summary`,
+  });
+  render(ReleaseNotesBox, { context: new Map([[DASHBOARD_SECTION_CONTEXT, { enhanced: true }]]) });
+
+  const message = await screen.findByText(
+    'Release notes are currently unavailable, please check again later or try this',
+  );
+  expect(message.closest('.p-5')).toHaveClass('rounded-lg');
+});
