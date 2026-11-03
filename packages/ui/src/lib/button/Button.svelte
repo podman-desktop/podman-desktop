@@ -66,33 +66,33 @@ interface BaseProps {
   children?: Snippet;
 }
 
+interface ActionButtonProps extends BaseProps {
+  /**
+   * Visual style: `primary` (default) for the main action, `secondary` for other actions, `danger` for
+   * destructive actions, `link` for Cancel, Close and other low-emphasis actions. An unknown value falls
+   * back to `primary` with a console warning. Use `tab` for tab-like filters and navigation, which
+   * requires `selected`.
+   */
+  type?: ActionButtonType;
+  /**
+   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
+   * Use `pressed` for toggle buttons instead.
+   */
+  selected?: boolean;
+}
+
+interface TabButtonProps extends BaseProps {
+  /** Tab-like filter or navigation button. It requires `selected`. */
+  type: 'tab';
+  /**
+   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
+   * Use `pressed` for toggle buttons instead.
+   */
+  selected: boolean;
+}
+
 // A tab button must say whether it is the active tab, so `selected` is required for type 'tab' (checked by svelte-check)
-type Props = BaseProps &
-  (
-    | {
-        /**
-         * Visual style: `primary` (default) for the main action, `secondary` for other actions, `danger` for
-         * destructive actions, `link` for Cancel, Close and other low-emphasis actions. An unknown value falls
-         * back to `primary` with a console warning. Use `tab` for tab-like filters and navigation, which
-         * requires `selected`.
-         */
-        type?: ActionButtonType;
-        /**
-         * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
-         * Use `pressed` for toggle buttons instead.
-         */
-        selected?: boolean;
-      }
-    | {
-        /** Tab-like filter or navigation button. It requires `selected`. */
-        type: 'tab';
-        /**
-         * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
-         * Use `pressed` for toggle buttons instead.
-         */
-        selected: boolean;
-      }
-  );
+type Props = TabButtonProps | ActionButtonProps;
 
 // support legacy usage (on:click)
 const dispatch = createEventDispatcher<{ click: undefined }>();
