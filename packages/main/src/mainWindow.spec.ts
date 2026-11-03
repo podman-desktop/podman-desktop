@@ -24,6 +24,7 @@ import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vites
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { registerStartupDiagnostics } from './startup-diagnostics.js';
 import * as util from './util.js';
 
 vi.mock(import('electron-context-menu'), async () => ({
@@ -33,6 +34,7 @@ vi.mock(import('./development-menu-builder.js'));
 vi.mock(import('./development-mode-tracker.js'));
 vi.mock(import('./navigation-items-menu-builder.js'));
 vi.mock(import('./open-dev-tools.js'));
+vi.mock(import('./startup-diagnostics.js'));
 vi.mock(import('./plugin/app-ready/app-identity-plugin.js'));
 
 vi.mock(import('./util.js'), async () => ({
@@ -97,6 +99,17 @@ function getHandler(mockOnFn: ReturnType<typeof vi.fn>, eventName: string): (...
 }
 
 describe('createNewWindow', () => {
+  test('registers startup diagnostics before loading the renderer', async () => {
+    const { createNewWindow } = await import('./mainWindow.js');
+    const window = await createNewWindow();
+
+    expect(registerStartupDiagnostics).toHaveBeenCalledWith(
+      window.webContents,
+      expect.objectContaining({ preload: expect.stringContaining('preload') }),
+    );
+    expect(registerStartupDiagnostics).toHaveBeenCalledBefore(vi.mocked(window.loadURL));
+  });
+
   test('should show window on normal launch', async () => {
     const { createNewWindow } = await import('./mainWindow.js');
 

@@ -23,6 +23,8 @@ import type { BrowserWindowConstructorOptions, Rectangle } from 'electron';
 import { app, autoUpdater, BrowserWindow, ipcMain, nativeTheme, screen } from 'electron';
 import contextMenu from 'electron-context-menu';
 
+import { registerStartupDiagnostics } from '/@/startup-diagnostics.js';
+
 import { buildDevelopmentMenu } from './development-menu-builder.js';
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
@@ -88,6 +90,7 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
   }
 
   const browserWindow = new BrowserWindow(browserWindowConstructorOptions);
+  registerStartupDiagnostics(browserWindow.webContents, browserWindowConstructorOptions.webPreferences);
 
   const { getCursorScreenPoint, getDisplayNearestPoint } = screen;
   const workArea = getDisplayNearestPoint(getCursorScreenPoint()).workArea;

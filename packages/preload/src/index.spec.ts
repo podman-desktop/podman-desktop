@@ -23,7 +23,7 @@ import { WorkloadKind } from '@desktop-framework/api';
 import type { OpenDialogOptions, SaveDialogOptions } from '@desktop-framework/extension-api';
 import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { buildApiSender, initExposure } from './index.js';
 
@@ -49,6 +49,23 @@ vi.mock(import('electron'), async () => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+test('reports whether the event bridge exposure was reached', () => {
+  vi.stubEnv('PODMAN_DESKTOP_STARTUP_DIAGNOSTICS', '1');
+  initExposure();
+
+  const stages = vi
+    .mocked(ipcRenderer.send)
+    .mock.calls.filter(([channel]) => channel === 'startup-diagnostics:preload');
+  expect(stages.map(([, details]) => details.stage)).toEqual(['exposure-start', 'events-exposed']);
+  const exposureOrder = vi.mocked(contextBridge.exposeInMainWorld).mock.invocationCallOrder[0];
+  expect(vi.mocked(ipcRenderer.send).mock.invocationCallOrder[0]).toBeLessThan(exposureOrder!);
+  expect(vi.mocked(ipcRenderer.send).mock.invocationCallOrder[1]).toBeGreaterThan(exposureOrder!);
 });
 
 test('build Api Sender', () => {

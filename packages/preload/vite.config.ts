@@ -56,6 +56,8 @@ export default defineConfig({
       external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].cjs',
+        // Run before bundled dependencies so an import failure still leaves an entry marker.
+        banner: `if (process.env.PODMAN_DESKTOP_STARTUP_DIAGNOSTICS === '1') console.log('[preload startup] bundle-entry', process.pid);`,
       },
     },
     emptyOutDir: true,

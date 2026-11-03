@@ -161,6 +161,17 @@ export type OpenSaveDialogResultCallback = (result: string | string[] | undefine
 const originalConsole = console;
 const memoryLogs: { logType: LogType; date: Date; message: string }[] = [];
 
+function logStartupStage(stage: string): void {
+  if (process.env.PODMAN_DESKTOP_STARTUP_DIAGNOSTICS !== '1') return;
+  ipcRenderer.send('startup-diagnostics:preload', {
+    stage,
+    rendererPID: process.pid,
+    sandboxed: process.sandboxed,
+    contextIsolated: process.contextIsolated,
+    sandboxFlags: process.argv?.filter(arg => arg.includes('sandbox')),
+  });
+}
+
 export const buildApiSender = (): ApiSenderType => {
   const target = new EventTarget();
 
@@ -182,6 +193,7 @@ export const buildApiSender = (): ApiSenderType => {
 
 // initialize extension loader mechanism
 export function initExposure(): void {
+  logStartupStage('exposure-start');
   const apiSender = buildApiSender();
 
   interface ErrorMessage {
@@ -206,6 +218,7 @@ export function initExposure(): void {
   }
 
   contextBridge.exposeInMainWorld('events', apiSender);
+  logStartupStage('events-exposed');
   ipcRenderer.on('api-sender', (_, channel, data) => {
     apiSender.send(channel, data);
   });
@@ -2797,4 +2810,6 @@ export function initExposure(): void {
 }
 
 // expose methods
+logStartupStage('module-evaluated');
 initExposure();
+logStartupStage('exposure-complete');

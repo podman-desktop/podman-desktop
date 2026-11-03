@@ -186,6 +186,8 @@ export class ElectronRunner extends Runner {
           // Preserve early Chromium/preload errors in CI artifacts, even if launch() fails.
           ELECTRON_ENABLE_LOGGING: '1',
           ELECTRON_LOG_FILE: logFile,
+          PODMAN_DESKTOP_STARTUP_DIAGNOSTICS: '1',
+          PODMAN_DESKTOP_STARTUP_DIAGNOSTICS_FILE: `${logFile}.startup.jsonl`,
         },
       });
       await this.captureStartupDiagnostics(attempt, maxAttempts);
@@ -464,6 +466,7 @@ export class ElectronRunner extends Runner {
     return {
       args,
       executablePath,
+      chromiumSandbox: process.env.PODMAN_DESKTOP_CHROMIUM_SANDBOX === 'true',
       env,
       recordVideo,
       timeout,
