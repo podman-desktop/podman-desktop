@@ -147,8 +147,18 @@ test('overflow carousel breaks out of the column and fades to the page backgroun
 
   // each fade sits outside the column, 75% page color on the column edge, solid at the window edge
   const [left, right] = container.querySelectorAll('.from-\\(--pd-content-bg\\)\\/75');
-  expect(left).toHaveClass('right-full', 'bg-gradient-to-l', 'to-(--pd-content-bg)');
-  expect(right).toHaveClass('left-full', 'bg-gradient-to-r', 'to-(--pd-content-bg)');
+  expect(left).toHaveClass(
+    'right-full',
+    'w-[calc((100cqw-100%)/2+1.5rem)]',
+    'bg-gradient-to-l',
+    'to-(--pd-content-bg)',
+  );
+  expect(right).toHaveClass(
+    'left-full',
+    'w-[calc((100cqw-100%)/2+1.5rem)]',
+    'bg-gradient-to-r',
+    'to-(--pd-content-bg)',
+  );
 });
 
 test('overflow nav buttons are 24px circles straddling the column edges', () => {

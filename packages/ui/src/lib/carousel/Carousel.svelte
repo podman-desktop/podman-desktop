@@ -8,7 +8,8 @@ interface Props<T> {
   cards: T[];
   cardWidth?: number;
   card: Snippet<[T]>;
-  // let the track run past its column to the edge of the nearest @container ancestor,
+  // let the track run past its column to the edge of the nearest @container ancestor
+  // (the column must be centered in that container),
   // with page-colored fades on both sides and 24px nav arrows straddling the column edges
   overflow?: boolean;
 }
