@@ -99,6 +99,7 @@ import type {
   ReleaseNotesInfo,
   ResourceCount,
   ResourceName,
+  SearchResultItemInfo,
   SecretCreateOptions,
   SecretCreateResult,
   SecretInfo,
@@ -294,6 +295,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('getSearchableNavigationRoutes', async (): Promise<NavigationSearchEntryInfo[]> => {
     return ipcInvoke('navigation:getSearchableRoutes');
+  });
+
+  contextBridge.exposeInMainWorld('searchDynamicProviders', async (query: string): Promise<SearchResultItemInfo[]> => {
+    return ipcInvoke('navigation:searchDynamicProviders', query);
   });
 
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
