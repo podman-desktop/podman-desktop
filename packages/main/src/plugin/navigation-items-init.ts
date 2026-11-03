@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { NavbarSettings } from '@desktop-framework/api';
 import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { inject, injectable } from 'inversify';
 
@@ -29,19 +30,19 @@ export class NavigationItemsInit {
       title: 'User Confirmation',
       type: 'object',
       properties: {
-        ['navbar.disabledItems']: {
+        [`${NavbarSettings.SectionName}.${NavbarSettings.DisabledItems}`]: {
           description: 'Items being disabled in the navigation bar',
           type: ['boolean'],
           default: [],
           hidden: true,
         },
-        ['navbar.itemOrder']: {
+        [`${NavbarSettings.SectionName}.${NavbarSettings.ItemOrder}`]: {
           description: 'User-defined order of navigation items',
           type: ['array'],
           default: [],
           hidden: true,
         },
-        ['navbar.hideConfirmationDismissed']: {
+        [`${NavbarSettings.SectionName}.${NavbarSettings.HideConfirmationDismissed}`]: {
           description: 'Whether the user asked not to be prompted again when hiding a navigation item',
           type: 'boolean',
           default: false,

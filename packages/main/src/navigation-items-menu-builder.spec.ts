@@ -18,14 +18,17 @@
 
 import type { DisplayItem } from '@desktop-framework/api';
 import type { BrowserWindow, ContextMenuParams, MenuItem, MenuItemConstructorOptions } from 'electron';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { NavigationItemsMenuBuilder, type ShowMessageBoxFn } from './navigation-items-menu-builder.js';
+import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { MessageBox } from './plugin/message-box.js';
+
+vi.mock(import('./plugin/message-box.js'));
 
 let navigationItemsMenuBuilder: TestNavigationItemsMenuBuilder;
 
-const showMessageBoxMock = vi.fn<ShowMessageBoxFn>();
+const showMessageBoxMock = vi.fn<MessageBox['showMessageBox']>();
 
 const getConfigurationMock = vi.fn();
 const configurationRegistryMock = {
@@ -59,6 +62,9 @@ class TestNavigationItemsMenuBuilder extends NavigationItemsMenuBuilder {
   override updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
     return super.updateNavbarHiddenItem(itemName, visible);
   }
+  override setItemVisibility(itemName: string, visible: boolean): Promise<void> {
+    return super.setItemVisibility(itemName, visible);
+  }
 }
 
 /** Stub the navbar configuration, falling back to the caller's default for unlisted keys. */
@@ -71,7 +77,12 @@ function mockConfiguration(values: Record<string, unknown>): void {
 beforeEach(() => {
   vi.resetAllMocks();
   showMessageBoxMock.mockResolvedValue({ response: 'Hide' });
-  navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(configurationRegistryMock, showMessageBoxMock);
+  const messageBox = new MessageBox(undefined as never);
+  messageBox.showMessageBox = showMessageBoxMock;
+  navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(
+    configurationRegistryMock,
+    Promise.resolve(messageBox),
+  );
 });
 
 describe('buildHideMenuItem', async () => {
@@ -82,12 +93,13 @@ describe('buildHideMenuItem', async () => {
     getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem(input);
-    expect(menu?.label).toBe(expectedLabel);
-    expect(menu?.click).toBeDefined();
-    expect(menu?.visible).toBe(true);
+    assert(menu, `Expected a hide menu item for '${input}'`);
+    expect(menu.label).toBe(expectedLabel);
+    expect(menu.click).toBeDefined();
+    expect(menu.visible).toBe(true);
 
     // click on the menu
-    menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+    menu.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
 
     expect(getConfigurationMock).toBeCalled();
     // if clicking it should send the item to the configuration as being disabled
@@ -174,8 +186,8 @@ describe('hide confirmation', () => {
     function clickToggle(name: string): void {
       const items = navigationItemsMenuBuilder.buildNavigationToggleMenuItems();
       const entry = items.find(item => item.label === name);
-      expect(entry).toBeDefined();
-      entry?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+      assert(entry, `Expected a toggle entry labelled '${name}'`);
+      entry.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
     }
 
     test('unchecking an item asks for confirmation just like the Hide menu entry', async () => {
@@ -406,26 +418,26 @@ describe('active item protection', () => {
     expect(podsItem?.checked).toBe(false);
   });
 
-  test('updateNavbarHiddenItem refuses to hide the active item', async () => {
+  test('refuses to hide the active item', async () => {
     navigationItemsMenuBuilder.receiveNavigationItems([{ name: 'Pods', visible: true, index: 0, active: true }]);
 
-    await navigationItemsMenuBuilder.updateNavbarHiddenItem('Pods', false);
+    await navigationItemsMenuBuilder.setItemVisibility('Pods', false);
 
     expect(configurationRegistryMock.updateConfigurationValue).not.toBeCalled();
   });
 
-  test('updateNavbarHiddenItem refuses to hide an excluded item', async () => {
+  test('refuses to hide an excluded item', async () => {
     navigationItemsMenuBuilder.receiveNavigationItems([{ name: 'Settings', visible: true, index: 0 }]);
 
-    await navigationItemsMenuBuilder.updateNavbarHiddenItem('Settings', false);
+    await navigationItemsMenuBuilder.setItemVisibility('Settings', false);
 
     expect(configurationRegistryMock.updateConfigurationValue).not.toBeCalled();
   });
 
-  test('updateNavbarHiddenItem still restores a protected item', async () => {
+  test('still restores a protected item', async () => {
     navigationItemsMenuBuilder.receiveNavigationItems([{ name: 'Pods', visible: false, index: 0, active: true }]);
 
-    await navigationItemsMenuBuilder.updateNavbarHiddenItem('Pods', true);
+    await navigationItemsMenuBuilder.setItemVisibility('Pods', true);
 
     expect(configurationRegistryMock.updateConfigurationValue).toBeCalledWith('navbar.disabledItems', [], 'DEFAULT');
   });

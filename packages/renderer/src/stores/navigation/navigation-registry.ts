@@ -129,7 +129,7 @@ function collectActiveNames(entries: NavigationRegistryEntry[], routeUrl: string
 
 /** Stable representation of the active set, used to skip redundant round-trips to main. */
 function activeKey(active: Set<string>): string {
-  return [...active].sort((a, b) => a.localeCompare(b)).join('\n');
+  return [...active].toSorted((a, b) => a.localeCompare(b)).join('\n');
 }
 
 let lastActiveKey = '';
@@ -230,7 +230,7 @@ router.subscribe(navigation => {
   currentRoute = navigation.url;
 
   // nothing registered yet: the next hideItems() will send the up-to-date route
-  if (values.length === 0 || !window.sendNavigationItems) {
+  if (values.length === 0) {
     return;
   }
 

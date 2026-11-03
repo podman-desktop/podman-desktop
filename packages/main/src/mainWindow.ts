@@ -36,8 +36,6 @@ import { isLinux, isMac, stoppedExtensions } from './util.js';
 const openDevTools = new OpenDevTools();
 const loginMinimizeHandler = new LoginMinimizeHandler();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
-// provided by the plugin system once its container is built, which happens after this window
-const messageBoxDeferred = Promise.withResolvers<MessageBox>();
 
 // development mode for extensions
 export interface WindowConfig {
@@ -47,6 +45,9 @@ export interface WindowConfig {
 let isExtensionsDevelopmentModeEnabled = false;
 
 async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
+  // the plugin system publishes it once its container is built, which happens after this window
+  const messageBoxDeferred = Promise.withResolvers<MessageBox>();
+
   const INITIAL_APP_WIDTH = 1050;
   const INITIAL_APP_MIN_WIDTH = 640;
   const INITIAL_APP_HEIGHT = 700;
@@ -165,12 +166,9 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
     });
     developmentModeTracker.init();
 
-    // The message box only reaches this file once the plugin system has loaded every extension,
-    // seconds after the renderer paints the navbar. Waiting for it keeps an early right-click
-    // queued until the dialog can be shown, rather than dropping it into the handler's catch.
-    navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry, async options =>
-      (await messageBoxDeferred.promise).showMessageBox(options),
-    );
+    // the message box arrives seconds later, once every extension has loaded; awaiting it keeps
+    // an early right-click queued until the dialog can be shown instead of failing
+    navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry, messageBoxDeferred.promise);
 
     // open dev tools (if required)
     openDevTools.open(browserWindow, configurationRegistry);

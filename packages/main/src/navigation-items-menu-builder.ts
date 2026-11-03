@@ -16,27 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { DisplayItem, MessageBoxOptions, MessageBoxReturnValue } from '@desktop-framework/api';
+import { type DisplayItem, NavbarSettings } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@desktop-framework/api/configuration';
 import type { Configuration } from '@desktop-framework/extension-api';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import type { MessageBox } from './plugin/message-box.js';
 
 // items that can't be hidden
 const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
-
-// buttons of the confirmation shown the first time an item is hidden
-const HIDE_BUTTON = 'Hide';
-const DONT_SHOW_AGAIN_BUTTON = `Don't show again`;
-const CANCEL_BUTTON = 'Cancel';
-
-/**
- * Shows the in-app message box. Electron's native dialog is deliberately not used: every
- * confirmation in Podman Desktop goes through the application's own dialog component.
- */
-export type ShowMessageBoxFn = (options: MessageBoxOptions) => Promise<MessageBoxReturnValue>;
 
 const EXPANDED_WIDTH = 160;
 
@@ -50,11 +40,17 @@ function leafName(name: string): string {
 // This class is responsible of creating the items to hide/pin a given selected item of the left navigation bar
 // and also display a list of all items with the ability to toggle the visibility of each item.
 export class NavigationItemsMenuBuilder {
+  // buttons of the confirmation shown the first time an item is hidden
+  protected static readonly HIDE_BUTTON = 'Hide';
+  protected static readonly DONT_SHOW_AGAIN_BUTTON = `Don't show again`;
+  protected static readonly CANCEL_BUTTON = 'Cancel';
+
   private navigationItems: DisplayItem[] = [];
 
   constructor(
     private configurationRegistry: ConfigurationRegistry,
-    private showMessageBox: ShowMessageBoxFn,
+    // the plugin system builds it after this class, so it is awaited rather than held directly
+    private messageBox: Promise<MessageBox>,
   ) {}
 
   receiveNavigationItems(data: DisplayItem[]): void {
@@ -62,53 +58,44 @@ export class NavigationItemsMenuBuilder {
   }
 
   protected getNavbarConfiguration(): Configuration {
-    return this.configurationRegistry.getConfiguration('navbar');
+    return this.configurationRegistry.getConfiguration(NavbarSettings.SectionName);
   }
 
   protected getItemOrder(): string[] {
-    return this.getNavbarConfiguration().get<string[]>('itemOrder', []);
+    return this.getNavbarConfiguration().get<string[]>(NavbarSettings.ItemOrder, []);
   }
 
   protected async setItemOrder(order: string[]): Promise<void> {
-    await this.configurationRegistry.updateConfigurationValue('navbar.itemOrder', order, CONFIGURATION_DEFAULT_SCOPE);
+    await this.configurationRegistry.updateConfigurationValue(
+      `${NavbarSettings.SectionName}.${NavbarSettings.ItemOrder}`,
+      order,
+      CONFIGURATION_DEFAULT_SCOPE,
+    );
   }
 
   protected getDisabledItems(): string[] {
-    return this.getNavbarConfiguration().get<string[]>('disabledItems', []);
+    return this.getNavbarConfiguration().get<string[]>(NavbarSettings.DisabledItems, []);
   }
 
   protected async setDisabledItems(items: string[]): Promise<void> {
     await this.configurationRegistry.updateConfigurationValue(
-      'navbar.disabledItems',
+      `${NavbarSettings.SectionName}.${NavbarSettings.DisabledItems}`,
       items,
       CONFIGURATION_DEFAULT_SCOPE,
     );
   }
 
-  /**
-   * True when the item leads to the page currently displayed. Such an item must stay in the
-   * navigation bar, otherwise the user would hide the page they are looking at and lose the
-   * way back to it.
-   */
+  /** The item leads to the page on screen, so hiding it would lose the way back to it. */
   protected isActiveItem(itemName: string): boolean {
     return this.navigationItems.some(item => item.name === itemName && item.active === true);
   }
 
-  /**
-   * Items that must stay in the navigation bar: the ones the application always needs, and the
-   * one leading to the page on screen. Extensions and webviews contribute names freely, so an
-   * item can carry a protected name without the menu having put it there.
-   */
+  /** Items that must stay in the navigation bar. */
   protected isProtectedItem(itemName: string): boolean {
     return EXCLUDED_ITEMS.includes(itemName) || this.isActiveItem(itemName);
   }
 
   protected async updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
-    // defense in depth: the menu never offers this, but never hide a protected item
-    if (!visible && this.isProtectedItem(itemName)) {
-      return;
-    }
-
     let items = this.getDisabledItems();
     if (visible) {
       items = items.filter(i => i !== itemName);
@@ -119,23 +106,20 @@ export class NavigationItemsMenuBuilder {
   }
 
   protected isHideConfirmationDismissed(): boolean {
-    return this.getNavbarConfiguration().get<boolean>('hideConfirmationDismissed', false) === true;
+    return this.getNavbarConfiguration().get<boolean>(NavbarSettings.HideConfirmationDismissed, false);
   }
 
   protected async dismissHideConfirmation(): Promise<void> {
     await this.configurationRegistry.updateConfigurationValue(
-      'navbar.hideConfirmationDismissed',
+      `${NavbarSettings.SectionName}.${NavbarSettings.HideConfirmationDismissed}`,
       true,
       CONFIGURATION_DEFAULT_SCOPE,
     );
   }
 
   /**
-   * Asks the user to confirm the very first hide, so the item does not just vanish with no hint
-   * of how to bring it back. Answers to `Don't show again` are remembered and skip it from then on.
-   *
-   * @param itemName the plain item name; it is rendered by the in-app dialog and so must not be
-   * run through {@link escapeLabel}, which only exists for Electron menu labels
+   * @param itemName plain item name, rendered by the in-app dialog, so not run through
+   * {@link escapeLabel} which only escapes Electron menu labels
    * @returns whether the item may be hidden
    */
   protected async confirmHide(itemName: string): Promise<boolean> {
@@ -143,37 +127,40 @@ export class NavigationItemsMenuBuilder {
       return true;
     }
 
-    const { response } = await this.showMessageBox({
+    const { response } = await (await this.messageBox).showMessageBox({
       type: 'question',
       title: 'Hide From Navigation Bar',
       message: `Hide "${itemName}" from the navigation bar?`,
       detail: 'Right-click the navigation bar to show it again, or to reset the navigation bar entirely.',
-      buttons: [HIDE_BUTTON, DONT_SHOW_AGAIN_BUTTON, CANCEL_BUTTON],
+      buttons: [
+        NavigationItemsMenuBuilder.HIDE_BUTTON,
+        NavigationItemsMenuBuilder.DONT_SHOW_AGAIN_BUTTON,
+        NavigationItemsMenuBuilder.CANCEL_BUTTON,
+      ],
       defaultId: 0,
       cancelId: 2,
     });
 
     // allowlist: `response` is undefined when the dialog is dismissed, and anything
     // unrecognised must not be read as consent to hide
-    if (response !== HIDE_BUTTON && response !== DONT_SHOW_AGAIN_BUTTON) {
+    if (
+      response !== NavigationItemsMenuBuilder.HIDE_BUTTON &&
+      response !== NavigationItemsMenuBuilder.DONT_SHOW_AGAIN_BUTTON
+    ) {
       return false;
     }
 
-    if (response === DONT_SHOW_AGAIN_BUTTON) {
+    if (response === NavigationItemsMenuBuilder.DONT_SHOW_AGAIN_BUTTON) {
       await this.dismissHideConfirmation();
     }
 
     return true;
   }
 
-  /**
-   * Single entry point for every visibility change the context menu offers, so the confirmation
-   * cannot be bypassed by reaching for one hide path rather than the other. Restoring an item is
-   * not destructive and never prompts.
-   */
+  /** Single entry point for both hide paths, so the confirmation cannot be bypassed. */
   protected async setItemVisibility(itemName: string, visible: boolean): Promise<void> {
-    // bail out ahead of the confirmation: asking about a hide that `updateNavbarHiddenItem` will
-    // refuse would let a `Don't show again` answer persist as the side effect of a no-op
+    // bail out before prompting: a `Don't show again` answer must not persist as the side
+    // effect of a hide that is refused anyway
     if (!visible && this.isProtectedItem(itemName)) {
       return;
     }

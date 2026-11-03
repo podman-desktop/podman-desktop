@@ -19,7 +19,7 @@
 import type { DisplayItem } from '@desktop-framework/api';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 
@@ -116,6 +116,9 @@ describe('findActiveItems', () => {
 
 describe('active item tracking', () => {
   beforeEach(async () => {
+    // production runs tinro in memory mode (see App.svelte), so window.location never
+    // reflects the route
+    router.mode.memory();
     vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([]);
     vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({
       reachable: true,
@@ -126,14 +129,12 @@ describe('active item tracking', () => {
 
   function lastSentItems(): DisplayItem[] {
     const call = vi.mocked(window.sendNavigationItems).mock.lastCall;
-    expect(call).toBeDefined();
-    return call?.[0] ?? [];
+    assert(call, 'Expected the navigation items to have been sent to main');
+    return call[0];
   }
 
   test('derives the active item from the tinro router rather than window.location', async () => {
-    // production runs tinro in memory mode (see App.svelte), so window.location never
-    // reflects the route — reading it would protect nothing at all
-    router.mode.memory();
+    // reading window.location would protect nothing at all
     vi.mocked(window.sendNavigationItems).mockClear();
 
     router.goto('/pods');
@@ -147,7 +148,6 @@ describe('active item tracking', () => {
   });
 
   test('re-sends the items when navigating, so the protected item follows the route', async () => {
-    router.mode.memory();
     router.goto('/pods');
     await vi.waitFor(() => {
       expect(lastSentItems().find(item => item.name === 'Pods')?.active).toBe(true);
@@ -162,17 +162,20 @@ describe('active item tracking', () => {
   });
 
   test('does not send again while the active item is unchanged', async () => {
-    router.mode.memory();
     router.goto('/pods');
     await vi.waitFor(() => {
       expect(lastSentItems().find(item => item.name === 'Pods')?.active).toBe(true);
     });
 
     vi.mocked(window.sendNavigationItems).mockClear();
-    // a child route of the same entry keeps Pods active
+    // a child route of the same entry keeps Pods active, so it must not send; the navigation
+    // after it does change the active item, and the single call proves only that one got through
     router.goto('/pods/podman/foo');
-    await new Promise(resolve => setTimeout(resolve, 50));
+    router.goto('/containers');
 
-    expect(window.sendNavigationItems).not.toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(lastSentItems().find(item => item.name === 'Containers')?.active).toBe(true);
+    });
+    expect(window.sendNavigationItems).toHaveBeenCalledTimes(1);
   });
 });

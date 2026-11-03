@@ -25,6 +25,7 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import type { MessageBox } from './plugin/message-box.js';
 import * as util from './util.js';
 
 vi.mock(import('electron-context-menu'), async () => ({
@@ -414,36 +415,50 @@ describe('createNewWindow', () => {
 });
 
 describe('navbar context menu confirmations', () => {
-  // the deferred backing this lives at module scope, so a second test here would observe it
-  // already resolved; keep the whole hand-off in one test
-  test('queues a confirmation raised before the plugin system publishes the message box', async () => {
-    const { createNewWindow } = await import('./mainWindow.js');
+  async function settled(promise: Promise<unknown>): Promise<boolean> {
+    return (await Promise.race([
+      promise.then(
+        () => true,
+        () => true,
+      ),
+      Promise.resolve(false),
+    ])) as boolean;
+  }
 
+  /**
+   * The message box promise handed to the menu builder when the configuration registry arrives.
+   * Wrapped in an object because an async function would adopt it and never return.
+   */
+  async function buildMenuAndTakeMessageBox(): Promise<{ messageBoxPromise: Promise<MessageBox> }> {
+    const { createNewWindow } = await import('./mainWindow.js');
     await createNewWindow();
 
     // the configuration registry arrives early in startup and builds the menu, while the message
     // box only follows once every extension has loaded
     getHandler(vi.mocked(ipcMain.on), 'configuration-registry')('', {} as ConfigurationRegistry);
 
-    const showMessageBox = vi.mocked(NavigationItemsMenuBuilder).mock.calls[0]?.[1];
-    assert(showMessageBox, 'Expected the menu builder to be given a message box function');
+    const messageBoxPromise = vi.mocked(NavigationItemsMenuBuilder).mock.calls[0]?.[1];
+    assert(messageBoxPromise, 'Expected the menu builder to be given a message box');
+    return { messageBoxPromise };
+  }
 
-    // the user right-clicks the navbar and hides an item in that gap
-    const options = { title: 'Hide From Navigation Bar', message: 'Hide "Pods" from the navigation bar?' };
-    const confirmation = showMessageBox(options);
-    const earlyOutcome = await Promise.race([
-      confirmation.then(
-        () => 'resolved',
-        () => 'rejected',
-      ),
-      Promise.resolve('waiting'),
-    ]);
-    expect(earlyOutcome).toBe('waiting');
+  test('queues a confirmation raised before the plugin system publishes the message box', async () => {
+    const { messageBoxPromise } = await buildMenuAndTakeMessageBox();
 
-    const messageBoxMock = { showMessageBox: vi.fn().mockResolvedValue({ response: 'Hide' }) };
-    getHandler(vi.mocked(ipcMain.on), 'message-box')('', messageBoxMock);
+    // a right-click landing in that gap waits for the dialog instead of failing
+    expect(await settled(messageBoxPromise)).toBe(false);
 
-    await expect(confirmation).resolves.toStrictEqual({ response: 'Hide' });
-    expect(messageBoxMock.showMessageBox).toHaveBeenCalledWith(options);
+    const messageBox = { showMessageBox: vi.fn() } as unknown as MessageBox;
+    getHandler(vi.mocked(ipcMain.on), 'message-box')('', messageBox);
+
+    await expect(messageBoxPromise).resolves.toBe(messageBox);
+  });
+
+  test('starts each window from its own unresolved message box', async () => {
+    // the deferred is scoped to createWindow, so this second window does not inherit the
+    // message box the previous test published
+    const { messageBoxPromise } = await buildMenuAndTakeMessageBox();
+
+    expect(await settled(messageBoxPromise)).toBe(false);
   });
 });
