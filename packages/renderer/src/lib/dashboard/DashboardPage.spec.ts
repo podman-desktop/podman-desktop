@@ -43,10 +43,9 @@ beforeEach(() => {
   tablePersistence.storage = undefined;
   vi.mocked(window.listGuides).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  vi.mocked(window.updateConfigurationValue).mockResolvedValue(undefined);
 });
 
-async function waitForSections(): Promise<void> {
+async function waitForLearningCenter(): Promise<void> {
   await waitFor(() => expect(screen.getByRole('button', { name: /^Learning Center/ })).toBeInTheDocument());
 }
 
@@ -66,7 +65,7 @@ test('setting on: layout menu uses sentence-case labels', async () => {
   setEnhanced(true);
   const { container } = render(DashboardPage);
 
-  await waitForSections();
+  await waitForLearningCenter();
   const item = await openLayoutMenuItem(container, 'Learning Center');
 
   expect(item).toHaveTextContent('Learning center');
@@ -77,7 +76,7 @@ test('setting off: layout menu keeps the ids', async () => {
   setEnhanced(false);
   const { container } = render(DashboardPage);
 
-  await waitForSections();
+  await waitForLearningCenter();
   const item = await openLayoutMenuItem(container, 'Learning Center');
 
   expect(item).toHaveTextContent('Learning Center');
@@ -95,7 +94,7 @@ test('stored labels are replaced by registry labels on load', async () => {
   const { container } = render(DashboardPage);
 
   await waitFor(() => expect(tablePersistence.storage?.load).toHaveBeenCalled());
-  await waitForSections();
+  await waitForLearningCenter();
   const item = await openLayoutMenuItem(container, 'Learning Center');
 
   expect(item).toHaveTextContent('Learning center');
@@ -106,12 +105,12 @@ test('switching the setting at runtime updates the layout menu labels', async ()
   setEnhanced(false);
   const { container } = render(DashboardPage);
 
-  await waitForSections();
+  await waitForLearningCenter();
 
   setEnhanced(true);
   await setupDashboardPageRegistry();
 
-  await waitForSections();
+  await waitForLearningCenter();
   const item = await openLayoutMenuItem(container, 'Learning Center');
   await waitFor(() => expect(item).toHaveTextContent('Learning center'));
   expect(item).not.toHaveTextContent('Learning Center');
