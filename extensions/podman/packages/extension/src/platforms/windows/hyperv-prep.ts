@@ -37,6 +37,10 @@ export enum HyperVPrepStatus {
   APPLIED = 'applied',
 }
 
+export interface HyperVPrepOptions {
+  showCompletionMessage?: boolean;
+}
+
 @injectable()
 export class HyperVPrep {
   private static readonly PODMAN_MINIMUM_VERSION = '6.0.0';
@@ -57,7 +61,7 @@ export class HyperVPrep {
 
   @postConstruct()
   async init(): Promise<void> {
-    this.#command = commands.registerCommand(HYPERV_PREP_COMMAND, this.prepare.bind(this));
+    this.#command = commands.registerCommand(HYPERV_PREP_COMMAND, () => this.prepare());
     this.#updateVersionListener = this.podmanProvider.provider.onDidUpdateVersion(() => {
       // listeners are called in registration order and this one is registered before the one
       // invalidating the cache in extension.ts, so drop the cached version before reading it
@@ -134,27 +138,34 @@ export class HyperVPrep {
     await execPodman(['system', 'hyperv-prep'], undefined, { isAdmin: true });
   }
 
-  private async prepare(): Promise<void> {
+  /**
+   * Runs the Hyper-V preparation flow.
+   * @returns `true` when Hyper-V is prepared (already applied or prepared successfully), `false` otherwise.
+   */
+  async prepare(telemetryEvent = HYPERV_PREP_COMMAND, options: HyperVPrepOptions = {}): Promise<boolean> {
+    const showCompletionMessage = options.showCompletionMessage !== false;
     if (!(await this.isSupported())) {
       await window.showInformationMessage(
         `Hyper-V preparation requires Podman ${HyperVPrep.PODMAN_MINIMUM_VERSION} or later.`,
       );
-      return;
+      return false;
     }
 
     try {
       const currentStatus = await this.getStatus();
       if (currentStatus === HyperVPrepStatus.APPLIED) {
-        await window.showInformationMessage('Hyper-V preparation is already applied.');
+        if (showCompletionMessage) {
+          await window.showInformationMessage('Hyper-V preparation is already applied.');
+        }
         await this.refreshContext();
-        return;
+        return true;
       }
     } catch (error) {
       console.error('Hyper-V preparation status check failed', error);
       this.telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
       const message = this.getErrorMessage(error, 'Unknown error while checking Hyper-V preparation status.');
       await window.showErrorMessage(`Hyper-V preparation status check failed: ${message}`);
-      return;
+      return false;
     }
 
     const confirmation = await window.showInformationMessage(
@@ -163,7 +174,7 @@ export class HyperVPrep {
       'No',
     );
     if (confirmation !== 'Yes') {
-      return;
+      return false;
     }
 
     try {
@@ -179,22 +190,27 @@ export class HyperVPrep {
       this.telemetryLogger.logError('hypervPrepFailed', { error });
       const message = this.getErrorMessage(error, 'Unknown error while preparing Hyper-V.');
       await window.showErrorMessage(`Hyper-V preparation failed: ${message}`);
-      return;
+      return false;
     }
 
     this.#preparedThisSession = true;
     const updatedStatus = await this.refreshContext();
-    this.telemetryLogger.logUsage('podman.hypervPrep', { status: updatedStatus ?? 'unknown' });
+    this.telemetryLogger.logUsage(telemetryEvent, { status: updatedStatus ?? 'unknown' });
+    if (!showCompletionMessage) {
+      return true;
+    }
+
     if (!updatedStatus) {
       await window.showInformationMessage(
         `Hyper-V preparation completed successfully, but the status could not be confirmed.\n\n${HYPERV_PREP_RELOGIN_MESSAGE}`,
       );
-      return;
+      return true;
     }
 
     await window.showInformationMessage(
       `Hyper-V preparation completed successfully.\n\n${HYPERV_PREP_RELOGIN_MESSAGE}`,
     );
+    return true;
   }
 
   private getErrorMessage(error: unknown, fallback: string): string {

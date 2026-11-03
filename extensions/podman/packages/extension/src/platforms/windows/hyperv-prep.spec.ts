@@ -402,6 +402,36 @@ describe('HyperVPrep command handler', () => {
     );
   });
 
+  test('can suppress the completion dialog and report success for onboarding', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(execPodman)
+      .mockResolvedValueOnce({ stdout: NEEDED_STATUS_OUTPUT, stderr: '', command: 'status' })
+      .mockResolvedValueOnce({ stdout: '', stderr: '', command: 'run' })
+      .mockResolvedValueOnce({ stdout: NEEDED_STATUS_OUTPUT, stderr: '', command: 'status' });
+    vi.mocked(extensionApi.window.showInformationMessage).mockClear();
+
+    const prepared = await hyperVPrep.prepare('podman.onboarding.hypervPrep', { showCompletionMessage: false });
+
+    expect(prepared).toBe(true);
+    expect(telemetryLoggerMock.logUsage).toHaveBeenCalledWith('podman.onboarding.hypervPrep', {
+      status: 'notApplied',
+    });
+    expect(extensionApi.window.showInformationMessage).toHaveBeenCalledOnce();
+    expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
+      'Prepare Hyper-V now? Administrator approval (UAC) is required.',
+      'Yes',
+      'No',
+    );
+  });
+
+  test('reports that Hyper-V is not prepared when the user declines confirmation', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('No');
+    vi.mocked(execPodman).mockResolvedValueOnce({ stdout: NEEDED_STATUS_OUTPUT, stderr: '', command: 'status' });
+
+    await expect(hyperVPrep.prepare()).resolves.toBe(false);
+  });
+
   test('skips prep when user declines confirmation', async () => {
     const callback = await setupHyperVPrepCommand();
     vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('No');
