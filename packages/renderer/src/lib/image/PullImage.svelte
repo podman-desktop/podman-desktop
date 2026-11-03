@@ -68,8 +68,14 @@ let selectedProviderConnection = $state<ProviderContainerConnectionInfo>();
 
 // the pages the actions navigate to read the image from the store, so the pull is only over once it is there
 let pulledImage = $derived.by(() => {
-  const image = $imagesInfos.find(info => info.Id === pullTarget?.Id && info.engineId === pullTarget?.engineId);
-  return image ? imageUtils.getImagesInfoUI(image, [])[0] : undefined;
+  const target = pullTarget;
+  const image = $imagesInfos.find(info => info.Id === target?.Id && info.engineId === target?.engineId);
+  if (!image) {
+    return undefined;
+  }
+  const entries = imageUtils.getImagesInfoUI(image, []);
+  // the image can already be known under another tag, a pull naming one is only over once it is there
+  return target?.repoTag ? entries.find(entry => `${entry.name}:${entry.tag}` === target.repoTag) : entries[0];
 });
 let pullFinished = $derived(!!pulledImage);
 

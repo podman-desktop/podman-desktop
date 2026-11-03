@@ -8109,15 +8109,43 @@ describe('resolveImage', () => {
 
   test('should answer with the image id and the engine id of the connection', async () => {
     const provider = givenProvider(
-      vi.fn().mockResolvedValue({ Id: 'sha256:1234' } as unknown as Dockerode.ImageInspectInfo),
+      vi.fn().mockResolvedValue({
+        Id: 'sha256:1234',
+        RepoTags: ['docker.io/library/alpine:latest'],
+      } as unknown as Dockerode.ImageInspectInfo),
     );
 
     await expect(containerRegistry.resolveImage(connection, 'alpine:latest')).resolves.toStrictEqual({
       Id: 'sha256:1234',
       engineId: 'podman1',
+      repoTag: 'docker.io/library/alpine:latest',
     });
     // the reference is handed to the engine untouched, it is the one resolving it
     expect(provider.api?.getImage).toHaveBeenCalledExactlyOnceWith('alpine:latest');
+  });
+
+  test.each([
+    // [what is asked for, what the image carries, which tag it names]
+    ['alpine', ['docker.io/library/alpine:latest', 'docker.io/library/alpine:3.19'], 'docker.io/library/alpine:latest'],
+    [
+      'alpine:3.19',
+      ['docker.io/library/alpine:latest', 'docker.io/library/alpine:3.19'],
+      'docker.io/library/alpine:3.19',
+    ],
+    ['localhost:5000/team/app', ['localhost:5000/team/app:latest'], 'localhost:5000/team/app:latest'],
+    ['localhost:5000/team/app:2', ['localhost:5000/team/app:2'], 'localhost:5000/team/app:2'],
+    ['alpine@sha256:abc', ['docker.io/library/alpine:latest'], undefined],
+    ['alpine:3.19', ['docker.io/library/alpine:latest'], undefined],
+    ['alpine', [], undefined],
+  ])('should name the tag %s points at', async (reference, repoTags, expected) => {
+    givenProvider(
+      vi.fn().mockResolvedValue({ Id: 'sha256:1234', RepoTags: repoTags } as unknown as Dockerode.ImageInspectInfo),
+    );
+
+    await expect(containerRegistry.resolveImage(connection, reference)).resolves.toMatchObject({
+      Id: 'sha256:1234',
+      repoTag: expected,
+    });
   });
 
   test('should answer undefined when the engine holds no such image', async () => {

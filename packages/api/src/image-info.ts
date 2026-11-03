@@ -39,6 +39,11 @@ export interface ImageInfo extends Dockerode.ImageInfo {
 export interface ImageLocation {
   Id: string;
   engineId: string;
+  /**
+   * The repository tag the reference named, among the ones the engine reports for this image.
+   * Undefined when the reference pinned a digest, or when the image carries no tag at all.
+   */
+  repoTag?: string;
 }
 
 export interface BuildImageOptions {

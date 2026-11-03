@@ -81,8 +81,8 @@ const ALPINE_IMAGE = {
 } as unknown as ImageInfo;
 
 // the engine resolves the pulled reference to one of its images, as it does once a pull is over
-function givenEngineResolves(image: ImageInfo): ImageInfo {
-  vi.mocked(window.resolveImage).mockResolvedValue({ Id: image.Id, engineId: image.engineId });
+function givenEngineResolves(image: ImageInfo, repoTag = image.RepoTags?.[0]): ImageInfo {
+  vi.mocked(window.resolveImage).mockResolvedValue({ Id: image.Id, engineId: image.engineId, repoTag });
   return image;
 }
 
@@ -486,9 +486,40 @@ test('Expect to report a pull the engine does not list', async () => {
   expect(screen.getByRole('button', { name: buttonText })).toBeEnabled();
 });
 
+test('Expect the finished actions to carry the pulled tag, not another tag of the same image', async () => {
+  // the image is already known under an older tag, the new one must be the one the actions open
+  const shared = { ...ALPINE_IMAGE, RepoTags: ['docker.io/library/alpine:latest', 'docker.io/library/alpine:3.19'] };
+  givenEngineResolves(shared, 'docker.io/library/alpine:3.19');
+  imagesInfos.set([shared]);
+  render(PullImage, { imageToPull: 'docker.io/alpine:3.19' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Run' }));
+
+  expect(handleNavigation).toHaveBeenCalledWith({
+    page: NavigationPage.IMAGE_RUN,
+    parameters: { tag: 'docker.io/library/alpine:3.19', engineId: ENGINE_ID, id: shared.Id },
+  });
+});
+
+test('Expect a tag the images store does not carry yet not to finish the pull', async () => {
+  // the store still only knows the older tag of that same image, the pull is not over
+  const known = { ...ALPINE_IMAGE, RepoTags: ['docker.io/library/alpine:latest'] };
+  givenEngineResolves(known, 'docker.io/library/alpine:3.19');
+  imagesInfos.set([known]);
+  render(PullImage, { imageToPull: 'docker.io/alpine:3.19' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  await vi.waitFor(() => expect(window.resolveImage).toHaveBeenCalled());
+  expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
+  expect(screen.getByText('Pulling image')).toBeInTheDocument();
+});
+
 test('Expect an image pulled by digest to finish the pull', async () => {
   // an image pulled by digest carries no repo tag, it still has to unlock the actions
   const untagged = { ...ALPINE_IMAGE, RepoTags: [], RepoDigests: ['docker.io/library/alpine@sha256:abc'] };
+  // a digest pull names no tag, the image carries none either
   givenEngineResolves(untagged);
   imagesInfos.set([untagged]);
   render(PullImage, { imageToPull: 'docker.io/alpine@sha256:abc' });

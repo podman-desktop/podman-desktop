@@ -1475,8 +1475,8 @@ export class ContainerProviderRegistry {
       throw new Error('no running provider for the matching container');
     }
     try {
-      const { Id } = await provider.api.getImage(reference).inspect();
-      return { Id, engineId: provider.id };
+      const { Id, RepoTags } = await provider.api.getImage(reference).inspect();
+      return { Id, engineId: provider.id, repoTag: this.matchRepoTag(reference, RepoTags ?? []) };
     } catch (error: unknown) {
       // a 404 means the engine holds no such image, which is an answer; anything else went wrong
       if ((error as { statusCode?: number })?.statusCode !== 404) {
@@ -1487,6 +1487,25 @@ export class ContainerProviderRegistry {
     } finally {
       this.telemetryService.track('resolveImage', telemetryOptions);
     }
+  }
+
+  /**
+   * Picks the repository tag a reference names among the ones the engine reports for the image it
+   * resolved to. The image is already identified, so the tag alone tells them apart; a reference
+   * pinning a digest names none of them.
+   */
+  protected matchRepoTag(reference: string, repoTags: string[]): string | undefined {
+    if (reference.includes('@')) {
+      return undefined;
+    }
+    const tag = this.referenceTag(reference);
+    return repoTags.find(repoTag => this.referenceTag(repoTag) === tag);
+  }
+
+  // a colon only opens a tag when no path separator follows it, a registry port carries one too
+  protected referenceTag(reference: string): string {
+    const index = reference.lastIndexOf(':');
+    return index > 0 && !reference.includes('/', index) ? reference.slice(index + 1) : 'latest';
   }
 
   getImageHash(imageName: string): string {
