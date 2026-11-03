@@ -102,12 +102,9 @@ Steps:
 - `PODMAN_DESKTOP_ARGS="/path/to/podman-desktop" pnpm test:e2e`
 - `PODMAN_DESKTOP_BINARY="/path/to/the/podman-desktop/executable" pnpm test:e2e`
 
-For startup diagnostics on Linux, set `PODMAN_DESKTOP_CHROMIUM_SANDBOX=true` to run
-without Playwright's default `--no-sandbox` flag. The PR smoke workflow compares
-the normal production run with a separate `production-sandbox` run. Each run
-uploads its own Electron logs and `*.startup.jsonl` files, including early preload
-events and the renderer's sandbox flags. The runner enables these diagnostics;
-normal application launches do not write them.
+The test runner enables startup diagnostics and saves a Chromium log and a
+`*.startup.jsonl` file for each launch attempt. CI uploads these files with the
+test artifacts, including early preload events and Linux renderer sandbox flags.
 
 ## How to develop and test @podman-desktop/tests-playwright locally
 

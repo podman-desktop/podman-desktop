@@ -317,7 +317,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [production, development, production-sandbox]
+        mode: [production, development]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -352,11 +352,9 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-      - name: Run Smoke E2E tests in ${{ matrix.mode != 'development' && 'Production' || 'Development' }} Mode
-        env:
-          PODMAN_DESKTOP_CHROMIUM_SANDBOX: ${{ matrix.mode == 'production-sandbox' && 'true' || 'false' }}
+      - name: Run Smoke E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
         run: |
-          if [ ${{ matrix.mode }} != 'development' ]; then
+          if [ ${{ matrix.mode }} == 'production' ]; then
             echo "Compiling the Podman Desktop in production mode"
             export ELECTRON_ENABLE_INSPECT=true
             pnpm compile:current --linux dir

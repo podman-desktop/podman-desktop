@@ -466,7 +466,6 @@ export class ElectronRunner extends Runner {
     return {
       args,
       executablePath,
-      chromiumSandbox: process.env.PODMAN_DESKTOP_CHROMIUM_SANDBOX === 'true',
       env,
       recordVideo,
       timeout,
