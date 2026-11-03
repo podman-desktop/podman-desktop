@@ -21,6 +21,7 @@ import { app, ipcMain, Menu, Tray } from 'electron';
 import { restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
+import { whenAppReady } from './app-ready.js';
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
 import { type AdditionalData, Main } from './main.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
@@ -93,7 +94,7 @@ app.on('will-finish-launching', () => {
   });
 });
 
-app.whenReady().then(
+whenAppReady(app).then(
   async () => {
     // Setup the default tray icon + menu items (skip if user disabled tray)
     const showTrayIcon = readShowTrayIconSetting();

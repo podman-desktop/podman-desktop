@@ -263,10 +263,15 @@ export class ElectronRunner extends Runner {
       this.failedStartupDiagnosticsFile = `${logFile}.renderer.json`;
       console.log(`Chromium startup log: ${logFile}`);
       const options = this._options as Parameters<typeof electron.launch>[0];
+      const env = options?.env ?? process.env;
+      // Playwright only installs its readiness barrier when executablePath is omitted.
+      // Allow disabling our equivalent barrier for controlled startup comparisons.
+      const startupHandshake = env.PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE ?? (options?.executablePath ? '1' : '0');
       this._app = await electron.launch({
         ...options,
         env: {
-          ...(options?.env ?? process.env),
+          ...env,
+          PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE: startupHandshake,
           // Preserve early Chromium/preload errors in CI artifacts, even if launch() fails.
           ELECTRON_ENABLE_LOGGING: '1',
           ELECTRON_LOG_FILE: logFile,
@@ -275,6 +280,19 @@ export class ElectronRunner extends Runner {
         },
       });
       await this.captureStartupDiagnostics(attempt, maxAttempts);
+      if (startupHandshake === '1') {
+        const released = await this.raceWithTimeout(
+          // Use the main-process API, before firstWindow(), while no renderer is needed.
+          this.getElectronApp().evaluate(({ app }) => app.emit('podman-desktop:playwright-ready')),
+          5_000,
+          'Releasing the Playwright startup handshake timed out',
+        );
+        console.log(
+          released
+            ? 'Playwright startup handshake released'
+            : 'This binary does not support the Playwright startup handshake; continuing without it',
+        );
+      }
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
 

@@ -27,6 +27,7 @@ import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+import { whenAppReady } from './app-ready.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
 
 export type AdditionalData = {
@@ -136,7 +137,7 @@ export class Main implements IDisposable {
     /**
      * Register {@link Main#whenReady} for ready event
      */
-    this.app.whenReady().then(this.whenReady.bind(this)).catch(console.error);
+    whenAppReady(this.app).then(this.whenReady.bind(this)).catch(console.error);
   }
 
   /**
@@ -168,6 +169,8 @@ export class Main implements IDisposable {
   }
 
   dispose(): void {
-    this.#plugins.forEach(plugin => plugin.dispose());
+    this.#plugins.forEach(plugin => {
+      plugin.dispose();
+    });
   }
 }

@@ -34,6 +34,14 @@ This approach is beneficial in the way that we do not need to have the `electron
 
 If you set `PODMAN_DESKTOP_BINARY` and `PODMAN_DESKTOP_ARGS` at the same time, the runner will throw an error since you cannot really run tests in both mode at the same time.
 
+### Synchronizing startup with Playwright
+
+When launching an explicit Electron executable, the runner enables `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=1`. The application waits for both Electron readiness and a signal from the connected runner before creating its main window or initializing extensions. The runner registers startup diagnostics before releasing this wait, without changing Chromium flags or the Electron profile.
+
+Normal application launches do not wait for Playwright. Development launches with no explicit executable retain Playwright's own readiness handling. Older binaries without handshake support continue to run and log that the handshake is unavailable.
+
+Set `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=0` to disable the handshake for a comparison, or `1` to enable it explicitly. An enabled handshake fails with exit code 1 if no signal arrives within 120 seconds; the runner also bounds its release operation to 5 seconds. Look for `[startup handshake]` and `Playwright startup handshake released` in the startup logs to confirm it was used.
+
 ### Configuring the Electron launch timeout
 
 The Electron runner waits up to 90 seconds for the application to launch by default. For a per-suite override, pass `electronLaunchTimeout` in `RunnerOptions` (in milliseconds):

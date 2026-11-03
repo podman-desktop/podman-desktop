@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { EventEmitter } from 'node:events';
+
 import type { App as ElectronApp } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -73,6 +75,8 @@ beforeEach(() => {
 afterEach(() => {
   // restore proper process.exit
   process.exit = PROCESS_EXIT_ORIGINAL;
+  vi.unstubAllEnvs();
+  vi.useRealTimers();
 });
 
 test('running main for non-primary instance should quit application', () => {
@@ -98,6 +102,27 @@ test('security restriction should be initialized', async () => {
   code.main([]);
 
   expect(SecurityRestrictions.prototype.init).toHaveBeenCalledOnce();
+});
+
+test('E2E startup holds the window plugin until Playwright acknowledges the connection', async () => {
+  vi.useFakeTimers();
+  vi.stubEnv('PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE', '1');
+  const events = new EventEmitter();
+  const app = {
+    ...ELECTRON_APP_MOCK,
+    on: events.on.bind(events),
+    once: events.once.bind(events),
+    removeListener: events.removeListener.bind(events),
+  } as unknown as ElectronApp;
+  vi.mocked(app.whenReady).mockResolvedValue(undefined);
+
+  new Main(app).main([]);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(WindowPlugin.prototype.onReady).not.toHaveBeenCalled();
+
+  events.emit('podman-desktop:playwright-ready');
+  await vi.advanceTimersByTimeAsync(0);
+  expect(WindowPlugin.prototype.onReady).toHaveBeenCalledOnce();
 });
 
 test('on windows setAppUserModelId should be called', async () => {
