@@ -25,7 +25,7 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
-import type { MessageBox } from './plugin/message-box.js';
+import { MessageBox } from './plugin/message-box.js';
 import * as util from './util.js';
 
 vi.mock(import('electron-context-menu'), async () => ({
@@ -36,6 +36,7 @@ vi.mock(import('./development-mode-tracker.js'));
 vi.mock(import('./navigation-items-menu-builder.js'));
 vi.mock(import('./open-dev-tools.js'));
 vi.mock(import('./plugin/app-ready/app-identity-plugin.js'));
+vi.mock(import('./plugin/message-box.js'));
 
 vi.mock(import('./util.js'), async () => ({
   isLinux: vi.fn().mockReturnValue(false),
@@ -416,13 +417,13 @@ describe('createNewWindow', () => {
 
 describe('navbar context menu confirmations', () => {
   async function settled(promise: Promise<unknown>): Promise<boolean> {
-    return (await Promise.race([
+    return Promise.race([
       promise.then(
         () => true,
         () => true,
       ),
       Promise.resolve(false),
-    ])) as boolean;
+    ]);
   }
 
   /**
@@ -448,7 +449,7 @@ describe('navbar context menu confirmations', () => {
     // a right-click landing in that gap waits for the dialog instead of failing
     expect(await settled(messageBoxPromise)).toBe(false);
 
-    const messageBox = { showMessageBox: vi.fn() } as unknown as MessageBox;
+    const messageBox = new MessageBox(undefined as never);
     getHandler(vi.mocked(ipcMain.on), 'message-box')('', messageBox);
 
     await expect(messageBoxPromise).resolves.toBe(messageBox);

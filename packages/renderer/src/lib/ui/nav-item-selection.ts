@@ -19,10 +19,8 @@
 /**
  * Whether a navigation entry pointing at `href` is the selected one for `routeUrl`.
  *
- * This is the single source of truth for "which nav item is active". `NavItem` uses it to
- * draw the selection highlight, and the navigation registry uses it to tell the main process
- * which items must not be hidden. Keeping both on the same rule is what guarantees the user
- * can never hide the item they are currently looking at.
+ * Shared by `NavItem`, which draws the highlight, and the navigation registry, which tells main
+ * what must not be hidden. One rule for both is what stops the open page being hidden.
  */
 export function isNavItemSelected(routeUrl: string, href: string): boolean {
   const uri = encodeURI(href);

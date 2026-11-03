@@ -28,7 +28,7 @@ vi.mock(import('./plugin/message-box.js'));
 
 let navigationItemsMenuBuilder: TestNavigationItemsMenuBuilder;
 
-const showMessageBoxMock = vi.fn<MessageBox['showMessageBox']>();
+const showMessageBoxMock = vi.mocked(MessageBox.prototype.showMessageBox);
 
 const getConfigurationMock = vi.fn();
 const configurationRegistryMock = {
@@ -77,11 +77,9 @@ function mockConfiguration(values: Record<string, unknown>): void {
 beforeEach(() => {
   vi.resetAllMocks();
   showMessageBoxMock.mockResolvedValue({ response: 'Hide' });
-  const messageBox = new MessageBox(undefined as never);
-  messageBox.showMessageBox = showMessageBoxMock;
   navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(
     configurationRegistryMock,
-    Promise.resolve(messageBox),
+    Promise.resolve(new MessageBox(undefined as never)),
   );
 });
 
@@ -247,10 +245,9 @@ describe('hide confirmation', () => {
       showMessageBoxMock.mockResolvedValue({ response: `Don't show again` });
       navigationItemsMenuBuilder.receiveNavigationItems(items);
 
-      clickToggle(target);
+      // the toggle entry routes straight here, so awaiting it needs no timer
+      await navigationItemsMenuBuilder.setItemVisibility(target, false);
 
-      // let anything the click started settle before asserting that nothing happened
-      await new Promise(resolve => setTimeout(resolve, 0));
       expect(showMessageBoxMock).not.toBeCalled();
       // the dismissal is global: recording it here would silence the prompt for every other item
       expect(configurationRegistryMock.updateConfigurationValue).not.toBeCalled();

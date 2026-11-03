@@ -127,17 +127,17 @@ function collectActiveNames(entries: NavigationRegistryEntry[], routeUrl: string
   return anyActive;
 }
 
-/** Stable representation of the active set, used to skip redundant round-trips to main. */
-function activeKey(active: Set<string>): string {
-  return [...active].toSorted((a, b) => a.localeCompare(b)).join('\n');
+/** Used to skip redundant round-trips to main when navigation leaves the active set unchanged. */
+function sameActiveItems(a: Set<string>, b: Set<string>): boolean {
+  return a.size === b.size && [...a].every(name => b.has(name));
 }
 
-let lastActiveKey = '';
+let lastActiveItems = new Set<string>();
 
 /** Send the main process the full item list, with visibility and active state. */
 async function sendNavigationItems(): Promise<void> {
   const active = findActiveItems(values, currentRoute);
-  lastActiveKey = activeKey(active);
+  lastActiveItems = active;
 
   const navItems: DisplayItem[] = [];
   values.forEach(item => {
@@ -219,11 +219,11 @@ configurationProperties.subscribe(() => {
   }
 });
 
-// Keep the main process aware of the active route. The navbar context menu refuses to hide the
-// selected item, and route changes go through none of the registry/configuration paths that
-// otherwise trigger hideItems() — without this, main would keep protecting whatever item was
-// selected when the app started.
+// Route changes reach none of the registry or configuration paths that call hideItems(), so
+// without this main keeps protecting whatever item was selected at startup.
 router.subscribe(navigation => {
+  // this module is imported before App.svelte calls router.mode.memory(), so the first value
+  // is still window.location, which in production is the packaged file:///.../index.html
   if (!navigation.url?.startsWith('/') || navigation.url.includes('.html')) {
     return;
   }
@@ -234,7 +234,7 @@ router.subscribe(navigation => {
     return;
   }
 
-  if (activeKey(findActiveItems(values, currentRoute)) === lastActiveKey) {
+  if (sameActiveItems(findActiveItems(values, currentRoute), lastActiveItems)) {
     return;
   }
 

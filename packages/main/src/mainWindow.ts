@@ -45,7 +45,7 @@ export interface WindowConfig {
 let isExtensionsDevelopmentModeEnabled = false;
 
 async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
-  // the plugin system publishes it once its container is built, which happens after this window
+  // published by the plugin system, which is built after this window
   const messageBoxDeferred = Promise.withResolvers<MessageBox>();
 
   const INITIAL_APP_WIDTH = 1050;
@@ -166,16 +166,15 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
     });
     developmentModeTracker.init();
 
-    // the message box arrives seconds later, once every extension has loaded; awaiting it keeps
-    // an early right-click queued until the dialog can be shown instead of failing
+    // awaited, so a right-click before the message box exists queues instead of failing
     navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry, messageBoxDeferred.promise);
 
     // open dev tools (if required)
     openDevTools.open(browserWindow, configurationRegistry);
   });
 
-  ipcMain.on('message-box', (_, data) => {
-    messageBoxDeferred.resolve(data as MessageBox);
+  ipcMain.on('message-box', (_, messageBox: MessageBox) => {
+    messageBoxDeferred.resolve(messageBox);
   });
 
   let windowHandler: WindowHandler | undefined;
