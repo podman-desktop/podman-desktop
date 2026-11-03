@@ -416,14 +416,14 @@ describe('createNewWindow', () => {
 });
 
 describe('navbar context menu confirmations', () => {
-  async function settled(promise: Promise<unknown>): Promise<boolean> {
-    return Promise.race([
-      promise.then(
-        () => true,
-        () => true,
-      ),
-      Promise.resolve(false),
-    ]);
+  const PENDING = Symbol('pending');
+
+  /**
+   * Races the promise itself, never a `.then()` of it: attaching a handler costs a microtask
+   * hop, which would let the sentinel win every time and make the check always report pending.
+   */
+  async function isPending(promise: Promise<unknown>): Promise<boolean> {
+    return (await Promise.race([promise, Promise.resolve(PENDING)])) === PENDING;
   }
 
   /**
@@ -447,7 +447,7 @@ describe('navbar context menu confirmations', () => {
     const { messageBoxPromise } = await buildMenuAndTakeMessageBox();
 
     // a right-click landing in that gap waits for the dialog instead of failing
-    expect(await settled(messageBoxPromise)).toBe(false);
+    expect(await isPending(messageBoxPromise)).toBe(true);
 
     const messageBox = new MessageBox(undefined as never);
     getHandler(vi.mocked(ipcMain.on), 'message-box')('', messageBox);
@@ -460,6 +460,6 @@ describe('navbar context menu confirmations', () => {
     // message box the previous test published
     const { messageBoxPromise } = await buildMenuAndTakeMessageBox();
 
-    expect(await settled(messageBoxPromise)).toBe(false);
+    expect(await isPending(messageBoxPromise)).toBe(true);
   });
 });

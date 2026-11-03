@@ -19,7 +19,7 @@
 import type { DisplayItem } from '@desktop-framework/api';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 
@@ -112,6 +112,21 @@ describe('findActiveItems', () => {
     // the main Dashboard is rendered outside the registry, so '/' marks no registry entry
     expect([...findActiveItems(entries, '/')]).toEqual([]);
   });
+
+  test('does not borrow a submenu child name for an unrelated top-level item', () => {
+    // collecItem descends only into groups, so the submenu child is never sent to main and the
+    // only item called Pods is the podman one; marking it active would make it unhideable
+    // while the navbar highlights nothing
+    const withSubmenu = [
+      entry('Kubernetes', '/kubernetes', {
+        type: 'submenu',
+        items: [entry('Pods', '/kubernetes/pods')],
+      }),
+      entry('Pods', '/pods'),
+    ];
+
+    expect(findActiveItems(withSubmenu, '/kubernetes/pods')).toEqual(new Set(['Kubernetes']));
+  });
 });
 
 describe('active item tracking', () => {
@@ -124,7 +139,14 @@ describe('active item tracking', () => {
       reachable: true,
       resources: { pods: 0, deployments: 0 },
     });
+    // every test below starts from a known route rather than wherever the previous one left
+    // the shared tinro singleton
+    router.goto('/');
     await fetchNavigationRegistries();
+  });
+
+  afterEach(() => {
+    router.goto('/');
   });
 
   function lastSentItems(): DisplayItem[] {

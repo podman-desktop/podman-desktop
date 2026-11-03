@@ -114,13 +114,28 @@ export function findActiveItems(entries: NavigationRegistryEntry[], routeUrl: st
   return active;
 }
 
-function collectActiveNames(entries: NavigationRegistryEntry[], routeUrl: string, active: Set<string>): boolean {
+/**
+ * @param sent whether `collecItem` sends these entries to main. It descends only into groups, so
+ * a submenu's children never become a `DisplayItem`. Adding their names anyway would protect
+ * whatever unrelated item happens to share one: being on `/kubernetes/pods` would mark the
+ * podman `Pods` active and make it unhideable, while the navbar does not highlight it.
+ */
+function collectActiveNames(
+  entries: NavigationRegistryEntry[],
+  routeUrl: string,
+  active: Set<string>,
+  sent = true,
+): boolean {
   let anyActive = false;
   for (const entry of entries) {
     // evaluate children first: a parent is active whenever one of its children is
-    const childActive = entry.items ? collectActiveNames(entry.items, routeUrl, active) : false;
+    const childActive = entry.items
+      ? collectActiveNames(entry.items, routeUrl, active, sent && entry.type === 'group')
+      : false;
     if (childActive || (entry.link && isNavItemSelected(routeUrl, entry.link))) {
-      active.add(entry.name);
+      if (sent) {
+        active.add(entry.name);
+      }
       anyActive = true;
     }
   }
@@ -135,16 +150,15 @@ function sameActiveItems(a: Set<string>, b: Set<string>): boolean {
 let lastActiveItems = new Set<string>();
 
 /** Send the main process the full item list, with visibility and active state. */
-async function sendNavigationItems(): Promise<void> {
-  const active = findActiveItems(values, currentRoute);
-  lastActiveItems = active;
-
+async function sendNavigationItems(active = findActiveItems(values, currentRoute)): Promise<void> {
   const navItems: DisplayItem[] = [];
   values.forEach(item => {
     collecItem(item, navItems, active);
   });
 
   await window.sendNavigationItems(navItems);
+  // only after the send lands, so a failure re-sends rather than leaving main a stale set
+  lastActiveItems = active;
 }
 
 // use helper here as window methods are initialized after the store in tests
@@ -234,11 +248,12 @@ router.subscribe(navigation => {
     return;
   }
 
-  if (sameActiveItems(findActiveItems(values, currentRoute), lastActiveItems)) {
+  const active = findActiveItems(values, currentRoute);
+  if (sameActiveItems(active, lastActiveItems)) {
     return;
   }
 
-  sendNavigationItems().catch((err: unknown) => console.error('Error sending navigation items', err));
+  sendNavigationItems(active).catch((err: unknown) => console.error('Error sending navigation items', err));
 });
 
 function handleKubernetesGroup(): void {

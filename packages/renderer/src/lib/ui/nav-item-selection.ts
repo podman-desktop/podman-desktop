@@ -24,7 +24,7 @@
  */
 export function isNavItemSelected(routeUrl: string, href: string): boolean {
   const uri = encodeURI(href);
-  // tinro may append a query string; selection is decided by the path alone
-  const path = routeUrl.split('?')[0] ?? routeUrl;
+  // tinro's url carries the query string; selection is decided by the path alone
+  const [path = routeUrl] = routeUrl.split('?');
   return path === uri || (uri !== '/' && path.startsWith(uri));
 }
