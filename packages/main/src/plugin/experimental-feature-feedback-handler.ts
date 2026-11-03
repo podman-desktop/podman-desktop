@@ -255,6 +255,9 @@ export class ExperimentalFeatureFeedbackHandler {
                 default:
                   this.disableFeature(key);
               }
+            } else {
+              // dialog closed without choosing an option: remind again in 2 days
+              this.setTimestamp(key, 2);
             }
             this.telemetry.track('experimentalFeatureFeedback', telemetryOptions);
           }

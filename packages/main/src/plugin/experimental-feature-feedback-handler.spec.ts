@@ -425,7 +425,7 @@ describe('showFeedbackDialog', () => {
     expect(telemetry.track).toHaveBeenCalled();
   });
 
-  test('should track a dismissed option when user closes the dialog', async () => {
+  test('should track a dismissed option and remind in 2 days when user closes the dialog', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
@@ -436,7 +436,7 @@ describe('showFeedbackDialog', () => {
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
 
-    expect(setTimestampSpy).not.toHaveBeenCalled();
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 2);
     expect(disableFeatureSpy).not.toHaveBeenCalled();
     expect(openExternalSpy).not.toHaveBeenCalled();
     expect(telemetry.track).toHaveBeenCalledWith('experimentalFeatureFeedback', { option: 'Dismissed' });
