@@ -36,9 +36,8 @@ import { isLinux, isMac } from '/@/utility/platform';
  * downgrade the call never happens and the assertions below would pass for the
  * wrong reason.
  */
-// Compose uses the same label for the CLI Tools table row and the Resources card.
-const COMPOSE_TOOL = composeExtension.extensionName;
-const COMPOSE_PROVIDER_CARD = composeExtension.extensionName;
+// same label for the CLI Tools table row and the Resources card
+const COMPOSE = composeExtension.extensionName;
 const blockedUpdateRegexp = new RegExp(
   `Provider update registration blocked for extension '${composeExtension.extensionFullLabel}' by providers.allowUpdate configuration`,
 );
@@ -68,10 +67,8 @@ test.beforeAll(async ({ runner, page, welcomePage, navigationBar }) => {
   await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
   await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
 
-  await cliToolsPage.uninstallTool(COMPOSE_TOOL);
-  await playExpect
-    .poll(async () => await cliToolsPage.getCurrentToolVersion(COMPOSE_TOOL), { timeout: 60_000 })
-    .toBeFalsy();
+  await cliToolsPage.uninstallTool(COMPOSE);
+  await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(COMPOSE), { timeout: 60_000 }).toBeFalsy();
 });
 
 test.afterAll(async ({ runner }) => {
@@ -79,9 +76,9 @@ test.afterAll(async ({ runner }) => {
   try {
     // the last test navigates to Resources, go back so the CLI Tools locators resolve
     await settingsBar?.cliToolsTab.click();
-    await cliToolsPage?.uninstallTool(COMPOSE_TOOL);
+    await cliToolsPage?.uninstallTool(COMPOSE);
   } catch (err: unknown) {
-    console.log(`Could not clean up ${COMPOSE_TOOL}: ${err}`);
+    console.log(`Could not clean up ${COMPOSE}: ${err}`);
   } finally {
     await runner.close();
   }
@@ -101,8 +98,8 @@ test.describe
         test('Compose can be installed and downgraded to make an update available', async () => {
           test.setTimeout(180_000);
 
-          await cliToolsPage.installTool(COMPOSE_TOOL);
-          await cliToolsPage.downgradeTool(COMPOSE_TOOL);
+          await cliToolsPage.installTool(COMPOSE);
+          await cliToolsPage.downgradeTool(COMPOSE);
 
           // `providers.allowUpdate` is only enforced in ProviderRegistry.registerUpdate();
           // CliToolRegistry.registerUpdate() has no such check, so the CLI Tools row still
@@ -113,7 +110,7 @@ test.describe
           // TODO(https://github.com/podman-desktop/podman-desktop/issues/19379): this only
           // covers the blocked path, so a deny-all regression would still pass. Add an
           // allowed extension (kind) to the fixture and assert its update button IS rendered.
-          await playExpect(cliToolsPage.getUpdateButton(COMPOSE_TOOL)).toBeVisible({ timeout: 30_000 });
+          await playExpect(cliToolsPage.getUpdateButton(COMPOSE)).toBeVisible({ timeout: 30_000 });
         });
 
         test('Provider update registration is blocked in the logs', async ({ runner }) => {
@@ -133,10 +130,10 @@ test.describe
           // guard against a false pass: the card must exist, otherwise the update button
           // would be missing simply because the whole Compose resource is not rendered
           await playExpect
-            .poll(async () => await resourcesPage.resourceCardIsVisible(COMPOSE_PROVIDER_CARD), { timeout: 10_000 })
+            .poll(async () => await resourcesPage.resourceCardIsVisible(COMPOSE), { timeout: 10_000 })
             .toBeTruthy();
 
-          await playExpect(resourcesPage.getProviderUpdateButton(COMPOSE_PROVIDER_CARD)).not.toBeAttached();
+          await playExpect(resourcesPage.getProviderUpdateButton(COMPOSE)).not.toBeAttached();
         });
       });
   });
