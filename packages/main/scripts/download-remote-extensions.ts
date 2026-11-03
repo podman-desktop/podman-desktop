@@ -19,7 +19,7 @@
 import 'reflect-metadata';
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 
@@ -127,9 +127,6 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     });
   }
 
-  // tmp folder
-  const tmpFolderPath = join(tmpdir(), options.extension.name);
-
   const finalPath = join(options.destination, options.extension.name);
 
   const { config } = await imageRegistry.getManifestFromImageName(options.extension.oci);
@@ -156,6 +153,9 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     }
   }
 
+  // unique tmp folder (not derived from the extension name), so it can safely be removed once done
+  const tmpFolderPath = await mkdtemp(join(tmpdir(), 'pd-remote-extension-'));
+
   try {
     await imageRegistry.downloadAndExtractImage(options.extension.oci, tmpFolderPath, event =>
       console.log(event.message),
@@ -175,7 +175,12 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     await writeFile(join(finalPath, DIGEST_FILENAME), config.digest, { encoding: 'utf-8' });
   } finally {
     // delete the tmp folder, whether the download succeeded or not
-    await rm(tmpFolderPath, { recursive: true, force: true });
+    // a cleanup failure must not hide the error of the download
+    try {
+      await rm(tmpFolderPath, { recursive: true, force: true });
+    } catch (error: unknown) {
+      console.warn(`unable to remove the temporary folder ${tmpFolderPath}`, error);
+    }
   }
 }
 

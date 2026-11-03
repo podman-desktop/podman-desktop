@@ -17,7 +17,7 @@
  ********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -73,6 +73,7 @@ beforeEach(() => {
   vi.unstubAllEnvs();
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
+  vi.mocked(mkdtemp).mockResolvedValue(TMP_EXTENSION_DEST);
   vi.mocked(product).extensions = {
     remote: [],
     developmentDocumentation: '',
@@ -307,6 +308,47 @@ describe('downloadExtension', () => {
       recursive: true,
       force: true,
     });
+  });
+
+  test('should download in a unique tmp folder', async () => {
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
+
+    expect(mkdtemp).toHaveBeenCalledExactlyOnceWith(join(TMP_DIR, 'pd-remote-extension-'));
+    expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledExactlyOnceWith(
+      REMOTE_INFO_MOCK.oci,
+      TMP_EXTENSION_DEST,
+      expect.any(Function),
+    );
+  });
+
+  test('should log the download progress', async () => {
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockImplementation(async (_image, _dest, logger) => {
+      logger({ message: 'Downloading layer 1/1', progress: 100 });
+    });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
+
+    expect(logSpy).toHaveBeenCalledWith('Downloading layer 1/1');
+  });
+
+  test('should keep the original error when the tmp folder cannot be removed', async () => {
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockRejectedValue(new Error('layer download failed'));
+    vi.mocked(rm).mockRejectedValue(new Error('EPERM'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await expect(
+      downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      }),
+    ).rejects.toThrowError('layer download failed');
   });
 
   test('should remove the tmp folder when the download fails', async () => {
