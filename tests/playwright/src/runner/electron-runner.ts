@@ -18,11 +18,12 @@
 
 import type { ChildProcess } from 'node:child_process';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { mkdir } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
 import { _electron as electron } from '@playwright/test';
-import type { BrowserWindow } from 'electron';
+import type { BrowserWindow, WebContents } from 'electron';
 
 import { Runner } from '/@/runner/podman-desktop-runner';
 import { RunnerFactory } from '/@/runner/runner-factory';
@@ -60,12 +61,6 @@ export class ElectronRunner extends Runner {
       }
     }
 
-    // Direct Electron console to Node terminal and collect in buffer.
-    this.getPage().on('console', msg => {
-      this.pushConsoleMessage(msg.text());
-      console.log(msg);
-    });
-
     // Start playwright tracing
     await this.startTracing();
 
@@ -78,14 +73,92 @@ export class ElectronRunner extends Runner {
       console.log('Warning: Video recording is not active on this page');
     }
 
-    // also get stderr from the node process
-    this.getElectronApp()
-      .process()
-      .stderr?.on('data', data => {
-        console.log(`STDERR: ${data}`);
-      });
-
     return this.getPage();
+  }
+
+  private async captureStartupDiagnostics(attempt: number, maxAttempts: number): Promise<void> {
+    const application = this.getElectronApp();
+    const proc = application.process();
+    const prefix = `[Electron attempt ${attempt}/${maxAttempts}, PID ${proc.pid}]`;
+
+    proc.stdout?.on('data', data => console.log(`${prefix} STDOUT: ${data}`));
+    proc.stderr?.on('data', data => console.log(`${prefix} STDERR: ${data}`));
+    proc.on('error', error => console.error(prefix, 'process error:', error));
+    proc.on('exit', (code, signal) => console.log(prefix, 'process exited:', { code, signal }));
+
+    // Listen on the context before firstWindow(), including errors from pages still loading.
+    const context = application.context();
+    context.on('console', msg => {
+      this.pushConsoleMessage(msg.text());
+      console.log(prefix, msg);
+    });
+    context.on('weberror', error => console.error(prefix, 'renderer error:', error.error()));
+    context.on('requestfailed', request => {
+      console.error(prefix, 'request failed:', request.method(), request.url(), request.failure()?.errorText);
+    });
+    const observePage = (page: Page): void => {
+      page.on('crash', () => console.error(prefix, 'page crashed:', page.url()));
+      page.on('close', () => console.log(prefix, 'page closed:', page.url()));
+    };
+    context.on('page', observePage);
+    context.pages().forEach(observePage);
+
+    try {
+      await this.raceWithTimeout(
+        application.evaluate(({ app, webContents }, prefix) => {
+          console.log(prefix, 'runtime:', JSON.stringify({ versions: process.versions, platform: process.platform }));
+          const observeContents = (contents: WebContents): void => {
+            const label = `${prefix} webContents ${contents.id}`;
+            contents.on('preload-error', (_event, preloadPath, error) => {
+              console.error(label, 'preload-error:', preloadPath, error.stack ?? error.message);
+            });
+            contents.on('render-process-gone', (_event, details) => {
+              console.error(label, 'render-process-gone:', JSON.stringify(details));
+            });
+            contents.on('did-fail-load', (_event, code, description, url, isMainFrame) => {
+              console.error(label, 'did-fail-load:', JSON.stringify({ code, description, url, isMainFrame }));
+            });
+            contents.on('did-start-loading', () => console.log(label, 'did-start-loading', contents.getURL()));
+            contents.on('dom-ready', () => console.log(label, 'dom-ready', contents.getURL()));
+            contents.on('did-finish-load', () => console.log(label, 'did-finish-load', contents.getURL()));
+            contents.on('did-stop-loading', () => console.log(label, 'did-stop-loading', contents.getURL()));
+          };
+          app.on('web-contents-created', (_event, contents) => observeContents(contents));
+          webContents.getAllWebContents().forEach(observeContents);
+          app.on('child-process-gone', (_event, details) => {
+            console.error(prefix, 'child-process-gone:', JSON.stringify(details));
+          });
+        }, prefix),
+        5_000,
+        'Registering Electron startup diagnostics timed out',
+      );
+    } catch (error: unknown) {
+      console.error(prefix, 'Could not register Electron startup diagnostics:', error);
+    }
+  }
+
+  private async logFailedStartupState(): Promise<void> {
+    if (!this._app) return;
+    try {
+      // Inspect from the main process: evaluating renderer JavaScript can hang on a blank window.
+      const windows = await this.raceWithTimeout(
+        this._app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows().map(window => ({
+            id: window.id,
+            visible: window.isVisible(),
+            url: window.webContents.getURL(),
+            loading: window.webContents.isLoading(),
+            crashed: window.webContents.isCrashed(),
+            rendererPID: window.webContents.getOSProcessId(),
+          })),
+        ),
+        5_000,
+        'Reading failed startup window state timed out',
+      );
+      console.log('Failed startup window state:', JSON.stringify(windows));
+    } catch (error: unknown) {
+      console.error('Could not read failed startup window state:', error);
+    }
   }
 
   /**
@@ -102,18 +175,30 @@ export class ElectronRunner extends Runner {
       Object.keys(this._options).forEach(key => {
         console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
       });
+      await mkdir(this._testOutput, { recursive: true });
+      const logFile = resolve(this._testOutput, `electron-${process.pid}-${Date.now()}-attempt-${attempt}.log`);
+      console.log(`Chromium startup log: ${logFile}`);
+      const options = this._options as Parameters<typeof electron.launch>[0];
       this._app = await electron.launch({
-        ...this._options,
+        ...options,
+        env: {
+          ...(options?.env ?? process.env),
+          // Preserve early Chromium/preload errors in CI artifacts, even if launch() fails.
+          ELECTRON_ENABLE_LOGGING: '1',
+          ELECTRON_LOG_FILE: logFile,
+        },
       });
+      await this.captureStartupDiagnostics(attempt, maxAttempts);
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
 
       const filePath = await this.getElectronApp().evaluate(async ({ app }) => app.getPath('exe'));
       console.log(`The Executable Electron app. file: ${filePath}`);
     } catch (err) {
-      console.log(`Caught exception in startup (attempt ${attempt}): ${err}`);
+      console.error(`Caught exception in startup (attempt ${attempt}):`, err);
+      await this.logFailedStartupState();
       await this.closeAfterFailedStart();
-      throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
+      throw new Error(`Podman Desktop could not be started correctly with error: ${err}`, { cause: err });
     }
 
     const rendered = await this.waitForAppRendered(ElectronRunner.APP_RENDER_TIMEOUT_MS);
@@ -128,6 +213,7 @@ export class ElectronRunner extends Runner {
       `Blank screen detected on attempt ${attempt}/${maxAttempts} — ` +
         `app did not render within ${ElectronRunner.APP_RENDER_TIMEOUT_MS}ms`,
     );
+    await this.logFailedStartupState();
     await this.closeAfterFailedStart();
 
     if (attempt >= maxAttempts) {
@@ -157,7 +243,8 @@ export class ElectronRunner extends Runner {
       );
       console.log('Application UI rendered successfully');
       return true;
-    } catch {
+    } catch (error: unknown) {
+      console.error('Application UI render check failed:', error);
       return false;
     }
   }
