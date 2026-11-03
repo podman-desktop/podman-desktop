@@ -1279,48 +1279,78 @@ describe('listContainers', () => {
   });
 });
 
-test.each([
+test.each<{
+  name: string;
+  statusCode: number;
+  // message dockerode built for the error, it wraps the reason with the HTTP status
+  engineMessage?: string;
+  imageName?: string;
+  expectedMessage: string;
+}>([
   {
+    name: 'a 403 hints that the image may not exist',
     statusCode: 403,
     expectedMessage: 'access to image "unknown-image" is denied (403 error). Can also be that image does not exist',
   },
   {
+    name: 'a 401 hints that the registry may require authentication',
     statusCode: 401,
     expectedMessage:
       'access to image "unknown-image" is denied (401 error). Can also be that the registry requires authentication.',
   },
   {
+    name: 'a 500 reports a bare engine message as is',
     statusCode: 500,
-    expectedMessage:
-      'access to image "unknown-image" is denied (500 error). Can also be that the registry requires authentication.',
+    expectedMessage: 'unable to pull image "unknown-image": access denied',
   },
-])('pull unknown image fails with error $statusCode', async ({ statusCode, expectedMessage }) => {
-  const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
+  {
+    name: 'a 500 on an unparseable reference reports the reason sent by the engine',
+    statusCode: 500,
+    engineMessage:
+      '(HTTP code 500) server error - normalizing image: normalizing name for compat API: parsing reference ".:latest": invalid reference format ',
+    imageName: '.',
+    expectedMessage: 'unable to pull image ".": invalid reference format',
+  },
+  {
+    name: 'a 500 on an unreachable registry strips the envelope dockerode wrapped the reason with',
+    statusCode: 500,
+    engineMessage: '(HTTP code 500) server error - connection refused ',
+    expectedMessage: 'unable to pull image "unknown-image": connection refused',
+  },
+  {
+    name: 'a 500 without any reason still reports the status code',
+    statusCode: 500,
+    engineMessage: '',
+    expectedMessage: 'unable to pull image "unknown-image" (500 error).',
+  },
+])(
+  'pull image fails when $name',
+  async ({ statusCode, engineMessage = 'access denied', imageName = 'unknown-image', expectedMessage }) => {
+    const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
 
-  const pullMock = vi.fn();
+    const pullMock = vi.fn();
 
-  const fakeDockerode = {
-    pull: pullMock,
-    modem: {
-      followProgress: vi.fn(),
-    },
-  } as unknown as Dockerode;
+    const fakeDockerode = {
+      pull: pullMock,
+      modem: {
+        followProgress: vi.fn(),
+      },
+    } as unknown as Dockerode;
 
-  getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
+    getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
 
-  const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
+    const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
 
-  // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', statusCode);
+    // add statusCode on the error
+    pullMock.mockRejectedValue(new DockerodeTestStatusError(engineMessage, statusCode));
 
-  pullMock.mockRejectedValue(error);
-
-  const callback = vi.fn();
-  // check that we have a nice error message
-  await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    expectedMessage,
-  );
-});
+    const callback = vi.fn();
+    // check that we have a nice error message
+    await expect(containerRegistry.pullImage(containerConnectionInfo, imageName, callback)).rejects.toThrow(
+      expectedMessage,
+    );
+  },
+);
 
 test('pulling an image with platform linux/arm64 will add platform to pull options', async () => {
   // Mock the pulling and dockerode
@@ -8508,5 +8538,64 @@ describe('updateImages', () => {
       skipped: 0,
       failed: 2,
     });
+  });
+});
+
+describe('getImageInfo', () => {
+  beforeEach(() => {
+    server = setupServer(
+      http.get('http://localhost/v4.2.0/libpod/images/json', () =>
+        HttpResponse.json([{ Id: 'dummyImageId', Digest: 'fooDigest' }]),
+      ),
+    );
+    server.listen({ onUnhandledFrame: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api,
+      libpodApi: api,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        endpoint: { socketPath: '/podman1.socket' },
+      },
+    } as unknown as InternalContainerProvider);
+  });
+
+  test('resolves the image matching the engine and the engine image id', async () => {
+    const image = await containerRegistry.getImageInfo('podman1', 'sha256:dummyImageId');
+
+    expect(image.engineId).toBe('podman1');
+    expect(image.Id).toBe('sha256:dummyImageId');
+  });
+
+  test('rejects when the id is the raw id without the digest prefix', async () => {
+    await expect(containerRegistry.getImageInfo('podman1', 'dummyImageId')).rejects.toThrow(
+      'Image dummyImageId not found on engine podman1',
+    );
+  });
+
+  test('rejects when the engine is unknown', async () => {
+    await expect(containerRegistry.getImageInfo('podman2', 'sha256:dummyImageId')).rejects.toThrow(
+      'no engine matching this engine',
+    );
+  });
+
+  test('rejects when the engine has no api', async () => {
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        endpoint: { socketPath: '/podman1.socket' },
+      },
+    } as unknown as InternalContainerProvider);
+
+    await expect(containerRegistry.getImageInfo('podman1', 'sha256:dummyImageId')).rejects.toThrow(
+      'no running provider for the matching container',
+    );
   });
 });

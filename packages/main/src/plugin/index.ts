@@ -152,7 +152,7 @@ import type {
   V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
-import checkDiskSpacePkg from 'check-disk-space';
+import { checkDiskSpace } from 'check-disk-space';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
@@ -263,11 +263,6 @@ import { ViewRegistry } from './view-registry.js';
 import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
-
-// workaround for ESM
-const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
-  path: string,
-) => Promise<{ free: number }>;
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
@@ -1446,9 +1441,18 @@ export class PluginSystem {
 
         try {
           const results = await containerProviderRegistry.updateImages(images, abortController?.signal);
-          const summary = results.map(result => `${result.imageRef}: ${result.message}`).join('; ');
-          task.name = `Image update: ${summary || 'No images updated'}`;
           const failures = results.filter(result => result.status === 'error');
+          const counts = {
+            updated: results.filter(result => result.status === 'updated').length,
+            'up to date': results.filter(result => result.status === 'normal').length,
+            skipped: results.filter(result => result.status === 'skipped').length,
+            failed: failures.length,
+          };
+          const summary = Object.entries(counts)
+            .filter(([, count]) => count > 0)
+            .map(([status, count]) => `${count} ${status}`)
+            .join(', ');
+          task.name = `Image update: ${summary || 'No images updated'}`;
           if (abortController?.signal.aborted) {
             task.status = 'canceled';
           } else if (failures.length > 0) {
@@ -3421,7 +3425,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<containerDesktopAPI.ImageChecks | undefined> => {
         let token;
@@ -3429,6 +3434,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageChecker.check(id, image, token);
       },
     );
@@ -3442,7 +3448,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<ImageFilesystemLayersUI | undefined> => {
         let token;
@@ -3450,6 +3457,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageFiles.getFilesystemLayers(id, image, token);
       },
     );

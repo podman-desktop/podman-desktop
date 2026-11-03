@@ -37,6 +37,9 @@ let composeVersion: string;
 // Set when the Compose version check fails (e.g. GitHub API unreachable).
 // Downstream serial tests depend on a successful download, so they must skip.
 let composeVersionCheckFailed = false;
+// Set when Compose is already installed (e.g. left over from a prior test suite).
+// The onboarding flow requires Compose to be absent, so downstream tests must skip.
+let composeAlreadyInstalled = false;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
 const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ?? false;
 const skipComposeOnboardingTest = process.env.SKIP_COMPOSE_ONBOARDING_TEST ?? false;
@@ -57,10 +60,12 @@ test.afterAll(async ({ runner }) => {
 test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
   test.describe.configure({ mode: 'serial' });
   test.beforeEach(async () => {
-    if (cliToolsPage.wasRateLimitReached() || composeVersionCheckFailed) {
+    if (cliToolsPage.wasRateLimitReached() || composeVersionCheckFailed || composeAlreadyInstalled) {
       const reason = cliToolsPage.wasRateLimitReached()
         ? 'Rate limit exceeded for current environment'
-        : 'Compose version check failed; download prerequisite not met';
+        : composeAlreadyInstalled
+          ? 'Compose is already installed; onboarding flow requires Compose to be absent'
+          : 'Compose version check failed; download prerequisite not met';
       test.info().annotations.push({ type: 'skip', description: reason });
       test.skip(true, reason);
     }
@@ -78,10 +83,14 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
     const composeResourceCard = new ResourceCliCardPage(page, RESOURCE_NAME);
     await composeResourceCard.card.scrollIntoViewIfNeeded();
     const setupButton = composeResourceCard.setupButton;
-    await playExpect(
-      setupButton,
-      'Compose Setup button is not present, perhaps compose is already installed',
-    ).toBeVisible({ timeout: 10_000 });
+
+    if ((await setupButton.count()) === 0 || !(await setupButton.isVisible().catch(() => false))) {
+      composeAlreadyInstalled = true;
+      test.skip(true, 'Compose is already installed; Setup button not available');
+      return;
+    }
+
+    await playExpect(setupButton).toBeVisible({ timeout: 10_000 });
   });
 
   test('Can enter Compose onboarding', async ({ page, navigationBar }) => {

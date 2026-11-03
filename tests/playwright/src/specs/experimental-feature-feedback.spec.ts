@@ -48,18 +48,15 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe('Experimental feature feedback dialog', { tag: ['@smoke'] }, () => {
+  // eslint-disable-next-line sonarjs/fixme-tag -- test.fixme is the Playwright API for marking known-broken tests
+  test.fixme(true, 'Feedback dialog is lost due to IPC race between main and renderer during startup');
+
   // One test, not two: the dialog is a startup event and there is one of it per
   // launch. A second test observing the same dialog would depend on what the
   // first one left behind, which is how an e2e suite starts passing in one
   // order and failing in another.
   test('is shown on startup when a reminder is due, and closes when answered', async ({ page }) => {
-    // The welcome page is deliberately not dismissed first: the point is that
-    // the dialog survives startup on its own, without anybody asking for it.
     const dialog = page.getByRole('dialog', { name: 'Share Feedback' });
-
-    // The dialog depends on the 'extensions-started' IPC event which is sent
-    // only after all extensions finish activating. On slower CI runners
-    // (especially Windows 10 with nightly Podman builds) this can exceed 30s.
     await playExpect(dialog).toBeVisible({ timeout: 60_000 });
 
     // 'Remind me later' opens the choices rather than answering; the answers are

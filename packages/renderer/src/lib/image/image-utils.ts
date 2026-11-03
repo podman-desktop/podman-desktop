@@ -194,7 +194,7 @@ export class ImageUtils {
         .flat();
     }
 
-    if (!imageInfo.RepoTags) {
+    if (!imageInfo.RepoTags?.length) {
       return [
         {
           id: imageInfo.Id,

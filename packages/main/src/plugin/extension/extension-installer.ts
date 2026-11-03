@@ -39,6 +39,7 @@ import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { MessageBox } from '/@/plugin/message-box.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 @injectable()
@@ -312,7 +313,30 @@ export class ExtensionInstaller {
     const task = this.taskManager.createTask({
       title: `Installing extension ${imageName}`,
     });
+    return this.installFromImageInTask(
+      task,
+      sendLog,
+      sendError,
+      sendEnd,
+      imageName,
+      extensionAnalyzed,
+      catalogExtensionId,
+    );
+  }
 
+  /**
+   * Install the extension from the image, reporting the installation in the given task,
+   * e.g. the task of an update which also covers the removal of the current version.
+   */
+  async installFromImageInTask(
+    task: Task,
+    sendLog: (message: string) => void,
+    sendError: (message: string) => void,
+    sendEnd: (message: string) => void,
+    imageName: string,
+    extensionAnalyzed?: (extension: AnalyzedExtension) => void,
+    catalogExtensionId?: string,
+  ): Promise<void> {
     const wrappedSendError = (message: string): void => {
       sendError(message);
       task.error = message;

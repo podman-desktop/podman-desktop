@@ -843,6 +843,21 @@ export class ColorRegistry {
       hcLight: accent1[50],
     });
 
+    // cards placed straight on the page in the enhanced dashboard; white in light so they stand out from content-bg
+    this.registerColor(`${ct}dashboard-card-bg`, {
+      dark: charcoal[600],
+      light: white,
+      hcDark: neutral[800],
+      hcLight: accent1[50],
+    });
+
+    this.registerColor(`${ct}dashboard-card-hover-bg`, {
+      dark: charcoal[600],
+      light: white,
+      hcDark: neutral[800],
+      hcLight: accent1[50],
+    });
+
     this.registerColor(`${ct}card-carousel-card-header-text`, {
       dark: gray[100],
       light: charcoal[900],

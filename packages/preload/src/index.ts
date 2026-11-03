@@ -20,8 +20,6 @@
  * @module preload
  */
 
-import EventEmitter from 'node:events';
-
 import type {
   CliToolInfo,
   ColorInfo,
@@ -164,17 +162,18 @@ const originalConsole = console;
 const memoryLogs: { logType: LogType; date: Date; message: string }[] = [];
 
 export const buildApiSender = (): ApiSenderType => {
-  const eventEmitter = new EventEmitter();
+  const target = new EventTarget();
 
   return {
     send: (channel: string, data?: unknown): void => {
-      eventEmitter.emit(channel, data);
+      target.dispatchEvent(new CustomEvent(channel, { detail: data }));
     },
     receive: (channel: string, func: (...args: unknown[]) => void): IDisposable => {
-      eventEmitter.on(channel, func);
+      const listener = (event: Event): void => func((event as CustomEvent).detail);
+      target.addEventListener(channel, listener);
       return {
         dispose: (): void => {
-          eventEmitter.removeListener(channel, func);
+          target.removeEventListener(channel, listener);
         },
       };
     },
@@ -2680,10 +2679,11 @@ export function initExposure(): void {
     'imageCheck',
     async (
       id: string,
-      image: containerDesktopAPI.ImageInfo,
+      engineId: string,
+      imageId: string,
       cancellationToken?: number,
     ): Promise<containerDesktopAPI.ImageChecks | undefined> => {
-      return ipcInvoke('image-checker:check', id, image, cancellationToken);
+      return ipcInvoke('image-checker:check', id, engineId, imageId, cancellationToken);
     },
   );
 
@@ -2712,10 +2712,11 @@ export function initExposure(): void {
     'imageGetFilesystemLayers',
     async (
       id: string,
-      image: containerDesktopAPI.ImageInfo,
+      engineId: string,
+      imageId: string,
       cancellationToken?: number,
     ): Promise<ImageFilesystemLayersUI | undefined> => {
-      return ipcInvoke('image-files:getFilesystemLayers', id, image, cancellationToken);
+      return ipcInvoke('image-files:getFilesystemLayers', id, engineId, imageId, cancellationToken);
     },
   );
 

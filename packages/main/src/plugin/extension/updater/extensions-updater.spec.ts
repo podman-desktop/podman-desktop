@@ -24,6 +24,8 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { ExtensionInstaller } from '/@/plugin/extension/extension-installer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 import { ExtensionsUpdater } from './extensions-updater.js';
@@ -98,7 +100,7 @@ const configurationRegistry = {
 } as unknown as ConfigurationRegistry;
 
 const extensionInstaller = {
-  installFromImage: vi.fn(),
+  installFromImageInTask: vi.fn(),
 } as unknown as ExtensionInstaller;
 
 const telemetry = {
@@ -106,6 +108,11 @@ const telemetry = {
     // do nothing
   }),
 } as unknown as Telemetry;
+
+const task = {} as Task;
+const taskManager = {
+  createTask: vi.fn(),
+} as unknown as TaskManager;
 
 const originalConsoleError = console.error;
 beforeEach(() => {
@@ -116,8 +123,11 @@ beforeEach(() => {
     configurationRegistry,
     extensionInstaller,
     telemetry,
+    taskManager,
   );
   vi.clearAllMocks();
+  task.error = undefined;
+  vi.mocked(taskManager.createTask).mockReturnValue(task);
 });
 
 afterEach(() => {
@@ -152,7 +162,8 @@ test('should check for updates and try to update one extension automatically', a
     { id: 'foo.extension1', ociUri: 'oci-registry.foo/foo/bar1', version: '2.0.0' },
   ]);
 
-  expect(extensionInstaller.installFromImage).toBeCalledWith(
+  expect(extensionInstaller.installFromImageInTask).toBeCalledWith(
+    task,
     expect.anything(),
     expect.anything(),
     expect.anything(),
@@ -179,7 +190,8 @@ test('should automatically replace a bundled extension by its new version', asyn
 
   expect(extensionLoader.replaceBundledExtension).toHaveBeenCalledWith('foo.extension1');
   expect(extensionLoader.removeExtension).not.toHaveBeenCalled();
-  expect(extensionInstaller.installFromImage).toHaveBeenCalledWith(
+  expect(extensionInstaller.installFromImageInTask).toHaveBeenCalledWith(
+    task,
     expect.anything(),
     expect.anything(),
     expect.anything(),
@@ -200,7 +212,8 @@ test('should automatically update an extension replacing a bundled one', async (
   await extensionsUpdater.init();
 
   expect(extensionLoader.removeExtension).toHaveBeenCalledWith('foo.extension1');
-  expect(extensionInstaller.installFromImage).toHaveBeenCalledWith(
+  expect(extensionInstaller.installFromImageInTask).toHaveBeenCalledWith(
+    task,
     expect.anything(),
     expect.anything(),
     expect.anything(),
@@ -217,12 +230,55 @@ test('should replace a bundled extension by its new version when updating it', a
 
   expect(extensionLoader.replaceBundledExtension).toHaveBeenCalledWith('foo.extension1');
   expect(extensionLoader.removeExtension).not.toHaveBeenCalled();
-  expect(extensionInstaller.installFromImage).toHaveBeenCalledWith(
+  expect(extensionInstaller.installFromImageInTask).toHaveBeenCalledWith(
+    task,
     expect.anything(),
     expect.anything(),
     expect.anything(),
     'oci-registry.foo/foo/bar1',
   );
+});
+
+test('should report the update of an extension in a task', async () => {
+  extensionLoaderListExtensionsMock.mockResolvedValue([
+    buildExtensionInfo('foo.extension1', {
+      displayName: 'My Extension 1',
+      update: { version: '2.0.0', ociUri: 'oci-registry.foo/foo/bar1' },
+    }),
+  ]);
+
+  await extensionsUpdater.updateExtension('foo.extension1', 'oci-registry.foo/foo/bar1');
+
+  expect(taskManager.createTask).toHaveBeenCalledOnce();
+  expect(taskManager.createTask).toHaveBeenCalledWith({ title: 'Updating My Extension 1 to v2.0.0' });
+  expect(extensionInstaller.installFromImageInTask).toHaveBeenCalledWith(
+    task,
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
+    'oci-registry.foo/foo/bar1',
+  );
+  expect(task.error).toBeUndefined();
+});
+
+test('should name the update task without version when the update is unknown', async () => {
+  extensionLoaderListExtensionsMock.mockResolvedValue([
+    buildExtensionInfo('foo.extension1', { displayName: 'My Extension 1' }),
+  ]);
+
+  await extensionsUpdater.updateExtension('foo.extension1', 'oci-registry.foo/foo/bar1');
+
+  expect(taskManager.createTask).toHaveBeenCalledWith({ title: 'Updating My Extension 1' });
+});
+
+test('should fail the update task when the current version cannot be removed', async () => {
+  extensionLoaderListExtensionsMock.mockResolvedValue([buildExtensionInfo('foo.extension1')]);
+  vi.mocked(extensionLoader.removeExtension).mockRejectedValueOnce(new Error('removal failure'));
+
+  await extensionsUpdater.updateExtension('foo.extension1', 'oci-registry.foo/foo/bar1');
+
+  expect(extensionInstaller.installFromImageInTask).not.toHaveBeenCalled();
+  expect(task.error).toBe('Error: removal failure');
 });
 
 /**
@@ -266,8 +322,9 @@ test('should flag but not apply the update of an extension having its automatic 
   ]);
   expect(extensionLoader.removeExtension).toHaveBeenCalledOnce();
   expect(extensionLoader.removeExtension).toHaveBeenCalledWith('foo.extension2');
-  expect(extensionInstaller.installFromImage).toHaveBeenCalledOnce();
-  expect(extensionInstaller.installFromImage).toHaveBeenCalledWith(
+  expect(extensionInstaller.installFromImageInTask).toHaveBeenCalledOnce();
+  expect(extensionInstaller.installFromImageInTask).toHaveBeenCalledWith(
+    task,
     expect.anything(),
     expect.anything(),
     expect.anything(),

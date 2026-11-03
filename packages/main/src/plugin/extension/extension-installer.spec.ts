@@ -33,6 +33,7 @@ import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ImageRegistry } from '/@/plugin/image-registry.js';
 import { MessageBox } from '/@/plugin/message-box.js';
 import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 import { ExtensionInstaller } from './extension-installer.js';
@@ -169,6 +170,24 @@ describe('installFromImage task lifecycle', () => {
 
     const task = createTaskMock.mock.results[0]?.value;
     expect(task.progress).toBe(100);
+  });
+
+  test('should report the installation in the given task', async () => {
+    getImageConfigLabelsMock.mockResolvedValueOnce({
+      'org.opencontainers.image.title': 'title',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'io.podman-desktop.api.version': '1.0.0',
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+    const task = { status: 'in-progress', progress: undefined, error: undefined } as unknown as Task;
+
+    await extensionInstaller.installFromImageInTask(task, vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(createTaskMock).not.toHaveBeenCalled();
+    expect(task.status).toBe('success');
   });
 
   test('should mark task as failed when installation errors', async () => {
