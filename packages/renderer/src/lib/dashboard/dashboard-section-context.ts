@@ -25,4 +25,10 @@ export const DASHBOARD_SECTION_CONTEXT = 'dashboard-section';
 export interface DashboardSectionContext {
   // true when the experimental enhanced dashboard layout is on
   readonly enhanced: boolean;
+
+  // human-readable label for a registry id, the id itself when unknown
+  label(id: string): string;
+
+  // hide a section (same as unchecking it in the dashboard layout menu)
+  hide(id: string): void;
 }

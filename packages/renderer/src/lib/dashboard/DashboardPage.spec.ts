@@ -48,7 +48,7 @@ beforeEach(() => {
 });
 
 async function waitForSections(): Promise<void> {
-  await waitFor(() => expect(screen.getByRole('button', { name: /^Learning Center/ })).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole('button', { name: /^Learning Center/i })).toBeInTheDocument());
 }
 
 function setEnhanced(enabled: boolean): void {
@@ -178,4 +178,22 @@ test('switching the setting at runtime re-renders the layout', async () => {
 
   await waitFor(() => expect(container.querySelector(COLUMN)).not.toBeNull());
   expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toHaveClass('font-extralight');
+});
+
+test('setting on: section title is the sentence-case label', async () => {
+  setEnhanced(true);
+  render(DashboardPage);
+
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Learning center' })).toBeInTheDocument());
+  expect(screen.queryByText('Learning Center')).not.toBeInTheDocument();
+});
+
+test('hide via the section close button removes the section', async () => {
+  setEnhanced(true);
+  render(DashboardPage);
+
+  const close = await waitFor(() => screen.getByRole('button', { name: 'Hide Learning center' }));
+  await fireEvent.click(close);
+
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Learning center' })).not.toBeInTheDocument());
 });

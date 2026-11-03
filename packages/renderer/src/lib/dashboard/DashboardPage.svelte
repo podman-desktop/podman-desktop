@@ -59,6 +59,10 @@ setContext<DashboardSectionContext>(DASHBOARD_SECTION_CONTEXT, {
   get enhanced(): boolean {
     return isEnhancedDashboard();
   },
+  label: (id: string): string => dashboardPageRegistry.entries.find(entry => entry.id === id)?.label ?? id,
+  hide: (id: string): void => {
+    handleDashboardToggle(id, false);
+  },
 });
 
 // Initialize dashboard configuration
