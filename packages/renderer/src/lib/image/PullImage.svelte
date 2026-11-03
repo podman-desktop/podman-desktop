@@ -1,5 +1,10 @@
 <script lang="ts">
-import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@desktop-framework/api';
+import type {
+  ImageLocation,
+  ImageSearchOptions,
+  ProviderContainerConnectionInfo,
+  PullEvent,
+} from '@desktop-framework/api';
 import { NavigationPage, PreferredRegistriesSettings } from '@desktop-framework/api';
 import { faArrowCircleDown, faBan, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
@@ -21,7 +26,6 @@ import { lastPage } from '/@/stores/breadcrumb';
 import { imagesInfos } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 
-import type { ImageInfoUI } from './ImageInfoUI';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 const DOCKER_PREFIX = 'docker.io';
@@ -34,7 +38,10 @@ const imageUtils = new ImageUtils();
 let logsPull = $state<Terminal>();
 let pullError = $state('');
 let pullRunning = $state(false);
-let pullCompleted = $state(false);
+// where the engine says it put the image it just pulled, the backend owns the engine id
+let pullTarget = $state<ImageLocation>();
+// a pull the engine cannot resolve afterwards, reported apart from a pull that outright failed
+let pullResolveError = $state<string>();
 let pullCancellableTokenId = $state<number | undefined>();
 let pullCancellationRequested = $state(false);
 let shortnameImages: string[] = [];
@@ -59,36 +66,18 @@ let providerConnections = $derived(
 
 let selectedProviderConnection = $state<ProviderContainerConnectionInfo>();
 
-// the engine id is not carried by the connection, it is built from the provider owning it
-let selectedEngineId = $derived(
-  $providerInfos
-    .flatMap(provider =>
-      provider.containerConnections.map(connection => ({ connection, engineId: `${provider.id}.${connection.name}` })),
-    )
-    .find(
-      ({ connection }) =>
-        connection.name === selectedProviderConnection?.name &&
-        connection.endpoint.socketPath === selectedProviderConnection?.endpoint.socketPath,
-    )?.engineId,
-);
-
-let isImageInStore = $derived.by(() => {
-  const target = getPullTarget();
-  if (!target || !selectedEngineId) {
-    return false;
-  }
-
-  return $imagesInfos.some(
-    image => image.engineId === selectedEngineId && (image.RepoTags ?? []).some(repoTag => repoTag.includes(target)),
-  );
+// the pages the actions navigate to read the image from the store, so the pull is only over once it is there
+let pulledImage = $derived.by(() => {
+  const image = $imagesInfos.find(info => info.Id === pullTarget?.Id && info.engineId === pullTarget?.engineId);
+  return image ? imageUtils.getImagesInfoUI(image, [])[0] : undefined;
 });
+let pullFinished = $derived(!!pulledImage);
 
-// the image gets into the store asynchronously and before running the pulled image, it has to be in the images store
-// so we defined that pull is finished when the pull is completed and the image is in the store
-let pullFinished = $derived(pullCompleted && isImageInStore);
+// only an engine pull holding a token can be cancelled, waiting for the store cannot
+let pullCancellable = $derived(pullCancellableTokenId !== undefined);
 
-// pull is still in progress if it is running or if it is completed but not finished yet
-let pullInProgress = $derived(pullRunning || (pullCompleted && !pullFinished));
+// the engine is done but the store, fed by debounced events, may still be catching up
+let pullInProgress = $derived(pullRunning || (!!pullTarget && !pullFinished));
 
 const lineNumberPerId = new SvelteMap<string, number>();
 let lineIndex = 0;
@@ -181,40 +170,31 @@ async function pullImage(): Promise<void> {
   await tick();
   logsPull?.clear();
 
-  // reset error
+  // reset the previous attempt
   pullError = '';
+  pullResolveError = undefined;
+  pullTarget = undefined;
+
+  const connection = $state.snapshot(selectedProviderConnection);
+  let reference = imageToPull.trim();
+  if (podmanFQN) {
+    reference = usePodmanFQN ? podmanFQN.trim() : `${DOCKER_PREFIX_WITH_SLASH}${reference}`;
+  }
 
   pullRunning = true;
   try {
     pullCancellationRequested = false;
     pullCancellableTokenId = await window.getCancellableTokenSource();
-    const selectedProviderConnectionSnapshot = $state.snapshot(selectedProviderConnection);
-    if (podmanFQN) {
-      usePodmanFQN
-        ? await window.pullImage(
-            selectedProviderConnectionSnapshot,
-            podmanFQN.trim(),
-            callback,
-            undefined,
-            pullCancellableTokenId,
-          )
-        : await window.pullImage(
-            selectedProviderConnectionSnapshot,
-            `docker.io/${imageToPull.trim()}`,
-            callback,
-            undefined,
-            pullCancellableTokenId,
-          );
-    } else {
-      await window.pullImage(
-        selectedProviderConnectionSnapshot,
-        imageToPull.trim(),
-        callback,
-        undefined,
-        pullCancellableTokenId,
-      );
+    await window.pullImage(connection, reference, callback, undefined, pullCancellableTokenId);
+
+    // the pull itself is over, from here on there is nothing left to cancel
+    pullCancellableTokenId = undefined;
+
+    // only the engine can say which image the reference produced and under which engine id
+    pullTarget = await window.resolveImage(connection, reference);
+    if (!pullTarget) {
+      pullResolveError = `Image ${reference} has been pulled but it could not be found on ${connection.name}.`;
     }
-    pullCompleted = true;
   } catch (error: unknown) {
     const errorMessage =
       error && typeof error === 'object' && 'message' in error && error.message ? error.message : error;
@@ -238,53 +218,20 @@ async function pullImageFinished(): Promise<void> {
   router.goto('/images');
 }
 
-function getDockerLibraryImage(): string | undefined {
-  return imageToPull?.startsWith('docker.io/') && imageToPull.split('/').length === 2
-    ? `${imageToPull.split('/')[0]}/library/${imageToPull.split('/')[1]}`
-    : undefined;
-}
-
-function getPullTarget(): string | undefined {
-  return usePodmanFQN && podmanFQN ? podmanFQN : (getDockerLibraryImage() ?? imageToPull);
-}
-
-async function getFirstPulledImageInfo(): Promise<ImageInfoUI | undefined> {
-  const dockerLibraryImage =
-    imageToPull?.startsWith('docker.io/') && imageToPull.split('/').length === 2
-      ? `${imageToPull.split('/')[0]}/library/${imageToPull.split('/')[1]}`
-      : undefined;
-
-  const target = usePodmanFQN && podmanFQN ? podmanFQN : (dockerLibraryImage ?? imageToPull);
-  if (!target) return undefined;
-
-  const localImages = (
-    await window.listImages({
-      provider: $state.snapshot(selectedProviderConnection),
-    })
-  ).filter(image => (image.RepoTags ?? []).some(repoTag => repoTag.includes(target)));
-
-  if (localImages.length === 0) return undefined;
-
-  const [first] = imageUtils.getImagesInfoUI(localImages[0], []);
-  return first;
-}
-
-async function gotoImageDetails(): Promise<void> {
-  const image = await getFirstPulledImageInfo();
-  if (image) {
-    router.goto(`/images/${image.id}/${image.engineId}/${image.base64RepoTag}/summary`);
+function gotoImageDetails(): void {
+  if (pulledImage) {
+    router.goto(`/images/${pulledImage.id}/${pulledImage.engineId}/${pulledImage.base64RepoTag}/summary`);
   }
 }
 
-async function gotoImageRun(): Promise<void> {
-  const image = await getFirstPulledImageInfo();
-  if (image) {
+function gotoImageRun(): void {
+  if (pulledImage) {
     handleNavigation({
       page: NavigationPage.IMAGE_RUN,
       parameters: {
-        id: image.id,
-        engineId: image.engineId,
-        tag: image.tag ? `${image.name}:${image.tag}` : image.name,
+        id: pulledImage.id,
+        engineId: pulledImage.engineId,
+        tag: pulledImage.tag ? `${pulledImage.name}:${pulledImage.tag}` : pulledImage.name,
       },
     });
   }
@@ -557,7 +504,7 @@ async function searchFunction(value: string): Promise<void> {
       <div class="w-full flex flex-col justify-end">
         <ButtonRow>
           {#if !pullFinished}
-            {#if !pullRunning}
+            {#if !pullCancellable}
               <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
             {/if}
             <Button
@@ -567,8 +514,7 @@ async function searchFunction(value: string): Promise<void> {
               inProgress={pullInProgress}>
               {pullInProgress ? 'Pulling image' : 'Pull image'}
             </Button>
-            {#if pullRunning}
-              <!-- only the engine pull can be cancelled, waiting for the images store cannot -->
+            {#if pullCancellable}
               <Button icon={faBan} on:click={cancelPullImage} type="secondary">Cancel</Button>
             {/if}
           {:else}
@@ -579,6 +525,9 @@ async function searchFunction(value: string): Promise<void> {
         </ButtonRow>
         {#if pullError}
           <ErrorMessage error={pullError} />
+        {/if}
+        {#if pullResolveError}
+          <ErrorMessage error={pullResolveError} />
         {/if}
         <RecommendedRegistry bind:imageError={pullError} imageName={imageToPull} />
       </div>
