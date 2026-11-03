@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { rmSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import * as path from 'node:path';
 
@@ -236,6 +237,58 @@ test('should install an image if labels are correct', async () => {
 
   // extension started
   expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started');
+});
+
+describe('installFromImage tmp folder cleanup', () => {
+  const imageToPull = 'fake.io/fake-image:fake-tag';
+
+  beforeEach(() => {
+    getImageConfigLabelsMock.mockResolvedValueOnce({
+      'org.opencontainers.image.title': 'title',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'io.podman-desktop.api.version': '1.0.0',
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+  });
+
+  test('should remove the tmp folder when the download fails', async () => {
+    downloadAndExtractImageMock.mockRejectedValueOnce(new Error('layer download failed'));
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
+      'layer download failed',
+    );
+
+    expect(rmSync).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-tmp'), {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  test('should remove the tmp folder when extracting the extension files fails', async () => {
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockRejectedValueOnce(new Error('extract failed'));
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
+      'extract failed',
+    );
+
+    expect(rmSync).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-tmp'), {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  test('should remove the tmp folder when the installation succeeds', async () => {
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(rmSync).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-tmp'), {
+      recursive: true,
+      force: true,
+    });
+  });
 });
 
 test('should install an image (dd extensions) if labels are correct', async () => {

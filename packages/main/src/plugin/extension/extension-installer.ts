@@ -180,26 +180,28 @@ export class ExtensionInstaller {
       }
     }
 
-    sendLog('Downloading and extract layers...');
-    await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, event => {
-      sendLog(event.message);
-      onProgress?.(event.progress);
-    });
+    try {
+      sendLog('Downloading and extract layers...');
+      await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, event => {
+        sendLog(event.message);
+        onProgress?.(event.progress);
+      });
 
-    sendLog('Filtering image content...');
-    if (isPDExtension) {
-      await this.extractExtensionFiles(tmpFolderPath, finalFolderPath);
-    } else if (isDDExtension) {
-      await this.#dockerDesktopInstaller.extractExtensionFiles(
-        tmpFolderPath,
-        finalFolderPath,
-        sendLog,
-        catatlogExtensionId,
-      );
+      sendLog('Filtering image content...');
+      if (isPDExtension) {
+        await this.extractExtensionFiles(tmpFolderPath, finalFolderPath);
+      } else if (isDDExtension) {
+        await this.#dockerDesktopInstaller.extractExtensionFiles(
+          tmpFolderPath,
+          finalFolderPath,
+          sendLog,
+          catatlogExtensionId,
+        );
+      }
+    } finally {
+      // delete the tmp folder, whether the installation succeeded or not
+      fs.rmSync(tmpFolderPath, { recursive: true, force: true });
     }
-
-    // delete the tmp folder
-    fs.rmSync(tmpFolderPath, { recursive: true });
 
     if (isPDExtension) {
       let analyzedExtension: AnalyzedExtension | undefined;
