@@ -37,6 +37,7 @@ vi.mock(import('/@/lib/explore-features/ExploreFeatures.svelte'));
 vi.mock(import('/@/lib/dashboard/SystemOverview.svelte'));
 vi.mock(import('/@/lib/dashboard/ProvidersSection.svelte'));
 // LearningCenter stays real: its card title tells the page has rendered its sections
+const COLUMN = '.max-w-\\[900px\\]';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -143,4 +144,38 @@ test('reset layout keeps registry labels in the layout menu', async () => {
     expect(item).toHaveTextContent('Learning center');
     expect(item).not.toHaveTextContent('Learning Center');
   });
+});
+
+test('setting off: renders the NavPage title and no 900px column', async () => {
+  setEnhanced(false);
+  const { container } = render(DashboardPage);
+
+  await waitForSections();
+  expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toHaveClass('font-bold');
+  expect(container.querySelector(COLUMN)).toBeNull();
+});
+
+test('setting on: renders the column, the header row and the content region', async () => {
+  setEnhanced(true);
+  const { container } = render(DashboardPage);
+
+  await waitFor(() => expect(container.querySelector(COLUMN)).not.toBeNull());
+  expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toHaveClass('font-extralight');
+  expect(screen.getByRole('region', { name: 'content' })).toHaveClass('px-6', '@container');
+  expect(screen.getByRole('region', { name: 'Dashboard' })).toBeInTheDocument();
+  expect(container.querySelector(COLUMN)).toHaveClass('pb-6');
+});
+
+test('switching the setting at runtime re-renders the layout', async () => {
+  setEnhanced(false);
+  const { container } = render(DashboardPage);
+
+  await waitForSections();
+  expect(container.querySelector(COLUMN)).toBeNull();
+
+  setEnhanced(true);
+  await setupDashboardPageRegistry();
+
+  await waitFor(() => expect(container.querySelector(COLUMN)).not.toBeNull());
+  expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toHaveClass('font-extralight');
 });
