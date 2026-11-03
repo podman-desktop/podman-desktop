@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -31,6 +32,8 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
 const containerToRun = 'alpine-container';
+const createdContainer = `alpine-created-${randomUUID().slice(0, 8)}`;
+const cancelledContainer = `alpine-cancelled-${randomUUID().slice(0, 8)}`;
 const containerList = ['first', 'second', 'third'];
 const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
@@ -55,6 +58,7 @@ test.afterAll(async ({ runner, page }) => {
 
   try {
     await deleteContainer(page, containerToRun);
+    await deleteContainer(page, createdContainer);
     for (const container of containerList) {
       await deleteContainer(page, container);
     }
@@ -297,6 +301,51 @@ test.describe('Verification of container creation workflow', { tag: ['@smoke'] }
     await playExpect(containersPage.heading).toBeVisible();
     await playExpect
       .poll(async () => await containersPage.containerExists(containerToRun), { timeout: 30_000 })
+      .toBeFalsy();
+  });
+
+  test('Cancel running of an image does not create a container', async ({ navigationBar }) => {
+    const images = await navigationBar.openImages();
+    const imageDetails = await images.openImageDetails(imageToPull);
+    const runImage = await imageDetails.openRunImage();
+    await runImage.activateTab('Basic');
+    await runImage.containerNameInput.fill(cancelledContainer);
+    await playExpect(runImage.containerNameInput).toHaveValue(cancelledContainer);
+
+    await runImage.cancel();
+    await playExpect(runImage.cancelButton).not.toBeVisible();
+
+    const containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await containers.containerExists(cancelledContainer), { timeout: 10_000 })
+      .toBeFalsy();
+  });
+
+  test('Create a container from image without starting it', async ({ navigationBar }) => {
+    const images = await navigationBar.openImages();
+    const imageDetails = await images.openImageDetails(imageToPull);
+    const runImage = await imageDetails.openRunImage();
+
+    const containerDetails = await runImage.createContainer(createdContainer);
+    await playExpect(containerDetails.heading).toBeVisible();
+    await playExpect(containerDetails.heading).toContainText(createdContainer);
+    await playExpect
+      .poll(async () => await containerDetails.getState(), { timeout: 15_000 })
+      .toContain(ContainerState.Created);
+    // "Create" opens the Summary tab ("Create and start" opens the TTY tab)
+    await playExpect(containerDetails.tabContent.getByRole('cell', { name: 'Engine ID', exact: true })).toBeVisible();
+
+    const imagesPage = await navigationBar.openImages();
+    playExpect(await imagesPage.getCurrentStatusOfImage(imageToPull)).toBe(ImageState.Used);
+
+    const containers = await navigationBar.openContainers();
+    await playExpect
+      .poll(async () => await containers.containerExists(createdContainer), { timeout: 10_000 })
+      .toBeTruthy();
+    const containersPage = await containers.deleteContainer(createdContainer);
+    await playExpect
+      .poll(async () => await containersPage.containerExists(createdContainer), { timeout: 30_000 })
       .toBeFalsy();
   });
 
