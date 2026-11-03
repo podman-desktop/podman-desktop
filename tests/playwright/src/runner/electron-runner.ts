@@ -18,10 +18,10 @@
 
 import type { ChildProcess } from 'node:child_process';
 import { execFileSync } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
-import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
+import type { CDPSession, ElectronApplication, JSHandle, Page } from '@playwright/test';
 import { _electron as electron } from '@playwright/test';
 import type { BrowserWindow, WebContents } from 'electron';
 
@@ -37,6 +37,7 @@ type WindowState = {
 
 export class ElectronRunner extends Runner {
   protected _app: ElectronApplication | undefined;
+  private failedStartupDiagnosticsFile: string | undefined;
 
   protected static readonly MAX_STARTUP_ATTEMPTS = 3;
   protected static readonly APP_RENDER_TIMEOUT_MS = 15_000;
@@ -150,6 +151,11 @@ export class ElectronRunner extends Runner {
             loading: window.webContents.isLoading(),
             crashed: window.webContents.isCrashed(),
             rendererPID: window.webContents.getOSProcessId(),
+            mainFrame: {
+              processId: window.webContents.mainFrame.processId,
+              routingId: window.webContents.mainFrame.routingId,
+              url: window.webContents.mainFrame.url,
+            },
           })),
         ),
         5_000,
@@ -158,6 +164,83 @@ export class ElectronRunner extends Runner {
       console.log('Failed startup window state:', JSON.stringify(windows));
     } catch (error: unknown) {
       console.error('Could not read failed startup window state:', error);
+    }
+    await this.logFailedRendererState();
+  }
+
+  private async logFailedRendererState(): Promise<void> {
+    const page = this._page;
+    if (!page || page.isClosed()) return;
+
+    // Attach only after startup failed: Runtime.enable can create a context on an
+    // initial empty document, so using it before navigation could change the race.
+    let session: CDPSession | undefined;
+    let finished = false;
+    const contextEvents: { timestamp: string; event: string; details: unknown }[] = [];
+    const snapshot: Record<string, unknown> = {
+      timestamp: new Date().toISOString(),
+      phase: 'after-startup-failure',
+      url: page.url(),
+      contextEvents,
+    };
+    const inspect = async (): Promise<void> => {
+      const attached = await page.context().newCDPSession(page);
+      if (finished) {
+        await attached.detach();
+        return;
+      }
+      session = attached;
+      for (const event of [
+        'Runtime.executionContextCreated',
+        'Runtime.executionContextDestroyed',
+        'Runtime.executionContextsCleared',
+      ] as const) {
+        session.on(event, details => {
+          contextEvents.push({ timestamp: new Date().toISOString(), event, details });
+        });
+      }
+      snapshot.frameTree = await session.send('Page.getFrameTree');
+      if (finished) return;
+      // Replays existing contexts, including the Electron isolated context if present.
+      await session.send('Runtime.enable');
+      if (finished) return;
+      snapshot.renderer = await session.send('Runtime.evaluate', {
+        expression: `({
+          url: location.href,
+          readyState: document.readyState,
+          timeOrigin: performance.timeOrigin,
+          elapsedMs: performance.now(),
+          appChildren: document.getElementById('app')?.childElementCount ?? null,
+          eventsType: typeof window.events,
+          receiveType: typeof window.events?.receive,
+          readinessType: typeof window.extensionSystemIsReady
+        })`,
+        returnByValue: true,
+        timeout: 1_000,
+      });
+    };
+    try {
+      await this.raceWithTimeout(inspect(), 5_000, 'Reading failed renderer contexts and bridge state timed out');
+    } catch (error: unknown) {
+      snapshot.error = String(error);
+    } finally {
+      finished = true;
+      if (session) {
+        try {
+          await this.raceWithTimeout(session.detach(), 1_000, 'Detaching renderer diagnostics timed out');
+        } catch (error: unknown) {
+          snapshot.detachError = String(error);
+        }
+      }
+    }
+
+    console.log('Failed startup renderer diagnostics:', JSON.stringify(snapshot));
+    if (this.failedStartupDiagnosticsFile) {
+      try {
+        await writeFile(this.failedStartupDiagnosticsFile, JSON.stringify(snapshot, undefined, 2));
+      } catch (error: unknown) {
+        console.error('Could not save failed renderer diagnostics:', error);
+      }
     }
   }
 
@@ -177,6 +260,7 @@ export class ElectronRunner extends Runner {
       });
       await mkdir(this._testOutput, { recursive: true });
       const logFile = resolve(this._testOutput, `electron-${process.pid}-${Date.now()}-attempt-${attempt}.log`);
+      this.failedStartupDiagnosticsFile = `${logFile}.renderer.json`;
       console.log(`Chromium startup log: ${logFile}`);
       const options = this._options as Parameters<typeof electron.launch>[0];
       this._app = await electron.launch({

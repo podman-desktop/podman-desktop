@@ -165,7 +165,14 @@ function logStartupStage(stage: string): void {
   if (process.env.PODMAN_DESKTOP_STARTUP_DIAGNOSTICS !== '1') return;
   ipcRenderer.send('startup-diagnostics:preload', {
     stage,
+    timestamp: new Date().toISOString(),
+    url: location.href,
+    readyState: document.readyState,
+    timeOrigin: performance.timeOrigin,
+    elapsedMs: performance.now(),
     rendererPID: process.pid,
+    contextId: process.contextId,
+    isMainFrame: process.isMainFrame,
     sandboxed: process.sandboxed,
     contextIsolated: process.contextIsolated,
     sandboxFlags: process.argv?.filter(arg => arg.includes('sandbox')),

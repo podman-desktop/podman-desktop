@@ -53,6 +53,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 test('reports whether the event bridge exposure was reached', () => {
@@ -66,6 +67,26 @@ test('reports whether the event bridge exposure was reached', () => {
   const exposureOrder = vi.mocked(contextBridge.exposeInMainWorld).mock.invocationCallOrder[0];
   expect(vi.mocked(ipcRenderer.send).mock.invocationCallOrder[0]).toBeLessThan(exposureOrder!);
   expect(vi.mocked(ipcRenderer.send).mock.invocationCallOrder[1]).toBeGreaterThan(exposureOrder!);
+});
+
+test('preload diagnostics identify the document and isolated context during exposure', () => {
+  vi.stubEnv('PODMAN_DESKTOP_STARTUP_DIAGNOSTICS', '1');
+  vi.stubGlobal('process', { ...process, contextId: 'preload-context-7', isMainFrame: true });
+  initExposure();
+
+  expect(ipcRenderer.send).toHaveBeenCalledWith(
+    'startup-diagnostics:preload',
+    expect.objectContaining({
+      stage: 'events-exposed',
+      contextId: 'preload-context-7',
+      isMainFrame: true,
+      url: location.href,
+      readyState: document.readyState,
+      timestamp: expect.any(String),
+      timeOrigin: performance.timeOrigin,
+      elapsedMs: expect.any(Number),
+    }),
+  );
 });
 
 test('build Api Sender', () => {

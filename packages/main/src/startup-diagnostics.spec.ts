@@ -28,6 +28,11 @@ vi.mock(import('node:fs/promises'));
 
 let contents: WebContents;
 const preferences: WebPreferences = { preload: '/app/preload.cjs', sandbox: true };
+const getLastWebPreferences = vi.fn<() => WebPreferences>();
+
+function logEntries(): { event: string; sequence: number; elapsedMs: number; details: unknown }[] {
+  return vi.mocked(appendFile).mock.calls.map(([, entry]) => JSON.parse(String(entry)));
+}
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -36,10 +41,13 @@ beforeEach(() => {
   vi.spyOn(console, 'log').mockImplementation(() => {});
   vi.mocked(appendFile).mockResolvedValue(undefined);
   vi.mocked(readFile).mockResolvedValue(Buffer.from('preload source'));
+  getLastWebPreferences.mockReturnValue({ ...preferences, contextIsolation: true, nodeIntegration: false });
   contents = Object.assign(new EventEmitter(), {
     id: 7,
     getOSProcessId: vi.fn().mockReturnValue(99),
     getURL: vi.fn().mockReturnValue('file:///app/index.html'),
+    getLastWebPreferences,
+    mainFrame: { processId: 4, routingId: 1, url: 'file:///app/index.html', detached: false },
   }) as unknown as WebContents;
 });
 
@@ -56,6 +64,93 @@ test('normal application launches do not register diagnostics or read the preloa
   expect(contents.eventNames()).toEqual([]);
   expect(readFile).not.toHaveBeenCalled();
   expect(appendFile).not.toHaveBeenCalled();
+  expect(getLastWebPreferences).not.toHaveBeenCalled();
+});
+
+test('records effective preferences separately from constructor preferences and refreshes them at dom-ready', () => {
+  registerStartupDiagnostics(contents, preferences);
+  getLastWebPreferences.mockReturnValue({ ...preferences, contextIsolation: false });
+  contents.emit('dom-ready');
+
+  expect(
+    logEntries()
+      .filter(entry => entry.event === 'effective-preferences')
+      .map(entry => entry.details),
+  ).toEqual([
+    {
+      stage: 'window-created',
+      available: true,
+      preferences: { ...preferences, contextIsolation: true, nodeIntegration: false },
+    },
+    { stage: 'dom-ready', available: true, preferences: { ...preferences, contextIsolation: false } },
+  ]);
+});
+
+test('an unavailable preferences API does not interrupt diagnostics', () => {
+  Object.assign(contents, { getLastWebPreferences: undefined });
+  registerStartupDiagnostics(contents, preferences);
+
+  expect(logEntries()).toContainEqual(
+    expect.objectContaining({
+      event: 'effective-preferences',
+      details: { stage: 'window-created', available: false },
+    }),
+  );
+});
+
+test('a failing preferences API does not interrupt navigation logging', () => {
+  getLastWebPreferences.mockImplementation(() => {
+    throw new Error('preferences unavailable');
+  });
+  registerStartupDiagnostics(contents, preferences);
+  contents.emit('did-finish-load');
+
+  expect(logEntries()).toContainEqual(expect.objectContaining({ event: 'effective-preferences-error' }));
+  expect(logEntries()).toContainEqual(expect.objectContaining({ event: 'did-finish-load' }));
+});
+
+test('correlates navigation and preload IPC with frame identities in emission order', () => {
+  registerStartupDiagnostics(contents, preferences);
+  contents.emit('did-start-navigation', {
+    url: 'file:///app/index.html',
+    isSameDocument: false,
+    isMainFrame: true,
+    frame: contents.mainFrame,
+  });
+  contents.emit('ipc-message', { senderFrame: contents.mainFrame }, 'startup-diagnostics:preload', {
+    stage: 'events-exposed',
+  });
+  contents.emit('did-frame-navigate', {}, 'file:///app/index.html', -1, '', true, 4, 1);
+  contents.emit('dom-ready');
+
+  const entries = logEntries();
+  expect(entries.map(entry => entry.sequence)).toEqual(entries.map((_, index) => index + 1));
+  expect(entries.map(entry => entry.elapsedMs)).toEqual(
+    entries.map(entry => entry.elapsedMs).toSorted((a, b) => a - b),
+  );
+  expect(entries.find(entry => entry.event === 'did-start-navigation')?.details).toEqual({
+    url: 'file:///app/index.html',
+    isSameDocument: false,
+    isMainFrame: true,
+    frame: { processId: 4, routingId: 1, url: 'file:///app/index.html' },
+  });
+  expect(entries.find(entry => entry.event === 'preload-sender')?.details).toEqual({
+    frame: { processId: 4, routingId: 1, url: 'file:///app/index.html' },
+  });
+  expect(entries.find(entry => entry.event === 'did-frame-navigate')?.details).toEqual({
+    url: 'file:///app/index.html',
+    isMainFrame: true,
+    frameProcessId: 4,
+    frameRoutingId: 1,
+  });
+});
+
+test('navigation diagnostics tolerate a detached or missing frame', () => {
+  registerStartupDiagnostics(contents, preferences);
+  contents.emit('did-start-navigation', { url: 'file:///app/index.html', frame: null });
+  contents.emit('frame-created', {}, { frame: { detached: true } });
+
+  expect(logEntries()).toContainEqual(expect.objectContaining({ event: 'frame-created', details: {} }));
 });
 
 test('persists preload errors before the document is ready', () => {

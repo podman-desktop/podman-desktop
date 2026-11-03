@@ -19,15 +19,35 @@
 import { createHash } from 'node:crypto';
 import { appendFile, readFile } from 'node:fs/promises';
 
-import type { WebContents, WebPreferences } from 'electron';
+import type { WebContents, WebFrameMain, WebPreferences } from 'electron';
+
+function selectPreferences(preferences: WebPreferences): WebPreferences {
+  return {
+    preload: preferences.preload,
+    sandbox: preferences.sandbox,
+    contextIsolation: preferences.contextIsolation,
+    nodeIntegration: preferences.nodeIntegration,
+    webSecurity: preferences.webSecurity,
+    webviewTag: preferences.webviewTag,
+  };
+}
+
+function describeFrame(frame: WebFrameMain | null | undefined): unknown {
+  if (!frame || frame.detached) return undefined;
+  return { processId: frame.processId, routingId: frame.routingId, url: frame.url };
+}
 
 export function registerStartupDiagnostics(contents: WebContents, preferences: WebPreferences = {}): void {
   if (process.env['PODMAN_DESKTOP_STARTUP_DIAGNOSTICS'] !== '1') return;
 
   const logFile = process.env['PODMAN_DESKTOP_STARTUP_DIAGNOSTICS_FILE'];
+  const startedAt = performance.now();
+  let sequence = 0;
   const log = (event: string, details: unknown): void => {
     const entry = JSON.stringify({
       timestamp: new Date().toISOString(),
+      elapsedMs: performance.now() - startedAt,
+      sequence: ++sequence,
       mainPID: process.pid,
       webContentsID: contents.id,
       event,
@@ -41,7 +61,33 @@ export function registerStartupDiagnostics(contents: WebContents, preferences: W
     }
   };
 
+  const logPreferences = (stage: string): void => {
+    try {
+      // Available at runtime in Electron 45, but not part of its public TypeScript API.
+      const diagnosticContents = contents as WebContents & { getLastWebPreferences?: () => WebPreferences };
+      const effective = diagnosticContents.getLastWebPreferences?.();
+      log('effective-preferences', {
+        stage,
+        available: effective !== undefined,
+        preferences: effective && selectPreferences(effective),
+      });
+    } catch (error: unknown) {
+      log('effective-preferences-error', { stage, error: String(error) });
+    }
+  };
+
   // Register before loadURL(), including errors that happen before electron.launch() resolves.
+  contents.on('did-start-navigation', ({ url, isSameDocument, isMainFrame, frame }) => {
+    log('did-start-navigation', { url, isSameDocument, isMainFrame, frame: describeFrame(frame) });
+  });
+  contents.on('frame-created', (_event, { frame }) => {
+    log('frame-created', { frame: describeFrame(frame) });
+  });
+  contents.on('did-frame-navigate', (_event, url, _code, _status, isMainFrame, frameProcessId, frameRoutingId) => {
+    log('did-frame-navigate', { url, isMainFrame, frameProcessId, frameRoutingId });
+  });
+  contents.on('did-finish-load', () => log('did-finish-load', { url: contents.getURL() }));
+  contents.on('did-stop-loading', () => log('did-stop-loading', { url: contents.getURL() }));
   contents.on('preload-error', (_event, preloadPath, error) => {
     log('preload-error', { preloadPath, error: error.stack ?? error.message });
   });
@@ -54,15 +100,20 @@ export function registerStartupDiagnostics(contents: WebContents, preferences: W
       log('renderer-console', { level, message, sourceId, lineNumber });
     }
   });
-  contents.on('ipc-message', (_event, channel, details: unknown) => {
-    if (channel === 'startup-diagnostics:preload') log('preload-stage', details);
+  contents.on('ipc-message', (event, channel, details: unknown) => {
+    if (channel === 'startup-diagnostics:preload') {
+      log('preload-stage', details);
+      log('preload-sender', { frame: describeFrame(event.senderFrame) });
+    }
   });
   contents.on('dom-ready', () => {
     const rendererPID = contents.getOSProcessId();
     log('dom-ready', {
       rendererPID,
       url: contents.getURL(),
+      frame: describeFrame(contents.mainFrame),
     });
+    logPreferences('dom-ready');
     if (process.platform === 'linux' && rendererPID > 0) {
       readFile(`/proc/${rendererPID}/cmdline`, 'utf8')
         .then(commandLine => {
@@ -80,13 +131,9 @@ export function registerStartupDiagnostics(contents: WebContents, preferences: W
     versions: process.versions,
     platform: process.platform,
     sandboxFlags: process.argv.filter(arg => arg.includes('sandbox')),
-    requestedPreferences: {
-      preload: preferences.preload,
-      sandbox: preferences.sandbox,
-      contextIsolation: preferences.contextIsolation,
-      nodeIntegration: preferences.nodeIntegration,
-    },
+    requestedPreferences: selectPreferences(preferences),
   });
+  logPreferences('window-created');
   if (preferences.preload) {
     const preloadPath = preferences.preload;
     readFile(preloadPath)
