@@ -156,22 +156,27 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     }
   }
 
-  await imageRegistry.downloadAndExtractImage(options.extension.oci, tmpFolderPath, event =>
-    console.log(event.message),
-  );
-
-  if (!existsSync(join(tmpFolderPath, 'extension', 'package.json'))) {
-    throw new Error(
-      `extension ${options.extension.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
+  try {
+    await imageRegistry.downloadAndExtractImage(options.extension.oci, tmpFolderPath, event =>
+      console.log(event.message),
     );
+
+    if (!existsSync(join(tmpFolderPath, 'extension', 'package.json'))) {
+      throw new Error(
+        `extension ${options.extension.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
+      );
+    }
+
+    // ensure the destination directory exists
+    await mkdir(options.destination, { recursive: true });
+
+    // rename tmp to destination
+    await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
+    await writeFile(join(finalPath, DIGEST_FILENAME), config.digest, { encoding: 'utf-8' });
+  } finally {
+    // delete the tmp folder, whether the download succeeded or not
+    await rm(tmpFolderPath, { recursive: true, force: true });
   }
-
-  // ensure the destination directory exists
-  await mkdir(options.destination, { recursive: true });
-
-  // rename tmp to destination
-  await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
-  await writeFile(join(finalPath, DIGEST_FILENAME), config.digest, { encoding: 'utf-8' });
 }
 
 /**

@@ -275,7 +275,7 @@ describe('downloadExtension', () => {
     expect(readFile).toHaveBeenCalledOnce();
 
     // ensure we rm the final destination
-    expect(rm).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DEST, {
+    expect(rm).toHaveBeenCalledWith(FINAL_EXTENSION_DEST, {
       recursive: true,
     });
 
@@ -295,7 +295,34 @@ describe('downloadExtension', () => {
     );
 
     expect(cp).not.toHaveBeenCalled();
-    expect(rm).not.toHaveBeenCalled();
+  });
+
+  test('should remove the tmp folder after a successful download', async () => {
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
+
+    expect(rm).toHaveBeenCalledExactlyOnceWith(TMP_EXTENSION_DEST, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  test('should remove the tmp folder when the download fails', async () => {
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockRejectedValue(new Error('layer download failed'));
+
+    await expect(
+      downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      }),
+    ).rejects.toThrowError('layer download failed');
+
+    expect(rm).toHaveBeenCalledExactlyOnceWith(TMP_EXTENSION_DEST, {
+      recursive: true,
+      force: true,
+    });
   });
 
   test('invalid OCI registry name with auth should throw an error', async () => {
@@ -357,7 +384,7 @@ describe('downloadExtension', () => {
     expect(cp).toHaveBeenCalledExactlyOnceWith(tmpFolder, join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name), {
       recursive: true,
     });
-    expect(rm).toHaveBeenCalledExactlyOnceWith(tmpFolder, {
+    expect(rm).toHaveBeenCalledWith(tmpFolder, {
       recursive: true,
     });
   });
