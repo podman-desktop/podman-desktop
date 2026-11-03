@@ -1,0 +1,228 @@
+---
+sidebar_position: 10.5
+title: Manage macOS settings with MDM
+description: Deploy macOS managed preferences for Podman Desktop, with device defaults, user values, and enforced settings.
+tags: [podman-desktop, configuration, enterprise, managed, macos, mdm]
+keywords: [podman desktop, macOS, MDM, plist, managed preferences, locked, policy]
+---
+
+# Manage macOS settings with MDM
+
+Mobile device management (MDM) lets administrators distribute application settings to managed macOS devices.
+Podman Desktop reads macOS managed preference files at startup and combines them with its existing JSON configuration.
+
+Device preferences supply initial values or enforce values with locks.
+Per-user preferences supply values for one macOS account. They cannot add locks.
+
+## Preference domain and locations
+
+The preference domain is `io.podman_desktop.PodmanDesktop`.
+The filename is this domain plus `.plist`. Custom builds use the `appId` from `product.json`.
+
+| Scope  | File                                                                            | Purpose                                               |
+| ------ | ------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Device | `/Library/Managed Preferences/io.podman_desktop.PodmanDesktop.plist`            | Managed defaults and a `locked` array for all users.  |
+| User   | `/Library/Managed Preferences/<username>/io.podman_desktop.PodmanDesktop.plist` | User values for the account that runs Podman Desktop. |
+
+`<username>` is the short macOS account name, not the display name or home directory path.
+Either file can exist without the other.
+
+:::note
+
+Podman Desktop reads these files directly. It does not read `.mobileconfig` files, query `CFPreferences`, or inspect installed profiles.
+It does not read preferences from `/Library/Preferences` or `~/Library/Preferences`.
+An MDM deployment must produce the expected dictionary at one of the paths above.
+
+:::
+
+## Preference keys
+
+Podman Desktop supports XML and binary plists.
+For the file format and editor, see [Apple's property list documentation](https://developer.apple.com/documentation/xcode/editing-property-list-files).
+
+### Configuration keys
+
+Configuration keys, such as `telemetry.enabled` or `preferences.appearance`, define values in the plist's top-level dictionary.
+They use the same dotted names and value types as `settings.json`, as listed in the [settings reference](/docs/configuration/settings-reference).
+
+Device values are initial defaults unless the device policy or `locked.json` locks the key.
+Per-user values override local user settings at startup but cannot override locked values.
+
+### Locked keys
+
+The optional `locked` array lists the configuration keys that users cannot override.
+It contains key names as strings. The configuration values remain separate entries in the same top-level dictionary.
+Each listed key requires a managed value in the device plist or `default-settings.json`.
+
+Only the device plist can add locks. A `locked` array in a per-user plist has no effect.
+
+### Device example
+
+This device plist disables telemetry and locks that setting. It also supplies an unlocked dark theme as an initial value.
+
+```xml title="/Library/Managed Preferences/io.podman_desktop.PodmanDesktop.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>telemetry.enabled</key>
+    <false/>
+    <key>preferences.appearance</key>
+    <string>dark</string>
+    <key>locked</key>
+    <array>
+      <string>telemetry.enabled</string>
+    </array>
+  </dict>
+</plist>
+```
+
+The device plist combines the roles of `default-settings.json` and `locked.json`.
+It does not require either JSON file.
+Without the `locked` entry, users can change both settings.
+
+### Per-user example
+
+This plist sets the light theme for the macOS account `lisa`.
+It overrides the device's unlocked dark theme and any theme value in that account's `settings.json` at startup.
+
+```xml title="/Library/Managed Preferences/lisa/io.podman_desktop.PodmanDesktop.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>preferences.appearance</key>
+    <string>light</string>
+  </dict>
+</plist>
+```
+
+Lisa can change the theme during the session. At the next startup, Podman Desktop applies the per-user value again.
+The device lock on telemetry remains effective for Lisa.
+
+## Configuration precedence
+
+Podman Desktop combines the sources at startup:
+
+| Configuration    | Rule                                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| Managed defaults | Device plist values override matching keys in `default-settings.json`. Other JSON defaults remain available. |
+| User values      | Per-user plist values override matching keys in `settings.json`. Other user values remain unchanged.         |
+| Locks            | Device plist locks and `locked.json` locks form one list without duplicates.                                 |
+
+These merges replace whole values for matching keys. Arrays and dictionaries do not merge their contents.
+An empty device `locked` array does not remove locks from `locked.json`.
+
+For a locked key, the value comes from the combined managed defaults.
+A device plist value wins over the JSON default even when `locked.json` supplies the lock.
+User values cannot override it.
+
+For an unlocked key, the initial value follows this order:
+
+1. Per-user plist value.
+2. Existing `settings.json` value.
+3. Device plist default.
+4. `default-settings.json` default.
+5. Built-in setting default.
+
+For the examples above, telemetry stays disabled for every user. Lisa starts with the light theme.
+Other users receive the dark theme only when their user configuration has no theme value.
+
+## Deploy through MDM
+
+### Prerequisites
+
+- A managed macOS device with Podman Desktop.
+- Access to the MDM console for application preferences or custom configuration profiles.
+- A device policy for settings that require enforcement.
+
+### File access
+
+Both plists must be readable by the account that runs Podman Desktop.
+Keep the files and their parent directories writable only by administrators or the management service.
+Podman Desktop does not validate file ownership or permissions before it loads the policy.
+
+### Profile structure
+
+The examples above are preference plists, not complete configuration profiles.
+An MDM console can accept a preference domain and plist, or require a full `.mobileconfig` profile.
+
+Apple's `com.apple.ManagedClient.preferences` payload places application settings under the domain within `PayloadContent`.
+For its `Forced` format, the settings dictionary belongs inside `mcx_preference_settings`.
+See [Apple's managed preferences payload reference](https://developer.apple.com/documentation/devicemanagement/managedpreferences) for the profile structure.
+
+Podman Desktop expects the resulting application preference file to contain the flat dictionary from the examples.
+The profile wrapper, including `PayloadContent`, `Forced`, and `mcx_preference_settings`, does not belong in that file.
+Podman Desktop uses its device `locked` array for enforcement.
+The Apple `Forced` field does not replace this array or make per-user values enforceable.
+
+### Procedure
+
+1. Save the device example as `io.podman_desktop.PodmanDesktop.plist`.
+2. Replace the sample settings with your policy values.
+3. Make sure that the plist syntax is valid:
+
+   ```shell
+   /usr/bin/plutil -lint io.podman_desktop.PodmanDesktop.plist
+   ```
+
+4. In your MDM console, create an application preference policy for the domain `io.podman_desktop.PodmanDesktop`.
+5. Import the plist through the console's custom preferences workflow, or include its dictionary in a configuration profile.
+6. Deploy the policy at the device scope to a macOS test device.
+7. As the affected user, inspect the device file:
+
+   ```shell
+   /usr/bin/plutil -convert json -o - "/Library/Managed Preferences/io.podman_desktop.PodmanDesktop.plist"
+   ```
+
+8. Make sure that the output contains the expected settings and `locked` array.
+9. Restart Podman Desktop.
+10. Open **Settings > Preferences**.
+11. Make sure that each locked setting has the expected value.
+12. Make sure that each locked setting displays a **Managed** label or lock icon.
+13. After the test succeeds, deploy the policy to the remaining macOS devices.
+
+For per-user values, select the user scope in your MDM console.
+Make sure that the resulting file exists under the correct account directory.
+
+:::note
+
+File location determines the scope that Podman Desktop uses. A file under an account directory cannot add locks.
+MDM enrollment or profile installation alone does not establish that the expected preference file exists.
+
+:::
+
+## Policy updates and removal
+
+Podman Desktop reads the plists once at startup. Policy changes and removal require an application restart.
+The application does not watch these files for changes.
+
+Unlocked device defaults fill missing user values. A later device policy change does not overwrite an existing user value.
+Per-user values override local values again at the next startup.
+
+Policy removal does not reset `settings.json`.
+Managed defaults copied into that file remain, and per-user values can remain if a settings save wrote them to disk.
+After removal, the remaining configuration sources determine the value and lock state.
+
+### Remove enforcement
+
+1. Remove the key from the device plist's `locked` array and `locked.json`, where applicable.
+2. Restart Podman Desktop.
+3. If a value must change after removal, update the corresponding user preference.
+
+## Load failures
+
+A missing plist contributes no settings or locks.
+If a file is unreadable, malformed, or cannot convert to JSON, Podman Desktop logs an error and ignores that file.
+The other plist and JSON sources still load. Startup continues without the failed file's policy.
+
+The reader requires a dictionary and, when present, a `locked` array that contains only strings.
+An invalid `locked` value rejects the whole file, including a per-user file.
+The reader does not validate individual settings against their schemas.
+
+## Related documentation
+
+- [Managed configuration troubleshooting](/docs/configuration/managed-configuration-troubleshooting#macos-mdm-preferences)
+- [JSON configuration and file locations](/docs/configuration/managed-configuration)
+- [Managed configuration use cases](/docs/configuration/managed-configuration-use-cases)
+- [Configuration settings reference](/docs/configuration/settings-reference)
