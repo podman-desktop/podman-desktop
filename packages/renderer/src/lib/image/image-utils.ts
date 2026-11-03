@@ -194,6 +194,7 @@ export class ImageUtils {
         .flat();
     }
 
+    // an image pulled by digest, or left untagged by a retag, carries no repo tag at all
     if (!imageInfo.RepoTags?.length) {
       return [
         {

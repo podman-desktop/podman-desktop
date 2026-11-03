@@ -109,6 +109,21 @@ test('should return untagged row when RepoTags is empty array', async () => {
   expect(imageinfoUIs[0].status).toBe('UNUSED');
 });
 
+test('should describe an image carrying no repo tag as <none>', async () => {
+  // an image pulled by digest, or left untagged by a retag, reports an empty RepoTags
+  const imageInfo = {
+    Id: 'sha256:1234',
+    Size: 123,
+    RepoTags: [],
+    RepoDigests: ['docker.io/library/alpine@sha256:abc'],
+  } as unknown as ImageInfo;
+
+  const imageInfoUIs = imageUtils.getImagesInfoUI(imageInfo, []);
+  expect(imageInfoUIs).toHaveLength(1);
+  expect(imageInfoUIs[0].name).toBe('<none>');
+  expect(imageInfoUIs[0].tag).toBe('');
+});
+
 test('check parsing of image info without labels', async () => {
   const context = new ContextUI();
   const imageInfo = {
