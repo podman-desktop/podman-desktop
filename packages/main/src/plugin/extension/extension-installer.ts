@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { cp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -160,9 +160,6 @@ export class ExtensionInstaller {
     // remove all special characters from the image name
     const imageNameWithoutSpecialChars = imageNameWithoutTag.replace(/[^a-zA-Z0-9]/g, '');
 
-    // tmp folder
-    const tmpFolderPath = path.join(os.tmpdir(), `/tmp/${imageNameWithoutSpecialChars}-tmp`);
-
     // final folder
     const finalFolderPath = path.join(unpackedFolder, imageNameWithoutSpecialChars);
 
@@ -179,6 +176,9 @@ export class ExtensionInstaller {
         return;
       }
     }
+
+    // unique tmp folder, so concurrent installs of the same image do not share (and clean up) each other's files
+    const tmpFolderPath = await mkdtemp(path.join(os.tmpdir(), `${imageNameWithoutSpecialChars}-`));
 
     try {
       sendLog('Downloading and extract layers...');
@@ -200,7 +200,12 @@ export class ExtensionInstaller {
       }
     } finally {
       // delete the tmp folder, whether the installation succeeded or not
-      fs.rmSync(tmpFolderPath, { recursive: true, force: true });
+      // a cleanup failure must not hide the error of the installation
+      try {
+        await rm(tmpFolderPath, { recursive: true, force: true });
+      } catch (error: unknown) {
+        console.error(`Unable to remove the temporary folder ${tmpFolderPath}`, error);
+      }
     }
 
     if (isPDExtension) {

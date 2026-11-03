@@ -16,8 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { rmSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import type { ExtensionInfo } from '@desktop-framework/api';
@@ -241,8 +240,10 @@ test('should install an image if labels are correct', async () => {
 
 describe('installFromImage tmp folder cleanup', () => {
   const imageToPull = 'fake.io/fake-image:fake-tag';
+  const TMP_FOLDER = '/fake/tmp/fakeiofakeimage-abc123';
 
   beforeEach(() => {
+    vi.mocked(mkdtemp).mockResolvedValue(TMP_FOLDER);
     getImageConfigLabelsMock.mockResolvedValueOnce({
       'org.opencontainers.image.title': 'title',
       'org.opencontainers.image.description': 'desc',
@@ -259,10 +260,7 @@ describe('installFromImage tmp folder cleanup', () => {
       'layer download failed',
     );
 
-    expect(rmSync).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-tmp'), {
-      recursive: true,
-      force: true,
-    });
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
   });
 
   test('should remove the tmp folder when extracting the extension files fails', async () => {
@@ -272,10 +270,27 @@ describe('installFromImage tmp folder cleanup', () => {
       'extract failed',
     );
 
-    expect(rmSync).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-tmp'), {
-      recursive: true,
-      force: true,
-    });
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
+  });
+
+  test('should use a unique tmp folder for each installation', async () => {
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(mkdtemp).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-'));
+    expect(downloadAndExtractImageMock).toHaveBeenCalledWith(imageToPull, TMP_FOLDER, expect.any(Function));
+  });
+
+  test('should keep the original error when the tmp folder cannot be removed', async () => {
+    downloadAndExtractImageMock.mockRejectedValueOnce(new Error('layer download failed'));
+    vi.mocked(rm).mockRejectedValueOnce(new Error('EPERM'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
+      'layer download failed',
+    );
   });
 
   test('should remove the tmp folder when the installation succeeds', async () => {
@@ -284,10 +299,7 @@ describe('installFromImage tmp folder cleanup', () => {
 
     await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
 
-    expect(rmSync).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-tmp'), {
-      recursive: true,
-      force: true,
-    });
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
   });
 });
 
