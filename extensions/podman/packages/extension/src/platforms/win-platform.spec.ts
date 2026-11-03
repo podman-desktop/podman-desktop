@@ -22,7 +22,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { WarningCheck } from '/@/checks/base-check';
 import type { HyperVCheck } from '/@/checks/windows/hyper-v-check';
+import type { HyperVInstalledCheck } from '/@/checks/windows/hyper-v-installed-check';
 import type { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
+import type { HyperVRunningCheck } from '/@/checks/windows/hyper-v-running-check';
 import type { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
 import type { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-firmware-check';
 import type { WinBitCheck } from '/@/checks/windows/win-bit-check';
@@ -41,6 +43,8 @@ const WIN_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as WinVersionChec
 const WIN_MEMORY_CHECK_MOCK = { execute: vi.fn() } as unknown as WinMemoryCheck;
 const HYPERV_PODMAN_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as HyperVPodmanVersionCheck;
 const HYPERV_CHECK_MOCK = { execute: vi.fn() } as unknown as HyperVCheck;
+const HYPERV_INSTALLED_CHECK_MOCK = { execute: vi.fn() } as unknown as HyperVInstalledCheck;
+const HYPERV_RUNNING_CHECK_MOCK = { execute: vi.fn() } as unknown as HyperVRunningCheck;
 const VIRTUALIZATION_FIRMWARE_CHECK_MOCK = {
   title: 'BIOS Virtualization Enabled',
   execute: vi.fn(),
@@ -63,6 +67,8 @@ beforeEach(() => {
     WIN_MEMORY_CHECK_MOCK,
     HYPERV_PODMAN_VERSION_CHECK_MOCK,
     HYPERV_CHECK_MOCK,
+    HYPERV_INSTALLED_CHECK_MOCK,
+    HYPERV_RUNNING_CHECK_MOCK,
     VIRTUALIZATION_FIRMWARE_CHECK_MOCK,
     VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK,
     WSL_VERSION_CHECK_MOCK,
@@ -118,6 +124,39 @@ test('isHyperVEnabled is independent of BIOS virtualization firmware check', asy
 
   expect(hypervEnabled).toBeTruthy();
   expect(VIRTUALIZATION_FIRMWARE_CHECK_MOCK.execute).not.toHaveBeenCalled();
+});
+
+test('isHyperVInstalledAndRunning should return false if not on Windows', async () => {
+  vi.mocked(extensionApi.env).isWindows = false;
+
+  expect(await winPlatform.isHyperVInstalledAndRunning()).toBe(false);
+  expect(HYPERV_INSTALLED_CHECK_MOCK.execute).not.toHaveBeenCalled();
+  expect(HYPERV_RUNNING_CHECK_MOCK.execute).not.toHaveBeenCalled();
+});
+
+test('isHyperVInstalledAndRunning should return false if Hyper-V is not installed', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(HYPERV_INSTALLED_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  expect(await winPlatform.isHyperVInstalledAndRunning()).toBe(false);
+  expect(HYPERV_RUNNING_CHECK_MOCK.execute).not.toHaveBeenCalled();
+});
+
+test('isHyperVInstalledAndRunning should return false if the Hyper-V service is stopped', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(HYPERV_INSTALLED_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(HYPERV_RUNNING_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  expect(await winPlatform.isHyperVInstalledAndRunning()).toBe(false);
+});
+
+test('isHyperVInstalledAndRunning should return true without running administrator checks', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(HYPERV_INSTALLED_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(HYPERV_RUNNING_CHECK_MOCK.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+
+  expect(await winPlatform.isHyperVInstalledAndRunning()).toBe(true);
+  expect(HYPERV_CHECK_MOCK.execute).not.toHaveBeenCalled();
 });
 
 test('isWSLEnabled should return false if not on Windows', async () => {
