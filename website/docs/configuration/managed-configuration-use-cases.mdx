@@ -10,6 +10,10 @@ keywords: [podman desktop, configuration, managed, enterprise, examples, use cas
 
 As an administrator, you can use managed configuration to enforce specific settings for all users in your organization. Below are some common use cases with example configurations.
 
+The examples use JSON files. On macOS, the same keys and value types apply to [MDM preference plists](/docs/configuration/managed-configuration-macos).
+The device plist combines the default values and the `locked` array in one dictionary.
+Per-user plists cannot add locks.
+
 ## Enforcing proxy settings
 
 Lock proxy configuration to ensure all users route traffic through corporate proxy servers.

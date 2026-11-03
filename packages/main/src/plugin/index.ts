@@ -169,6 +169,7 @@ import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-externa
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { MacManagedConfiguration } from '/@/plugin/mac-managed-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
@@ -577,6 +578,7 @@ export class PluginSystem {
     notifications.push(...(await safeStorageRegistry.init()));
 
     container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
+    container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
