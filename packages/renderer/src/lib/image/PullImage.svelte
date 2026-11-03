@@ -155,6 +155,11 @@ function callback(event: PullEvent): void {
 }
 
 async function pullImage(): Promise<void> {
+  // reset the previous attempt, a rejected one must not leave its report next to the new one
+  pullError = '';
+  pullResolveError = undefined;
+  pullTarget = undefined;
+
   if (!selectedProviderConnection) {
     pullError = 'No current provider connection';
     return;
@@ -169,11 +174,6 @@ async function pullImage(): Promise<void> {
   lineIndex = 0;
   await tick();
   logsPull?.clear();
-
-  // reset the previous attempt
-  pullError = '';
-  pullResolveError = undefined;
-  pullTarget = undefined;
 
   const connection = $state.snapshot(selectedProviderConnection);
   let reference = imageToPull.trim();
@@ -190,10 +190,9 @@ async function pullImage(): Promise<void> {
     // the pull itself is over, from here on there is nothing left to cancel
     pullCancellableTokenId = undefined;
 
-    // only the engine can say which image the reference produced and under which engine id
-    pullTarget = await window.resolveImage(connection, reference);
-    if (!pullTarget) {
-      pullResolveError = `Image ${reference} has been pulled but it could not be found on ${connection.name}.`;
+    // an aborted pull can end without rejecting, it produced no image to look for
+    if (!pullCancellationRequested) {
+      await resolvePulledImage(connection, reference);
     }
   } catch (error: unknown) {
     const errorMessage =
@@ -211,6 +210,22 @@ async function pullImage(): Promise<void> {
     pullCancellableTokenId = undefined;
     pullRunning = false;
     pullCancellationRequested = false;
+  }
+}
+
+/**
+ * Asks the engine which image the reference produced. Reports apart from the pull: the pull itself
+ * succeeded, so a failure here must not be dressed up as a pull error nor swallowed as a cancellation.
+ */
+async function resolvePulledImage(connection: ProviderContainerConnectionInfo, reference: string): Promise<void> {
+  try {
+    pullTarget = await window.resolveImage(connection, reference);
+    if (!pullTarget) {
+      pullResolveError = `Image ${reference} has been pulled but it could not be found on ${connection.name}.`;
+    }
+  } catch (error: unknown) {
+    console.error(`Error while resolving image ${reference} on ${connection.name}`, error);
+    pullResolveError = `Image ${reference} has been pulled but ${connection.name} could not be asked about it.`;
   }
 }
 

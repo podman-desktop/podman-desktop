@@ -500,6 +500,49 @@ test('Expect an image pulled by digest to finish the pull', async () => {
   expect(screen.queryByText('Pulling image')).not.toBeInTheDocument();
 });
 
+test('Expect a cancelled pull that resolves not to be reported as missing', async () => {
+  // aborting can end the pull stream cleanly, there is simply no image to look for
+  givenEngineResolves(ALPINE_IMAGE);
+  const pendingPull = Promise.withResolvers<void>();
+  vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  pendingPull.resolve();
+
+  await vi.waitFor(() => expect(screen.getByRole('button', { name: buttonText })).toBeEnabled());
+  expect(window.resolveImage).not.toHaveBeenCalled();
+  expect(screen.queryByText(/could not be found on/)).toBeNull();
+});
+
+test('Expect a failing resolve to be reported apart from the pull', async () => {
+  // the pull succeeded, an engine that cannot be asked must not be reported as a pull failure
+  vi.mocked(window.resolveImage).mockRejectedValue(new Error('socket hang up'));
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  expect(await screen.findByText(/could not be asked about it/)).toBeInTheDocument();
+  expect(screen.queryByText(/Error while pulling image/)).toBeNull();
+  expect(screen.queryByText('Pulling image')).not.toBeInTheDocument();
+});
+
+test('Expect a rejected pull not to keep the previous report', async () => {
+  vi.mocked(window.resolveImage).mockResolvedValue(undefined);
+  render(PullImage);
+
+  await userEvent.keyboard('docker.io/alpine[Enter]');
+  expect(await screen.findByText(/could not be found on/)).toBeInTheDocument();
+
+  // the next attempt is rejected before it starts, the stale report must not outlive it
+  await userEvent.clear(screen.getByPlaceholderText('Image name'));
+  await userEvent.keyboard('[Enter]');
+
+  expect(await screen.findByText('No image to pull')).toBeInTheDocument();
+  expect(screen.queryByText(/could not be found on/)).toBeNull();
+});
+
 test('Expect to close instead of cancel while only the images store is awaited', async () => {
   const pendingPull = Promise.withResolvers<void>();
   vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
