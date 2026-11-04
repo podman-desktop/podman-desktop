@@ -115,7 +115,7 @@ export class ElectronRunner extends Runner {
       // E2E packages gate app.whenReady() until attachment finishes. Older binaries have no listener.
       const released = await this.raceWithTimeout(
         this.getElectronApp().evaluate(({ app }) => app.emit('podman-desktop:playwright-ready')),
-        5_000,
+        this._runnerOptions._electronLaunchTimeout,
         'Releasing the Playwright startup handshake timed out',
       );
       console.log(
