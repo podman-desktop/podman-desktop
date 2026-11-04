@@ -18,9 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInfo } from '@podman-desktop/api';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
+import { NavigationPage, PreferredRegistriesSettings } from '@desktop-framework/api';
+import type { ImageInfo } from '@desktop-framework/extension-api';
 import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -29,6 +29,7 @@ import { router } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { handleNavigation } from '/@/navigation';
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 
@@ -36,6 +37,7 @@ import PullImage from './PullImage.svelte';
 
 vi.mock(import('/@/navigation'));
 vi.mock(import('/@/lib/ui/TerminalWindow.svelte'));
+vi.mock(import('tinro'));
 
 const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
   connectionType: 'container',
@@ -66,6 +68,7 @@ const PROVIDER_INFO_MOCK: ProviderInfo = {
 } as unknown as ProviderInfo;
 
 const originalConsoleError = console.error;
+const originalConsoleDebug = console.debug;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -83,6 +86,7 @@ beforeEach(() => {
     return undefined;
   });
   console.error = vi.fn();
+  console.debug = vi.fn();
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
   vi.mocked(window.cancelToken).mockResolvedValue(undefined);
@@ -96,6 +100,7 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleError;
+  console.debug = originalConsoleDebug;
 });
 
 const buttonText = 'Pull image';
@@ -160,7 +165,7 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton);
 
     // expect that the error message is displayed
-    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    const errorMessage = screen.getByRole('alert');
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent('Image does not exists');
   });
@@ -181,7 +186,7 @@ describe('PullImage', () => {
     await userEvent.keyboard('image-does-not-exist[Enter]');
 
     // expect that the error message is displayed
-    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    const errorMessage = screen.getByRole('alert');
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent('Image does not exists');
   });
@@ -201,7 +206,7 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton);
 
     // expect that the error message is displayed
-    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    const errorMessage = screen.getByRole('alert');
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent('Image does not exists');
 
@@ -290,7 +295,7 @@ describe('PullImage', () => {
     await vi.waitFor(() => {
       expect(screen.getByRole('button', { name: 'Pull image' })).toBeInTheDocument();
     });
-    expect(screen.queryByRole('alert', { name: 'Error Message Content' })).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 
@@ -752,5 +757,50 @@ describe('Preferred Registries', () => {
       // Should fall back to docker.io
       expect(window.searchImageInRegistry).toHaveBeenCalledWith(expect.objectContaining({ registry: 'docker.io' }));
     });
+  });
+});
+
+test('Expect Close button to navigate to last page when clicked', async () => {
+  lastPage.set({ name: 'Images', path: '/images' });
+  render(PullImage);
+
+  const closeButton = await screen.findByText('Close');
+  await userEvent.click(closeButton);
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images');
+});
+
+describe('image name the engine cannot parse', () => {
+  test('should report the engine error when pulling a name it cannot parse', async () => {
+    vi.mocked(window.pullImage).mockRejectedValue(new Error('invalid reference format'));
+    render(PullImage);
+
+    await userEvent.keyboard('.[Enter]');
+
+    const errorMessage = await screen.findByRole('alert');
+    expect(errorMessage).toHaveTextContent('Error while pulling image from test: invalid reference format');
+  });
+
+  // the engine rejects a name like ':' that it cannot parse, and the rejection used to escape
+  // the onChange handler as an 'Uncaught (in promise)' error
+  test('should not leak a rejection when the engine cannot resolve the name', async () => {
+    vi.mocked(window.resolveShortnameImage).mockRejectedValue(
+      new Error('(HTTP code 400) bad parameter - resolving ":": cannot parse input: ":": invalid reference format'),
+    );
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(':');
+
+    await vi.waitFor(() => {
+      expect(console.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Could not resolve shortname'),
+        expect.anything(),
+      );
+    });
+
+    // nothing could be resolved, so no Podman FQN is proposed
+    expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
   });
 });

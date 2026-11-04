@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -131,7 +131,7 @@ test('Expect to see empty screen on extension page only', async () => {
   render(ExtensionList, { searchTerm: 'A' });
 
   await vi.waitFor(() => {
-    expect(screen.queryByText(`No extensions matching 'A' found`)).toBeInTheDocument();
+    expect(screen.getByText(`No extensions matching 'A' found`)).toBeInTheDocument();
   });
 
   // click on the catalog
@@ -281,6 +281,74 @@ test('Switching tabs keeps only terms in search term', async () => {
   // meaning that `category:bar not:installed` has been removed from search term
   const myExtension1 = screen.getByRole('group', { name: 'A Extension' });
   expect(myExtension1).toBeInTheDocument();
+});
+
+test('Catalog search is below the tabs and outside the page header', async () => {
+  render(ExtensionList, { screen: 'catalog' });
+
+  const catalogTab = await screen.findByRole('button', { name: 'Catalog' });
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  expect(screen.getAllByRole('textbox', { name: 'search extensions' })).toHaveLength(1);
+  expect(catalogTab.compareDocumentPosition(searchInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'content' })).toContainElement(searchInput);
+});
+
+test('Catalog search stays above scrolling content with an opaque themed background', async () => {
+  render(ExtensionList, { screen: 'catalog' });
+
+  const searchRegion = await screen.findByRole('region', { name: 'search' });
+  expect(searchRegion).toHaveClass('sticky', 'top-0', 'z-10', 'shrink-0', 'bg-(--pd-content-bg)');
+  expect(screen.getByRole('region', { name: 'content' })).toContainElement(searchRegion);
+});
+
+test.each(['installed', 'development'] as const)('%s keeps search above the tabs', async currentScreen => {
+  render(ExtensionList, { screen: currentScreen });
+
+  const catalogTab = await screen.findByRole('button', { name: 'Catalog' });
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  expect(screen.getAllByRole('textbox', { name: 'search extensions' })).toHaveLength(1);
+  expect(searchInput.compareDocumentPosition(catalogTab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'content' })).not.toContainElement(searchInput);
+});
+
+test('Typing and clearing catalog search updates results and the filtered count', async () => {
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set([]);
+  render(ExtensionList, { screen: 'catalog' });
+
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'bar' } });
+
+  screen.getByRole('group', { name: 'A Extension' });
+  expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
+  const filteredCount = screen.getByText('Filtered out 1 items of 2');
+  expect(screen.getByRole('region', { name: 'search' })).toContainElement(filteredCount);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+
+  expect(searchInput).toHaveValue('');
+  screen.getByRole('group', { name: 'A Extension' });
+  screen.getByRole('group', { name: 'B Extension' });
+  expect(screen.queryByText('Filtered out 1 items of 2')).not.toBeInTheDocument();
+});
+
+test('Switching tabs preserves search text between the header and catalog inputs', async () => {
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set(combined);
+  render(ExtensionList);
+
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  await fireEvent.input(searchInput, { target: { value: 'bar' } });
+  await fireEvent.click(screen.getByRole('button', { name: 'Catalog' }));
+
+  expect(screen.getByRole('textbox', { name: 'search extensions' })).toHaveValue('bar');
+  screen.getByRole('group', { name: 'A Extension' });
+  expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Installed' }));
+
+  expect(screen.getByRole('textbox', { name: 'search extensions' })).toHaveValue('bar');
+  screen.getByRole('region', { name: 'idAInstalled' });
 });
 
 test('Expect install custom button is visible', async () => {

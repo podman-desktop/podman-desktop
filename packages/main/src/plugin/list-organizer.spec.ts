@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ListOrganizerItem, SavedListOrganizerConfig } from '@podman-desktop/core-api';
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { ListOrganizerItem, SavedListOrganizerConfig } from '@desktop-framework/api';
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ListOrganizerRegistry } from './list-organizer.js';
@@ -221,6 +221,38 @@ describe('ListOrganizerRegistry', () => {
     expect(result).toEqual([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
+    ]);
+  });
+
+  test('should update defaults when available columns change between loads', async () => {
+    // Like the configuration registry, return the registered default while no value is saved
+    let registeredDefault: unknown;
+    vi.mocked(mockConfigurationRegistry.registerConfigurations).mockImplementation(configurations => {
+      registeredDefault = configurations[0]?.properties?.['list.dashboard']?.default;
+      return { dispose: vi.fn() };
+    });
+    mockConfiguration.get.mockImplementation(
+      (_section: string, defaultValue: unknown) => registeredDefault ?? defaultValue,
+    );
+
+    await listOrganizerRegistry.loadListConfig('dashboard', ['Release Notes', 'Learning Center', 'Providers']);
+
+    const result = await listOrganizerRegistry.loadListConfig('dashboard', [
+      'Release Notes',
+      'System Overview',
+      'Learning Center',
+    ]);
+
+    expect(mockConfigurationRegistry.registerConfigurations).toHaveBeenCalledOnce();
+    expect(listOrganizerRegistry.getDefaultListConfig('dashboard')).toEqual([
+      { id: 'Release Notes', enabled: true },
+      { id: 'System Overview', enabled: true },
+      { id: 'Learning Center', enabled: true },
+    ]);
+    expect(result).toEqual([
+      { id: 'Release Notes', label: 'Release Notes', enabled: true, originalOrder: 0 },
+      { id: 'System Overview', label: 'System Overview', enabled: true, originalOrder: 1 },
+      { id: 'Learning Center', label: 'Learning Center', enabled: true, originalOrder: 2 },
     ]);
   });
 });

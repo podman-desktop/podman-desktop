@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
-import { CatalogExtension, CatalogFetchableExtension } from '@podman-desktop/core-api/extension-catalog';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import { CatalogExtension, CatalogFetchableExtension } from '@desktop-framework/api/extension-catalog';
 import { inject, injectable } from 'inversify';
 import { coerce, satisfies } from 'semver';
 
@@ -159,7 +159,7 @@ export class ExtensionsCatalog {
               return {
                 version: version.version,
                 podmanDesktopVersion: version.podmanDesktopVersion,
-                preview: version.preview,
+                preview: version.preview === true,
                 ociUri: version.ociUri,
                 files: version.files,
                 lastUpdated: new Date(version.lastUpdated),
@@ -193,6 +193,32 @@ export class ExtensionsCatalog {
 
     return fetchableExtensions;
   }
+
+  async fetchReadme(extensionId: string): Promise<string> {
+    const catalogExtensions = await this.getExtensions();
+    const extensionInfo = catalogExtensions.find(extension => extension.id === extensionId);
+
+    if (!extensionInfo) {
+      throw new Error(`No extension with id ${extensionId} found`);
+    }
+
+    // Get the first non-preview version
+    const nonPreviewVersions = extensionInfo.versions.filter(v => v.preview === false);
+    const latestVersion = nonPreviewVersions.length > 0 ? nonPreviewVersions[0] : undefined;
+    const latestVersionReadme = latestVersion?.files.find(f => f.assetType.toLowerCase() === 'readme')?.data;
+
+    if (!latestVersionReadme) {
+      throw new Error(`Extension ${extensionId} has no README`);
+    }
+
+    const response = await fetch(latestVersionReadme, {
+      signal: AbortSignal.timeout(ExtensionsCatalog.FETCH_TIMEOUT),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch README from ${latestVersionReadme}`);
+    }
+    return response.text();
+  }
 }
 
 // internal JSON format, not exposed to the outside
@@ -216,7 +242,7 @@ interface InternalCatalogExtensionVersionJSON {
   version: string;
   podmanDesktopVersion?: string;
   ociUri: string;
-  preview: boolean;
+  preview?: boolean;
   lastUpdated: string;
   files: InternalCatalogExtensionVersionFileJSON[];
 }

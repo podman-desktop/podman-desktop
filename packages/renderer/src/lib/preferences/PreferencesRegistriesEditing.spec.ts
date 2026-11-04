@@ -18,12 +18,14 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { Registry, RegistrySuggestedProvider } from '@podman-desktop/api';
+import { PreferredRegistriesSettings } from '@desktop-framework/api';
+import type { Registry, RegistrySuggestedProvider } from '@desktop-framework/extension-api';
 import { waitFor } from '@testing-library/dom';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { configurationProperties } from '/@/stores/configurationProperties';
 import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
 
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
@@ -33,6 +35,31 @@ describe('PreferencesRegistriesEditing', () => {
     vi.resetAllMocks();
     registriesInfos.set([]);
     registriesSuggestedInfos.set([]);
+    configurationProperties.set([]);
+  });
+
+  test('Expect the registries list to be a labelled region', () => {
+    render(PreferencesRegistriesEditing, {});
+
+    const region = screen.getByRole('region', { name: 'Configured registries' });
+    expect(within(region).getByRole('table', { name: 'Registries' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Preferred registries' })).not.toBeInTheDocument();
+  });
+
+  test('Expect the preferred registries to be a labelled region when the property exists', () => {
+    configurationProperties.set([
+      {
+        id: `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+        title: 'Preferred registries',
+        parentId: '',
+        type: 'string',
+        default: '',
+        description: 'Preferred registries',
+      },
+    ]);
+    render(PreferencesRegistriesEditing, {});
+
+    expect(screen.getByRole('region', { name: 'Preferred registries' })).toBeInTheDocument();
   });
 
   test('Expect that add registry button is visible and enabled', async () => {
@@ -249,6 +276,45 @@ describe('PreferencesRegistriesEditing', () => {
     await userEvent.click(loginButton);
 
     await waitFor(() => expect(window.updateImageRegistry).toHaveBeenCalledOnce());
+  });
+
+  test('Expect a failed login on an existing registry shows the error text in an alert without a static label', async () => {
+    const registry: Registry = {
+      source: 'test',
+      serverUrl: 'https://test.com',
+      name: 'Test Registry',
+      username: 'user',
+      secret: 'secret',
+    };
+    registriesInfos.set([registry]);
+    vi.mocked(window.checkImageCredentials).mockResolvedValue(undefined);
+    vi.mocked(window.updateImageRegistry).mockRejectedValue(new Error('Wrong Username or Password'));
+    render(PreferencesRegistriesEditing, {});
+
+    await userEvent.click(screen.getByRole('button', { name: 'kebab menu' }));
+    await userEvent.click(screen.getByTitle('Edit password'));
+    await userEvent.click(screen.getByRole('button', { name: 'Login' }));
+
+    const alert = await screen.findByText('Wrong Username or Password');
+    expect(alert).toHaveAttribute('role', 'alert');
+    expect(alert).not.toHaveAttribute('aria-label');
+    expect(screen.queryByLabelText('Error Message Content')).not.toBeInTheDocument();
+  });
+
+  test('Expect a failed login on a suggested registry shows the error text in an alert without a static label', async () => {
+    registriesSuggestedInfos.set([{ name: 'Docker Hub', url: 'docker.io' }]);
+    vi.mocked(window.checkImageCredentials).mockResolvedValue(undefined);
+    vi.mocked(window.createImageRegistry).mockRejectedValue(new Error('Wrong Username or Password'));
+    render(PreferencesRegistriesEditing, {});
+
+    await userEvent.click(screen.getByRole('button', { name: 'Configure' }));
+    await userEvent.type(screen.getByPlaceholderText('Username'), 'user');
+    await userEvent.type(screen.getByPlaceholderText('Password'), 'password');
+    await userEvent.click(screen.getByRole('button', { name: 'Login' }));
+
+    const alert = await screen.findByText('Wrong Username or Password');
+    expect(alert).toHaveAttribute('role', 'alert');
+    expect(alert).not.toHaveAttribute('aria-label');
   });
 
   test('Expect removing registry calls unregisterImageRegistry', async () => {

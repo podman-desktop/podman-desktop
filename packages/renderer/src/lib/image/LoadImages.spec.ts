@@ -18,16 +18,19 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderStatus } from '@podman-desktop/api';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
+import type { ProviderStatus } from '@desktop-framework/extension-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 
 import LoadImages from './LoadImages.svelte';
+
+vi.mock(import('tinro'));
 
 const pStatus: ProviderStatus = 'started';
 const pInfo: ProviderContainerConnectionInfo = {
@@ -145,7 +148,18 @@ test('Expect error shown if loadImages function fails', async () => {
     archives: ['path/file.tar'],
   });
 
-  const errorDiv = screen.getByLabelText('Error Message Content');
+  const errorDiv = screen.getByRole('alert');
   expect(errorDiv).toBeInTheDocument();
   expect((errorDiv as HTMLDivElement).innerHTML).toContain('load failed');
+});
+
+test('Expect Close button to navigate to last page when clicked', async () => {
+  providerInfos.set([providerInfo]);
+  lastPage.set({ name: 'Images', path: '/images' });
+  render(LoadImages);
+
+  const closeButton = await screen.findByText('Close');
+  await userEvent.click(closeButton);
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images');
 });

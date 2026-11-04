@@ -18,9 +18,9 @@
 
 /* eslint-disable sonarjs/no-unused-collection */
 
-import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
-import type { ForwardConfig } from '@podman-desktop/core-api';
-import { WorkloadKind } from '@podman-desktop/core-api';
+import type { ForwardConfig } from '@desktop-framework/api';
+import { WorkloadKind } from '@desktop-framework/api';
+import type { OpenDialogOptions, SaveDialogOptions } from '@desktop-framework/extension-api';
 import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -261,6 +261,44 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     expect(ipcRenderer.invoke).toHaveBeenCalledWith('navigation:getSearchableRoutes');
 
     expect(result).toEqual([{ routeId: 'ext.dashboard', label: 'Dashboard', icon: 'icon.png' }]);
+  });
+
+  test('imageCheck', async () => {
+    const checks = { checks: [] };
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: checks });
+
+    const imageCheckExposure = getInMainWorld('imageCheck');
+
+    const result = await imageCheckExposure('provider1', 'podman.podman', 'sha256:abc', 42);
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      'image-checker:check',
+      'provider1',
+      'podman.podman',
+      'sha256:abc',
+      42,
+    );
+
+    expect(result).toEqual(checks);
+  });
+
+  test('imageGetFilesystemLayers', async () => {
+    const layers = { layers: [] };
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: layers });
+
+    const imageGetFilesystemLayersExposure = getInMainWorld('imageGetFilesystemLayers');
+
+    const result = await imageGetFilesystemLayersExposure('provider1', 'podman.podman', 'sha256:abc', 42);
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      'image-files:getFilesystemLayers',
+      'provider1',
+      'podman.podman',
+      'sha256:abc',
+      42,
+    );
+
+    expect(result).toEqual(layers);
   });
 
   test('logger passed to createVmProviderConnection is called during provider-registry:taskConnection-onData', async () => {

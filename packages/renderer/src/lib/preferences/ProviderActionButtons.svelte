@@ -1,6 +1,6 @@
 <script lang="ts">
+import type { CheckStatus, Menu, ProviderInfo } from '@desktop-framework/api';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
-import type { CheckStatus, Menu, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
@@ -138,9 +138,9 @@ function executeProviderMenu(menu: Menu): void {
   {:else}
     <div class="flex flex-row justify-around flex-wrap gap-2">
       {#if showCreateNewButton}
-        <Tooltip bottom tip={isCreateButtonDisabled ? warningsTooltip : `Create new ${providerDisplayName}`}>
+        <Tooltip bottom tip={isCreateButtonDisabled ? warningsTooltip : `${buttonTitle} ${providerDisplayName}`}>
           <Button
-            aria-label="Create new {providerDisplayName}"
+            aria-label="{buttonTitle} {providerDisplayName}"
             inProgress={providerInstallationInProgress}
             disabled={isCreateButtonDisabled}
             onclick={handleCreateNew}>

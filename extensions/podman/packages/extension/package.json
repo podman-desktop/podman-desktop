@@ -53,6 +53,11 @@
         "title": "Podman: Set up registry"
       },
       {
+        "command": "podman.hypervPrep",
+        "title": "Podman: Prepare Hyper-V",
+        "enablement": "podman.hypervPrepSupported"
+      },
+      {
         "command": "podman.uninstallLegacyPodmanInstaller",
         "title": "Podman: Uninstall legacy podman installer"
       },
@@ -482,6 +487,13 @@
       "enablement": "(isLinux && onboardingContext:podmanIsNotInstalled) || (!isLinux && !onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists) || podman.needPodmanMachineCleanup"
     },
     "menus": {
+      "dashboard/provider": [
+        {
+          "command": "podman.hypervPrep",
+          "title": "Prepare Hyper-V",
+          "when": "providerId === podman && podman.hypervPrepSupported && podman.hypervPrepNotApplied"
+        }
+      ],
       "dashboard/container-connection": [
         {
           "command": "podman.setupRegistry",
@@ -505,7 +517,7 @@
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
     "semver": "^7.8.5",
-    "smol-toml": "1.8.0",
+    "smol-toml": "1.9.1",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
   },
@@ -516,11 +528,11 @@
     "adm-zip": "^0.6.1",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
-    "msw": "^2.15.0",
+    "msw": "^3.0.3",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
-    "tsx": "^4.23.13",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "tsx": "^4.23.15",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }

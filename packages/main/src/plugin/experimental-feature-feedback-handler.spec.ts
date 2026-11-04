@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Configuration } from '@podman-desktop/api';
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
+import type { Configuration } from '@desktop-framework/extension-api';
 import type Electron from 'electron';
 import { shell } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -423,6 +423,23 @@ describe('showFeedbackDialog', () => {
     expect(disableFeatureSpy).toBeCalledTimes(1);
     expect(disableFeatureSpy).toBeCalledWith('feat.feature1');
     expect(telemetry.track).toHaveBeenCalled();
+  });
+
+  test('should track a dismissed option when user closes the dialog', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: undefined });
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(setTimestampSpy).not.toHaveBeenCalled();
+    expect(disableFeatureSpy).not.toHaveBeenCalled();
+    expect(openExternalSpy).not.toHaveBeenCalled();
+    expect(telemetry.track).toHaveBeenCalledWith('experimentalFeatureFeedback', { option: 'Dismissed' });
   });
 
   test('should NOT show a dialog if the timestamp is in the future', async () => {

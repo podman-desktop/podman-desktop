@@ -36,7 +36,6 @@ test.use({
         'podman-desktop.kind',
         'podman-desktop.kube-context',
         'podman-desktop.kubectl-cli',
-        'podman-desktop.lima',
         'podman-desktop.minikube',
         'podman-desktop.registries',
       ],
@@ -53,22 +52,21 @@ test.afterAll(async ({ runner }) => {
   await runner.close(45_000);
 });
 
-test.describe
-  .serial('Application update reminder preferences set to Never', { tag: '@update-install' }, () => {
-    test.describe.configure({ retries: 1 });
-    test('No update on startup', async ({ page, welcomePage }) => {
-      const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop\?/ });
-      await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 20_000 });
-      await welcomePage.handleWelcomePage(true);
-    });
-    test('Version button is visible', async ({ statusBar }) => {
-      await playExpect(statusBar.content).toBeVisible();
-      await playExpect(statusBar.versionButton).toBeVisible();
-    });
-
-    test('User initiated update option is available', async ({ page, statusBar }) => {
-      await playExpect(statusBar.updateButtonTitle).toHaveText(await statusBar.versionButton.innerText());
-      await statusBar.updateButtonTitle.click();
-      await handleConfirmationDialog({ page, dialogTitle: /Update .*Podman Desktop\?/, buttonName: 'Cancel' });
-    });
+test.describe('Application update reminder preferences set to Never', { tag: '@update-install' }, () => {
+  test.describe.configure({ mode: 'serial', retries: 1 });
+  test('No update on startup', async ({ page, welcomePage }) => {
+    const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop\?/ });
+    await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 20_000 });
+    await welcomePage.handleWelcomePage(true);
   });
+  test('Version button is visible', async ({ statusBar }) => {
+    await playExpect(statusBar.content).toBeVisible();
+    await playExpect(statusBar.versionButton).toBeVisible();
+  });
+
+  test('User initiated update option is available', async ({ page, statusBar }) => {
+    await playExpect(statusBar.updateButtonTitle).toHaveText(await statusBar.versionButton.innerText());
+    await statusBar.updateButtonTitle.click();
+    await handleConfirmationDialog({ page, dialogTitle: /Update .*Podman Desktop\?/, buttonName: 'Cancel' });
+  });
+});

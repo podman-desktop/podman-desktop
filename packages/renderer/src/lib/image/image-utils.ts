@@ -18,11 +18,12 @@
 
 import {
   type ImageInfo,
+  type ImageUpdateResult,
   isViewContributionBadge,
   isViewContributionIcon,
   type ViewContributionBadgeValue,
   type ViewInfoUI,
-} from '@podman-desktop/core-api';
+} from '@desktop-framework/api';
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
@@ -193,7 +194,7 @@ export class ImageUtils {
         .flat();
     }
 
-    if (!imageInfo.RepoTags) {
+    if (!imageInfo.RepoTags?.length) {
       return [
         {
           id: imageInfo.Id,
@@ -253,6 +254,10 @@ export class ImageUtils {
   deleteImage(image: ImageInfoUI): Promise<void> {
     const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
     return window.deleteImage(image.engineId, imageId);
+  }
+
+  async updateImages(images: ImageInfoUI[]): Promise<ImageUpdateResult[]> {
+    return window.updateImages(images.map(({ engineId, id }) => ({ engineId, id })));
   }
 
   getImageInfoUI(

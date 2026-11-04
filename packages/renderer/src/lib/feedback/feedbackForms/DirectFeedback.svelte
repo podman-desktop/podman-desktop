@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { DirectFeedbackCategory, FeedbackProperties } from '@desktop-framework/api';
 import {
   faFrown,
   faGrinStars,
@@ -8,7 +9,6 @@ import {
   faSmile,
   faStar,
 } from '@fortawesome/free-solid-svg-icons';
-import type { DirectFeedbackCategory, FeedbackProperties } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -86,7 +86,7 @@ async function openGitHub(): Promise<void> {
 </script>
 
 <FeedbackForm>
-  <svelte:fragment slot="content">
+  {#snippet content()}
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
       >{feedbackMessages?.experienceLabel}</label>
     <div class="flex space-x-4" role="group" aria-label={feedbackMessages?.experienceLabel}>
@@ -101,7 +101,7 @@ async function openGitHub(): Promise<void> {
           <Icon
             size="1.5x"
             class="cursor-pointer {smileyRating === rating
-              ? 'text-(--pd-action-button-primary-text)'
+              ? 'text-(--pd-button-icon-primary-text)'
               : 'text-(--pd-button-disabled-text)'}"
             {icon} />
         </button>
@@ -131,8 +131,8 @@ async function openGitHub(): Promise<void> {
       bind:value={contactInformation}
       placeholder="Enter email address, or leave blank for anonymous feedback"
       class="w-full p-2 outline-hidden text-sm bg-[var(--pd-input-field-focused-bg)] rounded-xs text-[var(--pd-input-field-focused-text)] placeholder-[var(--pd-input-field-placeholder-text)]" />
-  </svelte:fragment>
-  <svelte:fragment slot="validation">
+  {/snippet}
+  {#snippet validation()}
     {#if smileyRating === 0}
       <ErrorMessage class="text-xs" error="Please select an experience smiley" />
     {:else if smileyRating === 1 && !hasFeedback}
@@ -149,9 +149,10 @@ async function openGitHub(): Promise<void> {
         </span>
       </div>
     {/if}
-  </svelte:fragment>
-  <svelte:fragment slot="buttons">
+  {/snippet}
+  {#snippet buttons()}
+    <Button class="underline" type="link" aria-label="Cancel" on:click={(): void => onCloseForm(true)}>Cancel</Button>
     <Button disabled={smileyRating === 0 || (smileyRating === 1 && !hasFeedback)} on:click={sendFeedback}
     >Send feedback</Button>
-  </svelte:fragment>
+  {/snippet}
 </FeedbackForm>

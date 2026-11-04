@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IDisposable } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { IDisposable } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
@@ -236,8 +236,10 @@ export class ExperimentalFeatureFeedbackHandler {
         })
         .then(async response => {
           if (response) {
-            const telemetryOptions = { option: 'Share Feedback on GitHub' };
+            // closing the dialog (x) resolves without any response
+            const telemetryOptions = { option: 'Dismissed' };
             if (response.response === 'Share Feedback on GitHub') {
+              telemetryOptions.option = 'Share Feedback on GitHub';
               await shell.openExternal(featureGitHubLink);
               this.setTimestamp(key, undefined);
             } else if (response.response === 'Remind me later' && typeof response.dropdownIndex === 'number') {
