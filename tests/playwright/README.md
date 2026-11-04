@@ -43,12 +43,13 @@ loader is skipped when `electron.launch()` receives an explicit `executablePath`
 To build and test this package on Linux:
 
 ```sh
-PODMAN_DESKTOP_E2E_BUILD=true ELECTRON_ENABLE_INSPECT=true pnpm compile:current --linux dir
+ELECTRON_ENABLE_INSPECT=true pnpm compile:e2e --linux dir
 PODMAN_DESKTOP_BINARY="$PWD/dist/linux-unpacked/podman-desktop" pnpm test:e2e:smoke
 ```
 
-`PODMAN_DESKTOP_E2E_BUILD` is a build-time flag. Normal builds use the application's original entry point and do not
-include the bootstrap or handshake code. The E2E package still uses production build settings and ASAR packaging.
+`compile:e2e` rebuilds the main process with the [E2E Vite configuration](bootstrap/vite.config.ts) before packaging.
+Normal builds use the application's original entry point and do not include the bootstrap or handshake code. The E2E
+package still uses production build settings and ASAR packaging.
 
 The Electron runner enables the handshake for explicit executable launches and releases it before requesting the first
 window. Older binaries without the bootstrap continue to work. Set `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=0` when running

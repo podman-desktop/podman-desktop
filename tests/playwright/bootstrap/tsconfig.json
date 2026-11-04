@@ -1,4 +1,5 @@
 {
   "extends": "../../../packages/main/tsconfig.json",
-  "include": ["*.ts"]
+  "include": ["*.ts", "../../../types/**/*.d.ts"],
+  "exclude": ["vite.config.ts"]
 }

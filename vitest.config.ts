@@ -31,6 +31,7 @@ export default defineConfig({
   test: {
     projects: [
       '{extensions,packages,tools,storybook,website,scripts}/**/{vitest,vite}.config.{js,ts}',
+      'tests/playwright/bootstrap/vite.config.ts',
       '!**/builtin/**',
     ],
     // use GitHub action reporters when running in CI

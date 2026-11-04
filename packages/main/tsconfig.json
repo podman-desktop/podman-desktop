@@ -21,11 +21,5 @@
       "/@product.json": ["../../product.json"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "scripts/**/*.ts",
-    "vitest.setup.ts",
-    "../../types/**/*.d.ts",
-    "../../tests/playwright/bootstrap/**/*.ts"
-  ]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "vitest.setup.ts", "../../types/**/*.d.ts"]
 }
