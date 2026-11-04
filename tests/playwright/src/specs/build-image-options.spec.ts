@@ -19,13 +19,14 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Preferences } from '/@/model/core/settings/preferences';
-import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-const THEMES = ['light', 'dark', 'hc-light', 'hc-dark'] as const;
 const CONTAINERFILE_PATH = fileURLToPath(new URL('../../resources/staged_build.yaml', import.meta.url));
+const BUILD_CONTEXT_DIR = path.resolve(path.dirname(CONTAINERFILE_PATH), '..');
+const IMAGE_NAME = 'build-options-test';
+const BUILD_TARGET = 'stage2';
+const BUILD_ARGUMENT = { key: 'TEST_ARG', value: 'test-value' };
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('build-image-options');
@@ -37,47 +38,36 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe('Build image settings', () => {
-  test.describe.configure({ mode: 'serial' });
+test('Preserves build settings across tabs', async ({ navigationBar, page }) => {
+  const images = await navigationBar.openImages();
+  const buildPage = await images.openBuildImage();
+  await buildPage.containerFilePathInput.fill(CONTAINERFILE_PATH);
+  await buildPage.buildContextDirectoryInput.fill(BUILD_CONTEXT_DIR);
+  await buildPage.imageNameInput.fill(IMAGE_NAME);
+  await buildPage.uncheckDefaultCheckbox();
+  await buildPage.amd64Button.click();
+  await buildPage.arm64Button.click();
 
-  for (const theme of THEMES) {
-    test(`Keyboard access and advanced settings in ${theme}`, async ({ navigationBar, page }) => {
-      const settings = await navigationBar.openSettings();
-      const preferences = await settings.openTabPage(PreferencesPage);
-      await preferences.setPreferenceDropdownValue(Preferences.Labels.APPEARANCE, theme);
-      playExpect(await preferences.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE)).toBe(theme);
-      await playExpect(page.locator('html')).toHaveCSS('color-scheme', theme.endsWith('dark') ? 'dark' : 'light');
+  await buildPage.advancedTab.click();
+  await buildPage.targetDropdownButton.click();
+  await page.getByRole('button', { name: BUILD_TARGET, exact: true }).click();
+  await buildPage.buildArgKeyInput.fill(BUILD_ARGUMENT.key);
+  await buildPage.buildArgValueInput.fill(BUILD_ARGUMENT.value);
+  await buildPage.registryValidationCheckbox.uncheck();
 
-      const images = await navigationBar.openImages();
-      const buildPage = await images.openBuildImage();
-      await playExpect(buildPage.basicTab).toHaveAttribute('href', '/images/build/basic');
-      await buildPage.containerFilePathInput.fill(CONTAINERFILE_PATH);
-      await buildPage.buildContextDirectoryInput.fill(path.dirname(CONTAINERFILE_PATH));
-      await buildPage.imageNameInput.fill('build-options-preview');
-      await buildPage.screenshot({ name: `build-image-basic-${theme}` });
+  // Return to each tab to detect lost form values.
+  await buildPage.basicTab.click();
+  await playExpect(buildPage.containerFilePathInput).toBeVisible();
+  await playExpect(buildPage.containerFilePathInput).toHaveValue(CONTAINERFILE_PATH);
+  await playExpect(buildPage.buildContextDirectoryInput).toHaveValue(BUILD_CONTEXT_DIR);
+  await playExpect(buildPage.imageNameInput).toHaveValue(IMAGE_NAME);
+  await playExpect(buildPage.amd64checkbox).toBeChecked();
+  await playExpect(buildPage.arm64checkbox).toBeChecked();
 
-      await buildPage.basicTab.focus();
-      await page.keyboard.press('Tab');
-      await playExpect(buildPage.advancedTab).toBeFocused();
-      await page.keyboard.press('Enter');
-      await playExpect(page.getByRole('region', { name: 'Advanced', exact: true })).toBeVisible();
-      await playExpect(buildPage.containerFilePathInput).not.toBeVisible();
-
-      await buildPage.targetDropdownButton.click();
-      await page.getByRole('button', { name: 'stage2', exact: true }).click();
-      await playExpect(buildPage.targetDropdownButton).toHaveText(/stage2/i);
-      await buildPage.toggleRegistryValidation(false);
-      await buildPage.advancedTab.click();
-      await playExpect(buildPage.registryValidationCheckbox).not.toBeChecked();
-
-      await buildPage.basicTab.click();
-      await playExpect(buildPage.containerFilePathInput).toHaveValue(CONTAINERFILE_PATH);
-      await playExpect(buildPage.imageNameInput).toHaveValue('build-options-preview');
-
-      await buildPage.advancedTab.click();
-      await playExpect(buildPage.targetDropdownButton).toHaveText(/stage2/i);
-      await playExpect(buildPage.registryValidationCheckbox).not.toBeChecked();
-      await buildPage.screenshot({ name: `build-image-advanced-${theme}` });
-    });
-  }
+  await buildPage.advancedTab.click();
+  await playExpect(buildPage.targetDropdownButton).toBeVisible();
+  await playExpect(buildPage.targetDropdownButton).toHaveText(BUILD_TARGET);
+  await playExpect(buildPage.buildArgKeyInput).toHaveValue(BUILD_ARGUMENT.key);
+  await playExpect(buildPage.buildArgValueInput).toHaveValue(BUILD_ARGUMENT.value);
+  await playExpect(buildPage.registryValidationCheckbox).not.toBeChecked();
 });

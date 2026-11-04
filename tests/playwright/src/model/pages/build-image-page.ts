@@ -42,6 +42,8 @@ export class BuildImagePage extends BasePage {
   readonly archLessOptionsButton: Locator;
   readonly terminalContent: Locator;
   readonly targetDropdownButton: Locator;
+  readonly buildArgKeyInput: Locator;
+  readonly buildArgValueInput: Locator;
   readonly registryValidationCheckbox: Locator;
   readonly basicTab: Locator;
   readonly advancedTab: Locator;
@@ -69,6 +71,8 @@ export class BuildImagePage extends BasePage {
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
     this.terminalContent = page.locator('.xterm-rows');
     this.targetDropdownButton = page.getByRole('button', { name: 'target' });
+    this.buildArgKeyInput = page.getByPlaceholder('Key', { exact: true });
+    this.buildArgValueInput = page.getByPlaceholder('Value', { exact: true });
     this.registryValidationCheckbox = page.getByRole('checkbox', { name: 'validate registries' });
     this.basicTab = page.getByRole('link', { name: 'Basic' });
     this.advancedTab = page.getByRole('link', { name: 'Advanced' });
