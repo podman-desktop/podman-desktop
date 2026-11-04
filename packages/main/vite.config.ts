@@ -46,7 +46,14 @@ export default defineConfig({
     assetsDir: '.',
     minify: process.env['MODE'] === 'production',
     lib: {
-      entry: ['src/index.ts', 'scripts/download-remote-extensions.ts', 'scripts/generate-extension-schema.ts'],
+      entry: {
+        index:
+          process.env['PODMAN_DESKTOP_E2E_BUILD'] === 'true'
+            ? '../../tests/playwright/bootstrap/index.ts'
+            : 'src/index.ts',
+        'download-remote-extensions': 'scripts/download-remote-extensions.ts',
+        'generate-extension-schema': 'scripts/generate-extension-schema.ts',
+      },
       formats: ['cjs'],
     },
     rollupOptions: {
@@ -70,7 +77,7 @@ export default defineConfig({
   test: {
     retry: 3, // Retries failing tests up to 3 times
     environment: 'node',
-    include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)', '../../tests/playwright/bootstrap/**/*.spec.ts'],
     setupFiles: ['./vitest.setup.ts'],
   },
 });

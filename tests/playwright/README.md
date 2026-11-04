@@ -34,6 +34,27 @@ This approach is beneficial in the way that we do not need to have the `electron
 
 If you set `PODMAN_DESKTOP_BINARY` and `PODMAN_DESKTOP_ARGS` at the same time, the runner will throw an error since you cannot really run tests in both mode at the same time.
 
+### Building a packaged application for E2E tests
+
+The production smoke CI job builds an E2E package with a startup bootstrap that waits for Playwright to attach before
+the application's `app.whenReady()` callbacks create the window and start extensions. Playwright's own readiness
+loader is skipped when `electron.launch()` receives an explicit `executablePath`.
+
+To build and test this package on Linux:
+
+```sh
+PODMAN_DESKTOP_E2E_BUILD=true ELECTRON_ENABLE_INSPECT=true pnpm compile:current --linux dir
+PODMAN_DESKTOP_BINARY="$PWD/dist/linux-unpacked/podman-desktop" pnpm test:e2e:smoke
+```
+
+`PODMAN_DESKTOP_E2E_BUILD` is a build-time flag. Normal builds use the application's original entry point and do not
+include the bootstrap or handshake code. The E2E package still uses production build settings and ASAR packaging.
+
+The Electron runner enables the handshake for explicit executable launches and releases it before requesting the first
+window. Older binaries without the bootstrap continue to work. Set `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=0` when running
+tests to disable the gate for startup comparisons. Launching the E2E package directly or with the CDP runner leaves the
+gate disabled unless `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=1` is explicitly set.
+
 ### Configuring the Electron launch timeout
 
 The Electron runner waits up to 90 seconds for the application to launch by default. For a per-suite override, pass `electronLaunchTimeout` in `RunnerOptions` (in milliseconds):

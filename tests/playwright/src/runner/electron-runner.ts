@@ -102,9 +102,25 @@ export class ElectronRunner extends Runner {
       Object.keys(this._options).forEach(key => {
         console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
       });
+      const options = this._options as Parameters<typeof electron.launch>[0];
+      const env = options?.env ?? process.env;
       this._app = await electron.launch({
-        ...this._options,
+        ...options,
+        env: {
+          ...env,
+          PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE:
+            env.PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE ?? (options?.executablePath ? '1' : '0'),
+        },
       });
+      // E2E packages gate app.whenReady() until attachment finishes. Older binaries have no listener.
+      const released = await this.raceWithTimeout(
+        this.getElectronApp().evaluate(({ app }) => app.emit('podman-desktop:playwright-ready')),
+        5_000,
+        'Releasing the Playwright startup handshake timed out',
+      );
+      console.log(
+        `[startup handshake] ${released ? 'Released E2E app-ready gate' : 'No app-ready gate in this launch'}`,
+      );
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
 
