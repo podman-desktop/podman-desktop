@@ -255,6 +255,9 @@ export class ExperimentalFeatureFeedbackHandler {
                 default:
                   this.disableFeature(key);
               }
+            } else {
+              // dismissing the dialog (x or Escape) behaves like "Remind me in 2 days"
+              this.setTimestamp(key, 2);
             }
             this.telemetry.track('experimentalFeatureFeedback', telemetryOptions);
           }
