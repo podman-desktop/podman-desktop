@@ -38,6 +38,8 @@ export class ElectronRunner extends Runner {
   protected _app: ElectronApplication | undefined;
 
   protected static readonly MAX_STARTUP_ATTEMPTS = 3;
+  // Relaunches after a missing preload bridge, on top of MAX_STARTUP_ATTEMPTS (see hasPreloadBridge)
+  protected static readonly MAX_PRELOAD_RELAUNCHES = 10;
   protected static readonly APP_RENDER_TIMEOUT_MS = 15_000;
 
   public constructor(options?: { runnerOptions?: RunnerOptions }) {
@@ -52,12 +54,25 @@ export class ElectronRunner extends Runner {
     }
 
     const maxAttempts = ElectronRunner.MAX_STARTUP_ATTEMPTS;
+    let attempt = 1;
+    let preloadRelaunches = 0;
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const launched = await this.launchAndVerify(attempt, maxAttempts);
-      if (launched) {
+    for (;;) {
+      const result = await this.launchAndVerify(attempt, maxAttempts);
+      if (result === 'rendered') {
         break;
       }
+      if (result === 'preload-missing' && preloadRelaunches < ElectronRunner.MAX_PRELOAD_RELAUNCHES) {
+        preloadRelaunches++;
+        continue;
+      }
+      if (attempt >= maxAttempts) {
+        throw new Error(
+          `Podman Desktop started with a blank screen on all ${maxAttempts} attempts. ` +
+            'The Electron renderer never mounted the application UI.',
+        );
+      }
+      attempt++;
     }
 
     // Direct Electron console to Node terminal and collect in buffer.
@@ -92,10 +107,15 @@ export class ElectronRunner extends Runner {
    * Attempt a single Electron launch cycle: launch the app, wait for the first
    * window, and verify the renderer actually painted (Svelte mounted into #app).
    *
-   * @returns `true` when the app rendered successfully and is ready for use.
-   * @throws when this is the final allowed attempt and the app still failed.
+   * @returns `rendered` when the app is ready for use, `preload-missing` when the first document
+   * loaded without the preload bridge, `blank` when the UI did not render in time.
+   * @throws when the app could not be launched.
    */
-  private async launchAndVerify(attempt: number, maxAttempts: number): Promise<boolean> {
+  private async launchAndVerify(
+    attempt: number,
+    maxAttempts: number,
+  ): Promise<'rendered' | 'preload-missing' | 'blank'> {
+    let preloadLoaded: boolean;
     try {
       console.log(`Starting Podman Desktop (attempt ${attempt}/${maxAttempts})`);
       console.log('Electron app launch options: ');
@@ -107,6 +127,7 @@ export class ElectronRunner extends Runner {
       });
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
+      preloadLoaded = await this.hasPreloadBridge();
 
       const filePath = await this.getElectronApp().evaluate(async ({ app }) => app.getPath('exe'));
       console.log(`The Executable Electron app. file: ${filePath}`);
@@ -116,12 +137,18 @@ export class ElectronRunner extends Runner {
       throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
     }
 
+    if (!preloadLoaded) {
+      console.log('Preload bridge missing: the page loaded while Playwright was attaching, relaunching');
+      await this.closeAfterFailedStart();
+      return 'preload-missing';
+    }
+
     const rendered = await this.waitForAppRendered(ElectronRunner.APP_RENDER_TIMEOUT_MS);
     if (rendered) {
       if (attempt > 1) {
         console.log(`Podman Desktop rendered successfully on attempt ${attempt}`);
       }
-      return true;
+      return 'rendered';
     }
 
     console.log(
@@ -129,15 +156,21 @@ export class ElectronRunner extends Runner {
         `app did not render within ${ElectronRunner.APP_RENDER_TIMEOUT_MS}ms`,
     );
     await this.closeAfterFailedStart();
+    return 'blank';
+  }
 
-    if (attempt >= maxAttempts) {
-      throw new Error(
-        `Podman Desktop started with a blank screen on all ${maxAttempts} attempts. ` +
-          'The Electron renderer never mounted the application UI.',
-      );
-    }
-
-    return false;
+  /**
+   * Playwright only synchronizes the app startup with its own attachment when it launches the
+   * default Electron binary (its loader defers `app.ready`). With an explicit `executablePath`
+   * (packaged builds), the first navigation of the window can race the attachment, and that
+   * document then has no preload bridge (`window.events` is undefined), leaving a blank UI.
+   * The app is relaunched rather than reloaded: a reload would keep the main process state but
+   * lose what the renderer collected before it (e.g. the startup lines of the troubleshooting logs).
+   */
+  private async hasPreloadBridge(): Promise<boolean> {
+    const page = this.getPage();
+    await page.waitForLoadState('domcontentloaded');
+    return page.evaluate(() => 'events' in window);
   }
 
   /**
