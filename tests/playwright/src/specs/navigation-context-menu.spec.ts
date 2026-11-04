@@ -31,6 +31,11 @@ interface ConfigurationWindow {
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'navigation-context-menu' }) });
 
+test.skip(
+  process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+  'Test requires Electron main process evaluation, not supported with CDP runner',
+);
+
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('navigation-context-menu-e2e');
   await welcomePage.handleWelcomePage(true);
