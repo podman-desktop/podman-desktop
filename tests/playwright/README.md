@@ -53,8 +53,9 @@ package still uses production build settings and ASAR packaging.
 
 The Electron runner enables the handshake for explicit executable launches and releases it before requesting the first
 window. Older binaries without the bootstrap continue to work. Set `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=0` when running
-tests to disable the gate for startup comparisons. Launching the E2E package directly or with the CDP runner leaves the
-gate disabled unless `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=1` is explicitly set.
+tests to disable the gate for startup comparisons. The CDP runner always disables the gate, overriding any inherited
+handshake flag, because it cannot release it. Launching the E2E package directly leaves the gate disabled unless
+`PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=1` is explicitly set.
 
 ### Configuring the Electron launch timeout
 

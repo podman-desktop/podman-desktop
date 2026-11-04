@@ -221,7 +221,8 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     try {
       // Spawn the Electron process with remote debugging enabled
       this._electronProcess = spawn(executablePath, [`--remote-debugging-port=${debugPort}`], {
-        env: env as NodeJS.ProcessEnv,
+        // CDP cannot release the main-process startup gate.
+        env: { ...env, PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE: '0' },
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 

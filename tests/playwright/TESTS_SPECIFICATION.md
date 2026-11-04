@@ -60,6 +60,11 @@ This does not isolate Podman resources, host CLI installations, registry auth,
 or system managed-configuration files. The real-home installation spec opts
 out of this redirection.
 
+The CDP runner always sets `PODMAN_DESKTOP_E2E_STARTUP_HANDSHAKE=0` for the
+spawned application, overriding any inherited value. Only the Electron
+runner can release the E2E package's main-process startup gate; see
+[packaged E2E builds](README.md#building-a-packaged-application-for-e2e-tests).
+
 ### Execution and selection
 
 Install dependencies and build once with `pnpm test:e2e:build`; `:run` and
