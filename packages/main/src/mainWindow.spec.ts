@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { Configuration } from '@desktop-framework/extension-api';
 import type Electron from 'electron';
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
@@ -449,7 +450,7 @@ describe('navbar context menu confirmations', () => {
     // a right-click landing in that gap waits for the dialog instead of failing
     expect(await isPending(messageBoxPromise)).toBe(true);
 
-    const messageBox = new MessageBox(undefined as never);
+    const messageBox = new MessageBox({} as ApiSenderType);
     getHandler(vi.mocked(ipcMain.on), 'message-box')('', messageBox);
 
     await expect(messageBoxPromise).resolves.toBe(messageBox);

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { DisplayItem, GoToInfo } from '@desktop-framework/api';
+import { type DisplayItem, type GoToInfo, NavbarSettings } from '@desktop-framework/api';
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
@@ -220,14 +220,19 @@ async function hideItems(): Promise<void> {
 configurationProperties.subscribe(() => {
   if (window.getConfigurationValue) {
     window
-      .getConfigurationValue<string[]>('navbar.disabledItems')
+      .getConfigurationValue<string[]>(`${NavbarSettings.SectionName}.${NavbarSettings.DisabledItems}`)
       ?.then(value => {
         if (value) {
           hiddenItems = value;
         }
       })
       .then(() => hideItems())
-      .catch((err: unknown) => console.error('Error getting configuration value navbar.disabledItems', err));
+      .catch((err: unknown) =>
+        console.error(
+          `Error getting configuration value ${NavbarSettings.SectionName}.${NavbarSettings.DisabledItems}`,
+          err,
+        ),
+      );
 
     handleKubernetesGroup();
   }

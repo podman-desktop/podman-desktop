@@ -19,7 +19,7 @@
 import type { DisplayItem } from '@desktop-framework/api';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 
@@ -143,10 +143,6 @@ describe('active item tracking', () => {
     // the shared tinro singleton
     router.goto('/');
     await fetchNavigationRegistries();
-  });
-
-  afterEach(() => {
-    router.goto('/');
   });
 
   function lastSentItems(): DisplayItem[] {

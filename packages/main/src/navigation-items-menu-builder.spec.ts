@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { DisplayItem } from '@desktop-framework/api';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { BrowserWindow, ContextMenuParams, MenuItem, MenuItemConstructorOptions } from 'electron';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -79,7 +80,7 @@ beforeEach(() => {
   showMessageBoxMock.mockResolvedValue({ response: 'Hide' });
   navigationItemsMenuBuilder = new TestNavigationItemsMenuBuilder(
     configurationRegistryMock,
-    Promise.resolve(new MessageBox(undefined as never)),
+    Promise.resolve(new MessageBox({} as ApiSenderType)),
   );
 });
 
@@ -93,11 +94,11 @@ describe('buildHideMenuItem', async () => {
     const menu = navigationItemsMenuBuilder.buildHideMenuItem(input);
     assert(menu, `Expected a hide menu item for '${input}'`);
     expect(menu.label).toBe(expectedLabel);
-    expect(menu.click).toBeDefined();
+    assert(menu.click, 'Expected the hide menu item to be clickable');
     expect(menu.visible).toBe(true);
 
     // click on the menu
-    menu.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+    menu.click({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
 
     expect(getConfigurationMock).toBeCalled();
     // if clicking it should send the item to the configuration as being disabled

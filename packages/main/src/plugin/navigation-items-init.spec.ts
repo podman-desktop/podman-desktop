@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect, test, vi } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { NavigationItemsInit } from './navigation-items-init.js';
@@ -55,7 +55,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['navbar.itemOrder']?.type).toStrictEqual(['array']);
   expect(configurationNode?.properties?.['navbar.itemOrder']?.default).toStrictEqual([]);
 
-  expect(configurationNode?.properties?.['navbar.hideConfirmationDismissed']).toBeDefined();
+  assert(configurationNode?.properties?.['navbar.hideConfirmationDismissed']);
   expect(configurationNode?.properties?.['navbar.hideConfirmationDismissed']?.description).toBe(
     'Whether the user asked not to be prompted again when hiding a navigation item',
   );
