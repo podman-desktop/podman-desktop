@@ -40,10 +40,12 @@ let onboardings: OnboardingInfo[] = $state(
   $onboardingList.filter(o => extensionIds.find(extensionId => o.extension === extensionId)),
 );
 let activeStep: ActiveOnboardingStep | undefined = $state();
+// read $context directly: the store updates the same ContextUI instance in place, which a
+// $derived(globalContext) does not propagate, so content "when" clauses would never be re-evaluated
 let activeStepContent: OnboardingStepItem[][] = $derived(
   activeStep?.step.content?.map(row => {
     return row.filter(item => {
-      return evaluateWhen(item.when, activeStep?.onboarding.extension ?? '');
+      return evaluateWhen(item.when, activeStep?.onboarding.extension ?? '', $context);
     });
   }) ?? [],
 );
@@ -140,7 +142,7 @@ async function setActiveStep(): Promise<void> {
 }
 
 // Evaluate the "when" clause with the extension and return true / false
-function evaluateWhen(when: string | undefined, extension: string): boolean {
+function evaluateWhen(when: string | undefined, extension: string, contextUI: ContextUI): boolean {
   // If there's no when, just return true
   if (!when) {
     return true;
@@ -150,7 +152,7 @@ function evaluateWhen(when: string | undefined, extension: string): boolean {
   // based upon the global context
   const whenDeserialized = ContextKeyExpr.deserialize(normalizeOnboardingWhenClause(when, extension));
   if (whenDeserialized) {
-    return whenDeserialized.evaluate(globalContext);
+    return whenDeserialized.evaluate(contextUI);
   }
   return false;
 }
