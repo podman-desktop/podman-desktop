@@ -255,6 +255,76 @@ test('should release previous client and local socket when reconnecting', async 
   sshServer.close();
 });
 
+test('should ignore events from a superseded ssh client', () => {
+  const clients: Client[] = [];
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
+    clients.push(this);
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'end').mockReturnThis();
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+  const handleReconnectSpy = vi.spyOn(podmanRemoteSshTunnel, 'handleReconnect').mockReturnValue();
+
+  podmanRemoteSshTunnel.connect();
+  podmanRemoteSshTunnel.connect();
+  expect(clients).toHaveLength(2);
+
+  // the first client is ended by the second connect and emits its end/close events
+  clients[0]?.emit('end');
+  clients[0]?.emit('close');
+  clients[0]?.emit('error', new Error('superseded'));
+  expect(handleReconnectSpy).not.toHaveBeenCalled();
+  expect(podmanRemoteSshTunnel.status()).toBe('unknown');
+
+  clients[1]?.emit('close');
+  expect(handleReconnectSpy).toHaveBeenCalledTimes(1);
+  expect(podmanRemoteSshTunnel.status()).toBe('stopped');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
+test('should clear pending reconnect timeout when the connection succeeds', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const clients: Client[] = [];
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
+    clients.push(this);
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'end').mockReturnThis();
+
+  const socketOrNpipePathLocal =
+    process.platform === 'win32' ? '\\\\.\\pipe\\test-local-ready' : join(tmpdir(), 'test-local-ready.sock');
+  await rm(socketOrNpipePathLocal, { force: true });
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    socketOrNpipePathLocal,
+  );
+  const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
+
+  podmanRemoteSshTunnel.connect();
+  podmanRemoteSshTunnel.handleReconnect();
+  clients[0]?.emit('ready');
+
+  vi.advanceTimersByTime(30000);
+  expect(connectSpy).toHaveBeenCalledTimes(1);
+  expect(podmanRemoteSshTunnel.status()).toBe('started');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
 test('disconnect should clear pending reconnect timeout', () => {
   vi.useFakeTimers();
   vi.spyOn(Client.prototype, 'connect').mockReturnThis();
