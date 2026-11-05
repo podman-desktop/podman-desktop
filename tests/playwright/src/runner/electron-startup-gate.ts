@@ -107,6 +107,11 @@ async function findInspectorUrl(port: number, signal: AbortSignal): Promise<stri
 export async function installStartupGate(port: number, signal: AbortSignal): Promise<void> {
   const url = await findInspectorUrl(port, signal);
   const ws = new WebSocket(url);
+  // Without this, pending calls never settle if the connection closes, and the launch hangs.
+  const closed = new Promise<never>((_, reject) => {
+    ws.onclose = (): void => reject(new Error(`Inspector connection to ${url} closed`));
+  });
+  closed.catch(() => {}); // Handles the rejection caused by the intentional close in `finally`.
   try {
     await new Promise((resolve, reject) => {
       ws.onopen = resolve;
@@ -124,10 +129,13 @@ export async function installStartupGate(port: number, signal: AbortSignal): Pro
     };
     const send = async (method: string, params: object = {}): Promise<unknown> => {
       const id = ++lastId;
-      const response = await new Promise<{ result?: unknown; error?: { message: string } }>(resolve => {
-        pending.set(id, resolve);
-        ws.send(JSON.stringify({ id, method, params }));
-      });
+      const response = await Promise.race([
+        new Promise<{ result?: unknown; error?: { message: string } }>(resolve => {
+          pending.set(id, resolve);
+          ws.send(JSON.stringify({ id, method, params }));
+        }),
+        closed,
+      ]);
       pending.delete(id);
       if (response.error) throw new Error(`${method} failed: ${response.error.message}`);
       return response.result;
@@ -136,7 +144,7 @@ export async function installStartupGate(port: number, signal: AbortSignal): Pro
     await send('Runtime.enable');
     await send('Debugger.enable');
     await send('Runtime.runIfWaitingForDebugger');
-    const callFrameId = await paused;
+    const callFrameId = await Promise.race([paused, closed]);
     const { result, exceptionDetails } = (await send('Debugger.evaluateOnCallFrame', {
       callFrameId,
       expression: `(${installGate.toString()})(require('electron'))`,
