@@ -59,6 +59,7 @@ import { CertificateDetectionService } from './certificate-detection/certificate
 import { PodmanCertificateSync } from './certificate-sync/podman-certificate-sync';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
+import { WSLPodmanVersionCheck } from './checks/windows/wsl-podman-version-check';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { KrunkitHelper } from './helpers/krunkit-helper';
@@ -2250,6 +2251,17 @@ export async function createMachine(
 
   const podmanInstallation = await podmanBinary.getBinaryInfo();
   const version = podmanInstallation?.version;
+
+  // WSL machines do not work when WSL is too old for the Podman version, fail early with a meaningful message
+  if (extensionApi.env.isWindows && provider === 'wsl' && version) {
+    const result = await new WSLPodmanVersionCheck(version).execute();
+    if (!result.successful) {
+      telemetryRecords.errorCode = 'ErrUnsupportedWSLVersion';
+      sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
+      throw new Error(`${result.description} ${result.docLinksDescription}`);
+    }
+  }
+
   // check for podman major version
   const isPodmanV5OrLater = version ? isPodman5OrLater(version) : false;
   // image
