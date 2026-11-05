@@ -18,8 +18,11 @@
 import * as net from 'node:net';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
+import { window } from '@podman-desktop/api';
 import type { ConnectConfig } from 'ssh2';
 import { Client } from 'ssh2';
+
+import { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
 
 export class PodmanRemoteSshTunnel {
   #sshConfig: ConnectConfig;
@@ -47,11 +50,24 @@ export class PodmanRemoteSshTunnel {
     private privateKey: string | undefined,
     private remotePath: string,
     private localPath: string,
+    storagePath: string,
   ) {
     this.#sshConfig = {
       host: this.host,
       port: this.port,
       username: this.username,
+      hostVerifier: new SshHostKeyStore(storagePath).createVerifier(this.host, this.port, error => {
+        this.#reconnect = false;
+        if (this.#reconnectTimeout) {
+          clearTimeout(this.#reconnectTimeout);
+          this.#reconnectTimeout = undefined;
+        }
+        this.#resolveConnected(false);
+        console.error('SSH host key verification failed:', error);
+        window.showErrorMessage(error.message).catch((notificationError: unknown) => {
+          console.error('Unable to display SSH host key verification error:', notificationError);
+        });
+      }),
     };
     if (this.privateKey) {
       this.#sshConfig.privateKey = this.privateKey;
@@ -90,6 +106,22 @@ export class PodmanRemoteSshTunnel {
       this.#resolveConnected = resolve;
     });
 
+    this.#client.on('error', err => {
+      console.error('SSH connection error:', err);
+      this.#status = 'unknown';
+      this.#resolveConnected(false);
+      this.handleReconnect();
+    });
+
+    this.#client.on('end', () => {
+      this.#status = 'stopped';
+      this.handleReconnect();
+    });
+
+    this.#client.on('close', () => {
+      this.#status = 'stopped';
+      this.handleReconnect();
+    });
     this.#client
       .on('ready', () => {
         this.#status = 'started';
@@ -150,22 +182,6 @@ export class PodmanRemoteSshTunnel {
         });
       })
       .connect(this.#sshConfig);
-
-    this.#client.on('error', err => {
-      console.error('SSH connection error:', err);
-      this.#status = 'unknown';
-      this.handleReconnect();
-    });
-
-    this.#client.on('end', () => {
-      this.#status = 'stopped';
-      this.handleReconnect();
-    });
-
-    this.#client.on('close', () => {
-      this.#status = 'stopped';
-      this.handleReconnect();
-    });
   }
 
   handleReconnect(): void {

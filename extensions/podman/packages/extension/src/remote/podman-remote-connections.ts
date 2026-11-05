@@ -143,7 +143,7 @@ export class PodmanRemoteConnections {
       try {
         const uri = new URL(connection.URI);
         const host = uri.hostname;
-        const port = Number.parseInt(uri.port, 10);
+        const port = uri.port ? Number.parseInt(uri.port, 10) : 22;
         const username = uri.username;
         const privateKey = await this.readPrivateKey(connection.Identity);
         const remotePath = uri.pathname;
@@ -220,7 +220,15 @@ export class PodmanRemoteConnections {
     remotePath: string,
     localPath: string,
   ): PodmanRemoteSshTunnel {
-    return new PodmanRemoteSshTunnel(host, port, username, privateKey, remotePath, localPath);
+    return new PodmanRemoteSshTunnel(
+      host,
+      port,
+      username,
+      privateKey,
+      remotePath,
+      localPath,
+      this.#extensionContext.storagePath,
+    );
   }
 
   hasConnections(): boolean {

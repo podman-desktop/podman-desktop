@@ -33,6 +33,8 @@ import { Client } from 'ssh2';
 
 import type { MachineInfo } from '/@/types';
 
+import { SshHostKeyStore } from './ssh-host-key-store';
+
 export class ProviderConnectionShellAccessImpl implements ProviderConnectionShellAccess, Disposable {
   #host: string;
   #port: number;
@@ -41,7 +43,10 @@ export class ProviderConnectionShellAccessImpl implements ProviderConnectionShel
   #client: Client | undefined;
   #stream: ClientChannel | undefined;
 
-  constructor(private readonly podmanMachine: MachineInfo) {
+  constructor(
+    private readonly podmanMachine: MachineInfo,
+    private readonly storagePath: string | undefined,
+  ) {
     this.#host = 'localhost';
     this.#port = podmanMachine.port;
     this.#username = podmanMachine.remoteUsername;
@@ -121,6 +126,9 @@ export class ProviderConnectionShellAccessImpl implements ProviderConnectionShel
         port: this.#port,
         username: this.#username,
         privateKey: fs.readFileSync(this.#privateKey),
+        hostVerifier: new SshHostKeyStore(this.storagePath).createVerifier(this.#host, this.#port, error => {
+          this.onErrorEmit.fire({ error: error.message });
+        }),
       });
 
     return {
