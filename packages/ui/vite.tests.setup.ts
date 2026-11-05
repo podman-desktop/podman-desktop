@@ -16,11 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { vi } from 'vitest';
+
 // jsdom does not implement ResizeObserver (used by bind:clientWidth / bind:clientHeight)
 class ResizeObserverMock {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
 }
 
-globalThis.ResizeObserver = ResizeObserverMock;
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);
