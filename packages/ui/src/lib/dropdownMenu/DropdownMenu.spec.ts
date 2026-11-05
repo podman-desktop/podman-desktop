@@ -20,21 +20,10 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 
 import DropdownMenu from './DropdownMenu.svelte';
 import DropdownMenuTest from './DropdownMenuTest.svelte';
-
-class ResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-  unobserve = vi.fn();
-}
-
-beforeEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ResizeObserver = ResizeObserver;
-});
 
 afterEach(() => {
   vi.resetAllMocks();

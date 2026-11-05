@@ -23,15 +23,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import DropDownMenuItems from './DropDownMenuItems.svelte';
 
-class ResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-  unobserve = vi.fn();
-}
-
 beforeEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ResizeObserver = ResizeObserver;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).innerHeight = 500;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
