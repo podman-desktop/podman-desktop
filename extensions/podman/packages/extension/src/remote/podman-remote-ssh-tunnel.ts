@@ -74,6 +74,7 @@ export class PodmanRemoteSshTunnel {
     return this.#sshConfig;
   }
 
+  /** Allowlists connection diagnostics so authentication fields never enter socket error logs. */
   private getLogContext(): Pick<ConnectConfig, 'host' | 'port' | 'username'> {
     return {
       host: this.host,

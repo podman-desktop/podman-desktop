@@ -15,7 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { expect, test } from 'vitest';
+import { format } from 'node:util';
+
+import { expect, test, vi } from 'vitest';
 
 import { redactLogArguments } from './log-redaction.js';
 
@@ -60,9 +62,53 @@ test('preserves error diagnostics while redacting credential properties and key 
   const error = new Error('Failed: -----BEGIN PRIVATE KEY-----\nsynthetic-key\n-----END PRIVATE KEY-----');
   Object.assign(error, { privateKey: 'test-key', code: 'ECONNRESET' });
   const [redacted] = redactLogArguments([error]);
-  expect(redacted).toBeInstanceOf(Error);
+  expect(redacted).toHaveProperty('name', 'Error');
   expect(redacted).toMatchObject({ message: 'Failed: [REDACTED]', privateKey: '[REDACTED]', code: 'ECONNRESET' });
   expect(redacted).toHaveProperty('stack', expect.stringContaining('Failed: [REDACTED]'));
+});
+
+test('preserves redacted error diagnostics through structured cloning', () => {
+  const error = Object.assign(new TypeError('connection failed'), { privateKey: 'test-key', code: 'ECONNRESET' });
+  const [redacted] = redactLogArguments([error]);
+  const cloned: unknown = structuredClone(redacted);
+  expect(cloned).toMatchObject({
+    name: 'TypeError',
+    message: 'connection failed',
+    stack: expect.stringContaining('TypeError: connection failed'),
+    privateKey: '[REDACTED]',
+    code: 'ECONNRESET',
+  });
+});
+
+test('redacts credential objects stored under symbol keys', () => {
+  const key = Symbol('connection');
+  const config = { [key]: { privateKey: 'test-key', password: 'test-password' } };
+  const [redacted] = redactLogArguments([config]);
+  expect(redacted).toEqual({ [key]: { privateKey: '[REDACTED]', password: '[REDACTED]' } });
+  expect(format('%o', redacted)).not.toContain('test-key');
+});
+
+test('replaces accessors without invoking them during JSON formatting', () => {
+  const getter = vi.fn(() => ({ privateKey: 'test-key' }));
+  const config = Object.defineProperty({}, 'connection', { enumerable: true, get: getter });
+  const [redacted] = redactLogArguments([config]);
+  expect(format('%j', redacted)).toBe('{"connection":"[REDACTED]"}');
+  expect(getter).not.toHaveBeenCalled();
+});
+
+test('fails closed when a proxy cannot be inspected', () => {
+  const { proxy, revoke } = Proxy.revocable({}, {});
+  revoke();
+  expect(redactLogArguments(['test-key', proxy])).toEqual(['[Log arguments could not be redacted]']);
+});
+
+test('fails closed when reading error diagnostics throws', () => {
+  const error = Object.defineProperty(new Error('failure'), 'stack', {
+    get: () => {
+      throw new Error('test-key');
+    },
+  });
+  expect(redactLogArguments([error])).toEqual(['[Log arguments could not be redacted]']);
 });
 
 test('handles circular arguments and repeated references', () => {

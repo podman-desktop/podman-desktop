@@ -221,6 +221,49 @@ test.each(['log', 'warn', 'trace', 'debug', 'error'] as const)(
   },
 );
 
+test('reports redaction failures to both sinks without throwing or exposing arguments', async () => {
+  const original = vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(pluginSystem, 'getExtName').mockResolvedValue(undefined);
+  const { proxy, revoke } = Proxy.revocable({}, {});
+  revoke();
+  try {
+    pluginSystem.redirectConsole('log');
+    expect(() => console.log('test-key', proxy)).not.toThrow();
+    await vi.waitFor(() => {
+      expect(original).toHaveBeenCalledExactlyOnceWith('[Log arguments could not be redacted]');
+      expect(webContents.send).toHaveBeenCalledExactlyOnceWith(
+        'console:output',
+        'log',
+        '[Log arguments could not be redacted]',
+      );
+    });
+  } finally {
+    original.mockRestore();
+  }
+});
+
+test('redacts credentials in console-forwarding failures', async () => {
+  const original = vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(pluginSystem, 'getExtName').mockResolvedValue('[podman]');
+  const error = Object.assign(new Error('send failed'), { privateKey: 'test-key' });
+  vi.mocked(webContents.send).mockImplementationOnce(() => {
+    throw error;
+  });
+  try {
+    pluginSystem.redirectConsole('error');
+    console.error('socket failure');
+    await vi.waitFor(() => {
+      expect(original).toHaveBeenCalledTimes(2);
+      expect(original).toHaveBeenLastCalledWith(
+        expect.objectContaining({ name: 'Error', message: 'send failed', privateKey: '[REDACTED]' }),
+      );
+    });
+    expect(error.privateKey).toBe('test-key');
+  } finally {
+    original.mockRestore();
+  }
+});
+
 test('Should queue events until we are ready', async () => {
   const apiSender = pluginSystem.getApiSender(webContents);
   expect(apiSender).toBeDefined();

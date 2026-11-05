@@ -20,9 +20,11 @@ const REDACTED = '[REDACTED]';
 const SSH_SECRET_FIELD = /^(privateKey|passphrase|password)$/i;
 const PRIVATE_KEY_BLOCK = /-----BEGIN ([A-Z ]*PRIVATE KEY)-----[\s\S]*?-----END \1-----/g;
 
+/** Copies log data without credentials or getters, failing closed if inspection throws. */
 export function redactLogArguments(args: unknown[]): unknown[] {
   const seen = new WeakMap<object, object>();
 
+  /** Recursively snapshots supported log values without modifying the originals. */
   function redact(value: unknown): unknown {
     if (typeof value === 'string') {
       return value.replace(PRIVATE_KEY_BLOCK, REDACTED);
@@ -41,24 +43,44 @@ export function redactLogArguments(args: unknown[]): unknown[] {
       return existing;
     }
 
-    const result: object = Array.isArray(value) ? [] : Object.create(prototype);
+    const result: object = Array.isArray(value) ? [] : value instanceof Error ? {} : Object.create(prototype);
     seen.set(value, result);
-    // Preserve Error messages/stacks and avoid invoking getters while copying logs.
-    const descriptors = Object.getOwnPropertyDescriptors(value);
-    if (value instanceof Error) {
-      // V8's lazy stack accessor requires the original Error's internal slots.
-      descriptors['stack'] = { value: redact(value.stack), configurable: true, writable: true };
-    }
-    for (const [key, descriptor] of Object.entries(descriptors)) {
-      if (SSH_SECRET_FIELD.test(key)) {
-        descriptors[key] = { value: REDACTED, enumerable: descriptor.enumerable, configurable: true };
-      } else if ('value' in descriptor) {
+    for (const key of Reflect.ownKeys(value)) {
+      if (value instanceof Error && (key === 'name' || key === 'message' || key === 'stack')) {
+        continue;
+      }
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor) {
+        continue;
+      }
+      if ((typeof key === 'string' && SSH_SECRET_FIELD.test(key)) || !('value' in descriptor)) {
+        Object.defineProperty(result, key, {
+          value: REDACTED,
+          enumerable: descriptor.enumerable,
+          configurable: true,
+        });
+      } else {
         descriptor.value = redact(descriptor.value);
+        Object.defineProperty(result, key, descriptor);
       }
     }
-    Object.defineProperties(result, descriptors);
+    if (value instanceof Error) {
+      // Enumerable diagnostics survive the structured clone used by renderer IPC.
+      for (const key of ['name', 'message', 'stack'] as const) {
+        Object.defineProperty(result, key, {
+          value: redact(value[key]),
+          enumerable: true,
+          configurable: true,
+        });
+      }
+    }
     return result;
   }
 
-  return args.map(redact);
+  try {
+    return args.map(redact);
+  } catch {
+    // Never log the original arguments or inspection error: either can contain credentials.
+    return ['[Log arguments could not be redacted]'];
+  }
 }
