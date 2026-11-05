@@ -18,15 +18,18 @@
 import DropdownMenu from './DropdownMenu.svelte';
 import DropDownMenuItem from './DropDownMenuItem.svelte';
 import DropDownMenuItems from './DropDownMenuItems.svelte';
+import DropDownMenuSubmenu from './DropDownMenuSubmenu.svelte';
 
 type DropdownMenuCompound = typeof DropdownMenu & {
   Item: typeof DropDownMenuItem;
   Items: typeof DropDownMenuItems;
+  Submenu: typeof DropDownMenuSubmenu;
 };
 
 const dropdownMenu = Object.assign(DropdownMenu, {
   Item: DropDownMenuItem,
   Items: DropDownMenuItems,
+  Submenu: DropDownMenuSubmenu,
 }) as DropdownMenuCompound;
 
 export default dropdownMenu;
