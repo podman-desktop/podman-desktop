@@ -158,7 +158,16 @@ export class ElectronRunner extends Runner {
     } catch (err) {
       // The gate failed while the launch may still complete: close that app when it does.
       // Not awaited: if the app is still paused, the launch only settles at its timeout.
-      launch.then(app => app.close()).catch(() => {});
+      launch
+        .then(app =>
+          this.raceWithTimeout(app.close(), 10_000, 'close() after late launch timed out').catch(
+            (closeErr: unknown) => {
+              console.log(`Failed to close app cleanly after startup gate failure: ${closeErr}`);
+              this.ensureElectronProcessesStopped(app.process()?.pid);
+            },
+          ),
+        )
+        .catch(() => {});
       throw err;
     } finally {
       abort.abort();
