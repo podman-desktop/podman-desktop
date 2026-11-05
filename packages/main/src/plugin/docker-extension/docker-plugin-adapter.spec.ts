@@ -18,8 +18,10 @@
 
 import type { SimpleContainerInfo } from '@desktop-framework/api';
 import type { IpcMainEvent } from 'electron';
+import { ipcMain } from 'electron';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ipcSenderValidator } from '/@/ipc-sender-validator.js';
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 
@@ -27,7 +29,7 @@ import { DockerPluginAdapter } from './docker-plugin-adapter.js';
 
 let dockerPluginAdapter: TestDockerPluginAdapter;
 
-const contributionManager = {} as unknown as ContributionManager;
+const contributionManager = { getExtensionPath: vi.fn() } as unknown as ContributionManager;
 
 class TestDockerPluginAdapter extends DockerPluginAdapter {
   override async getVmServiceContainer(contributionId: string): Promise<SimpleContainerInfo> {
@@ -155,6 +157,31 @@ describe('getVmServiceContainer', async () => {
 });
 
 describe('handle exec', async () => {
+  test('preserves spaces and shell metacharacters as literal arguments', async () => {
+    const args = [
+      'spaces in data',
+      'semi;colon',
+      '$(printf injected)',
+      '`printf injected`',
+      'a&b',
+      '"quoted"',
+      '%PATH%',
+    ];
+    const result = await dockerPluginAdapter.handleExec('myExtension', undefined, process.execPath, [
+      '-e',
+      'process.stdout.write(JSON.stringify(process.argv.slice(1)))',
+      ...args,
+    ]);
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual(args);
+  });
+
+  test('reports missing executable failures', async () => {
+    const result = await dockerPluginAdapter.handleExec('myExtension', undefined, 'missing-test-executable-982351', []);
+    expect(result.code).toBe(1);
+    expect(result.killed).toBe(true);
+    expect(result.stderr).toContain('ENOENT');
+  });
   test('handle exec inside the VM', async () => {
     const extensionName = 'myExtension';
 
@@ -193,6 +220,48 @@ describe('handle exec', async () => {
 
     expect(result.stdout).toEqual('hello\nworld\n');
     expect(result.stderr).toEqual('warning: text1\nwarning: text2\n');
+  });
+
+  describe('execution IPC authorization', () => {
+    test('rejects unauthorized promise execution before dispatch', async () => {
+      const exec = vi.spyOn(dockerPluginAdapter, 'handleExec');
+      const validate = vi.spyOn(ipcSenderValidator, 'assertDockerSender').mockImplementation(() => {
+        throw new Error('Unauthorized sender');
+      });
+      dockerPluginAdapter.init();
+      const handler = vi.mocked(ipcMain.handle).mock.calls.find(call => call[0] === 'docker-plugin-adapter:exec')?.[1];
+      expect(handler).toBeDefined();
+      await expect(handler!({} as Electron.IpcMainInvokeEvent, 'extension', undefined, 'echo', [])).rejects.toThrow(
+        'Unauthorized sender',
+      );
+      expect(exec).not.toHaveBeenCalled();
+      validate.mockRestore();
+      exec.mockRestore();
+    });
+
+    test('returns stream errors without dispatching unauthorized execution', async () => {
+      const exec = vi.spyOn(dockerPluginAdapter, 'handleExecWithOptions');
+      const validate = vi.spyOn(ipcSenderValidator, 'assertDockerSender').mockImplementation(() => {
+        throw new Error('Unauthorized sender');
+      });
+      dockerPluginAdapter.init();
+      const handler = vi
+        .mocked(ipcMain.on)
+        .mock.calls.find(call => call[0] === 'docker-plugin-adapter:execWithOptions')?.[1];
+      const reply = vi.fn();
+      expect(handler).toBeDefined();
+      handler!({ reply } as unknown as IpcMainEvent, 'extension', undefined, 'echo', 123, {}, []);
+      await vi.waitFor(() =>
+        expect(reply).toHaveBeenCalledWith(
+          'docker-plugin-adapter:execWithOptions-callback-error',
+          123,
+          expect.objectContaining({ message: 'Unauthorized sender' }),
+        ),
+      );
+      expect(exec).not.toHaveBeenCalled();
+      validate.mockRestore();
+      exec.mockRestore();
+    });
   });
 
   test('handle exec with error inside the VM', async () => {

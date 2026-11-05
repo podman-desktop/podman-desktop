@@ -22,6 +22,7 @@ import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
+import { ipcSenderValidator } from './ipc-sender-validator.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import * as util from './util.js';
@@ -33,6 +34,7 @@ vi.mock(import('./development-menu-builder.js'));
 vi.mock(import('./development-mode-tracker.js'));
 vi.mock(import('./navigation-items-menu-builder.js'));
 vi.mock(import('./open-dev-tools.js'));
+vi.mock(import('./ipc-sender-validator.js'));
 vi.mock(import('./plugin/app-ready/app-identity-plugin.js'));
 
 vi.mock(import('./util.js'), async () => ({
@@ -97,6 +99,18 @@ function getHandler(mockOnFn: ReturnType<typeof vi.fn>, eventName: string): (...
 }
 
 describe('createNewWindow', () => {
+  test('enables web security and registers the expected IPC sender before loading', async () => {
+    const { createNewWindow } = await import('./mainWindow.js');
+    const window = await createNewWindow();
+    expect(vi.mocked(BrowserWindow).mock.calls[0]?.[0]?.webPreferences?.webSecurity).toBe(true);
+    expect(ipcSenderValidator.registerMainWindow).toHaveBeenCalledWith(
+      window.webContents,
+      vi.mocked(window.loadURL).mock.calls[0]?.[0],
+    );
+    expect(vi.mocked(ipcSenderValidator.registerMainWindow).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(window.loadURL).mock.invocationCallOrder[0]!,
+    );
+  });
   test('should show window on normal launch', async () => {
     const { createNewWindow } = await import('./mainWindow.js');
 

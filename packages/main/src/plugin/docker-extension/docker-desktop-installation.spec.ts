@@ -18,15 +18,17 @@
 
 import * as fs from 'node:fs';
 
-import type { ProviderContainerConnectionInfo } from '@desktop-framework/api';
+import type { ContributionInfo, ProviderContainerConnectionInfo } from '@desktop-framework/api';
 import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { RequestConfig } from '@docker/extension-api-client-types/dist/v1/http-service.js';
 import type Dockerode from 'dockerode';
-import type { IpcMainEvent } from 'electron';
+import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
+import { ipcMain } from 'electron';
 import { http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ipcSenderValidator } from '/@/ipc-sender-validator.js';
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { Directories } from '/@/plugin/directories.js';
@@ -116,6 +118,28 @@ test('Check isHttpMethod', async () => {
 
   // invalid
   expect(dockerDesktopInstallation.isHttpMethod('ff')).toBeFalsy();
+});
+
+describe('VM service IPC ownership', () => {
+  test('rejects a different contribution port before requesting the VM', async () => {
+    const validate = vi
+      .spyOn(ipcSenderValidator, 'assertDockerSender')
+      .mockReturnValue({ vmServicePort: 12345 } as ContributionInfo);
+    const request = vi
+      .spyOn(dockerDesktopInstallation, 'handleExtensionVMServiceRequest')
+      .mockResolvedValue('response');
+    await dockerDesktopInstallation.init();
+    const handler = vi
+      .mocked(ipcMain.handle)
+      .mock.calls.find(call => call[0] === 'docker-desktop-adapter:extensionVMServiceRequest')?.[1];
+    expect(handler).toBeDefined();
+    await expect(handler!({} as IpcMainInvokeEvent, '54321', {})).rejects.toThrow('does not own the VM service port');
+    expect(request).not.toHaveBeenCalled();
+    await expect(handler!({} as IpcMainInvokeEvent, '12345', {})).resolves.toBe('response');
+    expect(request).toHaveBeenCalledWith('12345', {});
+    validate.mockRestore();
+    request.mockRestore();
+  });
 });
 
 test('Check asHttpMethod', async () => {

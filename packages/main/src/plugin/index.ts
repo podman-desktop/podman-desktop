@@ -159,6 +159,7 @@ import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
+import { ipcSenderValidator } from '/@/ipc-sender-validator.js';
 import { IPCHandle, IPCMainOn, MainWindowDeferred } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
@@ -347,6 +348,7 @@ export class PluginSystem {
   ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): void {
     ipcMain.handle(channel, async (...args) => {
       try {
+        ipcSenderValidator.assertSharedSender(args[0], channel, args.slice(1));
         return { result: await Promise.resolve(listener(...args)) };
       } catch (error) {
         // From error instance only message property will get through.
@@ -359,7 +361,15 @@ export class PluginSystem {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ipcMainOn(channel: string, listener: (event: IpcMainEvent, ...args: any[]) => void): void {
-    ipcMain.on(channel, listener);
+    ipcMain.on(channel, (event, ...args) => {
+      try {
+        ipcSenderValidator.assertSharedSender(event, channel, args);
+      } catch (error) {
+        console.error(`Rejected IPC on '${channel}':`, error);
+        return;
+      }
+      listener(event, ...args);
+    });
   }
 
   // Create an Error to access stack trace
@@ -815,6 +825,10 @@ export class PluginSystem {
     container.bind<WebviewRegistry>(WebviewRegistry).toSelf().inSingletonScope();
 
     const webviewRegistry = container.get<WebviewRegistry>(WebviewRegistry);
+    ipcSenderValidator.registerWebviews(() => ({
+      views: webviewRegistry.listWebviews(),
+      port: webviewRegistry.getRegistryHttpPort(),
+    }));
     await webviewRegistry.start();
 
     container.bind<PromiseWithResolvers<BrowserWindow>>(MainWindowDeferred).toConstantValue(this.mainWindowDeferred);
@@ -890,6 +904,7 @@ export class PluginSystem {
     troubleshooting.init();
     const menuRegistry = container.get<MenuRegistry>(MenuRegistry);
     const contributionManager = container.get<ContributionManager>(ContributionManager);
+    ipcSenderValidator.registerContributions(() => contributionManager.listContributions());
     const iconRegistry = container.get<IconRegistry>(IconRegistry);
     const onboardingRegistry = container.get<OnboardingRegistry>(OnboardingRegistry);
     const directories = container.get<Directories>(Directories);

@@ -23,6 +23,7 @@ import type { SimpleContainerInfo } from '@desktop-framework/api';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
 
+import { ipcSenderValidator } from '/@/ipc-sender-validator.js';
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 
@@ -168,7 +169,7 @@ export class DockerPluginAdapter {
       }
 
       // eslint-disable-next-line sonarjs/os-command
-      const spawnProcess = spawn(updatedCommand, updatedArgs, { env, shell: true });
+      const spawnProcess = spawn(updatedCommand, updatedArgs, { env });
       spawnProcess.stdout.setEncoding('utf8');
       spawnProcess.stdout.on('data', data => {
         execResult.stdout += data;
@@ -188,10 +189,11 @@ export class DockerPluginAdapter {
         resolve(execResult);
       });
       spawnProcess.on('error', error => {
-        const rawExecResult: RawExecResult = { ...error, stdout: execResult.stdout, stderr: execResult.stderr };
+        execResult.code = 1;
         execResult.killed = true;
         execResult.signal = error.toString();
-        resolve(rawExecResult);
+        execResult.stderr += error.message;
+        resolve(execResult);
       });
     });
   }
@@ -300,12 +302,16 @@ export class DockerPluginAdapter {
     ipcMain.handle(
       'docker-plugin-adapter:exec',
       async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         contributionId: string,
         launcher: string | undefined,
         cmd: string,
         args: string[],
       ): Promise<unknown> => {
+        if (typeof contributionId !== 'string') {
+          throw new Error('Invalid Docker extension contribution ID');
+        }
+        ipcSenderValidator.assertDockerSender(event, contributionId);
         return this.handleExec(contributionId, launcher, cmd, args);
       },
     );
@@ -321,11 +327,17 @@ export class DockerPluginAdapter {
         options: { splitOutputLines?: boolean },
         args: string[],
       ): void => {
-        this.handleExecWithOptions(event, contributionId, launcher, cmd, streamCallbackId, options, args).catch(
-          (error: unknown) => {
+        Promise.resolve()
+          .then(() => {
+            if (typeof contributionId !== 'string') {
+              throw new Error('Invalid Docker extension contribution ID');
+            }
+            ipcSenderValidator.assertDockerSender(event, contributionId);
+            return this.handleExecWithOptions(event, contributionId, launcher, cmd, streamCallbackId, options, args);
+          })
+          .catch((error: unknown) => {
             event.reply('docker-plugin-adapter:execWithOptions-callback-error', streamCallbackId, error);
-          },
-        );
+          });
       },
     );
   }

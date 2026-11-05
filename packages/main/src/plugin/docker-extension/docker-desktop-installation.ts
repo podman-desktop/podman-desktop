@@ -29,6 +29,7 @@ import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
 import * as tarFs from 'tar-fs';
 
+import { ipcSenderValidator } from '/@/ipc-sender-validator.js';
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { Directories } from '/@/plugin/directories.js';
@@ -186,6 +187,7 @@ export class DockerDesktopInstallation {
   ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: string[]) => Promise<void>): void {
     ipcMain.handle(channel, async (...args) => {
       try {
+        ipcSenderValidator.assertMainSender(args[0]);
         return { result: await Promise.resolve(listener(...args)) };
       } catch (e) {
         return { error: this.encodeIpcError(e) };
@@ -194,7 +196,8 @@ export class DockerDesktopInstallation {
   }
 
   async init(): Promise<void> {
-    ipcMain.handle('docker-desktop-plugin:get-preload-script', async (): Promise<string> => {
+    ipcMain.handle('docker-desktop-plugin:get-preload-script', async (event): Promise<string> => {
+      ipcSenderValidator.assertMainSender(event);
       const preloadScriptPath = path.join(__dirname, '../../preload-docker-extension/dist/index.cjs');
       return `file://${preloadScriptPath}`;
     });
@@ -202,9 +205,14 @@ export class DockerDesktopInstallation {
     ipcMain.on(
       'docker-desktop-plugin:install',
       (event: IpcMainEvent, imageName: string, logCallbackId: number): void => {
-        this.handlePluginInstall(event, imageName, logCallbackId).catch((error: unknown) => {
-          event.reply('docker-desktop-plugin:install-error', logCallbackId, error);
-        });
+        Promise.resolve()
+          .then(() => {
+            ipcSenderValidator.assertMainSender(event);
+            return this.handlePluginInstall(event, imageName, logCallbackId);
+          })
+          .catch((error: unknown) => {
+            event.reply('docker-desktop-plugin:install-error', logCallbackId, error);
+          });
       },
     );
 
@@ -217,14 +225,19 @@ export class DockerDesktopInstallation {
 
     ipcMain.handle(
       'docker-desktop-adapter:desktopUIToast',
-      async (_event: IpcMainInvokeEvent, type: string, message: string): Promise<void> => {
+      async (event: IpcMainInvokeEvent, type: string, message: string): Promise<void> => {
+        ipcSenderValidator.assertDockerSender(event);
         this.apiSender.send('toast:handler', { type, message });
       },
     );
 
     ipcMain.handle(
       'docker-desktop-adapter:extensionVMServiceRequest',
-      async (_event: IpcMainInvokeEvent, port: string, config: v1.RequestConfig): Promise<unknown> => {
+      async (event: IpcMainInvokeEvent, port: string, config: v1.RequestConfig): Promise<unknown> => {
+        const contribution = ipcSenderValidator.assertDockerSender(event);
+        if (contribution.vmServicePort === undefined || String(port) !== String(contribution.vmServicePort)) {
+          throw new Error('IPC sender does not own the VM service port');
+        }
         return this.handleExtensionVMServiceRequest(port, config);
       },
     );

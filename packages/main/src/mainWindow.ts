@@ -25,6 +25,7 @@ import contextMenu from 'electron-context-menu';
 
 import { buildDevelopmentMenu } from './development-menu-builder.js';
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
+import { ipcSenderValidator } from './ipc-sender-validator.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
@@ -64,7 +65,7 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
     backgroundColor: INITIAL_APP_BACKGROUND_COLOR,
     ...(config?.icon && { icon: config.icon }),
     webPreferences: {
-      webSecurity: false,
+      webSecurity: true,
       //nativeWindowOpen: true,
       webviewTag: true, // The webview tag is not recommended. Consider alternatives like iframe or Electron's BrowserView. https://www.electronjs.org/docs/latest/api/webview-tag#warning
       preload: join(__dirname, '../../preload/dist/index.cjs'),
@@ -184,7 +185,8 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
   });
 
   // receive the navigation items
-  ipcMain.handle('navigation:sendNavigationItems', (_, data) => {
+  ipcMain.handle('navigation:sendNavigationItems', (event, data) => {
+    ipcSenderValidator.assertMainSender(event);
     navigationItemsMenuBuilder?.receiveNavigationItems(data);
   });
 
@@ -266,6 +268,7 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
       ? import.meta.env.VITE_DEV_SERVER_URL
       : new URL('../renderer/dist/index.html', 'file://' + __dirname).toString();
 
+  ipcSenderValidator.registerMainWindow(browserWindow.webContents, pageUrl);
   await browserWindow.loadURL(pageUrl);
 
   return browserWindow;

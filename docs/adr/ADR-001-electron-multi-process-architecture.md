@@ -22,6 +22,26 @@ Use Electron's multi-process architecture with three process types:
 
 All IPC uses a `{ result, error }` envelope pattern for consistent error handling.
 
+### IPC sender authorization
+
+Shared plugin IPC handlers accept only the main frame of the WebContents registered
+when the application window is created, at its expected renderer URL. Other
+windows, subframes, and navigated documents are rejected.
+
+Extension webviews hosted by that window have a narrow channel allowlist matching
+their preload APIs. Their URLs must match registered contributions or webviews;
+Docker execution contribution IDs, webview state/message IDs, and Docker VM service
+ports must belong to the calling webview. File URLs are compared by page URL, not
+their shared `null` origin. Window recreation replaces the authorized WebContents.
+
+The application window enables Chromium web security. Docker host execution passes
+arguments directly to the executable without an implicit shell, matching streaming
+execution. Extensions requiring shell syntax must explicitly invoke a shell; ordinary
+arguments, including metacharacters, remain data.
+
+These checks do not sandbox installed extensions or prevent a compromised authorized
+renderer from using its intended privileges.
+
 ## Consequences
 
 - **Positive**: Cross-platform (macOS, Linux, Windows) from a single codebase

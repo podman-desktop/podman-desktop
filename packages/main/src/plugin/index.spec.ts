@@ -37,6 +37,7 @@ import { Container as InversifyContainer } from 'inversify';
 import type { MockInstance } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ipcSenderValidator } from '/@/ipc-sender-validator.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
@@ -107,6 +108,7 @@ vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(im
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
 vi.mock(import('./image-checker.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageCheckerImpl'));
 vi.mock(import('./image-files-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageFilesRegistry'));
+vi.mock(import('/@/ipc-sender-validator.js'));
 
 let pluginSystem: TestPluginSystem;
 
@@ -191,6 +193,32 @@ afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
 });
 
+test('shared invoke rejects unauthorized senders before calling the listener', async () => {
+  const listener = vi.fn();
+  pluginSystem.ipcHandle('test:privileged', listener);
+  vi.mocked(ipcSenderValidator.assertSharedSender).mockImplementationOnce(() => {
+    throw new Error('Unauthorized sender');
+  });
+  const invoke = getHandler<(event: IpcMainInvokeEvent) => Promise<{ error: Error }>>('test:privileged');
+  const result = await invoke({} as IpcMainInvokeEvent);
+  expect(result.error.message).toBe('Unauthorized sender');
+  expect(listener).not.toHaveBeenCalled();
+});
+
+test('shared send logs unauthorized calls without invoking the listener', () => {
+  const listener = vi.fn();
+  const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+  pluginSystem.ipcMainOn('test:privileged-send', listener);
+  vi.mocked(ipcSenderValidator.assertSharedSender).mockImplementationOnce(() => {
+    throw new Error('Unauthorized sender');
+  });
+  const handler = vi.mocked(ipcMain.on).mock.calls.find(call => call[0] === 'test:privileged-send')?.[1];
+  assert(handler);
+  handler({} as Electron.IpcMainEvent);
+  expect(log).toHaveBeenCalled();
+  expect(listener).not.toHaveBeenCalled();
+  log.mockRestore();
+});
 test('Should queue events until we are ready', async () => {
   const apiSender = pluginSystem.getApiSender(webContents);
   expect(apiSender).toBeDefined();
