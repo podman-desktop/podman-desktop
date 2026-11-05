@@ -20,5 +20,5 @@
     "types": ["@testing-library/jest-dom"]
   },
 
-  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte", "../../types/**/*.d.ts"]
+  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte", "../../types/**/*.d.ts", "vite.tests.setup.ts"]
 }
