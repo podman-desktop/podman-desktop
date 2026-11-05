@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { format } from 'node:util';
+import { format, inspect } from 'node:util';
 
 import { expect, test, vi } from 'vitest';
 
@@ -77,6 +77,27 @@ test('preserves redacted error diagnostics through structured cloning', () => {
     stack: expect.stringContaining('TypeError: connection failed'),
     privateKey: '[REDACTED]',
     code: 'ECONNRESET',
+  });
+});
+
+test('formats multiline error stacks without inheriting untrusted inspection hooks', () => {
+  const inspectHook = vi.fn(() => 'test-key');
+  class DiagnosticError extends Error {}
+  Object.defineProperty(DiagnosticError.prototype, inspect.custom, { value: inspectHook });
+  const error = Object.assign(new DiagnosticError('connection failed'), { privateKey: 'test-key' });
+  error.stack = 'Error: connection failed\n    at connect (tunnel.ts:1:1)';
+  const [redacted] = redactLogArguments([error]);
+
+  const output = format(redacted);
+  expect(output).toContain('Error: connection failed\n    at connect (tunnel.ts:1:1)');
+  expect(output).not.toContain('\\n');
+  expect(output).not.toContain('test-key');
+  expect(inspectHook).not.toHaveBeenCalled();
+  expect(structuredClone(redacted)).toMatchObject({
+    name: 'Error',
+    message: 'connection failed',
+    stack: error.stack,
+    privateKey: '[REDACTED]',
   });
 });
 

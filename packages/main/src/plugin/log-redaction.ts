@@ -43,7 +43,10 @@ export function redactLogArguments(args: unknown[]): unknown[] {
       return existing;
     }
 
-    const result: object = Array.isArray(value) ? [] : value instanceof Error ? {} : Object.create(prototype);
+    // Use a trusted prototype for readable stacks without inheriting custom inspection hooks.
+    const result: object = Array.isArray(value)
+      ? []
+      : Object.create(value instanceof Error ? Error.prototype : prototype);
     seen.set(value, result);
     for (const key of Reflect.ownKeys(value)) {
       if (value instanceof Error && (key === 'name' || key === 'message' || key === 'stack')) {
