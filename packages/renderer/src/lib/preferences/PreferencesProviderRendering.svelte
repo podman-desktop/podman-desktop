@@ -15,6 +15,7 @@ import { operationConnectionsInfo } from '/@/stores/operation-connections';
 import { providerInfos } from '/@/stores/providers';
 
 import PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
+import PreferencesConnectionOperationSuccess from './PreferencesConnectionOperationSuccess.svelte';
 import { writeToTerminal } from './Util';
 
 interface Props {
@@ -35,6 +36,9 @@ router.subscribe(() => {
 
 let connectionInfo = $state<ProviderConnectionInfo>();
 
+let operationSuccessful = $state(false);
+let successfulTaskId = $state<number>();
+
 let providers: ProviderInfo[] = $state([]);
 onMount(() => {
   providerLifecycleError = '';
@@ -43,7 +47,13 @@ onMount(() => {
   });
   operationConnectionsInfo.subscribe(operationsMap => {
     if (taskId) {
-      connectionInfo = operationsMap.get(taskId)?.connectionInfo;
+      const operation = operationsMap.get(taskId);
+      connectionInfo = operation?.connectionInfo;
+      // reopening a task that already succeeded
+      if (operation?.operationSuccessful) {
+        operationSuccessful = true;
+        successfulTaskId = taskId;
+      }
     }
   });
 });
@@ -65,6 +75,11 @@ let title: string = $derived(
 );
 
 let logsTerminal = $state<Terminal>();
+
+function onSuccess(operationTaskId?: number): void {
+  operationSuccessful = true;
+  successfulTaskId = operationTaskId;
+}
 
 async function startProvider(): Promise<void> {
   await window.startProviderLifecycle(providerInfo.internalId);
@@ -91,7 +106,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
 </script>
 
 <Route path="/*" breadcrumb={providerInfo?.name} navigationHint="details">
-  <FormPage title={title} inProgress={inProgress}>
+  <FormPage title={title} inProgress={inProgress && !operationSuccessful}>
     {#snippet icon()}
       {#if providerInfo?.images?.icon}
         <Icon icon={providerInfo.images.icon} title={providerInfo.name} class="max-h-10" />
@@ -138,36 +153,43 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
     {#snippet content()}
     <div class="px-5 pb-5 min-w-full h-fit">
       <div class="bg-[var(--pd-content-card-bg)] px-6 py-4">
-        <!-- Create connection panel-->
-        {#if providerInfo?.containerProviderConnectionCreation === true}
-          <PreferencesConnectionCreationRendering
-            providerInfo={providerInfo}
-            properties={properties}
-            propertyScope="ContainerProviderConnectionFactory"
-            callback={window.createContainerProviderConnection}
-            taskId={taskId}
-            bind:inProgress={inProgress} />
-        {/if}
+        {#if operationSuccessful}
+          <PreferencesConnectionOperationSuccess taskId={successfulTaskId} />
+        {:else}
+          <!-- Create connection panel-->
+          {#if providerInfo?.containerProviderConnectionCreation === true}
+            <PreferencesConnectionCreationRendering
+              providerInfo={providerInfo}
+              properties={properties}
+              propertyScope="ContainerProviderConnectionFactory"
+              callback={window.createContainerProviderConnection}
+              taskId={taskId}
+              onSuccess={onSuccess}
+              bind:inProgress={inProgress} />
+          {/if}
 
-        <!-- Create connection panel-->
-        {#if providerInfo?.kubernetesProviderConnectionCreation === true}
-          <PreferencesConnectionCreationRendering
-            providerInfo={providerInfo}
-            properties={properties}
-            propertyScope="KubernetesProviderConnectionFactory"
-            callback={window.createKubernetesProviderConnection}
-            taskId={taskId}
-            bind:inProgress={inProgress} />
-        {/if}
+          <!-- Create connection panel-->
+          {#if providerInfo?.kubernetesProviderConnectionCreation === true}
+            <PreferencesConnectionCreationRendering
+              providerInfo={providerInfo}
+              properties={properties}
+              propertyScope="KubernetesProviderConnectionFactory"
+              callback={window.createKubernetesProviderConnection}
+              taskId={taskId}
+              onSuccess={onSuccess}
+              bind:inProgress={inProgress} />
+          {/if}
 
-        {#if providerInfo?.vmProviderConnectionCreation === true}
-          <PreferencesConnectionCreationRendering
-            providerInfo={providerInfo}
-            properties={properties}
-            propertyScope="VmProviderConnectionFactory"
-            callback={window.createVmProviderConnection}
-            taskId={taskId}
-            bind:inProgress={inProgress} />
+          {#if providerInfo?.vmProviderConnectionCreation === true}
+            <PreferencesConnectionCreationRendering
+              providerInfo={providerInfo}
+              properties={properties}
+              propertyScope="VmProviderConnectionFactory"
+              callback={window.createVmProviderConnection}
+              taskId={taskId}
+              onSuccess={onSuccess}
+              bind:inProgress={inProgress} />
+          {/if}
         {/if}
       </div>
     </div>

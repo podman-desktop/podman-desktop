@@ -50,7 +50,6 @@ onMount(() => {
       properties={configurationItems}
       propertyScope="ContainerProviderConnectionFactory"
       callback={window.createContainerProviderConnection}
-      disableEmptyScreen={true}
       hideCloseButton={true} />
   {:else if component === 'createKubernetesProviderConnection' && providerInfo?.kubernetesProviderConnectionCreation === true}
     <PreferencesConnectionCreationOrEditRendering
@@ -58,7 +57,6 @@ onMount(() => {
       properties={configurationItems}
       propertyScope="KubernetesProviderConnectionFactory"
       callback={window.createKubernetesProviderConnection}
-      disableEmptyScreen={true}
       hideCloseButton={true} />
   {:else}
     <div aria-label="not supported warning" class="flex flex-row min-h-[500px] items-center justify-center">

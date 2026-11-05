@@ -29,19 +29,17 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
-import { clearTaskLogs, eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
+import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
 vi.mock(import('@xterm/xterm'));
-vi.mock(import('tinro'));
 
 vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'), async importOriginal => {
   const original = await importOriginal();
   return {
     ...original,
-    clearTaskLogs: vi.fn(),
     reconnectUI: vi.fn(),
   };
 });
@@ -167,6 +165,7 @@ describe.each([
 
     const callback = mockCallback(async keyLogger => {
       providedKeyLogger = keyLogger;
+      return new Promise<void>(() => {});
     });
 
     // eslint-disable-next-line @typescript-eslint/await-thenable
@@ -240,6 +239,7 @@ describe.each([
     const callback = mockCallback(async keyLogger => {
       // keep reference
       providedKeyLogger = keyLogger;
+      return new Promise<void>(() => {});
     });
     vi.mocked(window.getCancellableTokenSource).mockResolvedValue(Date.now());
     render(PreferencesConnectionCreationOrEditRendering, {
@@ -792,26 +792,45 @@ test.each([
   await vi.waitFor(() => expect(get(operationConnectionsInfo).get(1)?.operationInProgress).toBe(false));
 });
 
-test('Expect go back button to clear the task logs and keep the successful operation', async () => {
-  let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
-  const callback = mockCallback(async keyLogger => {
-    providedKeyLogger = keyLogger;
-  });
-  render(PreferencesConnectionCreationOrEditRendering, {
+test('Expect success stored and notified when the callback resolves after the component is destroyed', async () => {
+  const { promise: callbackDone, resolve: resolveCallback } = Promise.withResolvers<void>();
+  const callback = mockCallback(() => callbackDone);
+  const onSuccess = vi.fn();
+  const { unmount } = render(PreferencesConnectionCreationOrEditRendering, {
     properties,
     providerInfo,
     propertyScope,
     callback,
+    onSuccess,
     pageIsLoading: false,
     taskId: 1,
   });
   await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
-  const operationKey = get(operationConnectionsInfo).get(1)?.operationKey;
-  if (operationKey) providedKeyLogger?.(operationKey, 'finish', []);
+  await vi.waitFor(() => expect(callback).toHaveBeenCalled());
 
-  await fireEvent.click(await screen.findByRole('button', { name: 'Go back to resources' }));
+  // provider disposed its factory
+  unmount();
+  resolveCallback();
 
-  expect(clearTaskLogs).toHaveBeenCalledWith(operationKey);
-  expect(get(operationConnectionsInfo).get(1)?.operationSuccessful).toBe(true);
-  expect(router.goto).toHaveBeenCalledWith('/preferences/resources');
+  await vi.waitFor(() => expect(onSuccess).toHaveBeenCalledWith(1));
+  expect(get(operationConnectionsInfo).get(1)).toEqual(
+    expect.objectContaining({ operationSuccessful: true, operationInProgress: false }),
+  );
+});
+
+test('Expect onSuccess not called when the operation fails', async () => {
+  const onSuccess = vi.fn();
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback: vi.fn().mockRejectedValue(new Error('error')),
+    onSuccess,
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+
+  await screen.findByText('Error: error');
+  expect(onSuccess).not.toHaveBeenCalled();
 });
