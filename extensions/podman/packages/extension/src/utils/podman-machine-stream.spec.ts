@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { Client, type ClientChannel } from 'ssh2';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { MachineInfo } from '/@/types';
 
@@ -35,6 +35,7 @@ let providerConnectionShellAccess: TestProviderConnectionShellAccessImpl;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.useFakeTimers();
   const machineInfo: MachineInfo = {
     port: 12345,
     remoteUsername: 'user',
@@ -42,9 +43,14 @@ beforeEach(() => {
   } as unknown as MachineInfo;
 
   vi.mocked(Client.prototype.on).mockReturnThis();
+  vi.mocked(Client.prototype.once).mockReturnThis();
   vi.mocked(Client.prototype.shell).mockImplementation(function (this: Client, callback) {
     callback(undefined, streamMock);
     return this;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(machineInfo, 'storage');
@@ -72,7 +78,7 @@ test('should verify the machine SSH host key and report rejection', async () => 
   providerConnectionShellAccess.open();
   const rejectVerifier = createVerifier.mock.results[0]?.value;
   expect(Client.prototype.connect).toHaveBeenCalledWith(
-    expect.objectContaining({ host: 'localhost', port: 12345, hostVerifier: rejectVerifier }),
+    expect.objectContaining({ host: 'localhost', port: 12345, readyTimeout: 0, hostVerifier: expect.any(Function) }),
   );
   if (!rejectVerifier) {
     throw new Error('Missing host verifier');

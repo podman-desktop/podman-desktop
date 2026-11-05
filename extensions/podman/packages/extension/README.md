@@ -20,3 +20,7 @@ without offering to replace the pin. If a server key legitimately changes or a
 machine is recreated, independently verify the new fingerprint before removing
 the pin file identified in the error and reconnecting. A rejected remote tunnel
 does not automatically retry; disable and re-enable remote connections to retry.
+
+The SSH handshake timeout is paused while host-key verification awaits approval
+and resumes afterward. Saved pins are published atomically without overwriting
+existing keys; simultaneous approvals of an identical key are accepted.
