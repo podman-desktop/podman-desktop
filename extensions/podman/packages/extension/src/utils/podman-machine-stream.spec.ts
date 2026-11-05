@@ -22,6 +22,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { MachineInfo } from '/@/types';
 
 import { ProviderConnectionShellAccessImpl } from './podman-machine-stream';
+import { SshHostKeyStore } from './ssh-host-key-store';
 
 const onStreamMock = vi.fn();
 const streamMock = {
@@ -46,7 +47,7 @@ beforeEach(() => {
     return this;
   });
 
-  providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(machineInfo);
+  providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(machineInfo, 'storage');
 });
 
 class TestProviderConnectionShellAccessImpl extends ProviderConnectionShellAccessImpl {
@@ -59,6 +60,31 @@ vi.mock(import('node:fs'));
 
 // Mock ssh2 Client
 vi.mock(import('ssh2'));
+
+test('should verify the machine SSH host key and report rejection', async () => {
+  const listener = vi.fn();
+  const createVerifier = vi.spyOn(SshHostKeyStore.prototype, 'createVerifier');
+  providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(
+    { port: 12345, remoteUsername: 'user', identityPath: 'path/to/privateKey' } as MachineInfo,
+    undefined,
+  );
+  providerConnectionShellAccess.onErrorEmit.event(listener);
+  providerConnectionShellAccess.open();
+  const rejectVerifier = createVerifier.mock.results[0]?.value;
+  expect(Client.prototype.connect).toHaveBeenCalledWith(
+    expect.objectContaining({ host: 'localhost', port: 12345, hostVerifier: rejectVerifier }),
+  );
+  if (!rejectVerifier) {
+    throw new Error('Missing host verifier');
+  }
+  const callback = vi.fn();
+  rejectVerifier(Buffer.from('key'), callback);
+  await vi.waitFor(() => expect(callback).toHaveBeenCalledWith(false));
+  expect(listener).toHaveBeenCalledWith({
+    error: 'Cannot verify SSH host key: Podman extension storage is unavailable.',
+  });
+  createVerifier.mockRestore();
+});
 
 describe('Test SSH Client', () => {
   let client: Client;

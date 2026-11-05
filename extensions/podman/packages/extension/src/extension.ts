@@ -935,7 +935,10 @@ export async function registerProviderFor(
     };
   }
 
-  const providerConnectionShellAccess = new ProviderConnectionShellAccessImpl(machineInfo);
+  const providerConnectionShellAccess = new ProviderConnectionShellAccessImpl(
+    machineInfo,
+    storedExtensionContext?.storagePath,
+  );
   storedExtensionContext?.subscriptions.push(providerConnectionShellAccess);
   const containerProviderConnection: extensionApi.ContainerProviderConnection = {
     name: machineInfo.name,

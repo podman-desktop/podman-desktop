@@ -16,25 +16,34 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { window } from '@podman-desktop/api';
 import { Client, type ConnectConfig, Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
+
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
-beforeEach(() => {
+let storagePath: string;
+
+beforeEach(async () => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+  storagePath = await mkdtemp(join(tmpdir(), 'podman-ssh-test-'));
+  vi.mocked(window.showWarningMessage).mockResolvedValue('Trust and Save');
+  vi.mocked(window.showErrorMessage).mockResolvedValue(undefined);
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
+  await rm(storagePath, { recursive: true, force: true });
 });
 
 class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
@@ -121,6 +130,7 @@ test('should be able to connect', async () => {
     dummyKey,
     socketOrNpipePathRemote,
     socketOrNpipePathLocal,
+    storagePath,
   );
 
   podmanRemoteSshTunnel.connect();
@@ -138,7 +148,56 @@ test('should be able to connect', async () => {
   await vi.waitFor(() => expect(received).toBe('pong'));
 
   client.end();
+  podmanRemoteSshTunnel.disconnect();
+  sshServer.close();
   npipeServer.close();
+});
+
+test.each(['declined', 'changed'])('should reject a %s host key before authentication', async reason => {
+  if (reason === 'declined') {
+    vi.mocked(window.showWarningMessage).mockResolvedValue(undefined);
+  }
+  let authenticated = false;
+  const server = new Server({ hostKeys: [dummyKey] }, client => {
+    client.on('error', () => {});
+    client.on('authentication', ctx => {
+      authenticated = true;
+      ctx.accept();
+    });
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const port = (server.address() as AddressInfo).port;
+  if (reason === 'changed') {
+    await new SshHostKeyStore(storagePath).verify('127.0.0.1', port, Buffer.from('different key'));
+    vi.mocked(window.showWarningMessage).mockClear();
+  }
+  const tunnel = new TestPodmanRemoteSshTunnel(
+    '127.0.0.1',
+    port,
+    'foo',
+    dummyKey,
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+    storagePath,
+  );
+  try {
+    tunnel.connect();
+    await expect(tunnel.isConnected()).resolves.toBe(false);
+    expect(authenticated).toBe(false);
+    expect(tunnel.isListening()).toBe(false);
+    expect(window.showErrorMessage).toHaveBeenCalled();
+    if (reason === 'changed') {
+      expect(window.showWarningMessage).not.toHaveBeenCalled();
+    }
+    vi.useFakeTimers();
+    const reconnect = vi.spyOn(tunnel, 'connect');
+    tunnel.handleReconnect();
+    vi.advanceTimersByTime(30000);
+    expect(reconnect).not.toHaveBeenCalled();
+  } finally {
+    tunnel.disconnect();
+    server.close();
+  }
 });
 
 test('disconnect should clear pending reconnect timeout', () => {
@@ -152,6 +211,7 @@ test('disconnect should clear pending reconnect timeout', () => {
     '',
     '/tmp/remote.sock',
     '/tmp/local.sock',
+    storagePath,
   );
   const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
 
@@ -171,6 +231,7 @@ test('should use the provided private key over the ssh-agent', () => {
     'my-private-key',
     '/tmp/remote.sock',
     '/tmp/local.sock',
+    storagePath,
   );
   const config = tunnel.getSshConfig();
   expect(config.privateKey).toBe('my-private-key');
@@ -186,6 +247,7 @@ test('should fall back to the ssh-agent when no private key is provided', () => 
     undefined,
     '/tmp/remote.sock',
     '/tmp/local.sock',
+    storagePath,
   );
   const config = tunnel.getSshConfig();
   expect(config.privateKey).toBeUndefined();
@@ -201,6 +263,7 @@ test('should not set an agent when no private key and no ssh-agent are available
     undefined,
     '/tmp/remote.sock',
     '/tmp/local.sock',
+    storagePath,
   );
   const config = tunnel.getSshConfig();
   expect(config.privateKey).toBeUndefined();
