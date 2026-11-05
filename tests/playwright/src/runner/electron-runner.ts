@@ -24,6 +24,7 @@ import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
 import { _electron as electron } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
+import { getFreePort, installStartupGate } from '/@/runner/electron-startup-gate';
 import { Runner } from '/@/runner/podman-desktop-runner';
 import { RunnerFactory } from '/@/runner/runner-factory';
 import type { RunnerOptions } from '/@/runner/runner-options';
@@ -102,9 +103,7 @@ export class ElectronRunner extends Runner {
       Object.keys(this._options).forEach(key => {
         console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
       });
-      this._app = await electron.launch({
-        ...this._options,
-      });
+      this._app = await this.launchWithStartupGate(this._options as Parameters<typeof electron.launch>[0]);
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
 
@@ -138,6 +137,29 @@ export class ElectronRunner extends Runner {
     }
 
     return false;
+  }
+
+  /**
+   * Playwright delays app readiness until it is attached only when it launches its own Electron
+   * executable with its loader.js. With an explicit `executablePath`, install the readiness gate
+   * copied from loader.js through the inspector. See {@link installStartupGate}.
+   */
+  private async launchWithStartupGate(options: Parameters<typeof electron.launch>[0]): Promise<ElectronApplication> {
+    if (!options?.executablePath) {
+      return electron.launch(options);
+    }
+
+    const port = await getFreePort();
+    const abort = new AbortController();
+    try {
+      const [app] = await Promise.all([
+        electron.launch({ ...options, args: [`--inspect-brk=${port}`, ...(options.args ?? [])] }),
+        installStartupGate(port, abort.signal),
+      ]);
+      return app;
+    } finally {
+      abort.abort();
+    }
   }
 
   /**
