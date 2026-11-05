@@ -45,26 +45,6 @@ export class NavigationUtils {
     return flat;
   }
 
-  findNavigationEntryByLink(
-    entries: NavigationRegistryEntry[],
-    link: string,
-    parentName?: string,
-  ): NavigationRegistryEntry | undefined {
-    for (const entry of entries) {
-      const resolvedParentName = parentName ?? entry.parentName;
-      if (entry.type !== 'group' && entry.link === link) {
-        return resolvedParentName === entry.parentName ? entry : { ...entry, parentName: resolvedParentName };
-      }
-      const childParentName =
-        entry.type === 'submenu' ? this.formatNavigationName(entry.name, resolvedParentName) : resolvedParentName;
-      const child = this.findNavigationEntryByLink(entry.items ?? [], link, childParentName);
-      if (child) {
-        return child;
-      }
-    }
-    return undefined;
-  }
-
   getVisibleOrderedEntries(entries: NavigationRegistryEntry[]): NavigationRegistryEntry[] {
     return this.flattenNavigationEntries(entries)
       .filter(entry => !entry.hidden && entry.index !== undefined)

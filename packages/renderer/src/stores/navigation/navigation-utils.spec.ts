@@ -93,21 +93,3 @@ describe('flattenNavigationEntries', () => {
     expect(nodes.parentName).toBeUndefined();
   });
 });
-
-describe('findNavigationEntryByLink', () => {
-  test('finds nested entries and returns undefined for an unknown link', () => {
-    const pods = makeEntry('Pods', '/kubernetes/pods');
-    const entries = [
-      makeEntry('Kubernetes', '/kubernetes', {
-        type: 'submenu',
-        items: [pods],
-      }),
-    ];
-
-    expect(navigationUtils.findNavigationEntryByLink(entries, '/kubernetes/pods')).toEqual({
-      ...pods,
-      parentName: 'Kubernetes',
-    });
-    expect(navigationUtils.findNavigationEntryByLink(entries, '/unknown')).toBeUndefined();
-  });
-});
