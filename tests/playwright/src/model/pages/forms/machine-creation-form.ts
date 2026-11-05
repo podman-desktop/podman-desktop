@@ -102,6 +102,7 @@ export class MachineCreationForm extends BasePage {
 
       if (imagePath) {
         await this.imagePathBox.clear();
+        await playExpect(this.imagePathBox).toHaveValue('');
         await this.imagePathBox.fill(imagePath);
         await playExpect(this.imagePathBox).toHaveValue(imagePath);
       }
