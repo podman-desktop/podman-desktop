@@ -151,12 +151,15 @@ export class ElectronRunner extends Runner {
 
     const port = await getFreePort();
     const abort = new AbortController();
+    const launch = electron.launch({ ...options, args: [`--inspect-brk=${port}`, ...(options.args ?? [])] });
     try {
-      const [app] = await Promise.all([
-        electron.launch({ ...options, args: [`--inspect-brk=${port}`, ...(options.args ?? [])] }),
-        installStartupGate(port, abort.signal),
-      ]);
+      const [app] = await Promise.all([launch, installStartupGate(port, abort.signal)]);
       return app;
+    } catch (err) {
+      // The gate failed while the launch may still complete: close that app when it does.
+      // Not awaited: if the app is still paused, the launch only settles at its timeout.
+      launch.then(app => app.close()).catch(() => {});
+      throw err;
     } finally {
       abort.abort();
     }
