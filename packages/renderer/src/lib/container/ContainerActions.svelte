@@ -26,6 +26,7 @@ import { containersInfos, setContainerActionError, setContainerStatus } from '/@
 import { context } from '/@/stores/context';
 
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
+import ContainerOpenBrowserSubmenu from './ContainerOpenBrowserSubmenu.svelte';
 
 interface Props {
   container: ContainerInfoUI;
@@ -113,6 +114,13 @@ async function stopContainer(): Promise<void> {
     inProgress(false);
   }
 }
+
+// A same host port can be listed several times (e.g. bound on both IPv4 and IPv6), keep it once
+let publicPorts = $derived(
+  (container.ports ?? []).filter(
+    (port, index, ports) => port.PublicPort && ports.findIndex(p => p.PublicPort === port.PublicPort) === index,
+  ),
+);
 
 function openBrowser(): void {
   if (!container.openingUrl) {
@@ -232,14 +240,18 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
     hidden={!(container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE)}
     detailed={detailed}
     icon={faRocket} />
-  <ListItemButtonIcon
-    title="Open Browser"
-    onClick={openBrowser}
-    menu={dropdownMenu}
-    enabled={container.state === 'RUNNING' && container.hasPublicPort}
-    hidden={dropdownMenu && container.state !== 'RUNNING'}
-    detailed={detailed}
-    icon={faExternalLinkSquareAlt} />
+  {#if container.state === 'RUNNING' && publicPorts.length > 1}
+    <ContainerOpenBrowserSubmenu ports={publicPorts} menu={dropdownMenu} detailed={detailed} />
+  {:else}
+    <ListItemButtonIcon
+      title="Open Browser"
+      onClick={openBrowser}
+      menu={dropdownMenu}
+      enabled={container.state === 'RUNNING' && container.hasPublicPort}
+      hidden={dropdownMenu && container.state !== 'RUNNING'}
+      detailed={detailed}
+      icon={faExternalLinkSquareAlt} />
+  {/if}
   {#if !detailed}
     <ListItemButtonIcon
       title="Open Terminal"

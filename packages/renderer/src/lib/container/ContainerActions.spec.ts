@@ -73,6 +73,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'stopContainer', { value: vi.fn() });
   Object.defineProperty(window, 'restartContainer', { value: vi.fn() });
   Object.defineProperty(window, 'deleteContainer', { value: vi.fn() });
+  Object.defineProperty(window, 'openExternal', { value: vi.fn() });
 
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
 });
@@ -262,4 +263,118 @@ test('Expect ContributionsAction component is created with a contextUI containin
       }),
     );
   });
+});
+
+function runningContainerWithPorts(ports: { PublicPort: number; PrivatePort: number; IP?: string }[]): ContainerInfoUI {
+  return {
+    id: 'container-id',
+    engineId: 'container-engine-id',
+    name: 'my-container',
+    state: 'RUNNING',
+    hasPublicPort: ports.length > 0,
+    openingUrl: ports.length > 0 ? `http://localhost:${ports[0].PublicPort}` : '',
+    ports: ports.map(port => ({ IP: '0.0.0.0', Type: 'tcp', ...port })),
+    groupInfo: { type: 'standalone' },
+  } as unknown as ContainerInfoUI;
+}
+
+test('Expect Open Browser to open the only exposed port directly', async () => {
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  render(ContainerActions, { container: runningContainerWithPorts([{ PublicPort: 8080, PrivatePort: 80 }]) });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
+
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('Expect Open Browser to open directly when the same port is bound on IPv4 and IPv6', async () => {
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  render(ContainerActions, {
+    container: runningContainerWithPorts([
+      { PublicPort: 8080, PrivatePort: 80, IP: '0.0.0.0' },
+      { PublicPort: 8080, PrivatePort: 80, IP: '::' },
+    ]),
+  });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
+
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('Expect Open Browser submenu in kebab menu to list the exposed ports', async () => {
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  render(ContainerActions, {
+    container: runningContainerWithPorts([
+      { PublicPort: 8080, PrivatePort: 80 },
+      { PublicPort: 9090, PrivatePort: 90 },
+    ]),
+    dropdownMenu: true,
+  });
+
+  // open the kebab menu
+  await fireEvent.click(screen.getByRole('button', { name: 'kebab menu' }));
+
+  const openBrowser = screen.getByRole('button', { name: 'Open Browser' });
+  expect(openBrowser).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByRole('menu', { name: 'Exposed ports' })).not.toBeInTheDocument();
+
+  await fireEvent.click(openBrowser);
+
+  expect(openBrowser).toHaveAttribute('aria-expanded', 'true');
+  expect(window.openExternal).not.toHaveBeenCalled();
+  const submenu = screen.getByRole('menu', { name: 'Exposed ports' });
+  // clicking the parent item must not close the kebab menu
+  expect(submenu).toBeInTheDocument();
+
+  await fireEvent.click(screen.getByRole('menuitem', { name: 'http://localhost:9090' }));
+
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:9090');
+});
+
+test('Expect Open Browser submenu in kebab menu to open on hover and close on leave', async () => {
+  render(ContainerActions, {
+    container: runningContainerWithPorts([
+      { PublicPort: 8080, PrivatePort: 80 },
+      { PublicPort: 9090, PrivatePort: 90 },
+    ]),
+    dropdownMenu: true,
+  });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'kebab menu' }));
+  const wrapper = screen.getByRole('button', { name: 'Open Browser' }).parentElement!;
+
+  await fireEvent.mouseEnter(wrapper);
+  expect(screen.getByRole('menu', { name: 'Exposed ports' })).toBeInTheDocument();
+
+  await fireEvent.mouseLeave(wrapper);
+  expect(screen.queryByRole('menu', { name: 'Exposed ports' })).not.toBeInTheDocument();
+});
+
+test('Expect Open Browser submenu in details header to list the exposed ports', async () => {
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  render(ContainerActions, {
+    container: runningContainerWithPorts([
+      { PublicPort: 8080, PrivatePort: 80 },
+      { PublicPort: 9090, PrivatePort: 90 },
+    ]),
+    detailed: true,
+  });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
+  await fireEvent.click(screen.getByRole('menuitem', { name: 'http://localhost:8080' }));
+
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
+});
+
+test('Expect no Open Browser submenu for a single exposed port', async () => {
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  render(ContainerActions, {
+    container: runningContainerWithPorts([{ PublicPort: 8080, PrivatePort: 80 }]),
+  });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
+
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
 });
