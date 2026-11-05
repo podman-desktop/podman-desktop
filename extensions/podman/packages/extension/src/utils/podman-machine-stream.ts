@@ -33,7 +33,7 @@ import { Client } from 'ssh2';
 
 import type { MachineInfo } from '/@/types';
 
-import { SshHostKeyStore } from './ssh-host-key-store';
+import { SshHostKeyStore, withHostVerificationTimeout } from './ssh-host-key-store';
 
 export class ProviderConnectionShellAccessImpl implements ProviderConnectionShellAccess, Disposable {
   #host: string;
@@ -99,6 +99,13 @@ export class ProviderConnectionShellAccessImpl implements ProviderConnectionShel
 
   open(): ProviderConnectionShellAccessSession {
     this.#client = new Client();
+    const client = this.#client;
+    const verificationConfig = withHostVerificationTimeout(
+      client,
+      new SshHostKeyStore(this.storagePath).createVerifier(this.#host, this.#port, error => {
+        this.onErrorEmit.fire({ error: error.message });
+      }),
+    );
     this.#client
       .on('ready', () => {
         this.#client?.shell((err, stream) => {
@@ -126,9 +133,7 @@ export class ProviderConnectionShellAccessImpl implements ProviderConnectionShel
         port: this.#port,
         username: this.#username,
         privateKey: fs.readFileSync(this.#privateKey),
-        hostVerifier: new SshHostKeyStore(this.storagePath).createVerifier(this.#host, this.#port, error => {
-          this.onErrorEmit.fire({ error: error.message });
-        }),
+        ...verificationConfig,
       });
 
     return {
