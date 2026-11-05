@@ -55,7 +55,7 @@ export class WinInstaller extends BaseInstaller {
   }
 
   getUpdatePreflightChecks(): InstallCheck[] {
-    return [];
+    return this.winPlatform.getUpdatePreflightChecks();
   }
 
   getPreflightChecks(): InstallCheck[] {
