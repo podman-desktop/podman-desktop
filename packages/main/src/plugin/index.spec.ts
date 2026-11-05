@@ -191,6 +191,36 @@ afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
 });
 
+test.each(['log', 'warn', 'trace', 'debug', 'error'] as const)(
+  'redacts SSH credentials before %s reaches either console sink',
+  async logType => {
+    const original = vi.spyOn(console, logType).mockImplementation(() => {});
+    vi.spyOn(pluginSystem, 'getExtName').mockResolvedValue('[podman]');
+    const config = { host: 'localhost', privateKey: 'test-key', passphrase: 'test-passphrase' };
+    try {
+      pluginSystem.redirectConsole(logType);
+      console[logType]('socket failure', config);
+      await vi.waitFor(() => {
+        expect(original).toHaveBeenCalledExactlyOnceWith('[podman]', 'socket failure', {
+          host: 'localhost',
+          privateKey: '[REDACTED]',
+          passphrase: '[REDACTED]',
+        });
+        expect(webContents.send).toHaveBeenCalledExactlyOnceWith(
+          'console:output',
+          logType,
+          '[podman]',
+          'socket failure',
+          { host: 'localhost', privateKey: '[REDACTED]', passphrase: '[REDACTED]' },
+        );
+      });
+      expect(config.privateKey).toBe('test-key');
+    } finally {
+      original.mockRestore();
+    }
+  },
+);
+
 test('Should queue events until we are ready', async () => {
   const apiSender = pluginSystem.getApiSender(webContents);
   expect(apiSender).toBeDefined();

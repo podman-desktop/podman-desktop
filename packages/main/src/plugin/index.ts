@@ -233,6 +233,7 @@ import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
 import { ListOrganizerRegistry } from './list-organizer.js';
+import { redactLogArguments } from './log-redaction.js';
 import { MessageBox } from './message-box.js';
 import { NavigationItemsInit } from './navigation-items-init.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
@@ -405,19 +406,20 @@ export class PluginSystem {
     // keep original method
     const originalConsoleMethod = console[logType];
     console[logType] = (...args): void => {
+      const safeArgs = redactLogArguments(args);
       this.getExtName()
         .then(extName => {
-          if (extName) args.unshift(extName);
+          if (extName) safeArgs.unshift(extName);
 
           // but also send the content remotely
           if (!this.isQuitting) {
             // still display as before by invoking original method
-            originalConsoleMethod(...args);
+            originalConsoleMethod(...safeArgs);
 
             try {
-              this.getWebContentsSender().send('console:output', logType, ...args);
+              this.getWebContentsSender().send('console:output', logType, ...safeArgs);
             } catch (err) {
-              originalConsoleMethod(err);
+              originalConsoleMethod(...redactLogArguments([err]));
             }
           }
         })

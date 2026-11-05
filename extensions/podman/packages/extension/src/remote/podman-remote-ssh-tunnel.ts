@@ -74,6 +74,14 @@ export class PodmanRemoteSshTunnel {
     return this.#sshConfig;
   }
 
+  private getLogContext(): Pick<ConnectConfig, 'host' | 'port' | 'username'> {
+    return {
+      host: this.host,
+      port: this.port,
+      username: this.username,
+    };
+  }
+
   dispose(): void {
     this.disconnect();
   }
@@ -127,13 +135,13 @@ export class PodmanRemoteSshTunnel {
 
             // Handle local socket error
             localSocket.on('error', err => {
-              console.error('Podman ssh tunnel local socket error using configuration', this.#sshConfig, err);
+              console.error('Podman ssh tunnel local socket error using configuration', this.getLogContext(), err);
               remoteSocket.end();
             });
 
             // Handle remote socket error
             remoteSocket.on('error', (err: unknown) => {
-              console.error('Podman ssh tunnel remote socket error using configuration', this.#sshConfig, err);
+              console.error('Podman ssh tunnel remote socket error using configuration', this.getLogContext(), err);
               localSocket.end();
             });
           });

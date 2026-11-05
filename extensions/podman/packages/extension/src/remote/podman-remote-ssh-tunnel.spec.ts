@@ -17,15 +17,19 @@
  ***********************************************************************/
 
 import { rm } from 'node:fs/promises';
+import * as net from 'node:net';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 
-import { Client, type ConnectConfig, Server } from 'ssh2';
+import { Client, type ClientChannel, type ConnectConfig, Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
+
+vi.mock(import('node:net'), { spy: true });
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -153,6 +157,70 @@ test('disconnect should clear pending reconnect timeout', () => {
 
   vi.advanceTimersByTime(30000);
   expect(connectSpy).toHaveBeenCalledTimes(1);
+});
+
+test.each(['local', 'remote'] as const)('should only log non-secret configuration on %s socket errors', side => {
+  class TestClientChannel extends PassThrough implements ClientChannel {
+    stdin = this;
+    stdout = this;
+    stderr = new PassThrough();
+    server = false as const;
+    type = 'session' as const;
+    incoming = undefined;
+    outgoing = undefined;
+    eof = vi.fn();
+    close = vi.fn();
+    setWindow = vi.fn();
+    signal = vi.fn();
+    exit = vi.fn();
+  }
+  const localSocket = new net.Socket();
+  const remoteSocket = new TestClientChannel();
+  const remoteEndSpy = vi.spyOn(remoteSocket, 'end');
+  vi.spyOn(net.Server.prototype, 'listen').mockImplementation(function (this: net.Server) {
+    this.emit('connection', localSocket);
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
+    this.emit('ready');
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'end').mockReturnThis();
+  vi.spyOn(Client.prototype, 'openssh_forwardOutStreamLocal').mockImplementation(function (
+    this: Client,
+    _path,
+    callback,
+  ) {
+    callback(undefined, remoteSocket);
+    return this;
+  });
+  const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const tunnel = new TestPodmanRemoteSshTunnel('localhost', 22, 'foo', dummyKey, '/tmp/remote.sock', '/tmp/local.sock');
+  // Ensure future credential fields cannot slip into diagnostics.
+  tunnel.getSshConfig().password = 'test-password';
+  tunnel.getSshConfig().passphrase = 'test-passphrase';
+  tunnel.connect();
+
+  const error = new Error('socket failure');
+  if (side === 'local') {
+    localSocket.emit('error', error);
+    expect(remoteEndSpy).toHaveBeenCalledOnce();
+  } else {
+    const endSpy = vi.spyOn(localSocket, 'end');
+    remoteSocket.emit('error', error);
+    expect(endSpy).toHaveBeenCalledOnce();
+  }
+
+  expect(logSpy).toHaveBeenCalledExactlyOnceWith(
+    `Podman ssh tunnel ${side} socket error using configuration`,
+    { host: 'localhost', port: 22, username: 'foo' },
+    error,
+  );
+  expect(JSON.stringify(logSpy.mock.calls)).not.toContain(dummyKey);
+  expect(tunnel.getSshConfig().privateKey).toBe(dummyKey);
+  tunnel.dispose();
+  localSocket.destroy();
+  remoteSocket.destroy();
 });
 
 test('should use the provided private key over the ssh-agent', () => {
