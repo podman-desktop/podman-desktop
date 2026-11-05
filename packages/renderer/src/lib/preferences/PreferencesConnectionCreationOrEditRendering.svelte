@@ -25,12 +25,14 @@ import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
 import EditableConnectionResourceItem from './item-formats/EditableConnectionResourceItem.svelte';
 import {
-  clearCreateTask,
+  clearTaskLogs,
   type ConnectionCallback,
   disconnectUI,
   eventCollect,
+  getNextTaskId,
   reconnectUI,
   registerConnectionCallback,
+  removeOperation,
 } from './preferences-connection-rendering-task';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 import { calcHalfCpuCores, getInitialValue, isPropertyValidInContext, writeToTerminal } from './Util';
@@ -140,7 +142,7 @@ onMount(async () => {
     restoreConfigurationValues();
   }
 
-  taskId ??= operationConnectionInfoMap.size + 1;
+  taskId ??= getNextTaskId();
 
   const data: { [p: string]: unknown } = {};
   for (let field of configurationKeys) {
@@ -349,7 +351,7 @@ async function ended(): Promise<void> {
 async function cleanup(): Promise<void> {
   // clear
   if (loggerHandlerKey) {
-    clearCreateTask(loggerHandlerKey);
+    removeOperation(loggerHandlerKey);
     loggerHandlerKey = undefined;
   }
   errorMessage = undefined;
@@ -432,6 +434,7 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
     } catch (error: unknown) {
       //display error
       tokenId = undefined;
+      inProgress = false;
       // filter cancellation message to avoid displaying error and allow user to restart the creation
       if (
         error &&
@@ -442,11 +445,12 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
         error.message.indexOf('Execution cancelled') >= 0
       ) {
         errorMessage = 'Action cancelled. See logs for more details';
-        return;
+      } else {
+        errorMessage = String(error);
+        operationStarted = false;
       }
-      errorMessage = String(error);
-      operationStarted = false;
-      inProgress = false;
+      // the operation is over, even if the component has been destroyed meanwhile
+      updateStore();
     }
   }
 }
@@ -464,6 +468,14 @@ async function cancelCreation(): Promise<void> {
       name: providerInfo.name,
     },
   );
+}
+
+// keep the operation so reopening the task still displays the success
+function goBackToResources(): void {
+  if (loggerHandlerKey) {
+    clearTaskLogs(loggerHandlerKey);
+  }
+  router.goto('/preferences/resources');
 }
 
 async function closePanel(): Promise<void> {
@@ -516,12 +528,7 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
 <div class="flex flex-col w-full h-full overflow-hidden">
   {#if operationSuccessful && !disableEmptyScreen}
     <EmptyScreen icon={faCubes} title={operationLabel} message="Successful operation">
-      <Button
-        class="py-3"
-        on:click={async (): Promise<void> => {
-          await cleanup();
-          router.goto('/preferences/resources');
-        }}>
+      <Button class="py-3" on:click={goBackToResources}>
         Go back to resources
       </Button>
     </EmptyScreen>

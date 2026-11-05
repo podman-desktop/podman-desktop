@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Logger as LoggerType } from '@desktop-framework/extension-api';
+import { get } from 'svelte/store';
 
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
@@ -67,13 +68,44 @@ export function registerConnectionCallback(createCallback: ConnectionCallback): 
   return key;
 }
 
-// clear all data related to the given build
-export function clearCreateTask(key: symbol): void {
+// clear the logs related to the given build
+export function clearTaskLogs(key: symbol): void {
   taskLogCallbacks.delete(key);
   taskLogOnHolds.delete(key);
   taskLogReplays.delete(key);
-  // remove current create
-  operationConnectionsInfo.set(new Map());
+}
+
+// clear all data related to the given operation
+export function removeOperation(key: symbol): void {
+  clearTaskLogs(key);
+  operationConnectionsInfo.update(map => {
+    for (const [taskId, operation] of map) {
+      if (operation.operationKey === key) {
+        map.delete(taskId);
+      }
+    }
+    return map;
+  });
+}
+
+// clear all data related to the operations that are not in progress
+export function clearCompletedOperations(): void {
+  operationConnectionsInfo.update(map => {
+    for (const [taskId, operation] of map) {
+      if (!operation.operationInProgress) {
+        clearTaskLogs(operation.operationKey);
+        map.delete(taskId);
+      }
+    }
+    return map;
+  });
+}
+
+// ids are never reused, even when operations are removed or created with a given id
+let lastTaskId = 0;
+export function getNextTaskId(): number {
+  lastTaskId = Math.max(lastTaskId, ...get(operationConnectionsInfo).keys()) + 1;
+  return lastTaskId;
 }
 
 // client is leaving the page, disconnect the UI

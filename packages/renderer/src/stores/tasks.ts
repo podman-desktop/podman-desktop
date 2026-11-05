@@ -20,6 +20,8 @@ import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatu
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
+import { clearCompletedOperations } from '/@/lib/preferences/preferences-connection-rendering-task';
+
 import { findMatchInLeaves } from './search-util';
 
 /**
@@ -99,6 +101,7 @@ function updateTask(task: TaskInfo): void {
 
 // remove element from the store that are completed
 export async function clearNotifications(): Promise<void> {
+  clearCompletedOperations();
   return window.clearTasks();
 }
 
