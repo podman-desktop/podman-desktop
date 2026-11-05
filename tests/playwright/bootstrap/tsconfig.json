@@ -1,5 +1,24 @@
 {
-  "extends": "../../../packages/main/tsconfig.json",
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "target": "esnext",
+    "sourceMap": false,
+    "moduleResolution": "node16",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "isolatedModules": true,
+    "exactOptionalPropertyTypes": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node"],
+    "paths": {
+      "/@/*": ["../../../packages/main/src/*"],
+      "/@product.json": ["../../../product.json"]
+    }
+  },
   "include": ["*.ts", "../../../types/**/*.d.ts"],
   "exclude": ["vite.config.ts"]
 }

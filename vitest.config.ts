@@ -30,8 +30,7 @@ const PODMAN_DESKTOP_EXCLUDED = [
 export default defineConfig({
   test: {
     projects: [
-      '{extensions,packages,tools,storybook,website,scripts}/**/{vitest,vite}.config.{js,ts}',
-      'tests/playwright/bootstrap/vite.config.ts',
+      '{extensions,packages,tools,storybook,website,scripts,tests/playwright/bootstrap}/**/{vitest,vite}.config.{js,ts}',
       '!**/builtin/**',
     ],
     // use GitHub action reporters when running in CI

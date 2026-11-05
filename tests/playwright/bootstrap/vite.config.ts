@@ -16,27 +16,61 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { builtinModules } from 'node:module';
 import { join } from 'node:path';
 
-import mainConfig from '../../../packages/main/vite.config.js';
+import { node } from '../../../.electron-vendors.cache.json';
+import { defineConfig } from 'vite';
 
-const build = mainConfig.build;
-if (!build?.lib || !Array.isArray(build.lib.entry)) {
-  throw new Error('The E2E bootstrap requires the main library entry points to be an array');
-}
+const mainPackageRoot = join(__dirname, '../../../packages/main');
 
-export default {
-  ...mainConfig,
-  build: {
-    ...build,
-    lib: {
-      ...build.lib,
-      entry: build.lib.entry.map(entry => (entry === 'src/index.ts' ? join(__dirname, 'index.ts') : entry)),
+export default defineConfig({
+  mode: process.env['MODE'],
+  root: mainPackageRoot,
+  envDir: process.cwd(),
+  resolve: {
+    mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
+    alias: {
+      '/@/': `${join(mainPackageRoot, 'src')}/`,
+      '/@product.json': `${join(mainPackageRoot, '../../product.json')}`,
     },
   },
+  build: {
+    sourcemap: 'inline',
+    target: `node${node}`,
+    outDir: 'dist',
+    assetsDir: '.',
+    minify: process.env['MODE'] === 'production',
+    lib: {
+      entry: [
+        join(__dirname, 'index.ts'),
+        'scripts/download-remote-extensions.ts',
+        'scripts/generate-extension-schema.ts',
+      ],
+      formats: ['cjs'],
+    },
+    rollupOptions: {
+      platform: 'node',
+      external: [
+        'electron',
+        'chokidar',
+        'tar-fs',
+        'ssh2',
+        '@segment/analytics-node',
+        'isomorphic-ws',
+        ...builtinModules.flatMap(module => [module, `node:${module}`]),
+      ],
+      output: {
+        entryFileNames: '[name].cjs',
+      },
+    },
+    emptyOutDir: true,
+    reportCompressedSize: false,
+  },
   test: {
-    ...mainConfig.test,
+    retry: 3,
+    environment: 'node',
     name: 'e2e-bootstrap',
     include: [join(__dirname, '*.spec.ts')],
   },
-};
+});
