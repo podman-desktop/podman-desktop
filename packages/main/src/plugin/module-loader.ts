@@ -33,6 +33,12 @@ export interface NodeInternalModule {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OverrideFunction = (ext: ExtensionModule) => any;
 
+// check containment on whole path segments, a plain string prefix would match '/ext/ab' against '/ext/a'
+function isInsideDirectory(file: string, directory: string): boolean {
+  const relative = path.relative(path.normalize(directory), path.normalize(file));
+  return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+
 export class ModuleLoader {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _internalLoad: any;
@@ -67,7 +73,7 @@ export class ModuleLoader {
         if (override) {
           if (override instanceof Function) {
             const ext = Array.from(analyzedExtensions.values()).find(extension =>
-              path.normalize(parent.filename).startsWith(path.normalize(extension.path)),
+              isInsideDirectory(parent.filename, extension.path),
             );
             if (ext) {
               return override(ext);

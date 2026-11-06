@@ -85,6 +85,27 @@ test('module loader trow exception if override is a function and request came no
   expect(error).not.toBeUndefined();
 });
 
+test('module loader binds factory override to the extension owning the module, not to a sibling sharing a path prefix', () => {
+  const apiA = {} as typeof PodmanDesktop;
+  const apiAB = {} as typeof PodmanDesktop;
+  // 'a' is registered first so a plain string prefix match would pick it
+  analyzedExtension.set('a', { path: '/extensions/a', api: apiA });
+  analyzedExtension.set('ab', { path: '/extensions/ab', api: apiAB });
+
+  expect(fakeModule._load('module2', { filename: '/extensions/a/dist/index.js', path: '/extensions/a/dist' })).toBe(
+    apiA,
+  );
+  expect(fakeModule._load('module2', { filename: '/extensions/ab/dist/index.js', path: '/extensions/ab/dist' })).toBe(
+    apiAB,
+  );
+});
+
+test('module loader throws if the request comes from a directory sharing only a prefix with the extension', () => {
+  expect(() =>
+    fakeModule._load('module2', { filename: '/path/to/ext-other/index.js', path: '/path/to/ext-other' }),
+  ).toThrowError('Cannot find extension');
+});
+
 test('module loader calls calls original _load function for not registered module', () => {
   fakeModule._load('module3', { filename: '/path/to/ext/internal/module1.js', path: '/path/to/ext' });
   expect(loadSpy).toHaveBeenCalledOnce();
