@@ -74,13 +74,16 @@ export class PodmanRemoteSshTunnel {
     return this.#sshConfig;
   }
 
-  /** Allowlists connection diagnostics so authentication fields never enter socket error logs. */
-  private getLogContext(): Pick<ConnectConfig, 'host' | 'port' | 'username'> {
-    return {
-      host: this.host,
-      port: this.port,
-      username: this.username,
-    };
+  protected logSocketError(side: 'local' | 'remote', error: unknown): void {
+    console.error(
+      `Podman ssh tunnel ${side} socket error using configuration`,
+      {
+        host: this.host,
+        port: this.port,
+        username: this.username,
+      },
+      error,
+    );
   }
 
   dispose(): void {
@@ -136,13 +139,13 @@ export class PodmanRemoteSshTunnel {
 
             // Handle local socket error
             localSocket.on('error', err => {
-              console.error('Podman ssh tunnel local socket error using configuration', this.getLogContext(), err);
+              this.logSocketError('local', err);
               remoteSocket.end();
             });
 
             // Handle remote socket error
             remoteSocket.on('error', (err: unknown) => {
-              console.error('Podman ssh tunnel remote socket error using configuration', this.getLogContext(), err);
+              this.logSocketError('remote', err);
               localSocket.end();
             });
           });

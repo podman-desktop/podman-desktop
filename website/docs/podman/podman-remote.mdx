@@ -145,14 +145,6 @@ You can also use the `--connection` argument to target only the connection you w
 
 :::
 
-#### SSH credentials in diagnostic logs
-
-Remote SSH tunnel socket errors log only the host, port, username, and error details, not the authentication configuration. Console forwarding also redacts SSH credential fields and private-key blocks in text.
-
-Console redaction replaces accessor properties without evaluating getters and preserves error diagnostics when forwarding to the renderer. If log arguments cannot be safely inspected, both consoles receive a redaction-failure notice instead of the original arguments.
-
-If logs from an earlier installation contain private-key material, treat that key as compromised: replace the key pair, remove the old public key from every remote host that trusts it, and restrict access to or securely remove affected logs. Do not share private keys when reporting connection problems.
-
 #### Additional resources
 
 - [podman:docs/tutorials/remote_client.md](https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/remote_client.md)
