@@ -16,9 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { type ConnectionCallback, registerConnectionCallback } from './preferences-connection-rendering-task';
+import { operationConnectionsInfo } from '/@/stores/operation-connections';
+
+import {
+  clearCompletedOperations,
+  clearTaskLogs,
+  type ConnectionCallback,
+  getNextTaskId,
+  registerConnectionCallback,
+  removeOperation,
+} from './preferences-connection-rendering-task';
 import { disconnectUI, eventCollect, reconnectUI } from './preferences-connection-rendering-task';
 
 const dummyCallback: ConnectionCallback = {
@@ -72,4 +82,73 @@ test('check events', async () => {
   expect(dummyCallback.warn).toHaveBeenCalledWith(['world']);
   expect(dummyCallback.error).toHaveBeenCalledWith(['foo']);
   expect(dummyCallback.onEnd).toHaveBeenCalled();
+});
+
+function setOperations(...operations: { key: symbol; inProgress: boolean }[]): void {
+  operationConnectionsInfo.set(
+    new Map(
+      operations.map(({ key, inProgress }, index) => [
+        index + 1,
+        { operationKey: key, operationInProgress: inProgress } as never,
+      ]),
+    ),
+  );
+}
+
+function expectLogsCleared(key: symbol, cleared: boolean): void {
+  vi.mocked(newCallback.log).mockClear();
+  eventCollect(key, 'log', ['hello']);
+  reconnectUI(key, newCallback);
+  if (cleared) {
+    expect(newCallback.log).not.toHaveBeenCalled();
+  } else {
+    expect(newCallback.log).toHaveBeenCalled();
+  }
+}
+
+test('clearTaskLogs clears the logs and keeps the operation', () => {
+  const key = registerConnectionCallback(dummyCallback);
+  setOperations({ key, inProgress: false });
+
+  clearTaskLogs(key);
+
+  expect(get(operationConnectionsInfo).size).toBe(1);
+  expectLogsCleared(key, true);
+});
+
+test('removeOperation clears the logs and removes only the given operation', () => {
+  const key = registerConnectionCallback(dummyCallback);
+  const otherKey = registerConnectionCallback(dummyCallback);
+  setOperations({ key, inProgress: false }, { key: otherKey, inProgress: false });
+
+  removeOperation(key);
+
+  expect([...get(operationConnectionsInfo).values()].map(operation => operation.operationKey)).toEqual([otherKey]);
+  expectLogsCleared(key, true);
+  expectLogsCleared(otherKey, false);
+});
+
+test('clearCompletedOperations clears the logs and removes only the operations not in progress', () => {
+  const completedKey = registerConnectionCallback(dummyCallback);
+  const runningKey = registerConnectionCallback(dummyCallback);
+  setOperations({ key: completedKey, inProgress: false }, { key: runningKey, inProgress: true });
+
+  clearCompletedOperations();
+
+  expect([...get(operationConnectionsInfo).values()].map(operation => operation.operationKey)).toEqual([runningKey]);
+  expectLogsCleared(completedKey, true);
+  expectLogsCleared(runningKey, false);
+});
+
+test('getNextTaskId returns increasing ids', () => {
+  operationConnectionsInfo.set(new Map());
+  const first = getNextTaskId();
+  expect(getNextTaskId()).toBe(first + 1);
+});
+
+test('getNextTaskId does not return an id already used by an operation', () => {
+  const suppliedId = getNextTaskId() + 1;
+  operationConnectionsInfo.set(new Map([[suppliedId, { operationKey: Symbol() } as never]]));
+
+  expect(getNextTaskId()).toBe(suppliedId + 1);
 });
