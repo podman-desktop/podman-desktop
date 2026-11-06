@@ -26,7 +26,7 @@ import { ModuleLoader } from './module-loader.js';
 const fakeModule = {
   _load: vi.fn(),
 };
-let analyzedExtension;
+let analyzedExtension: Map<string, ExtensionModule>;
 let moduleLoader;
 
 const fakeModule1 = {
