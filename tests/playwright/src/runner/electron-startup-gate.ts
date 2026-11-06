@@ -21,16 +21,7 @@ import { createServer } from 'node:net';
 import type * as Electron from 'electron';
 
 /**
- * In development mode, Playwright launches its own Electron executable with
- * `-r playwright-core/lib/server/electron/loader.js`, which delays app readiness until Playwright
- * is attached. With an explicit `executablePath`, Playwright skips this loader, so the app can
- * create its window before Playwright attaches. Packaged binaries ignore `-r` and `NODE_OPTIONS`,
- * but accept `--inspect-brk` when the `EnableNodeCliInspectArguments` fuse is on (required by
- * Playwright anyway for `--inspect=0`).
- *
- * The runner starts the app paused with `--inspect-brk`, installs the readiness gate of Playwright's
- * loader.js through the Node inspector, then resumes it. Playwright releases the gate by calling
- * `__playwright_run()` once its browser targets are configured, as it does in development mode.
+ * Install a gate through the Node inspector, to wait that Playwright attaches before the app starts its window.
  */
 
 /**
