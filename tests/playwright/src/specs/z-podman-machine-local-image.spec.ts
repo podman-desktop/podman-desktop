@@ -179,9 +179,27 @@ for (const scenario of scenarios) {
         });
 
         await playExpect(resourcesPage.heading).toBeVisible();
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, LOCAL_IMAGE_MACHINE_NAME);
-        playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
-        playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
+
+        // Connection registration is async after create completes. Poll for the
+        // card, and refresh Resources once if the provider list is still stale.
+        let machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, LOCAL_IMAGE_MACHINE_NAME);
+        await waitUntil(async () => await machineCard.doesResourceElementExist(), {
+          timeout: TIMEOUT_MEDIUM,
+          sendError: false,
+        });
+
+        if (!(await machineCard.doesResourceElementExist())) {
+          await navigationBar.openDashboard();
+          const settingsBar = await navigationBar.openSettings();
+          await settingsBar.resourcesTab.click();
+          await playExpect(resourcesPage.heading).toBeVisible();
+          machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, LOCAL_IMAGE_MACHINE_NAME);
+        }
+
+        await playExpect(machineCard.resourceElement).toBeVisible({ timeout: TIMEOUT_MEDIUM });
+        await playExpect(machineCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
+          timeout: TIMEOUT_MEDIUM,
+        });
       });
     });
 

@@ -88,7 +88,9 @@ export class CreateMachinePage extends BasePage {
 
       await playExpect(goBackToResourcesButton).toBeEnabled();
       await goBackToResourcesButton.click();
-      return new ResourcesPage(this.page);
+      const resourcesPage = new ResourcesPage(this.page);
+      await playExpect(resourcesPage.heading).toBeVisible();
+      return resourcesPage;
     });
   }
 
