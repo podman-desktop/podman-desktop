@@ -52,6 +52,11 @@ import { decompressZstd } from './util/zstd.js';
 let imageRegistry: ImageRegistry;
 let server: SetupServer | undefined = undefined;
 
+// manifest fixtures declare static layer sizes, align them with the blobs served by the test
+function withLayerSizes<T extends { layers: { size: number }[] }>(manifest: T, sizes: (number | undefined)[]): T {
+  return { ...manifest, layers: manifest.layers.map((layer, index) => ({ ...layer, size: sizes[index] })) };
+}
+
 const pxoxyIsEnabledMock = vi.fn();
 const proxyGetProxyMock = vi.fn();
 
@@ -594,7 +599,7 @@ test('expect downloadAndExtractImage works', async () => {
     // image index
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
-      () => HttpResponse.json(imageRegistryManifestJson),
+      () => HttpResponse.json(withLayerSizes(imageRegistryManifestJson, [blobFile1.length, blobFile2.length])),
     ),
 
     // file 2
@@ -680,6 +685,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
   const readTarZstFile = (): Buffer => {
     return fs.readFileSync(tmpZstFile);
   };
+  const zstFileSize = readTarZstFile().length;
 
   // mock http responses
   const handlers = [
@@ -691,7 +697,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
     // image index
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
-      () => HttpResponse.json(imageRegistryManifestZstdJson),
+      () => HttpResponse.json(withLayerSizes(imageRegistryManifestZstdJson, [zstFileSize, zstFileSize])),
     ),
 
     // file 1
@@ -756,7 +762,7 @@ test('expect downloadAndExtractImage to remove the temporary files when decompre
     ),
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
-      () => HttpResponse.json(imageRegistryManifestZstdJson),
+      () => HttpResponse.json(withLayerSizes(imageRegistryManifestZstdJson, [12, 12])),
     ),
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/:digest',
@@ -784,6 +790,102 @@ test('expect downloadAndExtractImage to remove the temporary files when decompre
   } finally {
     await fs.promises.rm(destFolder, { recursive: true, force: true });
   }
+});
+
+describe('downloadAndExtractImage size validation', () => {
+  const destFolder = path.resolve(os.tmpdir(), 'test-folder-size-validation');
+  const tmpFile = path.resolve(
+    os.tmpdir(),
+    'sha256_ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4.zst',
+  );
+
+  // a body without content-length, so the size can only be checked while streaming
+  function streamOf(content: string): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      start(controller): void {
+        controller.enqueue(new TextEncoder().encode(content));
+        controller.close();
+      },
+    });
+  }
+
+  function serve(sizes: (number | undefined)[], blob: () => Response): void {
+    server = setupServer(
+      http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+        HttpResponse.json(imageRegistryManifestMultiArchJson),
+      ),
+      http.get(
+        'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+        () => HttpResponse.json(withLayerSizes(imageRegistryManifestZstdJson, sizes)),
+      ),
+      http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/:digest', blob),
+    );
+    server.listen({ onUnhandledFrame: 'error' });
+  }
+
+  beforeEach(() => {
+    vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+    vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('12345');
+    vi.mocked(decompressZstd).mockResolvedValue();
+    vi.spyOn(nodeTar, 'extract').mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(destFolder, { recursive: true, force: true });
+  });
+
+  test('rejects a blob larger than its declared size and removes the temporary file', async () => {
+    serve([4, 4], () => new HttpResponse(streamOf('zstd-content')));
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow(
+      'Blob sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 exceeds its declared size of 4 bytes',
+    );
+    expect(decompressZstd).not.toHaveBeenCalled();
+    expect(fs.existsSync(tmpFile)).toBeFalsy();
+  });
+
+  test('rejects a blob smaller than its declared size and removes the temporary file', async () => {
+    serve([100, 100], () => new HttpResponse(streamOf('zstd-content')));
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow(
+      'Blob sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 size mismatch: expected 100 bytes, received 12',
+    );
+    expect(decompressZstd).not.toHaveBeenCalled();
+    expect(fs.existsSync(tmpFile)).toBeFalsy();
+  });
+
+  test('rejects a blob whose content-length disagrees with its declared size before reading it', async () => {
+    serve([4, 4], () => new HttpResponse('zstd-content', { headers: { 'content-length': '12' } }));
+    const logger = vi.fn();
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, logger),
+    ).rejects.toThrow(
+      'Blob sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 size mismatch: expected 4 bytes, registry announced 12',
+    );
+    // the logger reports progress per received chunk
+    expect(logger).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    { label: 'missing', size: undefined },
+    { label: 'negative', size: -1 },
+    { label: 'non-integer', size: 1.5 },
+  ])('rejects a manifest with a $label layer size', async ({ size }) => {
+    const blobHandler = vi.fn(() => new HttpResponse('zstd-content'));
+    serve([size, 12], blobHandler);
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow(
+      'Invalid size declared for layer sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 of the image my-podman-desktop-fake-registry.io/my/extension',
+    );
+    expect(blobHandler).not.toHaveBeenCalled();
+  });
 });
 
 describe('expect checkCredentials', async () => {
