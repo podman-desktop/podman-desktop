@@ -16,10 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderInfo } from '@desktop-framework/api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
+import type { ProviderConnectionStatus } from '@desktop-framework/extension-api';
 import type { MenuItemConstructorOptions, Tray } from 'electron';
 import { ipcMain, Menu, nativeImage } from 'electron';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import type { MockInstance } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import statusStopped from './assets/status-stopped.png';
 import type { AnimatedTray } from './tray-animate-icon.js';
@@ -265,4 +267,81 @@ test('should log error if provider not found and no providerInfo provided', () =
   expect(consoleErrorSpy).toHaveBeenCalledWith(
     'No provider registered for providerId "testId", please register a provider before adding a menu item to the tray.',
   );
+});
+
+describe('provider container connections', () => {
+  const providerA = { id: 'provider-a', name: 'Provider A', internalId: 'internal-a' } as ProviderInfo;
+  const providerB = { id: 'provider-b', name: 'Provider B', internalId: 'internal-b' } as ProviderInfo;
+
+  // same name and same socket path for both providers
+  const connection = (status: ProviderConnectionStatus): ProviderContainerConnectionInfo =>
+    ({
+      name: 'Podman Machine',
+      status,
+      endpoint: { socketPath: '/run/user/1000/podman/podman.sock' },
+      lifecycleMethods: ['start', 'stop'],
+    }) as unknown as ProviderContainerConnectionInfo;
+
+  function getConnectionEntries(menuBuild: MockInstance<typeof Menu.buildFromTemplate>): MenuItemConstructorOptions[] {
+    return ((menuBuild.mock.lastCall?.[0] ?? []) as MenuItemConstructorOptions[]).filter(
+      item => item.label === 'Podman Machine',
+    );
+  }
+
+  function getSubmenuItem(entry: MenuItemConstructorOptions | undefined, label: string): MenuItemConstructorOptions {
+    const item = (entry?.submenu as MenuItemConstructorOptions[] | undefined)?.find(it => it.label === label);
+    expect(item).toBeDefined();
+    return item as MenuItemConstructorOptions;
+  }
+
+  test('connections with same name and socket path from different providers have distinct entries', () => {
+    const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+    trayMenu = new TrayMenu(tray, animatedTray);
+
+    trayMenu.handleConnection('add', providerA, connection('started'));
+    expect(getConnectionEntries(menuBuild)).toHaveLength(1);
+
+    trayMenu.handleConnection('add', providerB, connection('started'));
+    expect(getConnectionEntries(menuBuild)).toHaveLength(2);
+  });
+
+  test('status update is applied only to the entry of the provider owning the connection', () => {
+    const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+    trayMenu = new TrayMenu(tray, animatedTray);
+
+    trayMenu.handleConnection('add', providerA, connection('started'));
+    trayMenu.handleConnection('add', providerB, connection('started'));
+
+    trayMenu.handleConnection('update', providerA, connection('stopped'));
+
+    const [entryA, entryB] = getConnectionEntries(menuBuild);
+    // provider-a is stopped: it can be started but not stopped
+    expect(getSubmenuItem(entryA, 'Start').enabled).toBe(true);
+    expect(getSubmenuItem(entryA, 'Stop').enabled).toBe(false);
+    // provider-b is untouched and still started
+    expect(getSubmenuItem(entryB, 'Start').enabled).toBe(false);
+    expect(getSubmenuItem(entryB, 'Stop').enabled).toBe(true);
+  });
+
+  test('deleting a connection keeps the entry of the other provider', () => {
+    const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+    trayMenu = new TrayMenu(tray, animatedTray);
+
+    trayMenu.handleConnection('add', providerA, connection('started'));
+    trayMenu.handleConnection('add', providerB, connection('started'));
+
+    trayMenu.handleConnection('delete', providerA, connection('started'));
+
+    const entries = getConnectionEntries(menuBuild);
+    expect(entries).toHaveLength(1);
+
+    // the remaining entry acts on provider-b
+    const emitSpy = vi.spyOn(ipcMain, 'emit').mockReturnValue(true);
+    getSubmenuItem(entries[0], 'Stop').click?.({} as never, undefined, {} as never);
+    expect(emitSpy).toHaveBeenCalledWith(
+      'tray:menu-provider-container-connection-click',
+      '',
+      expect.objectContaining({ providerInfo: providerB }),
+    );
+  });
 });
