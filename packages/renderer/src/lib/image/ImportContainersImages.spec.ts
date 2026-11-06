@@ -25,7 +25,6 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 
 import ImportContainersImages from './ImportContainersImages.svelte';
@@ -65,12 +64,15 @@ const providerInfo = {
   installationSupport: undefined,
 } as unknown as ProviderInfo;
 
+const closeCallback = vi.fn();
+
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  providerInfos.set([]);
 });
 
 test('Expect import button to be disabled', async () => {
-  render(ImportContainersImages);
+  render(ImportContainersImages, { closeCallback });
   const btnImportContainer = screen.getByRole('button', { name: 'Import containers' });
   expect(btnImportContainer).toBeInTheDocument();
   expect(btnImportContainer).toBeDisabled();
@@ -79,7 +81,7 @@ test('Expect import button to be disabled', async () => {
 test('Expect import button to be enabled when atleast one container image is selected', async () => {
   providerInfos.set([providerInfo]);
   vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
-  render(ImportContainersImages);
+  render(ImportContainersImages, { closeCallback });
   const btnAddImages = screen.getByRole('button', { name: 'Add images to import' });
   expect(btnAddImages).toBeInTheDocument();
   await userEvent.click(btnAddImages);
@@ -97,7 +99,7 @@ test('Expect import button to be enabled when atleast one container image is sel
 test('Expect import button to be enabled when atleast one container image is selected but there is no provider', async () => {
   providerInfos.set([]);
   vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
-  render(ImportContainersImages);
+  render(ImportContainersImages, { closeCallback });
   const btnAddImages = screen.getByRole('button', { name: 'Add images to import' });
   expect(btnAddImages).toBeInTheDocument();
   await userEvent.click(btnAddImages);
@@ -111,8 +113,7 @@ test('Expect import call importContainer func', async () => {
   providerInfos.set([providerInfo]);
   vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
   vi.mocked(window.importContainer).mockResolvedValue();
-  const goToMock = vi.spyOn(router, 'goto');
-  render(ImportContainersImages);
+  render(ImportContainersImages, { closeCallback });
   const btnAddImages = screen.getByRole('button', { name: 'Add images to import' });
   expect(btnAddImages).toBeInTheDocument();
   await userEvent.click(btnAddImages);
@@ -127,14 +128,15 @@ test('Expect import call importContainer func', async () => {
     archivePath: 'path/file.tar',
     imageTag: 'file',
   });
-  expect(goToMock).toBeCalledWith('/images');
+  expect(closeCallback).toHaveBeenCalledOnce();
+  expect(router.goto).not.toHaveBeenCalled();
 });
 
 test('Expect error shown if import function fails', async () => {
   providerInfos.set([providerInfo]);
   vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
   vi.mocked(window.importContainer).mockRejectedValue('import failed');
-  render(ImportContainersImages);
+  render(ImportContainersImages, { closeCallback });
   const btnAddImages = screen.getByRole('button', { name: 'Add images to import' });
   expect(btnAddImages).toBeInTheDocument();
   await userEvent.click(btnAddImages);
@@ -153,15 +155,79 @@ test('Expect error shown if import function fails', async () => {
   const errorDiv = screen.getByRole('alert');
   expect(errorDiv).toBeInTheDocument();
   expect((errorDiv as HTMLDivElement).innerHTML).toContain('import failed');
+  expect(closeCallback).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Add images to import' })).toBeEnabled();
+
+  await userEvent.keyboard('{Escape}');
+  expect(closeCallback).toHaveBeenCalledOnce();
 });
 
-test('Expect Close button to navigate to last page when clicked', async () => {
+test('Cancel closes the modal without navigation', async () => {
+  render(ImportContainersImages, { closeCallback });
+
+  expect(screen.getByRole('dialog', { name: 'Import Containers' })).toHaveFocus();
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+  expect(closeCallback).toHaveBeenCalledOnce();
+  expect(router.goto).not.toHaveBeenCalled();
+});
+
+test.each(['Escape', 'Close'])('%s closes the modal', async action => {
+  render(ImportContainersImages, { closeCallback });
+
+  if (action === 'Escape') {
+    await userEvent.keyboard('{Escape}');
+  } else {
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+  }
+
+  expect(closeCallback).toHaveBeenCalledOnce();
+});
+
+test('Keep the modal and form unchanged until import finishes', async () => {
   providerInfos.set([providerInfo]);
-  lastPage.set({ name: 'Images', path: '/images' });
-  render(ImportContainersImages);
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
+  const pendingImport = Promise.withResolvers<void>();
+  vi.mocked(window.importContainer).mockReturnValue(pendingImport.promise);
+  render(ImportContainersImages, { closeCallback });
 
-  const closeButton = await screen.findByText('Close');
-  await userEvent.click(closeButton);
+  await userEvent.click(screen.getByRole('button', { name: 'Add images to import' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Import containers' }));
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images');
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  await userEvent.keyboard('{Escape}');
+  await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+  await userEvent.click(screen.getByLabelText('fade-bg'));
+
+  expect(closeCallback).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add images to import' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Remove container' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'container importing name' })).toBeDisabled();
+
+  pendingImport.resolve();
+  await vi.waitFor(() => expect(closeCallback).toHaveBeenCalledOnce());
+});
+
+test('Import uses edited names and excludes removed files', async () => {
+  providerInfos.set([providerInfo]);
+  vi.mocked(window.openDialog).mockResolvedValue(['path/first.tar', 'path/second.tar']);
+  vi.mocked(window.importContainer).mockResolvedValue();
+  render(ImportContainersImages, { closeCallback });
+
+  await userEvent.click(screen.getByRole('button', { name: 'Add images to import' }));
+  await userEvent.click(screen.getAllByRole('button', { name: 'Remove container' })[0]);
+
+  const nameInput = screen.getByRole('textbox', { name: 'container importing name' });
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, 'quay.io/podman/hello');
+  await userEvent.click(screen.getByRole('button', { name: 'Import containers' }));
+
+  expect(window.importContainer).toHaveBeenCalledExactlyOnceWith({
+    provider: pInfo,
+    archivePath: 'path/second.tar',
+    imageTag: 'quay.io/podman/hello',
+  });
+  expect(closeCallback).toHaveBeenCalledOnce();
 });

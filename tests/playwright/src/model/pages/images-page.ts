@@ -43,6 +43,7 @@ export class ImagesPage extends MainPage {
   readonly importImageButton: Locator;
   readonly addImagesToImportButton: Locator;
   readonly confirmImportContainersButton: Locator;
+  private readonly importDialog: Locator;
 
   constructor(page: Page) {
     super(page, 'images');
@@ -56,8 +57,12 @@ export class ImagesPage extends MainPage {
     this.deleteAllUnusedImagesCheckbox = this.page.getByRole('checkbox', { name: 'Toggle all', exact: true });
     this.deleteAllSelectedButton = this.bottomAdditionalActions.getByRole('button', { name: 'Delete' });
     this.importImageButton = this.additionalActions.getByLabel('Import Image', { exact: true });
-    this.addImagesToImportButton = this.page.getByRole('button', { name: 'Add images to import' });
-    this.confirmImportContainersButton = this.page.getByRole('button', { name: 'Import containers', exact: true });
+    this.importDialog = this.page.getByRole('dialog', { name: 'Import Containers', exact: true });
+    this.addImagesToImportButton = this.importDialog.getByRole('button', { name: 'Add images to import' });
+    this.confirmImportContainersButton = this.importDialog.getByRole('button', {
+      name: 'Import containers',
+      exact: true,
+    });
   }
 
   async openPullImage(): Promise<PullImagePage> {
@@ -207,19 +212,21 @@ export class ImagesPage extends MainPage {
     return test.step(`Import container image from ${archivePath}`, async () => {
       await playExpect(this.importImageButton).toBeEnabled();
       await this.importImageButton.click();
+      await playExpect(this.importDialog).toBeVisible();
       await playExpect(this.addImagesToImportButton).toBeVisible();
 
       await withMockedOpenFileDialog([archivePath], async () => {
         await this.addImagesToImportButton.click();
       });
 
-      const nameInput = this.page.getByLabel('container importing name');
+      const nameInput = this.importDialog.getByLabel('container importing name');
       await playExpect(nameInput).toBeVisible();
       await nameInput.clear();
       await nameInput.fill(imageName);
 
       await playExpect(this.confirmImportContainersButton).toBeEnabled();
       await this.confirmImportContainersButton.click();
+      await playExpect(this.importDialog).toBeHidden({ timeout });
       await playExpect(this.heading).toBeVisible({ timeout });
       return this;
     });
