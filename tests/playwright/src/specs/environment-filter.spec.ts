@@ -190,6 +190,51 @@ test.describe
       await pods.clearFilterByEnvironment();
     });
 
+    test('Environment filter is visible on the Images page', async ({ navigationBar }) => {
+      const images = await navigationBar.openImages();
+      await playExpect(images.heading).toBeVisible();
+      await playExpect.poll(async () => await images.isEnvironmentFilterVisible(), { timeout: 30_000 }).toBeTruthy();
+    });
+
+    test('Filtering images by environment', async ({ navigationBar }) => {
+      test.setTimeout(120_000);
+
+      let images = await navigationBar.openImages();
+      const pullImagePage = await images.openPullImage();
+      images = await pullImagePage.pullImage(environmentFilterImage, 'latest', 60_000, defaultMachineConnectionName);
+      await playExpect
+        .poll(async () => await images.waitForImageExists(environmentFilterImage), { timeout: 10_000 })
+        .toBeTruthy();
+
+      await test.step(`Filter by ${secondMachineDisplayName} shows no images`, async () => {
+        await images.filterByEnvironment(secondMachineDisplayName);
+        await playExpect
+          .poll(async () => (await images.getImageRowByName(environmentFilterImage)) === undefined, {
+            timeout: 10_000,
+          })
+          .toBeTruthy();
+      });
+
+      await test.step(`Filter by ${defaultMachineDisplayName} shows the pulled image`, async () => {
+        await images.filterByEnvironment(defaultMachineDisplayName);
+        await playExpect
+          .poll(async () => (await images.getImageRowByName(environmentFilterImage)) !== undefined, {
+            timeout: 10_000,
+          })
+          .toBeTruthy();
+      });
+
+      await test.step('Clearing the filter shows all environments', async () => {
+        await images.clearFilterByEnvironment();
+        await playExpect(images.environmentDropdown).toContainText('All');
+        await playExpect
+          .poll(async () => (await images.getImageRowByName(environmentFilterImage)) !== undefined, {
+            timeout: 10_000,
+          })
+          .toBeTruthy();
+      });
+    });
+
     test('Environment filter is visible on the Volumes page', async ({ navigationBar }) => {
       const volumes = await navigationBar.openVolumes();
       await playExpect(volumes.heading).toBeVisible();
