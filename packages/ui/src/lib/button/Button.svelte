@@ -2,12 +2,13 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { Component, Snippet } from 'svelte';
 import { createEventDispatcher, untrack } from 'svelte';
+import type { HTMLButtonAttributes } from 'svelte/elements';
 
 import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
 import type { ButtonType } from './Button';
 
-interface Props {
+interface Props extends Omit<HTMLButtonAttributes, 'type'> {
   /**
    * Native tooltip, shown on mouse hover only, so keyboard and touch users never see it. Use it for extra
    * hints, not as the only name of an icon-only button: set `aria-label` for that.
@@ -96,6 +97,7 @@ let {
   'aria-label': ariaLabel,
   onclick = dispatch.bind(undefined, 'click'),
   children,
+  ...restProps
 }: Props = $props();
 
 if (untrack(() => icon !== undefined && !title && !children && !ariaLabel)) {
@@ -153,6 +155,7 @@ let classes = $derived.by(() => {
 </script>
 
 <button
+  {...restProps}
   type="button"
   class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] select-none {classes} {classNames}"
   class:border-[var(--pd-button-tab-border-selected)]={(type === 'tab' && selected === true && !disabled && !inProgress) ||

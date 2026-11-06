@@ -335,3 +335,18 @@ test.each(RING_TYPES.flatMap(([type, ring]) => [false, true].map(pressed => [typ
     expect(button).toHaveClass('focus-visible:outline-offset-2');
   },
 );
+
+test('Button passes data attributes and native attributes to the button element', () => {
+  render(Button, { 'data-testid': 'my-button', 'data-default': '', name: 'my-name' });
+
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('data-testid', 'my-button');
+  expect(button).toHaveAttribute('data-default');
+  expect(button).toHaveAttribute('name', 'my-name');
+});
+
+test('Button own attributes win over passthrough attributes', () => {
+  render(Button, { disabled: true, 'aria-disabled': 'false' });
+
+  expect(screen.getByRole('button')).toHaveAttribute('aria-disabled', 'true');
+});
