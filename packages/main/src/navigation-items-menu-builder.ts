@@ -16,13 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { DisplayItem } from '@desktop-framework/api';
+import { type DisplayItem, NavbarSettings } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import { CONFIGURATION_DEFAULT_SCOPE } from '@desktop-framework/api/configuration';
 import type { Configuration } from '@desktop-framework/extension-api';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import type { MessageBox } from './plugin/message-box.js';
 
 // items that can't be hidden
 const EXCLUDED_ITEMS = ['Accounts', 'Settings'];
@@ -39,36 +40,59 @@ function leafName(name: string): string {
 // This class is responsible of creating the items to hide/pin a given selected item of the left navigation bar
 // and also display a list of all items with the ability to toggle the visibility of each item.
 export class NavigationItemsMenuBuilder {
+  // buttons of the confirmation shown the first time an item is hidden
+  protected static readonly HIDE_BUTTON = 'Hide';
+  protected static readonly DONT_SHOW_AGAIN_BUTTON = `Don't show again`;
+  protected static readonly CANCEL_BUTTON = 'Cancel';
+
   private navigationItems: DisplayItem[] = [];
 
-  constructor(private configurationRegistry: ConfigurationRegistry) {}
+  constructor(
+    private configurationRegistry: ConfigurationRegistry,
+    // the plugin system builds it after this class, so it is awaited rather than held directly
+    private messageBox: Promise<MessageBox>,
+  ) {}
 
   receiveNavigationItems(data: DisplayItem[]): void {
     this.navigationItems = data;
   }
 
   protected getNavbarConfiguration(): Configuration {
-    return this.configurationRegistry.getConfiguration('navbar');
+    return this.configurationRegistry.getConfiguration(NavbarSettings.SectionName);
   }
 
   protected getItemOrder(): string[] {
-    return this.getNavbarConfiguration().get<string[]>('itemOrder', []);
+    return this.getNavbarConfiguration().get<string[]>(NavbarSettings.ItemOrder, []);
   }
 
   protected async setItemOrder(order: string[]): Promise<void> {
-    await this.configurationRegistry.updateConfigurationValue('navbar.itemOrder', order, CONFIGURATION_DEFAULT_SCOPE);
+    await this.configurationRegistry.updateConfigurationValue(
+      `${NavbarSettings.SectionName}.${NavbarSettings.ItemOrder}`,
+      order,
+      CONFIGURATION_DEFAULT_SCOPE,
+    );
   }
 
   protected getDisabledItems(): string[] {
-    return this.getNavbarConfiguration().get<string[]>('disabledItems', []);
+    return this.getNavbarConfiguration().get<string[]>(NavbarSettings.DisabledItems, []);
   }
 
   protected async setDisabledItems(items: string[]): Promise<void> {
     await this.configurationRegistry.updateConfigurationValue(
-      'navbar.disabledItems',
+      `${NavbarSettings.SectionName}.${NavbarSettings.DisabledItems}`,
       items,
       CONFIGURATION_DEFAULT_SCOPE,
     );
+  }
+
+  /** The item leads to the page on screen, so hiding it would lose the way back to it. */
+  protected isActiveItem(itemName: string): boolean {
+    return this.navigationItems.some(item => item.name === itemName && item.active === true);
+  }
+
+  /** Items that must stay in the navigation bar. */
+  protected isProtectedItem(itemName: string): boolean {
+    return EXCLUDED_ITEMS.includes(itemName) || this.isActiveItem(itemName);
   }
 
   protected async updateNavbarHiddenItem(itemName: string, visible: boolean): Promise<void> {
@@ -79,6 +103,71 @@ export class NavigationItemsMenuBuilder {
       items.push(itemName);
     }
     await this.setDisabledItems(items);
+  }
+
+  protected isHideConfirmationDismissed(): boolean {
+    return this.getNavbarConfiguration().get<boolean>(NavbarSettings.HideConfirmationDismissed, false);
+  }
+
+  protected async dismissHideConfirmation(): Promise<void> {
+    await this.configurationRegistry.updateConfigurationValue(
+      `${NavbarSettings.SectionName}.${NavbarSettings.HideConfirmationDismissed}`,
+      true,
+      CONFIGURATION_DEFAULT_SCOPE,
+    );
+  }
+
+  /**
+   * @param itemName plain item name, rendered by the in-app dialog, so not run through
+   * {@link escapeLabel} which only escapes Electron menu labels
+   * @returns whether the item may be hidden
+   */
+  protected async confirmHide(itemName: string): Promise<boolean> {
+    if (this.isHideConfirmationDismissed()) {
+      return true;
+    }
+
+    const { response } = await (await this.messageBox).showMessageBox({
+      type: 'question',
+      title: 'Hide From Navigation Bar',
+      message: `Hide "${itemName}" from the navigation bar?`,
+      detail: 'Right-click the navigation bar to show it again, or to reset the navigation bar entirely.',
+      buttons: [
+        NavigationItemsMenuBuilder.HIDE_BUTTON,
+        NavigationItemsMenuBuilder.DONT_SHOW_AGAIN_BUTTON,
+        NavigationItemsMenuBuilder.CANCEL_BUTTON,
+      ],
+      defaultId: 0,
+      cancelId: 2,
+    });
+
+    // allowlist: `response` is undefined when the dialog is dismissed, and anything
+    // unrecognised must not be read as consent to hide
+    if (
+      response !== NavigationItemsMenuBuilder.HIDE_BUTTON &&
+      response !== NavigationItemsMenuBuilder.DONT_SHOW_AGAIN_BUTTON
+    ) {
+      return false;
+    }
+
+    if (response === NavigationItemsMenuBuilder.DONT_SHOW_AGAIN_BUTTON) {
+      await this.dismissHideConfirmation();
+    }
+
+    return true;
+  }
+
+  /** Single entry point for both hide paths, so the confirmation cannot be bypassed. */
+  protected async setItemVisibility(itemName: string, visible: boolean): Promise<void> {
+    // bail out before prompting: a `Don't show again` answer must not persist as the side
+    // effect of a hide that is refused anyway
+    if (!visible && this.isProtectedItem(itemName)) {
+      return;
+    }
+    if (!visible && !(await this.confirmHide(itemName))) {
+      return;
+    }
+    await this.updateNavbarHiddenItem(itemName, visible);
   }
 
   /** True when the item is currently present in the main nav (has an index / is in itemOrder). */
@@ -128,7 +217,7 @@ export class NavigationItemsMenuBuilder {
     // it's at the end with parenthesis like itemName (2)
     const itemName = this.computeItemName(rawItemName);
 
-    if (EXCLUDED_ITEMS.includes(itemName) || isGroupedName(itemName)) {
+    if (isGroupedName(itemName) || this.isProtectedItem(itemName)) {
       return undefined;
     }
 
@@ -139,8 +228,7 @@ export class NavigationItemsMenuBuilder {
       label: `Hide ${itemDisplayName}`,
       visible: true,
       click: (): void => {
-        // flag the item as being disabled
-        this.updateNavbarHiddenItem(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
+        this.setItemVisibility(itemName, false).catch((e: unknown) => console.error('error disabling item', e));
       },
     };
     return item;
@@ -201,9 +289,11 @@ export class NavigationItemsMenuBuilder {
       label: this.escapeLabel(item.name),
       type: 'checkbox',
       checked: item.visible,
+      // a protected item cannot be unchecked; a hidden one stays restorable even while protected
+      enabled: !(item.visible && this.isProtectedItem(item.name)),
       click: (): void => {
         // send the item to the frontend to show/hide it
-        this.updateNavbarHiddenItem(item.name, !item.visible).catch((e: unknown) =>
+        this.setItemVisibility(item.name, !item.visible).catch((e: unknown) =>
           console.error('error disabling item', e),
         );
       },

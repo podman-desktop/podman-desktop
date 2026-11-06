@@ -6,6 +6,8 @@ import type { HTMLAnchorAttributes, MouseEventHandler } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 
+import { isNavItemSelected } from './nav-item-selection';
+
 interface Props extends Omit<HTMLAnchorAttributes, 'onclick'> {
   href: string;
   tooltip: string;
@@ -34,7 +36,7 @@ let {
 const navItems: Writable<number> = getContext('nav-items');
 const inSection = $navItems !== undefined;
 let uri = $derived(encodeURI(href));
-let selected = $derived(meta.url === uri || (uri !== '/' && meta.url.startsWith(uri)));
+let selected = $derived(isNavItemSelected(meta.url, href));
 
 let tooltipText = $derived(counter ? `${tooltip} (${counter})` : tooltip);
 

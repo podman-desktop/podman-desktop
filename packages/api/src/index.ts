@@ -67,6 +67,7 @@ export * from './log-type.js';
 export * from './manifest-info.js';
 export * from './menu.js';
 export * from './menu-context.js';
+export * from './navbar-settings.js';
 export * from './navigation-history-info.js';
 export * from './navigation-page.js';
 export * from './navigation-request.js';

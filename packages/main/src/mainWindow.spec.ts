@@ -16,14 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { Configuration } from '@desktop-framework/extension-api';
 import type Electron from 'electron';
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
+import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { MessageBox } from './plugin/message-box.js';
 import * as util from './util.js';
 
 vi.mock(import('electron-context-menu'), async () => ({
@@ -34,6 +37,7 @@ vi.mock(import('./development-mode-tracker.js'));
 vi.mock(import('./navigation-items-menu-builder.js'));
 vi.mock(import('./open-dev-tools.js'));
 vi.mock(import('./plugin/app-ready/app-identity-plugin.js'));
+vi.mock(import('./plugin/message-box.js'));
 
 vi.mock(import('./util.js'), async () => ({
   isLinux: vi.fn().mockReturnValue(false),
@@ -409,5 +413,54 @@ describe('createNewWindow', () => {
 
       expect(bwInstance.show).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('navbar context menu confirmations', () => {
+  const PENDING = Symbol('pending');
+
+  /**
+   * Races the promise itself, never a `.then()` of it: attaching a handler costs a microtask
+   * hop, which would let the sentinel win every time and make the check always report pending.
+   */
+  async function isPending(promise: Promise<unknown>): Promise<boolean> {
+    return (await Promise.race([promise, Promise.resolve(PENDING)])) === PENDING;
+  }
+
+  /**
+   * The message box promise handed to the menu builder when the configuration registry arrives.
+   * Wrapped in an object because an async function would adopt it and never return.
+   */
+  async function buildMenuAndTakeMessageBox(): Promise<{ messageBoxPromise: Promise<MessageBox> }> {
+    const { createNewWindow } = await import('./mainWindow.js');
+    await createNewWindow();
+
+    // the configuration registry arrives early in startup and builds the menu, while the message
+    // box only follows once every extension has loaded
+    getHandler(vi.mocked(ipcMain.on), 'configuration-registry')('', {} as ConfigurationRegistry);
+
+    const messageBoxPromise = vi.mocked(NavigationItemsMenuBuilder).mock.calls[0]?.[1];
+    assert(messageBoxPromise, 'Expected the menu builder to be given a message box');
+    return { messageBoxPromise };
+  }
+
+  test('queues a confirmation raised before the plugin system publishes the message box', async () => {
+    const { messageBoxPromise } = await buildMenuAndTakeMessageBox();
+
+    // a right-click landing in that gap waits for the dialog instead of failing
+    expect(await isPending(messageBoxPromise)).toBe(true);
+
+    const messageBox = new MessageBox({} as ApiSenderType);
+    getHandler(vi.mocked(ipcMain.on), 'message-box')('', messageBox);
+
+    await expect(messageBoxPromise).resolves.toBe(messageBox);
+  });
+
+  test('starts each window from its own unresolved message box', async () => {
+    // the deferred is scoped to createWindow, so this second window does not inherit the
+    // message box the previous test published
+    const { messageBoxPromise } = await buildMenuAndTakeMessageBox();
+
+    expect(await isPending(messageBoxPromise)).toBe(true);
   });
 });

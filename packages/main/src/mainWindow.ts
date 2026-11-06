@@ -28,6 +28,7 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import type { MessageBox } from './plugin/message-box.js';
 import { LoginMinimizeHandler } from './system/window/login-minimize-handler.js';
 import type { WindowHandler } from './system/window/window-handler.js';
 import { isLinux, isMac, stoppedExtensions } from './util.js';
@@ -44,6 +45,9 @@ export interface WindowConfig {
 let isExtensionsDevelopmentModeEnabled = false;
 
 async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
+  // published by the plugin system, which is built after this window
+  const messageBoxDeferred = Promise.withResolvers<MessageBox>();
+
   const INITIAL_APP_WIDTH = 1050;
   const INITIAL_APP_MIN_WIDTH = 640;
   const INITIAL_APP_HEIGHT = 700;
@@ -162,10 +166,15 @@ async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
     });
     developmentModeTracker.init();
 
-    navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry);
+    // awaited, so a right-click before the message box exists queues instead of failing
+    navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry, messageBoxDeferred.promise);
 
     // open dev tools (if required)
     openDevTools.open(browserWindow, configurationRegistry);
+  });
+
+  ipcMain.on('message-box', (_, messageBox: MessageBox) => {
+    messageBoxDeferred.resolve(messageBox);
   });
 
   let windowHandler: WindowHandler | undefined;
