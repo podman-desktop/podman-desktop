@@ -40,6 +40,14 @@ import { ExtensionInstaller } from './extension-installer.js';
 
 let extensionInstaller: ExtensionInstaller;
 
+const extractExtensionFilesMock = vi.fn<ExtensionInstaller['extractExtensionFiles']>();
+
+class TestExtensionInstaller extends ExtensionInstaller {
+  override async extractExtensionFiles(tmpFolderPath: string, finalFolderPath: string): Promise<void> {
+    return extractExtensionFilesMock(tmpFolderPath, finalFolderPath);
+  }
+}
+
 const apiSenderSendMock = vi.fn();
 const apiSender: ApiSenderType = {
   send: apiSenderSendMock,
@@ -243,6 +251,19 @@ describe('installFromImage tmp folder cleanup', () => {
   const TMP_FOLDER = '/fake/tmp/fakeiofakeimage-abc123';
 
   beforeEach(() => {
+    console.error = vi.fn();
+    extensionInstaller = new TestExtensionInstaller(
+      apiSender,
+      extensionLoader,
+      imageRegistry,
+      extensionsCatalog,
+      telemetryMock,
+      directories,
+      contributionManager,
+      ipcMainOnMock,
+      taskManager,
+      messageBox,
+    );
     vi.mocked(mkdtemp).mockResolvedValue(TMP_FOLDER);
     getImageConfigLabelsMock.mockResolvedValueOnce({
       'org.opencontainers.image.title': 'title',
@@ -264,7 +285,7 @@ describe('installFromImage tmp folder cleanup', () => {
   });
 
   test('should remove the tmp folder when extracting the extension files fails', async () => {
-    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockRejectedValueOnce(new Error('extract failed'));
+    extractExtensionFilesMock.mockRejectedValueOnce(new Error('extract failed'));
 
     await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
       'extract failed',
@@ -274,7 +295,7 @@ describe('installFromImage tmp folder cleanup', () => {
   });
 
   test('should use a unique tmp folder for each installation', async () => {
-    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    extractExtensionFilesMock.mockResolvedValueOnce();
     analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
 
     await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
@@ -285,16 +306,18 @@ describe('installFromImage tmp folder cleanup', () => {
 
   test('should keep the original error when the tmp folder cannot be removed', async () => {
     downloadAndExtractImageMock.mockRejectedValueOnce(new Error('layer download failed'));
-    vi.mocked(rm).mockRejectedValueOnce(new Error('EPERM'));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const cleanupError = new Error('EPERM');
+    vi.mocked(rm).mockRejectedValueOnce(cleanupError);
 
     await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
       'layer download failed',
     );
+
+    expect(console.error).toHaveBeenCalledWith(`Unable to remove the temporary folder ${TMP_FOLDER}`, cleanupError);
   });
 
   test('should remove the tmp folder when the installation succeeds', async () => {
-    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    extractExtensionFilesMock.mockResolvedValueOnce();
     analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
 
     await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
