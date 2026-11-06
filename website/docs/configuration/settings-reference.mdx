@@ -87,6 +87,13 @@ import TabItem from '@theme/TabItem';
 | `userConfirmation.fetchImageFiles`           | boolean | `true`             | Confirm fetching image layers                                                                                                                                                                                                                                                                                        |
 | `window.restorePosition`                     | boolean | `true`             | Restore window position on restart                                                                                                                                                                                                                                                                                   |
 
+## Podman connections
+
+| Setting                              | Type    | Default | Description                                                                                                                                                                       |
+| ------------------------------------ | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `podman.system.connections.defaults` | array   | `[]`    | Default SSH system connections to create at startup. See [Managed configuration use cases](/docs/configuration/managed-configuration-use-cases#default-remote-podman-connections) |
+| `podman.system.connections.remote`   | boolean | `false` | Load remote SSH connections in Podman Desktop                                                                                                                                     |
+
 ## Internal Settings
 
 These settings are automatically managed by Podman Desktop and should not typically be modified manually:
