@@ -202,6 +202,50 @@ describe('HyperVPrep.getStatus', () => {
   );
 });
 
+describe('HyperVPrep.isCurrentUserHyperVAdminGroupMember', () => {
+  test('returns true when the supported user is a group member', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(execPodman).mockClear();
+    vi.mocked(execPodman).mockResolvedValueOnce({
+      stdout: APPLIED_STATUS_OUTPUT,
+      stderr: '',
+      command: 'podman system hyperv-prep --status',
+    });
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(true);
+    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--status']);
+  });
+
+  test('returns false when the supported user is not a group member', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(execPodman).mockResolvedValueOnce({
+      stdout: NEEDED_STATUS_OUTPUT,
+      stderr: '',
+      command: 'podman system hyperv-prep --status',
+    });
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(false);
+  });
+
+  test('returns false without reading status when Podman is unsupported', async () => {
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '5.9.9' });
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(execPodman).mockClear();
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(false);
+    expect(execPodman).not.toHaveBeenCalled();
+  });
+
+  test('returns false and logs when membership status cannot be read', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    const error = new Error('status unavailable');
+    vi.mocked(execPodman).mockRejectedValueOnce(error);
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(false);
+    expect(telemetryLoggerMock.logError).toHaveBeenCalledWith('hypervPrepStatusCheckFailed', { error });
+  });
+});
+
 describe('HyperVPrep.refreshContext', () => {
   test('hides buttons when Podman is older than version 6', async () => {
     vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '5.4.0' });
