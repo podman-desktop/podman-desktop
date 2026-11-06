@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -31,7 +31,8 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
-import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
+import { navigationDragState } from './stores/navigation/navigation-drag-state.svelte';
+import { fetchNavigationRegistries, setNavigationItemOrder } from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
 
@@ -91,6 +92,21 @@ test('Test rendering of the navigation bar with empty items', async (_arg: unkno
   expect(volumes).toBeInTheDocument();
   const settings = screen.getByRole('link', { name: 'Settings' });
   expect(settings).toBeInTheDocument();
+});
+
+test('places reorder shortcut metadata on the focused navigation link', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: () => {},
+  });
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  expect(containers).toHaveAttribute('aria-keyshortcuts', 'Control+ArrowUp Control+ArrowDown');
+  expect(containers).toHaveAttribute('title', expect.stringContaining('Arrow to move'));
+  expect(containers.closest('[role="listitem"]')).not.toHaveAttribute('aria-keyshortcuts');
 });
 
 test('Test contributions', () => {
@@ -217,4 +233,85 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+test('native image drag is prevented on reorderable navigation items', async () => {
+  const meta = { url: '/' } as unknown as TinroRouteMeta;
+  await fetchNavigationRegistries();
+  render(AppNavigation, {
+    meta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const firstRow = screen.getAllByRole('listitem')[0];
+  const event = new Event('dragstart', { bubbles: true, cancelable: true });
+  firstRow.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+});
+
+test('Ctrl+ArrowDown moves the focused item down repeatedly and keeps focus', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  await fetchNavigationRegistries();
+  const { unmount } = render(AppNavigation, {
+    meta: { url: '/' } as TinroRouteMeta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const names = (): string[] =>
+    within(screen.getByRole('region', { name: 'Scrollable navigation list' }))
+      .getAllByRole('link')
+      .map(link => link.getAttribute('aria-label') ?? '');
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  containers.focus();
+  const startIndex = names().indexOf('Containers');
+
+  await fireEvent.keyDown(window, { key: 'ArrowDown', ctrlKey: true });
+  await vi.waitFor(() => expect(names().indexOf('Containers')).toBe(startIndex + 1));
+  await vi.waitFor(() => expect(screen.getByRole('link', { name: 'Containers' })).toHaveFocus());
+
+  // A second press without refocusing must move the item again.
+  await fireEvent.keyDown(window, { key: 'ArrowDown', ctrlKey: true });
+  await vi.waitFor(() => expect(names().indexOf('Containers')).toBe(startIndex + 2));
+  expect(screen.getByRole('link', { name: 'Containers' })).toHaveFocus();
+
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith(
+    'navbar.itemOrder',
+    expect.arrayContaining(['Pods', 'Containers']),
+  );
+  expect(navigationDragState.announcement).toMatch(/^Moved Containers to position \d+ of \d+$/);
+
+  unmount();
+  setNavigationItemOrder([]);
+});
+
+test('Escape cancels an in-progress reorder drag', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  vi.mocked(window.updateConfigurationValue).mockClear();
+  await fetchNavigationRegistries();
+  const { unmount } = render(AppNavigation, {
+    meta: { url: '/' } as TinroRouteMeta,
+    exitSettingsCallback: (): void => {},
+  });
+
+  const row = screen.getAllByRole('listitem')[0];
+  await fireEvent.mouseDown(row, { button: 0, clientX: 10, clientY: 10 });
+  vi.advanceTimersByTime(400);
+
+  await vi.waitFor(() => expect(screen.getByTestId('nav-drag-ghost')).toBeInTheDocument());
+  const ghost = screen.getByTestId('nav-drag-ghost');
+  // Selected-row background/foreground keep the ghost readable in every theme (incl. hc-light).
+  expect(ghost).toHaveClass('bg-(--pd-global-nav-icon-selected-bg)');
+  expect(ghost).toHaveClass('text-(--pd-global-nav-icon)');
+
+  await fireEvent.keyDown(window, { key: 'Escape' });
+  await vi.waitFor(() => expect(screen.queryByTestId('nav-drag-ghost')).not.toBeInTheDocument());
+
+  await fireEvent.pointerUp(row);
+  expect(window.updateConfigurationValue).not.toHaveBeenCalledWith('navbar.itemOrder', expect.anything());
+
+  unmount();
+  setNavigationItemOrder([]);
+  vi.useRealTimers();
 });

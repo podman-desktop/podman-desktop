@@ -13,9 +13,20 @@ interface NavRegistryEntryProps extends Omit<HTMLAnchorAttributes, 'href' | 'onc
   entry: NavigationRegistryEntry;
   meta: TinroRouteMeta;
   expanded: boolean;
+  /** Optional hint appended to the collapsed tooltip, e.g. the reorder shortcut. */
+  hint?: string;
+  /** Use the grab cursor instead of the pointer cursor (main navigation reordering). */
+  reorderable?: boolean;
 }
 
-let { entry, meta = $bindable(), expanded = false, ...props }: NavRegistryEntryProps = $props();
+let {
+  entry,
+  meta = $bindable(),
+  expanded = false,
+  hint,
+  reorderable = false,
+  ...props
+}: NavRegistryEntryProps = $props();
 </script>
 
 {#if !entry.hidden}
@@ -26,6 +37,8 @@ let { entry, meta = $bindable(), expanded = false, ...props }: NavRegistryEntryP
     ariaLabel={entry.name}
     bind:meta={meta}
     {expanded}
+    {hint}
+    {reorderable}
     {...props}>
     <div class="flex items-center w-full">
       <div class="flex-shrink-0 flex items-center justify-center w-6">

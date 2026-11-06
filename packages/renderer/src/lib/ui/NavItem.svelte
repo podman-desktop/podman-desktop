@@ -14,6 +14,10 @@ interface Props extends Omit<HTMLAnchorAttributes, 'onclick'> {
   onClick?: MouseEventHandler<HTMLAnchorElement>;
   counter?: number;
   expanded?: boolean;
+  /** Optional hint appended to the collapsed tooltip, e.g. the reorder shortcut. */
+  hint?: string;
+  /** Use the grab cursor instead of the pointer cursor (main navigation reordering). */
+  reorderable?: boolean;
   children?: Snippet;
 }
 
@@ -26,6 +30,8 @@ let {
   onClick,
   counter,
   expanded = false,
+  hint,
+  reorderable = false,
   children,
   class: className,
   ...props
@@ -37,6 +43,8 @@ let uri = $derived(encodeURI(href));
 let selected = $derived(meta.url === uri || (uri !== '/' && meta.url.startsWith(uri)));
 
 let tooltipText = $derived(counter ? `${tooltip} (${counter})` : tooltip);
+let tooltipWithHint = $derived(hint ? `${tooltipText} — ${hint}` : tooltipText);
+let rowCursorClass = $derived(reorderable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer');
 
 function handleClick(e: MouseEvent & { currentTarget: EventTarget & HTMLAnchorElement }): void {
   if (onClick) {
@@ -61,7 +69,7 @@ onDestroy(() => {
   title={expanded ? title : undefined}
   onclick={handleClick}>
   <div
-    class="flex py-2 px-2.5 items-center cursor-pointer min-h-9"
+    class="flex py-2 px-2.5 items-center {rowCursorClass} min-h-9"
     class:border-l-[4px]={!inSection}
     class:border-[var(--pd-global-nav-bg)]={!inSection}
     class:text-[color:var(--pd-global-nav-icon)]={!selected || !inSection}
@@ -72,7 +80,7 @@ onDestroy(() => {
     class:hover:text-[color:var(--pd-global-nav-icon-hover)]={!selected || inSection}
     class:hover:bg-[var(--pd-global-nav-icon-hover-bg)]={!selected || inSection}
     class:hover:border-l-[var(--pd-global-nav-icon-hover-bg)]={!selected && !inSection}>
-    <Tooltip right tip={expanded ? undefined : tooltipText} class="flex items-center w-full min-w-0" containerClass="relative w-full min-w-0">
+    <Tooltip right tip={expanded ? undefined : tooltipWithHint} class="flex items-center w-full min-w-0" containerClass="relative w-full min-w-0">
       {@render children?.()}
     </Tooltip>
   </div>
