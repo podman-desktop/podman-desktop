@@ -32,6 +32,8 @@ interface RenderOptions extends Omit<HTMLAnchorAttributes, 'href' | 'onclick'> {
   meta: Pick<TinroRouteMeta, 'url'>;
   ariaLabel?: string;
   expanded?: boolean;
+  hint?: string;
+  reorderable?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
@@ -126,6 +128,49 @@ describe('title', () => {
     });
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute('title');
+  });
+});
+
+describe('hint', () => {
+  test('appends the hint to the collapsed tooltip', async () => {
+    renderIt({
+      tooltip: 'Dashboard',
+      href: '/test',
+      meta: { url: '/test' },
+      expanded: false,
+      hint: 'Hold to reorder',
+    });
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+
+    expect(await screen.findByText('Dashboard — Hold to reorder')).toBeInTheDocument();
+  });
+
+  test('does not change the collapsed tooltip without a hint', async () => {
+    renderIt({ tooltip: 'Dashboard', href: '/test', meta: { url: '/test' }, expanded: false });
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
+  });
+});
+
+describe('reorderable', () => {
+  test('uses the grab cursor instead of the pointer cursor', () => {
+    renderIt({ tooltip: 'Dashboard', href: '/test', meta: { url: '/test' }, reorderable: true });
+
+    const element = screen.getByLabelText('Dashboard');
+    expect(element.firstChild).toHaveClass('cursor-grab');
+    expect(element.firstChild).toHaveClass('active:cursor-grabbing');
+    expect(element.firstChild).not.toHaveClass('cursor-pointer');
+  });
+
+  test('keeps the pointer cursor by default', () => {
+    renderIt({ tooltip: 'Dashboard', href: '/test', meta: { url: '/test' } });
+
+    expect(screen.getByLabelText('Dashboard').firstChild).toHaveClass('cursor-pointer');
   });
 });
 

@@ -210,7 +210,13 @@ function onReorderContextMenu(e: Event): void {
 }
 
 // --- Keyboard reorder: modifier+Arrow to move focused nav item ---
-function onKeyDown(e: KeyboardEvent): void {
+// Escape aborts an in-progress pointer drag.
+async function onKeyDown(e: KeyboardEvent): Promise<void> {
+  if (e.key === 'Escape' && isReorderDragging) {
+    e.preventDefault();
+    resetReorderDrag();
+    return;
+  }
   if (!e.ctrlKey && !e.metaKey) return;
   if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
 
@@ -230,6 +236,12 @@ function onKeyDown(e: KeyboardEvent): void {
 
   e.preventDefault();
   moveNavigationItemToSlot(sourceIndex, dropSlotIndex);
+
+  // Moving the keyed node drops focus, so restore it for the next keypress.
+  await tick();
+  if (focused.isConnected) {
+    focused.focus();
+  }
 }
 
 $effect(() => {
@@ -443,13 +455,15 @@ function onDidChangeConfigurationCallback(e: Event): void {
               {entry}
               bind:meta={meta}
               {expanded}
+              reorderable
+              hint={itemTitle}
               aria-keyshortcuts={reorderKeyShortcuts}
               title={itemTitle} />
           </div>
         {/each}
         {#if showDropLine}
           <div
-            class="absolute left-2 right-2 h-0.5 rounded-full pointer-events-none z-20 bg-[var(--pd-global-nav-icon-selected-highlight)]"
+            class="absolute left-2 right-2 h-0.5 rounded-full pointer-events-none z-[60] bg-[var(--pd-global-nav-icon-selected-highlight)]"
             style:top="{dropIndicatorOffsetY}px"
             aria-hidden="true"></div>
         {/if}
@@ -521,7 +535,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
 
   {#if dragGhost}
     <div
-      class="fixed pointer-events-none z-50 shadow-lg opacity-90 scale-[1.03] bg-(--pd-global-nav-bg) text-(--pd-global-nav-icon-selected) border border-(--pd-global-nav-bg-border)"
+      class="fixed pointer-events-none z-50 shadow-[0_10px_30px_var(--pd-shadow-color-strong)] opacity-90 scale-[1.03] bg-(--pd-global-nav-icon-selected-bg) text-(--pd-global-nav-icon) border border-(--pd-global-nav-bg-border)"
       style:top="{ghostPointerY}px"
       style:left="{ghostPointerX}px"
       style:width="{navWidth}px"
@@ -529,7 +543,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
       data-testid="nav-drag-ghost">
       <div class="flex py-2 px-2.5 items-center min-h-9">
         <div class="flex items-center w-full min-w-0">
-          <div class="relative flex w-6 shrink-0 items-center justify-center text-(--pd-global-nav-icon-selected)">
+          <div class="relative flex w-6 shrink-0 items-center justify-center">
             {#if dragGhost.icon}
               <Icon icon={dragGhost.icon.icon} size={dragGhost.icon.size} ariaHidden />
             {/if}
