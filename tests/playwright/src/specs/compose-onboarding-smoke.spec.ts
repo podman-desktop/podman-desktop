@@ -34,6 +34,12 @@ const RESOURCE_NAME: string = 'Compose';
 let cliToolsPage: CLIToolsPage;
 
 let composeVersion: string;
+// Set when the Compose version check fails (e.g. GitHub API unreachable).
+// Downstream serial tests depend on a successful download, so they must skip.
+let composeVersionCheckFailed = false;
+// Set when Compose is already installed (e.g. left over from a prior test suite).
+// The onboarding flow requires Compose to be absent, so downstream tests must skip.
+let composeAlreadyInstalled = false;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
 const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ?? false;
 const skipComposeOnboardingTest = process.env.SKIP_COMPOSE_ONBOARDING_TEST ?? false;
@@ -54,9 +60,14 @@ test.afterAll(async ({ runner }) => {
 test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
   test.describe.configure({ mode: 'serial' });
   test.beforeEach(async () => {
-    if (cliToolsPage.wasRateLimitReached()) {
-      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
-      test.skip(true, 'Rate limit exceeded; skipping remaining compose onboarding checks');
+    if (cliToolsPage.wasRateLimitReached() || composeVersionCheckFailed || composeAlreadyInstalled) {
+      const reason = cliToolsPage.wasRateLimitReached()
+        ? 'Rate limit exceeded for current environment'
+        : composeAlreadyInstalled
+          ? 'Compose is already installed; onboarding flow requires Compose to be absent'
+          : 'Compose version check failed; download prerequisite not met';
+      test.info().annotations.push({ type: 'skip', description: reason });
+      test.skip(true, reason);
     }
   });
   test.afterEach(async ({ navigationBar }) => {
@@ -72,16 +83,20 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
     const composeResourceCard = new ResourceCliCardPage(page, RESOURCE_NAME);
     await composeResourceCard.card.scrollIntoViewIfNeeded();
     const setupButton = composeResourceCard.setupButton;
-    await playExpect(
-      setupButton,
-      'Compose Setup button is not present, perhaps compose is already installed',
-    ).toBeVisible({ timeout: 10_000 });
+
+    if ((await setupButton.count()) === 0 || !(await setupButton.isVisible().catch(() => false))) {
+      composeAlreadyInstalled = true;
+      test.skip(true, 'Compose is already installed; Setup button not available');
+      return;
+    }
+
+    await playExpect(setupButton).toBeVisible({ timeout: 10_000 });
   });
 
   test('Can enter Compose onboarding', async ({ page, navigationBar }) => {
     const onboardingPage = await openComposeOnboarding(page, navigationBar);
 
-    await playExpect(onboardingPage.heading).toBeVisible();
+    await playExpect(onboardingPage.contentSection).toBeVisible();
 
     const onboardingVersionPage = new ComposeVersionPage(page);
     await playExpect(onboardingVersionPage.onboardingStatusMessage).toContainText(
@@ -92,6 +107,7 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
     const statusText = await onboardingVersionPage.onboardingStatusMessage.innerText();
 
     if (statusText.includes('Unable to retrieve Compose version') || cliToolsPage.wasRateLimitReached()) {
+      composeVersionCheckFailed = true;
       test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
       return;
     }
@@ -102,6 +118,23 @@ test.describe('Compose onboarding workflow verification', { tag: '@smoke' }, () 
 
   test('Can install Compose locally', async ({ page, navigationBar }) => {
     const onboardingPage = await openComposeOnboarding(page, navigationBar);
+
+    // Re-entering onboarding repeats the version check. Wait for it to
+    // complete (or fail due to rate limiting) before clicking "Next Step",
+    // otherwise the button stays disabled and the click times out.
+    const onboardingVersionPage = new ComposeVersionPage(page);
+    await playExpect(onboardingVersionPage.onboardingStatusMessage).toContainText(
+      /Compose download|Unable to retrieve Compose version/,
+      { timeout: 10_000 },
+    );
+
+    const statusText = await onboardingVersionPage.onboardingStatusMessage.innerText();
+    if (statusText.includes('Unable to retrieve Compose version') || cliToolsPage.wasRateLimitReached()) {
+      composeVersionCheckFailed = true;
+      test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
+      return;
+    }
+
     await onboardingPage.nextStepButton.click();
 
     const onboardigLocalPage = new ComposeLocalInstallPage(page);

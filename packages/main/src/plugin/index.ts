@@ -56,6 +56,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImageSearchOptions,
   ImageSearchResult,
   ImagesSaveOptions,
@@ -152,7 +153,7 @@ import type {
   V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
-import checkDiskSpacePkg from 'check-disk-space';
+import { checkDiskSpace } from 'check-disk-space';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
@@ -263,11 +264,6 @@ import { ViewRegistry } from './view-registry.js';
 import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
-
-// workaround for ESM
-const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
-  path: string,
-) => Promise<{ free: number }>;
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
@@ -1375,6 +1371,17 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'container-provider-registry:resolveImage',
+      async (
+        _listener,
+        providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+        reference: string,
+      ): Promise<ImageLocation | undefined> => {
+        return containerProviderRegistry.resolveImage(providerContainerConnectionInfo, reference);
+      },
+    );
+
+    this.ipcHandle(
       'container-provider-registry:pullImage',
       async (
         _listener,
@@ -1438,7 +1445,42 @@ export class PluginSystem {
           cancellationTokenRegistry,
           cancellableTokenId,
         );
-        return containerProviderRegistry.updateImages(images, abortController?.signal);
+        const task = taskManager.createTask({
+          title: `Updating image${images.length > 1 ? 's' : ''}`,
+          cancellable: cancellableTokenId !== undefined,
+          cancellationTokenSourceId: cancellableTokenId,
+        });
+
+        try {
+          const results = await containerProviderRegistry.updateImages(images, abortController?.signal);
+          const failures = results.filter(result => result.status === 'error');
+          const counts = {
+            updated: results.filter(result => result.status === 'updated').length,
+            'up to date': results.filter(result => result.status === 'normal').length,
+            skipped: results.filter(result => result.status === 'skipped').length,
+            failed: failures.length,
+          };
+          const summary = Object.entries(counts)
+            .filter(([, count]) => count > 0)
+            .map(([status, count]) => `${count} ${status}`)
+            .join(', ');
+          task.name = `Image update: ${summary || 'No images updated'}`;
+          if (abortController?.signal.aborted) {
+            task.status = 'canceled';
+          } else if (failures.length > 0) {
+            task.error = failures.map(result => `${result.imageRef}: ${result.message}`).join('\n');
+          } else {
+            task.status = 'success';
+          }
+          return results;
+        } catch (error: unknown) {
+          if (abortController?.signal.aborted) {
+            task.status = 'canceled';
+          } else {
+            task.error = String(error);
+          }
+          throw error;
+        }
       },
     );
 
@@ -2509,6 +2551,13 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'extension-loader:setExtensionAutoUpdate',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string, enabled: boolean): Promise<void> => {
+        return this.extensionLoader.setExtensionAutoUpdate(extensionId, enabled);
+      },
+    );
+
+    this.ipcHandle(
       'shell:openExternal',
       async (_listener: Electron.IpcMainInvokeEvent, link: string): Promise<void> => {
         if (securityRestrictionCurrentHandler.handler) {
@@ -3388,7 +3437,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<containerDesktopAPI.ImageChecks | undefined> => {
         let token;
@@ -3396,6 +3446,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageChecker.check(id, image, token);
       },
     );
@@ -3409,7 +3460,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<ImageFilesystemLayersUI | undefined> => {
         let token;
@@ -3417,6 +3469,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageFiles.getFilesystemLayers(id, image, token);
       },
     );

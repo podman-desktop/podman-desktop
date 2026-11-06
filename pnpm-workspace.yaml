@@ -33,8 +33,8 @@ overrides:
   tmp-promise>tmp: ^0.2.7
   tar: ^7.5.3
   cheerio>undici: ^7.18.2
-  undici@^6: ^6.29.0
-  undici@^8: ^8.11.2
+  undici@^6: ^6.29.1
+  undici@^8: ^8.12.3
   minimatch>@isaacs/brace-expansion: ^5.0.1
   brace-expansion@^1: ^1.1.21
   brace-expansion@^2: ^2.1.7
@@ -53,9 +53,9 @@ overrides:
   ajv@^8: ^8.18.0
   svelte>devalue: ^5.9.3
   protobufjs: ^7.6.5
-  follow-redirects: ^1.16.0
+  follow-redirects: ^1.16.1
   uuid: ^14.0.0
-  ip-address@^10: ^10.5.1
+  ip-address@^10: ^10.7.4
   fast-uri: '>=4.1.5'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.16.1'
@@ -65,13 +65,13 @@ overrides:
   form-data: '>=4.0.6'
   '@docusaurus/utils@3>gray-matter': npm:@11ty/gray-matter@^2.1.0
   '@docusaurus/types>joi': ^17.13.6
-  markdown-it: ^14.3.2
-  launch-editor: '>=2.14.1'
+  markdown-it: ^14.3.3
+  launch-editor: ^2.14.2
   webpack-dev-server: '>=5.2.6'
   '@babel/core': '>=7.29.6 <8.0.0'
   websocket-driver: '>=0.7.5'
   svgo: '>=3.3.5 <4.0.0'
-  body-parser: '>=2.3.0'
+  body-parser: ^2.4.0
   builder-util-runtime: '>=9.7.0'
   postcss: '>=8.5.18'
   webpack-dev-middleware@^8: ^8.3.0
@@ -86,6 +86,7 @@ overrides:
   katex@^0: ^0.19.0
   source-map-js@^1: ^1.2.2
   image-size@^2: ^2.0.4
+  re2js@^2: ^2.9.1
 nodeLinker: hoisted
 allowBuilds:
   '@biomejs/biome': true

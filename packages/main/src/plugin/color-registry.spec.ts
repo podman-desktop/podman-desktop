@@ -329,6 +329,38 @@ test('initContent', async () => {
   expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.accent1[400]);
 });
 
+test('initContent registers content-sub-header with high contrast values', async () => {
+  colorRegistry.initColors();
+
+  const expected = {
+    light: tailwindColorPalette.accent1[600],
+    dark: tailwindColorPalette.accent1[400],
+    'hc-light': tailwindColorPalette.accent1[700],
+    'hc-dark': tailwindColorPalette.accent1[500],
+  };
+  for (const [theme, value] of Object.entries(expected)) {
+    const color = colorRegistry.listColors(theme).find(c => c.id === 'content-sub-header');
+    expect(color?.value, theme).toBe(value);
+  }
+});
+
+test('initContent registers the dashboard card colors, white in the light theme', async () => {
+  colorRegistry.initColors();
+
+  const expected = {
+    light: tailwindColorPalette.white,
+    dark: tailwindColorPalette.charcoal[600],
+    'hc-light': tailwindColorPalette.accent1[50],
+    'hc-dark': tailwindColorPalette.neutral[800],
+  };
+  for (const id of ['content-dashboard-card-bg', 'content-dashboard-card-hover-bg']) {
+    for (const [theme, value] of Object.entries(expected)) {
+      const color = colorRegistry.listColors(theme).find(c => c.id === id);
+      expect(color?.value, `${id} ${theme}`).toBe(value);
+    }
+  }
+});
+
 test('initDropdown registers dropdown-border', async () => {
   colorRegistry.initColors();
 

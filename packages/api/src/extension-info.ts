@@ -53,6 +53,16 @@ export interface ExtensionInfo {
     version: string;
     ociUri: string;
   };
+  // true if the updates of this extension are not applied automatically
+  autoUpdateDisabled?: boolean;
   repository?: string | { type: string; url: string; directory?: string };
   homepage?: string;
+}
+
+/**
+ * The extensions installed by the user and the bundled ones are updated from the catalog, a bundled extension being
+ * replaced by its new version. Extensions loaded from a development folder are not.
+ */
+export function isAutoUpdatable(extension: Pick<ExtensionInfo, 'removable' | 'bundled'>): boolean {
+  return extension.removable || extension.bundled;
 }

@@ -733,7 +733,9 @@ export class ColorRegistry {
 
     this.registerColor(`${ct}sub-header`, {
       dark: accent1[400],
-      light: accent1[500],
+      light: accent1[600],
+      hcDark: accent1[500],
+      hcLight: accent1[700],
     });
 
     this.registerColor(`${ct}header-icon`, {
@@ -837,6 +839,21 @@ export class ColorRegistry {
     this.registerColor(`${ct}card-carousel-card-hover-bg`, {
       dark: charcoal[600],
       light: gray[100],
+      hcDark: neutral[800],
+      hcLight: accent1[50],
+    });
+
+    // cards placed straight on the page in the enhanced dashboard; white in light so they stand out from content-bg
+    this.registerColor(`${ct}dashboard-card-bg`, {
+      dark: charcoal[600],
+      light: white,
+      hcDark: neutral[800],
+      hcLight: accent1[50],
+    });
+
+    this.registerColor(`${ct}dashboard-card-hover-bg`, {
+      dark: charcoal[600],
+      light: white,
       hcDark: neutral[800],
       hcLight: accent1[50],
     });

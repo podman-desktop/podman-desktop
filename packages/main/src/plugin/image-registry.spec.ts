@@ -52,6 +52,11 @@ import { decompressZstd } from './util/zstd.js';
 let imageRegistry: ImageRegistry;
 let server: SetupServer | undefined = undefined;
 
+// manifest fixtures declare static layer sizes, align them with the blobs served by the test
+function withLayerSizes<T extends { layers: { size: number }[] }>(manifest: T, sizes: (number | undefined)[]): T {
+  return { ...manifest, layers: manifest.layers.map((layer, index) => ({ ...layer, size: sizes[index] })) };
+}
+
 const pxoxyIsEnabledMock = vi.fn();
 const proxyGetProxyMock = vi.fn();
 
@@ -81,7 +86,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  server?.close();
+  // msw 3 throws when closing a server that is not listening
+  if (server?.readyState) {
+    server.close();
+  }
 });
 
 vi.mock(import('./util/zstd.js'));
@@ -217,7 +225,7 @@ describe('extract auth info', () => {
         () => new HttpResponse('', { status: 401, headers: { 'Www-Authenticate': 'Basic realm="Registry Realm"' } }),
       ),
     );
-    server.listen({ onUnhandledRequest: 'error' });
+    server.listen({ onUnhandledFrame: 'error' });
     const value = await imageRegistry.getAuthInfo('https://my-podman-desktop-fake-registry.io');
     expect(value).toBeDefined();
     expect(value?.authUrl).toBe('https://my-podman-desktop-fake-registry.io/v2/');
@@ -236,7 +244,7 @@ describe('extract auth info', () => {
           }),
       ),
     );
-    server.listen({ onUnhandledRequest: 'error' });
+    server.listen({ onUnhandledFrame: 'error' });
 
     const value = await imageRegistry.getAuthInfo('https://my-podman-desktop-fake-registry.io');
     expect(value).toBeDefined();
@@ -455,7 +463,7 @@ test('expect getImageConfigLabels works', async () => {
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const labels = await imageRegistry.getImageConfigLabels('my-podman-desktop-fake-registry.io/my/extension');
   expect(labels).toBeDefined();
@@ -492,7 +500,7 @@ test('expect getManifestFromImageName works', async () => {
   ];
 
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const manifest = await imageRegistry.getManifestFromImageName('my-podman-desktop-fake-registry.io/my/extension');
   expect(manifest).toStrictEqual(imageRegistryManifestJson);
@@ -513,7 +521,7 @@ test('expect getManifestFromImageName works with digest', async () => {
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const manifest = await imageRegistry.getManifestFromImageName(
     `my-podman-desktop-fake-registry.io/my/extension@${digest}`,
@@ -536,7 +544,7 @@ test('expect getManifestFromImageName works with tag and digest', async () => {
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   // Tag is ignored when digest is present, digest is used for manifest lookup
   const manifest = await imageRegistry.getManifestFromImageName(
@@ -591,7 +599,7 @@ test('expect downloadAndExtractImage works', async () => {
     // image index
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
-      () => HttpResponse.json(imageRegistryManifestJson),
+      () => HttpResponse.json(withLayerSizes(imageRegistryManifestJson, [blobFile1.length, blobFile2.length])),
     ),
 
     // file 2
@@ -617,7 +625,7 @@ test('expect downloadAndExtractImage works', async () => {
     }),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const destFolder = path.resolve(os.tmpdir(), 'test-folder');
   const logFn = vi.fn();
@@ -677,6 +685,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
   const readTarZstFile = (): Buffer => {
     return fs.readFileSync(tmpZstFile);
   };
+  const zstFileSize = readTarZstFile().length;
 
   // mock http responses
   const handlers = [
@@ -688,7 +697,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
     // image index
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
-      () => HttpResponse.json(imageRegistryManifestZstdJson),
+      () => HttpResponse.json(withLayerSizes(imageRegistryManifestZstdJson, [zstFileSize, zstFileSize])),
     ),
 
     // file 1
@@ -716,7 +725,7 @@ test('expect downloadAndExtractImage works with zstd', async () => {
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const destFolder = path.resolve(os.tmpdir(), 'test-folder');
   const logFn = vi.fn();
@@ -753,14 +762,14 @@ test('expect downloadAndExtractImage to remove the temporary files when decompre
     ),
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
-      () => HttpResponse.json(imageRegistryManifestZstdJson),
+      () => HttpResponse.json(withLayerSizes(imageRegistryManifestZstdJson, [12, 12])),
     ),
     http.get(
       'https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/:digest',
       () => new HttpResponse('zstd-content', { headers: { 'content-type': 'application/octet-stream' } }),
     ),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const destFolder = path.resolve(os.tmpdir(), 'test-folder');
   // the layer is rejected, as a decompression bomb would be
@@ -781,6 +790,102 @@ test('expect downloadAndExtractImage to remove the temporary files when decompre
   } finally {
     await fs.promises.rm(destFolder, { recursive: true, force: true });
   }
+});
+
+describe('downloadAndExtractImage size validation', () => {
+  const destFolder = path.resolve(os.tmpdir(), 'test-folder-size-validation');
+  const tmpFile = path.resolve(
+    os.tmpdir(),
+    'sha256_ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4.zst',
+  );
+
+  // a body without content-length, so the size can only be checked while streaming
+  function streamOf(content: string): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      start(controller): void {
+        controller.enqueue(new TextEncoder().encode(content));
+        controller.close();
+      },
+    });
+  }
+
+  function serve(sizes: (number | undefined)[], blob: () => Response): void {
+    server = setupServer(
+      http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+        HttpResponse.json(imageRegistryManifestMultiArchJson),
+      ),
+      http.get(
+        'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+        () => HttpResponse.json(withLayerSizes(imageRegistryManifestZstdJson, sizes)),
+      ),
+      http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/blobs/:digest', blob),
+    );
+    server.listen({ onUnhandledFrame: 'error' });
+  }
+
+  beforeEach(() => {
+    vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+    vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('12345');
+    vi.mocked(decompressZstd).mockResolvedValue();
+    vi.spyOn(nodeTar, 'extract').mockResolvedValue();
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(destFolder, { recursive: true, force: true });
+  });
+
+  test('rejects a blob larger than its declared size and removes the temporary file', async () => {
+    serve([4, 4], () => new HttpResponse(streamOf('zstd-content')));
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow(
+      'Blob sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 exceeds its declared size of 4 bytes',
+    );
+    expect(decompressZstd).not.toHaveBeenCalled();
+    expect(fs.existsSync(tmpFile)).toBeFalsy();
+  });
+
+  test('rejects a blob smaller than its declared size and removes the temporary file', async () => {
+    serve([100, 100], () => new HttpResponse(streamOf('zstd-content')));
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow(
+      'Blob sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 size mismatch: expected 100 bytes, received 12',
+    );
+    expect(decompressZstd).not.toHaveBeenCalled();
+    expect(fs.existsSync(tmpFile)).toBeFalsy();
+  });
+
+  test('rejects a blob whose content-length disagrees with its declared size before reading it', async () => {
+    serve([4, 4], () => new HttpResponse('zstd-content', { headers: { 'content-length': '12' } }));
+    const logger = vi.fn();
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, logger),
+    ).rejects.toThrow(
+      'Blob sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 size mismatch: expected 4 bytes, registry announced 12',
+    );
+    // the logger reports progress per received chunk
+    expect(logger).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    { label: 'missing', size: undefined },
+    { label: 'negative', size: -1 },
+    { label: 'non-integer', size: 1.5 },
+  ])('rejects a manifest with a $label layer size', async ({ size }) => {
+    const blobHandler = vi.fn(() => new HttpResponse('zstd-content'));
+    serve([size, 12], blobHandler);
+
+    await expect(
+      imageRegistry.downloadAndExtractImage('my-podman-desktop-fake-registry.io/my/extension', destFolder, vi.fn()),
+    ).rejects.toThrow(
+      'Invalid size declared for layer sha256:ec4d84bbb887a9dba10a4551252dde152bbb42e3b02e501b44218c9c5425eac4 of the image my-podman-desktop-fake-registry.io/my/extension',
+    );
+    expect(blobHandler).not.toHaveBeenCalled();
+  });
 });
 
 describe('expect checkCredentials', async () => {
@@ -1057,7 +1162,7 @@ test('getManifestFromUrl returns the expected manifest with mediaType', async ()
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   // mock findBestManifest
   const spyFindBestManifest = vi.spyOn(imageRegistry, 'findBestManifest');
@@ -1103,7 +1208,7 @@ test('getManifestFromUrl returns the expected manifest without mediaType but wit
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   // mock findBestManifest
   const spyFindBestManifest = vi.spyOn(imageRegistry, 'findBestManifest');
@@ -1155,7 +1260,7 @@ test('getManifestFromUrl returns the expected manifest with docker manifest v2',
     ),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   // mock findBestManifest
   const spyFindBestManifest = vi.spyOn(imageRegistry, 'findBestManifest');
@@ -1229,7 +1334,7 @@ test('getToken with registry auth', async () => {
     }),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const token = await imageRegistry.getToken(
     {
@@ -1256,7 +1361,7 @@ test('getToken without registry auth', async () => {
     http.get('https://my-podman-desktop-fake-registry.io/', () => HttpResponse.json({ token: '12345' })),
   ];
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const token = await imageRegistry.getToken(
     {
@@ -1323,7 +1428,7 @@ test('searchImages with proxy', async () => {
   ];
 
   server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   await expect(imageRegistry.searchImages({ query: 'anything' })).rejects.toThrow('searching images');
 });
@@ -1336,7 +1441,7 @@ test('searchImages without registry', async () => {
     },
   ];
   server = setupServer(http.get('https://index.docker.io/v1/search', () => HttpResponse.json({ results: list })));
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
   const result = await imageRegistry.searchImages({ query: 'http', limit: 10 });
   expect(result).toEqual(list);
 });
@@ -1349,7 +1454,7 @@ test('searchImages without limit', async () => {
     },
   ];
   server = setupServer(http.get('https://index.docker.io/v1/search', () => HttpResponse.json({ results: list })));
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
   const result = await imageRegistry.searchImages({ query: 'http' });
   expect(result).toEqual(list);
 });
@@ -1366,7 +1471,7 @@ test.each([
     },
   ];
   server = setupServer(http.get(expectedUrl, () => HttpResponse.json({ results: list })));
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
   const result = await imageRegistry.searchImages({ registry, query: 'http', limit: 10 });
   expect(result).toEqual(list);
 });
@@ -1387,7 +1492,7 @@ test('listImageTags', async () => {
   server = setupServer(
     http.get('https://registry.example.com/v2/a-name/tags/list', () => HttpResponse.json({ tags: ['1', '2', '3'] })),
   );
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 
   const result = await imageRegistry.listImageTags({ image: 'an-image' });
   expect(result).toEqual(['1', '2', '3']);

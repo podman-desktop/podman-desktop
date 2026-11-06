@@ -20,14 +20,17 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type {
+  ImageFilesystemLayersUI,
+  ImageInfo,
   ImageUpdateInfo,
+  ImageUpdateResult,
   NotificationCardOptions,
   ProviderContainerConnectionInfo,
   ProviderInfo,
 } from '@desktop-framework/api';
 import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { PlayKubeInfo } from '@desktop-framework/api/libpod';
-import type { PullEvent } from '@desktop-framework/extension-api';
+import type { ImageChecks, PullEvent } from '@desktop-framework/extension-api';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
@@ -45,6 +48,8 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { ImageCheckerImpl } from './image-checker.js';
+import { ImageFilesRegistry } from './image-files-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
@@ -100,6 +105,8 @@ vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
 );
 vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
+vi.mock(import('./image-checker.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageCheckerImpl'));
+vi.mock(import('./image-files-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageFilesRegistry'));
 
 let pluginSystem: TestPluginSystem;
 
@@ -1278,6 +1285,19 @@ describe('checkImageUpdateStatus handler', () => {
 });
 
 describe('updateImages handler', () => {
+  type UpdateImagesHandler = (
+    event: unknown,
+    images: ImageUpdateInfo[],
+    cancellableTokenId?: number,
+  ) => Promise<{ result: ImageUpdateResult[] } | { error: Error }>;
+
+  let task: TaskImpl;
+
+  beforeEach(() => {
+    task = new TaskImpl('update-image-task', 'Updating image');
+    vi.mocked(TaskManager.prototype.createTask).mockReturnValue(task);
+  });
+
   test('should delegate image updates to the container provider registry', async () => {
     const handle = getHandler<
       (
@@ -1287,8 +1307,8 @@ describe('updateImages handler', () => {
     >('container-provider-registry:updateImages');
 
     const images: ImageUpdateInfo[] = [
-      { engineId: 'podman.podman-machine-default', image: 'nginx', tag: 'latest' },
-      { engineId: 'podman.podman-machine-default', image: 'redis', tag: '7' },
+      { engineId: 'podman.podman-machine-default', id: 'sha256:nginx' },
+      { engineId: 'podman.podman-machine-default', id: 'sha256:redis' },
     ];
     const expectedResults = [
       { imageRef: 'nginx', updated: true, status: 'updated', message: 'Image updated successfully' },
@@ -1300,6 +1320,126 @@ describe('updateImages handler', () => {
 
     expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images, undefined);
     expect(result.result).toEqual(expectedResults);
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating images',
+      cancellable: false,
+      cancellationTokenSourceId: undefined,
+    });
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('success');
+    expect(task.name).toBe('Image update: 1 updated, 1 up to date');
+  });
+
+  test.each([
+    {
+      status: 'updated',
+      updated: true,
+      message: 'Image updated successfully',
+      taskStatus: 'success',
+      summary: '1 updated',
+    },
+    { status: 'normal', updated: false, message: 'Already up to date', taskStatus: 'success', summary: '1 up to date' },
+    { status: 'skipped', updated: false, message: 'Image has no tags', taskStatus: 'success', summary: '1 skipped' },
+    { status: 'error', updated: false, message: 'Registry unavailable', taskStatus: 'failure', summary: '1 failed' },
+  ] as const)('records a $status result', async ({ status, updated, message, taskStatus, summary }) => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const results: ImageUpdateResult[] = [{ imageRef: 'nginx:latest', status, updated, message }];
+    const { promise, resolve } = Promise.withResolvers<ImageUpdateResult[]>();
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockReturnValue(promise);
+
+    const pending = handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }]);
+
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating image',
+      cancellable: false,
+      cancellationTokenSourceId: undefined,
+    });
+    expect(task.state).toBe('running');
+    expect(task.status).toBe('in-progress');
+
+    resolve(results);
+    await expect(pending).resolves.toEqual({ result: results });
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe(taskStatus);
+    expect(task.name).toBe(`Image update: ${summary}`);
+    if (taskStatus === 'failure') {
+      expect(task.error).toBe('nginx:latest: Registry unavailable');
+    } else {
+      expect(task.error).toBeUndefined();
+    }
+  });
+
+  test('summarizes tag outcomes and includes details only for failures', async () => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const results: ImageUpdateResult[] = [
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'nginx:alpine', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'nginx:stable', updated: false, status: 'normal', message: 'Already up to date' },
+      { imageRef: 'sha256:untagged', updated: false, status: 'skipped', message: 'Image has no tags' },
+      { imageRef: 'other:latest', updated: false, status: 'error', message: 'Registry unavailable' },
+      { imageRef: 'private:latest', updated: false, status: 'error', message: 'Unauthorized' },
+    ];
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue(results);
+
+    await expect(handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }])).resolves.toEqual({ result: results });
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('failure');
+    expect(task.error).toBe('other:latest: Registry unavailable\nprivate:latest: Unauthorized');
+    expect(task.name).toBe('Image update: 2 updated, 1 up to date, 1 skipped, 2 failed');
+  });
+
+  test('completes the task when no results are returned', async () => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
+
+    await expect(handle(undefined, [])).resolves.toEqual({ result: [] });
+
+    expect(task.state).toBe('completed');
+    expect(task.name).toBe('Image update: No images updated');
+  });
+
+  test('marks a rejected update as failed and preserves the IPC error', async () => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const error = new Error('Engine unavailable');
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockRejectedValue(error);
+
+    await expect(handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }])).resolves.toEqual({ error });
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('failure');
+    expect(task.error).toBe('Error: Engine unavailable');
+  });
+
+  test.each(['result', 'rejection'] as const)('marks cancellation as canceled for a backend %s', async outcome => {
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const { promise, resolve, reject } = Promise.withResolvers<ImageUpdateResult[]>();
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockReturnValue(promise);
+
+    const pending = handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }], tokenId);
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating image',
+      cancellable: true,
+      cancellationTokenSourceId: tokenId,
+    });
+    await cancelTokenHandler(undefined, tokenId);
+    const signal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
+    expect(signal?.aborted).toBe(true);
+
+    if (outcome === 'result') {
+      resolve([{ imageRef: 'nginx:latest', updated: false, status: 'error', message: 'Update canceled' }]);
+    } else {
+      reject(new Error('Update canceled'));
+    }
+    await pending;
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('canceled');
+    expect(task.error).toBeUndefined();
   });
 
   test('should forward an abort signal when a cancellation token id is passed', async () => {
@@ -1315,7 +1455,7 @@ describe('updateImages handler', () => {
       ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
     >('container-provider-registry:updateImages');
 
-    const images: ImageUpdateInfo[] = [{ engineId: 'podman.podman-machine-default', image: 'nginx', tag: 'latest' }];
+    const images: ImageUpdateInfo[] = [{ engineId: 'podman.podman-machine-default', id: 'sha256:nginx' }];
     vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
 
     await handle(undefined, images, tokenId);
@@ -1461,4 +1601,102 @@ test('navigation:getSearchableRoutes handler should delegate to navigationManage
 
   expect(NavigationManager.prototype.getSearchableRoutes).toHaveBeenCalled();
   expect(result).toEqual({ result: mockRoutes });
+});
+
+describe('image handlers resolving the image by engine and image id', () => {
+  const fakeImage: ImageInfo = {
+    Id: 'sha256:abc',
+    ParentId: '',
+    RepoTags: ['quay.io/podman/hello:latest'],
+    Created: 0,
+    Size: 0,
+    VirtualSize: 0,
+    SharedSize: 0,
+    Labels: {},
+    Containers: 0,
+    engineId: 'podman.podman',
+    engineName: 'podman',
+    engineType: 'podman',
+    Digest: 'sha256:abc',
+  };
+
+  type ImageHandler<T> = (
+    _listener: unknown,
+    id: string,
+    engineId: string,
+    imageId: string,
+    tokenId?: number,
+  ) => Promise<{ result?: T; error?: Error }>;
+
+  test('image-checker:check resolves the image and delegates to the checker', async () => {
+    const fakeChecks: ImageChecks = { checks: [] };
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockResolvedValue(fakeImage);
+    vi.mocked(ImageCheckerImpl.prototype.check).mockResolvedValue(fakeChecks);
+
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<ImageHandler<ImageChecks>>('image-checker:check');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc', tokenId);
+
+    expect(ContainerProviderRegistry.prototype.getImageInfo).toHaveBeenCalledExactlyOnceWith(
+      'podman.podman',
+      'sha256:abc',
+    );
+    expect(ImageCheckerImpl.prototype.check).toHaveBeenCalledExactlyOnceWith(
+      'provider1',
+      fakeImage,
+      expect.objectContaining({ isCancellationRequested: false }),
+    );
+    expect(result.result).toEqual(fakeChecks);
+  });
+
+  test('image-checker:check returns the error when the image is not found', async () => {
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockRejectedValue(
+      new Error('Image sha256:abc not found on engine podman.podman'),
+    );
+    const handle = getHandler<ImageHandler<ImageChecks>>('image-checker:check');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc');
+
+    assert(result.error instanceof Error);
+    expect(result.error.message).toBe('Image sha256:abc not found on engine podman.podman');
+    expect(ImageCheckerImpl.prototype.check).not.toHaveBeenCalled();
+  });
+
+  test('image-files:getFilesystemLayers resolves the image and delegates to the registry', async () => {
+    const fakeLayers: ImageFilesystemLayersUI = { layers: [] };
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockResolvedValue(fakeImage);
+    vi.mocked(ImageFilesRegistry.prototype.getFilesystemLayers).mockResolvedValue(fakeLayers);
+
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<ImageHandler<ImageFilesystemLayersUI>>('image-files:getFilesystemLayers');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc', tokenId);
+
+    expect(ContainerProviderRegistry.prototype.getImageInfo).toHaveBeenCalledExactlyOnceWith(
+      'podman.podman',
+      'sha256:abc',
+    );
+    expect(ImageFilesRegistry.prototype.getFilesystemLayers).toHaveBeenCalledExactlyOnceWith(
+      'provider1',
+      fakeImage,
+      expect.objectContaining({ isCancellationRequested: false }),
+    );
+    expect(result.result).toEqual(fakeLayers);
+  });
+
+  test('image-files:getFilesystemLayers returns the error when the image is not found', async () => {
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockRejectedValue(
+      new Error('Image sha256:abc not found on engine podman.podman'),
+    );
+    const handle = getHandler<ImageHandler<ImageFilesystemLayersUI>>('image-files:getFilesystemLayers');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc');
+
+    assert(result.error instanceof Error);
+    expect(result.error.message).toBe('Image sha256:abc not found on engine podman.podman');
+    expect(ImageFilesRegistry.prototype.getFilesystemLayers).not.toHaveBeenCalled();
+  });
 });

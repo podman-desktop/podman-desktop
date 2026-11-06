@@ -55,6 +55,8 @@ export interface RegistryAuthInfo {
 
 @injectable()
 export class ImageRegistry {
+  static readonly DANGLING_IMAGE_MESSAGE = 'Image is dangling and cannot be checked for updates';
+
   private registries: containerDesktopAPI.Registry[] = [];
   private suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
   private providers: Map<string, containerDesktopAPI.RegistryProvider> = new Map();
@@ -552,6 +554,12 @@ export class ImageRegistry {
       throw new Error(`No gzip or zstd layers found for the image ${imageName}`);
     }
 
+    // the declared size bounds each download, so it must be a valid byte count
+    const invalidLayer = layers.find(layer => !Number.isSafeInteger(layer.size) || layer.size < 0);
+    if (invalidLayer) {
+      throw new Error(`Invalid size declared for layer ${invalidLayer.digest} of the image ${imageName}`);
+    }
+
     // total size of all layers
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalSize = layers.reduce((acc: number, layer: any) => acc + layer.size, 0);
@@ -567,6 +575,7 @@ export class ImageRegistry {
       await this.fetchAndExtractLayer(
         imageData,
         layerDigest,
+        layer.size,
         compressionType,
         destFolder,
         token,
@@ -581,6 +590,7 @@ export class ImageRegistry {
   protected async fetchAndExtractLayer(
     imageData: ImageRegistryNameTag,
     digest: string,
+    expectedSize: number,
     compressionType: 'gzip' | 'zstd',
     destFolder: string,
     token: string,
@@ -618,6 +628,16 @@ export class ImageRegistry {
       throw new Error(`Failed to fetch blob ${blobURL}: ${response.statusText}`);
     }
 
+    // fail fast when the announced length already disagrees with the manifest
+    // (skipped for encoded responses, where content-length is the encoded length)
+    const contentLength = response.headers.get('content-length');
+    if (contentLength !== null && !response.headers.has('content-encoding') && Number(contentLength) !== expectedSize) {
+      await response.body.cancel();
+      throw new Error(
+        `Blob ${digest} size mismatch: expected ${expectedSize} bytes, registry announced ${contentLength}`,
+      );
+    }
+
     const body = response.body;
     let transferred = 0;
 
@@ -629,6 +649,10 @@ export class ImageRegistry {
       await pipeline(async function* () {
         for await (const chunk of body) {
           transferred += chunk.byteLength;
+          // stop as soon as the registry sends more than the manifest declared
+          if (transferred > expectedSize) {
+            throw new Error(`Blob ${digest} exceeds its declared size of ${expectedSize} bytes`);
+          }
 
           const downloaded = currentDownloaded + transferred;
           const progress = Math.round((downloaded / totalSize) * 100);
@@ -639,6 +663,9 @@ export class ImageRegistry {
           });
 
           yield chunk;
+        }
+        if (transferred !== expectedSize) {
+          throw new Error(`Blob ${digest} size mismatch: expected ${expectedSize} bytes, received ${transferred}`);
         }
       }, createWriteStream(tmpFileName));
 
@@ -871,7 +898,7 @@ export class ImageRegistry {
       return {
         status: 'skipped',
         updateAvailable: false,
-        message: 'Image is dangling and cannot be checked for updates',
+        message: ImageRegistry.DANGLING_IMAGE_MESSAGE,
       };
     }
 

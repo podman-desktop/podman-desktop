@@ -18,6 +18,7 @@
 
 import {
   type ImageInfo,
+  type ImageUpdateResult,
   isViewContributionBadge,
   isViewContributionIcon,
   type ViewContributionBadgeValue,
@@ -193,7 +194,8 @@ export class ImageUtils {
         .flat();
     }
 
-    if (!imageInfo.RepoTags) {
+    // an image pulled by digest, or left untagged by a retag, carries no repo tag at all
+    if (!imageInfo.RepoTags?.length) {
       return [
         {
           id: imageInfo.Id,
@@ -253,6 +255,10 @@ export class ImageUtils {
   deleteImage(image: ImageInfoUI): Promise<void> {
     const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
     return window.deleteImage(image.engineId, imageId);
+  }
+
+  async updateImages(images: ImageInfoUI[]): Promise<ImageUpdateResult[]> {
+    return window.updateImages(images.map(({ engineId, id }) => ({ engineId, id })));
   }
 
   getImageInfoUI(

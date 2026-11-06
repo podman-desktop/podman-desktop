@@ -37,9 +37,11 @@ import type {
   ContainerStatsInfo,
   Event,
   HistoryInfo,
+  HostConfigPortBinding,
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImagesSaveOptions,
   ImageUpdateInfo,
   ImageUpdateResult,
@@ -762,6 +764,19 @@ export class ContainerProviderRegistry {
     return flattenedContainers;
   }
 
+  async getImageInfo(engineId: string, imageId: string): Promise<ImageInfo> {
+    const provider = this.internalProviders.get(engineId);
+    if (!provider) {
+      throw new Error('no engine matching this engine');
+    }
+    const images = await this.listImages({ provider: provider.connection });
+    const image = images.find(image => image.engineId === engineId && image.Id === imageId);
+    if (!image) {
+      throw new Error(`Image ${imageId} not found on engine ${engineId}`);
+    }
+    return image;
+  }
+
   // list images will prefer to use libpod API of the provider if podman
   // before falling back to using the regular API
   async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
@@ -1032,7 +1047,12 @@ export class ContainerProviderRegistry {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const volumeListInfo: any = await provider.api.listVolumes();
 
-          let storageDefinition = {
+          // the unversioned /system/df endpoint reports the volume usage either as a
+          // top-level Volumes array (docker) or nested inside VolumeUsage.Items (podman)
+          let storageDefinition: {
+            Volumes?: unknown[];
+            VolumeUsage?: { Items?: unknown[] };
+          } = {
             Volumes: [],
           };
 
@@ -1065,7 +1085,11 @@ export class ContainerProviderRegistry {
 
             // do we have a matching volume in storage definition ?
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const matchingVolume: any = (storageDefinition?.Volumes || []).find(
+            const matchingVolume: any = (
+              storageDefinition?.VolumeUsage?.Items ??
+              storageDefinition?.Volumes ??
+              []
+            ).find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (volumeStorage: any) => volumeStorage.Name === volumeInfo.Name,
             );
@@ -1405,8 +1429,13 @@ export class ContainerProviderRegistry {
         const statusCode = (error as any)?.statusCode;
         if (statusCode === 403) {
           error.message = `access to image "${imageName}" is denied (403 error). Can also be that image does not exist.`;
-        } else if (statusCode === 500 || statusCode === 401) {
-          error.message = `access to image "${imageName}" is denied (${statusCode} error). Can also be that the registry requires authentication.`;
+        } else if (statusCode === 401) {
+          error.message = `access to image "${imageName}" is denied (401 error). Can also be that the registry requires authentication.`;
+        } else if (statusCode === 500) {
+          const reason = this.getEngineErrorReason(error);
+          error.message = reason
+            ? `unable to pull image "${imageName}": ${reason}`
+            : `unable to pull image "${imageName}" (500 error).`;
         }
       }
       telemetryOptions = { error: error };
@@ -1416,57 +1445,157 @@ export class ContainerProviderRegistry {
     }
   }
 
+  /**
+   * Extracts the explanation reported by the container engine. Returns the root cause of the error if available, otherwise undefined.
+   */
+  protected getEngineErrorReason(error: Error): string | undefined {
+    // cut the prefix '(HTTP code 500) server error - <reason>' and get the reason part
+    const reason = error.message.replace(/^\(HTTP code \d+\)\s.*?\s-\s/, '').trim();
+    if (reason.length === 0) {
+      return undefined;
+    }
+
+    // the reason is string of wrapped errors: 'outer: inner: root cause'
+    // pop the last layer, which is the root cause
+    return reason.split(/:\s+/).pop()?.trim();
+  }
+
+  /**
+   * Asks a connection's engine which of its images a reference points at. The engine resolves the
+   * reference the same way its CLI does, so short names, tags and digests all work, and it answers
+   * with the image id the images list reports. Returns undefined when the engine holds no such image.
+   */
+  async resolveImage(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+    reference: string,
+  ): Promise<ImageLocation | undefined> {
+    let telemetryOptions = {};
+    const provider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    try {
+      const { Id, RepoTags } = await provider.api.getImage(reference).inspect();
+      return { Id, engineId: provider.id, repoTag: this.matchRepoTag(reference, RepoTags ?? []) };
+    } catch (error: unknown) {
+      // a 404 means the engine holds no such image, which is an answer; anything else went wrong
+      if ((error as { statusCode?: number })?.statusCode !== 404) {
+        telemetryOptions = { error: error };
+        throw error;
+      }
+      return undefined;
+    } finally {
+      this.telemetryService.track('resolveImage', telemetryOptions);
+    }
+  }
+
+  /**
+   * Picks the repository tag a reference names among the ones the engine reports for the image it
+   * resolved to. The image is already identified, so the tag alone tells them apart; a reference
+   * pinning a digest names none of them.
+   */
+  protected matchRepoTag(reference: string, repoTags: string[]): string | undefined {
+    if (reference.includes('@')) {
+      return undefined;
+    }
+    const tag = this.referenceTag(reference);
+    return repoTags.find(repoTag => this.referenceTag(repoTag) === tag);
+  }
+
+  // a colon only opens a tag when no path separator follows it, a registry port carries one too
+  protected referenceTag(reference: string): string {
+    const index = reference.lastIndexOf(':');
+    return index > 0 && !reference.includes('/', index) ? reference.slice(index + 1) : 'latest';
+  }
+
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
 
   async updateImages(images: ImageUpdateInfo[], abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
-    const results = await Promise.all(
-      images.map(async (info): Promise<ImageUpdateResult> => {
-        try {
-          const matchingEngine = this.getMatchingEngine(info.engineId);
-          const imageInspect = await matchingEngine.getImage(info.image).inspect();
-          const localDigests = imageInspect.RepoDigests ?? [];
-          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, localDigests);
-
-          if (status.status === 'error') {
-            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
-          }
-
-          if (status.status === 'skipped' || !status.updateAvailable) {
-            return { imageRef: info.image, updated: false, status: status.status, message: status.message };
-          }
-
-          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
-          const pullStream = await matchingEngine.pull(info.image, {
-            authconfig,
-            abortSignal,
-          });
-
-          const { resolve, reject, promise } = Promise.withResolvers<void>();
-          matchingEngine.modem.followProgress(
-            pullStream,
-            (err: Error | null) => (err ? reject(err) : resolve()),
-            () => {},
-          );
-          await promise;
-
-          return { imageRef: info.image, updated: true, status: 'updated', message: 'Image updated successfully' };
-        } catch (error: unknown) {
-          console.error(`Error updating image ${info.image}`, error);
-          const message = error instanceof Error ? error.message : String(error);
-          return { imageRef: info.image, updated: false, status: 'error', message };
-        }
-      }),
-    );
+    // the same image can be selected several times, once per tag: update it only once
+    const seenImages = new Set<string>();
+    const uniqueImages = images.filter(({ engineId, id }) => {
+      const key = JSON.stringify([engineId, id]);
+      if (seenImages.has(key)) return false;
+      seenImages.add(key);
+      return true;
+    });
+    const results = (
+      await Promise.all(uniqueImages.map(({ engineId, id }) => this.updateImage(engineId, id, abortSignal)))
+    ).flat();
     this.telemetryService.track('updateImages', {
-      count: images.length,
+      count: results.length,
       updated: results.filter(result => result.updated).length,
       upToDate: results.filter(result => result.status === 'normal' && !result.updated).length,
       skipped: results.filter(result => result.status === 'skipped').length,
       failed: results.filter(result => result.status === 'error').length,
     });
     return results;
+  }
+
+  /**
+   * Update every tag of the image: an image id can be referenced by several tags (e.g. nginx:latest and nginx:1.29)
+   */
+  protected async updateImage(engineId: string, id: string, abortSignal?: AbortSignal): Promise<ImageUpdateResult[]> {
+    try {
+      const engine = this.getMatchingEngine(engineId);
+      const inspected = await engine.getImage(id).inspect();
+      const tags = inspected.RepoTags ?? [];
+      const digests = inspected.RepoDigests ?? [];
+      if (tags.length === 0) {
+        return [
+          {
+            imageRef: id,
+            updated: false,
+            status: 'skipped',
+            message: ImageRegistry.DANGLING_IMAGE_MESSAGE,
+          },
+        ];
+      }
+      return await Promise.all(tags.map(imageRef => this.updateImageTag(engine, imageRef, digests, abortSignal)));
+    } catch (error: unknown) {
+      return [this.toUpdateError(id, error)];
+    }
+  }
+
+  protected async updateImageTag(
+    engine: Dockerode,
+    imageRef: string,
+    localDigests: string[],
+    abortSignal?: AbortSignal,
+  ): Promise<ImageUpdateResult> {
+    try {
+      const { tag } = this.imageRegistry.extractImageDataFromImageName(imageRef);
+      const { status, updateAvailable, message } = await this.imageRegistry.checkImageUpdateStatus(
+        imageRef,
+        tag,
+        localDigests,
+      );
+      if (!updateAvailable) {
+        return { imageRef, updated: false, status, message };
+      }
+
+      abortSignal?.throwIfAborted();
+      const authconfig = this.imageRegistry.getAuthconfigForImage(imageRef);
+      const pullStream = await engine.pull(imageRef, { authconfig, abortSignal });
+      const { resolve, reject, promise } = Promise.withResolvers<void>();
+      engine.modem.followProgress(
+        pullStream,
+        (err: Error | null) => (err ? reject(err) : resolve()),
+        () => {},
+      );
+      await promise;
+      return { imageRef, updated: true, status: 'updated', message: 'Image updated successfully' };
+    } catch (error: unknown) {
+      return this.toUpdateError(imageRef, error);
+    }
+  }
+
+  protected toUpdateError(imageRef: string, error: unknown): ImageUpdateResult {
+    console.error(`Error updating image ${imageRef}`, error);
+    const message = error instanceof Error ? error.message : String(error);
+    return { imageRef, updated: false, status: 'error', message };
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
@@ -1730,7 +1859,12 @@ export class ContainerProviderRegistry {
       const updatedEnv = this.extractContainerEnvironment(containerToReplicate);
 
       // build create container configuration
-      const originalConfiguration = this.getCreateContainsOptionsFromOriginal(containerToReplicate, updatedEnv);
+      const includePortMappings = overrideParameters.pod === undefined;
+      const originalConfiguration = this.getCreateContainsOptionsFromOriginal(
+        containerToReplicate,
+        updatedEnv,
+        includePortMappings,
+      );
 
       // add extra information
       const configuration: ContainerCreateOptions = {
@@ -1755,7 +1889,12 @@ export class ContainerProviderRegistry {
   private getCreateContainsOptionsFromOriginal(
     containerToReplicate: ContainerInspectInfo,
     updatedEnv: { [p: string]: string },
+    includePortMappings: boolean,
   ): Record<string, unknown> {
+    const portmappings = includePortMappings
+      ? this.convertPortBindings(containerToReplicate.Id, containerToReplicate.HostConfig?.PortBindings)
+      : undefined;
+
     return {
       command: containerToReplicate.Config.Cmd,
       entrypoint: containerToReplicate.Config.Entrypoint,
@@ -1767,7 +1906,56 @@ export class ContainerProviderRegistry {
       volumes: containerToReplicate.Mounts.filter(mount => (mount as any).Type === 'volume').map(mount => {
         return { Name: mount.Name, Dest: mount.Destination };
       }),
+      ...(portmappings && { portmappings }),
     };
+  }
+
+  /**
+   * Convert Docker-style HostConfig.PortBindings into the libpod portmappings format.
+   *
+   * Keys are in the format "port/protocol" (e.g. "80/tcp"). Each key maps to an
+   * array of bindings, so a single container port can be exposed on multiple host ports.
+   * An empty HostPort means the host should pick a random available port.
+   */
+  private convertPortBindings(
+    containerId: string,
+    portBindings: HostConfigPortBinding | undefined,
+  ): ContainerCreatePortMappingOption[] | undefined {
+    if (!portBindings || Object.keys(portBindings).length === 0) {
+      return undefined;
+    }
+
+    const portmappings: ContainerCreatePortMappingOption[] = [];
+    for (const [key, value] of Object.entries(portBindings)) {
+      const [portStr, protocol] = key.split('/');
+      const containerPort = Number.parseInt(portStr ?? '', 10);
+      if (Number.isNaN(containerPort) || String(containerPort) !== portStr || !Array.isArray(value)) {
+        console.warn(`Skipping invalid port binding "${key}" for container ${containerId}`);
+        continue;
+      }
+
+      for (const binding of value) {
+        let hostPort: number | undefined;
+        if (binding.HostPort) {
+          hostPort = Number.parseInt(binding.HostPort, 10);
+          if (Number.isNaN(hostPort) || String(hostPort) !== binding.HostPort) {
+            console.warn(
+              `Skipping invalid host port "${binding.HostPort}" in port binding "${key}" for container ${containerId}`,
+            );
+            continue;
+          }
+        }
+
+        portmappings.push({
+          container_port: containerPort,
+          host_port: hostPort,
+          host_ip: binding.HostIp === '' ? undefined : binding.HostIp,
+          protocol,
+        });
+      }
+    }
+
+    return portmappings.length > 0 ? portmappings : undefined;
   }
 
   async stopPod(engineId: string, podId: string): Promise<void> {
@@ -2515,6 +2703,8 @@ export class ContainerProviderRegistry {
       devices: updatedDevices,
       secrets: options.Secrets,
       secret_env: options.SecretEnv,
+      terminal: options.Tty,
+      stdin: options.OpenStdin,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);

@@ -124,4 +124,6 @@ export interface ContainerCreateOptions {
     Target: string;
   }>;
   secret_env?: Record<string, string>;
+  terminal?: boolean;
+  stdin?: boolean;
 }
