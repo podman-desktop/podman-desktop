@@ -8,34 +8,34 @@ import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
 
 let providersId: string[] = $state([]);
-let notificationCount: number = $state(0);
-let hasNewProviders = $state(false);
-let hasNewNotifications = $state(false);
+let notificationsId: string[] = $state([]);
+// content as it was the last time the user visited the dashboard
+// (ids are not used as they change each time a provider registers or a notification is posted again)
+let seenProvidersId: string[] = $state([]);
+let seenNotificationsId: string[] = $state([]);
+// computed against the content seen, so the dot disappears if the new content is removed
+let hasNewProviders = $derived(hasNewId(seenProvidersId, providersId));
+let hasNewNotifications = $derived(hasNewId(seenNotificationsId, notificationsId));
 let hasNew = $derived(hasNewProviders || hasNewNotifications);
 
 let providersUnsubscribe: Unsubscriber;
 let notificationsUnsubscribe: Unsubscriber;
 
 onMount(() => {
-  // if there is a new provider we display the dot
   providersUnsubscribe = providerInfos.subscribe(updatedProviders => {
-    const updatedProvidersId = updatedProviders.map(prov => prov.internalId).toSorted();
-    // content arriving while the user is on the dashboard is already seen:
-    // only flag changes made while away, the baseline is always updated
-    if (!isOnDashboard() && !hasNewProviders) {
-      hasNewProviders = hasNewProvider(providersId, updatedProvidersId);
+    providersId = updatedProviders.map(prov => `${prov.extensionId}:${prov.id}`).toSorted();
+    // content arriving while the user is on the dashboard is already seen
+    if (isOnDashboard()) {
+      seenProvidersId = providersId;
     }
-    providersId = updatedProvidersId;
   });
 
-  // if there is a new notification we display the dot
   notificationsUnsubscribe = notificationQueue.subscribe(notifications => {
-    // content arriving while the user is on the dashboard is already seen:
-    // only flag changes made while away, the baseline is always updated
-    if (!isOnDashboard() && !hasNewNotifications) {
-      hasNewNotifications = notifications.length > notificationCount;
+    notificationsId = notifications.map(notification => `${notification.extensionId}:${notification.title}`);
+    // content arriving while the user is on the dashboard is already seen
+    if (isOnDashboard()) {
+      seenNotificationsId = notificationsId;
     }
-    notificationCount = notifications.length;
   });
 });
 
@@ -49,21 +49,14 @@ function isOnDashboard(): boolean {
   return $router.path === '/';
 }
 
-function hasNewProvider(oldProvidersId: string[], newProvidersId: string[]): boolean {
-  if (oldProvidersId.length < newProvidersId.length) {
-    return true;
-  }
-  for (let [index, id] of newProvidersId.entries()) {
-    if (id !== oldProvidersId[index]) {
-      return true;
-    }
-  }
-  return false;
+function hasNewId<T>(oldIds: T[], newIds: T[]): boolean {
+  const seenIds = new Set(oldIds);
+  return newIds.some(id => !seenIds.has(id));
 }
 
 function onHide(): void {
-  hasNewProviders = false;
-  hasNewNotifications = false;
+  seenProvidersId = providersId;
+  seenNotificationsId = notificationsId;
 }
 </script>
 
