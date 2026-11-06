@@ -8,6 +8,7 @@ import {
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
   defaultSection,
+  isEnhancedDashboard,
   setupDashboardPageRegistry,
 } from '/@/stores/dashboard/dashboard-page-registry.svelte';
 
@@ -26,6 +27,20 @@ let sortedDashboardRegistry = $derived(
     .filter(section => section.enabled)
     .map(section => dashboardPageRegistry.entries.find(item => item.id === section.id))
     .filter((item): item is DashboardPageRegistryEntry => item?.component !== undefined),
+);
+
+// The enhanced layout shows sentence-case labels; the legacy layout keeps showing ids
+function sectionLabel(entry: DashboardPageRegistryEntry): string {
+  return isEnhancedDashboard() ? entry.label : entry.id;
+}
+
+// Labels are resolved at render time from the registry, so stored labels, a reset
+// and a live setting flip never leave the layout menu stale
+let layoutItems = $derived(
+  dashboardSections.map(section => {
+    const entry = dashboardPageRegistry.entries.find(item => item.id === section.id);
+    return { ...section, label: entry ? sectionLabel(entry) : section.label };
+  }),
 );
 
 // Initialize default dashboard configuration
@@ -167,7 +182,7 @@ function handleDashboardToggle(itemId: string, enabled: boolean): void {
 <NavPage searchEnabled={false} title="Dashboard">
   {#snippet additionalActions()}
     <ListOrganizer
-      items={dashboardSections}
+      items={layoutItems}
       ordering={dashboardOrdering}
       title="Configure Dashboard Sections"
       enableReorder={true}
