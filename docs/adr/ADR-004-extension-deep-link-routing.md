@@ -61,9 +61,10 @@ Option 10 is not chosen; its principle ("the extension decides what to do") is k
 **URL**
 
 ```
-podman-desktop://<extensionId>[/<path>][?<query>][#<fragment>]
+<urlProtocol>://<extensionId>[/<path>][?<query>][#<fragment>]
 ```
 
+- `<urlProtocol>` is the scheme the product registers with the operating system: `product.json` `urlProtocol`, which is `podman-desktop` in upstream builds. Downstream builds can use another value, so core must not hard-code `podman-desktop`, and extensions that build links (for example callback URLs) must use `env.urlProtocol`. Examples in this ADR use the upstream value.
 - `<extensionId>` is the extension id (`publisher.name`) and is the URI authority. It is compared without case sensitivity.
 - A link is directed to an extension only if the authority looks like an extension id (it contains a dot; same rule as VS Code: `^[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$`, case-insensitive). Built-in forms (`extension`, `experimental`, `preferences/experimental`) keep their current syntax and behaviour. Future built-in verbs must not contain a dot.
 - `<path>`, `<query>` and `<fragment>` are defined by the extension. Core does not interpret them.
@@ -86,10 +87,12 @@ export namespace window {
 
 The handler is bound to the id of the calling extension by core; an extension cannot register for another id.
 
+The `Uri` passed to `handleUri` has its components as the WHATWG `URL` parser returns them: `path`, `query` and `fragment` stay percent-encoded, `query` is given without `?` and `fragment` without `#`. Extensions parse the query with `URLSearchParams`.
+
 **Behaviour of the application (observable contract)**
 
 1. Invalid link (syntax, limits) → the user is informed; nothing runs; query and fragment are not written to logs or telemetry.
-2. Extension not installed → a dialog owned by core states which extension the link is for (display name from the catalog when available, and id) and shows the link as plain text, with "Install and open" / Cancel. Accepting opens the existing extension page; the link is kept in memory for a limited time and delivered after the extension registers its handler, without a second confirmation (as in VS Code, where the install dialog carries the link as justification). Automatic installation without the user's click on Install is **not** introduced. An extension that is not in the catalog cannot be installed from a link; the user is informed.
+2. Extension not installed → a dialog owned by core states which extension the link is for (display name from the catalog when available, and id) and shows the link as plain text, with "Install and open" / Cancel. Accepting opens the existing extension page; the link is kept in memory for a limited time and delivered after the extension registers its handler, without a second confirmation: clicking "Install and open" in a dialog that shows the link counts as consent (as in VS Code, where the install dialog carries the link as justification). Automatic installation without the user's click on Install is **not** introduced. An extension that is not in the catalog cannot be installed from a link; the user is informed.
 3. Extension installed but disabled, stopped or failed → the user is told, and can open the extension's page. Core does not start or enable it automatically.
 4. Extension started but without a handler after all extensions have started → the user is told that this version of the extension cannot open links and, when an update is available, can open it.
 5. Extension installed and its handler not registered yet (application or extension still starting) → the link is buffered until the handler is registered, for a limited time.
@@ -110,7 +113,7 @@ The handler is bound to the id of the calling extension by core; an extension ca
 - Bad, because there are two consent steps in the common case (core dialog and the extension's own action), which adds friction.
 - Bad, because older Podman Desktop versions silently ignore the link; the producer (Hugging Face button) cannot know the installed version.
 - Bad, because platform gaps (Linux handling, Windows cold start) must be fixed or documented as limitations; otherwise "one click" is not true everywhere.
-- New obligations: maintain the URL grammar as a public contract; document the API and the security obligations for extension authors (`website/docs/extensions/`); UX ownership of the dialogs; telemetry for outcome only (extension id and outcome, no query); fix `Uri` round-tripping of the fragment before exposing `Uri` to handlers (`packages/main/src/plugin/types/uri.ts` keeps the leading `#` in `fragment` and `toString()` adds another one; read from code, not run).
+- New obligations: maintain the URL grammar as a public contract; document the API and the security obligations for extension authors (`website/docs/extensions/`); UX ownership of the dialogs; telemetry for outcome only (extension id and outcome, no query); fix `Uri` fragment handling (`parse`/`toString` duplicate the `#`) before the API is released.
 
 ### Confirmation
 
@@ -227,4 +230,4 @@ The link names a command, for example `podman-desktop://<extensionId>/<commandId
 - Release dependency: the consumer-visible button works only on Podman Desktop versions that contain the implementation. Intended order: core release → AI Lab release → Hugging Face change merged last. Target Podman Desktop version: not determined (`main` is currently `1.31.0-next`).
 - Hugging Face acceptance of a link that requires an installed extension is not known; the install-and-continue behaviour (behaviour 2) and option 9 are the answers to bring to the Hugging Face team.
 - Security notes that implementers should treat as requirements: URIs are untrusted; no logging of query or fragment; bounded buffers and queue; plain-text rendering of the link in dialogs; no automatic installation or enabling; possible administrative switch to disable external links (managed configuration) — _open question_, not decided here.
-- Open questions for review: (a) whether "Install and open" counts as consent so the link is delivered without a second dialog (proposed: yes, as in VS Code); (b) whether a "do not ask again for this extension" option (setting, lockable by managed configuration) is acceptable later; (c) whether the single-colon form `podman-desktop:<extensionId>/…` is accepted and normalised or rejected (proposed: only the `//` form); (d) exact limits and buffer duration; (e) whether Linux and Windows cold-start fixes are part of the same delivery or a prerequisite; (f) policy for onboarding/first-run state; (g) whether `env.uriScheme` should be added for extensions that build callback links.
+- Open questions for review: (b) whether a "do not ask again for this extension" option (setting, lockable by managed configuration) is acceptable later; (c) whether the single-colon form `podman-desktop:<extensionId>/…` is accepted and normalised or rejected (proposed: only the `//` form); (d) exact limits and buffer duration; (e) whether Linux and Windows cold-start fixes are part of the same delivery or a prerequisite; (f) policy for onboarding/first-run state.
