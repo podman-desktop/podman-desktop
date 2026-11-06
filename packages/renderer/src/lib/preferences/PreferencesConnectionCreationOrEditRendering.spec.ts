@@ -27,7 +27,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
+import { assert, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import { clearTaskLogs, eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
@@ -807,7 +807,9 @@ test('Expect go back button to clear the task logs and keep the successful opera
   });
   await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
   const operationKey = get(operationConnectionsInfo).get(1)?.operationKey;
-  if (operationKey) providedKeyLogger?.(operationKey, 'finish', []);
+  assert(operationKey);
+  assert(providedKeyLogger);
+  providedKeyLogger(operationKey, 'finish', []);
 
   await fireEvent.click(await screen.findByRole('button', { name: 'Go back to resources' }));
 

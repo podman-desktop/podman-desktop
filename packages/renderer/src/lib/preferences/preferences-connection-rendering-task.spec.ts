@@ -16,10 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ProviderInfo } from '@desktop-framework/api';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { operationConnectionsInfo } from '/@/stores/operation-connections';
+import { type OperationConnectionInfo, operationConnectionsInfo } from '/@/stores/operation-connections';
 
 import {
   clearCompletedOperations,
@@ -84,15 +85,47 @@ test('check events', async () => {
   expect(dummyCallback.onEnd).toHaveBeenCalled();
 });
 
-function setOperations(...operations: { key: symbol; inProgress: boolean }[]): void {
-  operationConnectionsInfo.set(
-    new Map(
-      operations.map(({ key, inProgress }, index) => [
-        index + 1,
-        { operationKey: key, operationInProgress: inProgress } as never,
-      ]),
-    ),
-  );
+const providerInfo: ProviderInfo = {
+  id: 'test',
+  name: 'test',
+  internalId: '0',
+  extensionId: '',
+  status: 'started',
+  warnings: [],
+  links: [],
+  images: {},
+  detectionChecks: [],
+  installationSupport: false,
+  cleanupSupport: false,
+  canStart: false,
+  canStop: false,
+  containerConnections: [],
+  kubernetesConnections: [],
+  vmConnections: [],
+  containerProviderConnectionCreation: false,
+  containerProviderConnectionInitialization: false,
+  kubernetesProviderConnectionCreation: false,
+  kubernetesProviderConnectionInitialization: false,
+  vmProviderConnectionCreation: false,
+  vmProviderConnectionInitialization: false,
+};
+
+function buildOperation(key: symbol, inProgress = false): OperationConnectionInfo {
+  return {
+    operationKey: key,
+    providerInfo,
+    connectionInfo: undefined,
+    properties: [],
+    propertyScope: 'ContainerProviderConnectionFactory',
+    operationInProgress: inProgress,
+    operationSuccessful: false,
+    operationStarted: true,
+    errorMessage: '',
+  };
+}
+
+function setOperations(...operations: OperationConnectionInfo[]): void {
+  operationConnectionsInfo.set(new Map(operations.map((operation, index) => [index + 1, operation])));
 }
 
 function expectLogsCleared(key: symbol, cleared: boolean): void {
@@ -108,7 +141,7 @@ function expectLogsCleared(key: symbol, cleared: boolean): void {
 
 test('clearTaskLogs clears the logs and keeps the operation', () => {
   const key = registerConnectionCallback(dummyCallback);
-  setOperations({ key, inProgress: false });
+  setOperations(buildOperation(key));
 
   clearTaskLogs(key);
 
@@ -119,7 +152,7 @@ test('clearTaskLogs clears the logs and keeps the operation', () => {
 test('removeOperation clears the logs and removes only the given operation', () => {
   const key = registerConnectionCallback(dummyCallback);
   const otherKey = registerConnectionCallback(dummyCallback);
-  setOperations({ key, inProgress: false }, { key: otherKey, inProgress: false });
+  setOperations(buildOperation(key), buildOperation(otherKey));
 
   removeOperation(key);
 
@@ -131,7 +164,7 @@ test('removeOperation clears the logs and removes only the given operation', () 
 test('clearCompletedOperations clears the logs and removes only the operations not in progress', () => {
   const completedKey = registerConnectionCallback(dummyCallback);
   const runningKey = registerConnectionCallback(dummyCallback);
-  setOperations({ key: completedKey, inProgress: false }, { key: runningKey, inProgress: true });
+  setOperations(buildOperation(completedKey), buildOperation(runningKey, true));
 
   clearCompletedOperations();
 
@@ -148,7 +181,7 @@ test('getNextTaskId returns increasing ids', () => {
 
 test('getNextTaskId does not return an id already used by an operation', () => {
   const suppliedId = getNextTaskId() + 1;
-  operationConnectionsInfo.set(new Map([[suppliedId, { operationKey: Symbol() } as never]]));
+  operationConnectionsInfo.set(new Map([[suppliedId, buildOperation(Symbol())]]));
 
   expect(getNextTaskId()).toBe(suppliedId + 1);
 });
