@@ -465,8 +465,8 @@ importers:
   extensions/kind:
     dependencies:
       '@kubernetes/client-node':
-        specifier: ^2.0.1
-        version: 2.0.1(supports-color@8.1.1)
+        specifier: ^2.0.2
+        version: 2.0.2(supports-color@8.1.1)
       '@octokit/rest':
         specifier: ^22.0.1
         version: 22.0.1
@@ -728,8 +728,8 @@ importers:
         specifier: ^9.3.2
         version: 9.3.2
       '@kubernetes/client-node':
-        specifier: ^2.0.1
-        version: 2.0.1(supports-color@8.1.1)
+        specifier: ^2.0.2
+        version: 2.0.2(supports-color@8.1.1)
       '@segment/analytics-node':
         specifier: ^3.1.0
         version: 3.1.0
@@ -3618,8 +3618,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@kubernetes/client-node@2.0.1':
-    resolution: {integrity: sha512-evJgmEtgArEYlj6DNkMGjK41IrFK/hEwb5lWVxx0VRBWybQpnvi+2TtA19mLgVfRHfqX5yjHObX6e9W7LEZBjw==}
+  '@kubernetes/client-node@2.0.2':
+    resolution: {integrity: sha512-AvVq87luFXIoo95dkBsNnzU6pIwKGJM5CZD/iLfxMPXPzVa4w8isIMvXmYly+4TkodQFf3fQzX3KDysVy1OYng==}
 
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
@@ -15812,7 +15812,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@kubernetes/client-node@2.0.1(supports-color@8.1.1)':
+  '@kubernetes/client-node@2.0.2(supports-color@8.1.1)':
     dependencies:
       '@types/js-yaml': 4.0.9
       '@types/node': 26.2.0
