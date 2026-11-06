@@ -197,6 +197,7 @@ const PODMAN_INSTALL_MOCK: PodmanInstall = {
 const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
+  removeStaleApiSocket: vi.fn(),
 } as unknown as WinPlatform;
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
@@ -1088,6 +1089,50 @@ test('if autoStart is true, machine start uses detached mode', async () => {
   });
 
   expect(spyUpdateStatus).toHaveBeenCalledWith('started');
+});
+
+describe('startMachine stale API socket on Windows', () => {
+  beforeEach(() => {
+    extension.podmanMachinesStatuses.clear();
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+  });
+
+  test.each([
+    { autoStart: false, label: 'manual start' },
+    { autoStart: true, label: 'autostart' },
+  ])('removes the stale API socket before starting the machine ($label)', async ({ autoStart }) => {
+    await extension.startMachine(
+      provider,
+      podmanConfiguration,
+      machineInfo,
+      undefined,
+      undefined,
+      undefined,
+      autoStart,
+    );
+
+    expect(WIN_PLATFORM_MOCK.removeStaleApiSocket).toHaveBeenCalledWith('name', expect.any(LoggerDelegator));
+    expect(vi.mocked(WIN_PLATFORM_MOCK.removeStaleApiSocket).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(extensionApi.process.exec).mock.invocationCallOrder[0],
+    );
+  });
+
+  test.each(['started', 'starting'] as const)('does not remove the API socket when the machine is %s', async status => {
+    extension.podmanMachinesStatuses.set('name', status);
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    expect(WIN_PLATFORM_MOCK.removeStaleApiSocket).not.toHaveBeenCalled();
+  });
+
+  test('does not remove the API socket on other platforms', async () => {
+    vi.mocked(extensionApi.env).isWindows = false;
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    expect(WIN_PLATFORM_MOCK.removeStaleApiSocket).not.toHaveBeenCalled();
+  });
 });
 
 test('if a machine is successfully reporting telemetry', async () => {
