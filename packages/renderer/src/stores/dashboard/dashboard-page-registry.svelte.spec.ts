@@ -25,6 +25,7 @@ import {
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
   defaultSection,
+  isEnhancedDashboard,
   setupDashboardPageRegistry,
 } from './dashboard-page-registry.svelte';
 
@@ -80,6 +81,29 @@ describe('defaultSection', () => {
 
     expect(defaultSection.names).toEqual(sectionNames);
   });
+
+  test('every registry entry has a sentence-case label', async () => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+    await setupDashboardPageRegistry();
+
+    expect(dashboardPageRegistry.entries.map(entry => entry.label)).toEqual([
+      'Release notes',
+      'System overview',
+      'Extension banners',
+      'Explore features',
+      'Learning center',
+    ]);
+  });
+
+  test('isEnhancedDashboard reflects the experimental setting', async () => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+    await setupDashboardPageRegistry();
+    expect(isEnhancedDashboard()).toBe(true);
+
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
+    await setupDashboardPageRegistry();
+    expect(isEnhancedDashboard()).toBe(false);
+  });
 });
 
 describe('convertFromListOrganizerItems', () => {
@@ -102,11 +126,13 @@ describe('convertFromListOrganizerItems', () => {
     const originalEntries: DashboardPageRegistryEntry[] = [
       {
         id: 'Release Notes',
+        label: 'Release notes',
         originalOrder: 0,
         component: 'ReleaseNotesBox' as unknown as Component,
       },
       {
         id: 'Extension Banners',
+        label: 'Extension banners',
         originalOrder: 2,
         component: 'ExtensionBanners' as unknown as Component,
       },
@@ -117,12 +143,14 @@ describe('convertFromListOrganizerItems', () => {
     expect(result).toEqual([
       {
         id: 'Release Notes',
+        label: 'Release notes',
         hidden: false,
         originalOrder: 0,
         component: 'ReleaseNotesBox' as unknown as Component,
       },
       {
         id: 'Extension Banners',
+        label: 'Extension banners',
         hidden: true,
         originalOrder: 2,
         component: 'ExtensionBanners' as unknown as Component,
@@ -147,6 +175,7 @@ describe('convertFromListOrganizerItems', () => {
     expect(result).toEqual([
       {
         id: 'Unknown Section',
+        label: 'Unknown Section',
         hidden: false,
         originalOrder: 0,
         component: undefined,
@@ -167,6 +196,7 @@ describe('convertFromListOrganizerItems', () => {
     const originalEntries: DashboardPageRegistryEntry[] = [
       {
         id: 'Release Notes',
+        label: 'Release notes',
         originalOrder: 0,
         component: 'CustomComponent' as unknown as Component,
       },
@@ -182,6 +212,7 @@ describe('convertFromListOrganizerItems', () => {
     const originalEntries: DashboardPageRegistryEntry[] = [
       {
         id: 'Release Notes',
+        label: 'Release notes',
         originalOrder: 0,
         component: 'ReleaseNotesBox' as unknown as Component,
       },
