@@ -29,6 +29,7 @@ import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
 import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { HyperVPrepOnboarding } from '/@/platforms/windows/hyperv-prep-onboarding';
 import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from '/@/utils/rosetta';
@@ -37,6 +38,7 @@ import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
 vi.mock(import('/@/platforms/windows/hyperv-prep'));
+vi.mock(import('/@/platforms/windows/hyperv-prep-onboarding'));
 
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
@@ -112,10 +114,14 @@ describe('inversifyBinding', () => {
       expect(container.isBound(HyperVPrep)).toBeTruthy();
     });
 
-    test('InversifyBinding#init should register HyperVPrep as a startup service', async () => {
+    test('InversifyBinding#init should bind HyperVPrepOnboarding', async () => {
+      expect(container.isBound(HyperVPrepOnboarding)).toBeTruthy();
+    });
+
+    test('InversifyBinding#init should register HyperVPrep and HyperVPrepOnboarding as startup services', async () => {
       const startupServices = await container.getAllAsync(StartupSymbol);
 
-      expect(startupServices).toEqual([container.get(HyperVPrep)]);
+      expect(startupServices).toEqual([container.get(HyperVPrep), container.get(HyperVPrepOnboarding)]);
     });
 
     test('InversifyBinding#init should not bind SocketCompatibility', async () => {
@@ -153,6 +159,10 @@ describe('inversifyBinding', () => {
 
     test('InversifyBinding#init should not bind HyperVPrep', async () => {
       expect(container.isBound(HyperVPrep)).toBeFalsy();
+    });
+
+    test('InversifyBinding#init should not bind HyperVPrepOnboarding', async () => {
+      expect(container.isBound(HyperVPrepOnboarding)).toBeFalsy();
     });
 
     test('InversifyBinding#init should not register any startup service', async () => {

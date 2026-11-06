@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,19 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 
 import Onboarding from './Onboarding.svelte';
+
+// listener registered by the context store when it is imported: this is how the main process
+// forwards the context.setValue() calls of extensions to the renderer
+const contextValueUpdatedListener = vi
+  .mocked(window.events.receive)
+  .mock.calls.find(([channel]) => channel === 'context-value-updated')?.[1];
 
 async function waitRender(customProperties: object): Promise<void> {
   render(Onboarding, { ...customProperties });
@@ -295,6 +301,63 @@ test('Expect content with "when" to change dynamically when setting has been upd
   // Expect "helloworld" to exist
   const helloExists = screen.getAllByText('helloworld');
   expect(helloExists[0]).toBeInTheDocument();
+});
+
+test('Expect content with "when" to follow onboarding context values set by the extension while the step is displayed', async () => {
+  assert(contextValueUpdatedListener, 'the context store should listen to context-value-updated events');
+  context.set(new ContextUI());
+
+  onboardingList.set([
+    {
+      extension: 'id',
+      removable: true,
+      title: 'onboarding',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
+      steps: [
+        {
+          id: 'step',
+          title: 'step',
+          state: 'completed',
+          completionEvents: [],
+          content: [
+            [
+              {
+                value: '${onboardingContext:summary}',
+              },
+            ],
+            [
+              {
+                value: 'pending action',
+                when: 'onboardingContext:outcome == pending',
+              },
+            ],
+          ],
+        },
+      ],
+      enablement: 'true',
+    },
+  ]);
+
+  await waitRender({
+    extensionIds: ['id'],
+  });
+  // the step starts without the extension having set any onboarding context value
+  expect(screen.queryByText('pending action')).not.toBeInTheDocument();
+
+  // the extension calls context.setValue('outcome', 'pending', 'onboarding')
+  contextValueUpdatedListener({ key: 'id.onboarding.summary', value: 'action available' });
+  contextValueUpdatedListener({ key: 'id.onboarding.outcome', value: 'pending' });
+  await screen.findByText('action available');
+  await screen.findByText('pending action');
+
+  // the action completes and the extension updates the context again
+  contextValueUpdatedListener({ key: 'id.onboarding.summary', value: 'action done' });
+  contextValueUpdatedListener({ key: 'id.onboarding.outcome', value: 'done' });
+  await screen.findByText('action done');
+  await vi.waitFor(() => expect(screen.queryByText('pending action')).not.toBeInTheDocument());
 });
 
 test('Expect Step Body to clean up if new step has no content to display.', async () => {
