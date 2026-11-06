@@ -28,9 +28,11 @@ import { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-fi
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
 
 @injectable()
 export class WinPlatform {
@@ -80,7 +82,17 @@ export class WinPlatform {
       new WarningCheck(this.virtualizationFirmwareCheck),
       new WarningCheck(this.wslCheck),
       new WarningCheck(this.hyperVSequenceCheck),
+      this.createBundledPodmanWSLCheck(),
     ];
+  }
+
+  getUpdatePreflightChecks(): InstallCheck[] {
+    return [this.createBundledPodmanWSLCheck()];
+  }
+
+  // checks the installed WSL against the Podman version that is going to be installed
+  private createBundledPodmanWSLCheck(): InstallCheck {
+    return new WarningCheck(new WSLPodmanVersionCheck(getBundledPodmanVersion()));
   }
 
   async isWSLEnabled(): Promise<boolean> {

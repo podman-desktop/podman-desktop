@@ -28,10 +28,14 @@ import type { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualizati
 import type { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import type { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import type { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import type { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import type { WSL2Check } from '/@/checks/windows/wsl2-check';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
 
 import { WinPlatform } from './win-platform';
+
+vi.mock(import('/@/checks/windows/wsl-podman-version-check'));
 
 const EXTENSION_CONTEXT_MOCK = {} as ExtensionContext;
 const TELEMETRY_LOGGER_MOCK = {} as TelemetryLogger;
@@ -72,9 +76,30 @@ beforeEach(() => {
 
 test('getPreflightChecks should include a warning-wrapped BIOS virtualization check', () => {
   const checks = winPlatform.getPreflightChecks();
-  expect(checks).toHaveLength(6);
+  expect(checks).toHaveLength(7);
   expect(checks[3]).toBeInstanceOf(WarningCheck);
   expect(checks[3].title).toEqual('BIOS Virtualization Enabled');
+});
+
+test('getPreflightChecks should include a warning-wrapped WSL check for the bundled Podman version', async () => {
+  vi.mocked(WSLPodmanVersionCheck.prototype.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  const checks = winPlatform.getPreflightChecks();
+
+  expect(checks[6]).toBeInstanceOf(WarningCheck);
+  expect(WSLPodmanVersionCheck).toHaveBeenCalledWith(getBundledPodmanVersion());
+  await expect(checks[6].execute()).resolves.toEqual({ successful: false, severity: 'warning' });
+});
+
+test('getUpdatePreflightChecks should only include a warning-wrapped WSL check for the bundled Podman version', async () => {
+  vi.mocked(WSLPodmanVersionCheck.prototype.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  const checks = winPlatform.getUpdatePreflightChecks();
+
+  expect(checks).toHaveLength(1);
+  expect(checks[0]).toBeInstanceOf(WarningCheck);
+  expect(WSLPodmanVersionCheck).toHaveBeenCalledWith(getBundledPodmanVersion());
+  await expect(checks[0].execute()).resolves.toEqual({ successful: false, severity: 'warning' });
 });
 
 test('isHyperVEnabled should return false if it is not a Windows environment', async () => {
