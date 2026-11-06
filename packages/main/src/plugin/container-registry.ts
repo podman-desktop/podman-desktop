@@ -2703,6 +2703,8 @@ export class ContainerProviderRegistry {
       devices: updatedDevices,
       secrets: options.Secrets,
       secret_env: options.SecretEnv,
+      terminal: options.Tty,
+      stdin: options.OpenStdin,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);
