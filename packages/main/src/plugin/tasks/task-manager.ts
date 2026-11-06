@@ -123,10 +123,15 @@ export class TaskManager {
     action?: TaskAction;
     cancellable?: boolean;
     cancellationTokenSourceId?: number;
+    connectionTaskId?: number;
   }): Task {
     this.taskId++;
 
-    const task = new TaskImpl(`task-${this.taskId}`, options?.title ?? `Task ${this.taskId}`);
+    const task = new TaskImpl(
+      `task-${this.taskId}`,
+      options?.title ?? `Task ${this.taskId}`,
+      options?.connectionTaskId,
+    );
     task.action = options?.action;
     task.cancellable = options?.cancellable ?? false;
     if (task.cancellable && !options?.cancellationTokenSourceId) {
@@ -198,6 +203,7 @@ export class TaskManager {
       action: task.action?.name,
       cancellable: task.cancellable,
       cancellationTokenSourceId: task.cancellationTokenSourceId,
+      connectionTaskId: task.connectionTaskId,
     };
   }
 

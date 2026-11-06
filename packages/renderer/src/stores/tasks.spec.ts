@@ -20,7 +20,10 @@ import { type IDisposable, type NotificationTaskInfo, TASK_STATUSES, type TaskIn
 import { get } from 'svelte/store';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { clearCompletedOperations } from '/@/lib/preferences/preferences-connection-rendering-task';
+import {
+  clearCompletedOperations,
+  removeTaskOperation,
+} from '/@/lib/preferences/preferences-connection-rendering-task';
 
 import {
   clearNotifications,
@@ -88,6 +91,25 @@ test('Expect clearNotification to clear completed operations and call window.cle
 
   expect(clearCompletedOperations).toHaveBeenCalled();
   expect(clearTasksMock).toHaveBeenCalled();
+});
+
+test('Expect task-removed to remove the operation of a connection task', () => {
+  const task: TaskInfo = { ...SUCCEED_TASK, connectionTaskId: 3 };
+  tasksInfo.set([task]);
+
+  callbacks.get('task-removed')?.(task);
+
+  expect(get(tasksInfo)).toEqual([]);
+  expect(removeTaskOperation).toHaveBeenCalledWith(3);
+});
+
+test('Expect task-removed to not remove any operation for other tasks', () => {
+  tasksInfo.set([SUCCEED_TASK]);
+
+  callbacks.get('task-removed')?.(SUCCEED_TASK);
+
+  expect(get(tasksInfo)).toEqual([]);
+  expect(removeTaskOperation).not.toHaveBeenCalled();
 });
 
 describe('isNotificationTask', () => {

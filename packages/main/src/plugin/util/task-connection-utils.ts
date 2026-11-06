@@ -31,6 +31,7 @@ interface TaskConnectionUtilsParams {
 export interface TaskOptions {
   loggerId: string;
   tokenId?: number;
+  connectionTaskId?: number;
   title: string;
   navigateToTask: () => Promise<void>;
   execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) => Promise<void>;
@@ -50,6 +51,7 @@ export class TaskConnectionUtils {
 
     const task = this.dependencies.taskManager.createTask({
       title: options.title,
+      connectionTaskId: options.connectionTaskId,
       action: {
         name: 'Open task',
         execute: () => {

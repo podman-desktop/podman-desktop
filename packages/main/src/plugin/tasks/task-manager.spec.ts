@@ -360,6 +360,15 @@ test('create task having cancellationTokenSourceId without being cancellable thr
   );
 });
 
+test('create task with connectionTaskId', async () => {
+  const task = taskManager.createTask({ connectionTaskId: 3 });
+  expect(task.connectionTaskId).toEqual(3);
+  expect(apiSenderSendMock).toHaveBeenCalledWith(
+    'task-created',
+    expect.objectContaining({ id: task.id, connectionTaskId: 3 }),
+  );
+});
+
 describe('execute', () => {
   test('execute should throw an error if the task does not exist', async () => {
     expect(() => {

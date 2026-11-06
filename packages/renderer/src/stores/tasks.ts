@@ -20,7 +20,10 @@ import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatu
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
-import { clearCompletedOperations } from '/@/lib/preferences/preferences-connection-rendering-task';
+import {
+  clearCompletedOperations,
+  removeTaskOperation,
+} from '/@/lib/preferences/preferences-connection-rendering-task';
 
 import { findMatchInLeaves } from './search-util';
 
@@ -112,7 +115,12 @@ window.events?.receive('task-updated', (task: unknown) => {
   updateTask(task as TaskInfo);
 });
 window.events?.receive('task-removed', (task: unknown) => {
-  tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== (task as TaskInfo | NotificationTaskInfo).id));
+  const removedTask = task as TaskInfo | NotificationTaskInfo;
+  tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== removedTask.id));
+  // the operation page can no longer be reached from the task manager
+  if (removedTask.connectionTaskId !== undefined) {
+    removeTaskOperation(removedTask.connectionTaskId);
+  }
 });
 
 export function isNotificationTask(task: TaskInfo): task is NotificationTaskInfo {

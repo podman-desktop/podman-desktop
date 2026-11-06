@@ -101,6 +101,14 @@ export function clearCompletedOperations(): void {
   });
 }
 
+// clear all data related to the operation of the given task
+export function removeTaskOperation(taskId: number): void {
+  const operation = get(operationConnectionsInfo).get(taskId);
+  if (operation) {
+    removeOperation(operation.operationKey);
+  }
+}
+
 // ids are never reused, even when operations are removed or created with a given id
 let lastTaskId = 0;
 export function getNextTaskId(): number {

@@ -70,6 +70,7 @@ test('createTask is called', async () => {
   const options: TaskOptions = {
     loggerId: 'logger1',
     tokenId: 42,
+    connectionTaskId: 7,
     title: 'a title',
     navigateToTask: vi.fn(),
     execute: vi.fn(),
@@ -86,6 +87,7 @@ test('createTask is called', async () => {
     throw new Error('param should be defined');
   }
   expect(createTaskParams.title).toEqual('a title');
+  expect(createTaskParams.connectionTaskId).toEqual(7);
   expect(createTaskParams.action?.name).toEqual(`Open task`);
 
   // check that action.execute passed to createTask is calling options.navigateToTask

@@ -2707,6 +2707,7 @@ export class PluginSystem {
 
         const task = taskManager.createTask({
           title: `Updating ${providerConnectionInfo.name} provider`,
+          connectionTaskId: taskId,
           action: {
             name: 'Open task',
             execute: () => {
@@ -2788,6 +2789,7 @@ export class PluginSystem {
         return taskConnectionUtils.withTask({
           loggerId,
           tokenId,
+          connectionTaskId: taskId,
           title: `Creating ${providerName ?? 'Container'} provider`,
           navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
           execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
@@ -2822,6 +2824,7 @@ export class PluginSystem {
         return taskConnectionUtils.withTask({
           loggerId,
           tokenId,
+          connectionTaskId: taskId,
           title: `Creating ${providerName ?? 'Kubernetes'} provider`,
           navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
           execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
@@ -2845,6 +2848,7 @@ export class PluginSystem {
         return taskConnectionUtils.withTask({
           loggerId,
           tokenId,
+          connectionTaskId: taskId,
           title: `Creating ${providerName ?? 'VM'} provider`,
           navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
           execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>

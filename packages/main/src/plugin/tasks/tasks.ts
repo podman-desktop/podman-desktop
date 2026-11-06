@@ -40,5 +40,6 @@ export interface Task extends Disposable {
   action?: TaskAction;
   cancellable: boolean;
   cancellationTokenSourceId?: number;
+  connectionTaskId?: number;
   readonly onUpdate: Event<TaskUpdateEvent>;
 }

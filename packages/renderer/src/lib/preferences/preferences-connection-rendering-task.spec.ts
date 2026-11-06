@@ -29,6 +29,7 @@ import {
   getNextTaskId,
   registerConnectionCallback,
   removeOperation,
+  removeTaskOperation,
 } from './preferences-connection-rendering-task';
 import { disconnectUI, eventCollect, reconnectUI } from './preferences-connection-rendering-task';
 
@@ -171,6 +172,19 @@ test('clearCompletedOperations clears the logs and removes only the operations n
   expect([...get(operationConnectionsInfo).values()].map(operation => operation.operationKey)).toEqual([runningKey]);
   expectLogsCleared(completedKey, true);
   expectLogsCleared(runningKey, false);
+});
+
+test('removeTaskOperation clears the logs and removes only the operation of the given task', () => {
+  const key = registerConnectionCallback(dummyCallback);
+  const otherKey = registerConnectionCallback(dummyCallback);
+  setOperations(buildOperation(otherKey), buildOperation(key));
+
+  removeTaskOperation(2);
+  removeTaskOperation(5);
+
+  expect([...get(operationConnectionsInfo).keys()]).toEqual([1]);
+  expectLogsCleared(key, true);
+  expectLogsCleared(otherKey, false);
 });
 
 test('getNextTaskId returns increasing ids', () => {
