@@ -21,7 +21,7 @@ import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/pro
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import product from '/@product.json' with { type: 'json' };
@@ -213,6 +213,14 @@ describe('findAuthEnvironment', () => {
 });
 
 describe('downloadExtension', () => {
+  const originalConsoleLog = console.log;
+  const originalConsoleWarn = console.warn;
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.warn = originalConsoleWarn;
+  });
+
   beforeEach(() => {
     console.log = vi.fn();
     console.warn = vi.fn();

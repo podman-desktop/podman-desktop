@@ -23,7 +23,7 @@ import type { ExtensionInfo } from '@desktop-framework/api';
 import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { CatalogFetchableExtension } from '@desktop-framework/api/extension-catalog';
 import type { IpcMain, IpcMainEvent } from 'electron';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { Directories } from '/@/plugin/directories.js';
@@ -249,6 +249,11 @@ test('should install an image if labels are correct', async () => {
 describe('installFromImage tmp folder cleanup', () => {
   const imageToPull = 'fake.io/fake-image:fake-tag';
   const TMP_FOLDER = '/fake/tmp/fakeiofakeimage-abc123';
+  const originalConsoleError = console.error;
+
+  afterEach(() => {
+    console.error = originalConsoleError;
+  });
 
   beforeEach(() => {
     console.error = vi.fn();
