@@ -99,10 +99,8 @@ export class ImageUtils {
     }
 
     return containersInfo.some(container => {
-      // imageId is required on ContainerInfoUI, but a hand-built fixture (e.g. in tests)
-      // may still omit it; an undefined one simply never matches. Falling back to another
-      // field here would report the wrong image as in-use
-      if (container.imageId !== imageInfo.Id) {
+      // Image IDs are content digests, so the same image on two engines has the same Id.
+      if (container.engineId !== imageInfo.engineId || container.imageId !== imageInfo.Id) {
         return false;
       }
       if (repositoryTag) {
