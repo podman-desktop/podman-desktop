@@ -165,6 +165,7 @@ describe.each([
 
     const callback = mockCallback(async keyLogger => {
       providedKeyLogger = keyLogger;
+      return new Promise<void>(() => {});
     });
 
     // eslint-disable-next-line @typescript-eslint/await-thenable
@@ -238,6 +239,7 @@ describe.each([
     const callback = mockCallback(async keyLogger => {
       // keep reference
       providedKeyLogger = keyLogger;
+      return new Promise<void>(() => {});
     });
     vi.mocked(window.getCancellableTokenSource).mockResolvedValue(Date.now());
     render(PreferencesConnectionCreationOrEditRendering, {
@@ -770,4 +772,65 @@ test('Expect reconnectUI to be called only once', async () => {
     expect(screen.getByRole('term')).toBeInTheDocument();
     expect(reconnectUI).toBeCalledTimes(1);
   });
+});
+
+test.each([
+  { name: 'fails', error: 'error' },
+  { name: 'is cancelled', error: 'Execution cancelled' },
+])('Expect operation not in progress in store when the callback $name', async ({ error }) => {
+  const { unmount } = render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback: vi.fn().mockRejectedValue(new Error(error)),
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+  unmount();
+
+  await vi.waitFor(() => expect(get(operationConnectionsInfo).get(1)?.operationInProgress).toBe(false));
+});
+
+test('Expect success stored and notified when the callback resolves after the component is destroyed', async () => {
+  const { promise: callbackDone, resolve: resolveCallback } = Promise.withResolvers<void>();
+  const callback = mockCallback(() => callbackDone);
+  const onSuccess = vi.fn();
+  const { unmount } = render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback,
+    onSuccess,
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+  await vi.waitFor(() => expect(callback).toHaveBeenCalled());
+
+  // provider disposed its factory
+  unmount();
+  resolveCallback();
+
+  await vi.waitFor(() => expect(onSuccess).toHaveBeenCalledWith(1));
+  expect(get(operationConnectionsInfo).get(1)).toEqual(
+    expect.objectContaining({ operationSuccessful: true, operationInProgress: false }),
+  );
+});
+
+test('Expect onSuccess not called when the operation fails', async () => {
+  const onSuccess = vi.fn();
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback: vi.fn().mockRejectedValue(new Error('error')),
+    onSuccess,
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+
+  await screen.findByText('Error: error');
+  expect(onSuccess).not.toHaveBeenCalled();
 });

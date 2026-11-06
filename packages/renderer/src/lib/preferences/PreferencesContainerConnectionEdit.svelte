@@ -9,6 +9,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 
 import PreferencesConnectionCreationRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
+import PreferencesConnectionOperationSuccess from '/@/lib/preferences/PreferencesConnectionOperationSuccess.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -30,6 +31,14 @@ let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnecti
   providerInfo.containerConnections.filter(connection => connection.name === connectionName)[0],
 );
 let scope: string = $derived(isContainerConnection(connectionInfo) ? 'ContainerConnection' : 'KubernetesConnection');
+
+let operationSuccessful = $state(false);
+let successfulTaskId = $state<number>();
+
+function onSuccess(operationTaskId?: number): void {
+  operationSuccessful = true;
+  successfulTaskId = operationTaskId;
+}
 
 async function editConnection(
   internalProviderId: string,
@@ -56,12 +65,17 @@ async function editConnection(
   <DetailsPage title={connectionInfo.name}>
     {#snippet contentSnippet()}
       <div class="text-[var(--pd-content-text)]">
-        <PreferencesConnectionCreationRendering
-          providerInfo={providerInfo}
-          connectionInfo={connectionInfo}
-          properties={properties}
-          propertyScope={scope}
-          callback={editConnection} />
+        {#if operationSuccessful}
+          <PreferencesConnectionOperationSuccess taskId={successfulTaskId} />
+        {:else}
+          <PreferencesConnectionCreationRendering
+            providerInfo={providerInfo}
+            connectionInfo={connectionInfo}
+            properties={properties}
+            propertyScope={scope}
+            callback={editConnection}
+            onSuccess={onSuccess} />
+        {/if}
       </div>
     {/snippet}
     {#snippet iconSnippet()}

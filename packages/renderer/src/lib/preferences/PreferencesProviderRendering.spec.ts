@@ -20,9 +20,11 @@ import type { ProviderInfo } from '@desktop-framework/api';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { operationConnectionsInfo } from '/@/stores/operation-connections';
 import { providerInfos } from '/@/stores/providers';
 
 import * as PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
+import * as PreferencesConnectionOperationSuccess from './PreferencesConnectionOperationSuccess.svelte';
 import PreferencesProviderRendering from './PreferencesProviderRendering.svelte';
 
 const defaultProviderInfo = {
@@ -44,6 +46,7 @@ const defaultProviderInfo = {
 } as unknown as ProviderInfo;
 
 vi.mock(import('./PreferencesConnectionCreationOrEditRendering.svelte'));
+vi.mock(import('./PreferencesConnectionOperationSuccess.svelte'));
 
 describe.each<{
   name: string;
@@ -132,4 +135,83 @@ describe.each<{
       }),
     );
   });
+});
+
+function setOperation(taskId: number, operationSuccessful: boolean): void {
+  operationConnectionsInfo.set(
+    new Map([
+      [
+        taskId,
+        {
+          operationKey: Symbol(),
+          providerInfo: defaultProviderInfo,
+          connectionInfo: undefined,
+          properties: [],
+          propertyScope: 'KubernetesProviderConnectionFactory',
+          operationInProgress: false,
+          operationSuccessful,
+          operationStarted: true,
+          errorMessage: '',
+        },
+      ],
+    ]),
+  );
+}
+
+describe('operation success', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    operationConnectionsInfo.set(new Map());
+  });
+
+  test.each([
+    { name: 'success screen for a successful task', successful: true, factory: false },
+    { name: 'creation panel for a running task', successful: false, factory: true },
+  ])('reopening a task displays the $name', ({ successful, factory }) => {
+    setOperation(3, successful);
+    providerInfos.set([{ ...defaultProviderInfo, kubernetesProviderConnectionCreation: factory }]);
+    render(PreferencesProviderRendering, { providerInternalId: 'id', taskId: 3 });
+
+    const [shown, hidden] = successful
+      ? [PreferencesConnectionOperationSuccess, PreferencesConnectionCreationRendering]
+      : [PreferencesConnectionCreationRendering, PreferencesConnectionOperationSuccess];
+    expect(shown.default).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ taskId: 3 }));
+    expect(hidden.default).not.toHaveBeenCalled();
+  });
+
+  test('success screen is displayed when a reopened task succeeds later', async () => {
+    setOperation(3, false);
+    providerInfos.set([{ ...defaultProviderInfo, kubernetesProviderConnectionCreation: true }]);
+    render(PreferencesProviderRendering, { providerInternalId: 'id', taskId: 3 });
+
+    setOperation(3, true);
+
+    await vi.waitFor(() =>
+      expect(PreferencesConnectionOperationSuccess.default).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ taskId: 3 }),
+      ),
+    );
+  });
+
+  test.each([5, undefined])(
+    'success screen is displayed on success notification with task id %s after the factory is disposed',
+    async taskId => {
+      const info = { ...defaultProviderInfo, kubernetesProviderConnectionCreation: true };
+      providerInfos.set([info]);
+      render(PreferencesProviderRendering, { providerInternalId: 'id' });
+      const { onSuccess } = vi.mocked(PreferencesConnectionCreationRendering.default).mock.calls[0][1];
+      expect(PreferencesConnectionOperationSuccess.default).not.toHaveBeenCalled();
+
+      providerInfos.set([{ ...info, kubernetesProviderConnectionCreation: false }]);
+      onSuccess?.(taskId);
+
+      await vi.waitFor(() =>
+        expect(PreferencesConnectionOperationSuccess.default).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ taskId }),
+        ),
+      );
+    },
+  );
 });

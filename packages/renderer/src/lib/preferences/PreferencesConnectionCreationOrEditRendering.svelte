@@ -6,8 +6,7 @@ import type {
 } from '@desktop-framework/api';
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { AuditRequestItems, AuditResult, ConfigurationScope } from '@desktop-framework/extension-api';
-import { faCubes } from '@fortawesome/free-solid-svg-icons';
-import { Button, ButtonRow, EmptyScreen, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 /* eslint-disable import/no-duplicates */
@@ -25,12 +24,13 @@ import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
 import EditableConnectionResourceItem from './item-formats/EditableConnectionResourceItem.svelte';
 import {
-  clearCreateTask,
   type ConnectionCallback,
   disconnectUI,
   eventCollect,
+  getNextTaskId,
   reconnectUI,
   registerConnectionCallback,
+  removeOperation,
 } from './preferences-connection-rendering-task';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 import { calcHalfCpuCores, getInitialValue, isPropertyValidInContext, writeToTerminal } from './Util';
@@ -49,7 +49,7 @@ interface Props {
     taskId: number | undefined,
   ): Promise<void>;
   taskId?: number;
-  disableEmptyScreen?: boolean;
+  onSuccess?: (taskId?: number) => void;
   hideCloseButton?: boolean;
   connectionInfo?: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
   inProgress?: boolean;
@@ -62,7 +62,7 @@ let {
   propertyScope,
   callback,
   taskId = undefined,
-  disableEmptyScreen = false,
+  onSuccess,
   hideCloseButton = false,
   connectionInfo = undefined,
   inProgress = $bindable(false),
@@ -140,7 +140,7 @@ onMount(async () => {
     restoreConfigurationValues();
   }
 
-  taskId ??= operationConnectionInfoMap.size + 1;
+  taskId ??= getNextTaskId();
 
   const data: { [p: string]: unknown } = {};
   for (let field of configurationKeys) {
@@ -344,12 +344,15 @@ async function ended(): Promise<void> {
     operationSuccessful = true;
   }
   updateStore();
+  if (operationSuccessful) {
+    onSuccess?.(taskId);
+  }
 }
 
 async function cleanup(): Promise<void> {
   // clear
   if (loggerHandlerKey) {
-    clearCreateTask(loggerHandlerKey);
+    removeOperation(loggerHandlerKey);
     loggerHandlerKey = undefined;
   }
   errorMessage = undefined;
@@ -429,9 +432,17 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
       loggerHandlerKey = registerConnectionCallback(getLoggerHandler());
       updateStore();
       await callback(providerInfo.internalId, data, loggerHandlerKey, eventCollect, tokenId, taskId);
+      if (!operationCancelled && !operationFailed) {
+        inProgress = false;
+        tokenId = undefined;
+        operationSuccessful = true;
+        updateStore();
+        onSuccess?.(taskId);
+      }
     } catch (error: unknown) {
       //display error
       tokenId = undefined;
+      inProgress = false;
       // filter cancellation message to avoid displaying error and allow user to restart the creation
       if (
         error &&
@@ -442,11 +453,12 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
         error.message.indexOf('Execution cancelled') >= 0
       ) {
         errorMessage = 'Action cancelled. See logs for more details';
-        return;
+      } else {
+        errorMessage = String(error);
+        operationStarted = false;
       }
-      errorMessage = String(error);
-      operationStarted = false;
-      inProgress = false;
+      // the operation is over, even if the component has been destroyed meanwhile
+      updateStore();
     }
   }
 }
@@ -514,109 +526,96 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
 </script>
 
 <div class="flex flex-col w-full h-full overflow-hidden">
-  {#if operationSuccessful && !disableEmptyScreen}
-    <EmptyScreen icon={faCubes} title={operationLabel} message="Successful operation">
-      <Button
-        class="py-3"
-        on:click={async (): Promise<void> => {
-          await cleanup();
-          router.goto('/preferences/resources');
-        }}>
-        Go back to resources
-      </Button>
-    </EmptyScreen>
-  {:else}
-    <div class="flex flex-col px-6 w-full h-full overflow-auto">
-      {#if pageIsLoading}
-        <div class="text-center mt-16 p-2" role="status">
-          <Spinner size="2em" />
-        </div>
-      {:else}
-        {#if operationStarted || errorMessage}
-          <div class="w-full">
-            <div class="mt-2 mb-8">
-              <div class="mt-2 float-right">
-                <button
-                  aria-label="Show Logs"
-                  class="text-xs mr-3 hover:underline"
-                  onclick={(): boolean => (showLogs = !showLogs)}
-                  >Show Logs <i class="fas {showLogs ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i
-                  ></button>
-                <button
-                  aria-label="Cancel {operationLabel.toLowerCase()}"
-                  class="text-xs {errorMessage ? 'mr-3' : ''} hover:underline {tokenId ? '' : 'hidden'}"
-                  disabled={!tokenId}
-                  onclick={cancelCreation}>Cancel</button>
-                <button
-                  class="text-xs hover:underline {inProgress ? 'hidden' : ''}"
-                  aria-label="Close panel"
-                  onclick={closePanel}>Close</button>
-              </div>
-            </div>
-            <div id="log" class="pt-2 h-80 {showLogs ? '' : 'hidden'}">
-              <div class="w-full h-full">
-                <TerminalWindow bind:terminal={logsTerminal} />
-              </div>
+  <div class="flex flex-col px-6 w-full h-full overflow-auto">
+    {#if pageIsLoading}
+      <div class="text-center mt-16 p-2" role="status">
+        <Spinner size="2em" />
+      </div>
+    {:else}
+      {#if operationStarted || errorMessage}
+        <div class="w-full">
+          <div class="mt-2 mb-8">
+            <div class="mt-2 float-right">
+              <button
+                aria-label="Show Logs"
+                class="text-xs mr-3 hover:underline"
+                onclick={(): boolean => (showLogs = !showLogs)}
+                >Show Logs <i class="fas {showLogs ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i
+                ></button>
+              <button
+                aria-label="Cancel {operationLabel.toLowerCase()}"
+                class="text-xs {errorMessage ? 'mr-3' : ''} hover:underline {tokenId ? '' : 'hidden'}"
+                disabled={!tokenId}
+                onclick={cancelCreation}>Cancel</button>
+              <button
+                class="text-xs hover:underline {inProgress ? 'hidden' : ''}"
+                aria-label="Close panel"
+                onclick={closePanel}>Close</button>
             </div>
           </div>
-        {/if}
-        {#if errorMessage}
-          <div class="pt-3 mt-2 w-full h-fit">
-            <ErrorMessage error={errorMessage} />
-          </div>
-        {/if}
-
-        <div class="p-3 mt-2 w-full h-fit {inProgress ? 'opacity-40 pointer-events-none' : ''}">
-          {#if connectionAuditResult && (connectionAuditResult.records?.length ?? 0) > 0}
-            <AuditMessageBox auditResult={connectionAuditResult} />
-          {/if}
-          <form
-            novalidate
-            class="p-2 space-y-7 h-fit"
-            onsubmit={preventDefault(handleOnSubmit)}
-            bind:this={formEl}
-            aria-label="Properties Information">
-            {#each configurationKeys as configurationKey (configurationKey.id)}
-              <div class="mb-2.5">
-                <div class="flex flex-row items-center h-fit">
-                  {#if configurationKey.description}
-                    {configurationKey.description}:
-                  {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}
-                    <Markdown markdown={configurationKey.markdownDescription} />
-                  {/if}
-                  {#if configurationKey.format === 'memory' || configurationKey.format === 'diskSize' || configurationKey.format === 'cpu'}
-                    <div class="text-[var(--pd-content-text)]">
-                      <EditableConnectionResourceItem
-                        record={configurationKey}
-                        value={getConnectionResourceConfigurationNumberValue(configurationKey, configurationValues)}
-                        onSave={setConfigurationValue} />
-                    </div>
-                  {/if}
-                </div>
-                {#if configurationValues}
-                  <PreferencesRenderingItemFormat
-                    invalidRecord={handleInvalidComponent}
-                    validRecord={handleValidComponent}
-                    record={configurationKey}
-                    setRecordValue={setConfigurationValue}
-                    enableSlider={true}
-                    initialValue={getConfigurationValue(configurationKey)}
-                    givenValue={getConnectionResourceConfigurationValue(configurationKey, configurationValues)} />
-                {/if}
-              </div>
-            {/each}
-            <div class="w-full">
-              <ButtonRow>
-                {#if !hideCloseButton}
-                  <Button type="link" aria-label="Close page" on:click={closePage}>Close</Button>
-                {/if}
-                <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl?.requestSubmit()}
-                  >{buttonLabel}</Button>
-              </ButtonRow>
+          <div id="log" class="pt-2 h-80 {showLogs ? '' : 'hidden'}">
+            <div class="w-full h-full">
+              <TerminalWindow bind:terminal={logsTerminal} />
             </div>
-          </form>
+          </div>
         </div>
       {/if}
-    </div>
-  {/if}
+      {#if errorMessage}
+        <div class="pt-3 mt-2 w-full h-fit">
+          <ErrorMessage error={errorMessage} />
+        </div>
+      {/if}
+
+      <div class="p-3 mt-2 w-full h-fit {inProgress ? 'opacity-40 pointer-events-none' : ''}">
+        {#if connectionAuditResult && (connectionAuditResult.records?.length ?? 0) > 0}
+          <AuditMessageBox auditResult={connectionAuditResult} />
+        {/if}
+        <form
+          novalidate
+          class="p-2 space-y-7 h-fit"
+          onsubmit={preventDefault(handleOnSubmit)}
+          bind:this={formEl}
+          aria-label="Properties Information">
+          {#each configurationKeys as configurationKey (configurationKey.id)}
+            <div class="mb-2.5">
+              <div class="flex flex-row items-center h-fit">
+                {#if configurationKey.description}
+                  {configurationKey.description}:
+                {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}
+                  <Markdown markdown={configurationKey.markdownDescription} />
+                {/if}
+                {#if configurationKey.format === 'memory' || configurationKey.format === 'diskSize' || configurationKey.format === 'cpu'}
+                  <div class="text-[var(--pd-content-text)]">
+                    <EditableConnectionResourceItem
+                      record={configurationKey}
+                      value={getConnectionResourceConfigurationNumberValue(configurationKey, configurationValues)}
+                      onSave={setConfigurationValue} />
+                  </div>
+                {/if}
+              </div>
+              {#if configurationValues}
+                <PreferencesRenderingItemFormat
+                  invalidRecord={handleInvalidComponent}
+                  validRecord={handleValidComponent}
+                  record={configurationKey}
+                  setRecordValue={setConfigurationValue}
+                  enableSlider={true}
+                  initialValue={getConfigurationValue(configurationKey)}
+                  givenValue={getConnectionResourceConfigurationValue(configurationKey, configurationValues)} />
+              {/if}
+            </div>
+          {/each}
+          <div class="w-full">
+            <ButtonRow>
+              {#if !hideCloseButton}
+                <Button type="link" aria-label="Close page" on:click={closePage}>Close</Button>
+              {/if}
+              <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl?.requestSubmit()}
+                >{buttonLabel}</Button>
+            </ButtonRow>
+          </div>
+        </form>
+      </div>
+    {/if}
+  </div>
 </div>

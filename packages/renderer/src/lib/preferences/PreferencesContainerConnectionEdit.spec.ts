@@ -28,9 +28,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { providerInfos } from '/@/stores/providers';
 
 import * as PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
+import * as PreferencesConnectionOperationSuccess from './PreferencesConnectionOperationSuccess.svelte';
 import PreferencesContainerConnectionEdit from './PreferencesContainerConnectionEdit.svelte';
 
 vi.mock(import('./PreferencesConnectionCreationOrEditRendering.svelte'));
+vi.mock(import('./PreferencesConnectionOperationSuccess.svelte'));
 
 const EMPTY_PROVIDER_MOCK: ProviderInfo = {
   id: 'podman',
@@ -170,6 +172,26 @@ describe('PreferencesContainerConnectionEdit', () => {
         propertyScope: 'ContainerConnection',
         callback: expect.any(Function),
       }),
+    );
+  });
+
+  test('displays the success screen when the edit form notifies a success', async () => {
+    const connectionName = 'podman machine';
+    providerInfos.set([createProvider('started', connectionName)]);
+
+    render(PreferencesContainerConnectionEdit, {
+      providerInternalId: '0',
+      name: Buffer.from(connectionName).toString('base64'),
+    });
+    expect(PreferencesConnectionOperationSuccess.default).not.toHaveBeenCalled();
+
+    vi.mocked(PreferencesConnectionCreationRendering.default).mock.calls[0][1].onSuccess?.(4);
+
+    await vi.waitFor(() =>
+      expect(PreferencesConnectionOperationSuccess.default).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ taskId: 4 }),
+      ),
     );
   });
 });

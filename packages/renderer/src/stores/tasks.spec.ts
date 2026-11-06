@@ -20,6 +20,8 @@ import { type IDisposable, type NotificationTaskInfo, TASK_STATUSES, type TaskIn
 import { get } from 'svelte/store';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { clearCompletedOperations } from '/@/lib/preferences/preferences-connection-rendering-task';
+
 import {
   clearNotifications,
   filtered,
@@ -29,6 +31,8 @@ import {
   type TaskInfoUI,
   tasksInfo,
 } from './tasks';
+
+vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'));
 
 const started = new Date().getTime();
 
@@ -76,12 +80,13 @@ beforeEach(() => {
   });
 });
 
-test('Expect clearNotification to call window.clearTasks', async () => {
+test('Expect clearNotification to clear completed operations and call window.clearTasks', async () => {
   const clearTasksMock = vi.fn().mockResolvedValue(undefined);
   (window as { clearTasks: () => void }).clearTasks = clearTasksMock;
 
   await clearNotifications();
 
+  expect(clearCompletedOperations).toHaveBeenCalled();
   expect(clearTasksMock).toHaveBeenCalled();
 });
 
