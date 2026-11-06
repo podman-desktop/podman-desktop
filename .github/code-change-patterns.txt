@@ -12,6 +12,7 @@
 # Installation test coverage
 ^tests/playwright/src/special-specs/installation/
 ^tests/playwright/src/utility/installation-assets\.ts$
+^tests/playwright/src/utility/installer-checksums\.ts$
 ^tests/playwright/src/model/core/installation-assets\.json$
 
 # Build and configuration files
