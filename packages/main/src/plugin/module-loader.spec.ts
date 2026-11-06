@@ -100,6 +100,20 @@ test('module loader binds factory override to the extension owning the module, n
   );
 });
 
+test('module loader does not bind extensions whose directories differ only by case', () => {
+  const apiUpper = {} as typeof PodmanDesktop;
+  const apiLower = {} as typeof PodmanDesktop;
+  analyzedExtension.set('upper', { path: '/extensions/Foo', api: apiUpper });
+  analyzedExtension.set('lower', { path: '/extensions/foo', api: apiLower });
+
+  expect(fakeModule._load('module2', { filename: '/extensions/foo/dist/index.js', path: '/extensions/foo/dist' })).toBe(
+    apiLower,
+  );
+  expect(fakeModule._load('module2', { filename: '/extensions/Foo/dist/index.js', path: '/extensions/Foo/dist' })).toBe(
+    apiUpper,
+  );
+});
+
 test('module loader throws if the request comes from a directory sharing only a prefix with the extension', () => {
   expect(() =>
     fakeModule._load('module2', { filename: '/path/to/ext-other/index.js', path: '/path/to/ext-other' }),

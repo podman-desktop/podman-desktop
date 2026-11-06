@@ -34,9 +34,17 @@ export interface NodeInternalModule {
 export type OverrideFunction = (ext: ExtensionModule) => any;
 
 // check containment on whole path segments, a plain string prefix would match '/ext/ab' against '/ext/a'
+// path.relative ignores case on Windows, so the exact-case prefix check keeps '/ext/Foo' and '/ext/foo' apart
 function isInsideDirectory(file: string, directory: string): boolean {
-  const relative = path.relative(path.normalize(directory), path.normalize(file));
-  return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+  const normalizedFile = path.normalize(file);
+  const normalizedDirectory = path.normalize(directory);
+  const relative = path.relative(normalizedDirectory, normalizedFile);
+  return (
+    relative !== '..' &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative) &&
+    normalizedFile.startsWith(normalizedDirectory)
+  );
 }
 
 export class ModuleLoader {
