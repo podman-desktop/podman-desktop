@@ -32,6 +32,20 @@ export interface ImageInfo extends Dockerode.ImageInfo {
   Arch?: string;
 }
 
+/**
+ * Locates an image on the engine holding it. The engine id is built by the backend when it registers
+ * a container connection, so it can only be obtained from the backend, never computed by a caller.
+ */
+export interface ImageLocation {
+  Id: string;
+  engineId: string;
+  /**
+   * The repository tag the reference named, among the ones the engine reports for this image.
+   * Undefined when the reference pinned a digest, or when the image carries no tag at all.
+   */
+  repoTag?: string;
+}
+
 export interface BuildImageOptions {
   /**
    * Specifies a Containerfile which contains instructions for building the image

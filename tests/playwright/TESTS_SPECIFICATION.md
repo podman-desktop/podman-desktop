@@ -54,6 +54,14 @@ See [README.md](README.md) and [runner-factory.ts](src/runner/runner-factory.ts)
 | `CI`                                         | Shared `isCI` is true only for case-insensitive `true`. Some helpers use any non-empty value instead (registry credential defaults and global cleanup), as noted below.                             |
 | `RunnerOptions`                              | Specs may choose a profile folder, injected settings, or disabled extensions in code. These are not additional command-line environment variables.                                                  |
 
+When `PODMAN_DESKTOP_BINARY` or `PODMAN_DESKTOP_ARGS` is set, the runner
+passes an explicit `executablePath`, so Playwright skips its readiness loader.
+The runner instead starts the app with `--inspect-brk=<free port>`, installs
+the same readiness gate through the Node inspector, and resumes it; Playwright
+releases the gate once attached. Packaged binaries must therefore have the
+`EnableNodeCliInspectArguments` fuse enabled (already required by Playwright).
+See [electron-startup-gate.ts](src/runner/electron-startup-gate.ts).
+
 The runner normally redirects application data to
 `tests/playwright/output/<profile>/<customFolder>` and seeds settings there.
 This does not isolate Podman resources, host CLI installations, registry auth,

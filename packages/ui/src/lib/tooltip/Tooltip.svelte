@@ -2,6 +2,7 @@
 import type { Placement } from '@floating-ui/dom';
 import type { Snippet } from 'svelte';
 
+import { getTooltipAriaTarget } from './tooltip-aria';
 import { tooltipHidden } from './tooltip-store';
 import TooltipPopup, { nextTooltipId } from './TooltipPopup.svelte';
 
@@ -42,17 +43,9 @@ const tooltipId = nextTooltipId();
 let referenceElement: HTMLElement | undefined = $state(undefined);
 let isVisible = $state(false);
 
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
-
-function getTooltipAriaTarget(root: HTMLElement | undefined): HTMLElement | undefined {
-  if (!root) return undefined;
-  return root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? root;
-}
-
 function setTooltipAriaDescribedBy(root: HTMLElement | undefined, id: string | undefined): void {
+  if (!root) return;
   const target = getTooltipAriaTarget(root);
-  if (!target) return;
 
   if (id) {
     target.setAttribute('aria-describedby', id);
