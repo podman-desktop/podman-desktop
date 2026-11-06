@@ -36,7 +36,6 @@ import { isLinux } from '/@/utility/platform';
 import { getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
-
 const RESOURCE_NAME = 'podman';
 const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
 const LOCAL_IMAGE_MACHINE_NAME = 'podman-machine-local-image';
@@ -93,7 +92,7 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   playExpect(await defaultMachineCard.resourceElementConnectionStatus.innerText()).toContain(
     ResourceElementState.Running,
   );
-  // Stop the default machine before creating a second one. Creating with startNow: false and 
+  // Stop the default machine before creating a second one. Creating with startNow: false and
   // starting explicitly later also makes the "not the default machine" dialog deterministic.
   await defaultMachineCard.performConnectionAction(ResourceElementActions.Stop);
   await waitUntil(
