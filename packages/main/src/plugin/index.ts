@@ -56,6 +56,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImageSearchOptions,
   ImageSearchResult,
   ImagesSaveOptions,
@@ -1366,6 +1367,17 @@ export class PluginSystem {
         shortName: string,
       ): Promise<string[]> => {
         return containerProviderRegistry.resolveShortnameImage(providerContainerConnectionInfo, shortName);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:resolveImage',
+      async (
+        _listener,
+        providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+        reference: string,
+      ): Promise<ImageLocation | undefined> => {
+        return containerProviderRegistry.resolveImage(providerContainerConnectionInfo, reference);
       },
     );
 
