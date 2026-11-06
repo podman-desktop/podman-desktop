@@ -45,6 +45,10 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
   getSshConfig(): ConnectConfig {
     return super.getSshConfig();
   }
+
+  logSocketError(side: 'local' | 'remote', error: unknown): void {
+    super.logSocketError(side, error);
+  }
 }
 
 let dummyKey: string;
@@ -153,6 +157,22 @@ test('disconnect should clear pending reconnect timeout', () => {
 
   vi.advanceTimersByTime(30000);
   expect(connectSpy).toHaveBeenCalledTimes(1);
+});
+
+test.each(['local', 'remote'] as const)('logs only non-secret configuration for %s socket errors', side => {
+  const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const tunnel = new TestPodmanRemoteSshTunnel('localhost', 22, 'foo', dummyKey, '/tmp/remote.sock', '/tmp/local.sock');
+  tunnel.getSshConfig().password = 'test-password';
+  tunnel.getSshConfig().passphrase = 'test-passphrase';
+  const error = new Error('socket failure');
+  tunnel.logSocketError(side, error);
+
+  expect(logSpy).toHaveBeenCalledExactlyOnceWith(
+    `Podman ssh tunnel ${side} socket error using configuration`,
+    { host: 'localhost', port: 22, username: 'foo' },
+    error,
+  );
+  expect(logSpy.mock.calls.flat().join(' ')).not.toContain(dummyKey);
 });
 
 test('should use the provided private key over the ssh-agent', () => {
