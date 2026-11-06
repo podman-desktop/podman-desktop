@@ -4531,6 +4531,15 @@ describe('provider status updates on podman socket liveness change', () => {
     }
   }
 
+  // Loops left by previous tests resume as soon as stopLoop is false and one of their timers fires.
+  // Start our loop and set stopLoop back to true in the same synchronous step, so they cannot resume.
+  // https://github.com/podman-desktop/podman-desktop/issues/19973
+  function startMonitor(socketPath: string, machineName?: string): Promise<void> {
+    const promise = monitorPodmanSocket(provider, socketPath, machineName);
+    extension.deactivate().catch(console.error);
+    return promise;
+  }
+
   test.each([
     { from: 'started' as const, to: 'stopped' as const, expectedProviderStatus: 'stopped' },
     { from: 'stopped' as const, to: 'started' as const, expectedProviderStatus: 'ready' },
@@ -4573,7 +4582,7 @@ describe('provider status updates on podman socket liveness change', () => {
     updateProviderStatus(provider, 'started');
     vi.mocked(provider.updateStatus).mockClear();
 
-    const promise = monitorPodmanSocket(provider, '/socket');
+    const promise = startMonitor('/socket');
     await vi.advanceTimersByTimeAsync(5000);
     await promise;
 
@@ -4586,7 +4595,7 @@ describe('provider status updates on podman socket liveness change', () => {
     updateProviderStatus(provider, 'stopped');
     vi.mocked(provider.updateStatus).mockClear();
 
-    const promise = monitorPodmanSocket(provider, '/socket');
+    const promise = startMonitor('/socket');
     await vi.advanceTimersByTimeAsync(5000);
     await promise;
 
@@ -4597,7 +4606,7 @@ describe('provider status updates on podman socket liveness change', () => {
     setupSocketMonitorWithStatus(true);
     extension.podmanMachinesStatuses.set('test-machine', 'stopped');
 
-    const promise = monitorPodmanSocket(provider, '/socket', 'test-machine');
+    const promise = startMonitor('/socket', 'test-machine');
     await vi.advanceTimersByTimeAsync(5000);
     await promise;
 
@@ -4608,11 +4617,32 @@ describe('provider status updates on podman socket liveness change', () => {
     setupSocketMonitorWithStatus(false);
     extension.podmanMachinesStatuses.set('test-machine', 'started');
 
-    const promise = monitorPodmanSocket(provider, '/socket', 'test-machine');
+    const promise = startMonitor('/socket', 'test-machine');
     await vi.advanceTimersByTimeAsync(5000);
     await promise;
 
     expect(extension.podmanMachinesStatuses.get('test-machine')).toBe('stopped');
+  });
+
+  // https://github.com/podman-desktop/podman-desktop/issues/19973
+  test('monitorPodmanSocket machine status is not removed by a loop left over from a previous test', async () => {
+    // fake timers first: installing them again later would drop the leftover timer
+    setupSocketMonitorWithStatus(true);
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({ stdout: '[]', stderr: '', command: '' });
+
+    // a previous test leaves a monitorMachines loop waiting on its 5s timer, then afterEach deactivates
+    extension.monitorMachines(provider, podmanConfiguration).catch(console.error);
+    await vi.advanceTimersByTimeAsync(1000);
+    await extension.deactivate();
+
+    // this test starts the loops again; the leftover timer fires during the advance below
+    resetStopLoop();
+    extension.podmanMachinesStatuses.set('test-machine', 'stopped');
+    const promise = startMonitor('/socket', 'test-machine');
+    await vi.advanceTimersByTimeAsync(5000);
+    await promise;
+
+    expect(extension.podmanMachinesStatuses.get('test-machine')).toBe('started');
   });
 
   test('initDefaultLinux registers container connection when socket exists', async () => {
