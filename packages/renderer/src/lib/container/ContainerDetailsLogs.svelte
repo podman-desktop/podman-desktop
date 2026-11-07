@@ -41,6 +41,10 @@ $effect(() => {
     refContainer &&
     (refContainer.id !== container.id || (refContainer.state !== container.state && container.state !== 'EXITED'))
   ) {
+    // the new container may have no logs at all
+    if (refContainer.id !== container.id) {
+      noLogs = true;
+    }
     logsTerminal?.clear();
     fetchContainerLogs().catch((err: unknown) => console.error(`Error fetching container logs ${container.id}`, err));
   }
@@ -77,6 +81,8 @@ onMount(async () => {
 
 onDestroy(() => {
   logsTerminal?.dispose();
+  // don't leave the disposed terminal with the parent
+  onTerminalChange?.(undefined);
 });
 </script>
 

@@ -111,3 +111,22 @@ test('expect containerLogsClearTimestamps change only when callback is executed 
   await tick();
   expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T23:45:20.000Z');
 });
+
+test('expect the clear timestamp to stay with the cleared container when the page switches container', async () => {
+  containerLogsClearTimestamps.set({});
+  const otherContainer = { id: 'bar', engineId: 'enginerFoo' } as unknown as ContainerInfoUI;
+  const terminal = new Terminal();
+
+  const { rerender } = render(ContainerDetailsLogsClear, { terminal, container });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear logs' }));
+  await waitFor(() => expect(window.logsContainer).toHaveBeenCalled());
+  vi.mocked(window.logsContainer).mock.calls[0][0].callback('data', '2025-07-31T18:10:34Z some log message');
+  await vi.waitFor(() => expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T18:10:35.000Z'));
+
+  // the details page reuses this button when navigating straight to another container
+  await rerender({ terminal, container: otherContainer });
+  await tick();
+
+  expect(get(containerLogsClearTimestamps)).toEqual({ [container.id]: '2025-07-31T18:10:35.000Z' });
+});

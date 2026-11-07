@@ -116,3 +116,38 @@ test('log data is written as-is, without stripping a multiplexed header', async 
     expect(Terminal.prototype.write).toHaveBeenCalledWith(`${fakeHeader}${payload}\r`);
   });
 });
+
+test('switching to another container resets the logs state until it has logs', async () => {
+  const onTerminalChange = vi.fn();
+  const otherContainer = { id: 'bar' } as unknown as ContainerInfoUI;
+
+  const { rerender } = render(ContainerDetailsLogs, { container, onTerminalChange });
+
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalled();
+    expect(Terminal.prototype.open).toHaveBeenCalled();
+  });
+  vi.mocked(window.logsContainer).mock.calls[0][0].callback('data', 'hello world');
+  await vi.waitFor(() => expect(onTerminalChange).toHaveBeenLastCalledWith(expect.any(Terminal)));
+
+  await rerender({ container: otherContainer, onTerminalChange });
+
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenLastCalledWith(expect.objectContaining({ containerId: 'bar' }));
+    expect(onTerminalChange).toHaveBeenLastCalledWith(undefined);
+  });
+});
+
+test('leaving the Logs tab does not leave the disposed terminal with the parent', async () => {
+  const onTerminalChange = vi.fn();
+
+  const { unmount } = render(ContainerDetailsLogs, { container, onTerminalChange });
+
+  await vi.waitFor(() => expect(window.logsContainer).toHaveBeenCalled());
+  vi.mocked(window.logsContainer).mock.calls[0][0].callback('data', 'hello world');
+  await vi.waitFor(() => expect(onTerminalChange).toHaveBeenLastCalledWith(expect.any(Terminal)));
+
+  unmount();
+
+  expect(onTerminalChange).toHaveBeenLastCalledWith(undefined);
+});

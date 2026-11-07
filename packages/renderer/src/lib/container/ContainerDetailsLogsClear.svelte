@@ -10,34 +10,28 @@ import type { ContainerInfoUI } from './ContainerInfoUI';
 
 const { terminal, container }: { terminal: Terminal; container: ContainerInfoUI } = $props();
 
-let clearTimestamp: string = $state('');
-
 let lastLog = false;
-
-$effect(() => {
-  if (clearTimestamp) {
-    $containerLogsClearTimestamps[container.id] = clearTimestamp;
-  }
-});
 
 async function getLastLogTimestamp(): Promise<void> {
   lastLog = true;
+  // the page can switch to another container before the callback runs
+  const containerId = container.id;
   await window.logsContainer({
     engineId: container.engineId,
-    containerId: container.id,
-    callback,
+    containerId,
+    callback: (name: string, data: string): void => callback(containerId, name, data),
     timestamps: true,
     tail: 1,
   });
 }
 
-function callback(name: string, data: string): void {
+function callback(containerId: string, name: string, data: string): void {
   if (name === 'data' && data && lastLog) {
     lastLog = false;
     const timestamp = data.split(' ', 1)[0];
     const datenow = new SvelteDate(timestamp);
     datenow.setSeconds(datenow.getSeconds() + 1);
-    clearTimestamp = datenow.toISOString();
+    $containerLogsClearTimestamps[containerId] = datenow.toISOString();
   }
 }
 
