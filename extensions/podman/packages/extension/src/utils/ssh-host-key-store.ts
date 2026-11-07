@@ -17,70 +17,99 @@
  ***********************************************************************/
 
 import { createHash } from 'node:crypto';
-import { link, mkdir, mkdtemp, open, readFile, rm } from 'node:fs/promises';
+import { link, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { isIP } from 'node:net';
 import { join } from 'node:path';
 
+import type { ExtensionContext } from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
-import type { Client, HostVerifier } from 'ssh2';
+import { inject, injectable } from 'inversify';
+import type { Client, ConnectConfig, HostVerifier } from 'ssh2';
 
-const pending = new Map<string, { fingerprint: string; result: Promise<boolean> }>();
-const TRUST = 'Trust and Save';
+import { ExtensionContextSymbol } from '/@/inject/symbols';
 
-export function withHostVerificationTimeout(
-  client: Client,
-  verifier: HostVerifier,
-): { readyTimeout: number; hostVerifier: HostVerifier } {
-  let finished = false;
-  let ready = false;
-  let timeout: NodeJS.Timeout | undefined;
-  const clear = (): void => {
-    clearTimeout(timeout);
-    timeout = undefined;
-  };
-  const start = (): void => {
-    clear();
-    timeout = setTimeout(() => {
-      client.emit('error', new Error('Timed out while waiting for SSH handshake or authentication.'));
-      client.destroy();
-    }, 20000);
-    timeout.unref();
-  };
-  const finish = (): void => {
-    finished = true;
-    clear();
-  };
-  client
-    .once('ready', () => {
-      ready = true;
-      clear();
-    })
-    .once('error', finish)
-    .once('close', finish)
-    .once('end', finish);
-  start();
-  return {
-    // ssh2's built-in timeout cannot be paused while the user verifies a fingerprint.
-    readyTimeout: 0,
-    hostVerifier: (key, callback): void => {
-      clear();
-      verifier(key, trusted => {
-        if (finished) {
-          callback(false);
-          return;
-        }
-        if (trusted && !ready) {
-          start();
-        }
-        callback(trusted);
-      });
-    },
-  };
-}
-
+@injectable()
 export class SshHostKeyStore {
-  constructor(private readonly storagePath: string | undefined) {}
+  private static readonly TRUST = 'Trust and Save';
+  private static readonly HANDSHAKE_TIMEOUT = 20000;
+  readonly #pending = new Map<string, { fingerprint: string; result: Promise<boolean> }>();
 
-  createVerifier(host: string, port: number, onRejected: (error: Error) => void): HostVerifier {
+  constructor(@inject(ExtensionContextSymbol) private readonly extensionContext: ExtensionContext) {}
+
+  protected isLocalhost(host: string): boolean {
+    const hostname = host.toLowerCase().replace(/^\[|\]$/g, '');
+    return (
+      hostname === 'localhost' ||
+      hostname === 'localhost.' ||
+      (isIP(hostname) === 6 && new URL(`http://[${hostname}]`).hostname === '[::1]') ||
+      (isIP(hostname) === 4 && hostname.startsWith('127.'))
+    );
+  }
+
+  getConnectionConfig(
+    client: Client,
+    host: string,
+    port: number,
+    onRejected: (error: Error) => void,
+  ): Pick<ConnectConfig, 'readyTimeout'> & { hostVerifier?: HostVerifier } {
+    if (this.isLocalhost(host)) {
+      return {};
+    }
+    return this.withHostVerificationTimeout(client, this.createVerifier(host, port, onRejected));
+  }
+
+  protected withHostVerificationTimeout(
+    client: Client,
+    verifier: HostVerifier,
+  ): { readyTimeout: number; hostVerifier: HostVerifier } {
+    let finished = false;
+    let ready = false;
+    let timeout: NodeJS.Timeout | undefined;
+    const clear = (): void => {
+      clearTimeout(timeout);
+      timeout = undefined;
+    };
+    const start = (): void => {
+      clear();
+      timeout = setTimeout(() => {
+        client.emit('error', new Error('Timed out while waiting for SSH handshake or authentication.'));
+        client.destroy();
+      }, SshHostKeyStore.HANDSHAKE_TIMEOUT);
+      timeout.unref();
+    };
+    const finish = (): void => {
+      finished = true;
+      clear();
+    };
+    client
+      .once('ready', () => {
+        ready = true;
+        clear();
+      })
+      .once('error', finish)
+      .once('close', finish)
+      .once('end', finish);
+    start();
+    return {
+      // ssh2's built-in timeout cannot be paused while the user verifies a fingerprint.
+      readyTimeout: 0,
+      hostVerifier: (key, callback): void => {
+        clear();
+        verifier(key, trusted => {
+          if (finished) {
+            callback(false);
+            return;
+          }
+          if (trusted && !ready) {
+            start();
+          }
+          callback(trusted);
+        });
+      },
+    };
+  }
+
+  protected createVerifier(host: string, port: number, onRejected: (error: Error) => void): HostVerifier {
     return (key, callback): void => {
       this.verify(host, port, key).then(
         trusted => {
@@ -98,14 +127,17 @@ export class SshHostKeyStore {
   }
 
   async verify(host: string, port: number, key: Buffer): Promise<boolean> {
-    if (!this.storagePath) {
+    if (this.isLocalhost(host)) {
+      return true;
+    }
+    if (!this.extensionContext.storagePath) {
       throw new Error('Cannot verify SSH host key: Podman extension storage is unavailable.');
     }
     const endpoint = `[${host.toLowerCase()}]:${port}`;
-    const directory = join(this.storagePath, 'ssh-host-keys');
-    const file = join(directory, createHash('sha256').update(endpoint).digest('hex'));
-    const fingerprint = `SHA256:${createHash('sha256').update(key).digest('base64').replace(/=+$/, '')}`;
-    const existing = pending.get(file);
+    const directory = join(this.extensionContext.storagePath, 'ssh-host-keys');
+    const file = this.getPinPath(host, port);
+    const fingerprint = this.getFingerprint(key);
+    const existing = this.#pending.get(file);
     if (existing) {
       if (existing.fingerprint === fingerprint) {
         return existing.result;
@@ -114,11 +146,11 @@ export class SshHostKeyStore {
       return this.verify(host, port, key);
     }
     const result = this.verifyAndSave(endpoint, directory, file, fingerprint);
-    pending.set(file, { fingerprint, result });
+    this.#pending.set(file, { fingerprint, result });
     try {
       return await result;
     } finally {
-      pending.delete(file);
+      this.#pending.delete(file);
     }
   }
 
@@ -141,25 +173,19 @@ export class SshHostKeyStore {
       return true;
     }
     const approval = await window.showWarningMessage(
-      `The SSH server ${endpoint} is not yet trusted by Podman Desktop. Host key fingerprint: ${fingerprint}. ` +
+      `The SSH server ${endpoint} is not yet trusted. Host key fingerprint: ${fingerprint}. ` +
         'Verify this fingerprint with the server administrator through a trusted channel before approving.',
       'Cancel',
-      TRUST,
+      SshHostKeyStore.TRUST,
     );
-    if (approval !== TRUST) {
+    if (approval !== SshHostKeyStore.TRUST) {
       return false;
     }
     await mkdir(directory, { recursive: true, mode: 0o700 });
     const temporaryDirectory = await mkdtemp(join(directory, '.pending-'));
     const temporaryFile = join(temporaryDirectory, 'pin');
     try {
-      const handle = await open(temporaryFile, 'wx', 0o600);
-      try {
-        await handle.writeFile(fingerprint);
-        await handle.sync();
-      } finally {
-        await handle.close();
-      }
+      await writeFile(temporaryFile, fingerprint, { flag: 'wx', mode: 0o600, flush: true });
       // Publish a complete pin atomically, without replacing an existing one.
       try {
         await link(temporaryFile, file);
@@ -173,6 +199,19 @@ export class SshHostKeyStore {
       await rm(temporaryDirectory, { recursive: true, force: true });
     }
     return true;
+  }
+
+  protected getFingerprint(key: Buffer): string {
+    return `SHA256:${createHash('sha256').update(key).digest('base64').replace(/=+$/, '')}`;
+  }
+
+  protected getPinPath(host: string, port: number): string {
+    const endpoint = `[${host.toLowerCase()}]:${port}`;
+    return join(
+      this.extensionContext.storagePath,
+      'ssh-host-keys',
+      createHash('sha256').update(endpoint).digest('hex'),
+    );
   }
 
   private assertFingerprint(endpoint: string, file: string, saved: string, fingerprint: string): void {

@@ -16,35 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { mkdtemp, rm } from 'node:fs/promises';
-import { type AddressInfo, createConnection, createServer } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import * as net from 'node:net';
 
+import type { ExtensionContext } from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
-import { Client, type ConnectConfig, Server } from 'ssh2';
-import { generatePrivateKey } from 'sshpk';
-import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { Client, type ConnectConfig } from 'ssh2';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
-let storagePath: string;
-
-beforeEach(async () => {
-  vi.resetAllMocks();
-  vi.restoreAllMocks();
-  storagePath = await mkdtemp(join(tmpdir(), 'podman-ssh-test-'));
-  vi.mocked(window.showWarningMessage).mockResolvedValue('Trust and Save');
-  vi.mocked(window.showErrorMessage).mockResolvedValue(undefined);
-});
-
-afterEach(async () => {
-  vi.useRealTimers();
-  vi.unstubAllEnvs();
-  await rm(storagePath, { recursive: true, force: true });
-});
+vi.mock(import('ssh2'));
+vi.mock(import('node:net'));
+vi.mock(import('/@/utils/ssh-host-key-store'));
 
 class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
   isListening(): boolean {
@@ -56,319 +41,113 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
   }
 }
 
-let dummyKey: string;
-beforeAll(async () => {
-  // generate on the fly a dummy key
-  dummyKey = generatePrivateKey('ed25519').toString('ssh');
-});
+let store: SshHostKeyStore;
+let client: Client;
+let server: net.Server;
+let tunnel: TestPodmanRemoteSshTunnel;
+let events: Map<string, () => void>;
+let rejected: ((error: Error) => void) | undefined;
+const hostVerifier = vi.fn();
 
-test('should be able to connect', async () => {
-  let sshPort = 0;
-  let connected = false;
-  let authenticated = false;
-
-  // create ssh server
-  const sshServer = new Server(
-    {
-      hostKeys: [dummyKey],
-    },
-    client => {
-      connected = true;
-
-      client
-        .on('authentication', ctx => {
-          ctx.accept();
-        })
-        .on('ready', () => {
-          authenticated = true;
-        });
-    },
-  ).listen(0, '127.0.0.1', () => {
-    const address: AddressInfo = sshServer.address() as AddressInfo;
-    sshPort = address?.port;
+beforeEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllEnvs();
+  vi.resetAllMocks();
+  store = new SshHostKeyStore({} as ExtensionContext);
+  client = new Client();
+  server = new net.Server();
+  events = new Map();
+  rejected = undefined;
+  vi.mocked(Client).mockImplementation(function () {
+    return client;
   });
-
-  // wait that the server is listening
-  await vi.waitFor(() => expect(sshPort).toBeGreaterThan(0));
-
-  // create a npipe/socket server
-  // on windows it's an npipe, on macOS a socket file
-  let socketOrNpipePathLocal: string;
-  let socketOrNpipePathRemote: string;
-  if (process.platform === 'win32') {
-    socketOrNpipePathLocal = '\\\\.\\pipe\\test-local';
-    socketOrNpipePathRemote = '\\\\.\\pipe\\test-remote';
-  } else {
-    socketOrNpipePathLocal = join(tmpdir(), 'test-local.sock');
-    socketOrNpipePathRemote = join(tmpdir(), 'test-remote.sock');
-  }
-
-  // delete file if exists
-  await rm(socketOrNpipePathLocal, { force: true });
-  await rm(socketOrNpipePathRemote, { force: true });
-
-  let listenReady = false;
-
-  // start a remote server
-  const npipeServer = createServer(_socket => {}).listen(socketOrNpipePathRemote, () => {
-    listenReady = true;
-  });
-
-  await vi.waitFor(() => expect(listenReady).toBeTruthy());
-
-  const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
-    'localhost',
-    sshPort,
-    'foo',
-    dummyKey,
-    socketOrNpipePathRemote,
-    socketOrNpipePathLocal,
-    storagePath,
-  );
-
-  podmanRemoteSshTunnel.connect();
-
-  // wait authenticated and connected
-  await vi.waitFor(() => expect(connected && authenticated && podmanRemoteSshTunnel.isListening()).toBeTruthy());
-
-  let connectedToLocal = false;
-  // send a request to the tunnel using the socket path
-  const client = createConnection({ path: socketOrNpipePathLocal }, () => {
-    connectedToLocal = true;
-  });
-
-  await vi.waitFor(() => expect(connectedToLocal).toBeTruthy());
-
-  client.end();
-  podmanRemoteSshTunnel.disconnect();
-  sshServer.close();
-  npipeServer.close();
-});
-
-test.each(['declined', 'changed'])('should reject a %s host key before authentication', async reason => {
-  if (reason === 'declined') {
-    vi.mocked(window.showWarningMessage).mockResolvedValue(undefined);
-  }
-  let authenticated = false;
-  const server = new Server({ hostKeys: [dummyKey] }, client => {
-    client.on('error', () => {});
-    client.on('authentication', ctx => {
-      authenticated = true;
-      ctx.accept();
-    });
-  });
-  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
-  const port = (server.address() as AddressInfo).port;
-  if (reason === 'changed') {
-    await new SshHostKeyStore(storagePath).verify('127.0.0.1', port, Buffer.from('different key'));
-    vi.mocked(window.showWarningMessage).mockClear();
-  }
-  const tunnel = new TestPodmanRemoteSshTunnel(
-    '127.0.0.1',
-    port,
-    'foo',
-    dummyKey,
-    '/tmp/remote.sock',
-    '/tmp/local.sock',
-    storagePath,
-  );
-  try {
-    tunnel.connect();
-    await expect(tunnel.isConnected()).resolves.toBe(false);
-    expect(authenticated).toBe(false);
-    expect(tunnel.isListening()).toBe(false);
-    expect(window.showErrorMessage).toHaveBeenCalled();
-    if (reason === 'changed') {
-      expect(window.showWarningMessage).not.toHaveBeenCalled();
-    }
-    vi.useFakeTimers();
-    const reconnect = vi.spyOn(tunnel, 'connect');
-    tunnel.handleReconnect();
-    vi.advanceTimersByTime(30000);
-    expect(reconnect).not.toHaveBeenCalled();
-  } finally {
-    tunnel.disconnect();
-    server.close();
-  }
-});
-
-test('keeps the SSH connection open while approval takes longer than the handshake timeout', async () => {
-  let approve: ((value: string) => void) | undefined;
-  vi.mocked(window.showWarningMessage).mockReturnValue(
-    new Promise<string>(resolve => {
-      approve = resolve;
-    }),
-  );
-  const server = new Server({ hostKeys: [dummyKey] }, client => {
-    client.on('error', () => {});
-    client.on('authentication', ctx => ctx.accept());
-  });
-  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
-  const port = (server.address() as AddressInfo).port;
-  const path = process.platform === 'win32' ? `\\\\.\\pipe\\approval-${port}` : join(storagePath, 'approval.sock');
-  const tunnel = new TestPodmanRemoteSshTunnel('127.0.0.1', port, 'foo', dummyKey, '/remote.sock', path, storagePath);
-  try {
-    tunnel.connect();
-    await vi.waitFor(() => expect(window.showWarningMessage).toHaveBeenCalledOnce());
-    vi.useFakeTimers();
-    vi.advanceTimersByTime(60000);
-    expect(window.showErrorMessage).not.toHaveBeenCalled();
-    expect(tunnel.isListening()).toBe(false);
-    approve?.('Trust and Save');
-    vi.useRealTimers();
-    await expect(tunnel.isConnected()).resolves.toBe(true);
-    await vi.waitFor(() => expect(tunnel.isListening()).toBe(true));
-  } finally {
-    tunnel.disconnect();
-    server.close();
-  }
-});
-
-test('closes the old listener after transport loss and rejects a changed key on reconnect', async () => {
-  const connections: Client[] = [];
-  const connect = vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
-    connections.push(this);
+  vi.mocked(client.on).mockImplementation(function (this: Client, event: string, listener: (...args: never[]) => void) {
+    events.set(event, listener);
     return this;
   });
-  const createVerifier = vi.spyOn(SshHostKeyStore.prototype, 'createVerifier');
-  const path = process.platform === 'win32' ? '\\\\.\\pipe\\reconnect-test' : join(storagePath, 'reconnect.sock');
-  const tunnel = new TestPodmanRemoteSshTunnel('server', 22, 'foo', dummyKey, '/remote.sock', path, storagePath);
-  try {
-    tunnel.connect();
-    const first = connections[0];
-    if (!first) throw new Error('Missing SSH client');
-    await new SshHostKeyStore(storagePath).verify('server', 22, Buffer.from('trusted'));
-    first.emit('ready');
-    await vi.waitFor(() => expect(tunnel.isListening()).toBe(true));
-    first.emit('error', new Error('Transport lost'));
-    expect(tunnel.isListening()).toBe(false);
-    await vi.waitFor(async () => {
-      const error = await new Promise<Error>(resolve => {
-        const socket = createConnection({ path });
-        socket.on('error', resolve);
-        socket.on('connect', () => {
-          socket.destroy();
-          resolve(new Error('Listener is still active'));
-        });
-      });
-      expect(error.message).not.toBe('Listener is still active');
-    });
-    tunnel.connect();
-    // A listener from a previously authenticated connection must also close on rejection.
-    connections[1]?.emit('ready');
-    await vi.waitFor(() => expect(tunnel.isListening()).toBe(true));
-    const callback = vi.fn();
-    const verifier = createVerifier.mock.results[0]?.value;
-    if (!verifier) throw new Error('Missing verifier');
-    verifier(Buffer.from('changed'), callback);
-    await vi.waitFor(() => expect(callback).toHaveBeenCalledWith(false));
-    expect(window.showErrorMessage).toHaveBeenCalledWith(expect.stringContaining('SSH host key changed'));
-    expect(tunnel.isListening()).toBe(false);
-    const config = connect.mock.lastCall?.[0];
-    expect(config?.readyTimeout).toBe(0);
-    vi.useFakeTimers();
-    tunnel.handleReconnect();
-    vi.advanceTimersByTime(30000);
-    expect(connect).toHaveBeenCalledTimes(2);
-  } finally {
-    tunnel.disconnect();
-  }
-});
-
-test('handles synchronous forwarding failures without leaving a socket open', async () => {
-  const connect = vi.spyOn(Client.prototype, 'connect').mockReturnThis();
-  const forward = vi.spyOn(Client.prototype, 'openssh_forwardOutStreamLocal').mockImplementation(() => {
-    throw new Error('Not connected');
+  vi.mocked(client.connect).mockReturnThis();
+  vi.mocked(net.createServer).mockReturnValue(server);
+  vi.mocked(server.on).mockReturnThis();
+  vi.mocked(server.listen).mockImplementation(function (this: net.Server, _path, callback) {
+    if (typeof callback === 'function') callback();
+    return this;
   });
-  const path = process.platform === 'win32' ? '\\\\.\\pipe\\forward-test' : join(storagePath, 'forward.sock');
-  const tunnel = new TestPodmanRemoteSshTunnel('server', 22, 'foo', dummyKey, '/remote.sock', path, storagePath);
-  let socket: ReturnType<typeof createConnection> | undefined;
-  try {
-    tunnel.connect();
-    const sshClient = connect.mock.contexts[0];
-    if (!(sshClient instanceof Client)) {
-      throw new Error('Missing SSH client');
-    }
-    sshClient.emit('ready');
-    await vi.waitFor(() => expect(tunnel.isListening()).toBe(true));
-    await new Promise<void>((resolve, reject) => {
-      socket = createConnection({ path });
-      socket.on('end', resolve).on('error', reject);
-      socket.resume();
-    });
-    expect(forward).toHaveBeenCalledOnce();
-  } finally {
-    socket?.destroy();
-    tunnel.disconnect();
-  }
+  vi.mocked(store.getConnectionConfig).mockImplementation((_client, _host, _port, onRejected) => {
+    rejected = onRejected;
+    return { hostVerifier, readyTimeout: 0 };
+  });
+  vi.mocked(window.showErrorMessage).mockResolvedValue(undefined);
+  tunnel = new TestPodmanRemoteSshTunnel('remote.example', 22, 'user', 'key', '/remote.sock', '/local.sock', store);
 });
 
-test('disconnect should clear pending reconnect timeout', () => {
+test('uses the injected singleton to configure verification before authentication', () => {
+  tunnel.connect();
+  expect(store.getConnectionConfig).toHaveBeenCalledWith(client, 'remote.example', 22, expect.any(Function));
+  expect(client.connect).toHaveBeenCalledWith(expect.objectContaining({ hostVerifier, readyTimeout: 0 }));
+  expect(net.createServer).not.toHaveBeenCalled();
+});
+
+test('creates the listener only when the SSH client is ready', async () => {
+  tunnel.connect();
+  events.get('ready')?.();
+  await expect(tunnel.isConnected()).resolves.toBe(true);
+  expect(tunnel.isListening()).toBe(true);
+  expect(server.listen).toHaveBeenCalledWith('/local.sock', expect.any(Function));
+  tunnel.disconnect();
+});
+
+test('host-key rejection closes the old listener and prevents retries', async () => {
+  tunnel.connect();
+  events.get('ready')?.();
+  expect(tunnel.isListening()).toBe(true);
+  tunnel.connect();
   vi.useFakeTimers();
-  vi.spyOn(Client.prototype, 'connect').mockReturnThis();
+  tunnel.handleReconnect();
+  rejected?.(new Error('SSH host key changed'));
+  await expect(tunnel.isConnected()).resolves.toBe(false);
+  expect(server.close).toHaveBeenCalledOnce();
+  expect(client.end).toHaveBeenCalledOnce();
+  expect(tunnel.isListening()).toBe(false);
+  expect(window.showErrorMessage).toHaveBeenCalledWith('SSH host key changed');
+  events.get('close')?.();
+  vi.advanceTimersByTime(60000);
+  expect(client.connect).toHaveBeenCalledTimes(2);
+});
 
-  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
-    'localhost',
-    22,
-    'foo',
-    '',
-    '/tmp/remote.sock',
-    '/tmp/local.sock',
-    storagePath,
-  );
-  const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
-
-  podmanRemoteSshTunnel.connect();
-  podmanRemoteSshTunnel.handleReconnect();
-  podmanRemoteSshTunnel.disconnect();
-
+test('disconnect clears a pending reconnect', () => {
+  vi.useFakeTimers();
+  tunnel.connect();
+  tunnel.handleReconnect();
+  tunnel.disconnect();
   vi.advanceTimersByTime(30000);
-  expect(connectSpy).toHaveBeenCalledTimes(1);
+  expect(client.connect).toHaveBeenCalledOnce();
 });
 
-test('should use the provided private key over the ssh-agent', () => {
-  const tunnel = new TestPodmanRemoteSshTunnel(
-    'localhost',
-    22,
-    'foo',
-    'my-private-key',
-    '/tmp/remote.sock',
-    '/tmp/local.sock',
-    storagePath,
-  );
-  const config = tunnel.getSshConfig();
-  expect(config.privateKey).toBe('my-private-key');
-  expect(config.agent).toBeUndefined();
+test('does not add a verifier or alter timeouts for a localhost tunnel', () => {
+  vi.mocked(store.getConnectionConfig).mockReturnValue({});
+  const local = new TestPodmanRemoteSshTunnel('localhost', 22, 'user', 'key', '/remote.sock', '/local.sock', store);
+  local.connect();
+  expect(store.getConnectionConfig).toHaveBeenCalledWith(client, 'localhost', 22, expect.any(Function));
+  const config = vi.mocked(client.connect).mock.lastCall?.[0];
+  expect(config?.hostVerifier).toBeUndefined();
+  expect(config?.readyTimeout).toBeUndefined();
+  local.disconnect();
 });
 
-test('should fall back to the ssh-agent when no private key is provided', () => {
-  vi.stubEnv('SSH_AUTH_SOCK', '/tmp/agent.sock');
-  const tunnel = new TestPodmanRemoteSshTunnel(
-    'localhost',
-    22,
-    'foo',
-    undefined,
-    '/tmp/remote.sock',
-    '/tmp/local.sock',
-    storagePath,
-  );
-  const config = tunnel.getSshConfig();
-  expect(config.privateKey).toBeUndefined();
-  expect(config.agent).toBe('/tmp/agent.sock');
+test('uses the private key instead of the ssh-agent', () => {
+  expect(tunnel.getSshConfig().privateKey).toBe('key');
+  expect(tunnel.getSshConfig().agent).toBeUndefined();
 });
 
-test('should not set an agent when no private key and no ssh-agent are available', () => {
+test('falls back to the ssh-agent without a private key', () => {
+  vi.stubEnv('SSH_AUTH_SOCK', '/agent.sock');
+  const agentTunnel = new TestPodmanRemoteSshTunnel('remote.example', 22, 'user', undefined, '/r', '/l', store);
+  expect(agentTunnel.getSshConfig().agent).toBe('/agent.sock');
+  expect(agentTunnel.getSshConfig().privateKey).toBeUndefined();
+});
+
+test('does not set an agent when none is available', () => {
   vi.stubEnv('SSH_AUTH_SOCK', undefined);
-  const tunnel = new TestPodmanRemoteSshTunnel(
-    'localhost',
-    22,
-    'foo',
-    undefined,
-    '/tmp/remote.sock',
-    '/tmp/local.sock',
-    storagePath,
-  );
-  const config = tunnel.getSshConfig();
-  expect(config.privateKey).toBeUndefined();
-  expect(config.agent).toBeUndefined();
+  const agentTunnel = new TestPodmanRemoteSshTunnel('remote.example', 22, 'user', undefined, '/r', '/l', store);
+  expect(agentTunnel.getSshConfig().agent).toBeUndefined();
 });

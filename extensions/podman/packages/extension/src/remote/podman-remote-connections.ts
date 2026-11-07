@@ -23,6 +23,7 @@ import { join } from 'node:path';
 import * as extensionApi from '@podman-desktop/api';
 
 import { getPodmanCli } from '/@/utils/podman-cli';
+import type { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
@@ -56,7 +57,11 @@ export class PodmanRemoteConnections {
 
   #timeout: NodeJS.Timeout | undefined;
 
-  constructor(extensionContext: extensionApi.ExtensionContext, provider: extensionApi.Provider) {
+  constructor(
+    extensionContext: extensionApi.ExtensionContext,
+    provider: extensionApi.Provider,
+    private readonly sshHostKeyStore: SshHostKeyStore,
+  ) {
     this.#extensionContext = extensionContext;
     this.#provider = provider;
   }
@@ -220,15 +225,7 @@ export class PodmanRemoteConnections {
     remotePath: string,
     localPath: string,
   ): PodmanRemoteSshTunnel {
-    return new PodmanRemoteSshTunnel(
-      host,
-      port,
-      username,
-      privateKey,
-      remotePath,
-      localPath,
-      this.#extensionContext.storagePath,
-    );
+    return new PodmanRemoteSshTunnel(host, port, username, privateKey, remotePath, localPath, this.sshHostKeyStore);
   }
 
   hasConnections(): boolean {

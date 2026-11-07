@@ -17,12 +17,11 @@
  ***********************************************************************/
 
 import { Client, type ClientChannel } from 'ssh2';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { MachineInfo } from '/@/types';
 
 import { ProviderConnectionShellAccessImpl } from './podman-machine-stream';
-import { SshHostKeyStore } from './ssh-host-key-store';
 
 const onStreamMock = vi.fn();
 const streamMock = {
@@ -35,25 +34,28 @@ let providerConnectionShellAccess: TestProviderConnectionShellAccessImpl;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.useFakeTimers();
   const machineInfo: MachineInfo = {
+    name: 'podman-machine-default',
+    cpus: 2,
+    memory: 2048,
+    diskSize: 20,
+    userModeNetworking: false,
+    cpuUsage: 0,
+    diskUsage: 0,
+    memoryUsage: 0,
+    vmType: 'qemu',
     port: 12345,
     remoteUsername: 'user',
     identityPath: 'path/to/privateKey',
-  } as unknown as MachineInfo;
+  };
 
   vi.mocked(Client.prototype.on).mockReturnThis();
-  vi.mocked(Client.prototype.once).mockReturnThis();
   vi.mocked(Client.prototype.shell).mockImplementation(function (this: Client, callback) {
     callback(undefined, streamMock);
     return this;
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(machineInfo, 'storage');
+  providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(machineInfo);
 });
 
 class TestProviderConnectionShellAccessImpl extends ProviderConnectionShellAccessImpl {
@@ -67,29 +69,12 @@ vi.mock(import('node:fs'));
 // Mock ssh2 Client
 vi.mock(import('ssh2'));
 
-test('should verify the machine SSH host key and report rejection', async () => {
-  const listener = vi.fn();
-  const createVerifier = vi.spyOn(SshHostKeyStore.prototype, 'createVerifier');
-  providerConnectionShellAccess = new TestProviderConnectionShellAccessImpl(
-    { port: 12345, remoteUsername: 'user', identityPath: 'path/to/privateKey' } as MachineInfo,
-    undefined,
-  );
-  providerConnectionShellAccess.onErrorEmit.event(listener);
+test('does not verify host keys for the localhost machine shell', () => {
   providerConnectionShellAccess.open();
-  const rejectVerifier = createVerifier.mock.results[0]?.value;
-  expect(Client.prototype.connect).toHaveBeenCalledWith(
-    expect.objectContaining({ host: 'localhost', port: 12345, readyTimeout: 0, hostVerifier: expect.any(Function) }),
-  );
-  if (!rejectVerifier) {
-    throw new Error('Missing host verifier');
-  }
-  const callback = vi.fn();
-  rejectVerifier(Buffer.from('key'), callback);
-  await vi.waitFor(() => expect(callback).toHaveBeenCalledWith(false));
-  expect(listener).toHaveBeenCalledWith({
-    error: 'Cannot verify SSH host key: Podman extension storage is unavailable.',
-  });
-  createVerifier.mockRestore();
+  const config = vi.mocked(Client.prototype.connect).mock.lastCall?.[0];
+  expect(config?.host).toBe('localhost');
+  expect(config?.hostVerifier).toBeUndefined();
+  expect(config?.readyTimeout).toBeUndefined();
 });
 
 describe('Test SSH Client', () => {
