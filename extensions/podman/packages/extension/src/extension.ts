@@ -75,6 +75,7 @@ import { PodmanConfiguration } from './utils/podman-configuration';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
 import { ROSETTA_ENABLE_FILE, RosettaProvisioner } from './utils/rosetta';
+import { SshHostKeyStore } from './utils/ssh-host-key-store';
 import {
   appConfigDir,
   appHomeDir,
@@ -140,6 +141,7 @@ let wslWarningShown = false;
 
 let extensionNotifications: ExtensionNotifications;
 let podmanRemoteConnections: PodmanRemoteConnections | undefined;
+let sshHostKeyStore: SshHostKeyStore;
 
 export function isIncompatibleMachineOutput(output: string | undefined): boolean {
   // apple HV v4 to v5 machine config error
@@ -1423,6 +1425,7 @@ export async function initInversify(
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
   socketCompatibility = inversifyContainer.get(SocketCompatibility, { optional: true });
   extensionNotifications = inversifyContainer.get(ExtensionNotifications);
+  sshHostKeyStore = inversifyContainer.get(SshHostKeyStore);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
   return { podmanInstall, winPlatform, podmanProvider };
@@ -1699,7 +1702,7 @@ export async function start(
 
   // Initialize remote connections before machine monitoring so hasConnections()
   // is populated before the first updateMachines() call
-  podmanRemoteConnections = new PodmanRemoteConnections(extensionContext, provider);
+  podmanRemoteConnections = new PodmanRemoteConnections(extensionContext, provider, sshHostKeyStore);
   await podmanRemoteConnections.start();
 
   // Podman Machine support is on macOS, Windows and Linux

@@ -35,10 +35,19 @@ let providerConnectionShellAccess: TestProviderConnectionShellAccessImpl;
 beforeEach(() => {
   vi.resetAllMocks();
   const machineInfo: MachineInfo = {
+    name: 'podman-machine-default',
+    cpus: 2,
+    memory: 2048,
+    diskSize: 20,
+    userModeNetworking: false,
+    cpuUsage: 0,
+    diskUsage: 0,
+    memoryUsage: 0,
+    vmType: 'qemu',
     port: 12345,
     remoteUsername: 'user',
     identityPath: 'path/to/privateKey',
-  } as unknown as MachineInfo;
+  };
 
   vi.mocked(Client.prototype.on).mockReturnThis();
   vi.mocked(Client.prototype.shell).mockImplementation(function (this: Client, callback) {
@@ -59,6 +68,14 @@ vi.mock(import('node:fs'));
 
 // Mock ssh2 Client
 vi.mock(import('ssh2'));
+
+test('does not verify host keys for the localhost machine shell', () => {
+  providerConnectionShellAccess.open();
+  const config = vi.mocked(Client.prototype.connect).mock.lastCall?.[0];
+  expect(config?.host).toBe('localhost');
+  expect(config?.hostVerifier).toBeUndefined();
+  expect(config?.readyTimeout).toBeUndefined();
+});
 
 describe('Test SSH Client', () => {
   let client: Client;
