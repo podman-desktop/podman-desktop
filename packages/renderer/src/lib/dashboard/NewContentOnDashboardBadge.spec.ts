@@ -44,6 +44,18 @@ const notification1: NotificationCard = {
   highlight: true,
 };
 
+const notification2: NotificationCard = {
+  ...notification1,
+  id: 2,
+  title: '2',
+};
+
+// same notification posted again, it gets a new id
+const notification1Reposted: NotificationCard = {
+  ...notification1,
+  id: 3,
+};
+
 const pStatus: ProviderStatus = 'started';
 const pInfo: ProviderContainerConnectionInfo = {
   connectionType: 'container',
@@ -61,6 +73,7 @@ const pInfo: ProviderContainerConnectionInfo = {
 };
 const providerInfo = {
   id: 'test',
+  extensionId: 'extension',
   internalId: 'id',
   name: '',
   containerConnections: [pInfo],
@@ -76,6 +89,8 @@ const providerInfo = {
   images: undefined,
   installationSupport: undefined,
 } as unknown as ProviderInfo;
+const providerInfo2: ProviderInfo = { ...providerInfo, id: 'test2', internalId: 'id2' };
+const providerInfo3: ProviderInfo = { ...providerInfo, id: 'test3', internalId: 'id3' };
 
 test('Expect to do not display any dot if active page is Dashboard', async () => {
   notificationQueue.set([]);
@@ -168,4 +183,137 @@ test('Expect to display the dot if a new notification arrives after leaving Dash
   notificationQueue.set([notification1]);
 
   await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+});
+
+test('Expect to hide the dot if the new provider is removed before visiting the Dashboard', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  providerInfos.set([providerInfo]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  providerInfos.set([]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to hide the dot if the new notification is removed before visiting the Dashboard', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  notificationQueue.set([]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to keep the dot if only part of the new content is removed', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  providerInfos.set([providerInfo]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  // the provider is removed but the notification is still new: the dot is displayed until it is removed too
+  providerInfos.set([]);
+  notificationQueue.set([]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to hide the dot after visiting the Dashboard, even if the content is still there', async () => {
+  notificationQueue.set([]);
+  providerInfos.set([]);
+  router.goto('/pods');
+  await waitRender();
+
+  notificationQueue.set([notification1]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+
+  router.goto('/');
+  await vi.waitFor(() => expect(get(router).path).toBe('/'));
+  router.goto('/pods');
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+
+  // the component still reacts to really new content
+  notificationQueue.set([notification1, notification2]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+});
+
+test('Expect to display the dot if a seen notification is replaced by a new one', async () => {
+  router.goto('/');
+  notificationQueue.set([notification1]);
+  providerInfos.set([]);
+  await waitRender();
+
+  router.goto('/pods');
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+
+  notificationQueue.set([notification2]);
+
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+});
+
+test('Expect to do not display the dot if a seen notification is posted again', async () => {
+  router.goto('/');
+  notificationQueue.set([notification1]);
+  providerInfos.set([]);
+  await waitRender();
+
+  router.goto('/pods');
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+
+  notificationQueue.set([notification1Reposted]);
+
+  // the dot only displays and hides for the really new notification, not for the one posted again
+  notificationQueue.set([notification1Reposted, notification2]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+  notificationQueue.set([notification1Reposted]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to do not display the dot if a seen provider is removed while another seen provider remains', async () => {
+  router.goto('/');
+  notificationQueue.set([]);
+  providerInfos.set([providerInfo, providerInfo2]);
+  await waitRender();
+
+  router.goto('/pods');
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+
+  providerInfos.set([providerInfo2]);
+
+  // the dot only displays and hides for the really new provider, not for the removal of a seen one
+  providerInfos.set([providerInfo2, providerInfo3]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+  providerInfos.set([providerInfo2]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
+});
+
+test('Expect to do not display the dot if a seen provider is registered again', async () => {
+  router.goto('/');
+  notificationQueue.set([]);
+  providerInfos.set([providerInfo]);
+  await waitRender();
+
+  router.goto('/pods');
+  await vi.waitFor(() => expect(get(router).path).toBe('/pods'));
+
+  // the provider is disabled then enabled again: it gets a new internal id
+  providerInfos.set([]);
+  providerInfos.set([{ ...providerInfo, internalId: 'id-registered-again' }]);
+
+  // the dot only displays and hides for the really new provider, not for the one registered again
+  providerInfos.set([{ ...providerInfo, internalId: 'id-registered-again' }, providerInfo3]);
+  await vi.waitFor(() => expect(screen.getByLabelText('New content available')).toBeInTheDocument());
+  providerInfos.set([{ ...providerInfo, internalId: 'id-registered-again' }]);
+  await vi.waitFor(() => expect(screen.queryByLabelText('New content available')).not.toBeInTheDocument());
 });
