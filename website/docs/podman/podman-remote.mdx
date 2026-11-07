@@ -113,6 +113,24 @@ On Windows, you need to use an absolute path for the identities; a path with ~ w
 
 5. Check within Podman Desktop such as the **Containers** section that you can now access your remote instance.
 
+#### SSH server identity
+
+For non-localhost SSH endpoints, the first connection asks you to approve the
+server's SHA256 host-key fingerprint. Compare it with a fingerprint obtained from
+the server administrator through a trusted channel before selecting **Trust and
+Save**. Cancelling or dismissing the prompt refuses the connection.
+
+Approved fingerprints are stored per hostname and port in `ssh-host-keys` under
+the Podman extension's storage directory, separately from OpenSSH `known_hosts`.
+Connections to `localhost` and literal loopback addresses (`127.0.0.0/8` and
+`::1`) are exempt, including local Podman machine shells.
+
+Subsequent remote connections must present the same key. Changed keys are rejected
+without an option to overwrite the saved key. If the server's key legitimately
+changes, independently verify its new fingerprint before removing the pin file
+identified in the error message. Disable and re-enable remote connections to
+retry; a rejected tunnel does not retry automatically.
+
 #### Verification
 
 **GUI verification:**

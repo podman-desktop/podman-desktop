@@ -32,6 +32,7 @@ import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
 import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from '/@/utils/rosetta';
+import { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
 
 import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
@@ -76,6 +77,13 @@ describe('inversifyBinding', () => {
 
     expect(first).toBeInstanceOf(PodmanMachineLifecycle);
     expect(first).toBe(second);
+  });
+
+  test('should bind SshHostKeyStore as a singleton', async () => {
+    const container = await inversifyBinding.init();
+    const first = container.get(SshHostKeyStore);
+    expect(first).toBeInstanceOf(SshHostKeyStore);
+    expect(container.get(SshHostKeyStore)).toBe(first);
   });
 
   test('should bind ExtensionNotifications as a singleton', async () => {

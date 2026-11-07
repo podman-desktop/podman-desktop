@@ -49,6 +49,7 @@ import { PodmanBinary } from '/@/utils/podman-binary';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { RosettaProvisioner } from '/@/utils/rosetta';
+import { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
 
 import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
@@ -72,6 +73,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanBinary).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanMachineLifecycle).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(SshHostKeyStore).toSelf().inSingletonScope();
 
     this.#inversifyContainer.bind(WinBitCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinVersionCheck).toSelf().inSingletonScope();
