@@ -3,26 +3,32 @@ import '@xterm/xterm/css/xterm.css';
 
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
-import { mount, onDestroy, onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
-import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 interface Props {
   container: ContainerInfoUI;
+  // gets the logs terminal while it is showing logs, undefined otherwise
+  onTerminalChange?: (terminal: Terminal | undefined) => void;
 }
 
-const { container }: Props = $props();
+const { container, onTerminalChange }: Props = $props();
 
 // logs has been initialized
 let noLogs = $state(true);
 
 // the terminal displaying the logs
 let logsTerminal = $state<Terminal>();
+
+// nothing to clear on the "No Log" screen
+$effect(() => {
+  onTerminalChange?.(noLogs ? undefined : logsTerminal);
+});
 
 // save previous container
 let refContainer: ContainerInfoUI;
@@ -40,9 +46,6 @@ $effect(() => {
   }
   refContainer = container;
 });
-
-// the div containing the terminal
-let terminalParentDiv: HTMLDivElement;
 
 function callback(name: string, data: string): void {
   if (name === 'first-message') {
@@ -68,23 +71,6 @@ async function fetchContainerLogs(): Promise<void> {
   });
 }
 
-function afterTerminalInit(): void {
-  if (!logsTerminal) {
-    throw new Error('terminal was not set by TerminalWindow. Should not happen');
-  }
-  // mount the svelte5 component to the terminal xterm element
-  let xtermElement = terminalParentDiv.querySelector('.xterm');
-  xtermElement ??= terminalParentDiv;
-  // add svelte component using this xterm element
-  mount(ContainerDetailsLogsClear, {
-    target: xtermElement,
-    props: {
-      terminal: logsTerminal,
-      container: container,
-    },
-  });
-}
-
 onMount(async () => {
   await fetchContainerLogs();
 });
@@ -100,7 +86,6 @@ onDestroy(() => {
   class="min-w-full flex flex-col"
   class:invisible={noLogs === true}
   class:h-0={noLogs === true}
-  class:h-full={noLogs === false}
-  bind:this={terminalParentDiv}>
-  <TerminalWindow search on:init={afterTerminalInit} class="h-full" bind:terminal={logsTerminal} convertEol disableStdIn />
+  class:h-full={noLogs === false}>
+  <TerminalWindow search class="h-full" bind:terminal={logsTerminal} convertEol disableStdIn />
 </div>

@@ -47,11 +47,9 @@ async function clear(): Promise<void> {
 }
 </script>
 
-<div class="absolute top-0 right-2 px-1 z-1 m-1 opacity-50 space-x-1">
-  <button title="Clear logs" onclick={clear} class="">
-    <Icon
-      class="cursor-pointer rounded-full bg-[var(--pd-button-disabled)] min-h-8 w-8 p-1.5 hover:bg-[var(--pd-button-close-hover-bg)]"
-      icon={faEraser}
-    />
-  </button>
-</div>
+<button title="Clear logs" onclick={clear} class="flex">
+  <Icon
+    class="cursor-pointer rounded-full bg-[var(--pd-button-disabled)] min-h-6 w-6 p-1 hover:bg-[var(--pd-button-close-hover-bg)]"
+    icon={faEraser}
+  />
+</button>

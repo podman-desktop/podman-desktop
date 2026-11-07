@@ -3,6 +3,7 @@ import '@xterm/xterm/css/xterm.css';
 
 import { ErrorMessage, Link, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
+import type { Terminal } from '@xterm/xterm';
 import { router } from 'tinro';
 
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
@@ -17,6 +18,7 @@ import ContainerActions from './ContainerActions.svelte';
 import ContainerDetailsInspect from './ContainerDetailsInspect.svelte';
 import ContainerDetailsKube from './ContainerDetailsKube.svelte';
 import ContainerDetailsLogs from './ContainerDetailsLogs.svelte';
+import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
 import ContainerDetailsSummary from './ContainerDetailsSummary.svelte';
 import ContainerDetailsTerminal from './ContainerDetailsTerminal.svelte';
 import ContainerDetailsTtyTerminal from './ContainerDetailsTtyTerminal.svelte';
@@ -31,6 +33,9 @@ let { containerID }: Props = $props();
 
 let displayTty: boolean = $state(false);
 let hadContainer = false;
+
+// set by the Logs tab while it is showing logs
+let logsTerminal = $state<Terminal>();
 
 let container: ContainerInfoUI | undefined = $derived($containersInfos.find(c => c.id === containerID));
 
@@ -105,13 +110,22 @@ $effect(() => {
           <Tab title="TTY" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
         {/if}
       {/if}
+      {#if logsTerminal && isTabSelected($router.path, 'logs')}
+        <div class="self-center">
+          <ContainerDetailsLogsClear terminal={logsTerminal} container={container} />
+        </div>
+      {/if}
     {/snippet}
     {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <ContainerDetailsSummary container={container} />
       </Route>
       <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
-        <ContainerDetailsLogs container={container} />
+        <ContainerDetailsLogs
+          container={container}
+          onTerminalChange={(terminal): void => {
+            logsTerminal = terminal;
+          }} />
       </Route>
       <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
         <ContainerDetailsInspect container={container} />

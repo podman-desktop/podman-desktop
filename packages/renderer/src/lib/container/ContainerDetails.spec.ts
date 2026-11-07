@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInfo, ContainerInspectInfo } from '@desktop-framework/api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -298,4 +298,31 @@ test('Expect a failed action to write through to the store element', async () =>
   const inStore = get(containersInfos)[0];
   expect(inStore.actionError).toBe('cannot bind port');
   expect(inStore.state).toBe('ERROR');
+});
+
+test('Expect the clear logs button in the tab row only while the Logs tab shows logs', async () => {
+  router.goto('/');
+
+  containersInfos.set([myContainerUI]);
+
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
+    Config: {
+      Tty: false,
+    },
+  } as unknown as ContainerInspectInfo);
+
+  render(ContainerDetails, { containerID: 'myContainer' });
+
+  // redirected to the Logs tab, which shows "No Log" until logs arrive
+  await vi.waitFor(() => expect(window.logsContainer).toHaveBeenCalled());
+  expect(screen.queryByRole('button', { name: 'Clear logs' })).not.toBeInTheDocument();
+
+  const { callback } = vi.mocked(window.logsContainer).mock.calls[0][0];
+  callback('data', 'hello world');
+
+  const tabs = screen.getByRole('region', { name: 'Tabs' });
+  expect(await within(tabs).findByRole('button', { name: 'Clear logs' })).toBeInTheDocument();
+
+  router.goto('/summary');
+  await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Clear logs' })).not.toBeInTheDocument());
 });

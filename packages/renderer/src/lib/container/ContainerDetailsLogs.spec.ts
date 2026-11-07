@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -90,10 +90,6 @@ test('Render container logs ', async () => {
   await vi.waitFor(() => {
     expect(Terminal.prototype.write).toHaveBeenCalled();
   });
-
-  // expect the button to clear
-  const clearButton = screen.getByRole('button', { name: 'Clear logs' });
-  expect(clearButton).toBeInTheDocument();
 });
 
 test('log data is written as-is, without stripping a multiplexed header', async () => {
