@@ -116,6 +116,10 @@ export interface InternalContainerProvider {
   // api not there if status is stopped
   api?: Dockerode;
   libpodApi?: LibPod;
+  // pending timer to reconnect after an /events failure
+  reconnectTimer?: NodeJS.Timeout;
+  // true once the connection registration has been disposed
+  disposed?: boolean;
 }
 
 interface JSONEvent {
@@ -363,10 +367,17 @@ export class ContainerProviderRegistry {
       internalProvider.api = undefined;
       internalProvider.libpodApi = undefined;
 
+      // the registration has been disposed, do not reconnect
+      if (internalProvider.disposed) {
+        return;
+      }
+
       // ok we had some errors so we need to reconnect the provider
       // delay the reconnection to avoid too many reconnections
       // retry in 5 seconds
-      setTimeout(() => {
+      clearTimeout(internalProvider.reconnectTimer);
+      internalProvider.reconnectTimer = setTimeout(() => {
+        internalProvider.reconnectTimer = undefined;
         this.setupConnectionAPI(internalProvider, containerProviderConnection);
       }, this.retryDelayEvents);
     };
@@ -439,6 +450,10 @@ export class ContainerProviderRegistry {
 
     return Disposable.create(() => {
       clearInterval(timer);
+      // cancel any pending reconnect so the removed connection is not resurrected
+      internalProvider.disposed = true;
+      clearTimeout(internalProvider.reconnectTimer);
+      internalProvider.reconnectTimer = undefined;
       onBeforeUpdateDisposable.dispose();
       this.internalProviders.delete(id);
       this.containerProviders.delete(id);

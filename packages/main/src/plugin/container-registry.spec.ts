@@ -4144,6 +4144,52 @@ test('setupConnectionAPI with errors after machine being removed', async () => {
   );
 });
 
+test('disposing a connection cancels the pending reconnect after an events failure', async () => {
+  vi.useFakeTimers();
+
+  const connection = {
+    name: 'podman',
+    type: 'podman',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    status: () => 'started',
+  } as unknown as podmanDesktopAPI.ContainerProviderConnection;
+  const provider = { name: 'podman', id: 'p1' } as unknown as podmanDesktopAPI.Provider;
+  const providerRegistry = {
+    onBeforeDidUpdateContainerConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as ProviderRegistry;
+
+  // capture the error callback instead of opening a real /events stream
+  let errorCallback: ((error: Error) => void) | undefined;
+  const handleEventsSpy = vi.spyOn(containerRegistry, 'handleEvents').mockImplementation((_api, callback) => {
+    errorCallback = callback;
+  });
+  const onApiAttached = vi.fn();
+  containerRegistry.onApiAttached(onApiAttached);
+
+  const disposable = containerRegistry.registerContainerConnection(provider, connection, providerRegistry);
+  expect(handleEventsSpy).toHaveBeenCalledTimes(1);
+  expect(onApiAttached).toHaveBeenCalledTimes(1);
+
+  // fail the events stream: a reconnect is scheduled, then dispose before it elapses
+  errorCallback?.(new Error('events failed'));
+  disposable.dispose();
+  vi.mocked(apiSender.send).mockClear();
+
+  await vi.advanceTimersByTimeAsync(10_000);
+
+  // no new client, no provider-change and no api attached event for the removed connection
+  expect(handleEventsSpy).toHaveBeenCalledTimes(1);
+  expect(onApiAttached).toHaveBeenCalledTimes(1);
+  expect(apiSender.send).not.toHaveBeenCalled();
+  expect(containerRegistry.isApiAttached('p1.podman')).toBe(false);
+
+  // an events failure reported after dispose must not schedule a new reconnect
+  errorCallback?.(new Error('events failed again'));
+  await vi.advanceTimersByTimeAsync(10_000);
+  expect(handleEventsSpy).toHaveBeenCalledTimes(1);
+  expect(onApiAttached).toHaveBeenCalledTimes(1);
+});
+
 test('check handleEvents with loadArchive', async () => {
   const consoleLogSpy = vi.spyOn(console, 'log');
   const getEventsMock = vi.fn();
