@@ -41,6 +41,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImagesSaveOptions,
   ImageUpdateInfo,
   ImageUpdateResult,
@@ -1459,6 +1460,54 @@ export class ContainerProviderRegistry {
     return reason.split(/:\s+/).pop()?.trim();
   }
 
+  /**
+   * Asks a connection's engine which of its images a reference points at. The engine resolves the
+   * reference the same way its CLI does, so short names, tags and digests all work, and it answers
+   * with the image id the images list reports. Returns undefined when the engine holds no such image.
+   */
+  async resolveImage(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+    reference: string,
+  ): Promise<ImageLocation | undefined> {
+    let telemetryOptions = {};
+    const provider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    try {
+      const { Id, RepoTags } = await provider.api.getImage(reference).inspect();
+      return { Id, engineId: provider.id, repoTag: this.matchRepoTag(reference, RepoTags ?? []) };
+    } catch (error: unknown) {
+      // a 404 means the engine holds no such image, which is an answer; anything else went wrong
+      if ((error as { statusCode?: number })?.statusCode !== 404) {
+        telemetryOptions = { error: error };
+        throw error;
+      }
+      return undefined;
+    } finally {
+      this.telemetryService.track('resolveImage', telemetryOptions);
+    }
+  }
+
+  /**
+   * Picks the repository tag a reference names among the ones the engine reports for the image it
+   * resolved to. The image is already identified, so the tag alone tells them apart; a reference
+   * pinning a digest names none of them.
+   */
+  protected matchRepoTag(reference: string, repoTags: string[]): string | undefined {
+    if (reference.includes('@')) {
+      return undefined;
+    }
+    const tag = this.referenceTag(reference);
+    return repoTags.find(repoTag => this.referenceTag(repoTag) === tag);
+  }
+
+  // a colon only opens a tag when no path separator follows it, a registry port carries one too
+  protected referenceTag(reference: string): string {
+    const index = reference.lastIndexOf(':');
+    return index > 0 && !reference.includes('/', index) ? reference.slice(index + 1) : 'latest';
+  }
+
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
@@ -2654,6 +2703,8 @@ export class ContainerProviderRegistry {
       devices: updatedDevices,
       secrets: options.Secrets,
       secret_env: options.SecretEnv,
+      terminal: options.Tty,
+      stdin: options.OpenStdin,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);

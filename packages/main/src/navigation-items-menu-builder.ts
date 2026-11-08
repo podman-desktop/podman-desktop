@@ -31,12 +31,8 @@ const EXPANDED_WIDTH = 160;
 
 const GROUP_SEPARATOR = ' > ';
 const isGroupedName = (name: string): boolean => name.includes(GROUP_SEPARATOR);
-function leafName(name: string): string {
-  const separatorIndex = name.lastIndexOf(GROUP_SEPARATOR);
-  return separatorIndex === -1 ? name : name.slice(separatorIndex + GROUP_SEPARATOR.length);
-}
 
-// This class is responsible of creating the items to hide/pin a given selected item of the left navigation bar
+// This class is responsible of creating the items to hide a given selected item of the left navigation bar
 // and also display a list of all items with the ability to toggle the visibility of each item.
 export class NavigationItemsMenuBuilder {
   private navigationItems: DisplayItem[] = [];
@@ -81,33 +77,6 @@ export class NavigationItemsMenuBuilder {
     await this.setDisabledItems(items);
   }
 
-  /** True when the item is currently present in the main nav (has an index / is in itemOrder). */
-  protected isPinnedToNav(item: DisplayItem): boolean {
-    if (item.index !== undefined) {
-      return true;
-    }
-    return this.getItemOrder().includes(item.name);
-  }
-
-  protected async pinItemToNav(item: DisplayItem): Promise<void> {
-    let order = this.getItemOrder();
-    if (order.includes(item.name)) {
-      return;
-    }
-    // Materialize current default order (top-level indexed items) before inserting.
-    if (order.length === 0) {
-      order = this.navigationItems
-        .filter(i => !isGroupedName(i.name) && i.index !== undefined)
-        .toSorted((a, b) => (a.index ?? 0) - (b.index ?? 0))
-        .map(i => i.name);
-    }
-    await this.setItemOrder([item.name, ...order]);
-  }
-
-  protected async unpinItemFromNav(item: DisplayItem): Promise<void> {
-    await this.setItemOrder(this.getItemOrder().filter(i => i !== item.name));
-  }
-
   protected escapeLabel(label: string): string {
     return label.replace('&', '&&');
   }
@@ -144,51 +113,6 @@ export class NavigationItemsMenuBuilder {
       },
     };
     return item;
-  }
-
-  /**
-   * Match a settings/submenu child by linkText.
-   * Prefixed names ("Kubernetes > Pods") always match exactly.
-   * Leaf-only text ("Pods", "Resources") is only used outside the main nav
-   * (settings/submenu sidebars) so top-level "Pods" / "Kubernetes" are not
-   * mistaken for "Kubernetes > Pods".
-   */
-  protected findGroupedItemByLinkText(linkText: string, allowLeafMatch: boolean): DisplayItem | undefined {
-    const itemName = this.computeItemName(linkText);
-    const exact = this.navigationItems.find(item => isGroupedName(item.name) && item.name === itemName);
-    if (exact) {
-      return exact;
-    }
-    if (!allowLeafMatch || isGroupedName(itemName)) {
-      return undefined;
-    }
-    return this.navigationItems.find(item => isGroupedName(item.name) && leafName(item.name) === itemName);
-  }
-
-  /** Pin / Unpin for a promoted (Settings/submenu) item matched by linkText. */
-  protected buildGroupedPinMenuItem(
-    linkText: string | undefined,
-    allowLeafMatch = true,
-  ): MenuItemConstructorOptions | undefined {
-    if (!linkText) {
-      return undefined;
-    }
-    const item = this.findGroupedItemByLinkText(linkText, allowLeafMatch);
-    if (!item) {
-      return undefined;
-    }
-
-    const pinned = this.isPinnedToNav(item);
-    const itemDisplayName = this.escapeLabel(leafName(item.name));
-
-    return {
-      label: pinned ? `Unpin ${itemDisplayName}` : `Pin ${itemDisplayName} to Navigation`,
-      visible: true,
-      click: (): void => {
-        const action = pinned ? this.unpinItemFromNav(item) : this.pinItemToNav(item);
-        action.catch((e: unknown) => console.error('error updating pinned navigation item', e));
-      },
-    };
   }
 
   protected buildNavigationToggleMenuItems(): MenuItemConstructorOptions[] {
@@ -258,11 +182,7 @@ export class NavigationItemsMenuBuilder {
     const navWidth = this.getNavWidth();
     const inMainNav = parameters.x < navWidth;
 
-    // Pin/Unpin: leaf names only from settings/submenu sidebars; main nav needs the prefixed name.
-    const pinMenu = this.buildGroupedPinMenuItem(parameters.linkText, !inMainNav);
-    if (pinMenu) {
-      items.push(pinMenu);
-    } else if (parameters.linkText && inMainNav && parameters.y > 76) {
+    if (parameters.linkText && inMainNav && parameters.y > 76) {
       // allow to hide the top-level item being selected
       const menu = this.buildHideMenuItem(parameters.linkText);
       if (menu) {
