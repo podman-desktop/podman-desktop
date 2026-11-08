@@ -5573,6 +5573,53 @@ describe('createContainerLibPod', () => {
       }),
     );
   });
+
+  test('check that empty env values and values containing = are kept', async () => {
+    const dockerAPI = {
+      createContainer: vi.fn(),
+      getContainer: vi.fn(),
+    } as unknown as Dockerode;
+    const libpodAPI = {
+      createPodmanContainer: vi.fn(),
+    } as unknown as LibPod;
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: libpodAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    vi.mocked(dockerAPI.getContainer).mockResolvedValue({
+      start: vi.fn(),
+    } as unknown as Dockerode.Container);
+
+    vi.mocked(libpodAPI.createPodmanContainer).mockResolvedValue({
+      Id: 'id',
+      Warnings: [],
+    });
+
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const options: ContainerCreateOptions = {
+      Image: 'image',
+      name: 'name',
+      pod: 'pod',
+      Env: ['EMPTY=', 'WITH_EQ=a=b', 'NO_EQUAL_SIGN'],
+    };
+
+    await containerRegistry.createContainer('podman1', options);
+
+    expect(dockerAPI.createContainer).not.toHaveBeenCalled();
+    expect(libpodAPI.createPodmanContainer).toBeCalledWith(
+      expect.objectContaining({
+        env: { EMPTY: '', WITH_EQ: 'a=b' },
+      }),
+    );
+  });
 });
 
 describe('getContainerCreateMountOptionFromBind', () => {
