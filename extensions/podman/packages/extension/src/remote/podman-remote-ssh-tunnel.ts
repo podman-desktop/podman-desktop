@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { EventEmitter } from 'node:events';
 import * as net from 'node:net';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
@@ -86,6 +87,17 @@ export class PodmanRemoteSshTunnel {
     );
   }
 
+  protected registerSocketErrorHandler(
+    socket: EventEmitter,
+    peerSocket: { end(): unknown },
+    side: 'local' | 'remote',
+  ): void {
+    socket.on('error', error => {
+      this.logSocketError(side, error);
+      peerSocket.end();
+    });
+  }
+
   dispose(): void {
     this.disconnect();
   }
@@ -138,16 +150,10 @@ export class PodmanRemoteSshTunnel {
             });
 
             // Handle local socket error
-            localSocket.on('error', err => {
-              this.logSocketError('local', err);
-              remoteSocket.end();
-            });
+            this.registerSocketErrorHandler(localSocket, remoteSocket, 'local');
 
             // Handle remote socket error
-            remoteSocket.on('error', (err: unknown) => {
-              this.logSocketError('remote', err);
-              localSocket.end();
-            });
+            this.registerSocketErrorHandler(remoteSocket, localSocket, 'remote');
           });
         });
 

@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -46,8 +47,8 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
     return super.getSshConfig();
   }
 
-  logSocketError(side: 'local' | 'remote', error: unknown): void {
-    super.logSocketError(side, error);
+  registerSocketErrorHandler(socket: EventEmitter, peerSocket: { end(): unknown }, side: 'local' | 'remote'): void {
+    super.registerSocketErrorHandler(socket, peerSocket, side);
   }
 }
 
@@ -159,19 +160,38 @@ test('disconnect should clear pending reconnect timeout', () => {
   expect(connectSpy).toHaveBeenCalledTimes(1);
 });
 
-test.each(['local', 'remote'] as const)('logs only non-secret configuration for %s socket errors', side => {
+test('logs safe configuration when either tunnel socket emits an error', () => {
   const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   const tunnel = new TestPodmanRemoteSshTunnel('localhost', 22, 'foo', dummyKey, '/tmp/remote.sock', '/tmp/local.sock');
   tunnel.getSshConfig().password = 'test-password';
   tunnel.getSshConfig().passphrase = 'test-passphrase';
-  const error = new Error('socket failure');
-  tunnel.logSocketError(side, error);
+  const localSocket = new EventEmitter();
+  const remoteSocket = new EventEmitter();
+  const localEnd = vi.fn();
+  const remoteEnd = vi.fn();
+  tunnel.registerSocketErrorHandler(localSocket, { end: remoteEnd }, 'local');
+  tunnel.registerSocketErrorHandler(remoteSocket, { end: localEnd }, 'remote');
 
-  expect(logSpy).toHaveBeenCalledExactlyOnceWith(
-    `Podman ssh tunnel ${side} socket error using configuration`,
+  const localError = new Error('local socket failure');
+  const remoteError = new Error('remote socket failure');
+  localSocket.emit('error', localError);
+  remoteSocket.emit('error', remoteError);
+
+  expect(logSpy).toHaveBeenNthCalledWith(
+    1,
+    'Podman ssh tunnel local socket error using configuration',
     { host: 'localhost', port: 22, username: 'foo' },
-    error,
+    localError,
   );
+  expect(logSpy).toHaveBeenNthCalledWith(
+    2,
+    'Podman ssh tunnel remote socket error using configuration',
+    { host: 'localhost', port: 22, username: 'foo' },
+    remoteError,
+  );
+  expect(logSpy).toHaveBeenCalledTimes(2);
+  expect(localEnd).toHaveBeenCalledOnce();
+  expect(remoteEnd).toHaveBeenCalledOnce();
   expect(logSpy.mock.calls.flat().join(' ')).not.toContain(dummyKey);
 });
 
