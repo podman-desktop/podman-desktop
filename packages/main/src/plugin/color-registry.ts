@@ -1909,6 +1909,20 @@ export class ColorRegistry {
       hcLight: gray[300],
     });
 
+    this.registerColor(`${dropdown}separator`, {
+      dark: charcoal[400],
+      light: gray[600],
+      hcDark: white,
+      hcLight: black,
+    });
+
+    this.registerColor(`${dropdown}label-text`, {
+      dark: gray[800],
+      light: charcoal[100],
+      hcDark: white,
+      hcLight: black,
+    });
+
     this.registerColor(`${dropdown}item-text`, {
       dark: gray[400],
       light: charcoal[600],
