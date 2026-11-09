@@ -1,13 +1,16 @@
 <script lang="ts">
-interface Props {
+import type { HTMLAttributes } from 'svelte/elements';
+
+interface Props extends HTMLAttributes<HTMLDivElement> {
   title: string;
-  id?: string;
 }
 
-let { title, id }: Props = $props();
+let { title, class: className, ...restProps }: Props = $props();
 </script>
 
 <!-- Non-interactive title of a group of items -->
-<div id={id} class="px-2.5 pt-2.5 pb-1 text-xs font-semibold whitespace-nowrap text-[var(--pd-dropdown-label-text)]">
+<div
+  class="px-2.5 pt-2.5 pb-1 text-xs font-semibold whitespace-nowrap text-[var(--pd-dropdown-label-text)] {className}"
+  {...restProps}>
   {title}
 </div>

@@ -21,8 +21,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
+import DropDownMenuGroup from './DropDownMenuGroup.svelte';
 import DropDownMenuGroupTest from './DropDownMenuGroupTest.svelte';
 import DropDownMenuLabel from './DropDownMenuLabel.svelte';
+import DropDownMenuSeparator from './DropDownMenuSeparator.svelte';
 
 test('Expect group to be named by its label', () => {
   render(DropDownMenuGroupTest, { label: 'Open Browser' });
@@ -54,4 +56,30 @@ test('Expect label to display its title and not be clickable', () => {
   const label = screen.getByText('My label');
   expect(label).toHaveAttribute('id', 'my-label');
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
+});
+
+test('Expect HTML attributes and class to be passed to the group', () => {
+  render(DropDownMenuGroup, { label: 'My group', class: 'custom-class', 'data-testid': 'my-group' });
+
+  const group = screen.getByTestId('my-group');
+  expect(group).toHaveRole('group');
+  expect(group).toHaveClass('custom-class');
+  expect(group).toHaveClass('divide-y');
+});
+
+test('Expect HTML attributes and class to be passed to the label', () => {
+  render(DropDownMenuLabel, { title: 'My label', class: 'custom-class', 'data-testid': 'my-label' });
+
+  const label = screen.getByTestId('my-label');
+  expect(label).toHaveTextContent('My label');
+  expect(label).toHaveClass('custom-class');
+});
+
+test('Expect HTML attributes and class to be passed to the separator', () => {
+  render(DropDownMenuSeparator, { class: 'custom-class', 'data-testid': 'my-separator' });
+
+  const separator = screen.getByRole('separator');
+  expect(separator).toHaveAttribute('data-testid', 'my-separator');
+  expect(separator).toHaveClass('custom-class');
+  expect(separator).toHaveClass('h-px');
 });
