@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createEventDispatcher, onDestroy, onMount, type Snippet } from 'svelte';
+import { createEventDispatcher, type Snippet } from 'svelte';
 
 import { LinearProgress } from '..';
 import CloseButton from '../button/CloseButton.svelte';
@@ -45,27 +45,7 @@ const {
   content,
 }: Props = $props();
 
-let heightOfDetail = $state(0);
-
 let showBreadcrumb = breadcrumbLeftPart ?? breadcrumbRightPart;
-let detailSlot: HTMLDivElement;
-let observer: MutationObserver;
-
-onMount(() => {
-  observer = new MutationObserver(() => updateHeight());
-  observer.observe(detailSlot, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  });
-  updateHeight();
-});
-
-onDestroy(() => observer?.disconnect());
-
-function updateHeight(): void {
-  heightOfDetail = detailSlot ? detailSlot.getBoundingClientRect().height : 0;
-}
 
 const dispatchClose = createEventDispatcher<{ close: undefined }>();
 
@@ -102,35 +82,40 @@ function handleKeydown(e: KeyboardEvent): void {
           {/if}
         </div>
       {/if}
-      <div class="flex flex-row items-center pt-1">
-        {#if icon}
-          <div class="pr-3">
-            {@render icon()}
-          </div>
-        {/if}
-        <div class="flex flex-col grow pr-2">
-          <div class="flex flex-row items-baseline">
-            <h1 aria-label={title} class="text-xl font-bold leading-tight text-[var(--pd-content-header)]">
-              {title}
-            </h1>
-            <div class="text-[var(--pd-table-body-text-sub-secondary)] ml-2 leading-normal" class:hidden={!titleDetail}>
-              {titleDetail}
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
+        <div class="flex max-w-full grow items-center">
+          {#if icon}
+            <div class="shrink-0 pr-3">
+              {@render icon()}
             </div>
-          </div>
-          <div>
-            <span class="text-sm leading-none text-[var(--pd-content-sub-header)] line-clamp-1" class:hidden={!subtitle}
-              >{subtitle}</span>
-            {@render subtitleSnippet?.()}
+          {/if}
+          <div class="flex min-w-0 grow flex-col">
+            <div class="flex flex-wrap items-baseline gap-x-2">
+              <h1
+                aria-label={title}
+                title={title}
+                class="min-w-0 line-clamp-2 text-xl font-bold leading-tight wrap-anywhere text-[var(--pd-content-header)]">
+                {title}
+              </h1>
+              <div
+                title={titleDetail}
+                class="min-w-0 truncate leading-normal text-[var(--pd-table-body-text-sub-secondary)]"
+                class:hidden={!titleDetail}>
+                {titleDetail}
+              </div>
+            </div>
+            <div>
+              <!-- The clamped subtitle should not determine when the actions wrap. -->
+              <span
+                class="text-sm leading-none text-[var(--pd-content-sub-header)] line-clamp-1 [contain:inline-size]"
+                class:hidden={!subtitle}>{subtitle}</span>
+              {@render subtitleSnippet?.()}
+            </div>
           </div>
         </div>
-        <div class="flex flex-col">
-          <div class="flex flex-nowrap justify-self-end pl-3 space-x-2" aria-label="Control Actions" role="group">
+        <div class="ml-auto flex max-w-full flex-col">
+          <div class="flex flex-wrap justify-end gap-2" aria-label="Control Actions" role="group">
             {@render actions?.()}
-          </div>
-          <div class="relative">
-            <div bind:this={detailSlot} class="absolute top-0 right-0">
-              {@render detail?.()}
-            </div>
           </div>
           {#if !showBreadcrumb}
             <CloseButton class="justify-self-end" onclick={onclose} />
@@ -142,12 +127,15 @@ function handleKeydown(e: KeyboardEvent): void {
   {#if inProgress}
     <LinearProgress />
   {/if}
-  <div
-    class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]"
-    style="padding-top: {heightOfDetail > 50 ? '1rem' : '0px'}"
-    aria-label="Tabs"
-    role="region">
-    {@render tabs?.()}
+  <div class="flex flex-row-reverse flex-wrap items-end border-b border-[var(--pd-content-divider)]">
+    {#if detail}
+      <div class="max-w-full pr-5">
+        {@render detail()}
+      </div>
+    {/if}
+    <div class="flex grow px-2" aria-label="Tabs" role="region">
+      {@render tabs?.()}
+    </div>
   </div>
   <div class="h-full min-h-0" aria-label="Tab Content" role="region">
     {@render content?.()}
