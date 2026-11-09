@@ -20,18 +20,25 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
+import { type DragDropEventHandlers, type DragDropManager, DragDropProvider } from '@dnd-kit/svelte';
+import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';
-import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
+import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
+import {
+  fetchNavigationRegistries,
+  navigationItemOrder,
+  navigationRegistry,
+} from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
 
@@ -39,13 +46,31 @@ vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
 
+vi.mock(import('@dnd-kit/svelte'));
+vi.mock(import('@dnd-kit/svelte/sortable'));
+
 // fake the window object
-beforeAll(() => {
-  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
-  Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
+beforeEach(async () => {
+  vi.resetAllMocks();
+  vi.mocked(DragDropProvider).mockImplementation((anchor, props) => {
+    // The anchor is required to render a snippet but is not part of its public type.
+    const children = props.children as unknown as ((anchor: unknown) => void) | undefined;
+    children?.(anchor);
+    return {};
+  });
+  vi.mocked(createSortable).mockReturnValue({
+    attach: vi.fn(),
+  } as unknown as ReturnType<typeof createSortable>);
+  vi.mocked(isSortable).mockReturnValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue(undefined);
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
+  // Start from the default order so an earlier test cannot leak its order into this one.
+  navigationItemOrder.set([]);
+  await fetchNavigationRegistries();
 });
 
 test('Test rendering of the navigation bar with empty items', async (_arg: unknown) => {
@@ -217,4 +242,97 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+type DragStartEvent = Parameters<NonNullable<DragDropEventHandlers['onDragStart']>>[0];
+type DragOverEvent = Parameters<NonNullable<DragDropEventHandlers['onDragOver']>>[0];
+type DragEndEvent = Parameters<NonNullable<DragDropEventHandlers['onDragEnd']>>[0];
+
+const manager = {} as DragDropManager;
+
+function dragOver(from: number, to: number): DragOverEvent {
+  return { operation: { source: { index: from }, target: { index: to } } } as unknown as DragOverEvent;
+}
+
+function dragEnd(from: number, to: number, canceled = false): DragEndEvent {
+  return { canceled, operation: { source: { initialIndex: from, index: to } } } as unknown as DragEndEvent;
+}
+
+function dragHandlers(): DragDropEventHandlers {
+  const props = vi.mocked(DragDropProvider).mock.lastCall?.[1];
+  if (!props) throw new Error('DragDropProvider is not rendered');
+  return props;
+}
+
+function navNames(): string[] {
+  const list = screen.getByRole('region', { name: 'Scrollable navigation list' });
+  return within(list)
+    .getAllByRole('link')
+    .map(link => link.getAttribute('aria-label') ?? '');
+}
+
+async function renderNavigation(): Promise<string[]> {
+  render(AppNavigation, { meta: { url: '/' } as TinroRouteMeta, exitSettingsCallback: (): void => {} });
+  return navNames();
+}
+
+test('entries are listed in the saved order, then the ones not in it', async () => {
+  const names = await renderNavigation();
+
+  navigationItemOrder.set([names[2], names[0]]);
+  await vi.waitFor(() => expect(navNames()).toEqual([names[2], names[0], names[1], ...names.slice(3)]));
+});
+
+// Extensions push entries into the registry after it was rendered for the first time.
+test('entries added after the initial render are listed', async () => {
+  await renderNavigation();
+
+  const extension: NavigationRegistryEntry = {
+    name: 'Late item',
+    link: '/late',
+    tooltip: 'Late item',
+    icon: {},
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  navigationRegistry.update(items => [...items, extension]);
+
+  await vi.waitFor(() => expect(navNames()).toContain('Late item'));
+});
+
+test('dragging an entry over another moves it there, and dropping it saves the order', async () => {
+  const names = await renderNavigation();
+  const { onDragStart, onDragOver, onDragEnd } = dragHandlers();
+  const moved = [names[1], names[2], names[0], ...names.slice(3)];
+
+  onDragStart?.({} as DragStartEvent, manager);
+  onDragOver?.(dragOver(0, 2), manager);
+  await vi.waitFor(() => expect(navNames()).toEqual(moved));
+
+  onDragEnd?.(dragEnd(0, 2), manager);
+  await vi.waitFor(() => expect(navNames()).toEqual(moved));
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith('navbar.itemOrder', moved);
+});
+
+test('canceling a drag goes back to the saved order', async () => {
+  const names = await renderNavigation();
+  const { onDragStart, onDragOver, onDragEnd } = dragHandlers();
+
+  onDragStart?.({} as DragStartEvent, manager);
+  onDragOver?.(dragOver(0, 2), manager);
+  onDragEnd?.(dragEnd(0, 2, true), manager);
+  await vi.waitFor(() => expect(navNames()).toEqual(names));
+
+  expect(window.updateConfigurationValue).not.toHaveBeenCalledWith('navbar.itemOrder', expect.anything());
+});
+
+test('dropping an entry where it started does not save the order', async () => {
+  await renderNavigation();
+  const { onDragStart, onDragEnd } = dragHandlers();
+
+  onDragStart?.({} as DragStartEvent, manager);
+  onDragEnd?.(dragEnd(1, 1), manager);
+
+  expect(window.updateConfigurationValue).not.toHaveBeenCalledWith('navbar.itemOrder', expect.anything());
 });
