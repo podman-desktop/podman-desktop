@@ -792,6 +792,31 @@ test.each([
   await vi.waitFor(() => expect(get(operationConnectionsInfo).get(1)?.operationInProgress).toBe(false));
 });
 
+test('Expect retry to clear the logs of the previous attempt', async () => {
+  const callback = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('error'))
+    .mockReturnValue(new Promise<void>(() => {}));
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+  await screen.findByText('Error: error');
+  const firstKey = get(operationConnectionsInfo).get(1)?.operationKey;
+  assert(firstKey);
+  expect(clearTaskLogs).not.toHaveBeenCalled();
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+  await vi.waitFor(() => expect(clearTaskLogs).toHaveBeenCalledWith(firstKey));
+  expect(get(operationConnectionsInfo).get(1)?.operationKey).not.toBe(firstKey);
+});
+
 test('Expect go back button to clear the task logs and keep the successful operation', async () => {
   let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
   const callback = mockCallback(async keyLogger => {

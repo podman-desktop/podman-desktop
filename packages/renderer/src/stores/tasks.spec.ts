@@ -103,6 +103,17 @@ test('Expect task-removed to remove the operation of a connection task', () => {
   expect(removeTaskOperation).toHaveBeenCalledWith(3);
 });
 
+test('Expect task-removed to keep the operation while another task references it', () => {
+  const failedTask: TaskInfo = { ...SUCCEED_TASK, status: 'failure', connectionTaskId: 3 };
+  const retryTask: TaskInfo = { ...SUCCEED_TASK, id: '2', connectionTaskId: 3 };
+  tasksInfo.set([failedTask, retryTask]);
+
+  callbacks.get('task-removed')?.(failedTask);
+
+  expect(get(tasksInfo)).toEqual([retryTask]);
+  expect(removeTaskOperation).not.toHaveBeenCalled();
+});
+
 test('Expect task-removed to not remove any operation for other tasks', () => {
   tasksInfo.set([SUCCEED_TASK]);
 

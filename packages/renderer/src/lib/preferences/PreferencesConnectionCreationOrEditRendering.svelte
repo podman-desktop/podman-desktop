@@ -428,6 +428,10 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
       tokenId = await window.getCancellableTokenSource();
       // clear terminal
       logsTerminal?.clear();
+      // logs of a previous attempt can no longer be displayed
+      if (loggerHandlerKey) {
+        clearTaskLogs(loggerHandlerKey);
+      }
       loggerHandlerKey = registerConnectionCallback(getLoggerHandler());
       updateStore();
       await callback(providerInfo.internalId, data, loggerHandlerKey, eventCollect, tokenId, taskId);

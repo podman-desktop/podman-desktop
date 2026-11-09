@@ -18,7 +18,7 @@
 
 import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatus } from '@desktop-framework/api';
 import type { Writable } from 'svelte/store';
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 
 import {
   clearCompletedOperations,
@@ -117,9 +117,11 @@ window.events?.receive('task-updated', (task: unknown) => {
 window.events?.receive('task-removed', (task: unknown) => {
   const removedTask = task as TaskInfo | NotificationTaskInfo;
   tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== removedTask.id));
-  // the operation page can no longer be reached from the task manager
-  if (removedTask.connectionTaskId !== undefined) {
-    removeTaskOperation(removedTask.connectionTaskId);
+  // the operation page can no longer be reached from the task manager,
+  // unless another task (e.g. a retry from the same page) references the same operation
+  const connectionTaskId = removedTask.connectionTaskId;
+  if (connectionTaskId !== undefined && !get(tasksInfo).some(t => t.connectionTaskId === connectionTaskId)) {
+    removeTaskOperation(connectionTaskId);
   }
 });
 
