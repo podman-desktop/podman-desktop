@@ -4190,6 +4190,68 @@ test('disposing a connection cancels the pending reconnect after an events failu
   expect(onApiAttached).toHaveBeenCalledTimes(1);
 });
 
+test('a further events failure does not postpone the pending reconnect', async () => {
+  vi.useFakeTimers();
+
+  const connection = {
+    name: 'podman',
+    type: 'podman',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    status: () => 'started',
+  } as unknown as podmanDesktopAPI.ContainerProviderConnection;
+  const internalContainerProvider: InternalContainerProvider = {
+    name: 'podman',
+    id: 'p1.podman',
+    connection,
+  };
+
+  let errorCallback: ((error: Error) => void) | undefined;
+  const handleEventsSpy = vi.spyOn(containerRegistry, 'handleEvents').mockImplementation((_api, callback) => {
+    errorCallback = callback;
+  });
+
+  containerRegistry.setupConnectionAPI(internalContainerProvider, connection);
+  expect(handleEventsSpy).toHaveBeenCalledTimes(1);
+
+  // first failure schedules the reconnect (5s), a second one 3s later must not postpone it
+  const firstErrorCallback = errorCallback;
+  firstErrorCallback?.(new Error('events failed'));
+  await vi.advanceTimersByTimeAsync(3000);
+  firstErrorCallback?.(new Error('events failed again'));
+  await vi.advanceTimersByTimeAsync(2000);
+
+  expect(handleEventsSpy).toHaveBeenCalledTimes(2);
+});
+
+test('status polling does not reattach a connection disposed while reading its status', async () => {
+  vi.useFakeTimers();
+
+  const statusMock = vi.fn().mockReturnValue('stopped');
+  const connection = {
+    name: 'podman',
+    type: 'podman',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    status: statusMock,
+  } as unknown as podmanDesktopAPI.ContainerProviderConnection;
+  const provider = { name: 'podman', id: 'p1' } as unknown as podmanDesktopAPI.Provider;
+  const providerRegistry = {
+    onBeforeDidUpdateContainerConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as ProviderRegistry;
+  const handleEventsSpy = vi.spyOn(containerRegistry, 'handleEvents').mockImplementation(() => {});
+
+  const disposable = containerRegistry.registerContainerConnection(provider, connection, providerRegistry);
+
+  // the registration is disposed while the poll reads the status
+  statusMock.mockImplementation(() => {
+    disposable.dispose();
+    return 'started';
+  });
+  await vi.advanceTimersByTimeAsync(2000);
+
+  expect(handleEventsSpy).not.toHaveBeenCalled();
+  expect(containerRegistry.isApiAttached('p1.podman')).toBe(false);
+});
+
 test('check handleEvents with loadArchive', async () => {
   const consoleLogSpy = vi.spyOn(console, 'log');
   const getEventsMock = vi.fn();

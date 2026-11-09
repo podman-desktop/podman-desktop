@@ -375,7 +375,10 @@ export class ContainerProviderRegistry {
       // ok we had some errors so we need to reconnect the provider
       // delay the reconnection to avoid too many reconnections
       // retry in 5 seconds
-      clearTimeout(internalProvider.reconnectTimer);
+      // keep the first pending retry: further errors must not postpone it
+      if (internalProvider.reconnectTimer) {
+        return;
+      }
       internalProvider.reconnectTimer = setTimeout(() => {
         internalProvider.reconnectTimer = undefined;
         this.setupConnectionAPI(internalProvider, containerProviderConnection);
@@ -432,6 +435,10 @@ export class ContainerProviderRegistry {
     // track the status of the provider
     const timer = setInterval(() => {
       const newStatus = containerProviderConnection.status();
+      // the registration may have been disposed while reading the status
+      if (internalProvider.disposed) {
+        return;
+      }
       if (newStatus === 'started' && !internalProvider.api) {
         this.setupConnectionAPI(internalProvider, containerProviderConnection);
         this.internalProviders.set(id, internalProvider);
