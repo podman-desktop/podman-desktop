@@ -38,5 +38,4 @@ export interface TaskInfo {
   action?: string;
   cancellable: boolean;
   cancellationTokenSourceId?: number;
-  connectionTaskId?: number;
 }

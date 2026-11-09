@@ -28,6 +28,8 @@ import {
   type ConnectionCallback,
   getNextTaskId,
   registerConnectionCallback,
+  registerConnectionTask,
+  removeConnectionTask,
   removeOperation,
   removeTaskOperation,
 } from './preferences-connection-rendering-task';
@@ -185,6 +187,37 @@ test('removeTaskOperation clears the logs and removes only the operation of the 
   expect([...get(operationConnectionsInfo).keys()]).toEqual([1]);
   expectLogsCleared(key, true);
   expectLogsCleared(otherKey, false);
+});
+
+test('removeConnectionTask removes the operation of the removed task', () => {
+  const key = registerConnectionCallback(dummyCallback);
+  setOperations(buildOperation(key));
+  registerConnectionTask('task-1', 1);
+
+  removeConnectionTask('task-1');
+
+  expect(get(operationConnectionsInfo).size).toBe(0);
+});
+
+test('removeConnectionTask keeps the operation while another task references it', () => {
+  const key = registerConnectionCallback(dummyCallback);
+  setOperations(buildOperation(key));
+  registerConnectionTask('task-1', 1);
+  registerConnectionTask('task-2', 1);
+
+  removeConnectionTask('task-1');
+  expect(get(operationConnectionsInfo).size).toBe(1);
+
+  removeConnectionTask('task-2');
+  expect(get(operationConnectionsInfo).size).toBe(0);
+});
+
+test('removeConnectionTask ignores tasks not linked to an operation', () => {
+  setOperations(buildOperation(registerConnectionCallback(dummyCallback)));
+
+  removeConnectionTask('task-unknown');
+
+  expect(get(operationConnectionsInfo).size).toBe(1);
 });
 
 test('getNextTaskId returns increasing ids', () => {

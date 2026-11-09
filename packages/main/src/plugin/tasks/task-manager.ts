@@ -127,11 +127,7 @@ export class TaskManager {
   }): Task {
     this.taskId++;
 
-    const task = new TaskImpl(
-      `task-${this.taskId}`,
-      options?.title ?? `Task ${this.taskId}`,
-      options?.connectionTaskId,
-    );
+    const task = new TaskImpl(`task-${this.taskId}`, options?.title ?? `Task ${this.taskId}`);
     task.action = options?.action;
     task.cancellable = options?.cancellable ?? false;
     if (task.cancellable && !options?.cancellationTokenSourceId) {
@@ -144,6 +140,10 @@ export class TaskManager {
       task.cancellationTokenSourceId = options?.cancellationTokenSourceId;
     }
     this.registerTask(task);
+    // link the taskId to the provider connection operation id
+    if (options?.connectionTaskId !== undefined) {
+      this.apiSender.send('connection-task-created', { taskId: task.id, connectionTaskId: options.connectionTaskId });
+    }
     return task;
   }
 
@@ -203,7 +203,6 @@ export class TaskManager {
       action: task.action?.name,
       cancellable: task.cancellable,
       cancellationTokenSourceId: task.cancellationTokenSourceId,
-      connectionTaskId: task.connectionTaskId,
     };
   }
 

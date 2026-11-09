@@ -18,11 +18,12 @@
 
 import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatus } from '@desktop-framework/api';
 import type { Writable } from 'svelte/store';
-import { derived, get, writable } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 
 import {
   clearCompletedOperations,
-  removeTaskOperation,
+  registerConnectionTask,
+  removeConnectionTask,
 } from '/@/lib/preferences/preferences-connection-rendering-task';
 
 import { findMatchInLeaves } from './search-util';
@@ -117,12 +118,11 @@ window.events?.receive('task-updated', (task: unknown) => {
 window.events?.receive('task-removed', (task: unknown) => {
   const removedTask = task as TaskInfo | NotificationTaskInfo;
   tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== removedTask.id));
-  // the operation page can no longer be reached from the task manager,
-  // unless another task (e.g. a retry from the same page) references the same operation
-  const connectionTaskId = removedTask.connectionTaskId;
-  if (connectionTaskId !== undefined && !get(tasksInfo).some(t => t.connectionTaskId === connectionTaskId)) {
-    removeTaskOperation(connectionTaskId);
-  }
+  removeConnectionTask(removedTask.id);
+});
+window.events?.receive('connection-task-created', (data: unknown) => {
+  const { taskId, connectionTaskId } = data as { taskId: string; connectionTaskId: number };
+  registerConnectionTask(taskId, connectionTaskId);
 });
 
 export function isNotificationTask(task: TaskInfo): task is NotificationTaskInfo {

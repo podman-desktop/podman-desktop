@@ -38,7 +38,6 @@ export class TaskImpl implements Task {
   constructor(
     public readonly id: string,
     name: string,
-    public readonly connectionTaskId?: number,
   ) {
     this.mName = name;
     this.mState = 'running';

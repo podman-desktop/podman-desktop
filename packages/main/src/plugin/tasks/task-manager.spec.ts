@@ -360,13 +360,14 @@ test('create task having cancellationTokenSourceId without being cancellable thr
   );
 });
 
-test('create task with connectionTaskId', async () => {
+test('create task with connectionTaskId sends connection-task-created', async () => {
   const task = taskManager.createTask({ connectionTaskId: 3 });
-  expect(task.connectionTaskId).toEqual(3);
-  expect(apiSenderSendMock).toHaveBeenCalledWith(
-    'task-created',
-    expect.objectContaining({ id: task.id, connectionTaskId: 3 }),
-  );
+  expect(apiSenderSendMock).toHaveBeenCalledWith('connection-task-created', { taskId: task.id, connectionTaskId: 3 });
+});
+
+test('create task without connectionTaskId does not send connection-task-created', async () => {
+  taskManager.createTask();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('connection-task-created', expect.anything());
 });
 
 describe('execute', () => {

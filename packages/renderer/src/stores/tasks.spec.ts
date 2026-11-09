@@ -22,7 +22,8 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   clearCompletedOperations,
-  removeTaskOperation,
+  registerConnectionTask,
+  removeConnectionTask,
 } from '/@/lib/preferences/preferences-connection-rendering-task';
 
 import {
@@ -93,34 +94,19 @@ test('Expect clearNotification to clear completed operations and call window.cle
   expect(clearTasksMock).toHaveBeenCalled();
 });
 
-test('Expect task-removed to remove the operation of a connection task', () => {
-  const task: TaskInfo = { ...SUCCEED_TASK, connectionTaskId: 3 };
-  tasksInfo.set([task]);
-
-  callbacks.get('task-removed')?.(task);
-
-  expect(get(tasksInfo)).toEqual([]);
-  expect(removeTaskOperation).toHaveBeenCalledWith(3);
-});
-
-test('Expect task-removed to keep the operation while another task references it', () => {
-  const failedTask: TaskInfo = { ...SUCCEED_TASK, status: 'failure', connectionTaskId: 3 };
-  const retryTask: TaskInfo = { ...SUCCEED_TASK, id: '2', connectionTaskId: 3 };
-  tasksInfo.set([failedTask, retryTask]);
-
-  callbacks.get('task-removed')?.(failedTask);
-
-  expect(get(tasksInfo)).toEqual([retryTask]);
-  expect(removeTaskOperation).not.toHaveBeenCalled();
-});
-
-test('Expect task-removed to not remove any operation for other tasks', () => {
+test('Expect task-removed to remove the task and its connection task', () => {
   tasksInfo.set([SUCCEED_TASK]);
 
   callbacks.get('task-removed')?.(SUCCEED_TASK);
 
   expect(get(tasksInfo)).toEqual([]);
-  expect(removeTaskOperation).not.toHaveBeenCalled();
+  expect(removeConnectionTask).toHaveBeenCalledWith(SUCCEED_TASK.id);
+});
+
+test('Expect connection-task-created to register the connection task', () => {
+  callbacks.get('connection-task-created')?.({ taskId: 'task-1', connectionTaskId: 3 });
+
+  expect(registerConnectionTask).toHaveBeenCalledWith('task-1', 3);
 });
 
 describe('isNotificationTask', () => {
