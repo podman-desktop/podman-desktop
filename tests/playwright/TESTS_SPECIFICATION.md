@@ -638,7 +638,7 @@ before reusing the host, especially after `MACHINE_CLEANUP=true`.
 
 ### Metadata and purpose
 
-All use `@managed-configuration`, application UI, and a
+The JSON policy suites use `@managed-configuration`, application UI, and a
 `managed-configuration` runner profile. No working engine is required by their
 assertions.
 
@@ -683,6 +683,51 @@ points and lock proxy/registry values. Run on a dedicated host or restore its
 policy files before ordinary suites. Teardown closes the app and does not
 remove policies or restore host registry files. The combined suite marks the
 Zoom Level reset case as expected to fail (`test.fail`, #16000).
+
+### macOS per-user preferences
+
+#### Metadata and purpose
+
+[managed-configuration-macos-user.spec.ts](src/special-specs/managed-configuration/managed-configuration-macos-user.spec.ts)
+uses `@managed-configuration` and the `managed-configuration-macos-user` runner
+profile. It runs only on macOS and requires no container engine.
+
+The suite tests per-user overrides, ignored per-user locks, preserved JSON
+locks, session edits, and per-user values after an application restart.
+
+#### Preconditions and inputs
+
+- The host requires the JSON policy fixtures from the preceding section.
+- `/Library/Managed Preferences/<username>` must exist and permit writes from
+  the test account. `<username>` is the account's short name.
+- The account directory must not contain
+  `io.podman_desktop.PodmanDesktop.plist`. The setup refuses to overwrite an
+  existing policy.
+
+The CI workflow creates the account directory and assigns it to the test
+account. Local runs require the same directory access before the suite starts.
+
+The setup copies
+[user-preferences.plist](resources/managed-configuration/user-preferences.plist)
+into the account directory. `RunnerOptions` supplies `system` for Appearance
+and `false` for the feedback dialog in the initial user settings.
+
+#### Execution
+
+Run from the repository root after the E2E build:
+
+```bash
+pnpm test:e2e:suite managed-configuration-macos-user -g @managed-configuration
+```
+
+The full managed configuration command also selects this suite. Other
+platforms skip it.
+
+#### Notes
+
+The test closes the application in `finally`. The teardown removes only the
+plist that the setup created. It retains the account directory and the JSON
+policies. The suite does not test device plists or an MDM deployment.
 
 ## Remote connections, stress, and visual capture
 

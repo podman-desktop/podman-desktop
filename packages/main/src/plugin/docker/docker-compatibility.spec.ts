@@ -28,7 +28,9 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import type { Directories } from '/@/plugin/directories.js';
+import { LegacyDirectories } from '/@/plugin/directories-legacy.js';
 import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { MacManagedConfiguration } from '/@/plugin/mac-managed-configuration.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import * as util from '/@/util.js';
 
@@ -52,6 +54,8 @@ class TestDockerCompatibility extends DockerCompatibility {
 
 // mock exists sync
 vi.mock(import('node:fs'));
+vi.mock(import('/@/plugin/directories-legacy.js'));
+vi.mock(import('/@/plugin/mac-managed-configuration.js'));
 
 const dockerodeInfoMock = vi.fn();
 const dockerodePodmanInfoMock = vi.fn();
@@ -78,6 +82,7 @@ beforeAll(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
+    new MacManagedConfiguration(new LegacyDirectories()),
   );
   configurationRegistry.registerConfigurations = vi.fn();
   configurationRegistry.deregisterConfigurations = vi.fn();

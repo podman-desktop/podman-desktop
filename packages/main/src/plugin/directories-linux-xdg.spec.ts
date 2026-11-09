@@ -132,6 +132,17 @@ describe('LinuxXDGDirectories', () => {
     });
   });
 
+  describe('getManagedPreferencesDir', () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+      provider = new LinuxXDGDirectories();
+    });
+
+    test.each([undefined, 'testuser'])('omit the managed preference directory for %s', username => {
+      expect(provider.getManagedPreferencesDir(username)).toBeUndefined();
+    });
+  });
+
   describe('getManagedDefaultsDirectory', () => {
     test('should return linux managed folder path when not running in Flatpak', () => {
       provider = new LinuxXDGDirectories();

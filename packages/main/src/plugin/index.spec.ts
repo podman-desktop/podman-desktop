@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { EventEmitter } from 'node:events';
+import * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 
 import type {
@@ -54,6 +55,7 @@ import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
 import { LockedConfiguration } from './locked-configuration.js';
+import { MacManagedConfiguration } from './mac-managed-configuration.js';
 import type { MessageBox } from './message-box.js';
 import { NavigationManager } from './navigation/navigation-manager.js';
 import { ProviderRegistry } from './provider-registry.js';
@@ -87,6 +89,7 @@ function getHandler<T>(name: string): T {
   return handler as T;
 }
 
+vi.mock(import('node:fs/promises'), { spy: true });
 vi.mock(import('/@/plugin/updater.js'), importOriginal => mockOriginalClass(importOriginal, 'Updater'));
 vi.mock(import('/@/plugin/extension/extension-loader.js'), importOriginal =>
   mockOriginalClass(importOriginal, 'ExtensionLoader'),
@@ -107,6 +110,9 @@ vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(im
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
 vi.mock(import('./image-checker.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageCheckerImpl'));
 vi.mock(import('./image-files-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageFilesRegistry'));
+vi.mock(import('./mac-managed-configuration.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'MacManagedConfiguration'),
+);
 
 let pluginSystem: TestPluginSystem;
 
@@ -169,6 +175,7 @@ beforeEach(async () => {
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.mocked(Updater.prototype.init).mockReturnValue(new Disposable(vi.fn()));
   vi.mocked(ExtensionLoader.prototype.listExtensions).mockResolvedValue([]);
+  vi.mocked(MacManagedConfiguration.prototype.getContent).mockResolvedValue({ defaults: {}, user: {}, locked: [] });
 
   vi.mocked(ProviderRegistry.prototype.getProviderInfos).mockReturnValue([]);
   vi.mocked(ContainerProviderRegistry.prototype.listContainers).mockResolvedValue([]);
@@ -189,6 +196,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
+});
+
+test('plugin startup does not read host managed preferences', async () => {
+  vi.mocked(fsPromises.access).mockClear();
+
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+
+  expect(fsPromises.access).not.toHaveBeenCalledWith(expect.stringContaining('/Library/Managed Preferences/'));
 });
 
 test('Should queue events until we are ready', async () => {
@@ -409,12 +424,16 @@ test('configurationRegistry propagated', async () => {
   const lockedConfigurationMock = {
     getContent: vi.fn().mockResolvedValue({}),
   } as unknown as LockedConfiguration;
+  const macManagedConfigurationMock = new MacManagedConfiguration(directoriesMock);
   const notifications: NotificationCardOptions[] = [];
 
   inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
   inversifyContainer.bind<Directories>(Directories).toConstantValue(directoriesMock);
   inversifyContainer.bind<DefaultConfiguration>(DefaultConfiguration).toConstantValue(defaultConfigurationMock);
   inversifyContainer.bind<LockedConfiguration>(LockedConfiguration).toConstantValue(lockedConfigurationMock);
+  inversifyContainer
+    .bind<MacManagedConfiguration>(MacManagedConfiguration)
+    .toConstantValue(macManagedConfigurationMock);
 
   const configurationRegistry = await pluginSystem.initConfigurationRegistry(
     inversifyContainer,
