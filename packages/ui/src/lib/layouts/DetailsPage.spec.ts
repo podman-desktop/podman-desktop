@@ -29,7 +29,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('Expect title is defined', async () => {
+test('Displays the title with a two-line cap', () => {
   const title = 'My Dummy Title';
   render(DetailsPage, {
     title,
@@ -38,6 +38,7 @@ test('Expect title is defined', async () => {
   const titleElement = screen.getByRole('heading', { level: 1, name: title });
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
+  expect(titleElement).toHaveClass('line-clamp-2');
 });
 
 test('Expect page name is defined', async () => {

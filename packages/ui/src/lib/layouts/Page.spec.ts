@@ -18,18 +18,19 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, getByRole, render, screen } from '@testing-library/svelte';
+import { fireEvent, getByRole, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { createRawSnippet } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import Page from './Page.svelte';
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
-test('Expect title is defined', async () => {
-  const title = 'My Dummy Title';
+test('Exposes the full title on the heading', () => {
+  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
   render(Page, {
     title,
   });
@@ -37,6 +38,27 @@ test('Expect title is defined', async () => {
   const titleElement = screen.getByRole('heading', { level: 1, name: title });
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
+  expect(titleElement).toHaveAttribute('title', title);
+  expect(titleElement).not.toHaveClass('line-clamp-2');
+});
+
+test('Renders the detail next to the tabs and outside the header', () => {
+  const detail = createRawSnippet(() => ({ render: (): string => '<span>Container statistics</span>' }));
+  render(Page, { title: 'Container Details', detail });
+
+  const header = screen.getByRole('region', { name: 'Header' });
+  const tabs = screen.getByRole('region', { name: 'Tabs' });
+  const statistics = screen.getByText('Container statistics');
+
+  expect(tabs.previousElementSibling).toContainElement(statistics);
+  expect(within(header).queryByText('Container statistics')).not.toBeInTheDocument();
+});
+
+test('Omits the detail container when no detail is provided', () => {
+  render(Page, { title: 'Image Details' });
+
+  const tabs = screen.getByRole('region', { name: 'Tabs' });
+  expect(tabs.parentElement?.children).toHaveLength(1);
 });
 
 test('Expect no backlink or close is defined', async () => {

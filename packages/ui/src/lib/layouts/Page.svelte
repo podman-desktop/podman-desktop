@@ -8,6 +8,7 @@ import Link from '../link/Link.svelte';
 interface Props {
   title: string;
   titleDetail?: string;
+  clampTitle?: boolean;
   subtitle?: string;
   breadcrumbLeftPart?: string;
   breadcrumbRightPart?: string;
@@ -26,6 +27,7 @@ interface Props {
 const {
   title,
   titleDetail = undefined,
+  clampTitle = false,
   subtitle = undefined,
   breadcrumbLeftPart = undefined,
   breadcrumbRightPart = undefined,
@@ -93,21 +95,19 @@ function handleKeydown(e: KeyboardEvent): void {
             <div class="flex flex-wrap items-baseline gap-x-2">
               <h1
                 aria-label={title}
-                title={title}
-                class="min-w-0 line-clamp-2 text-xl font-bold leading-tight wrap-anywhere text-[var(--pd-content-header)]">
+                {title}
+                class="min-w-0 text-xl font-bold leading-tight wrap-anywhere text-(--pd-content-header)"
+                class:line-clamp-2={clampTitle}>
                 {title}
               </h1>
-              <div
-                title={titleDetail}
-                class="min-w-0 truncate leading-normal text-[var(--pd-table-body-text-sub-secondary)]"
-                class:hidden={!titleDetail}>
+              <div class="leading-normal wrap-anywhere text-(--pd-table-body-text-sub-secondary)" class:hidden={!titleDetail}>
                 {titleDetail}
               </div>
             </div>
             <div>
               <!-- The clamped subtitle should not determine when the actions wrap. -->
               <span
-                class="text-sm leading-none text-[var(--pd-content-sub-header)] line-clamp-1 [contain:inline-size]"
+                class="text-sm leading-none text-(--pd-content-sub-header) line-clamp-1 [contain:inline-size]"
                 class:hidden={!subtitle}>{subtitle}</span>
               {@render subtitleSnippet?.()}
             </div>
@@ -127,7 +127,7 @@ function handleKeydown(e: KeyboardEvent): void {
   {#if inProgress}
     <LinearProgress />
   {/if}
-  <div class="flex flex-row-reverse flex-wrap items-end border-b border-[var(--pd-content-divider)]">
+  <div class="flex flex-row-reverse flex-wrap items-end border-b border-(--pd-content-divider)">
     {#if detail}
       <div class="max-w-full pr-5">
         {@render detail()}
