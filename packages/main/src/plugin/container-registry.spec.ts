@@ -8906,6 +8906,51 @@ describe('getImageInfo', () => {
 });
 
 describe('getContainerStats', () => {
+  test('forwards each stats object to the callback with the engine name and id', async () => {
+    const stream = new PassThrough();
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        getContainer: vi.fn().mockReturnValue({ stats: vi.fn().mockResolvedValue(stream) }),
+      } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+    const callback = vi.fn();
+
+    await containerRegistry.getContainerStats('podman1', 'container1', callback);
+    stream.write(JSON.stringify({ cpu_stats: { online_cpus: 4 } }));
+
+    await vi.waitFor(() =>
+      expect(callback).toHaveBeenCalledWith({
+        engineName: 'podman',
+        engineId: 'podman1',
+        cpu_stats: { online_cpus: 4 },
+      }),
+    );
+  });
+
+  test.each([
+    { name: 'the engine is unknown', engineId: 'unknown', message: 'no engine matching this container' },
+    {
+      name: 'the engine has no api',
+      engineId: 'podman1',
+      message: 'no running provider for the matching container',
+    },
+  ])('rejects and tracks the error when $name', async ({ engineId, message }) => {
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    await expect(containerRegistry.getContainerStats(engineId, 'container1', vi.fn())).rejects.toThrow(message);
+
+    expect(telemetryTrackMock).toHaveBeenCalledWith('containerStats', {
+      error: expect.objectContaining({ message }),
+    });
+  });
+
   test('a failing stream should not unregister a stream started afterwards', async () => {
     const firstStream = new PassThrough();
     const secondStream = new PassThrough();
