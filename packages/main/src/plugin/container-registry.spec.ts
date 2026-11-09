@@ -4223,6 +4223,36 @@ test('a further events failure does not postpone the pending reconnect', async (
   expect(handleEventsSpy).toHaveBeenCalledTimes(2);
 });
 
+test('pending reconnect does not open a second stream when status polling already restored the api', async () => {
+  vi.useFakeTimers();
+
+  const connection = {
+    name: 'podman',
+    type: 'podman',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    status: () => 'started',
+  } as unknown as podmanDesktopAPI.ContainerProviderConnection;
+  const provider = { name: 'podman', id: 'p1' } as unknown as podmanDesktopAPI.Provider;
+  const providerRegistry = {
+    onBeforeDidUpdateContainerConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as ProviderRegistry;
+
+  let errorCallback: ((error: Error) => void) | undefined;
+  const handleEventsSpy = vi.spyOn(containerRegistry, 'handleEvents').mockImplementation((_api, callback) => {
+    errorCallback = callback;
+  });
+
+  containerRegistry.registerContainerConnection(provider, connection, providerRegistry);
+  expect(handleEventsSpy).toHaveBeenCalledTimes(1);
+
+  // the failure schedules a reconnect at 5s, but the status poll (every 2s) restores the api first
+  errorCallback?.(new Error('events failed'));
+  await vi.advanceTimersByTimeAsync(6000);
+
+  // initial setup + the one done by the poll, none from the retry timer
+  expect(handleEventsSpy).toHaveBeenCalledTimes(2);
+});
+
 test('status polling does not reattach a connection disposed while reading its status', async () => {
   vi.useFakeTimers();
 

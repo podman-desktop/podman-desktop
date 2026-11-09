@@ -381,6 +381,10 @@ export class ContainerProviderRegistry {
       }
       internalProvider.reconnectTimer = setTimeout(() => {
         internalProvider.reconnectTimer = undefined;
+        // the status polling may already have restored the API, do not open a second client/stream
+        if (internalProvider.api) {
+          return;
+        }
         this.setupConnectionAPI(internalProvider, containerProviderConnection);
       }, this.retryDelayEvents);
     };
