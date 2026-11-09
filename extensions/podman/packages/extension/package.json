@@ -18,6 +18,9 @@
     "podman-desktop": "^0.0.1"
   },
   "main": "./dist/extension.cjs",
+  "product": {
+    "dockerCompatibilityGuide": "https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility"
+  },
   "contributes": {
     "commands": [
       {
