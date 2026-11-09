@@ -8928,6 +8928,16 @@ describe('getContainerStats', () => {
         cpu_stats: { online_cpus: 4 },
       }),
     );
+
+    stream.write(JSON.stringify({ cpu_stats: { online_cpus: 8 } }));
+
+    await vi.waitFor(() =>
+      expect(callback).toHaveBeenCalledWith({
+        engineName: 'podman',
+        engineId: 'podman1',
+        cpu_stats: { online_cpus: 8 },
+      }),
+    );
   });
 
   test.each([
@@ -8951,7 +8961,7 @@ describe('getContainerStats', () => {
     });
   });
 
-  test('a failing stream should not unregister a stream started afterwards', async () => {
+  test('a failing stream unregisters itself but not a stream started afterwards', async () => {
     const firstStream = new PassThrough();
     const secondStream = new PassThrough();
     const statsMock = vi.fn().mockResolvedValueOnce(firstStream).mockResolvedValueOnce(secondStream);
@@ -8965,13 +8975,22 @@ describe('getContainerStats', () => {
     const firstId = await containerRegistry.getContainerStats('podman1', 'container1', vi.fn());
     const secondId = await containerRegistry.getContainerStats('podman1', 'container2', vi.fn());
 
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const firstDestroySpy = vi.spyOn(firstStream, 'destroy');
+
     // invalid JSON makes the first pipeline fail, after the second stream has been registered
     firstStream.end('}');
-    await vi.waitFor(() => expect(firstStream.destroyed).toBeTruthy());
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error while grabbing stats', expect.anything()),
+    );
+    const destroyCallsAfterError = firstDestroySpy.mock.calls.length;
 
+    await containerRegistry.stopContainerStats(firstId);
     await containerRegistry.stopContainerStats(secondId);
 
     expect(firstId).not.toBe(secondId);
+    // the failed stream is no longer registered, so stopping it does not destroy it again
+    expect(firstDestroySpy).toHaveBeenCalledTimes(destroyCallsAfterError);
     expect(secondStream.destroyed).toBeTruthy();
   });
 });
