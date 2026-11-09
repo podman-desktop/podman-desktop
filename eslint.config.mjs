@@ -255,6 +255,25 @@ export default [
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
 
+      // dialogs should not have more than three buttons
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CallExpression[callee.property.name="showMessageBox"] > ObjectExpression > Property[key.name="buttons"] > ArrayExpression[elements.length>3]',
+          message: 'A message box should not have more than three buttons.',
+        },
+        {
+          selector: 'CallExpression[callee.property.name="showDialog"] > ArrayExpression[elements.length>3]',
+          message: 'A dialog should not have more than three buttons.',
+        },
+        {
+          selector:
+            'CallExpression[callee.property.name=/^show(Information|Warning|Error)Message$/][arguments.length>4]',
+          message: 'A message should not have more than three buttons.',
+        },
+      ],
+
       // new rule that has been added as a recommended one in eslint v10
       // but comment it by default until we can fix all the issues in the codebase
       'preserve-caught-error': 'off',

@@ -296,6 +296,7 @@ export class PodmanInstall {
           await extensionApi.env.openExternal(url);
         }
       } else {
+        // eslint-disable-next-line no-restricted-syntax -- the Ignore option is discussed in #18498
         const answer = await extensionApi.window.showInformationMessage(
           `You have Podman ${updateInfo.installedVersion}.\nDo you want to update to ${updateInfo.bundledVersion}?`,
           'Yes',
