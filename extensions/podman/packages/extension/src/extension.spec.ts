@@ -189,6 +189,7 @@ vi.mock(import('./configuration/registry-configuration'), async () => {
 });
 
 const PODMAN_INSTALL_MOCK: PodmanInstall = {
+  getInstallChecks: vi.fn(),
   getUpdatePreflightChecks: vi.fn(),
   isAbleToInstall: vi.fn(),
   doInstallPodman: vi.fn(),
@@ -2792,6 +2793,107 @@ describe('registerOnboardingMachineExistsCommand', () => {
 
     // check called with podman machine exists being false as there is no machine
     expect(extensionApi.context.setValue).toBeCalledWith('podmanMachineExists', false, 'onboarding');
+  });
+});
+
+describe('podman.onboarding.checkRequirementsCommand', () => {
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isLinux = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isMac = false;
+    vi.mocked(PODMAN_INSTALL_MOCK.isAbleToInstall).mockReturnValue(false);
+    // only pretend the Linux socket exists, so the extension does not wait for it.
+    // The containers.conf file must not exist, otherwise reading it would hang on the mocked fs callback
+    vi.mocked(fs.existsSync).mockImplementation((path: fs.PathLike) => path.toString().endsWith('/podman/podman.sock'));
+  });
+
+  async function activateAndGetCommand(): Promise<() => Promise<void>> {
+    await extension.activate(getContextMock());
+
+    const commandName = 'podman.onboarding.checkRequirementsCommand';
+
+    // the start() function is not awaited by activate(), wait for the commands to be registered
+    await vi.waitFor(() => {
+      expect(extensionApi.commands.registerCommand).toHaveBeenCalledWith(commandName, expect.any(Function));
+    });
+
+    const registered = vi
+      .mocked(extensionApi.commands.registerCommand)
+      .mock.calls.find(([command]) => command === commandName);
+    assert(registered);
+    return registered[1];
+  }
+
+  test('reports optional check failures as warnings without blocking the setup', async () => {
+    vi.mocked(PODMAN_INSTALL_MOCK.getInstallChecks).mockReturnValue([
+      {
+        title: 'Required check',
+        execute: vi.fn().mockResolvedValue({ successful: true } satisfies extensionApi.CheckResult),
+      },
+      {
+        title: 'Optional check',
+        execute: vi.fn().mockResolvedValue({
+          successful: false,
+          severity: 'warning',
+          description: 'optional check failed',
+        } satisfies extensionApi.CheckResult),
+      },
+    ] satisfies extensionApi.InstallCheck[]);
+
+    const command = await activateAndGetCommand();
+    await command();
+
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('requirementsStatus', 'warnings', 'onboarding');
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith(
+      'warningsMarkdown',
+      [
+        {
+          state: 'successful',
+          description: 'Required check',
+          docDescription: undefined,
+          docLinks: undefined,
+          command: undefined,
+        },
+        {
+          state: 'warning',
+          description: 'optional check failed',
+          docDescription: undefined,
+          docLinks: undefined,
+          command: undefined,
+        },
+      ],
+      'onboarding',
+    );
+  });
+
+  test('reports blocking check failures as failures', async () => {
+    vi.mocked(PODMAN_INSTALL_MOCK.getInstallChecks).mockReturnValue([
+      {
+        title: 'Required check',
+        execute: vi.fn().mockResolvedValue({
+          successful: false,
+          description: 'blocking check failed',
+        } satisfies extensionApi.CheckResult),
+      },
+    ] satisfies extensionApi.InstallCheck[]);
+
+    const command = await activateAndGetCommand();
+    await command();
+
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('requirementsStatus', 'failed', 'onboarding');
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith(
+      'warningsMarkdown',
+      [
+        {
+          state: 'failed',
+          description: 'blocking check failed',
+          docDescription: undefined,
+          docLinks: undefined,
+          command: undefined,
+        },
+      ],
+      'onboarding',
+    );
   });
 });
 
