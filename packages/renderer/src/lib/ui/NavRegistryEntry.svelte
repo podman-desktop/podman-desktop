@@ -13,9 +13,10 @@ interface NavRegistryEntryProps extends Omit<HTMLAnchorAttributes, 'href' | 'onc
   entry: NavigationRegistryEntry;
   meta: TinroRouteMeta;
   expanded: boolean;
+  reorderable?: boolean;
 }
 
-let { entry, meta = $bindable(), expanded = false, ...props }: NavRegistryEntryProps = $props();
+let { entry, meta = $bindable(), expanded = false, reorderable = false, ...props }: NavRegistryEntryProps = $props();
 </script>
 
 {#if !entry.hidden}
@@ -26,6 +27,7 @@ let { entry, meta = $bindable(), expanded = false, ...props }: NavRegistryEntryP
     ariaLabel={entry.name}
     bind:meta={meta}
     {expanded}
+    {reorderable}
     {...props}>
     <div class="flex items-center w-full">
       <div class="flex-shrink-0 flex items-center justify-center w-6">

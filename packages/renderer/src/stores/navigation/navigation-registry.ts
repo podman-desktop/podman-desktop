@@ -33,6 +33,7 @@ import { createNavigationNetworkEntry } from './navigation-registry-network.svel
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 import { createNavigationSecretEntry } from './navigation-registry-secret.svelte';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
+import { NavigationUtils } from './navigation-utils';
 
 export interface NavigationRegistryEntry {
   name: string;
@@ -58,8 +59,10 @@ const windowEvents: string[] = [];
 const windowListeners = ['extensions-already-started', 'system-ready'];
 
 export const navigationRegistry: Writable<NavigationRegistryEntry[]> = writable([]);
+const navigationUtils = new NavigationUtils();
 
 let hiddenItems: string[] = [];
+let itemOrder: string[] = [];
 
 let values: NavigationRegistryEntry[] = [];
 let initialized = false;
@@ -123,6 +126,33 @@ export const fetchNavigationRegistries = async (): Promise<void> => {
   await navigationRegistryEventStoreInfo.fetch();
 };
 
+function assignNavigationIndices(
+  navigationRegistryEntry: NavigationRegistryEntry,
+  order: string[],
+  parentName?: string,
+): void {
+  const resolvedParentName = parentName ?? navigationRegistryEntry.parentName;
+  if (navigationRegistryEntry.type === 'group') {
+    navigationRegistryEntry.index = undefined;
+    for (const item of navigationRegistryEntry.items ?? []) {
+      assignNavigationIndices(item, order, resolvedParentName);
+    }
+    return;
+  }
+
+  // Only entries rendered in the main navigation (top-level entries and group children) can be ordered.
+  const index = resolvedParentName === undefined ? order.indexOf(navigationRegistryEntry.name) : -1;
+  navigationRegistryEntry.index = index === -1 ? undefined : index;
+
+  const childParentName =
+    navigationRegistryEntry.type === 'submenu'
+      ? navigationUtils.formatNavigationName(navigationRegistryEntry.name, resolvedParentName)
+      : resolvedParentName;
+  for (const item of navigationRegistryEntry.items ?? []) {
+    assignNavigationIndices(item, order, childParentName);
+  }
+}
+
 function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void {
   if (hiddenItems?.includes(navigationRegistryEntry.name)) {
     navigationRegistryEntry.hidden = true;
@@ -139,6 +169,15 @@ function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void 
 }
 
 async function hideItems(): Promise<void> {
+  const defaultOrder = navigationUtils
+    .flattenNavigationEntries(values)
+    .filter(entry => entry.parentName === undefined)
+    .map(entry => entry.name);
+  const order = [...itemOrder, ...defaultOrder.filter(name => !itemOrder.includes(name))];
+  values.forEach(item => {
+    assignNavigationIndices(item, order);
+  });
+
   // for each item, set the hidden property to true
   values.forEach(item => {
     hideSingleItem(item);
@@ -155,6 +194,37 @@ async function hideItems(): Promise<void> {
   navigationRegistry.set(values);
 }
 
+// Names written by the old pinning experiments are qualified ("Kubernetes > Nodes"),
+// while the main navigation only ever contains plain top-level names.
+function isMainNavigationName(name: string): boolean {
+  return !name.includes(' > ');
+}
+
+// Update navbar item order in-memory and persist (avoids stale UI before config round-trip).
+export function setNavigationItemOrder(ids: string[]): void {
+  const mainNavNames = navigationUtils
+    .flattenNavigationEntries(values)
+    .filter(entry => entry.parentName === undefined)
+    .map(entry => entry.name);
+  // Only items currently rendered in the main navigation can be moved.
+  const acceptedIds = ids.filter((name, index) => mainNavNames.includes(name) && ids.indexOf(name) === index);
+  // The UI submits visible entries. Preserve the slots belonging to hidden or unavailable entries.
+  const visibleNames = navigationUtils.getVisibleOrderedEntries(values).map(entry => entry.name);
+  const currentOrder = [...itemOrder, ...visibleNames.filter(name => !itemOrder.includes(name))];
+  let next = 0;
+  const order = currentOrder.flatMap(name => {
+    if (visibleNames.includes(name) || acceptedIds.includes(name)) {
+      return next < acceptedIds.length ? [acceptedIds[next++]] : [name];
+    }
+    return [name];
+  });
+  itemOrder = acceptedIds.length > 0 ? [...order, ...acceptedIds.slice(next)] : [];
+  hideItems().catch((err: unknown) => console.error('Error applying navigation item order', err));
+  window
+    .updateConfigurationValue('navbar.itemOrder', itemOrder)
+    .catch((err: unknown) => console.error('Error saving navbar.itemOrder', err));
+}
+
 // update the items by looking at the disabled items each time we update the configuration properties
 configurationProperties.subscribe(() => {
   if (window.getConfigurationValue) {
@@ -167,6 +237,14 @@ configurationProperties.subscribe(() => {
       })
       .then(() => hideItems())
       .catch((err: unknown) => console.error('Error getting configuration value navbar.disabledItems', err));
+
+    window
+      .getConfigurationValue<string[]>('navbar.itemOrder')
+      ?.then(value => {
+        itemOrder = (value ?? []).filter(isMainNavigationName);
+      })
+      .then(() => hideItems())
+      .catch((err: unknown) => console.error('Error getting configuration value navbar.itemOrder', err));
 
     handleKubernetesGroup();
   }

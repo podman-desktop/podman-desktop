@@ -8,6 +8,8 @@ import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
+import { NavReorder } from '/@/lib/navigation/reorder.svelte';
+
 import AuthActions from './lib/authentication/AuthActions.svelte';
 import { CommandRegistry } from './lib/CommandRegistry';
 import NewContentOnDashboardBadge from './lib/dashboard/NewContentOnDashboardBadge.svelte';
@@ -19,17 +21,20 @@ import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
-import { navigationRegistry } from './stores/navigation/navigation-registry';
+import { navigationRegistry, setNavigationItemOrder } from './stores/navigation/navigation-registry';
+import { NavigationUtils } from './stores/navigation/navigation-utils';
 
 interface Props {
   exitSettingsCallback: () => void;
   meta: TinroRouteMeta;
 }
 let { exitSettingsCallback, meta = $bindable() }: Props = $props();
+const navigationUtils = new NavigationUtils();
 
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
 let scrollRegionEl = $state<HTMLDivElement>();
+let navEl = $state<HTMLElement>();
 
 const iconSize = '24';
 const NAV_BAR_WIDTH_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`;
@@ -41,6 +46,48 @@ const expandedThreshold = 70;
 let navWidth = $state(160);
 let expanded = $derived(navWidth > expandedThreshold);
 let isDragging = $state(false);
+let isMac: boolean = $state(false);
+let modifierKeyLabel: string = $derived(isMac ? '⌘' : 'Ctrl+');
+let reorderKeyShortcuts = $derived(isMac ? 'Meta+ArrowUp Meta+ArrowDown' : 'Control+ArrowUp Control+ArrowDown');
+
+let dragContainerEl = $state<HTMLDivElement>();
+
+// Single main-nav list sorted by index.
+let allVisibleEntries = $derived(navigationUtils.getVisibleOrderedEntries($navigationRegistry));
+let visibleItemNames = $derived(allVisibleEntries.map(entry => entry.name));
+
+const reorder = new NavReorder();
+let itemTitle = $derived(reorder.isDragging ? undefined : `Hold to reorder. ${modifierKeyLabel}Arrow to move`);
+
+// Ghost preview while reordering: same icon/name as the main nav row.
+let dragGhost = $derived(reorder.sourceIndex === undefined ? undefined : allVisibleEntries[reorder.sourceIndex]);
+let ghostPointerX = $derived(navEl?.getBoundingClientRect().left ?? 0);
+
+// The browser starts a native drag for <img> icons (e.g. extension items),
+// which would steal the pointer from the long-press reorder.
+function onNavItemDragStart(e: DragEvent): void {
+  e.preventDefault();
+}
+
+function saveItemOrder(newOrder: string[] | undefined): void {
+  if (newOrder) setNavigationItemOrder(newOrder);
+}
+
+function startReorder(sourceIndex: number): void {
+  reorder.start(sourceIndex, dragContainerEl);
+}
+
+function onReorderPointerMove(e: PointerEvent): void {
+  reorder.onPointerMove(e, dragContainerEl, scrollRegionEl);
+}
+
+function onReorderPointerUp(): void {
+  saveItemOrder(reorder.onPointerUp(visibleItemNames));
+}
+
+function onReorderKeyDown(e: KeyboardEvent): void {
+  saveItemOrder(reorder.onKeyDown(e, dragContainerEl, visibleItemNames));
+}
 
 $effect(() => {
   document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
@@ -159,6 +206,7 @@ onMount(async () => {
   const commandRegistry = new CommandRegistry();
   commandRegistry.init();
   navWidth = (await window.getConfigurationValue<number>(NAV_BAR_WIDTH_KEY)) ?? maxWidth;
+  isMac = (await window.getOsPlatform()) === 'darwin';
   await tick();
   const el = scrollRegionEl;
   if (el) {
@@ -179,6 +227,7 @@ onDestroy(() => {
   window.removeEventListener('pointerup', onResizeUp);
   isDragging = false;
   scrollRegionCleanup?.();
+  document.body.style.cursor = '';
 });
 
 function handleClick(): void {
@@ -202,11 +251,12 @@ function onDidChangeConfigurationCallback(e: Event): void {
 }
 </script>
 
-<svelte:window />
+<svelte:window onkeydown={onReorderKeyDown} />
 <nav
+  bind:this={navEl}
   class="group w-leftnavbar relative h-full flex-shrink-0 flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
   aria-label="AppNavigation"
-  class:select-none={isDragging}
+  class:select-none={isDragging || reorder.isDragging}
   style:width="{navWidth}px">
   <NavItem href="/" tooltip="Dashboard" bind:meta={meta} {expanded}>
     <div class="flex items-center w-full">
@@ -230,17 +280,39 @@ function onDidChangeConfigurationCallback(e: Event): void {
       role="region"
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
-      onpointerdown={onScrollRegionPointerDown}>
-      {#each $navigationRegistry as navigationRegistryItem, index (index)}
-        {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-          <!-- This is a group, list all items from the entry -->
-          {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
-          {/each}
-        {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
+      onpointerdown={onScrollRegionPointerDown}
+      onpointermove={onReorderPointerMove}
+      onpointerup={onReorderPointerUp}
+      onpointercancel={reorder.cancel}>
+      <div bind:this={dragContainerEl} class="flex flex-col relative" role="list">
+        {#each allVisibleEntries as entry, i (entry.link)}
+          <div
+            data-nav-drag-item={entry.link}
+            role="listitem"
+            class="touch-none select-none cursor-grab"
+            class:opacity-50={reorder.isDragging && reorder.sourceIndex === i}
+            class:[&_.tooltip-content]:hidden={reorder.isDragging}
+            onpointerdown={reorder.onPointerDown}
+            ondragstart={onNavItemDragStart}
+            oncontextmenu={reorder.onContextMenu}
+            {@attach longPress(startReorder.bind(undefined, i), 0, NavReorder.LONG_PRESS_MS)}
+            {@attach reorder.focusPendingRow(entry.link, i)}>
+            <NavRegistryEntry
+              {entry}
+              bind:meta={meta}
+              {expanded}
+              reorderable
+              aria-keyshortcuts={reorderKeyShortcuts}
+              title={itemTitle} />
+          </div>
+        {/each}
+        {#if reorder.showDropLine}
+          <div
+            class="absolute left-2 right-2 h-0.5 rounded-full pointer-events-none z-10 bg-(--pd-global-nav-icon-selected-highlight)"
+            style:top="{reorder.dropIndicatorOffsetY}px"
+            aria-hidden="true"></div>
         {/if}
-      {/each}
+      </div>
     </div>
     {#if scrollThumbVisible}
       <div
@@ -305,4 +377,20 @@ function onDidChangeConfigurationCallback(e: Event): void {
     {@attach longPress(toggleNavWidth)}
     onpointerdown={onResizeHandlePointerDown}
     ondblclick={onResizeHandleDblClick}></div>
+
+  {#if dragGhost}
+    <div
+      class="fixed pointer-events-none z-50 shadow-[0_10px_30px_var(--pd-shadow-color-strong)] opacity-90 scale-[1.03] bg-(--pd-global-nav-icon-selected-bg) text-(--pd-global-nav-icon) border border-(--pd-global-nav-bg-border) [&_.tooltip-content]:hidden"
+      style:top="{reorder.ghostY}px"
+      style:left="{ghostPointerX}px"
+      style:width="{navWidth}px"
+      aria-hidden="true"
+      data-testid="nav-drag-ghost">
+      <NavRegistryEntry entry={dragGhost} {meta} {expanded} tabindex={-1} />
+    </div>
+  {/if}
+
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="nav-live-region">
+    {reorder.announcement}
+  </div>
 </nav>
