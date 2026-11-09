@@ -26,6 +26,7 @@ import {
   window,
 } from '@podman-desktop/api';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
+import { parseArgsStringToArgv } from 'string-argv';
 import type { Registry } from 'winreg';
 import WinReg from 'winreg';
 
@@ -95,17 +96,21 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
         try {
           const uninstallString = await this.getUninstallCMD();
 
-          /**
-           * We cannot directly invoke the uninstallation command as it need a shell
-           */
-          await processAPI.exec('cmd.exe', ['/s', '/c', `"${uninstallString}"`], {
-            logger: {
-              error: console.error,
-              log: console.log,
-              warn: console.warn,
+          // sudo-prompt already runs the command in a batch file, so no nested cmd.exe is needed.
+          // Pre-quote each token to preserve paths when Windows process.exec joins them.
+          const [executable, args] = this.parseUninstallCommand(uninstallString);
+          await processAPI.exec(
+            `"${executable}"`,
+            args.map(arg => `"${arg.replace(/(\\*)"/g, '$1$1""').replace(/\\+$/, match => match + match)}"`),
+            {
+              logger: {
+                error: console.error,
+                log: console.log,
+                warn: console.warn,
+              },
+              isAdmin: true,
             },
-            isAdmin: true,
-          });
+          );
         } catch (err: unknown) {
           console.error('Something went wrong while trying to uninstall legacy Podman Installer', err);
           telemetry['error'] = err;
@@ -116,6 +121,49 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
         }
       },
     );
+  }
+
+  /**
+   * Parse Windows quotes and backslashes before splitting on unquoted spaces or tabs.
+   * Reject incomplete quoting, line breaks, and invalid executable names.
+   */
+  protected parseUninstallCommand(uninstallString: string): [executable: string, args: string[]] {
+    if (/[\r\n\0]/.test(uninstallString)) {
+      throw new Error('malformed uninstall command: line breaks or null characters');
+    }
+
+    let inQuotes = false;
+    // Protect literal quotes with NUL (rejected above) so string-argv cannot split on them.
+    const normalized = uninstallString.replace(/(\\*)("+|')/g, (_match, slashes: string, quotes: string) => {
+      if (quotes[0] !== '"') {
+        return slashes + (inQuotes ? quotes : `"${quotes}"`);
+      }
+      let result = '\\'.repeat(Math.floor(slashes.length / 2));
+      let index = slashes.length % 2;
+      if (index) result += '\0';
+      for (; index < quotes.length; index++) {
+        if (inQuotes && quotes[index + 1] === '"') {
+          result += '\0';
+          index++;
+        } else {
+          inQuotes = !inQuotes;
+          result += '"';
+        }
+      }
+      return result;
+    });
+    if (inQuotes) {
+      throw new Error('malformed uninstall command: unterminated quote');
+    }
+
+    const [executable, ...args] = parseArgsStringToArgv(normalized).map(arg => arg.replace(/\0/g, '"'));
+    if (!executable) {
+      throw new Error('malformed uninstall command: empty command line');
+    }
+    if (executable.includes('"')) {
+      throw new Error('malformed uninstall command: embedded quotes in executable');
+    }
+    return [executable, args];
   }
 
   /**
