@@ -152,59 +152,28 @@ test('clearTaskLogs clears the logs and keeps the operation', () => {
   expectLogsCleared(key, true);
 });
 
-test('removeOperation clears the logs and removes only the given operation', () => {
-  const key = registerConnectionCallback(dummyCallback);
-  const otherKey = registerConnectionCallback(dummyCallback);
-  setOperations(buildOperation(key), buildOperation(otherKey));
+test.each([
+  { name: 'removeOperation', remove: (key: symbol): void => removeOperation(key) },
+  { name: 'removeTaskOperation', remove: (): void => removeTaskOperation(1) },
+  { name: 'clearCompletedOperations', remove: (): void => clearCompletedOperations() },
+])('$name clears the logs and removes only the matching operation', ({ remove }) => {
+  const removedKey = registerConnectionCallback(dummyCallback);
+  const keptKey = registerConnectionCallback(dummyCallback);
+  setOperations(buildOperation(removedKey), buildOperation(keptKey, true));
 
-  removeOperation(key);
+  remove(removedKey);
 
-  expect([...get(operationConnectionsInfo).values()].map(operation => operation.operationKey)).toEqual([otherKey]);
-  expectLogsCleared(key, true);
-  expectLogsCleared(otherKey, false);
+  expect([...get(operationConnectionsInfo).values()].map(operation => operation.operationKey)).toEqual([keptKey]);
+  expectLogsCleared(removedKey, true);
+  expectLogsCleared(keptKey, false);
 });
 
-test('clearCompletedOperations clears the logs and removes only the operations not in progress', () => {
-  const completedKey = registerConnectionCallback(dummyCallback);
-  const runningKey = registerConnectionCallback(dummyCallback);
-  setOperations(buildOperation(completedKey), buildOperation(runningKey, true));
-
-  clearCompletedOperations();
-
-  expect([...get(operationConnectionsInfo).values()].map(operation => operation.operationKey)).toEqual([runningKey]);
-  expectLogsCleared(completedKey, true);
-  expectLogsCleared(runningKey, false);
-});
-
-test('removeTaskOperation clears the logs and removes only the operation of the given task', () => {
-  const key = registerConnectionCallback(dummyCallback);
-  const otherKey = registerConnectionCallback(dummyCallback);
-  setOperations(buildOperation(otherKey), buildOperation(key));
-
-  removeTaskOperation(2);
-  removeTaskOperation(5);
-
-  expect([...get(operationConnectionsInfo).keys()]).toEqual([1]);
-  expectLogsCleared(key, true);
-  expectLogsCleared(otherKey, false);
-});
-
-test('removeConnectionTask removes the operation of the removed task', () => {
-  const key = registerConnectionCallback(dummyCallback);
-  setOperations(buildOperation(key));
-  registerConnectionTask('task-1', 1);
-
-  removeConnectionTask('task-1');
-
-  expect(get(operationConnectionsInfo).size).toBe(0);
-});
-
-test('removeConnectionTask keeps the operation while another task references it', () => {
-  const key = registerConnectionCallback(dummyCallback);
-  setOperations(buildOperation(key));
+test('removeConnectionTask removes the operation once no task references it', () => {
+  setOperations(buildOperation(registerConnectionCallback(dummyCallback)));
   registerConnectionTask('task-1', 1);
   registerConnectionTask('task-2', 1);
 
+  removeConnectionTask('task-unknown');
   removeConnectionTask('task-1');
   expect(get(operationConnectionsInfo).size).toBe(1);
 
@@ -212,23 +181,12 @@ test('removeConnectionTask keeps the operation while another task references it'
   expect(get(operationConnectionsInfo).size).toBe(0);
 });
 
-test('removeConnectionTask ignores tasks not linked to an operation', () => {
-  setOperations(buildOperation(registerConnectionCallback(dummyCallback)));
-
-  removeConnectionTask('task-unknown');
-
-  expect(get(operationConnectionsInfo).size).toBe(1);
-});
-
-test('getNextTaskId returns increasing ids', () => {
+test('getNextTaskId returns increasing ids not already used by an operation', () => {
   operationConnectionsInfo.set(new Map());
   const first = getNextTaskId();
   expect(getNextTaskId()).toBe(first + 1);
-});
 
-test('getNextTaskId does not return an id already used by an operation', () => {
-  const suppliedId = getNextTaskId() + 1;
+  const suppliedId = first + 3;
   operationConnectionsInfo.set(new Map([[suppliedId, buildOperation(Symbol())]]));
-
   expect(getNextTaskId()).toBe(suppliedId + 1);
 });
