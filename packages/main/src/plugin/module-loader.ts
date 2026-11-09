@@ -52,6 +52,16 @@ export class ModuleLoader {
     });
   }
 
+  // match on whole path segments: '/ext/ab/index.js' must not be considered inside '/ext/a'
+  protected isInsideDirectory(file: string, directory: string): boolean {
+    const normalizedFile = path.normalize(file);
+    let normalizedDirectory = path.normalize(directory);
+    if (normalizedDirectory.endsWith(path.sep)) {
+      normalizedDirectory = normalizedDirectory.slice(0, -1);
+    }
+    return normalizedFile === normalizedDirectory || normalizedFile.startsWith(normalizedDirectory + path.sep);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   overrideRequire(): void {
     if (!this._internalLoad) {
@@ -61,13 +71,14 @@ export class ModuleLoader {
       const internalLoad = this._internalLoad;
       const extModuleCache = this._extModuleCache;
       const analyzedExtensions = this._analyzedExtensions;
+      const isInside = (file: string, directory: string): boolean => this.isInsideDirectory(file, directory);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._module._load = function load(request: string, parent: any): any {
         const override = overrides.get(request);
         if (override) {
           if (override instanceof Function) {
             const ext = Array.from(analyzedExtensions.values()).find(extension =>
-              path.normalize(parent.filename).startsWith(path.normalize(extension.path)),
+              isInside(parent.filename, extension.path),
             );
             if (ext) {
               return override(ext);
