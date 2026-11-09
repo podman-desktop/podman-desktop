@@ -26,6 +26,7 @@ import {
   window,
 } from '@podman-desktop/api';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
+import { parseArgsStringToArgv } from 'string-argv';
 import type { Registry } from 'winreg';
 import WinReg from 'winreg';
 
@@ -95,17 +96,21 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
         try {
           const uninstallString = await this.getUninstallCMD();
 
-          /**
-           * We cannot directly invoke the uninstallation command as it need a shell
-           */
-          await processAPI.exec('cmd.exe', ['/s', '/c', `"${uninstallString}"`], {
-            logger: {
-              error: console.error,
-              log: console.log,
-              warn: console.warn,
+          // sudo-prompt already runs the command in a batch file, so no nested cmd.exe is needed.
+          // Pre-quote each token to preserve paths when Windows process.exec joins them.
+          const [executable, args] = this.parseUninstallCommand(uninstallString);
+          await processAPI.exec(
+            `"${executable}"`,
+            args.map(arg => `"${arg.replace(/\\+$/, match => match + match)}"`),
+            {
+              logger: {
+                error: console.error,
+                log: console.log,
+                warn: console.warn,
+              },
+              isAdmin: true,
             },
-            isAdmin: true,
-          });
+          );
         } catch (err: unknown) {
           console.error('Something went wrong while trying to uninstall legacy Podman Installer', err);
           telemetry['error'] = err;
@@ -116,6 +121,26 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
         }
       },
     );
+  }
+
+  /**
+   * Split a registry `QuietUninstallString` into its executable and arguments.
+   *
+   * A WiX Burn bundle always writes it as a quoted executable path (it usually contains spaces)
+   * followed by whitespace-separated flags, e.g. `"<path to exe>" <flag> <flag>...`. We use the
+   * `string-argv` tokenizer rather than a hand-written parser.
+   *
+   * @throws if no executable can be extracted (empty or whitespace-only command line).
+   */
+  protected parseUninstallCommand(uninstallString: string): [executable: string, args: string[]] {
+    const [executable, ...args] = parseArgsStringToArgv(uninstallString);
+    if (!executable) {
+      throw new Error('malformed uninstall command: empty command line');
+    }
+    if (/[\r\n]/.test(uninstallString) || [executable, ...args].some(arg => arg.includes('"'))) {
+      throw new Error('malformed uninstall command: embedded quotes or line breaks');
+    }
+    return [executable, args];
   }
 
   /**

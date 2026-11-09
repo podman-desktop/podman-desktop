@@ -32,6 +32,13 @@ import {
 
 vi.mock(import('winreg'));
 
+// Widens the protected parseUninstallCommand to public so it can be unit-tested directly.
+class TestPodmanWindowsLegacyInstaller extends PodmanWindowsLegacyInstaller {
+  public override parseUninstallCommand(uninstallString: string): [executable: string, args: string[]] {
+    return super.parseUninstallCommand(uninstallString);
+  }
+}
+
 const TELEMETRY_LOGGER_MOCK = {
   logUsage: vi.fn(),
 } as unknown as extensionApi.TelemetryLogger;
@@ -124,8 +131,89 @@ describe('isInstalled', () => {
   });
 });
 
+describe('parseUninstallCommand', () => {
+  let installer: TestPodmanWindowsLegacyInstaller;
+
+  beforeEach(() => {
+    installer = new TestPodmanWindowsLegacyInstaller(TELEMETRY_LOGGER_MOCK);
+  });
+
+  test.each([
+    {
+      name: 'a bare executable with no arguments',
+      input: 'C:\\podman.exe',
+      expected: ['C:\\podman.exe', []],
+    },
+    {
+      name: 'a quoted executable path containing spaces',
+      input: '"C:\\Program Files\\Podman\\setup.exe"',
+      expected: ['C:\\Program Files\\Podman\\setup.exe', []],
+    },
+    {
+      name: 'a quoted executable followed by bare flags (the real Podman shape)',
+      input: '"C:\\Program Files\\Podman\\setup.exe" /uninstall /quiet',
+      expected: ['C:\\Program Files\\Podman\\setup.exe', ['/uninstall', '/quiet']],
+    },
+    {
+      name: 'a bare executable followed by flags',
+      input: 'C:\\podman.exe /uninstall /quiet',
+      expected: ['C:\\podman.exe', ['/uninstall', '/quiet']],
+    },
+    {
+      name: 'leading whitespace before the executable',
+      input: '   "C:\\a b\\setup.exe" /quiet',
+      expected: ['C:\\a b\\setup.exe', ['/quiet']],
+    },
+    {
+      name: 'trailing whitespace after the last flag',
+      input: '"C:\\a b\\setup.exe" /uninstall   ',
+      expected: ['C:\\a b\\setup.exe', ['/uninstall']],
+    },
+    {
+      name: 'tab characters as flag separators',
+      input: '"C:\\a b\\setup.exe"\t/uninstall\t/quiet',
+      expected: ['C:\\a b\\setup.exe', ['/uninstall', '/quiet']],
+    },
+    {
+      name: 'runs of whitespace between flags',
+      input: 'C:\\podman.exe    /uninstall',
+      expected: ['C:\\podman.exe', ['/uninstall']],
+    },
+  ])('should parse $name', ({ input, expected }) => {
+    expect(installer.parseUninstallCommand(input)).toEqual(expected);
+  });
+
+  test.each([
+    { name: 'an empty string', input: '' },
+    { name: 'a whitespace-only string', input: '   \t  ' },
+    { name: 'an empty quoted executable', input: '"" /quiet' },
+  ])('should throw on $name', ({ input }) => {
+    expect(() => installer.parseUninstallCommand(input)).toThrowError(/empty command line/);
+  });
+
+  test('correctly tokenizes a quoted flag value containing spaces', () => {
+    // string-argv treats double quotes as a tokenizer-wide delimiter, not just around the
+    // leading executable, so a quoted flag value with spaces is kept as a single token with
+    // its quotes stripped.
+    expect(installer.parseUninstallCommand('"C:\\a b\\setup.exe" /log "C:\\c d\\u.log"')).toEqual([
+      'C:\\a b\\setup.exe',
+      ['/log', 'C:\\c d\\u.log'],
+    ]);
+  });
+
+  test.each(['"C:\\Podman\\setup.exe" /log a"b"c', '"C:\\Podman\\setup.exe"\r\n/quiet'])(
+    'rejects quotes or line breaks that cannot be safely re-quoted: %s',
+    input => {
+      expect(() => installer.parseUninstallCommand(input)).toThrowError(/embedded quotes or line breaks/);
+    },
+  );
+});
+
 describe('uninstall', () => {
-  const UNINSTALL_CMD_MOCK = 'uninstall.exe /a /b /c';
+  // A WiX Burn bundle writes QuietUninstallString as a quoted exe path followed by flags.
+  const UNINSTALL_EXE_MOCK = 'C:\\ProgramData\\Package Cache\\{a1b2c3d4}\\podman-5.0.0-setup.exe';
+  const UNINSTALL_CMD_MOCK = `"${UNINSTALL_EXE_MOCK}" /uninstall /quiet`;
+  let quietUninstallString: string;
 
   const PODMAN_UNINSTALL_REGISTRY: Registry = {
     valueExists: vi.fn(),
@@ -133,6 +221,7 @@ describe('uninstall', () => {
   } as unknown as Registry;
 
   beforeEach(() => {
+    quietUninstallString = UNINSTALL_CMD_MOCK;
     vi.mocked(WinReg.prototype.keys).mockImplementation(function (
       this: Registry,
       cb: (err: Error | undefined, result: Registry[]) => void,
@@ -168,7 +257,7 @@ describe('uninstall', () => {
           cb(
             undefined as unknown as Error,
             {
-              value: UNINSTALL_CMD_MOCK,
+              value: quietUninstallString,
             } as RegistryItem,
           );
           break;
@@ -179,13 +268,42 @@ describe('uninstall', () => {
     });
   });
 
-  test('should execute expected uninstall cmd in shell', async () => {
+  test('should invoke the uninstall executable directly with parsed args', async () => {
     await podmanWindowsLegacyInstaller.uninstall();
 
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('cmd.exe', ['/s', '/c', `"${UNINSTALL_CMD_MOCK}"`], {
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(`"${UNINSTALL_EXE_MOCK}"`, ['"/uninstall"', '"/quiet"'], {
       isAdmin: true,
       logger: expect.anything(),
     });
+  });
+
+  test.each([
+    'C:\\Program Files\\Podman\\uninstall log.txt',
+    'C:\\logs\\a+b.txt',
+    'C:\\logs\\a=b.txt',
+    'C:\\logs\\a & b.txt',
+  ])('pre-quotes the log argument for the existing Windows exec implementation: %s', async logPath => {
+    quietUninstallString = `"${UNINSTALL_EXE_MOCK}" /log "${logPath}" /quiet`;
+
+    await podmanWindowsLegacyInstaller.uninstall();
+
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(
+      `"${UNINSTALL_EXE_MOCK}"`,
+      ['"/log"', `"${logPath}"`, '"/quiet"'],
+      { isAdmin: true, logger: expect.anything() },
+    );
+  });
+
+  test('doubles trailing backslashes before adding a closing quote to an argument', async () => {
+    quietUninstallString = `"${UNINSTALL_EXE_MOCK}" /log "C:\\logs with spaces\\"`;
+
+    await podmanWindowsLegacyInstaller.uninstall();
+
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(
+      `"${UNINSTALL_EXE_MOCK}"`,
+      ['"/log"', '"C:\\logs with spaces\\\\"'],
+      { isAdmin: true, logger: expect.anything() },
+    );
   });
 
   test('expect telemetry usage to be provided for uninstall legacy', async () => {
@@ -214,6 +332,22 @@ describe('uninstall', () => {
       'podman.uninstallLegacy',
       expect.objectContaining({
         error: error,
+      }),
+    );
+  });
+
+  test('expect error raised from a malformed QuietUninstallString to be logged in telemetry', async () => {
+    quietUninstallString = '';
+
+    await expect(async () => {
+      return await podmanWindowsLegacyInstaller.uninstall();
+    }).rejects.toThrowError(/empty command line/);
+
+    expect(extensionApi.process.exec).not.toHaveBeenCalled();
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledWith(
+      'podman.uninstallLegacy',
+      expect.objectContaining({
+        error: expect.any(Error),
       }),
     );
   });
