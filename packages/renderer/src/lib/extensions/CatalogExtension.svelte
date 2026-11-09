@@ -1,10 +1,10 @@
 <script lang="ts">
-import { faCheckCircle, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
+import ExtensionStatus from '/@/lib/ui/ExtensionStatus.svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 
@@ -19,6 +19,8 @@ let {
   ondetails = (_extensionId: string): void => {},
 }: Props = $props();
 
+const installed = $derived(catalogExtensionUI.installedExtension);
+
 function openExtensionDetails(): void {
   ondetails(catalogExtensionUI.id);
   router.goto(`/extensions/details/${catalogExtensionUI.id}/`);
@@ -26,47 +28,42 @@ function openExtensionDetails(): void {
 </script>
 
 <div
-  class="rounded-lg border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] hover:border-[var(--pd-content-card-border-selected)] min-h-32 max-h-32"
+  class="rounded-lg border border-(--pd-content-bg) flex flex-col bg-(--pd-content-card-bg) hover:border-(--pd-content-card-border-selected) min-h-32"
   role="group"
   aria-label={catalogExtensionUI.displayName}>
-  <!-- if featured need to display a top banner -->
-
-  {#if catalogExtensionUI.isFeatured}
-    <div class="bg-[var(--pd-badge-purple)] text-[var(--pd-card-header-text)] rounded-t-md px-2 text-sm min-h-6 flex flex-row items-center">
-      Featured
-    </div>
-  {/if}
-
   <div class="p-3 h-full w-full flex flex-col justify-start">
-    <div class="flex flex-row w-full">
-      <div class="w-3/4 flex flex-col">
-        <div class="flex flex-col w-full">
-          <div class="flex-row flex items-center">
-            <img
-              src={catalogExtensionUI.iconHref}
-              alt="{catalogExtensionUI.displayName} logo"
-              class="mr-2 max-w-10 max-h-10 object-contain" />
-
-            <div>
-              <div class="line-clamp-2 leading-4 max-h-8 text-[var(--pd-content-header)]">
-                {catalogExtensionUI.displayName}
-              </div>
-              <div class="pt-2 text-[var(--pd-content-text)] line-clamp-1">
-                {catalogExtensionUI.shortDescription}
-              </div>
-            </div>
+    <div class="flex items-start gap-2 w-full">
+      <img
+        src={catalogExtensionUI.iconHref}
+        alt="{catalogExtensionUI.displayName} logo"
+        class="size-10 shrink-0 object-contain" />
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <div class="truncate font-semibold text-(--pd-content-header)" title={catalogExtensionUI.displayName}>
+            {catalogExtensionUI.displayName}
           </div>
-          <div class="pt-1 text-[var(--pd-content-text)] text-sm">{catalogExtensionUI.publisherDisplayName}</div>
+          {#if catalogExtensionUI.isFeatured}
+            <span
+              class="inline-flex shrink-0 rounded-full border border-(--pd-content-header) px-2 py-0.5 text-xs font-medium leading-none text-(--pd-content-header)">
+              Featured
+            </span>
+          {/if}
         </div>
+        <div
+          class="pt-0.5 truncate text-sm font-medium text-(--pd-content-header)"
+          title={catalogExtensionUI.publisherDisplayName}>
+          {catalogExtensionUI.publisherDisplayName}
+        </div>
+        <div class="pt-0.5 text-sm text-(--pd-content-text) line-clamp-1">
+          {catalogExtensionUI.shortDescription}
+        </div>
+        {#if installed}
+          <ExtensionStatus status={installed.state} class="pt-1" />
+        {/if}
       </div>
 
-      {#if catalogExtensionUI.isInstalled}
-        <div class="flex flex-1 text-[var(--pd-invert-content-info-icon)] p-1 justify-items-end flex-row place-content-end items-center">
-          <Icon class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
-          <div class="uppercase text-sm cursor-default">Already installed</div>
-        </div>
-      {:else if catalogExtensionUI.fetchable}
-        <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">
+      {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
+        <div class="shrink-0">
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
         </div>
       {/if}
