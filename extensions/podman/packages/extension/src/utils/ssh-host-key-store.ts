@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { createHash } from 'node:crypto';
-import { link, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { link, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { isIP } from 'node:net';
 import { join } from 'node:path';
 
@@ -114,7 +114,7 @@ export class SshHostKeyStore {
       this.verify(host, port, key).then(
         trusted => {
           if (!trusted) {
-            onRejected(new Error(`SSH host key approval declined for [${host}]:${port}.`));
+            onRejected(new Error(`SSH host key approval declined for \`[${host}]:${port}\`.`));
           }
           callback(trusted);
         },
@@ -160,20 +160,13 @@ export class SshHostKeyStore {
     file: string,
     fingerprint: string,
   ): Promise<boolean> {
-    let saved: string | undefined;
-    try {
-      saved = await readFile(file, 'utf8');
-    } catch (error) {
-      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
-        throw error;
-      }
-    }
+    const saved = await this.readSavedPin(file);
     if (saved !== undefined) {
       this.assertFingerprint(endpoint, file, saved, fingerprint);
       return true;
     }
     const approval = await window.showWarningMessage(
-      `The SSH server ${endpoint} is not yet trusted. Host key fingerprint: ${fingerprint}. ` +
+      `The SSH server \`${endpoint}\` is not yet trusted. Host key fingerprint: \`${fingerprint}\`. ` +
         'Verify this fingerprint with the server administrator through a trusted channel before approving.',
       'Cancel',
       SshHostKeyStore.TRUST,
@@ -190,15 +183,70 @@ export class SshHostKeyStore {
       try {
         await link(temporaryFile, file);
       } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'EEXIST')) {
+        if (this.isUnsupportedHardLink(error)) {
+          await this.publishPinWithDirectoryRename(directory, file, endpoint, fingerprint);
+        } else if (this.isPinAlreadyExists(error)) {
+          this.assertFingerprint(endpoint, file, await this.readSavedPin(file), fingerprint);
+        } else {
           throw error;
         }
-        this.assertFingerprint(endpoint, file, await readFile(file, 'utf8'), fingerprint);
       }
     } finally {
       await rm(temporaryDirectory, { recursive: true, force: true });
     }
     return true;
+  }
+
+  private async readSavedPin(file: string): Promise<string | undefined> {
+    let stats: Awaited<ReturnType<typeof lstat>>;
+    try {
+      stats = await lstat(file);
+    } catch (error) {
+      if (this.isErrorCode(error, 'ENOENT')) {
+        return undefined;
+      }
+      throw error;
+    }
+    return stats.isDirectory() ? readFile(join(file, 'fingerprint'), 'utf8') : readFile(file, 'utf8');
+  }
+
+  private async publishPinWithDirectoryRename(
+    directory: string,
+    file: string,
+    endpoint: string,
+    fingerprint: string,
+  ): Promise<void> {
+    const temporaryDirectory = await mkdtemp(join(directory, '.pending-pin-'));
+    try {
+      await writeFile(join(temporaryDirectory, 'fingerprint'), fingerprint, {
+        flag: 'wx',
+        mode: 0o600,
+        flush: true,
+      });
+      try {
+        // Same-filesystem directory rename atomically publishes the complete pin without hard links.
+        await rename(temporaryDirectory, file);
+      } catch (error) {
+        if (!this.isPinAlreadyExists(error)) {
+          throw error;
+        }
+        this.assertFingerprint(endpoint, file, await this.readSavedPin(file), fingerprint);
+      }
+    } finally {
+      await rm(temporaryDirectory, { recursive: true, force: true });
+    }
+  }
+
+  private isUnsupportedHardLink(error: unknown): boolean {
+    return ['ENOSYS', 'ENOTSUP', 'EOPNOTSUPP', 'EPERM'].some(code => this.isErrorCode(error, code));
+  }
+
+  private isPinAlreadyExists(error: unknown): boolean {
+    return ['EEXIST', 'ENOTEMPTY', 'ENOTDIR'].some(code => this.isErrorCode(error, code));
+  }
+
+  private isErrorCode(error: unknown, code: string): boolean {
+    return error instanceof Error && 'code' in error && error.code === code;
   }
 
   protected getFingerprint(key: Buffer): string {
@@ -214,11 +262,11 @@ export class SshHostKeyStore {
     );
   }
 
-  private assertFingerprint(endpoint: string, file: string, saved: string, fingerprint: string): void {
+  private assertFingerprint(endpoint: string, file: string, saved: string | undefined, fingerprint: string): void {
     if (saved !== fingerprint) {
       throw new Error(
-        `SSH host key changed for ${endpoint}. Connection refused. Expected ${saved}, received ${fingerprint}. ` +
-          `Verify the server key with its administrator before removing the saved pin at ${file}.`,
+        `SSH host key changed for \`${endpoint}\`. Connection refused. Expected \`${saved}\`, received \`${fingerprint}\`. ` +
+          `Verify the server key with its administrator before removing the saved pin at \`${file}\`.`,
       );
     }
   }

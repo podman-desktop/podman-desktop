@@ -114,6 +114,17 @@ test('host-key rejection closes the old listener and prevents retries', async ()
   expect(client.connect).toHaveBeenCalledTimes(2);
 });
 
+test('host-key rejection cancels a reconnect timer that was already pending', async () => {
+  vi.useFakeTimers();
+  tunnel.connect();
+  tunnel.handleReconnect();
+  expect(vi.getTimerCount()).toBe(1);
+  rejected?.(new Error('SSH host key changed'));
+  await expect(tunnel.isConnected()).resolves.toBe(false);
+  await vi.advanceTimersByTimeAsync(30000);
+  expect(client.connect).toHaveBeenCalledOnce();
+});
+
 test('disconnect clears a pending reconnect', () => {
   vi.useFakeTimers();
   tunnel.connect();

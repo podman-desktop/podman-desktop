@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs/promises';
+import { join } from 'node:path';
 
 import type { ExtensionContext } from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
@@ -58,8 +59,9 @@ beforeEach(() => {
     events.set(event, listener);
     return this;
   });
+  vi.mocked(fs.lstat).mockRejectedValue(Object.assign(new Error('Not found'), { code: 'ENOENT' }));
   vi.mocked(fs.readFile).mockRejectedValue(Object.assign(new Error('Not found'), { code: 'ENOENT' }));
-  vi.mocked(fs.mkdtemp).mockResolvedValue('/extension-storage/ssh-host-keys/.pending-test');
+  vi.mocked(fs.mkdtemp).mockImplementation(async prefix => `${prefix}test`);
   vi.mocked(window.showWarningMessage).mockResolvedValue('Trust and Save');
 });
 
@@ -67,7 +69,7 @@ test('requires explicit approval and publishes a complete fingerprint without ov
   const fingerprint = store.getFingerprint(key);
   await expect(store.verify('server', 22, key)).resolves.toBe(true);
   expect(window.showWarningMessage).toHaveBeenCalledWith(
-    expect.stringContaining(`[server]:22 is not yet trusted. Host key fingerprint: ${fingerprint}`),
+    expect.stringContaining(`\`[server]:22\` is not yet trusted. Host key fingerprint: \`${fingerprint}\``),
     'Cancel',
     'Trust and Save',
   );
@@ -96,6 +98,7 @@ test.each(['Cancel', undefined, 'unexpected'])('refuses unapproved keys (%s)', a
 });
 
 test('accepts a saved fingerprint without prompting', async () => {
+  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
   vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
   await expect(store.verify('SERVER', 22, key)).resolves.toBe(true);
   expect(fs.readFile).toHaveBeenCalledWith(store.getPinPath('server', 22), 'utf8');
@@ -103,6 +106,7 @@ test('accepts a saved fingerprint without prompting', async () => {
 });
 
 test('rejects changed keys without offering replacement', async () => {
+  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
   vi.mocked(fs.readFile).mockResolvedValue('SHA256:old-key');
   await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key changed');
   expect(window.showWarningMessage).not.toHaveBeenCalled();
@@ -124,6 +128,7 @@ test('deduplicates simultaneous prompts in the singleton', async () => {
 });
 
 test('rechecks a pinned key after a concurrent mismatch fails', async () => {
+  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
   vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
   const results = await Promise.allSettled([
     store.verify('server', 22, Buffer.from('attacker')),
@@ -135,15 +140,76 @@ test('rechecks a pinned key after a concurrent mismatch fails', async () => {
 
 test.each([true, false])('accepts only an identical concurrently published pin (same: %s)', async same => {
   vi.mocked(fs.link).mockRejectedValue(Object.assign(new Error('Exists'), { code: 'EEXIST' }));
-  vi.mocked(fs.readFile)
-    .mockRejectedValueOnce(Object.assign(new Error('Not found'), { code: 'ENOENT' }))
-    .mockResolvedValue(same ? store.getFingerprint(key) : 'SHA256:other-key');
+  let lstatCount = 0;
+  vi.mocked(fs.lstat).mockImplementation(async () => {
+    if (lstatCount++ === 0) {
+      throw Object.assign(new Error('Not found'), { code: 'ENOENT' });
+    }
+    return { isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>;
+  });
+  vi.mocked(fs.readFile).mockImplementation(async () => (same ? store.getFingerprint(key) : 'SHA256:other-key'));
   if (same) {
     await expect(store.verify('server', 22, key)).resolves.toBe(true);
   } else {
     await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key changed');
   }
   expect(fs.rm).toHaveBeenCalled();
+});
+
+test.each(['ENOTSUP', 'EOPNOTSUPP', 'EPERM'])(
+  'atomically publishes and subsequently reads a pin when hard links are unsupported (%s)',
+  async code => {
+    vi.mocked(fs.link).mockRejectedValue(Object.assign(new Error('Hard links unavailable'), { code }));
+    vi.mocked(fs.lstat).mockImplementation(async path => {
+      if (path === store.getPinPath('server', 22)) {
+        if (vi.mocked(fs.rename).mock.calls.length > 0) {
+          return { isDirectory: () => true } as Awaited<ReturnType<typeof fs.lstat>>;
+        }
+        throw Object.assign(new Error('Not found'), { code: 'ENOENT' });
+      }
+      return { isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>;
+    });
+
+    await expect(store.verify('server', 22, key)).resolves.toBe(true);
+    expect(fs.rename).toHaveBeenCalledWith(
+      '/extension-storage/ssh-host-keys/.pending-pin-test',
+      store.getPinPath('server', 22),
+    );
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      '/extension-storage/ssh-host-keys/.pending-pin-test/fingerprint',
+      store.getFingerprint(key),
+      { flag: 'wx', mode: 0o600, flush: true },
+    );
+    const writeCallOrder = vi.mocked(fs.writeFile).mock.invocationCallOrder;
+    expect(writeCallOrder[writeCallOrder.length - 1]).toBeLessThan(
+      vi.mocked(fs.rename).mock.invocationCallOrder[0] ?? 0,
+    );
+    vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
+    await expect(store.verify('server', 22, key)).resolves.toBe(true);
+    expect(fs.readFile).toHaveBeenCalledWith(join(store.getPinPath('server', 22), 'fingerprint'), 'utf8');
+  },
+);
+
+test('rejects a concurrently published different pin when hard links are unsupported', async () => {
+  vi.mocked(fs.link).mockRejectedValue(Object.assign(new Error('Hard links unavailable'), { code: 'ENOTSUP' }));
+  vi.mocked(fs.rename).mockRejectedValue(Object.assign(new Error('Pin already exists'), { code: 'ENOTEMPTY' }));
+  let lstatCount = 0;
+  vi.mocked(fs.lstat).mockImplementation(async path => {
+    if (path === store.getPinPath('server', 22)) {
+      if (lstatCount++ === 0) {
+        throw Object.assign(new Error('Not found'), { code: 'ENOENT' });
+      }
+      return { isDirectory: () => true } as Awaited<ReturnType<typeof fs.lstat>>;
+    }
+    return { isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>;
+  });
+  vi.mocked(fs.readFile).mockResolvedValue('SHA256:other-key');
+
+  await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key changed');
+  expect(fs.rm).toHaveBeenCalledWith('/extension-storage/ssh-host-keys/.pending-pin-test', {
+    recursive: true,
+    force: true,
+  });
 });
 
 test('does not publish a partially written pin', async () => {
@@ -154,6 +220,7 @@ test('does not publish a partially written pin', async () => {
 });
 
 test('fails closed on unreadable storage', async () => {
+  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
   vi.mocked(fs.readFile).mockRejectedValue(new Error('Permission denied'));
   await expect(store.verify('server', 22, key)).rejects.toThrow('Permission denied');
   expect(window.showWarningMessage).not.toHaveBeenCalled();
