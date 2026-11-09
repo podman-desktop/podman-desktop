@@ -21,7 +21,12 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 
-import { fetchNavigationRegistries, navigationRegistry } from './navigation-registry';
+import {
+  fetchNavigationRegistries,
+  navigationItemOrder,
+  navigationRegistry,
+  saveNavigationItemOrder,
+} from './navigation-registry';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -67,5 +72,79 @@ test('check update properties', async () => {
   const containersAndPods = hidden.filter(item => item.name === 'Containers' || item.name === 'Pods');
   containersAndPods.forEach(item => {
     expect(item.hidden).toBeTruthy();
+  });
+});
+
+/** Mocks the configuration values read when the configuration properties change. */
+function mockConfigurationValues(values: {
+  disabledItems?: string[];
+  itemOrder?: string[];
+  useInternalKubernetes?: boolean;
+}): void {
+  vi.mocked(window.getConfigurationValue).mockImplementation(async key => {
+    if (key === 'navbar.disabledItems') return values.disabledItems;
+    if (key === 'navbar.itemOrder') return values.itemOrder;
+    return values.useInternalKubernetes;
+  });
+}
+
+test('applies the saved top-level order', async () => {
+  mockConfigurationValues({ itemOrder: ['Tools', 'Containers'] });
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(navigationItemOrder)).toEqual(['Tools', 'Containers']));
+  expect(window.updateConfigurationValue).not.toHaveBeenCalledWith('navbar.itemOrder', expect.anything());
+});
+
+test('saving the order of the shown items keeps the slots of the other items', () => {
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue(undefined);
+  navigationItemOrder.set(['Containers', 'Pods', 'Images', 'Volumes']);
+
+  // Pods is hidden: Images is moved before Containers
+  saveNavigationItemOrder(['Images', 'Containers', 'Volumes']);
+
+  const order = ['Images', 'Pods', 'Containers', 'Volumes'];
+  expect(get(navigationItemOrder)).toEqual(order);
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith('navbar.itemOrder', order);
+});
+
+test('saving the order adds the items missing from the saved order', () => {
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue(undefined);
+  navigationItemOrder.set([]);
+
+  saveNavigationItemOrder(['Pods', 'Containers']);
+
+  expect(get(navigationItemOrder)).toEqual(['Pods', 'Containers']);
+});
+
+test('the order is loaded from the configuration', async () => {
+  mockConfigurationValues({ itemOrder: ['Pods', 'Containers'] });
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(navigationItemOrder)).toEqual(['Pods', 'Containers']));
+});
+
+test('applies the saved order when Kubernetes becomes available', async () => {
+  // The Kubernetes group entries subscribe to the Kubernetes context stores on creation.
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([]);
+  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({
+    reachable: true,
+    resources: { pods: 0, deployments: 0 },
+  });
+  await fetchNavigationRegistries();
+  mockConfigurationValues({ itemOrder: ['Kubernetes', 'Containers'], useInternalKubernetes: true });
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => {
+    expect(get(navigationRegistry).some(item => item.name === 'Kubernetes')).toBe(true);
+    expect(get(navigationItemOrder)).toEqual(['Kubernetes', 'Containers']);
+  });
+  expect(window.updateConfigurationValue).not.toHaveBeenCalledWith('navbar.itemOrder', expect.anything());
+
+  mockConfigurationValues({ itemOrder: ['Kubernetes', 'Containers'], useInternalKubernetes: false });
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => {
+    expect(get(navigationRegistry).some(item => item.name === 'Kubernetes')).toBe(false);
   });
 });

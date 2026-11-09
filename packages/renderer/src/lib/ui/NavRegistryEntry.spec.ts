@@ -20,21 +20,28 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { createSortable } from '@dnd-kit/svelte/sortable';
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
 import { render, screen } from '@testing-library/svelte';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import NavRegistryEntry from './NavRegistryEntry.svelte';
 
-beforeAll(() => {
+vi.mock(import('@dnd-kit/svelte/sortable'));
+
+beforeEach(() => {
+  vi.resetAllMocks();
   // Mock the animate function
   HTMLElement.prototype.animate = vi.fn().mockReturnValue({
     finished: Promise.resolve(),
     cancel: vi.fn(),
   });
+  vi.mocked(createSortable).mockReturnValue({
+    attach: vi.fn(),
+  } as unknown as ReturnType<typeof createSortable>);
 });
 
 test('Expect entry is rendered', async () => {
@@ -51,7 +58,7 @@ test('Expect entry is rendered', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta, expanded: false });
+  render(NavRegistryEntry, { entry, meta, expanded: false, index: 0 });
 
   const content = screen.queryByLabelText('Item1');
   expect(content).toBeInTheDocument();
@@ -71,7 +78,7 @@ test('Expect hidden entry is not rendered', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta, expanded: false });
+  render(NavRegistryEntry, { entry, meta, expanded: false, index: 0 });
 
   const content = screen.queryByLabelText('Item1');
   expect(content).not.toBeInTheDocument();
@@ -91,7 +98,7 @@ test('Expect entry to have title if expanded is true', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta, expanded: true });
+  render(NavRegistryEntry, { entry, meta, expanded: true, index: 0 });
 
   const content = screen.queryByLabelText('Item1 title');
   expect(content).toBeInTheDocument();
@@ -112,7 +119,7 @@ test('Expect entry to not have title when collapsed', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta, expanded: false });
+  render(NavRegistryEntry, { entry, meta, expanded: false, index: 0 });
 
   const content = screen.queryByLabelText('Item1 title');
   expect(content).not.toBeInTheDocument();
@@ -133,6 +140,7 @@ test('forwards aria-keyshortcuts to the navigation link', () => {
     entry,
     meta: { url: '/test' } as TinroRouteMeta,
     expanded: false,
+    index: 0,
     'aria-keyshortcuts': 'Control+ArrowUp Control+ArrowDown',
   });
 
@@ -151,7 +159,7 @@ test('does not add aria-keyshortcuts when it is not provided', () => {
     destinations: [],
     type: 'entry',
   };
-  render(NavRegistryEntry, { entry, meta: { url: '/test' } as TinroRouteMeta, expanded: false });
+  render(NavRegistryEntry, { entry, meta: { url: '/test' } as TinroRouteMeta, expanded: false, index: 0 });
 
   expect(screen.getByRole('link', { name: 'Item1' })).not.toHaveAttribute('aria-keyshortcuts');
 });
@@ -171,6 +179,7 @@ test('forwards class to the navigation link', () => {
     entry,
     meta: { url: '/test' } as TinroRouteMeta,
     expanded: false,
+    index: 0,
     class: 'custom-nav-item',
   });
 
@@ -194,8 +203,28 @@ test('forwards title to the navigation link when expanded', () => {
     entry,
     meta: { url: '/test' } as TinroRouteMeta,
     expanded: true,
+    index: 0,
     title: 'Hold to reorder',
   });
 
   expect(screen.getByRole('link', { name: 'Item1' })).toHaveAttribute('title', 'Hold to reorder');
+});
+
+test('registers the entry as a sortable identified by its link', () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Item1',
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    tooltip: 'Item tooltip',
+    link: '/mylink',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, { entry, meta: { url: '/test' } as TinroRouteMeta, expanded: false, index: 3 });
+
+  const input = vi.mocked(createSortable).mock.lastCall?.[0];
+  expect(input).toBeDefined();
+  expect(input?.id).toBe('/mylink');
+  expect(input?.index).toBe(3);
+  expect(screen.getByRole('link', { name: 'Item1' })).toBeInTheDocument();
 });
