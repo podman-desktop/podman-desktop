@@ -24,6 +24,7 @@ on:
 jobs:
   update-podman:
     name: Update Podman version
+    if: github.event.repository.fork == false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
