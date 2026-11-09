@@ -1746,6 +1746,7 @@ export async function start(
           result.push({
             name: check.title,
             successful: checkResult.successful,
+            severity: checkResult.severity,
             description: checkResult.description,
             docLinks: checkResult.docLinks,
             docLinksDescription: checkResult.docLinksDescription,
@@ -1776,7 +1777,7 @@ export async function start(
 
       for (const res of result) {
         const warning = {
-          state: res.successful ? 'successful' : 'failed',
+          state: res.successful ? 'successful' : res.severity === 'warning' ? 'warning' : 'failed',
           description: res.description ?? res.name,
           docDescription: res.docLinksDescription,
           docLinks: res.docLinks,
