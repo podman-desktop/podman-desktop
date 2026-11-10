@@ -12,21 +12,33 @@ interface Props {
   validation?: Snippet;
   buttons?: Snippet;
   initialButtonFocus?: InitialButtonFocus;
+  ignoreFocusOut?: boolean;
+  closeDisabled?: boolean;
 }
 
-let { title, onclose, icon, content, validation, buttons, initialButtonFocus }: Props = $props();
+let {
+  title,
+  onclose,
+  icon,
+  content,
+  validation,
+  buttons,
+  initialButtonFocus,
+  ignoreFocusOut = false,
+  closeDisabled = false,
+}: Props = $props();
 
 function shouldFocusContainer(): boolean {
   return initialButtonFocus === 'none';
 }
 </script>
 
-<Modal name={title} onclose={onclose} focusContainer={shouldFocusContainer()}>
+<Modal name={title} onclose={onclose} focusContainer={shouldFocusContainer()} {ignoreFocusOut}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     {@render icon?.()}
     <h1 class="grow text-lg font-bold">{title}</h1>
 
-    <CloseButton onclick={onclose} />
+    <CloseButton onclick={onclose} disabled={closeDisabled} />
   </div>
 
   <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 py-4">
