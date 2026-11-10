@@ -75,13 +75,15 @@ export class ExtensionInstaller {
     // files or folder to grab
     const filesExtension: string[] = [];
 
+    const extensionFolder = `${tmpFolderPath}/extension/`;
+
     // a Podman Desktop extension image must ship its files in the /extension folder
-    if (!fs.existsSync(`${tmpFolderPath}/extension`)) {
+    if (!fs.existsSync(extensionFolder)) {
       throw new Error('Malformed extension: the image does not contain an /extension folder');
     }
 
     // grab files from that directory using fs promises
-    const extensionFiles = await fs.promises.readdir(`${tmpFolderPath}/extension/`, { withFileTypes: true });
+    const extensionFiles = await fs.promises.readdir(extensionFolder, { withFileTypes: true });
 
     // add all files
     for (const file of extensionFiles) {
