@@ -290,6 +290,7 @@ test.describe('Volume container integration', { tag: ['@smoke'] }, () => {
     const runImage = await imageDetails.openRunImage();
     const containerStartParams: ContainerInteractiveParams = {
       attachTerminal: true,
+      interactive: true,
       attachVolumeName: volumeName,
       attachVolumePath: containerVolumePath,
     };
@@ -304,6 +305,8 @@ test.describe('Volume container integration', { tag: ['@smoke'] }, () => {
     await playExpect.poll(async () => containersDetails.getState()).toContain(ContainerState.Running);
     await containersDetails.activateTab('Terminal');
     await playExpect(containersDetails.terminalInput).toBeVisible();
+    // Wait for an interactive shell before typing; failed podman exec shows OCI errors here instead of a prompt
+    await playExpect(containersDetails.terminalContent).toContainText('#', { timeout: 15_000 });
     await containersDetails.executeCommandInTerminal(`cd ${containerVolumePath}`);
     await containersDetails.executeCommandInTerminal('pwd');
     await playExpect(containersDetails.terminalContent).toContainText(containerVolumePath);

@@ -18,6 +18,7 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
+import { DropdownComponent } from '/@/model/components/dropdown-component';
 import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { waitWhile } from '/@/utility/wait';
 
@@ -40,7 +41,8 @@ export class RunImagePage extends BasePage {
   readonly containerEntryPointInput: Locator;
   readonly containerComamndInput: Locator;
   readonly containerAddCustomPortMappingButton: Locator;
-  readonly volumeNameInput: Locator;
+  readonly volumeSourceTypeDropdown: DropdownComponent;
+  readonly existingVolumeDropdown: DropdownComponent;
   readonly volumeContainerPath: Locator;
 
   constructor(page: Page, name: string) {
@@ -62,8 +64,10 @@ export class RunImagePage extends BasePage {
     this.containerEntryPointInput = page.getByLabel('Entrypoint');
     this.containerComamndInput = page.getByLabel('Command');
     this.containerAddCustomPortMappingButton = page.getByLabel('Add custom port mapping', { exact: true });
-    this.volumeNameInput = page.getByPlaceholder('Path on the host');
-    this.volumeContainerPath = page.getByPlaceholder('Path inside the container');
+    // First volume mount row (index 0) created by RunImage
+    this.volumeSourceTypeDropdown = new DropdownComponent(page, 'Volume source type 0');
+    this.existingVolumeDropdown = new DropdownComponent(page, 'Existing volume 0');
+    this.volumeContainerPath = page.getByLabel('Path inside the container 0');
   }
 
   async activateTab(name: string): Promise<void> {
@@ -113,12 +117,19 @@ export class RunImagePage extends BasePage {
       if (optionalParams?.attachVolumeName !== undefined && optionalParams?.attachVolumePath !== undefined) {
         await this.activateTab('Basic');
 
-        await playExpect(this.volumeNameInput).toBeVisible();
-        await this.volumeNameInput.pressSequentially(optionalParams.attachVolumeName, { delay: 10 });
-        await playExpect(this.volumeNameInput).toHaveValue(optionalParams.attachVolumeName);
+        // Mount a pre-created named volume (not a host-path bind)
+        await this.volumeSourceTypeDropdown.waitForReady();
+        await this.volumeSourceTypeDropdown.selectOption('volume', 'Existing volume', true);
+
+        await this.existingVolumeDropdown.waitForReady();
+        await this.existingVolumeDropdown.selectOption(
+          optionalParams.attachVolumeName,
+          optionalParams.attachVolumeName,
+          true,
+        );
 
         await playExpect(this.volumeContainerPath).toBeVisible();
-        await this.volumeContainerPath.pressSequentially(optionalParams.attachVolumePath, { delay: 10 });
+        await this.volumeContainerPath.fill(optionalParams.attachVolumePath);
         await playExpect(this.volumeContainerPath).toHaveValue(optionalParams.attachVolumePath);
       }
 
