@@ -64,7 +64,9 @@ export class ExtensionCardPage extends BasePage {
     this.editButton = this.leftActions.getByRole('button', {
       name: `Edit properties of ${extensionName} extension`,
     });
-    this.status = this.leftActions.getByRole('status', { name: 'Extension status' });
+    this.status = this.leftActions
+      .getByRole('status', { name: 'Extension status' })
+      .or(this.leftActions.getByLabel('Extension status Label'));
     this.enableButton = this.extensionActions.getByRole('button', {
       name: 'Start',
     });
