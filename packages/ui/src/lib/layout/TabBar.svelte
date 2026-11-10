@@ -923,10 +923,6 @@ function contextMenuActions(tabId: string): ContextMenuAction[] {
     background-color: var(--pd-button-close-hover-bg);
   }
 
-  .tab-active .tab-close:hover {
-    background-color: var(--pd-action-button-details-bg);
-  }
-
   .tab-active::before,
   .tab-active::after {
     position: absolute;
