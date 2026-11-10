@@ -87,6 +87,10 @@ test('uses the injected singleton to configure verification before authenticatio
   expect(net.createServer).not.toHaveBeenCalled();
 });
 
+test('allows OpenSSH extensions on servers with a non-OpenSSH identifier', () => {
+  expect(tunnel.getSshConfig().strictVendor).toBe(false);
+});
+
 test('creates the listener only when the SSH client is ready', async () => {
   tunnel.connect();
   events.get('ready')?.();
