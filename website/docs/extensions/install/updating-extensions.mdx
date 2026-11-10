@@ -15,10 +15,10 @@ Podman Desktop checks the extension catalog for newer versions of your extension
 ## How updates work
 
 - Podman Desktop checks for updates at startup, and then every 12 hours.
-- An extension is checked when it is listed in the [extension catalog](/docs/extensions/catalog). Extensions installed from another image, Docker Desktop extensions, and extensions loaded from a local folder are not updated.
+- An extension is checked when its ID matches an extension in the [extension catalog](/docs/extensions/catalog), even if you installed it from another image. Docker Desktop extensions and extensions loaded from a local folder are not updated.
 - Podman Desktop compares the installed version with the latest version of the extension in the catalog that is compatible with your Podman Desktop version. Preview versions are never installed by an update.
 - Updating an extension removes the installed version and installs the new one from its image.
-- Extensions bundled with Podman Desktop are also updated from the catalog. The new version replaces the bundled one. To go back to the bundled version, uninstall the extension: the bundled version is restored.
+- Extensions bundled with Podman Desktop are also updated from the catalog. The new version replaces the bundled one. To go back to the bundled version, uninstall the extension, then [disable its automatic updates](#turning-off-automatic-updates-for-one-extension). Otherwise, the next check updates it again.
 
 ## Configuring automatic updates
 
@@ -62,7 +62,7 @@ Podman Desktop still checks this extension for updates, and shows the **Update a
 
 ## Updating an extension manually
 
-When automatic updates are disabled, globally or for this extension, update the extension yourself:
+When automatic updates are disabled for this extension, or when **Auto Update** is disabled and **Auto Check Updates** is enabled, update the extension yourself:
 
 1. Click the **Extensions** button.
 1. In the **Installed** tab, click **Update available** next to the extension version. Hover the link to see the version that will be installed. The link is also next to the version on the details page of the extension.
