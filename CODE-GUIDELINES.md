@@ -680,13 +680,13 @@ For more details, see the [Vitest snapshot guide](https://vitest.dev/guide/snaps
 
 ## Dialog language guide
 
-All dialogs (`showMessageBox` calls) must follow consistent language patterns for titles, body text, and buttons.
+Native `showMessageBox` dialogs must follow the title and button language patterns below. In-app dialogs built with the `Dialog` component follow the in-app title and button rules.
 
 For button layout and ordering in dialogs, modals, and forms, see [Button layout in dialogs, modals, and forms](#button-layout-in-dialogs-modals-and-forms).
 
 ### Titles
 
-Use `[Verb] [Object]` format. Add `?` for confirmations. No articles ("a", "the").
+Native `showMessageBox` titles use `[Verb] [Object]` format. Add `?` for confirmations. No articles ("a", "the").
 
 | Dialog type  | Format                   | Examples                                      |
 | ------------ | ------------------------ | --------------------------------------------- |
@@ -717,8 +717,12 @@ These rules apply to native `showMessageBox` dialog buttons, which follow OS dia
 In-app `<Button>` components (anywhere outside native `showMessageBox` dialogs, e.g. page actions, modals built with the `Dialog` component) use sentence case instead of title case, matching the rest of the UI.
 
 - Capitalize only the first word and proper nouns: `Manage registries`, `Clear all`, `Use existing image`
-- Proper nouns and product/technical terms keep their standard capitalization: `Use Containerfile`, `Update Podman Desktop`
+- Proper nouns and product/technical terms keep their standard capitalization: `Build from Containerfile`, `Update Podman Desktop`
 - Do not title-case every word: avoid `Use Existing Image`, `Manage Registries`
+
+### In-app Dialog titles
+
+Titles for in-app dialogs built with the `Dialog` component use sentence case, matching in-app buttons. Capitalize the first word and proper nouns: `Push image`, `Add registry`, `Edit context`.
 
 ### Using `withConfirmation`
 
@@ -740,7 +744,7 @@ withConfirmation(cancelTask, `cancel task ${name}`, {
 
 When a dialog presents two equally valid options (not a cancel/action pair), style both buttons as `type="secondary"` – neither option is subordinate to the other.
 
-- Use parallel action verbs: `Use existing image` / `Use Containerfile`
+- Use a distinct action verb for each option, and make each label say what the click does: `Use existing image` / `Build from Containerfile`
 - Use sentence case, not title case: capitalize only the first word and proper nouns (e.g. `Containerfile`, `Podman`) – see [Button labels](#button-labels)
 - Order: `Close`/`Dismiss` leftmost, then the less common option, then the more common option
 - Use `Close`/`Dismiss` (`type="link"`), not `Cancel`, to back out without choosing – nothing has been committed yet, so there is nothing to cancel
@@ -749,7 +753,7 @@ When a dialog presents two equally valid options (not a cancel/action pair), sty
 ```svelte
 <Button type="link" on:click={onClose}>Close</Button>
 <Button type="secondary" on:click={fromExistingImage}>Use existing image</Button>
-<Button type="secondary" on:click={fromDockerfile}>Use Containerfile</Button>
+<Button type="secondary" on:click={fromDockerfile}>Build from Containerfile</Button>
 ```
 
 Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and only one button is `type="primary"`:
@@ -832,7 +836,7 @@ Every dialog, modal, or form must have a labeled Close/Cancel/Dismiss button tha
 ✅ **Use this pattern:**
 
 ```svelte
-<Dialog title="Duplicate Container?" onclose={onCancel}>
+<Dialog title="Duplicate container?" onclose={onCancel}>
   {#snippet content()}
     <p>Do you want to duplicate this container?</p>
   {/snippet}
@@ -846,7 +850,7 @@ Every dialog, modal, or form must have a labeled Close/Cancel/Dismiss button tha
 🚫 **Instead of:**
 
 ```svelte
-<Dialog title="Duplicate Container?" onclose={onCancel}>
+<Dialog title="Duplicate container?" onclose={onCancel}>
   {#snippet content()}
     <p>Do you want to duplicate this container?</p>
   {/snippet}
@@ -918,7 +922,7 @@ For Dialog components, follow the previous instructions by using the `initialBut
 ✅ **Use this pattern (non-destructive action):**
 
 ```svelte
-<Dialog title="Duplicate Container?" onclose={onCancel} initialButtonFocus="last">
+<Dialog title="Duplicate container?" onclose={onCancel} initialButtonFocus="last">
   {#snippet content()}
     <p>Do you want to duplicate this container?</p>
   {/snippet}
