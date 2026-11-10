@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import * as path from 'node:path';
 
@@ -383,6 +384,8 @@ test('should fail if extension with same id is already installed', async () => {
     },
   ]);
 
+  vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+
   analyzeExtensionMock.mockResolvedValueOnce({
     id,
   } as AnalyzedExtension);
@@ -460,6 +463,40 @@ test('should fail if an image have incorrect labels', async () => {
 
   // extension not started
   expect(apiSenderSendMock).not.toBeCalled();
+});
+
+test('extractExtensionFiles should throw when the image has no /extension folder', async () => {
+  vi.mocked(fs.existsSync).mockReturnValue(false);
+
+  await expect(extensionInstaller.extractExtensionFiles('/tmp/fake-tmp', '/fake/final')).rejects.toThrow(
+    'Malformed extension: the image does not contain an /extension folder',
+  );
+  expect(fs.promises.readdir).not.toHaveBeenCalled();
+});
+
+test('should fail with a malformed extension error if the image has no /extension folder', async () => {
+  const sendError = vi.fn();
+  const sendEnd = vi.fn();
+
+  const imageToPull = 'fake.io/fake-image:fake-tag';
+
+  getImageConfigLabelsMock.mockResolvedValueOnce({
+    'org.opencontainers.image.title': 'fake-title',
+    'org.opencontainers.image.description': 'fake-description',
+    'org.opencontainers.image.vendor': 'fake-vendor',
+    'io.podman-desktop.api.version': '1.0.0',
+  });
+  listExtensionsMock.mockResolvedValueOnce([]);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
+
+  await expect(extensionInstaller.installFromImage(vi.fn(), sendError, sendEnd, imageToPull)).rejects.toThrow(
+    'Malformed extension: the image does not contain an /extension folder',
+  );
+
+  const task = createTaskMock.mock.results[0]?.value;
+  expect(task.error).toBe('Error: Malformed extension: the image does not contain an /extension folder');
+  expect(analyzeExtensionMock).not.toHaveBeenCalled();
+  expect(sendEnd).not.toHaveBeenCalled();
 });
 
 test('should remove the extension folders when the dependencies analysis reports errors', async () => {
