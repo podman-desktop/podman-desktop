@@ -3870,6 +3870,30 @@ describe('attachToContainer', () => {
     expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
   });
 
+  test('container attach stream LIBPOD API fails when podmanAttach rejects', async () => {
+    const attachMock = vi.fn().mockRejectedValue(new Error('attach failed'));
+
+    const fakeLibPod = {
+      podmanAttach: attachMock,
+    } as unknown as LibPod;
+
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: fakeLibPod,
+    } as InternalContainerProvider;
+
+    const container = {
+      id: '1234',
+    } as unknown as Dockerode.Container;
+
+    await expect(containerRegistry.attachToContainer(engine, container, true, true)).rejects.toThrow('attach failed');
+    expect(attachMock).toBeCalledWith(container.id);
+  });
+
   test('container do not attach stream as no tty', async () => {
     const fakeDockerode = {} as Dockerode;
 
@@ -5546,6 +5570,53 @@ describe('createContainerLibPod', () => {
       expect.objectContaining({
         secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
         secret_env: { FOO_DATA: 'foo-data' },
+      }),
+    );
+  });
+
+  test('check that empty env values and values containing = are kept', async () => {
+    const dockerAPI = {
+      createContainer: vi.fn(),
+      getContainer: vi.fn(),
+    } as unknown as Dockerode;
+    const libpodAPI = {
+      createPodmanContainer: vi.fn(),
+    } as unknown as LibPod;
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: libpodAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    vi.mocked(dockerAPI.getContainer).mockResolvedValue({
+      start: vi.fn(),
+    } as unknown as Dockerode.Container);
+
+    vi.mocked(libpodAPI.createPodmanContainer).mockResolvedValue({
+      Id: 'id',
+      Warnings: [],
+    });
+
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const options: ContainerCreateOptions = {
+      Image: 'image',
+      name: 'name',
+      pod: 'pod',
+      Env: ['EMPTY=', 'WITH_EQ=a=b', 'NO_EQUAL_SIGN'],
+    };
+
+    await containerRegistry.createContainer('podman1', options);
+
+    expect(dockerAPI.createContainer).not.toHaveBeenCalled();
+    expect(libpodAPI.createPodmanContainer).toBeCalledWith(
+      expect.objectContaining({
+        env: { EMPTY: '', WITH_EQ: 'a=b' },
       }),
     );
   });

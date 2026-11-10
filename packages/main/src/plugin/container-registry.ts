@@ -2579,10 +2579,11 @@ export class ContainerProviderRegistry {
     }
 
     // convert env from array of string to an object with key being the env name
+    // the value may be empty or contain '=' signs, entries without '=' are skipped
     const updatedEnv = options.Env?.reduce((acc: { [key: string]: string }, env) => {
-      const [key, value] = env.split('=');
-      if (key && value) {
-        acc[key] = value;
+      const [key, ...values] = env.split('=');
+      if (key && values.length > 0) {
+        acc[key] = values.join('=');
       }
       return acc;
     }, {});

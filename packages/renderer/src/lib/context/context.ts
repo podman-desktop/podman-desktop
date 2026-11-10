@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,5 +89,17 @@ export class ContextUI implements IContext {
 
   collectAllValues(): Record<string, unknown> {
     return this._value;
+  }
+
+  /**
+   * Creates a shallow copy of this context, so consumers comparing references
+   * (for example a Svelte $derived) can detect that the context has changed.
+   *
+   * @returns a new ContextUI instance holding the same values
+   */
+  clone(): ContextUI {
+    const cloned = new ContextUI();
+    cloned._value = this.value;
+    return cloned;
   }
 }

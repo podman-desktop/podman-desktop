@@ -29,13 +29,13 @@
     "@storybook/svelte-vite": "^10.6.3",
     "@sveltejs/package": "^3.0.2",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
-    "@tailwindcss/vite": "^4.3.4",
+    "@tailwindcss/vite": "^4.3.5",
     "@tsconfig/svelte": "^5.0.8",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "autoprefixer": "^10.6.2",
     "cross-env": "10.1.0",
-    "eslint-plugin-storybook": "10.6.5",
-    "eslint-plugin-svelte": "^3.23.1",
+    "eslint-plugin-storybook": "10.6.6",
+    "eslint-plugin-svelte": "^3.24.0",
     "postcss": "^8.5.32",
     "postcss-load-config": "^6.0.1",
     "react": "18.2.0",
@@ -43,9 +43,9 @@
     "storybook": "^10.6.3",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.8",
-    "tailwindcss": "^4.3.4",
+    "tailwindcss": "^4.3.5",
     "typescript": "^6.0.3",
-    "vite": "^8.3.5",
+    "vite": "^8.3.6",
     "vitest": "^5.0.5"
   }
 }

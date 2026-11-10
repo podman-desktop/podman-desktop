@@ -354,7 +354,7 @@ export async function handleEditNetworkDialog(
   },
 ): Promise<void> {
   return test.step(`Handle Update Network dialog for: ${networkName}`, async () => {
-    const dialogTitle = `Update Network ${networkName}`;
+    const dialogTitle = `Update network ${networkName}`;
     const updateDialog = page.getByRole('dialog', { name: dialogTitle });
     await playExpect(updateDialog).toBeVisible();
 

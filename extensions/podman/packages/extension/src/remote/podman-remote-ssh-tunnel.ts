@@ -53,6 +53,8 @@ export class PodmanRemoteSshTunnel {
       host: this.host,
       port: this.port,
       username: this.username,
+      // Allow extensions like direct-streamlocal@openssh.com to be attempted on non-OpenSSH-identifying servers
+      strictVendor: false,
     };
     if (this.privateKey) {
       this.#sshConfig.privateKey = this.privateKey;

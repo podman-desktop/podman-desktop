@@ -18,6 +18,7 @@
 import type { App as ElectronApp } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { restoreWindow } from '/@/mainWindow.js';
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
@@ -26,10 +27,13 @@ import { isLinux, isMac, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { Main } from './main.js';
+import { ProtocolLauncher } from './protocol-launcher.js';
 
 vi.mock(import('/@/plugin/app-ready/app-identity-plugin.js'));
 vi.mock(import('/@/plugin/app-ready/dev-icon-builder.js'));
 vi.mock(import('/@/util.js'));
+vi.mock(import('/@/mainWindow.js'));
+vi.mock(import('./protocol-launcher.js'));
 vi.mock(import('/@/security-restrictions.js'));
 vi.mock(import('electron-context-menu'), () => ({
   default: vi.fn(),
@@ -151,6 +155,37 @@ function getElectronAppListener(event: string): Listener {
   if (!listener) throw new Error(`cannot found listener for event ${event}`);
   return listener;
 }
+
+describe('ElectronApp#on second-instance', () => {
+  beforeEach(() => {
+    vi.mocked(restoreWindow).mockResolvedValue(undefined);
+    new Main(ELECTRON_APP_MOCK).main([]);
+  });
+
+  test('should restore the window', () => {
+    getElectronAppListener('second-instance')({}, [], '', undefined);
+
+    expect(restoreWindow).toHaveBeenCalledOnce();
+  });
+
+  test('should handle the protocol arguments on Windows', () => {
+    vi.mocked(isWindows).mockReturnValue(true);
+
+    getElectronAppListener('second-instance')({}, [], '', { argv: ['podman-desktop:extension/foo.bar'] });
+
+    expect(ProtocolLauncher.prototype.handleAdditionalProtocolLauncherArgs).toHaveBeenCalledWith([
+      'podman-desktop:extension/foo.bar',
+    ]);
+  });
+
+  test('should not handle the protocol arguments on other platforms', () => {
+    vi.mocked(isWindows).mockReturnValue(false);
+
+    getElectronAppListener('second-instance')({}, [], '', { argv: ['podman-desktop:extension/foo.bar'] });
+
+    expect(ProtocolLauncher.prototype.handleAdditionalProtocolLauncherArgs).not.toHaveBeenCalled();
+  });
+});
 
 describe('ElectronApp#on window-all-closed', () => {
   let code: Main;

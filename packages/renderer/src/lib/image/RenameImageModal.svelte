@@ -64,7 +64,7 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
 </script>
 
 <Dialog
-  title="Edit Image"
+  title="Edit image"
   onclose={closeCallback}>
   {#snippet content()}
     <div  class="w-full">

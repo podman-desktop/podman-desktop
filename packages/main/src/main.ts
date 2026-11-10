@@ -18,6 +18,7 @@
 import type { IDisposable } from '@desktop-framework/api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
+import { restoreWindow } from '/@/mainWindow.js';
 import { AppIdentityDevPlugin } from '/@/plugin/app-ready/app-identity-plugin.js';
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
@@ -130,6 +131,7 @@ export class Main implements IDisposable {
     /**
      * Setup {@link ElectronApp.on} listeners
      */
+    this.app.on('second-instance', this.onSecondInstance.bind(this));
     this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
     this.app.on('before-quit', this.onBeforeQuit.bind(this));
 
@@ -148,6 +150,26 @@ export class Main implements IDisposable {
    */
   protected async whenReady(): Promise<Array<void>> {
     return Promise.all(this.#plugins.map(plugin => plugin.onReady()));
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('second-instance')} event
+   * do not use _args as it may contain additional arguments
+   */
+  protected onSecondInstance(
+    _event: unknown,
+    _args: string[],
+    _workingDirectory: string,
+    additionalData: unknown,
+  ): void {
+    // if we are on Windows, we need to handle the protocol
+    if (isWindows() && additionalData && (additionalData as AdditionalData).argv) {
+      this.protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
+    }
+
+    restoreWindow().catch((error: unknown) => {
+      console.error('Error restoring window', error);
+    });
   }
 
   /**
