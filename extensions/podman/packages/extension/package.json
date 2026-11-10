@@ -519,6 +519,7 @@
     "semver": "^7.8.6",
     "smol-toml": "1.9.1",
     "ssh2": "^1.17.0",
+    "string-argv": "^0.4.0",
     "winreg": "^1.2.5"
   },
   "devDependencies": {

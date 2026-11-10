@@ -609,6 +609,9 @@ importers:
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
+      string-argv:
+        specifier: ^0.4.0
+        version: 0.4.0
       winreg:
         specifier: ^1.2.5
         version: 1.2.5
@@ -11617,6 +11620,10 @@ packages:
   string-argv@0.3.2:
     resolution: {integrity: sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==}
     engines: {node: '>=0.6.19'}
+
+  string-argv@0.4.0:
+    resolution: {integrity: sha512-UOtaksJ3SK3KLHba2i9I27fvuZNfBlImDP5wKsCOxCDMRDNxlipCe8rmnUAaDpqlQ93upnA0SzF2pjWhttozSA==}
+    engines: {node: '>=16.20.0'}
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -25135,6 +25142,8 @@ snapshots:
   strictdom@1.0.1: {}
 
   string-argv@0.3.2: {}
+
+  string-argv@0.4.0: {}
 
   string-width@4.2.3:
     dependencies:
