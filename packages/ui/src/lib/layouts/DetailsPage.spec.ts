@@ -29,8 +29,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('Displays the title with a two-line cap', () => {
-  const title = 'My Dummy Title';
+test('Makes a capped title reachable with the keyboard', async () => {
+  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
   render(DetailsPage, {
     title,
   });
@@ -39,6 +39,9 @@ test('Displays the title with a two-line cap', () => {
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
   expect(titleElement).toHaveClass('line-clamp-2');
+
+  await userEvent.tab();
+  expect(titleElement).toHaveFocus();
 });
 
 test('Expect page name is defined', async () => {

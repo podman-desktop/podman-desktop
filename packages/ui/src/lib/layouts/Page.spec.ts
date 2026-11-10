@@ -48,17 +48,17 @@ test('Renders the detail next to the tabs and outside the header', () => {
 
   const header = screen.getByRole('region', { name: 'Header' });
   const tabs = screen.getByRole('region', { name: 'Tabs' });
-  const statistics = screen.getByText('Container statistics');
+  const details = screen.getByRole('region', { name: 'Page details' });
 
-  expect(tabs.previousElementSibling).toContainElement(statistics);
+  expect(tabs.previousElementSibling).toBe(details);
+  expect(details).toHaveTextContent('Container statistics');
   expect(within(header).queryByText('Container statistics')).not.toBeInTheDocument();
 });
 
 test('Omits the detail container when no detail is provided', () => {
   render(Page, { title: 'Image Details' });
 
-  const tabs = screen.getByRole('region', { name: 'Tabs' });
-  expect(tabs.parentElement?.children).toHaveLength(1);
+  expect(screen.queryByRole('region', { name: 'Page details' })).not.toBeInTheDocument();
 });
 
 test('Expect no backlink or close is defined', async () => {

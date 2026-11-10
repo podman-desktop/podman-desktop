@@ -84,37 +84,42 @@ function handleKeydown(e: KeyboardEvent): void {
           {/if}
         </div>
       {/if}
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
-        <div class="flex max-w-full grow items-center">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-2 pt-1">
+        <div class="flex min-w-0 grow basis-18 items-center">
           {#if icon}
             <div class="shrink-0 pr-3">
               {@render icon()}
             </div>
           {/if}
-          <div class="flex min-w-0 grow flex-col">
+          <div class="flex min-w-0 grow flex-col wrap-anywhere">
             <div class="flex flex-wrap items-baseline gap-x-2">
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex (focus reveals the full clamped title) -->
               <h1
                 aria-label={title}
                 {title}
-                class="min-w-0 text-xl font-bold leading-tight wrap-anywhere text-(--pd-content-header)"
-                class:line-clamp-2={clampTitle}>
+                tabindex={clampTitle ? 0 : undefined}
+                class="min-w-0 text-xl font-bold leading-tight text-(--pd-content-header)"
+                class:line-clamp-2={clampTitle}
+                class:focus:line-clamp-none={clampTitle}
+                class:focus:max-h-[40vh]={clampTitle}
+                class:focus:overflow-auto={clampTitle}
+                class:focus-visible:outline-(--pd-button-focus-ring)={clampTitle}>
                 {title}
               </h1>
-              <div class="leading-normal wrap-anywhere text-(--pd-table-body-text-sub-secondary)" class:hidden={!titleDetail}>
+              <div class="leading-normal text-(--pd-table-body-text-sub-secondary)" class:hidden={!titleDetail}>
                 {titleDetail}
               </div>
             </div>
             <div>
-              <!-- The clamped subtitle should not determine when the actions wrap. -->
               <span
-                class="text-sm leading-none text-(--pd-content-sub-header) line-clamp-1 [contain:inline-size]"
+                class="text-sm leading-none text-(--pd-content-sub-header) line-clamp-1"
                 class:hidden={!subtitle}>{subtitle}</span>
               {@render subtitleSnippet?.()}
             </div>
           </div>
         </div>
         <div class="ml-auto flex max-w-full flex-col">
-          <div class="flex flex-wrap justify-end gap-2" aria-label="Control Actions" role="group">
+          <div class="flex flex-wrap justify-end-safe gap-2" aria-label="Control Actions" role="group">
             {@render actions?.()}
           </div>
           {#if !showBreadcrumb}
@@ -129,11 +134,15 @@ function handleKeydown(e: KeyboardEvent): void {
   {/if}
   <div class="flex flex-row-reverse flex-wrap items-end border-b border-(--pd-content-divider)">
     {#if detail}
-      <div class="max-w-full pr-5">
+      <!-- Reuse the header's bottom padding so tall details don't add another band above the tabs. -->
+      <div class="max-w-full pr-5" class:-mt-2={!inProgress} aria-label="Page details" role="region">
         {@render detail()}
       </div>
     {/if}
-    <div class="flex grow px-2" aria-label="Tabs" role="region">
+    <div
+      class="flex min-w-0 grow basis-28 overflow-x-auto px-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-(--pd-content-sub-header)"
+      aria-label="Tabs"
+      role="region">
       {@render tabs?.()}
     </div>
   </div>
