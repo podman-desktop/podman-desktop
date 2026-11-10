@@ -24,7 +24,8 @@ import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@pod
 import * as extensionApi from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
 
-import product from '../product.json' with { type: 'json' };
+import packageJson from '/@package.json' with { type: 'json' };
+
 import { connectionAuditor, createCluster } from './create-cluster';
 import type { ImageInfo } from './image-handler';
 import { ImageHandler } from './image-handler';
@@ -40,7 +41,7 @@ import {
 
 const KIND_CLI_NAME = 'kind';
 const KIND_DISPLAY_NAME = 'Kind';
-const KIND_MARKDOWN = product.kindMarkdown ?? '';
+const KIND_MARKDOWN = packageJson.product.kindMarkdown ?? '';
 
 const API_KIND_INTERNAL_API_PORT = 6443;
 
