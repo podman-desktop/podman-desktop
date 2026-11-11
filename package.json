@@ -154,7 +154,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
-    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/coverage-v8": "^5.1.0",
     "@vitest/eslint-plugin": "^1.6.28",
     "cross-env": "10.1.0",
     "dts-for-context-bridge": "0.7.1",
@@ -184,7 +184,7 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6",
     "mustache": "^4.2.0",
-    "vitest": "^5.0.5",
+    "vitest": "^5.1.0",
     "xvfb-maybe": "^0.2.1"
   },
   "dependencies": {
