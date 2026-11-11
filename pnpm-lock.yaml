@@ -1014,8 +1014,8 @@ importers:
         specifier: ^11.0.30
         version: 11.0.30
       humanize-duration:
-        specifier: ^3.35.0
-        version: 3.35.0
+        specifier: ^3.35.1
+        version: 3.35.1
       jsdom:
         specifier: ^31.0.0
         version: 31.0.0(@noble/hashes@2.2.0)
@@ -1086,8 +1086,8 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1
       humanize-duration:
-        specifier: ^3.35.0
-        version: 3.35.0
+        specifier: ^3.35.1
+        version: 3.35.1
       moment:
         specifier: ^2.31.0
         version: 2.31.0
@@ -8575,8 +8575,8 @@ packages:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
 
-  humanize-duration@3.35.0:
-    resolution: {integrity: sha512-+KYh+R85n1yadHHwy/QXF0JgPq5NPPBNrvigA5aAKrlKFd0bJpMx7wE3Xd6rM0kEaBQMCFrdMihkaDSgWERNvQ==}
+  humanize-duration@3.35.1:
+    resolution: {integrity: sha512-O4HQEzneiiAiPmFzvQKKK+Gbz3vFO9Obq6lnWsbGyUbJ54m7mDN+/lHpzilFxDd8pmrMzuHLw4dsoWnLCEq7dQ==}
 
   husky@9.1.7:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
@@ -21441,7 +21441,7 @@ snapshots:
 
   human-signals@2.1.0: {}
 
-  humanize-duration@3.35.0: {}
+  humanize-duration@3.35.1: {}
 
   husky@9.1.7: {}
 
