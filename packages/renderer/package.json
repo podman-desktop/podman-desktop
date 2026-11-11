@@ -30,7 +30,7 @@
     "dompurify": "^3.4.17",
     "eslint-plugin-svelte": "^3.24.1",
     "filesize": "^11.0.30",
-    "humanize-duration": "^3.35.0",
+    "humanize-duration": "^3.35.1",
     "jsdom": "^31.0.0",
     "micromark": "^4.0.3",
     "micromark-extension-directive": "^4.0.0",
