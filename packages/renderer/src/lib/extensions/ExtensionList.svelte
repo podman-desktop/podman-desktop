@@ -127,11 +127,11 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
       <div class="pl-5 w-72">
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
       </div>
-      {#if filterSummary && filterSummary.filtered > 0}
-        <div class="flex flex-1 items-center px-5 text-sm text-[var(--pd-content-text)]">
+      <div class="flex flex-1 items-center px-5 text-sm text-(--pd-content-text)" role="status">
+        {#if filterSummary && filterSummary.filtered > 0}
           Filtered out {filterSummary.filtered} items of {filterSummary.total}
-        </div>
-      {/if}
+        {/if}
+      </div>
     </div>
   {/if}
   <div class="flex min-w-full grow">

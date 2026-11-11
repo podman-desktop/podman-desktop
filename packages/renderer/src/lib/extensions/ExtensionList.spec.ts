@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
-import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -307,6 +307,32 @@ test.each(['installed', 'catalog'] as const)(
   },
 );
 
+test.each(['installed', 'catalog'] as const)(
+  '%s keeps the filter status mounted before filtering and after clearing',
+  async currentScreen => {
+    catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+    extensionInfos.set(combined);
+    render(ExtensionList, { screen: currentScreen });
+
+    const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+    const searchRegion = within(screen.getByRole('region', { name: 'search' }));
+    const filterStatus = searchRegion.getByRole('status');
+    expect(filterStatus).toBeEmptyDOMElement();
+
+    await fireEvent.input(searchInput, { target: { value: 'no-match' } });
+
+    expect(searchRegion.getByRole('status')).toBe(filterStatus);
+    expect(filterStatus).toHaveTextContent(
+      currentScreen === 'installed' ? 'Filtered out 1 items of 1' : 'Filtered out 2 items of 2',
+    );
+
+    await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+
+    expect(searchRegion.getByRole('status')).toBe(filterStatus);
+    expect(filterStatus).toBeEmptyDOMElement();
+  },
+);
+
 test('Local extensions keeps search above the tabs', async () => {
   render(ExtensionList, { screen: 'development' });
 
@@ -354,6 +380,7 @@ test('Typing and clearing installed search updates results and the filtered coun
   screen.getByRole('region', { name: 'idAInstalled' });
   expect(screen.queryByRole('region', { name: 'idBInstalled' })).not.toBeInTheDocument();
   const filteredCount = screen.getByText('Filtered out 1 items of 2');
+  expect(filteredCount).toHaveAttribute('role', 'status');
   expect(screen.getByRole('region', { name: 'search' })).toContainElement(filteredCount);
 
   await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
@@ -392,6 +419,7 @@ test('Typing and clearing catalog search updates results and the filtered count'
   screen.getByRole('group', { name: 'A Extension' });
   expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
   const filteredCount = screen.getByText('Filtered out 1 items of 2');
+  expect(filteredCount).toHaveAttribute('role', 'status');
   expect(screen.getByRole('region', { name: 'search' })).toContainElement(filteredCount);
 
   await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
