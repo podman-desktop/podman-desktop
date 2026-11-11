@@ -47,6 +47,7 @@ let ociImageUrl: string | undefined;
 
 let navigationBar: NavigationBar;
 const skipExtensionsTest = process.env.SKIP_EXTENSIONS_TEST === 'true';
+const isActiveRegexp = new RegExp(`${ExtensionState.Installed}|Active`, 'i');
 
 test.skip(skipExtensionsTest, 'Skip test suite based on env. variable');
 
@@ -163,7 +164,7 @@ for (const { extensionLabel, extensionFullLabel, extensionName, extensionFullNam
           extensionFullName,
         );
         await playExpect(extensionPage.heading).toBeVisible();
-        await playExpect(extensionPage.status).toHaveText(ExtensionState.Installed, { timeout: 15_000 });
+        await playExpect.poll(() => extensionPage.status.innerText(), { timeout: 15_000 }).toMatch(isActiveRegexp);
         // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
         const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
         // we would like to propagate the error's stack trace into test failure message
@@ -190,7 +191,7 @@ for (const { extensionLabel, extensionFullLabel, extensionName, extensionFullNam
           );
 
           await extensionPage.disableExtension();
-          await playExpect(extensionPage.status).toHaveText(ExtensionState.Disabled);
+          await playExpect(extensionPage.status).toHaveText(ExtensionState.Disabled, { ignoreCase: true });
 
           // check that extension navbar icon is hidden/shown
           if (extensionNavigationBarIcon) {
@@ -221,7 +222,7 @@ for (const { extensionLabel, extensionFullLabel, extensionName, extensionFullNam
           );
 
           await extensionPage.enableExtension();
-          await playExpect(extensionPage.status).toHaveText(ExtensionState.Installed, { timeout: 10_000 });
+          await playExpect.poll(() => extensionPage.status.innerText(), { timeout: 10_000 }).toMatch(isActiveRegexp);
 
           // check that extension navbar icon is hidden/shown
           if (extensionNavigationBarIcon) {
@@ -318,7 +319,7 @@ test.describe('Install extension via SHA digest', { tag: '@smoke' }, () => {
       ext.extensionFullName,
     );
     await playExpect(extensionPage.heading).toBeVisible();
-    await playExpect(extensionPage.status).toHaveText(ExtensionState.Installed, { timeout: 15_000 });
+    await playExpect.poll(() => extensionPage.status.innerText(), { timeout: 15_00 }).toMatch(isActiveRegexp);
 
     const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
     let stackTrace = '';

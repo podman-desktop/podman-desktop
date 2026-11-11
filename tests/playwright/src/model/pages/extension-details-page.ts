@@ -19,6 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { ExtensionState } from '/@/model/core/states';
+
 import { BasePage } from './base-page';
 import { ExtensionsPage } from './extensions-page';
 
@@ -49,7 +51,8 @@ export class ExtensionDetailsPage extends BasePage {
     });
     this.status = this.header
       .getByRole('status', { name: 'Extension status' })
-      .or(this.header.getByLabel('Extension status Label'));
+      .or(this.header.getByLabel('Extension status Label'))
+      .first();
     this.errorStackTrace = this.tabContent.getByRole('group', {
       name: 'Stack Trace',
       exact: true,
@@ -58,7 +61,7 @@ export class ExtensionDetailsPage extends BasePage {
 
   async disableExtension(): Promise<this> {
     return test.step(`Disable extension: ${this.extensionName}`, async () => {
-      if ((await this.status.innerText()).toLocaleLowerCase() === 'disabled') return this;
+      if ((await this.status.innerText()).toLowerCase() === 'disabled') return this;
 
       await this.disableButton.click();
       await playExpect(this.status).toHaveText('Disabled', { timeout: 30000, ignoreCase: true });
@@ -68,11 +71,12 @@ export class ExtensionDetailsPage extends BasePage {
 
   async enableExtension(): Promise<this> {
     return test.step(`Enable extension: ${this.extensionName}`, async () => {
-      const status = (await this.status.innerText()).toLocaleLowerCase();
+      const isActiveRegexp = new RegExp(`${ExtensionState.Installed}|Active`, 'i');
+      const status = (await this.status.innerText()).toLowerCase();
       if (status === 'installed' || status === 'active') return this;
 
       await this.enableButton.click();
-      await playExpect(this.status).toHaveText(/Installed|Active/i, { timeout: 30000 });
+      await playExpect.poll(() => this.status.innerText(), { timeout: 30_000 }).toMatch(isActiveRegexp);
       return this;
     });
   }
