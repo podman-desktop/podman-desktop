@@ -261,16 +261,17 @@ export default [
         {
           selector:
             'CallExpression[callee.property.name="showMessageBox"] > ObjectExpression > Property[key.name="buttons"] > ArrayExpression[elements.length>3]',
-          message: 'A message box should not have more than three buttons.',
+          message: 'Dialogs should have at most three buttons. Move secondary options into a `dropdownButton`.',
         },
         {
+          // showDialog and the show*Message calls take plain string buttons, so a dropdownButton is not available.
           selector: 'CallExpression[callee.property.name="showDialog"] > ArrayExpression[elements.length>3]',
-          message: 'A dialog should not have more than three buttons.',
+          message: 'Dialogs should have at most three buttons. Keep the three most important choices.',
         },
         {
           selector:
             'CallExpression[callee.property.name=/^show(Information|Warning|Error)Message$/][arguments.length>4]',
-          message: 'A message should not have more than three buttons.',
+          message: 'Dialogs should have at most three buttons. Keep the three most important choices.',
         },
       ],
 
