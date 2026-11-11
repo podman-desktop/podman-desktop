@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 
 // jsdom does not implement ResizeObserver (used by bind:clientWidth / bind:clientHeight)
 class ResizeObserverMock {
@@ -26,3 +26,15 @@ class ResizeObserverMock {
 }
 
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+beforeEach(() => {
+  // jsdom does not implement the Web Animations API.
+  Object.defineProperty(HTMLElement.prototype, 'animate', {
+    configurable: true,
+    writable: true,
+    value: vi.fn(() => ({
+      finished: Promise.resolve(),
+      cancel: vi.fn(),
+    })),
+  });
+});
