@@ -73,25 +73,26 @@ function startOnboardingQueue(): void {
     </div>
 
     <!-- Body -->
-    <div class="flex flex-col justify-center content-center flex-auto backdrop-blur-sm p-2 overflow-y-auto">
+    <div class="flex flex-col justify-center-safe content-center flex-auto backdrop-blur-sm p-2 overflow-y-auto">
       <div class="flex justify-center p-2"><DesktopIcon /></div>
       <div class="flex justify-center text-lg font-bold p-2">
         <span class="mr-2">🎉</span>{welcomeMessages?.welcomeMessage} v{podmanDesktopVersion} !
       </div>
       {#if onboardingProviders && onboardingProviders.length > 0}
         <div class="flex flex-row justify-center">
-          <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">
+          <div class="w-full max-w-6xl bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">
             <div class="flex justify-center text-sm text-[var(--pd-content-card-text)] pb-2">
               <div>Choose the extensions to include:</div>
             </div>
-            <div aria-label="providerList" class="grid grid-cols-3 gap-3">
+            <div aria-label="providerList" class="grid grid-cols-6 gap-3">
               {#each onboardingProviders as onboarding, index (index)}
                 <OnboardingExtensionCard
                   icon={onboarding.icon}
                   displayName={onboarding.displayName}
                   description={onboarding.description}
                   checked={onboarding.selected ?? true}
-                  onToggle={(): void => toggleOnboardingSelection(onboarding.name)} />
+                  onToggle={(): void => toggleOnboardingSelection(onboarding.name)}
+                  class={welcomeUtils.getProviderCardClass(index, onboardingProviders.length)} />
               {/each}
             </div>
           </div>
