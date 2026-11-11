@@ -1362,8 +1362,8 @@ importers:
         specifier: ^4.3.5
         version: 4.3.5
       markdownlint:
-        specifier: ^0.42.0
-        version: 0.42.0(supports-color@8.1.1)
+        specifier: ^0.42.1
+        version: 0.42.1(supports-color@8.1.1)
       markdownlint-cli2:
         specifier: ^0.24.0
         version: 0.24.0(supports-color@8.1.1)
@@ -9437,6 +9437,10 @@ packages:
 
   markdownlint@0.42.0:
     resolution: {integrity: sha512-kzsCV/rPWRFn3jUhcB919YF4Qgeh0g9tcogoXFadGSo6Zxj6662YOqWXv0jDn8nv5KCCxDfMKJZv6N4HkNkvTg==}
+    engines: {node: '>=22'}
+
+  markdownlint@0.42.1:
+    resolution: {integrity: sha512-Otolm9JX12iO2NG5cetlKfzGygpiLSlHuqXKxoT6HGhN5HtbxprJPicKZqqCQd88qOvUi/TEs3o1AmcYioVscA==}
     engines: {node: '>=22'}
 
   marked@14.0.0:
@@ -22206,6 +22210,21 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  markdownlint@0.42.1(supports-color@8.1.1):
+    dependencies:
+      micromark: 4.0.3(supports-color@8.1.1)
+      micromark-core-commonmark: 2.0.4
+      micromark-extension-directive: 4.0.0
+      micromark-extension-gfm-autolink-literal: 2.1.0
+      micromark-extension-gfm-footnote: 2.1.0
+      micromark-extension-gfm-table: 2.1.2
+      micromark-extension-math: 3.1.0
+      micromark-util-types: 2.0.3
+      re2js: 2.9.1
+      string-width: 8.3.0
+    transitivePeerDependencies:
+      - supports-color
+
   marked@14.0.0: {}
 
   marked@16.4.2: {}
@@ -22550,18 +22569,18 @@ snapshots:
       micromark-util-character: 2.1.1
       micromark-util-sanitize-uri: 2.0.1
       micromark-util-symbol: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.3
 
   micromark-extension-gfm-footnote@2.1.0:
     dependencies:
       devlop: 1.1.0
-      micromark-core-commonmark: 2.0.3
-      micromark-factory-space: 2.0.1
+      micromark-core-commonmark: 2.0.4
+      micromark-factory-space: 2.1.0
       micromark-util-character: 2.1.1
       micromark-util-normalize-identifier: 2.0.1
       micromark-util-sanitize-uri: 2.0.1
       micromark-util-symbol: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.3
 
   micromark-extension-gfm-strikethrough@2.1.0:
     dependencies:
@@ -22583,10 +22602,10 @@ snapshots:
   micromark-extension-gfm-table@2.1.2:
     dependencies:
       devlop: 1.1.0
-      micromark-factory-space: 2.0.1
+      micromark-factory-space: 2.1.0
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.3
 
   micromark-extension-gfm-tagfilter@2.0.0:
     dependencies:
@@ -22616,10 +22635,10 @@ snapshots:
       '@types/katex': 0.16.8
       devlop: 1.1.0
       katex: 0.19.0
-      micromark-factory-space: 2.0.1
+      micromark-factory-space: 2.1.0
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.3
 
   micromark-extension-mdx-expression@3.0.0:
     dependencies:

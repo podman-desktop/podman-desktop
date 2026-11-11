@@ -48,7 +48,7 @@
     "@docusaurus/types": "^3.10.2",
     "@octokit/rest": "^22.0.1",
     "@tailwindcss/postcss": "^4.3.5",
-    "markdownlint": "^0.42.0",
+    "markdownlint": "^0.42.1",
     "markdownlint-cli2": "^0.24.0",
     "markdownlint-cli2-formatter-summarize": "^0.0.8",
     "msw": "^3.0.4",
