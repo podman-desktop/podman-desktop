@@ -25,6 +25,7 @@ interface Props {
   element?: HTMLInputElement;
   'aria-label'?: string;
   'aria-invalid'?: Booleanish | 'grammar' | 'spelling' | null;
+  'aria-describedby'?: string;
   left?: Snippet;
   right?: Snippet;
   oninput?: FormEventHandler<HTMLInputElement>;
@@ -56,6 +57,7 @@ let {
   element = $bindable(),
   'aria-label': ariaLabel,
   'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
   oninput = bubble('input'),
   onkeypress = bubble('keypress'),
   title = '',
@@ -68,6 +70,9 @@ let {
 }: Props = $props();
 
 let enabled = $derived(!readonly && !disabled);
+
+const errorId = $props.id();
+let hasErrorText = $derived(!!error && error.length > 0 && showError);
 
 // clear the value if the parent doesn't override
 async function onClear(): Promise<void> {
@@ -123,6 +128,7 @@ async function onClear(): Promise<void> {
       {pattern}
       aria-label={ariaLabel}
       aria-invalid={ariaInvalid ?? (error && showError ? true : undefined)}
+      aria-describedby={ariaDescribedBy ?? (hasErrorText ? errorId : undefined)}
       bind:value />
     {#if error && showError}
       <span class="px-0.5 text-[color:var(--pd-input-field-error-text)]" aria-hidden="true">
@@ -141,7 +147,7 @@ async function onClear(): Promise<void> {
     {/if}
     {@render right?.()}
   </div>
-  {#if error && error.length > 0 && showError}
-    <span class="text-sm text-[color:var(--pd-input-field-error-text)]">{error}</span>
+  {#if hasErrorText}
+    <span id={errorId} class="text-sm text-[color:var(--pd-input-field-error-text)]">{error}</span>
   {/if}
 </div>
