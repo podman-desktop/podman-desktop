@@ -1279,48 +1279,78 @@ describe('listContainers', () => {
   });
 });
 
-test.each([
+test.each<{
+  name: string;
+  statusCode: number;
+  // message dockerode built for the error, it wraps the reason with the HTTP status
+  engineMessage?: string;
+  imageName?: string;
+  expectedMessage: string;
+}>([
   {
+    name: 'a 403 hints that the image may not exist',
     statusCode: 403,
     expectedMessage: 'access to image "unknown-image" is denied (403 error). Can also be that image does not exist',
   },
   {
+    name: 'a 401 hints that the registry may require authentication',
     statusCode: 401,
     expectedMessage:
       'access to image "unknown-image" is denied (401 error). Can also be that the registry requires authentication.',
   },
   {
+    name: 'a 500 reports a bare engine message as is',
     statusCode: 500,
-    expectedMessage:
-      'access to image "unknown-image" is denied (500 error). Can also be that the registry requires authentication.',
+    expectedMessage: 'unable to pull image "unknown-image": access denied',
   },
-])('pull unknown image fails with error $statusCode', async ({ statusCode, expectedMessage }) => {
-  const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
+  {
+    name: 'a 500 on an unparseable reference reports the reason sent by the engine',
+    statusCode: 500,
+    engineMessage:
+      '(HTTP code 500) server error - normalizing image: normalizing name for compat API: parsing reference ".:latest": invalid reference format ',
+    imageName: '.',
+    expectedMessage: 'unable to pull image ".": invalid reference format',
+  },
+  {
+    name: 'a 500 on an unreachable registry strips the envelope dockerode wrapped the reason with',
+    statusCode: 500,
+    engineMessage: '(HTTP code 500) server error - connection refused ',
+    expectedMessage: 'unable to pull image "unknown-image": connection refused',
+  },
+  {
+    name: 'a 500 without any reason still reports the status code',
+    statusCode: 500,
+    engineMessage: '',
+    expectedMessage: 'unable to pull image "unknown-image" (500 error).',
+  },
+])(
+  'pull image fails when $name',
+  async ({ statusCode, engineMessage = 'access denied', imageName = 'unknown-image', expectedMessage }) => {
+    const getMatchingEngineFromConnectionSpy = vi.spyOn(containerRegistry, 'getMatchingEngineFromConnection');
 
-  const pullMock = vi.fn();
+    const pullMock = vi.fn();
 
-  const fakeDockerode = {
-    pull: pullMock,
-    modem: {
-      followProgress: vi.fn(),
-    },
-  } as unknown as Dockerode;
+    const fakeDockerode = {
+      pull: pullMock,
+      modem: {
+        followProgress: vi.fn(),
+      },
+    } as unknown as Dockerode;
 
-  getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
+    getMatchingEngineFromConnectionSpy.mockReturnValue(fakeDockerode);
 
-  const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
+    const containerConnectionInfo = {} as ProviderContainerConnectionInfo;
 
-  // add statusCode on the error
-  const error = new DockerodeTestStatusError('access denied', statusCode);
+    // add statusCode on the error
+    pullMock.mockRejectedValue(new DockerodeTestStatusError(engineMessage, statusCode));
 
-  pullMock.mockRejectedValue(error);
-
-  const callback = vi.fn();
-  // check that we have a nice error message
-  await expect(containerRegistry.pullImage(containerConnectionInfo, 'unknown-image', callback)).rejects.toThrow(
-    expectedMessage,
-  );
-});
+    const callback = vi.fn();
+    // check that we have a nice error message
+    await expect(containerRegistry.pullImage(containerConnectionInfo, imageName, callback)).rejects.toThrow(
+      expectedMessage,
+    );
+  },
+);
 
 test('pulling an image with platform linux/arm64 will add platform to pull options', async () => {
   // Mock the pulling and dockerode
@@ -3840,6 +3870,30 @@ describe('attachToContainer', () => {
     expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
   });
 
+  test('container attach stream LIBPOD API fails when podmanAttach rejects', async () => {
+    const attachMock = vi.fn().mockRejectedValue(new Error('attach failed'));
+
+    const fakeLibPod = {
+      podmanAttach: attachMock,
+    } as unknown as LibPod;
+
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: fakeLibPod,
+    } as InternalContainerProvider;
+
+    const container = {
+      id: '1234',
+    } as unknown as Dockerode.Container;
+
+    await expect(containerRegistry.attachToContainer(engine, container, true, true)).rejects.toThrow('attach failed');
+    expect(attachMock).toBeCalledWith(container.id);
+  });
+
   test('container do not attach stream as no tty', async () => {
     const fakeDockerode = {} as Dockerode;
 
@@ -5378,6 +5432,61 @@ describe('createContainerLibPod', () => {
     expect(createPodmanContainerMock).toBeCalledWith(expectedOptions);
   });
 
+  test.each([
+    { tty: true, openStdin: true },
+    { tty: false, openStdin: true },
+    { tty: true, openStdin: false },
+  ])(
+    'check that Tty=$tty and OpenStdin=$openStdin are kept when libPod is forced by request for nvidia device',
+    async ({ tty, openStdin }) => {
+      const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+      const libpod = new LibpodDockerode();
+      libpod.enhancePrototypeWithLibPod();
+      containerRegistry.addInternalProvider('podman1', {
+        name: 'podman',
+        id: 'podman1',
+        api: dockerAPI,
+        libpodApi: dockerAPI,
+        connection: {
+          type: 'podman',
+        },
+      } as unknown as InternalContainerProvider);
+
+      const createPodmanContainerMock = vi
+        .spyOn(dockerAPI as unknown as LibPod, 'createPodmanContainer')
+        .mockResolvedValue({ Id: 'id', Warnings: [] });
+      vi.spyOn(dockerAPI as unknown as Dockerode, 'getContainer').mockReturnValue({
+        start: () => {},
+      } as unknown as Dockerode.Container);
+      const attachToContainerMock = vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+      const options: ContainerCreateOptions = {
+        Image: 'image',
+        Tty: tty,
+        OpenStdin: openStdin,
+        HostConfig: {
+          Devices: [
+            {
+              PathOnHost: 'nvidia.com/gpu=all',
+              PathInContainer: '',
+              CgroupPermissions: '',
+            },
+          ],
+        },
+      };
+      await containerRegistry.createContainer('podman1', options);
+      expect(createPodmanContainerMock).toBeCalledWith(
+        expect.objectContaining({
+          devices: [{ path: 'nvidia.com/gpu=all' }],
+          terminal: tty,
+          stdin: openStdin,
+        }),
+      );
+      expect(attachToContainerMock).toBeCalledWith(expect.anything(), expect.anything(), tty, openStdin);
+    },
+  );
+
   test('expect createContainer to use compat api for non-podman options', async () => {
     vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
 
@@ -5461,6 +5570,53 @@ describe('createContainerLibPod', () => {
       expect.objectContaining({
         secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
         secret_env: { FOO_DATA: 'foo-data' },
+      }),
+    );
+  });
+
+  test('check that empty env values and values containing = are kept', async () => {
+    const dockerAPI = {
+      createContainer: vi.fn(),
+      getContainer: vi.fn(),
+    } as unknown as Dockerode;
+    const libpodAPI = {
+      createPodmanContainer: vi.fn(),
+    } as unknown as LibPod;
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: libpodAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    vi.mocked(dockerAPI.getContainer).mockResolvedValue({
+      start: vi.fn(),
+    } as unknown as Dockerode.Container);
+
+    vi.mocked(libpodAPI.createPodmanContainer).mockResolvedValue({
+      Id: 'id',
+      Warnings: [],
+    });
+
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const options: ContainerCreateOptions = {
+      Image: 'image',
+      name: 'name',
+      pod: 'pod',
+      Env: ['EMPTY=', 'WITH_EQ=a=b', 'NO_EQUAL_SIGN'],
+    };
+
+    await containerRegistry.createContainer('podman1', options);
+
+    expect(dockerAPI.createContainer).not.toHaveBeenCalled();
+    expect(libpodAPI.createPodmanContainer).toBeCalledWith(
+      expect.objectContaining({
+        env: { EMPTY: '', WITH_EQ: 'a=b' },
       }),
     );
   });
@@ -8055,6 +8211,89 @@ describe('inspectSecret', () => {
   });
 });
 
+describe('resolveImage', () => {
+  const connection = {
+    type: 'podman' as const,
+    name: 'podman',
+    displayName: 'podman',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    status: (): 'started' => 'started',
+  };
+
+  function givenProvider(inspect: () => Promise<Dockerode.ImageInspectInfo>): InternalContainerProvider {
+    const internalContainerProvider: InternalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        getImage: vi.fn().mockReturnValue({ inspect } as unknown as Dockerode.Image),
+      } as unknown as Dockerode,
+      connection,
+    };
+    containerRegistry.addInternalProvider('podman1', internalContainerProvider);
+    return internalContainerProvider;
+  }
+
+  test('should answer with the image id and the engine id of the connection', async () => {
+    const provider = givenProvider(
+      vi.fn().mockResolvedValue({
+        Id: 'sha256:1234',
+        RepoTags: ['docker.io/library/alpine:latest'],
+      } as unknown as Dockerode.ImageInspectInfo),
+    );
+
+    await expect(containerRegistry.resolveImage(connection, 'alpine:latest')).resolves.toStrictEqual({
+      Id: 'sha256:1234',
+      engineId: 'podman1',
+      repoTag: 'docker.io/library/alpine:latest',
+    });
+    // the reference is handed to the engine untouched, it is the one resolving it
+    expect(provider.api?.getImage).toHaveBeenCalledExactlyOnceWith('alpine:latest');
+  });
+
+  test.each([
+    // [what is asked for, what the image carries, which tag it names]
+    ['alpine', ['docker.io/library/alpine:latest', 'docker.io/library/alpine:3.19'], 'docker.io/library/alpine:latest'],
+    [
+      'alpine:3.19',
+      ['docker.io/library/alpine:latest', 'docker.io/library/alpine:3.19'],
+      'docker.io/library/alpine:3.19',
+    ],
+    ['localhost:5000/team/app', ['localhost:5000/team/app:latest'], 'localhost:5000/team/app:latest'],
+    ['localhost:5000/team/app:2', ['localhost:5000/team/app:2'], 'localhost:5000/team/app:2'],
+    ['alpine@sha256:abc', ['docker.io/library/alpine:latest'], undefined],
+    ['alpine:3.19', ['docker.io/library/alpine:latest'], undefined],
+    ['alpine', [], undefined],
+  ])('should name the tag %s points at', async (reference, repoTags, expected) => {
+    givenProvider(
+      vi.fn().mockResolvedValue({ Id: 'sha256:1234', RepoTags: repoTags } as unknown as Dockerode.ImageInspectInfo),
+    );
+
+    await expect(containerRegistry.resolveImage(connection, reference)).resolves.toMatchObject({
+      Id: 'sha256:1234',
+      repoTag: expected,
+    });
+  });
+
+  test('should answer undefined when the engine holds no such image', async () => {
+    givenProvider(vi.fn().mockRejectedValue(Object.assign(new Error('no such image'), { statusCode: 404 })));
+
+    await expect(containerRegistry.resolveImage(connection, 'alpine:latest')).resolves.toBeUndefined();
+  });
+
+  test('should rethrow when the engine fails for any other reason', async () => {
+    // an unreachable engine is not an answer, reporting the image as missing would be a lie
+    givenProvider(vi.fn().mockRejectedValue(Object.assign(new Error('socket hang up'), { statusCode: 500 })));
+
+    await expect(containerRegistry.resolveImage(connection, 'alpine:latest')).rejects.toThrow('socket hang up');
+  });
+
+  test('should throw if no matching engine', async () => {
+    await expect(
+      containerRegistry.resolveImage({ ...connection, name: 'nonexistent' }, 'alpine:latest'),
+    ).rejects.toThrow('no running provider for the matching container');
+  });
+});
+
 describe('getImageInspect', () => {
   test('should throw if no matching engine', async () => {
     await expect(containerRegistry.getImageInspect('nonexistent', 'secret1')).rejects.toThrow(
@@ -8508,5 +8747,64 @@ describe('updateImages', () => {
       skipped: 0,
       failed: 2,
     });
+  });
+});
+
+describe('getImageInfo', () => {
+  beforeEach(() => {
+    server = setupServer(
+      http.get('http://localhost/v4.2.0/libpod/images/json', () =>
+        HttpResponse.json([{ Id: 'dummyImageId', Digest: 'fooDigest' }]),
+      ),
+    );
+    server.listen({ onUnhandledFrame: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api,
+      libpodApi: api,
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        endpoint: { socketPath: '/podman1.socket' },
+      },
+    } as unknown as InternalContainerProvider);
+  });
+
+  test('resolves the image matching the engine and the engine image id', async () => {
+    const image = await containerRegistry.getImageInfo('podman1', 'sha256:dummyImageId');
+
+    expect(image.engineId).toBe('podman1');
+    expect(image.Id).toBe('sha256:dummyImageId');
+  });
+
+  test('rejects when the id is the raw id without the digest prefix', async () => {
+    await expect(containerRegistry.getImageInfo('podman1', 'dummyImageId')).rejects.toThrow(
+      'Image dummyImageId not found on engine podman1',
+    );
+  });
+
+  test('rejects when the engine is unknown', async () => {
+    await expect(containerRegistry.getImageInfo('podman2', 'sha256:dummyImageId')).rejects.toThrow(
+      'no engine matching this engine',
+    );
+  });
+
+  test('rejects when the engine has no api', async () => {
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+        name: 'podman',
+        endpoint: { socketPath: '/podman1.socket' },
+      },
+    } as unknown as InternalContainerProvider);
+
+    await expect(containerRegistry.getImageInfo('podman1', 'sha256:dummyImageId')).rejects.toThrow(
+      'no running provider for the matching container',
+    );
   });
 });

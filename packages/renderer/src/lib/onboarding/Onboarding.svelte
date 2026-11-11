@@ -245,6 +245,17 @@ async function restartSetup(): Promise<void> {
   await setActiveStep();
 }
 
+async function restartCurrentOnboarding(): Promise<void> {
+  if (!activeStep) {
+    return;
+  }
+  await cleanSetup([activeStep.onboarding], globalContext);
+
+  // reset current onboarding's executed commands
+  executedCommands = [];
+  await setActiveStep();
+}
+
 // If the user hits escape, prompt them to exit the onboarding
 function handleEscape({ key }: KeyboardEvent): void {
   if (key === 'Escape') {
@@ -387,7 +398,7 @@ let sidebarTitle = $derived(
 
           {#if activeStep.step.state === 'failed'}
             <div class="mx-auto mt-4">
-              <Button on:click={restartSetup}>Try again</Button>
+              <Button on:click={restartCurrentOnboarding}>Try again</Button>
             </div>
           {/if}
 
@@ -435,7 +446,7 @@ let sidebarTitle = $derived(
 
 {#if displayCancelSetup}
   <!-- Create overlay-->
-  <div class="fixed top-0 left-0 right-0 bottom-0 bg-(--pd-modal-fade) bg-opacity-60 bg-blend-multiply h-full grid z-50">
+  <div class="fixed top-0 left-0 right-0 bottom-0 bg-(--pd-modal-fade)/60 bg-blend-multiply h-full grid z-50">
     <div
       class="flex flex-col place-self-center w-[550px] rounded-xl bg-[var(--pd-modal-bg)] shadow-xl shadow-(--pd-modal-shadow)"
       role="dialog"

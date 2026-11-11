@@ -34,6 +34,8 @@ const matchingRecords = $derived(
       property =>
         !searchValue ||
         matchValue(property.title, searchValue) ||
+        (!!property.id && matchValue(property.id, searchValue)) ||
+        (!!property.displayName && matchValue(property.displayName, searchValue)) ||
         (!!property.description && matchValue(property.description, searchValue)) ||
         (!!property.markdownDescription && matchValue(property.markdownDescription, searchValue)),
     )

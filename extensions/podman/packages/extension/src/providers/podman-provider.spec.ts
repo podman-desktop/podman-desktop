@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
+import packageJson from '/@package.json' with { type: 'json' };
+
+vi.mock(import('/@package.json'));
 
 const PODMAN_BINARY: PodmanBinary = {
   getBinaryInfo: vi.fn(),
@@ -41,6 +44,7 @@ beforeEach(() => {
     has: vi.fn(),
     update: vi.fn(),
   });
+  vi.mocked(packageJson).product.dockerCompatibilityGuide = 'https://example.com/docker-compat';
 });
 
 describe('initialisation', () => {
@@ -98,6 +102,29 @@ describe('initialisation', () => {
         status: 'installed',
       }),
     );
+  });
+});
+
+describe('Docker compatibility guide link', () => {
+  test('should be added from package.json', async () => {
+    const podmanProvider = new PodmanProvider(PODMAN_BINARY);
+    await podmanProvider.init();
+
+    const { links } = vi.mocked(provider.createProvider).mock.calls[0][0];
+    expect(links).toContainEqual({
+      title: 'Docker compatibility guide',
+      url: 'https://example.com/docker-compat',
+    });
+  });
+
+  test('should not be added when package.json has no dockerCompatibilityGuide', async () => {
+    vi.mocked(packageJson).product.dockerCompatibilityGuide = '';
+
+    const podmanProvider = new PodmanProvider(PODMAN_BINARY);
+    await podmanProvider.init();
+
+    const { links } = vi.mocked(provider.createProvider).mock.calls[0][0];
+    expect(links?.map(link => link.title)).not.toContain('Docker compatibility guide');
   });
 });
 

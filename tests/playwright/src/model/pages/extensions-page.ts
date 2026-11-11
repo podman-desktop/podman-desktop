@@ -63,7 +63,7 @@ export class ExtensionsPage {
       await this.installExtensionFromOCIImageButton.click();
 
       const dialog = this.page.getByRole('dialog', {
-        name: 'Install Custom Extension',
+        name: 'Install custom extension',
         exact: true,
       });
       await playExpect(dialog).toBeVisible();

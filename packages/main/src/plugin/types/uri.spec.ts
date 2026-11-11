@@ -113,3 +113,22 @@ test('Expect revive to return revived Uri object', () => {
   expect(revived.query).equals('query');
   expect(revived.fragment).equals('fragment');
 });
+
+test.each([
+  ['https://example.com/a#sec', 'sec'],
+  ['https://example.com/a?x=1#sec', 'sec'],
+  ['podman-desktop://redhat.ai-lab/models/import/hf?model=a%2Fb#f', 'f'],
+  ['https://example.com/a', ''],
+  ['https://example.com/a#f#g', 'f#g'],
+])('Uri.parse keeps the fragment without the leading # for %s', (value, fragment) => {
+  const uri = Uri.parse(value);
+  expect(uri.fragment).toBe(fragment);
+  expect(uri.toString()).toBe(new URL(value).href);
+});
+
+test.each([
+  ['https://example.com/a#', 'https://example.com/a'],
+  ['https://example.com/a?#f', 'https://example.com/a#f'],
+])('Uri.toString drops empty delimiters for %s', (value, expected) => {
+  expect(Uri.parse(value).toString()).toBe(expected);
+});

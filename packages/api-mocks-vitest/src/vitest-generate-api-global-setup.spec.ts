@@ -26,21 +26,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import setup from './vitest-generate-api-global-setup.js';
 
-vi.mock(import('node:fs/promises'), () => {
-  const stat = vi.fn();
-  const readFile = vi.fn();
-  const writeFile = vi.fn();
-  const mkdir = vi.fn();
-  const copyFile = vi.fn();
-  return {
-    default: { stat, readFile, writeFile, mkdir, copyFile },
-    stat,
-    readFile,
-    writeFile,
-    mkdir,
-    copyFile,
-  };
-});
+vi.mock(import('node:fs/promises'));
 
 // Minimal TypeScript declaration that exercises namespace + class extraction
 const MOCK_EXTENSION_API_CONTENT = `

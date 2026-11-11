@@ -63,6 +63,20 @@ export class PodDetailsPage extends DetailsPage {
     });
   }
 
+  async getPodId(): Promise<string> {
+    return test.step('Get Pod ID', async () => {
+      await this.activateTab(PodDetailsPage.SUMMARY_TAB);
+      // the pod's own ID row comes first, the ones of its containers are listed below it
+      const idRow = this.tabContent
+        .getByRole('row')
+        .filter({ has: this.page.getByRole('cell', { name: 'ID', exact: true }) })
+        .first();
+      const idCell = idRow.getByRole('cell').nth(1);
+      await playExpect(idCell).toBeVisible();
+      return ((await idCell.textContent()) ?? '').trim();
+    });
+  }
+
   async startPod(): Promise<void> {
     return test.step('Start Pod', async () => {
       await playExpect(this.startButton).toBeEnabled({ timeout: 10_000 });

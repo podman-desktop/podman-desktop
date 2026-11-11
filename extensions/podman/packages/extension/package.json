@@ -18,6 +18,9 @@
     "podman-desktop": "^0.0.1"
   },
   "main": "./dist/extension.cjs",
+  "product": {
+    "dockerCompatibilityGuide": "https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility"
+  },
   "contributes": {
     "commands": [
       {
@@ -51,6 +54,11 @@
       {
         "command": "podman.setupRegistry",
         "title": "Podman: Set up registry"
+      },
+      {
+        "command": "podman.hypervPrep",
+        "title": "Podman: Prepare Hyper-V",
+        "enablement": "podman.hypervPrepSupported"
       },
       {
         "command": "podman.uninstallLegacyPodmanInstaller",
@@ -482,6 +490,13 @@
       "enablement": "(isLinux && onboardingContext:podmanIsNotInstalled) || (!isLinux && !onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists) || podman.needPodmanMachineCleanup"
     },
     "menus": {
+      "dashboard/provider": [
+        {
+          "command": "podman.hypervPrep",
+          "title": "Prepare Hyper-V",
+          "when": "providerId === podman && podman.hypervPrepSupported && podman.hypervPrepNotApplied"
+        }
+      ],
       "dashboard/container-connection": [
         {
           "command": "podman.setupRegistry",
@@ -501,10 +516,10 @@
     "@podman-desktop/api": "workspace:*",
     "@podman-desktop/podman-extension-api": "workspace:*",
     "async-mutex": "^0.5.0",
-    "inversify": "^8.2.3",
+    "inversify": "^8.3.0",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "semver": "^7.8.5",
+    "semver": "^7.8.6",
     "smol-toml": "1.9.1",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
@@ -516,11 +531,11 @@
     "adm-zip": "^0.6.1",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
-    "msw": "^3.0.3",
+    "msw": "^3.0.4",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
     "tsx": "^4.23.15",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }

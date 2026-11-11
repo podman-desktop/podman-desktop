@@ -62,6 +62,9 @@ test('should be able to connect', async () => {
   const sshServer = new Server(
     {
       hostKeys: [dummyKey],
+      // explicitly identify as something non-OpenSSH
+      // the server doesn't need to be OpenSSH, just needs to support some @openssh.com vendor extensions
+      ident: 'some-custom-name',
     },
     client => {
       connected = true;
@@ -72,6 +75,10 @@ test('should be able to connect', async () => {
         })
         .on('ready', () => {
           authenticated = true;
+        })
+        .on('openssh.streamlocal', (accept, _reject, info) => {
+          const stream = accept();
+          stream.pipe(createConnection(info.socketPath)).pipe(stream);
         });
     },
   ).listen(0, '127.0.0.1', () => {
@@ -101,7 +108,7 @@ test('should be able to connect', async () => {
   let listenReady = false;
 
   // start a remote server
-  const npipeServer = createServer(_socket => {}).listen(socketOrNpipePathRemote, () => {
+  const npipeServer = createServer(socket => socket.end('pong')).listen(socketOrNpipePathRemote, () => {
     listenReady = true;
   });
 
@@ -121,13 +128,14 @@ test('should be able to connect', async () => {
   // wait authenticated and connected
   await vi.waitFor(() => expect(connected && authenticated && podmanRemoteSshTunnel.isListening()).toBeTruthy());
 
-  let connectedToLocal = false;
-  // send a request to the tunnel using the socket path
-  const client = createConnection({ path: socketOrNpipePathLocal }, () => {
-    connectedToLocal = true;
+  // send a request to the tunnel using the socket path and expect the remote server's reply
+  let received = '';
+  const client = createConnection({ path: socketOrNpipePathLocal });
+  client.on('data', data => {
+    received += data.toString();
   });
 
-  await vi.waitFor(() => expect(connectedToLocal).toBeTruthy());
+  await vi.waitFor(() => expect(received).toBe('pong'));
 
   client.end();
   npipeServer.close();

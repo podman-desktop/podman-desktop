@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
-import { LinuxSocketCompatibility } from '/@/compatibility-mode/linux-socket-compatibility';
-import type { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
-// TODO: Windows
-export function getSocketCompatibility(): SocketCompatibility {
-  switch (process.platform) {
-    case 'darwin':
-      return new DarwinSocketCompatibility();
-    case 'linux':
-      return new LinuxSocketCompatibility();
-    default:
-      throw new Error(`Unsupported platform ${process.platform}`);
-  }
+/**
+ * The element that should be described by the tooltip: the first focusable descendant
+ * of the trigger, so screen readers announce the tooltip when it gets focus, or the trigger itself.
+ */
+export function getTooltipAriaTarget(root: HTMLElement): HTMLElement {
+  return root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? root;
 }

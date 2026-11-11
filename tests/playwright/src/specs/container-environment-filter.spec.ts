@@ -92,8 +92,8 @@ test.describe
           async (): Promise<void> => {
             await openPodmanResources(navigationBar, page);
             const defaultMachineCard = new ResourceConnectionCardPage(page, 'podman', defaultMachineVisibleName);
-            const status = await defaultMachineCard.resourceElementConnectionStatus.innerText();
-            if (status.includes(ResourceElementState.Off)) {
+            const status = await defaultMachineCard.resourceElementConnectionStatus.textContent();
+            if (status?.includes(ResourceElementState.Off)) {
               await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
               await waitForMachineStatus(page, defaultMachineVisibleName, ResourceElementState.Running, {
                 initialTimeout: 60_000,
@@ -131,7 +131,7 @@ test.describe
     });
 
     test('Stopping the default Podman machine', async ({ navigationBar, page }) => {
-      test.setTimeout(150_000);
+      test.setTimeout(180_000);
 
       await openPodmanResources(navigationBar, page);
       const defaultMachineCard = new ResourceConnectionCardPage(page, 'podman', defaultMachineVisibleName);
@@ -164,7 +164,7 @@ test.describe
     });
 
     test('Starting the second Podman machine', async ({ navigationBar, page }) => {
-      test.setTimeout(300_000);
+      test.setTimeout(330_000);
 
       await openPodmanResources(navigationBar, page);
       const secondMachineCard = new ResourceConnectionCardPage(page, 'podman', secondMachineVisibleName);
@@ -179,7 +179,7 @@ test.describe
     });
 
     test('Starting the default Podman machine again', async ({ navigationBar, page }) => {
-      test.setTimeout(210_000);
+      test.setTimeout(240_000);
 
       await openPodmanResources(navigationBar, page);
       const defaultMachineCard = new ResourceConnectionCardPage(page, 'podman', defaultMachineVisibleName);

@@ -20,7 +20,10 @@ import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { isLinux } from '/@/utility/platform';
 
-const pluginsInitializationRegexp = new RegExp('PluginSystem: initialization done');
+interface ExtensionSystemWindow extends Window {
+  extensionSystemIsExtensionsStarted: () => Promise<boolean>;
+}
+
 const applicationDisabledRegexp = new RegExp(
   'Application update is disabled with preferences.update.appUpdate settings',
 );
@@ -40,20 +43,22 @@ test.use({
         'podman-desktop.kind',
         'podman-desktop.kube-context',
         'podman-desktop.kubectl-cli',
-        'podman-desktop.lima',
         'podman-desktop.registries',
       ],
     },
   }),
 });
 
-test.beforeAll(async ({ runner }) => {
+test.beforeAll(async ({ runner, page }) => {
   runner.setVideoAndTraceName('disabled-update-e2e');
   await playExpect
-    .poll(() => runner.getConsoleMessages().some((msg: string) => pluginsInitializationRegexp.test(msg)), {
-      timeout: 30_000,
-      intervals: [500],
-    })
+    .poll(
+      () => page.evaluate(() => (window as unknown as ExtensionSystemWindow).extensionSystemIsExtensionsStarted()),
+      {
+        timeout: 30_000,
+        intervals: [500],
+      },
+    )
     .toBeTruthy();
 });
 

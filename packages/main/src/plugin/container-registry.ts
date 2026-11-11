@@ -41,6 +41,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImagesSaveOptions,
   ImageUpdateInfo,
   ImageUpdateResult,
@@ -763,6 +764,19 @@ export class ContainerProviderRegistry {
     return flattenedContainers;
   }
 
+  async getImageInfo(engineId: string, imageId: string): Promise<ImageInfo> {
+    const provider = this.internalProviders.get(engineId);
+    if (!provider) {
+      throw new Error('no engine matching this engine');
+    }
+    const images = await this.listImages({ provider: provider.connection });
+    const image = images.find(image => image.engineId === engineId && image.Id === imageId);
+    if (!image) {
+      throw new Error(`Image ${imageId} not found on engine ${engineId}`);
+    }
+    return image;
+  }
+
   // list images will prefer to use libpod API of the provider if podman
   // before falling back to using the regular API
   async listImages(options?: ListImagesOptions): Promise<ImageInfo[]> {
@@ -1415,8 +1429,13 @@ export class ContainerProviderRegistry {
         const statusCode = (error as any)?.statusCode;
         if (statusCode === 403) {
           error.message = `access to image "${imageName}" is denied (403 error). Can also be that image does not exist.`;
-        } else if (statusCode === 500 || statusCode === 401) {
-          error.message = `access to image "${imageName}" is denied (${statusCode} error). Can also be that the registry requires authentication.`;
+        } else if (statusCode === 401) {
+          error.message = `access to image "${imageName}" is denied (401 error). Can also be that the registry requires authentication.`;
+        } else if (statusCode === 500) {
+          const reason = this.getEngineErrorReason(error);
+          error.message = reason
+            ? `unable to pull image "${imageName}": ${reason}`
+            : `unable to pull image "${imageName}" (500 error).`;
         }
       }
       telemetryOptions = { error: error };
@@ -1424,6 +1443,69 @@ export class ContainerProviderRegistry {
     } finally {
       this.telemetryService.track('pullImage', { imageName: this.getImageHash(imageName), ...telemetryOptions });
     }
+  }
+
+  /**
+   * Extracts the explanation reported by the container engine. Returns the root cause of the error if available, otherwise undefined.
+   */
+  protected getEngineErrorReason(error: Error): string | undefined {
+    // cut the prefix '(HTTP code 500) server error - <reason>' and get the reason part
+    const reason = error.message.replace(/^\(HTTP code \d+\)\s.*?\s-\s/, '').trim();
+    if (reason.length === 0) {
+      return undefined;
+    }
+
+    // the reason is string of wrapped errors: 'outer: inner: root cause'
+    // pop the last layer, which is the root cause
+    return reason.split(/:\s+/).pop()?.trim();
+  }
+
+  /**
+   * Asks a connection's engine which of its images a reference points at. The engine resolves the
+   * reference the same way its CLI does, so short names, tags and digests all work, and it answers
+   * with the image id the images list reports. Returns undefined when the engine holds no such image.
+   */
+  async resolveImage(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+    reference: string,
+  ): Promise<ImageLocation | undefined> {
+    let telemetryOptions = {};
+    const provider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    try {
+      const { Id, RepoTags } = await provider.api.getImage(reference).inspect();
+      return { Id, engineId: provider.id, repoTag: this.matchRepoTag(reference, RepoTags ?? []) };
+    } catch (error: unknown) {
+      // a 404 means the engine holds no such image, which is an answer; anything else went wrong
+      if ((error as { statusCode?: number })?.statusCode !== 404) {
+        telemetryOptions = { error: error };
+        throw error;
+      }
+      return undefined;
+    } finally {
+      this.telemetryService.track('resolveImage', telemetryOptions);
+    }
+  }
+
+  /**
+   * Picks the repository tag a reference names among the ones the engine reports for the image it
+   * resolved to. The image is already identified, so the tag alone tells them apart; a reference
+   * pinning a digest names none of them.
+   */
+  protected matchRepoTag(reference: string, repoTags: string[]): string | undefined {
+    if (reference.includes('@')) {
+      return undefined;
+    }
+    const tag = this.referenceTag(reference);
+    return repoTags.find(repoTag => this.referenceTag(repoTag) === tag);
+  }
+
+  // a colon only opens a tag when no path separator follows it, a registry port carries one too
+  protected referenceTag(reference: string): string {
+    const index = reference.lastIndexOf(':');
+    return index > 0 && !reference.includes('/', index) ? reference.slice(index + 1) : 'latest';
   }
 
   getImageHash(imageName: string): string {
@@ -2497,10 +2579,11 @@ export class ContainerProviderRegistry {
     }
 
     // convert env from array of string to an object with key being the env name
+    // the value may be empty or contain '=' signs, entries without '=' are skipped
     const updatedEnv = options.Env?.reduce((acc: { [key: string]: string }, env) => {
-      const [key, value] = env.split('=');
-      if (key && value) {
-        acc[key] = value;
+      const [key, ...values] = env.split('=');
+      if (key && values.length > 0) {
+        acc[key] = values.join('=');
       }
       return acc;
     }, {});
@@ -2621,6 +2704,8 @@ export class ContainerProviderRegistry {
       devices: updatedDevices,
       secrets: options.Secrets,
       secret_env: options.SecretEnv,
+      terminal: options.Tty,
+      stdin: options.OpenStdin,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);
