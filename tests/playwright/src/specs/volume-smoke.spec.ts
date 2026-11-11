@@ -21,7 +21,13 @@ import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
 import { VolumesPage } from '/@/model/pages/volumes-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '/@/utility/operations';
+import {
+  deleteContainer,
+  deleteImage,
+  readFileInVolumeFromCLI,
+  resetPodmanMachinesFromCLI,
+} from '/@/utility/operations';
+import { isLinux } from '/@/utility/platform';
 import { logContainerExecDiagnostics, logPodmanEnvironmentDiagnostics } from '/@/utility/podman-diagnostics';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
@@ -40,12 +46,22 @@ const containerStartParams: ContainerInteractiveParams = {
 };
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
+  test.setTimeout(600_000);
   runner.setVideoAndTraceName('volume-e2e');
 
   await welcomePage.handleWelcomePage(true);
+
+  // Temporary: isolate oom_score_adj failure on an explicitly rootless machine.
+  // Full-suite failures were rootless because enhanced-dashboard recreates default as rootless;
+  // volume-only previously passed against the CI-provisioned rootful machine.
+  if (!isLinux) {
+    process.env.PODMAN_ROOTFUL = '0';
+    await resetPodmanMachinesFromCLI();
+  }
+
   await waitForPodmanMachineStartup(page);
   // Temporary diagnostics for Podman CLI investigation (crun oom_score_adj / interactive exec).
-  logPodmanEnvironmentDiagnostics('volume-smoke-beforeAll');
+  logPodmanEnvironmentDiagnostics('volume-smoke-beforeAll-rootless');
 });
 
 test.afterAll(async ({ runner }) => {
