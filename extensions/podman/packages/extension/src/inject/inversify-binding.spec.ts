@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,20 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
-import { HyperVPrep } from '/@/hyperv/hyperv-prep';
+import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
+import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
 import { InversifyBinding } from './inversify-binding';
-import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
+
+vi.mock(import('/@/platforms/windows/hyperv-prep'));
 
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
@@ -73,6 +78,15 @@ describe('inversifyBinding', () => {
     expect(first).toBe(second);
   });
 
+  test('should bind ExtensionNotifications as a singleton', async () => {
+    const container: InversifyContainer = await inversifyBinding.init();
+
+    const first = container.get(ExtensionNotifications);
+
+    expect(first).toBeInstanceOf(ExtensionNotifications);
+    expect(container.get(ExtensionNotifications)).toBe(first);
+  });
+
   describe('windows', () => {
     let container: InversifyContainer;
     beforeEach(async () => {
@@ -97,6 +111,16 @@ describe('inversifyBinding', () => {
     test('InversifyBinding#init should bind HyperVPrep', async () => {
       expect(container.isBound(HyperVPrep)).toBeTruthy();
     });
+
+    test('InversifyBinding#init should register HyperVPrep as a startup service', async () => {
+      const startupServices = await container.getAllAsync(StartupSymbol);
+
+      expect(startupServices).toEqual([container.get(HyperVPrep)]);
+    });
+
+    test('InversifyBinding#init should not bind SocketCompatibility', async () => {
+      expect(container.isBound(SocketCompatibility)).toBeFalsy();
+    });
   });
 
   describe('macos', () => {
@@ -120,8 +144,19 @@ describe('inversifyBinding', () => {
       expect(value).toBeInstanceOf(PodmanCleanupMacOS);
     });
 
+    test('InversifyBinding#init should bind DarwinSocketCompatibility for SocketCompatibility as a singleton', async () => {
+      const first = container.get(SocketCompatibility);
+
+      expect(first).toBeInstanceOf(DarwinSocketCompatibility);
+      expect(container.get(SocketCompatibility)).toBe(first);
+    });
+
     test('InversifyBinding#init should not bind HyperVPrep', async () => {
       expect(container.isBound(HyperVPrep)).toBeFalsy();
+    });
+
+    test('InversifyBinding#init should not register any startup service', async () => {
+      expect(await container.getAllAsync(StartupSymbol)).toEqual([]);
     });
   });
 
@@ -144,8 +179,16 @@ describe('inversifyBinding', () => {
       }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
     });
 
+    test('InversifyBinding#init should not bind SocketCompatibility', async () => {
+      expect(container.isBound(SocketCompatibility)).toBeFalsy();
+    });
+
     test('InversifyBinding#init should not bind HyperVPrep', async () => {
       expect(container.isBound(HyperVPrep)).toBeFalsy();
+    });
+
+    test('InversifyBinding#init should not register any startup service', async () => {
+      expect(await container.getAllAsync(StartupSymbol)).toEqual([]);
     });
   });
 });

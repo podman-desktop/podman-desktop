@@ -21,7 +21,7 @@ import type { Configuration } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode';
+import type { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 
 import { ExtensionNotifications } from './notifications';
 import { isDisguisedPodman } from './warnings';
@@ -34,6 +34,8 @@ const config: Configuration = {
 
 vi.mock(import('node:fs'));
 vi.mock(import('./warnings'));
+
+let socketCompatibility: SocketCompatibility;
 
 const mockTelemetryLogger: extensionApi.TelemetryLogger = {
   logUsage: vi.fn(),
@@ -51,8 +53,7 @@ beforeEach(() => {
 
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue(config);
 
-  const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
-  mock.mockReturnValue({
+  socketCompatibility = {
     isEnabled: () => false,
     enable: vi.fn(),
     disable: vi.fn(),
@@ -60,14 +61,14 @@ beforeEach(() => {
     tooltipText: (): string => {
       return '';
     },
-  });
+  };
 });
 
 describe('macOS: tests for notifying if disguised podman socket fails / passes', () => {
   beforeEach(() => {
-    // Mock the get compatibility functionality.
+    // Mock the socket compatibility.
     // we will always assuming it's "disabled" for the tests
-    vi.spyOn(compatibilityModeLib, 'getSocketCompatibility').mockReturnValue({
+    socketCompatibility = {
       isEnabled: vi.fn().mockReturnValue(true),
       enable: vi.fn().mockReturnValue(true),
       disable: vi.fn(),
@@ -75,11 +76,11 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
       tooltipText: (): string => {
         return '';
       },
-    });
+    };
   });
 
   test('when isDisguisedPodman is true, error message should NOT be shown', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, socketCompatibility);
 
     // macOS only
     vi.mocked(extensionApi.env).isMac = true;
@@ -99,7 +100,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   });
 
   test('when isDisguisedPodman is false, error message should be shown', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, socketCompatibility);
 
     // macOS only
     vi.mocked(extensionApi.env).isMac = true;
@@ -127,7 +128,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   });
 
   test('when isDisguisedPodman throws an error, telemetryLogUsageMock should be called with error', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, socketCompatibility);
 
     vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(extensionApi.env).isWindows = false;
@@ -148,7 +149,8 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   });
 
   test('do not show error message OR call function if on linux', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    // socket compatibility is only bound on macOS
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, undefined);
 
     // linux
     vi.mocked(extensionApi.env).isMac = false;
@@ -164,7 +166,8 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   });
 
   test('do not show error message OR call function if on windows', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    // socket compatibility is only bound on macOS
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, undefined);
 
     // windows
     vi.mocked(extensionApi.env).isMac = false;
@@ -187,9 +190,9 @@ describe('podman-mac-helper tests', () => {
     vi.mocked(extensionApi.env).isWindows = false;
     vi.mocked(extensionApi.env).isLinux = false;
 
-    // Mock the get compatibility functionality.
+    // Mock the socket compatibility.
     // we just assume that it's false / not enabled by default to test the functionality.
-    vi.spyOn(compatibilityModeLib, 'getSocketCompatibility').mockReturnValue({
+    socketCompatibility = {
       isEnabled: vi.fn(),
       enable: vi.fn().mockReturnValue(false),
       disable: vi.fn(),
@@ -197,11 +200,11 @@ describe('podman-mac-helper tests', () => {
       tooltipText: (): string => {
         return '';
       },
-    });
+    };
   });
 
   test('show setup podman mac helper notification if on mac and podman-mac-helper needs running', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, socketCompatibility);
     vi.mocked(isDisguisedPodman).mockResolvedValue(false);
     await extensionNotifications.checkMacSocket();
 
@@ -218,7 +221,7 @@ describe('podman-mac-helper tests', () => {
   });
 
   test('set do not show configuration setting to true, make sure notification is NOT shown', async () => {
-    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger, socketCompatibility);
 
     // Set configuration to always be true
     // mimicking the 'doNotShow' setting being true

@@ -19,11 +19,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import extensionApi from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { findRunningMachine } from '/@/extension';
 import { execPodman } from '/@/utils/util';
 
+@injectable()
 export class DarwinSocketCompatibility extends SocketCompatibility {
   // Shows the details of the compatibility mode on what we do.
   details = 'the podman-mac-helper binary will be run, unlinking the Docker socket from Podman.';

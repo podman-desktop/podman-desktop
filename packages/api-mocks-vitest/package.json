@@ -38,7 +38,7 @@
     "@podman-desktop/api": "workspace:*",
     "@types/mustache": "^4.2.6",
     "mustache": "^4.2.0",
-    "rimraf": "^6.0.1",
+    "rimraf": "^6.1.4",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   },

@@ -20,10 +20,11 @@ import { arch, release } from 'node:os';
 
 import type { RunError, RunOptions } from '@podman-desktop/api';
 import { env, process as processAPI, window } from '@podman-desktop/api';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { compare } from 'semver';
 
 import type { PodmanConfiguration } from './podman-configuration';
+import { PodmanMachineLifecycle } from './podman-machine-lifecycle';
 import { execPodman, VMTYPE } from './util';
 
 export const ROSETTA_ENABLE_FILE = '/etc/containers/enable-rosetta';
@@ -37,6 +38,11 @@ const PODMAN_MINIMUM_VERSION_FOR_ROSETTA_ENABLE_FILE = '5.6.0';
 
 @injectable()
 export class RosettaProvisioner {
+  constructor(
+    @inject(PodmanMachineLifecycle)
+    private readonly podmanMachineLifecycle: PodmanMachineLifecycle,
+  ) {}
+
   /**
    * Returns true when all conditions for the /etc/containers/enable-rosetta
    * opt-in are satisfied: AppleHV provider on macOS Tahoe+ ARM64 with Rosetta
@@ -100,7 +106,7 @@ export class RosettaProvisioner {
    * Returns true if a restart was performed, false if nothing was needed.
    *
    * Errors during file creation (SSH) are caught and logged as warnings because
-   * the machine is still running. Errors during the stop/start cycle are
+   * the machine is still running. Errors during the machine restart are
    * propagated because the machine state may have changed.
    * https://blog.podman.io/2025/08/podman-5-6-released-rosetta-status-update/
    */
@@ -120,11 +126,9 @@ export class RosettaProvisioner {
     }
     if (!fileCreated) return false;
 
-    const args = machineName ? [machineName] : [];
-    // Stop/start errors propagate — the machine state has changed and the
+    // Restart errors propagate — the machine state has changed and the
     // caller must not report a stale status.
-    await execPodman(['machine', 'stop', ...args], vmType);
-    await execPodman(['machine', 'start', ...args], vmType, options);
+    await this.podmanMachineLifecycle.restart({ machineName, vmType, podmanVersion, runOptions: options });
     return true;
   }
 

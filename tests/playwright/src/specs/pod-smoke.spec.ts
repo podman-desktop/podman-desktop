@@ -20,6 +20,7 @@ import * as os from 'node:os';
 
 import { ContainerState, PodState } from '/@/model/core/states';
 import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
 import { PodsPage } from '/@/model/pages/pods-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage, deletePod } from '/@/utility/operations';
@@ -254,6 +255,45 @@ test.describe('Verification of pod creation workflow', { tag: '@smoke' }, () => 
     await containerDetailsPage.terminalInput.pressSequentially('pwd', { delay: 15 });
     await containerDetailsPage.terminalInput.press('Enter');
     await playExpect(containerDetailsPage.terminalContent).toContainText('app');
+  });
+
+  test('Checking infra container of the pod', async ({ navigationBar }) => {
+    // podman names the infra container <first 12 chars of the pod id>-infra
+    const pods = await navigationBar.openPods();
+    await playExpect.poll(async () => await pods.podExists(podToRun), { timeout: 10_000 }).toBeTruthy();
+    const podDetails = await pods.openPodDetails(podToRun);
+    const podId = await podDetails.getPodId();
+    playExpect(podId, `Could not read the id of pod ${podToRun}`).not.toBe('');
+    const infraContainerName = `${podId.substring(0, 12)}-infra`;
+
+    const containers = await navigationBar.openContainers();
+    await playExpect.poll(async () => containers.containerExists(infraContainerName), { timeout: 10_000 }).toBeTruthy();
+
+    const infraDetailsPage = await containers.openContainersDetails(infraContainerName);
+    await playExpect(infraDetailsPage.heading).toContainText(infraContainerName);
+    await infraDetailsPage.activateTab(ContainerDetailsPage.SUMMARY_TAB);
+    await playExpect(infraDetailsPage.infraContainerBanner).toBeVisible();
+    await playExpect(infraDetailsPage.tabContent.getByRole('cell', { name: podToRun, exact: true })).toBeVisible();
+
+    // terminal tabs are not offered for infra containers
+    await playExpect(infraDetailsPage.tabs.getByRole('link', { name: ContainerDetailsPage.LOGS_TAB })).toBeVisible();
+    await playExpect(
+      infraDetailsPage.tabs.getByRole('link', { name: ContainerDetailsPage.TERMINAL_TAB, exact: true }),
+    ).toHaveCount(0);
+    await playExpect(
+      infraDetailsPage.tabs.getByRole('link', { name: ContainerDetailsPage.TTY_TAB, exact: true }),
+    ).toHaveCount(0);
+
+    // regular containers of the pod still get the terminal tab and no banner
+    const regularDetailsPage = await (await navigationBar.openContainers()).openContainersDetails(
+      `${frontendContainer}-podified`,
+    );
+    await playExpect(regularDetailsPage.heading).toContainText(`${frontendContainer}-podified`);
+    await regularDetailsPage.activateTab(ContainerDetailsPage.SUMMARY_TAB);
+    await playExpect(regularDetailsPage.infraContainerBanner).toHaveCount(0);
+    await playExpect(
+      regularDetailsPage.tabs.getByRole('link', { name: ContainerDetailsPage.TERMINAL_TAB, exact: true }),
+    ).toBeVisible();
   });
 
   test('Checking deployed application', async ({ navigationBar, page }) => {

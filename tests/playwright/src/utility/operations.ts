@@ -28,6 +28,7 @@ import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/t
 import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
 import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ExperimentalPage } from '/@/model/pages/experimental-page';
+import type { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RegistriesPage } from '/@/model/pages/registries-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
@@ -353,7 +354,7 @@ export async function handleEditNetworkDialog(
   },
 ): Promise<void> {
   return test.step(`Handle Update Network dialog for: ${networkName}`, async () => {
-    const dialogTitle = `Update Network ${networkName}`;
+    const dialogTitle = `Update network ${networkName}`;
     const updateDialog = page.getByRole('dialog', { name: dialogTitle });
     await playExpect(updateDialog).toBeVisible();
 
@@ -391,59 +392,6 @@ export async function handleEditNetworkDialog(
     }
 
     await playExpect(updateDialog).not.toBeVisible();
-  });
-}
-
-/**
- * Waits for a Podman machine's connection status to reach a target state on the Settings -> Resources page.
- * If the status appears stuck (still shows a stale value after the initial timeout), navigates to the Dashboard
- * and back to Settings -> Resources to force a UI refresh, then re-checks.
- * @param page playwright's page object
- * @param machineName Name of the Podman machine (e.g. podman-machine-default)
- * @param targetState State the machine connection is expected to reach
- * @param options initialTimeout before forcing a UI refresh, retryTimeout after the refresh (both in ms)
- */
-export async function waitForMachineStatus(
-  page: Page,
-  machineName: string,
-  targetState: ResourceElementState,
-  { initialTimeout = 30_000, retryTimeout = 30_000 }: { initialTimeout?: number; retryTimeout?: number } = {},
-): Promise<void> {
-  const RESOURCE_NAME: string = 'podman';
-  const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, machineName);
-  // A missing card is treated as a pending state, innerText() would otherwise reject and skip the refresh below.
-  const readStatus = async (card: ResourceConnectionCardPage): Promise<string> => {
-    if ((await card.resourceElementConnectionStatus.count()) === 0) return '';
-    return card.resourceElementConnectionStatus.innerText();
-  };
-  const hasTargetState = async (card: ResourceConnectionCardPage): Promise<boolean> =>
-    (await readStatus(card)).includes(targetState);
-
-  await waitUntil(() => hasTargetState(machineCard), {
-    timeout: initialTimeout,
-    sendError: false,
-  });
-
-  const currentStatus = await readStatus(machineCard);
-  if (currentStatus.includes(targetState)) return;
-
-  console.log(
-    `Machine ${machineName} status is "${currentStatus}" after ${initialTimeout}ms, expected "${targetState}". ` +
-      'Navigating away and back to force UI refresh.',
-  );
-
-  const navigationBar = new NavigationBar(page);
-  await navigationBar.openDashboard();
-  const settingsBar = await navigationBar.openSettings();
-  await settingsBar.resourcesTab.click();
-
-  const resourcesPage = new ResourcesPage(page);
-  await playExpect(resourcesPage.heading).toBeVisible();
-
-  const refreshedCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, machineName);
-  await waitUntil(() => hasTargetState(refreshedCard), {
-    timeout: retryTimeout,
-    sendError: true,
   });
 }
 
@@ -541,6 +489,84 @@ async function stopPodmanMachineViaCLI(machineVisibleName: string): Promise<void
 async function waitForPodmanMachineStoppedState(podmanResourceCard: ResourceConnectionCardPage): Promise<void> {
   await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
     timeout: 30_000,
+  });
+}
+
+const PODMAN_RESOURCE_NAME = 'podman';
+
+/**
+ * Waits for a Podman machine's status to reach a target state, with a
+ * navigate-away-and-back retry when the UI label appears stuck.
+ *
+ * Works on both the **Resources page** (default) and the **machine details page**
+ * (pass `machineDetails`).  The status label can become stale (e.g. stuck on
+ * STARTING when the machine is actually RUNNING).  Navigating to Dashboard and
+ * back forces the renderer to re-mount the component with fresh backend data.
+ *
+ * Uses `toContainText` (substring match) rather than `toHaveText` (exact match)
+ * so the assertion tolerates status labels that include extra context alongside
+ * the core state string.
+ *
+ * @param page - Playwright page object
+ * @param machineName - The machine's connection name (hyphenated form,
+ *   e.g. `'podman-machine-default'`) used to locate its resource card
+ * @param targetState - Expected status text (e.g. ResourceElementState.Running)
+ * @param options.initialTimeout - How long to wait before triggering the navigation retry (default 90 000 ms)
+ * @param options.retryTimeout - How long to wait after the hard refresh (default 30 000 ms)
+ * @param options.machineDetails - When provided, the function checks the status on
+ *   the machine details page and navigates back into it after the refresh.
+ *   When omitted, the function stays on the Resources page.
+ */
+export async function waitForMachineStatus(
+  page: Page,
+  machineName: string,
+  targetState: ResourceElementState,
+  {
+    initialTimeout = 90_000,
+    retryTimeout = 30_000,
+    machineDetails,
+  }: { initialTimeout?: number; retryTimeout?: number; machineDetails?: PodmanMachineDetails } = {},
+): Promise<void> {
+  return test.step(`Wait for machine "${machineName}" to reach "${targetState}"`, async () => {
+    const statusLocator = machineDetails
+      ? machineDetails.podmanMachineStatus
+      : new ResourceConnectionCardPage(page, PODMAN_RESOURCE_NAME, machineName).resourceElementConnectionStatus;
+
+    // First attempt
+    try {
+      await playExpect(statusLocator).toContainText(targetState, { timeout: initialTimeout });
+      return;
+    } catch {
+      const currentStatus = await statusLocator.innerText({ timeout: 5_000 }).catch(() => 'unavailable');
+      console.log(
+        `Machine ${machineName} status is "${currentStatus}" after ${initialTimeout}ms, expected "${targetState}". ` +
+          'Navigating away and back to force UI refresh.',
+      );
+    }
+
+    // Navigate away (Dashboard) and back (Settings → Resources) to force refresh
+    const navigationBar = new NavigationBar(page);
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.resourcesTab.click();
+
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect(resourcesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await resourcesPage.resourceCardIsVisible(PODMAN_RESOURCE_NAME), { timeout: 15_000 })
+      .toBeTruthy();
+    const podmanConnections = new ResourceConnectionCardPage(page, PODMAN_RESOURCE_NAME, machineName);
+    await playExpect(podmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
+    await playExpect(podmanConnections.resourceElement).toBeVisible({ timeout: 30_000 });
+
+    if (machineDetails) {
+      await playExpect(podmanConnections.resourceElementDetailsButton).toBeVisible({ timeout: 30_000 });
+      await podmanConnections.resourceElementDetailsButton.click();
+      await playExpect(machineDetails.podmanMachineStatus).toBeVisible({ timeout: 10_000 });
+    }
+
+    // Second attempt after the hard refresh
+    await playExpect(statusLocator).toContainText(targetState, { timeout: retryTimeout });
   });
 }
 

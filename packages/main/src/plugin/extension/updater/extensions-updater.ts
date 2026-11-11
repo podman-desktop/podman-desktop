@@ -27,6 +27,8 @@ import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalo
 import { ExtensionInstaller } from '/@/plugin/extension/extension-installer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
+import { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import product from '/@product.json' with { type: 'json' };
 
@@ -47,6 +49,8 @@ export class ExtensionsUpdater {
     private extensionInstaller: ExtensionInstaller,
     @inject(Telemetry)
     private telemetry: Telemetry,
+    @inject(TaskManager)
+    private taskManager: TaskManager,
   ) {}
 
   async init(): Promise<void> {
@@ -226,10 +230,17 @@ export class ExtensionsUpdater {
       eventName = 'extension-update-manual';
     }
 
+    // the task covers the whole update, from stopping the current version to installing the new one
+    let task: Task | undefined;
     try {
       const installedExtension = (await this.extensionLoader.listExtensions()).find(
         extension => extension.id === extensionId,
       );
+      const name = installedExtension?.displayName ?? extensionId;
+      const version = installedExtension?.update?.version;
+      task = this.taskManager.createTask({
+        title: version ? `Updating ${name} to v${version}` : `Updating ${name}`,
+      });
       if (installedExtension?.bundled) {
         // a bundled extension cannot be uninstalled: stop it, the new version replaces it
         await this.extensionLoader.replaceBundledExtension(extensionId);
@@ -243,10 +254,13 @@ export class ExtensionsUpdater {
       };
 
       // install the extension
-      await this.extensionInstaller.installFromImage(reportMessage, reportMessage, reportMessage, ociUri);
+      await this.extensionInstaller.installFromImageInTask(task, reportMessage, reportMessage, reportMessage, ociUri);
     } catch (err) {
       console.error(`Error while updating extension ${extensionId}:`, err);
       telemetryOptions.error = err;
+      if (task) {
+        task.error = String(err);
+      }
     } finally {
       this.telemetry.track(eventName, telemetryOptions);
     }

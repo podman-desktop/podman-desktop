@@ -17,10 +17,10 @@
   },
   "devDependencies": {
     "@podman-desktop/api": "workspace:*",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "dependencies": {
     "@desktop-framework/api": "workspace:*",
-    "electron": "44.9.1"
+    "electron": "45.2.3"
   }
 }

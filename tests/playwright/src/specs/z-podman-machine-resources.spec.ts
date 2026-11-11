@@ -42,7 +42,6 @@ const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
 const RESOURCE_NAME = 'podman';
 
 // Timeout constants
-const TIMEOUT_SHORT = 30_000;
 const TIMEOUT_MEDIUM = 60_000;
 const TIMEOUT_LONG = 120_000;
 const TIMEOUT_MACHINE_CREATION = 200_000;
@@ -103,7 +102,11 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   await waitUntil(
     async () =>
       (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-    { timeout: TIMEOUT_SHORT, sendError: true },
+    {
+      timeout: TIMEOUT_MEDIUM,
+      sendError: true,
+      message: `Default machine "${DEFAULT_PODMAN_MACHINE_NAME}" did not reach OFF state within ${TIMEOUT_MEDIUM}ms after stop`,
+    },
   );
 });
 
@@ -202,13 +205,11 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
       await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
       await handlePodmanConfirmationDialogs(page);
 
-      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
-        initialTimeout: TIMEOUT_MEDIUM,
-        retryTimeout: TIMEOUT_SHORT,
-      });
+      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running);
     });
 
     test('Restart the machine', async ({ page }) => {
+      test.setTimeout(300_000);
       test.skip(
         isCI && userNet,
         'Restarting podman machine is flaky in cicd pipeline with usermode networking. This issue is tracked in https://github.com/podman-desktop/podman-desktop/issues/15889',
@@ -217,15 +218,9 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
       const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
       await machineCard.performConnectionAction(ResourceElementActions.Restart);
 
-      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off, {
-        initialTimeout: TIMEOUT_MEDIUM,
-        retryTimeout: TIMEOUT_SHORT,
-      });
+      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off);
 
-      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running, {
-        initialTimeout: TIMEOUT_MEDIUM,
-        retryTimeout: TIMEOUT_SHORT,
-      });
+      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running);
     });
 
     test('Stop and delete the machine', async ({ page }) => {

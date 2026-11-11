@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import { PodmanBinary } from '/@/utils/podman-binary';
+import packageJson from '/@package.json' with { type: 'json' };
 
 @injectable()
 export class PodmanProvider implements Disposable {
@@ -93,10 +94,6 @@ export class PodmanProvider implements Disposable {
         url: 'https://podman.io/getting-started/installation',
       },
       {
-        title: 'Docker compatibility guide',
-        url: 'https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility',
-      },
-      {
         title: 'Join the community',
         url: 'https://podman.io/community/',
       },
@@ -121,6 +118,13 @@ export class PodmanProvider implements Disposable {
         group: corePodmanEngineLinkGroup,
       },
     ];
+
+    if (packageJson.product?.dockerCompatibilityGuide) {
+      providerOptions.links.splice(2, 0, {
+        title: 'Docker compatibility guide',
+        url: packageJson.product.dockerCompatibilityGuide,
+      });
+    }
 
     this.#provider = provider.createProvider(providerOptions);
   }

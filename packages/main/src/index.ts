@@ -18,11 +18,10 @@
 import type { Event } from '@desktop-framework/api';
 import { app, ipcMain, Menu, Tray } from 'electron';
 
-import { restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
-import { type AdditionalData, Main } from './main.js';
+import { Main } from './main.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
@@ -33,7 +32,7 @@ import { WindowHandler } from './system/window/window-handler.js';
 import { AnimatedDevTray } from './tray-animate-dev-icon.js';
 import { AnimatedTray } from './tray-animate-icon.js';
 import { TrayMenu } from './tray-menu.js';
-import { isMac, isWindows, stoppedExtensions } from './util.js';
+import { isMac, stoppedExtensions } from './util.js';
 
 let extensionLoader: ExtensionLoader | undefined;
 let animatedTray: AnimatedTray | undefined;
@@ -44,18 +43,6 @@ podmanDesktopMain.main(process.argv);
 
 // TODO: remove when index.spec.ts tests are migrated in podmanDesktopMain-main.spec
 export const mainWindowDeferred = podmanDesktopMain.mainWindowDeferred;
-
-// do not use _args as it may contain additional arguments
-app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unknown) => {
-  // if we are on Windows, we need to handle the protocol
-  if (isWindows() && additionalData && (additionalData as AdditionalData).argv) {
-    podmanDesktopMain.protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
-  }
-
-  restoreWindow().catch((error: unknown) => {
-    console.error('Error restoring window', error);
-  });
-});
 
 app.on('will-quit', () => {
   // Clean up tray resources
