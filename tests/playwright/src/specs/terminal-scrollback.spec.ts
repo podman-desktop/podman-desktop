@@ -54,15 +54,21 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(90_000);
 
   try {
-    await deleteContainer(page, containerToRun);
-    await deleteImage(page, imageToPull);
+    // restore the default scrollback value first, so it does not depend on the resources cleanup
+    try {
+      const settings = await navigationBar.openSettings();
+      await settings.preferencesTab.click();
+      await new PreferencesPage(page).resetPreference(Preferences.Labels.SCROLLBACK);
+    } catch (error) {
+      console.log('Error resetting the scrollback preference:', error);
+    }
 
-    // restore the default scrollback value
-    const settings = await navigationBar.openSettings();
-    await settings.preferencesTab.click();
-    await new PreferencesPage(page).resetPreference(Preferences.Labels.SCROLLBACK);
-  } catch (error) {
-    console.log('Error during cleanup:', error);
+    try {
+      await deleteContainer(page, containerToRun);
+      await deleteImage(page, imageToPull);
+    } catch (error) {
+      console.log('Error removing the container and image:', error);
+    }
   } finally {
     await runner.close();
   }

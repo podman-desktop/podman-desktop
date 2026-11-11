@@ -404,7 +404,7 @@ and registry-push suites clear images through `ensureNoImagesPresentCLI`.
 | [image-smoke.spec.ts](src/specs/image-smoke.spec.ts)                               | `@smoke`                                        | Pull/search/cancel/details/rename/delete, build/staged build, prune, save/load tar; clears images at setup.                                                                                                                |
 | [image-search.spec.ts](src/specs/image-search.spec.ts)                             | `@smoke`, `@windows_sanity`                     | Search, tag selection, relevance and pull results; clears images at setup.                                                                                                                                                 |
 | [container-smoke.spec.ts](src/specs/container-smoke.spec.ts)                       | `@smoke`                                        | Create/details/terminal/navigation/start/stop/delete, export/import, filter/prune and bulk start.                                                                                                                          |
-| [terminal-scrollback.spec.ts](src/specs/terminal-scrollback.spec.ts)               | None                                            | Sets `terminal.integrated.scrollback` to 150, prints 500 lines in an alpine container's Terminal tab and checks that lines beyond the buffer are discarded; resets the preference and removes the container/image.         |
+| [terminal-scrollback.spec.ts](src/specs/terminal-scrollback.spec.ts)               | None                                            | Sets `terminal.integrated.scrollback` to 150, prints 500 lines in an alpine container's Terminal tab and checks that lines beyond the buffer are discarded; best-effort cleanup (see Notes).                               |
 | [pod-smoke.spec.ts](src/specs/pod-smoke.spec.ts)                                   | `@smoke`                                        | Pull frontend/backend, run containers, podify, inspect, application connectivity, lifecycle and pruning. Needs reachable published application ports.                                                                      |
 | [volume-smoke.spec.ts](src/specs/volume-smoke.spec.ts)                             | `@smoke`; basic workflow also `@windows_sanity` | Create/details/delete/filter/prune plus bootc-image-builder volumes and container mount/file I/O; includes a large image pull.                                                                                             |
 | [network-smoke.spec.ts](src/specs/network-smoke.spec.ts)                           | `@smoke`                                        | Default bridge, custom subnet creation, container attachment/inspect, details deletion and filtering; skips if Podman CLI is absent or below `5.7.0`.                                                                      |
@@ -434,6 +434,13 @@ Compose runtime checks may install Compose on non-macOS hosts and skip
 affected steps after API rate limits. Ensure Compose is already usable where
 installation checks are skipped. Teardown removes its frontend/backend
 containers and images.
+
+The terminal scrollback suite sets `terminal.integrated.scrollback` to `150`
+and creates the `scrollback-container` container from the alpine image. Its
+teardown is best-effort: the preference reset and the container/image removal
+run independently and failures are only logged, so a failed run can leave the
+container or image behind (an image still used by another container is not
+deleted) or, if the reset fails, the preference at `150`.
 
 The comprehensive navigation suite currently skips its Kubernetes navigation,
 stopped-machine, extension-webview, and attached-TTY regression placeholders;
