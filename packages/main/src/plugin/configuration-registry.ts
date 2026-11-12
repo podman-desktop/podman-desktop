@@ -49,7 +49,7 @@ import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
-import { MacManagedConfiguration } from './mac-managed-configuration.js';
+import type { ManagedSettings } from './managed-settings.js';
 import { Disposable } from './types/disposable.js';
 import { AtomicFileWriter } from './util/atomic-file-writer.js';
 
@@ -82,8 +82,6 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
     private defaultConfiguration: DefaultConfiguration,
     @inject(LockedConfiguration)
     private lockedConfiguration: LockedConfiguration,
-    @inject(MacManagedConfiguration)
-    private macManagedConfiguration: MacManagedConfiguration,
   ) {
     this.configurationProperties = {};
     this.configurationContributors = [];
@@ -99,7 +97,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
     return path.resolve(this.directories.getConfigurationDirectory(), 'settings.json');
   }
 
-  public async init(): Promise<NotificationCardOptions[]> {
+  public async init(managedSettings?: ManagedSettings): Promise<NotificationCardOptions[]> {
     const notifications: NotificationCardOptions[] = [];
 
     const settingsFile = this.getSettingsFile();
@@ -143,18 +141,17 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
       configData = {};
     }
 
-    // Plist values override JSON values within the same configuration scope.
-    const managedPreferences = await this.macManagedConfiguration.getContent();
-    configData = { ...configData, ...managedPreferences.user };
-    const defaults = { ...(await this.defaultConfiguration.getContent()), ...managedPreferences.defaults };
+    // Platform preferences override JSON values within the same configuration scope.
+    configData = { ...configData, ...managedSettings?.user };
+    const defaults = { ...(await this.defaultConfiguration.getContent()), ...managedSettings?.defaults };
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, defaults);
 
     // Load managed locked
     const locked = { ...(await this.lockedConfiguration.getContent()) };
-    if (managedPreferences.locked.length > 0) {
+    if (managedSettings && managedSettings.locked.length > 0) {
       const jsonLocked = locked[CONFIGURATION_LOCKED_KEY];
       locked[CONFIGURATION_LOCKED_KEY] = [
-        ...new Set([...(Array.isArray(jsonLocked) ? jsonLocked : []), ...managedPreferences.locked]),
+        ...new Set([...(Array.isArray(jsonLocked) ? jsonLocked : []), ...managedSettings.locked]),
       ];
     }
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, locked);

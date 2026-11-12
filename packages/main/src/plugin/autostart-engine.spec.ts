@@ -28,9 +28,7 @@ import { AutostartEngine } from './autostart-engine.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
-import { LegacyDirectories } from './directories-legacy.js';
 import type { LockedConfiguration } from './locked-configuration.js';
-import { MacManagedConfiguration } from './mac-managed-configuration.js';
 import type { ProviderRegistry } from './provider-registry.js';
 
 let configurationRegistry: ConfigurationRegistry;
@@ -44,8 +42,6 @@ const mockRegisterConfiguration = vi.fn();
 const mockRunAutostart = vi.fn().mockResolvedValue('');
 
 vi.mock(import('/@product.json'));
-vi.mock(import('./directories-legacy.js'));
-vi.mock(import('./mac-managed-configuration.js'));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -59,7 +55,6 @@ beforeAll(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
-    new MacManagedConfiguration(new LegacyDirectories()),
   );
   providerRegistry = {} as unknown as ProviderRegistry;
   autostartEngine = new AutostartEngine(configurationRegistry, providerRegistry);

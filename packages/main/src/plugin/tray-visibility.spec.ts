@@ -16,18 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { ApiSenderType } from '@desktop-framework/api/api-sender';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test } from 'vitest';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
-import { LegacyDirectories } from './directories-legacy.js';
 import type { LockedConfiguration } from './locked-configuration.js';
-import { MacManagedConfiguration } from './mac-managed-configuration.js';
 import { TrayVisibility } from './tray-visibility.js';
-
-vi.mock(import('./directories-legacy.js'));
-vi.mock(import('./mac-managed-configuration.js'));
 
 let trayVisibility: TrayVisibility;
 let configurationRegistry: ConfigurationRegistry;
@@ -38,7 +33,6 @@ beforeEach(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
-    new MacManagedConfiguration(new LegacyDirectories()),
   );
   trayVisibility = new TrayVisibility(configurationRegistry);
 });
