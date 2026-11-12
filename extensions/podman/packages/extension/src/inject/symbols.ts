@@ -21,3 +21,7 @@ export const TelemetryLoggerSymbol = Symbol.for('TelemetryLogger');
  * Symbol for {@link import('@podman-desktop/api').ProviderCleanup}
  */
 export const ProviderCleanupSymbol = Symbol.for('ProviderCleanup');
+/**
+ * Symbol for services instantiated when the inversify container is initialized
+ */
+export const StartupSymbol = Symbol.for('Startup');

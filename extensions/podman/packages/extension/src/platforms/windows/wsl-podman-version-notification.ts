@@ -44,7 +44,7 @@ export class WSLPodmanVersionNotification {
   @postConstruct()
   init(): void {
     this.#updateVersionListener = this.podmanProvider.provider.onDidUpdateVersion(() => {
-      // drop the cached version before reading it (see HyperVPrep)
+      // drop the cached version before reading it, the binary was just updated
       this.podmanBinary.invalidate();
       this.refresh().catch(console.error);
     });
