@@ -202,6 +202,13 @@ const PODMAN_INSTALL_MOCK: PodmanInstall = {
 const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
+<<<<<<< HEAD
+=======
+  removeStaleApiSocket: vi.fn(),
+  wslPodmanVersionCheck: {
+    executeFor: vi.fn(),
+  },
+>>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
 } as unknown as WinPlatform;
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
@@ -260,6 +267,7 @@ beforeEach(async () => {
   };
   vi.resetAllMocks();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
+  vi.mocked(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).mockResolvedValue({ successful: true });
 
   // Mock withProgress to execute the task immediately
   vi.mocked(extensionApi.window.withProgress).mockImplementation((_options, task) => {
@@ -874,6 +882,71 @@ describe('createMachine on windows without an explicit provider', () => {
           CONTAINERS_MACHINE_PROVIDER: 'hyperv',
         },
       },
+    );
+  });
+});
+
+describe('createMachine on windows with a WSL version incompatible with Podman', () => {
+  const machineParams = {
+    'podman.factory.machine.cpus': '2',
+    'podman.factory.machine.image': 'path',
+  };
+
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.1.4' });
+    vi.mocked(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).mockResolvedValue({
+      successful: false,
+      description: 'WSL is too old.',
+      docLinksDescription: 'Update WSL.',
+    });
+  });
+
+  test('fails early for a WSL machine', async () => {
+    await expect(
+      extension.createMachine({ ...machineParams, 'podman.factory.machine.win.provider': 'wsl' }, podmanConfiguration),
+    ).rejects.toThrow('WSL is too old. Update WSL.');
+
+    expect(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).toHaveBeenCalledWith('6.1.4');
+
+    expect(extensionApi.process.exec).not.toHaveBeenCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.anything(),
+    );
+    await waitTelemetryLoggerUsage();
+    expect(telemetryLogger.logUsage).toBeCalledWith(
+      'podman.machine.init',
+      expect.objectContaining({ provider: 'wsl', errorCode: 'ErrUnsupportedWSLVersion' }),
+    );
+  });
+
+  test('creates a Hyper-V machine', async () => {
+    await extension.createMachine(
+      { ...machineParams, 'podman.factory.machine.win.provider': 'hyperv' },
+      podmanConfiguration,
+    );
+
+    expect(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).not.toHaveBeenCalled();
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.objectContaining({ env: { CONTAINERS_MACHINE_PROVIDER: 'hyperv' } }),
+    );
+  });
+
+  test('creates a WSL machine when WSL is compatible', async () => {
+    vi.mocked(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).mockResolvedValue({ successful: true });
+
+    await extension.createMachine(
+      { ...machineParams, 'podman.factory.machine.win.provider': 'wsl' },
+      podmanConfiguration,
+    );
+
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.objectContaining({ env: { CONTAINERS_MACHINE_PROVIDER: 'wsl' } }),
     );
   });
 });
