@@ -143,10 +143,7 @@ async function importContainers(): Promise<void> {
         <!-- Keep file paths and editable image names aligned within the modal. -->
         <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
           <span class="text-sm font-semibold">Image path</span>
-          <div>
-            <span class="text-sm font-semibold">Image name</span>
-            <p class="text-xs text-(--pd-content-text)">e.g. {IMAGE_NAME_EXAMPLE}</p>
-          </div>
+          <span class="text-sm font-semibold">Image name</span>
           <span></span>
           {#each containersToImport as containerToImport, index (containerToImport)}
             <div class="col-span-3 grid grid-cols-subgrid items-center gap-2" role="group" aria-label={containerToImport.fileName}>
