@@ -462,6 +462,39 @@
           "when": "!onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists && !isLinux"
         },
         {
+          "id": "checkHyperVPrepCommand",
+          "title": "Checking Hyper-V preparation",
+          "when": "!onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists && isWindows",
+          "command": "podman.onboarding.checkHyperVPrep",
+          "completionEvents": [
+            "onCommand:podman.onboarding.checkHyperVPrep"
+          ]
+        },
+        {
+          "id": "hypervPrepView",
+          "title": "Prepare Hyper-V for non-administrator use",
+          "when": "isWindows && podman.hypervPrepSupported && podman.hypervPrepNotApplied && onboardingContext:hypervPrepAvailable",
+          "content": [
+            [
+              {
+                "value": "${onboardingContext:hypervPrepSummary}"
+              }
+            ],
+            [
+              {
+                "value": "With Podman 6 or later, prepare Hyper-V once to manage Hyper-V machines without running Podman Desktop as an administrator. The command requests administrator approval (UAC).\n\nThis step is optional. Click **Next** to continue without preparing Hyper-V, for example if you plan to use WSL.",
+                "when": "onboardingContext:hypervPrepOutcome == pending"
+              }
+            ],
+            [
+              {
+                "value": ":button[Prepare Hyper-V]{command=podman.onboarding.hypervPrep}",
+                "when": "onboardingContext:hypervPrepOutcome == pending"
+              }
+            ]
+          ]
+        },
+        {
           "id": "createPodmanMachineCommand",
           "title": "Create a Podman machine",
           "when": "!onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists && !isLinux",

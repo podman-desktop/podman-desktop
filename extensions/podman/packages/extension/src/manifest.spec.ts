@@ -29,3 +29,40 @@ test('binary path has an explicit label without changing its configuration contr
     description: 'Custom path to Podman binary (Default is blank)',
   });
 });
+
+test('Hyper-V preparation onboarding is offered before machine creation with a centered prepare button', () => {
+  const steps = manifest.contributes.onboarding.steps;
+  const checkIndex = steps.findIndex(step => step.id === 'checkHyperVPrepCommand');
+  const prepIndex = steps.findIndex(step => step.id === 'hypervPrepView');
+  const createMachineIndex = steps.findIndex(step => step.id === 'createPodmanMachineCommand');
+
+  expect(checkIndex).toBeGreaterThan(-1);
+  expect(prepIndex).toBeGreaterThan(checkIndex);
+  expect(createMachineIndex).toBeGreaterThan(prepIndex);
+  expect(steps[checkIndex]).toMatchObject({
+    when: expect.stringContaining('isWindows'),
+    command: 'podman.onboarding.checkHyperVPrep',
+    completionEvents: ['onCommand:podman.onboarding.checkHyperVPrep'],
+  });
+  expect(steps[prepIndex]).toMatchObject({
+    when: expect.stringMatching(/isWindows.*onboardingContext:hypervPrepAvailable/),
+  });
+  expect(steps[prepIndex]?.completionEvents).toBeUndefined();
+
+  const prepRows = steps[prepIndex]?.content;
+  expect(prepRows).toHaveLength(3);
+  expect(prepRows?.[0]).toEqual([{ value: '${onboardingContext:hypervPrepSummary}' }]);
+  expect(prepRows?.[1]).toEqual([
+    {
+      value: expect.stringContaining('This step is optional. Click **Next**'),
+      when: 'onboardingContext:hypervPrepOutcome == pending',
+    },
+  ]);
+  // the button is alone in its row so the onboarding layout centers it
+  expect(prepRows?.[2]).toEqual([
+    {
+      value: ':button[Prepare Hyper-V]{command=podman.onboarding.hypervPrep}',
+      when: 'onboardingContext:hypervPrepOutcome == pending',
+    },
+  ]);
+});
