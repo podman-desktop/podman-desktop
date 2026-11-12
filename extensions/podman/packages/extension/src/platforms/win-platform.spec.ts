@@ -28,6 +28,7 @@ import type { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualizati
 import type { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import type { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import type { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import type { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import type { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import type { WSL2Check } from '/@/checks/windows/wsl2-check';
 
@@ -48,6 +49,10 @@ const VIRTUALIZATION_FIRMWARE_CHECK_MOCK = {
 const VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK = { execute: vi.fn() } as unknown as VirtualMachinePlatformCheck;
 const WSL_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as WSLVersionCheck;
 const WSL2_CHECK_MOCK = { execute: vi.fn() } as unknown as WSL2Check;
+const WSL_PODMAN_VERSION_CHECK_MOCK = {
+  title: 'WSL Version for Podman',
+  execute: vi.fn(),
+} as unknown as WSLPodmanVersionCheck;
 
 const SUCCESSFUL_CHECK_RESULT: CheckResult = { successful: true };
 const FAILED_CHECK_RESULT: CheckResult = { successful: false };
@@ -67,14 +72,36 @@ beforeEach(() => {
     VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK,
     WSL_VERSION_CHECK_MOCK,
     WSL2_CHECK_MOCK,
+    WSL_PODMAN_VERSION_CHECK_MOCK,
   );
 });
 
 test('getPreflightChecks should include a warning-wrapped BIOS virtualization check', () => {
   const checks = winPlatform.getPreflightChecks();
-  expect(checks).toHaveLength(6);
+  expect(checks).toHaveLength(7);
   expect(checks[3]).toBeInstanceOf(WarningCheck);
   expect(checks[3].title).toEqual('BIOS Virtualization Enabled');
+});
+
+test('getPreflightChecks should include a warning-wrapped WSL check for the bundled Podman version', async () => {
+  vi.mocked(WSL_PODMAN_VERSION_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  const checks = winPlatform.getPreflightChecks();
+
+  expect(checks[6]).toBeInstanceOf(WarningCheck);
+  expect(checks[6].title).toEqual('WSL Version for Podman');
+  await expect(checks[6].execute()).resolves.toEqual({ successful: false, severity: 'warning' });
+});
+
+test('getUpdatePreflightChecks should only include a warning-wrapped WSL check for the bundled Podman version', async () => {
+  vi.mocked(WSL_PODMAN_VERSION_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  const checks = winPlatform.getUpdatePreflightChecks();
+
+  expect(checks).toHaveLength(1);
+  expect(checks[0]).toBeInstanceOf(WarningCheck);
+  expect(checks[0].title).toEqual('WSL Version for Podman');
+  await expect(checks[0].execute()).resolves.toEqual({ successful: false, severity: 'warning' });
 });
 
 test('isHyperVEnabled should return false if it is not a Windows environment', async () => {

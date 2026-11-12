@@ -28,6 +28,7 @@ import { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-fi
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
@@ -62,6 +63,8 @@ export class WinPlatform {
     readonly wSLVersionCheck: WSLVersionCheck,
     @inject(WSL2Check)
     readonly wSL2Check: WSL2Check,
+    @inject(WSLPodmanVersionCheck)
+    readonly wslPodmanVersionCheck: WSLPodmanVersionCheck,
   ) {
     this.hyperVSequenceCheck = new SequenceCheck('Hyper-V Platform', [this.hyperVPodmanVersionCheck, this.hyperVCheck]);
 
@@ -80,7 +83,12 @@ export class WinPlatform {
       new WarningCheck(this.virtualizationFirmwareCheck),
       new WarningCheck(this.wslCheck),
       new WarningCheck(this.hyperVSequenceCheck),
+      new WarningCheck(this.wslPodmanVersionCheck),
     ];
+  }
+
+  getUpdatePreflightChecks(): InstallCheck[] {
+    return [new WarningCheck(this.wslPodmanVersionCheck)];
   }
 
   async isWSLEnabled(): Promise<boolean> {

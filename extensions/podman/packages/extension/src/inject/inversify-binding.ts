@@ -31,6 +31,7 @@ import { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-fi
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
@@ -40,6 +41,11 @@ import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
+<<<<<<< HEAD
+=======
+import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { WSLPodmanVersionNotification } from '/@/platforms/windows/wsl-podman-version-notification';
+>>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
@@ -76,6 +82,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(VirtualMachinePlatformCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSLVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WSLPodmanVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVRunningCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVInstalledCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(UserAdminCheck).toSelf().inSingletonScope();
@@ -87,6 +94,13 @@ export class InversifyBinding {
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupWindows).inSingletonScope();
+<<<<<<< HEAD
+=======
+      this.#inversifyContainer.bind(HyperVPrep).toSelf().inSingletonScope();
+      this.#inversifyContainer.bind(StartupSymbol).toService(HyperVPrep);
+      this.#inversifyContainer.bind(WSLPodmanVersionNotification).toSelf().inSingletonScope();
+      this.#inversifyContainer.bind(StartupSymbol).toService(WSLPodmanVersionNotification);
+>>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupMacOS).inSingletonScope();
