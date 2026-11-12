@@ -26,13 +26,9 @@ import { ColorRegistry } from './color-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
-import { LegacyDirectories } from './directories-legacy.js';
 import type { LockedConfiguration } from './locked-configuration.js';
-import { MacManagedConfiguration } from './mac-managed-configuration.js';
 
 vi.mock(import('./configuration-registry.js'));
-vi.mock(import('./directories-legacy.js'));
-vi.mock(import('./mac-managed-configuration.js'));
 
 class TestColorRegistry extends ColorRegistry {
   override initColors(): void {
@@ -55,7 +51,6 @@ beforeEach(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
-    new MacManagedConfiguration(new LegacyDirectories()),
   );
   registry = new TestColorRegistry(apiSender, configurationRegistry);
   registry.initColors();
