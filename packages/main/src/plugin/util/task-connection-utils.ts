@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 
 import type { CancellationTokenRegistry } from '/@/plugin/cancellation-token-registry.js';
@@ -26,6 +27,7 @@ interface TaskConnectionUtilsParams {
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd;
   cancellationTokenRegistry: CancellationTokenRegistry;
   taskManager: TaskManager;
+  apiSender: ApiSenderType;
 }
 
 export interface TaskOptions {
@@ -51,7 +53,6 @@ export class TaskConnectionUtils {
 
     const task = this.dependencies.taskManager.createTask({
       title: options.title,
-      connectionTaskId: options.connectionTaskId,
       action: {
         name: 'Open task',
         execute: () => {
@@ -59,6 +60,14 @@ export class TaskConnectionUtils {
         },
       },
     });
+
+    // link the task to the provider connection operation of the renderer
+    if (options.connectionTaskId !== undefined) {
+      this.dependencies.apiSender.send('connection-task-created', {
+        taskId: task.id,
+        connectionTaskId: options.connectionTaskId,
+      });
+    }
 
     try {
       await options.execute(logger, token);

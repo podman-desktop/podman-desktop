@@ -123,7 +123,6 @@ export class TaskManager {
     action?: TaskAction;
     cancellable?: boolean;
     cancellationTokenSourceId?: number;
-    connectionTaskId?: number;
   }): Task {
     this.taskId++;
 
@@ -140,10 +139,6 @@ export class TaskManager {
       task.cancellationTokenSourceId = options?.cancellationTokenSourceId;
     }
     this.registerTask(task);
-    // link the taskId to the provider connection operation id
-    if (options?.connectionTaskId !== undefined) {
-      this.apiSender.send('connection-task-created', { taskId: task.id, connectionTaskId: options.connectionTaskId });
-    }
     return task;
   }
 

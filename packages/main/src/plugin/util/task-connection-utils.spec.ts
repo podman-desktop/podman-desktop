@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { CancellationTokenSource } from '/@/plugin/cancellation-token.js';
@@ -44,11 +45,16 @@ const taskManager = {
   createTask: vi.fn(),
 } as unknown as TaskManager;
 
+const apiSender = {
+  send: vi.fn(),
+} as unknown as ApiSenderType;
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
 
   originalTask = {
+    id: 'task-1',
     status: 'in-progress',
     error: '',
   } as unknown as Task;
@@ -57,6 +63,7 @@ beforeEach(() => {
     getLogHandler: vi.fn(),
     cancellationTokenRegistry,
     taskManager,
+    apiSender,
   };
 
   vi.mocked(options.getLogHandler).mockReturnValue(getLogHandlerResult);
@@ -87,8 +94,8 @@ test('createTask is called', async () => {
     throw new Error('param should be defined');
   }
   expect(createTaskParams.title).toEqual('a title');
-  expect(createTaskParams.connectionTaskId).toEqual(7);
   expect(createTaskParams.action?.name).toEqual(`Open task`);
+  expect(apiSender.send).toHaveBeenCalledWith('connection-task-created', { taskId: 'task-1', connectionTaskId: 7 });
 
   // check that action.execute passed to createTask is calling options.navigateToTask
   const execute = createTaskParams.action?.execute;
@@ -115,6 +122,7 @@ test(`options.execute is called and is resolved`, async () => {
   const result = await taskConnectionUtils.withTask(options);
 
   expect(result).toBeUndefined();
+  expect(apiSender.send).not.toHaveBeenCalled();
   expect(getLogHandlerResult.onEnd).toHaveBeenCalled();
   expect(getLogHandlerResult.error).not.toHaveBeenCalled();
   expect(originalTask.status).toEqual('success');

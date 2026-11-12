@@ -2686,6 +2686,13 @@ export class PluginSystem {
       },
     );
 
+    const taskConnectionUtils = new TaskConnectionUtils({
+      getLogHandler: this.getLogHandler.bind(this),
+      cancellationTokenRegistry,
+      taskManager,
+      apiSender,
+    });
+
     this.ipcHandle(
       'provider-registry:editProviderConnectionLifecycle',
       async (
@@ -2698,38 +2705,16 @@ export class PluginSystem {
         tokenId: number | undefined,
         taskId: number | undefined,
       ): Promise<void> => {
-        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
-        let token;
-        if (tokenId) {
-          const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
-          token = tokenSource?.token;
-        }
-
-        const task = taskManager.createTask({
-          title: `Updating ${providerConnectionInfo.name} provider`,
+        return taskConnectionUtils.withTask({
+          loggerId,
+          tokenId,
           connectionTaskId: taskId,
-          action: {
-            name: 'Open task',
-            execute: () => {
-              navigationManager.navigateToProviderTask(providerId, taskId).catch((err: unknown) => console.error(err));
-            },
-          },
+          title: `Updating ${providerConnectionInfo.name} provider`,
+          navigateToTask: () => navigationManager.navigateToProviderTask(providerId, taskId),
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
+            providerRegistry.editProviderConnection(providerId, providerConnectionInfo, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while updating container provider: ${err}`,
         });
-
-        return providerRegistry
-          .editProviderConnection(providerId, providerConnectionInfo, params, logger, token)
-          .then(result => {
-            task.status = 'success';
-            return result;
-          })
-          .catch((err: unknown) => {
-            task.error = `Something went wrong while updating container provider: ${err}`;
-            logger.error(err);
-            throw err;
-          })
-          .finally(() => {
-            logger.onEnd();
-          });
       },
     );
 
@@ -2768,12 +2753,6 @@ export class PluginSystem {
           });
       },
     );
-
-    const taskConnectionUtils = new TaskConnectionUtils({
-      getLogHandler: this.getLogHandler.bind(this),
-      cancellationTokenRegistry,
-      taskManager,
-    });
 
     this.ipcHandle(
       'provider-registry:createContainerProviderConnection',
