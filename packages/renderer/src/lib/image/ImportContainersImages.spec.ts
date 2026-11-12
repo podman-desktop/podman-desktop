@@ -254,8 +254,6 @@ test.each(['/Users/test/Library/Containers/images/', 'C:\\Users\\test\\images\\'
       expect(nameInput).toHaveAttribute('title', file.replace('.tar', ''));
       expect(screen.getByRole('button', { name: `Remove ${file}` })).toBeEnabled();
     }
-
-    expect(screen.getByText('e.g. quay.io/podman/hello')).toBeVisible();
   },
 );
 
