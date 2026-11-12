@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-latest', 'macos-latest', 'windows-2025' ]
+        os: [ 'ubuntu-24.04', 'macos-latest', 'windows-2025' ]
         timeout: [ 15 ]
     steps:
       - name: Checkout
