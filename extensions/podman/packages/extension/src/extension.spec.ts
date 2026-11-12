@@ -202,13 +202,9 @@ const PODMAN_INSTALL_MOCK: PodmanInstall = {
 const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
-<<<<<<< HEAD
-=======
-  removeStaleApiSocket: vi.fn(),
   wslPodmanVersionCheck: {
     executeFor: vi.fn(),
   },
->>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
 } as unknown as WinPlatform;
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
