@@ -132,6 +132,7 @@ export class Main implements IDisposable {
      * Setup {@link ElectronApp.on} listeners
      */
     this.app.on('second-instance', this.onSecondInstance.bind(this));
+    this.app.on('will-finish-launching', this.onWillFinishLaunching.bind(this));
     this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
     this.app.on('before-quit', this.onBeforeQuit.bind(this));
 
@@ -169,6 +170,18 @@ export class Main implements IDisposable {
 
     restoreWindow().catch((error: unknown) => {
       console.error('Error restoring window', error);
+    });
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('will-finish-launching')} event
+   * Handle the open-url event (macOS/Linux). For Windows, it needs to be handled in the second-instance event
+   */
+  protected onWillFinishLaunching(): void {
+    this.app.on('open-url', (event, url) => {
+      event.preventDefault();
+      // delegate to the handler
+      this.protocolLauncher.handleOpenUrl(url);
     });
   }
 
