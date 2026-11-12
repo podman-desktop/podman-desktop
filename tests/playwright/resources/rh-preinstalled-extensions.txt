@@ -1,7 +1,7 @@
 # Pre-installed extensions to verify during E2E smoke tests.
 # Format: label=<extension.id>,name=<extensionName>
 # Optionally add version=<expected version> if it differs from the Podman Desktop version.
-label=redhat.openshift-local,name=openshift-local,version=2.4.0
+label=redhat.openshift-local,name=openshift-local,version=2.6.0
 label=redhat.redhat-authentication,name=redhat-authentication,version=1.2.1
 label=redhat.redhat-sandbox,name=redhat-sandbox,version=0.1.0
 label=redhat.bootc,name=bootc,version=1.14.1

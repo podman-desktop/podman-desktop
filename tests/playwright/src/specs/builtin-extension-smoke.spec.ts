@@ -27,6 +27,7 @@ import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const isActiveRegexp = new RegExp(`${ExtensionState.Installed}|Active`, 'i');
 const DEFAULT_PREINSTALLED_FILE =
   process.env.PRODUCT_TESTS === '1'
     ? path.resolve(__dirname, '..', '..', 'resources', 'rh-preinstalled-extensions.txt')
@@ -193,9 +194,16 @@ async function verifyBuiltInExtensionStatus(
   await extensionStatusLabel.scrollIntoViewIfNeeded();
 
   if (enabled) {
-    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Installed, { timeout: 20_000 });
+    await playExpect
+      .poll(() => extensionStatusLabel.innerText(), {
+        timeout: 20_000,
+      })
+      .toMatch(isActiveRegexp);
   } else {
-    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Disabled, { timeout: 20_000 });
+    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Disabled, {
+      timeout: 20_000,
+      ignoreCase: true,
+    });
   }
 
   const extensionsPageAfter = await navigationBar.openExtensions();
@@ -212,7 +220,7 @@ async function verifyBuiltInExtensionStatus(
     await playExpect(podmanExtensionPage.disableButton).toBeVisible({
       timeout: 10_000,
     });
-    await playExpect(podmanExtensionPage.status.getByText(ExtensionState.Installed)).toBeVisible();
+    await playExpect.poll(() => podmanExtensionPage.status.innerText()).toMatch(isActiveRegexp);
   } else {
     await playExpect(podmanExtensionPage.enableButton).toBeVisible({
       timeout: 10_000,
@@ -220,7 +228,7 @@ async function verifyBuiltInExtensionStatus(
     await playExpect(podmanExtensionPage.disableButton).not.toBeVisible({
       timeout: 10_000,
     });
-    await playExpect(podmanExtensionPage.status.getByText(ExtensionState.Disabled)).toBeVisible();
+    await playExpect(podmanExtensionPage.status).toHaveText(ExtensionState.Disabled, { ignoreCase: true });
   }
 }
 
@@ -247,7 +255,11 @@ for (const ext of preInstalledExtensions) {
     test(`Check ${ext.name} is installed and active`, async ({ navigationBar }) => {
       const extensionsPage = await navigationBar.openExtensions();
       const extensionCard = await extensionsPage.getInstalledExtension(ext.name.toLowerCase(), ext.label);
-      await playExpect(extensionCard.status).toHaveText(ExtensionState.Installed, { timeout: 20_000 });
+      await playExpect
+        .poll(() => extensionCard.status.innerText(), {
+          timeout: 20_000,
+        })
+        .toMatch(isActiveRegexp);
     });
 
     test(`Check ${ext.name} is marked as Pre-installed`, async ({ navigationBar }) => {
@@ -274,10 +286,17 @@ for (const ext of preInstalledExtensions) {
       const extensionsPage = await navigationBar.openExtensions();
       const detailsPage = await extensionsPage.openExtensionDetails(ext.name.toLowerCase(), ext.label, ext.name);
       await detailsPage.disableExtension();
-      await playExpect(detailsPage.status).toContainText(ExtensionState.Disabled, { timeout: 20_000 });
+      await playExpect(detailsPage.status).toContainText(ExtensionState.Disabled, {
+        timeout: 20_000,
+        ignoreCase: true,
+      });
       await playExpect(detailsPage.removeExtensionButton).not.toBeEnabled();
       await detailsPage.enableExtension();
-      await playExpect(detailsPage.status).toContainText(ExtensionState.Installed, { timeout: 20_000 });
+      await playExpect
+        .poll(() => detailsPage.status.innerText(), {
+          timeout: 20_000,
+        })
+        .toMatch(isActiveRegexp);
       await playExpect(detailsPage.removeExtensionButton).not.toBeEnabled();
     });
   });
