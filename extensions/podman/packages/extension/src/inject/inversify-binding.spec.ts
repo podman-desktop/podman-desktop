@@ -26,24 +26,13 @@ import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
-<<<<<<< HEAD
-import { RosettaProvisioner } from '/@/utils/rosetta';
-
-import { InversifyBinding } from './inversify-binding';
-import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
-=======
-import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
 import { WSLPodmanVersionNotification } from '/@/platforms/windows/wsl-podman-version-notification';
-import { ExtensionNotifications } from '/@/utils/notifications';
-import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from '/@/utils/rosetta';
 
 import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
-vi.mock(import('/@/platforms/windows/hyperv-prep'));
 vi.mock(import('/@/platforms/windows/wsl-podman-version-notification'));
->>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
 
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
@@ -95,23 +84,12 @@ describe('inversifyBinding', () => {
 
       expect(value).toBeInstanceOf(PodmanCleanupWindows);
     });
-<<<<<<< HEAD
-=======
 
-    test('InversifyBinding#init should bind HyperVPrep', async () => {
-      expect(container.isBound(HyperVPrep)).toBeTruthy();
-    });
-
-    test('InversifyBinding#init should register HyperVPrep and WSLPodmanVersionNotification as startup services', async () => {
+    test('InversifyBinding#init should register WSLPodmanVersionNotification as startup service', async () => {
       const startupServices = await container.getAllAsync(StartupSymbol);
 
-      expect(startupServices).toEqual([container.get(HyperVPrep), container.get(WSLPodmanVersionNotification)]);
+      expect(startupServices).toEqual([container.get(WSLPodmanVersionNotification)]);
     });
-
-    test('InversifyBinding#init should not bind SocketCompatibility', async () => {
-      expect(container.isBound(SocketCompatibility)).toBeFalsy();
-    });
->>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
   });
 
   describe('macos', () => {
@@ -134,19 +112,6 @@ describe('inversifyBinding', () => {
 
       expect(value).toBeInstanceOf(PodmanCleanupMacOS);
     });
-<<<<<<< HEAD
-=======
-
-    test('InversifyBinding#init should bind DarwinSocketCompatibility for SocketCompatibility as a singleton', async () => {
-      const first = container.get(SocketCompatibility);
-
-      expect(first).toBeInstanceOf(DarwinSocketCompatibility);
-      expect(container.get(SocketCompatibility)).toBe(first);
-    });
-
-    test('InversifyBinding#init should not bind HyperVPrep', async () => {
-      expect(container.isBound(HyperVPrep)).toBeFalsy();
-    });
 
     test('InversifyBinding#init should not bind WSLPodmanVersionNotification', async () => {
       expect(container.isBound(WSLPodmanVersionNotification)).toBeFalsy();
@@ -155,7 +120,6 @@ describe('inversifyBinding', () => {
     test('InversifyBinding#init should not register any startup service', async () => {
       expect(await container.getAllAsync(StartupSymbol)).toEqual([]);
     });
->>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
   });
 
   describe('linux', () => {
@@ -176,16 +140,6 @@ describe('inversifyBinding', () => {
         container.get(ProviderCleanupSymbol);
       }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
     });
-<<<<<<< HEAD
-=======
-
-    test('InversifyBinding#init should not bind SocketCompatibility', async () => {
-      expect(container.isBound(SocketCompatibility)).toBeFalsy();
-    });
-
-    test('InversifyBinding#init should not bind HyperVPrep', async () => {
-      expect(container.isBound(HyperVPrep)).toBeFalsy();
-    });
 
     test('InversifyBinding#init should not bind WSLPodmanVersionNotification', async () => {
       expect(container.isBound(WSLPodmanVersionNotification)).toBeFalsy();
@@ -194,6 +148,5 @@ describe('inversifyBinding', () => {
     test('InversifyBinding#init should not register any startup service', async () => {
       expect(await container.getAllAsync(StartupSymbol)).toEqual([]);
     });
->>>>>>> 5717750 (fix(extension/podman): warn when WSL is too old for the installed Podman version (#20063))
   });
 });
