@@ -103,7 +103,7 @@ onMount(async () => {
           {/each}
         {/snippet}
         {#snippet buttons()}
-          <Button class="underline" type="link" aria-label="Cancel" onclick={hideModal}>Cancel</Button>
+          <Button class="underline" type="link" aria-label="Cancel" onclick={(): Promise<void> => hideModal()}>Cancel</Button>
         {/snippet}
       </FeedbackForm>
     {/if}
