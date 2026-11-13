@@ -202,13 +202,10 @@ const PODMAN_INSTALL_MOCK: PodmanInstall = {
 const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
-<<<<<<< HEAD
   wslPodmanVersionCheck: {
     executeFor: vi.fn(),
   },
-=======
   removeStaleApiSocket: vi.fn(),
->>>>>>> 75aeca992b56 (fix(podman): remove stale API socket before starting a machine on Windows)
 } as unknown as WinPlatform;
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
