@@ -15,8 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { IDisposable } from '@desktop-framework/api';
+import type { Event, IDisposable } from '@desktop-framework/api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
+import { ipcMain, Menu, Tray } from 'electron';
 
 import { restoreWindow } from '/@/mainWindow.js';
 import { AppIdentityDevPlugin } from '/@/plugin/app-ready/app-identity-plugin.js';
@@ -24,11 +25,23 @@ import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { DevIconBuilder } from '/@/plugin/app-ready/dev-icon-builder.js';
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
-import { isLinux, isMac, isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows, stoppedExtensions } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+import { ApplicationMenuBuilder } from './application-menu-builder.js';
+import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { Emitter } from './plugin/events/emitter.js';
+import { PluginSystem } from './plugin/index.js';
+import { readShowTrayIconSetting } from './plugin/util/read-tray-setting.js';
+import { ZoomLevelHandler } from './plugin/zoom-level-handler.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
+import { StartupInstall } from './system/startup-install.js';
+import { WindowHandler } from './system/window/window-handler.js';
+import { AnimatedDevTray } from './tray-animate-dev-icon.js';
+import { AnimatedTray } from './tray-animate-icon.js';
+import { TrayMenu } from './tray-menu.js';
 
 export type AdditionalData = {
   argv: string[];
@@ -54,6 +67,10 @@ export class Main implements IDisposable {
    * @type {Array<AppPlugin>}
    */
   readonly #plugins: Array<AppPlugin>;
+
+  #extensionLoader: ExtensionLoader | undefined;
+  #animatedTray: AnimatedTray | undefined;
+  #tray: Tray | undefined;
 
   constructor(app: ElectronApp) {
     this.app = app;
@@ -134,11 +151,116 @@ export class Main implements IDisposable {
     this.app.on('will-finish-launching', this.onWillFinishLaunching.bind(this));
     this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
     this.app.on('before-quit', this.onBeforeQuit.bind(this));
+    this.app.on('will-quit', this.onWillQuit.bind(this));
+    this.app.once('before-quit', this.onBeforeQuitStopExtensions.bind(this));
 
     /**
      * Register {@link Main#whenReady} for ready event
      */
     this.app.whenReady().then(this.whenReady.bind(this)).catch(console.error);
+    this.app
+      .whenReady()
+      .then(this.startPluginSystem.bind(this), (e: unknown) => console.error('Failed to start app:', e));
+  }
+
+  /**
+   * Starts the plugin system, once {@link ElectronApp#whenReady} resolved and the plugins started
+   */
+  protected async startPluginSystem(): Promise<void> {
+    // Setup the default tray icon + menu items (skip if user disabled tray)
+    const showTrayIcon = readShowTrayIconSetting();
+    if (showTrayIcon) {
+      this.#animatedTray = import.meta.env.DEV ? new AnimatedDevTray() : new AnimatedTray();
+      this.#tray = new Tray(this.#animatedTray.getDefaultImage());
+      this.#animatedTray.setTray(this.#tray);
+    }
+    const trayMenu = new TrayMenu(this.#tray, this.#animatedTray);
+
+    const _onDidCreatedConfigurationRegistry = new Emitter<ConfigurationRegistry>();
+    const onDidCreatedConfigurationRegistry: Event<ConfigurationRegistry> = _onDidCreatedConfigurationRegistry.event;
+
+    // Start extensions
+    const pluginSystem = new PluginSystem(trayMenu, this.mainWindowDeferred);
+
+    onDidCreatedConfigurationRegistry(async (configurationRegistry: ConfigurationRegistry) => {
+      // If we've manually set the tray icon color, update the tray icon. This can only be done
+      // after configurationRegistry is loaded. Windows or Linux support only for icon color change.
+      if (!isMac()) {
+        const color = configurationRegistry.getConfiguration('preferences').get('TrayIconColor');
+        if (typeof color === 'string') {
+          this.#animatedTray?.setColor(color);
+        }
+      }
+
+      // Share configuration registry with renderer process
+      ipcMain.emit('configuration-registry', '', configurationRegistry);
+
+      // Register the window configuration
+      // This is used to save/restore the window size and position
+      this.mainWindowDeferred.promise
+        .then(browserWindow => {
+          const windowHandler = new WindowHandler(configurationRegistry, browserWindow);
+          windowHandler.init();
+
+          // Configure the zoom level handler
+          // handle zoom level
+          const zoomLevelHandler = new ZoomLevelHandler(browserWindow, configurationRegistry);
+          zoomLevelHandler.init();
+
+          // sets the menu
+          const applicationMenuBuilder = new ApplicationMenuBuilder(zoomLevelHandler);
+          const menu = applicationMenuBuilder.build();
+
+          if (menu) {
+            Menu.setApplicationMenu(menu);
+          }
+
+          // send window Handler
+          ipcMain.emit('window-handler', '', windowHandler);
+        })
+        .catch((error: unknown) => {
+          console.error('Error initializing window handler', error);
+        });
+
+      // Configure automatic startup
+      const automaticStartup = new StartupInstall(configurationRegistry);
+      await automaticStartup.configure();
+    });
+
+    this.#extensionLoader = await pluginSystem.initExtensions(_onDidCreatedConfigurationRegistry);
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('will-quit')} event
+   * Clean up tray resources
+   */
+  protected onWillQuit(): void {
+    this.#animatedTray?.dispose();
+    this.#tray?.destroy();
+  }
+
+  /**
+   * Listener for the first {@link ElectronApp.on('before-quit')} event
+   * Stops the extensions before quitting again
+   */
+  protected onBeforeQuitStopExtensions(event: { preventDefault: () => void }): void {
+    if (!this.#extensionLoader) {
+      stoppedExtensions.val = true;
+      return;
+    }
+    event.preventDefault();
+    this.#extensionLoader
+      .asyncDispose()
+      .then(() => {
+        console.log('Stopped all extensions');
+      })
+      .catch((error: unknown) => {
+        console.log('Error stopping extensions', error);
+      })
+      .finally(() => {
+        stoppedExtensions.val = true;
+        this.app.quit();
+      });
   }
 
   /**
