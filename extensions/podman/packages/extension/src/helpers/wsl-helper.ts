@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 import { normalizeWSLOutput } from '/@/utils/util';
 
@@ -26,6 +27,7 @@ export interface WSLVersionInfo {
   windowsVersion?: string;
 }
 
+@injectable()
 export class WslHelper {
   async getWSLVersionData(): Promise<WSLVersionInfo> {
     const { stdout } = await extensionApi.process.exec('wsl', ['--version'], { encoding: 'utf16le' });

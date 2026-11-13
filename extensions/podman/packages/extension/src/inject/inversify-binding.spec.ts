@@ -25,6 +25,7 @@ import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
+import { WslHelper } from '/@/helpers/wsl-helper';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
@@ -68,6 +69,16 @@ describe('inversifyBinding', () => {
 
     const value = container.get(RosettaProvisioner);
     expect(value).toBeInstanceOf(RosettaProvisioner);
+  });
+
+  test('should bind WslHelper as a singleton', async () => {
+    const container: InversifyContainer = await inversifyBinding.init();
+
+    const first = container.get(WslHelper);
+    const second = container.get(WslHelper);
+
+    expect(first).toBeInstanceOf(WslHelper);
+    expect(first).toBe(second);
   });
 
   test('should bind PodmanMachineLifecycle as a singleton', async () => {
