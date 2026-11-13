@@ -27,19 +27,21 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
+import { assert, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
-import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
+import { clearTaskLogs, eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
 vi.mock(import('@xterm/xterm'));
+vi.mock(import('tinro'));
 
 vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'), async importOriginal => {
   const original = await importOriginal();
   return {
     ...original,
+    clearTaskLogs: vi.fn(),
     reconnectUI: vi.fn(),
   };
 });
@@ -795,4 +797,73 @@ test('Expect reconnectUI to be called only once', async () => {
     expect(screen.getByRole('term')).toBeInTheDocument();
     expect(reconnectUI).toBeCalledTimes(1);
   });
+});
+
+test.each([
+  { name: 'fails', error: 'error' },
+  { name: 'is cancelled', error: 'Execution cancelled' },
+])('Expect operation not in progress in store when the callback $name', async ({ error }) => {
+  const { unmount } = render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback: vi.fn().mockRejectedValue(new Error(error)),
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+  unmount();
+
+  await vi.waitFor(() => expect(get(operationConnectionsInfo).get(1)?.operationInProgress).toBe(false));
+});
+
+test('Expect retry to clear the logs of the previous attempt', async () => {
+  const callback = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('error'))
+    .mockReturnValue(new Promise<void>(() => {}));
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+  await screen.findByText('Error: error');
+  const firstKey = get(operationConnectionsInfo).get(1)?.operationKey;
+  assert(firstKey);
+  expect(clearTaskLogs).not.toHaveBeenCalled();
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+  await vi.waitFor(() => expect(clearTaskLogs).toHaveBeenCalledWith(firstKey));
+  expect(get(operationConnectionsInfo).get(1)?.operationKey).not.toBe(firstKey);
+});
+
+test('Expect go back button to clear the task logs and keep the successful operation', async () => {
+  let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
+  const callback = mockCallback(async keyLogger => {
+    providedKeyLogger = keyLogger;
+  });
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId: 1,
+  });
+  await fireEvent.click(await screen.findByRole('button', { name: 'Create' }));
+  const operationKey = get(operationConnectionsInfo).get(1)?.operationKey;
+  assert(operationKey);
+  assert(providedKeyLogger);
+  providedKeyLogger(operationKey, 'finish', []);
+
+  await fireEvent.click(await screen.findByRole('button', { name: 'Go back to resources' }));
+
+  expect(clearTaskLogs).toHaveBeenCalledWith(operationKey);
+  expect(get(operationConnectionsInfo).get(1)?.operationSuccessful).toBe(true);
+  expect(router.goto).toHaveBeenCalledWith('/preferences/resources');
 });

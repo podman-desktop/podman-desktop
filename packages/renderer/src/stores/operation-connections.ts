@@ -25,7 +25,7 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
-interface OperationConnectionInfo {
+export interface OperationConnectionInfo {
   operationKey: symbol;
   providerInfo: ProviderInfo;
   connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | undefined;

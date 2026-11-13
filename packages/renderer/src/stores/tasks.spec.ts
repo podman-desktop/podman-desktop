@@ -21,6 +21,12 @@ import { get } from 'svelte/store';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
+  clearCompletedOperations,
+  registerConnectionTask,
+  removeConnectionTask,
+} from '/@/lib/preferences/preferences-connection-rendering-task';
+
+import {
   clearNotifications,
   filtered,
   getMatchingStatusFromSearchPattern,
@@ -29,6 +35,8 @@ import {
   type TaskInfoUI,
   tasksInfo,
 } from './tasks';
+
+vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'));
 
 const started = new Date().getTime();
 
@@ -76,13 +84,29 @@ beforeEach(() => {
   });
 });
 
-test('Expect clearNotification to call window.clearTasks', async () => {
+test('Expect clearNotification to clear completed operations and call window.clearTasks', async () => {
   const clearTasksMock = vi.fn().mockResolvedValue(undefined);
   (window as { clearTasks: () => void }).clearTasks = clearTasksMock;
 
   await clearNotifications();
 
+  expect(clearCompletedOperations).toHaveBeenCalled();
   expect(clearTasksMock).toHaveBeenCalled();
+});
+
+test('Expect task-removed to remove the task and its connection task', () => {
+  tasksInfo.set([SUCCEED_TASK]);
+
+  callbacks.get('task-removed')?.(SUCCEED_TASK);
+
+  expect(get(tasksInfo)).toEqual([]);
+  expect(removeConnectionTask).toHaveBeenCalledWith(SUCCEED_TASK.id);
+});
+
+test('Expect connection-task-created to register the connection task', () => {
+  callbacks.get('connection-task-created')?.({ taskId: 'task-1', connectionTaskId: 3 });
+
+  expect(registerConnectionTask).toHaveBeenCalledWith('task-1', 3);
 });
 
 describe('isNotificationTask', () => {

@@ -969,6 +969,7 @@ describe.each<{
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle =
       getHandler<
         (
@@ -1006,6 +1007,7 @@ describe.each<{
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle =
       getHandler<
         (

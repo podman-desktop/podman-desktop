@@ -20,6 +20,12 @@ import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatu
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
+import {
+  clearCompletedOperations,
+  registerConnectionTask,
+  removeConnectionTask,
+} from '/@/lib/preferences/preferences-connection-rendering-task';
+
 import { findMatchInLeaves } from './search-util';
 
 /**
@@ -99,6 +105,7 @@ function updateTask(task: TaskInfo): void {
 
 // remove element from the store that are completed
 export async function clearNotifications(): Promise<void> {
+  clearCompletedOperations();
   return window.clearTasks();
 }
 
@@ -109,7 +116,13 @@ window.events?.receive('task-updated', (task: unknown) => {
   updateTask(task as TaskInfo);
 });
 window.events?.receive('task-removed', (task: unknown) => {
-  tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== (task as TaskInfo | NotificationTaskInfo).id));
+  const removedTask = task as TaskInfo | NotificationTaskInfo;
+  tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== removedTask.id));
+  removeConnectionTask(removedTask.id);
+});
+window.events?.receive('connection-task-created', (data: unknown) => {
+  const { taskId, connectionTaskId } = data as { taskId: string; connectionTaskId: number };
+  registerConnectionTask(taskId, connectionTaskId);
 });
 
 export function isNotificationTask(task: TaskInfo): task is NotificationTaskInfo {
