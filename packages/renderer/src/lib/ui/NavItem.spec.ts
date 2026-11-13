@@ -32,6 +32,7 @@ interface RenderOptions extends Omit<HTMLAnchorAttributes, 'href' | 'onclick'> {
   meta: Pick<TinroRouteMeta, 'url'>;
   ariaLabel?: string;
   expanded?: boolean;
+  reorderable?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
@@ -126,6 +127,23 @@ describe('title', () => {
     });
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute('title');
+  });
+});
+
+describe('reorderable', () => {
+  test('uses the grab cursor instead of the pointer cursor', () => {
+    renderIt({ tooltip: 'Dashboard', href: '/test', meta: { url: '/test' }, reorderable: true });
+
+    const element = screen.getByLabelText('Dashboard');
+    expect(element.firstChild).toHaveClass('cursor-grab');
+    expect(element.firstChild).toHaveClass('active:cursor-grabbing');
+    expect(element.firstChild).not.toHaveClass('cursor-pointer');
+  });
+
+  test('keeps the pointer cursor by default', () => {
+    renderIt({ tooltip: 'Dashboard', href: '/test', meta: { url: '/test' } });
+
+    expect(screen.getByLabelText('Dashboard').firstChild).toHaveClass('cursor-pointer');
   });
 });
 
