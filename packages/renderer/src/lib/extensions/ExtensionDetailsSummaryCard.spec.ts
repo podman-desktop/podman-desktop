@@ -36,6 +36,7 @@ test('Expect to have text of the card including version, release date, publisher
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
@@ -76,6 +77,7 @@ test('Expect repository link to open external URL', async () => {
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
@@ -108,6 +110,7 @@ test('Expect repository object link to open external URL', async () => {
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
@@ -143,6 +146,7 @@ test('Expect repository link to strip git+ prefix before opening', async () => {
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
@@ -178,6 +182,7 @@ test('Expect homepage link to open external URL', async () => {
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
@@ -210,6 +215,7 @@ test('Expect no repository or homepage when not provided', async () => {
     type: 'pd',
     removable: false,
     devMode: false,
+    bundled: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',
@@ -229,4 +235,48 @@ test('Expect no repository or homepage when not provided', async () => {
   expect(screen.queryByText('resources')).not.toBeInTheDocument();
   expect(screen.queryByText('Repository')).not.toBeInTheDocument();
   expect(screen.queryByText('Homepage')).not.toBeInTheDocument();
+});
+
+test('Expect the auto-update entry of an installed extension', async () => {
+  const extensionDetails: ExtensionDetailsUI = {
+    displayName: 'my display name',
+    description: 'my description',
+    type: 'pd',
+    removable: true,
+    devMode: false,
+    bundled: false,
+    state: 'started',
+    name: 'foo',
+    icon: 'fooIcon',
+    readme: { content: '' },
+    releaseDate: '2024-01-01',
+    categories: [],
+    publisherDisplayName: 'my publisher',
+    version: 'v1.2.3',
+    id: 'myId',
+    fetchable: true,
+    fetchLink: 'myLink',
+    fetchVersion: 'v3.4.5',
+    installedExtension: {
+      id: 'myId',
+      name: 'foo',
+      description: 'my description',
+      displayName: 'my display name',
+      publisher: 'my publisher',
+      removable: true,
+      devMode: false,
+      bundled: false,
+      version: 'v1.2.3',
+      state: 'started',
+      path: '/plugins/foo',
+      readme: '',
+      type: 'pd',
+      autoUpdateDisabled: true,
+    },
+  };
+
+  render(ExtensionDetailsSummaryCard, { extensionDetails });
+
+  const autoUpdate = screen.getByRole('region', { name: 'Auto-update' });
+  expect(autoUpdate).toHaveTextContent('Disabled');
 });

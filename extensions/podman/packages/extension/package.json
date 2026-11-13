@@ -3,7 +3,7 @@
   "name": "podman",
   "displayName": "Podman",
   "description": "Integration for Podman and Podman Machines",
-  "version": "1.30.0-next",
+  "version": "1.31.0-next",
   "icon": "icon.png",
   "type": "module",
   "publisher": "podman-desktop",
@@ -18,6 +18,9 @@
     "podman-desktop": "^0.0.1"
   },
   "main": "./dist/extension.cjs",
+  "product": {
+    "dockerCompatibilityGuide": "https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility"
+  },
   "contributes": {
     "commands": [
       {
@@ -53,6 +56,11 @@
         "title": "Podman: Set up registry"
       },
       {
+        "command": "podman.hypervPrep",
+        "title": "Podman: Prepare Hyper-V",
+        "enablement": "podman.hypervPrepSupported"
+      },
+      {
         "command": "podman.uninstallLegacyPodmanInstaller",
         "title": "Podman: Uninstall legacy podman installer"
       },
@@ -66,6 +74,7 @@
       "title": "Podman",
       "properties": {
         "podman.binary.path": {
+          "displayName": "Path to Podman Binary",
           "type": "string",
           "format": "file",
           "default": "",
@@ -481,6 +490,13 @@
       "enablement": "(isLinux && onboardingContext:podmanIsNotInstalled) || (!isLinux && !onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists) || podman.needPodmanMachineCleanup"
     },
     "menus": {
+      "dashboard/provider": [
+        {
+          "command": "podman.hypervPrep",
+          "title": "Prepare Hyper-V",
+          "when": "providerId === podman && podman.hypervPrepSupported && podman.hypervPrepNotApplied"
+        }
+      ],
       "dashboard/container-connection": [
         {
           "command": "podman.setupRegistry",
@@ -500,11 +516,11 @@
     "@podman-desktop/api": "workspace:*",
     "@podman-desktop/podman-extension-api": "workspace:*",
     "async-mutex": "^0.5.0",
-    "inversify": "^8.2.3",
+    "inversify": "^8.3.0",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "semver": "^7.8.5",
-    "smol-toml": "1.8.0",
+    "semver": "^7.8.6",
+    "smol-toml": "1.9.1",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
   },
@@ -512,14 +528,14 @@
     "@types/mustache": "^4.2.6",
     "@types/ssh2": "^1.15.6",
     "@types/sshpk": "^1.17.5",
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
-    "msw": "^2.15.0",
+    "msw": "^3.0.4",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
-    "tsx": "^4.23.13",
-    "vite": "^8.2.2",
-    "vitest": "^5.0.0"
+    "tsx": "^4.23.15",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
   }
 }

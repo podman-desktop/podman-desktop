@@ -18,8 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { ProviderContainerConnectionInfo } from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -210,5 +210,26 @@ describe('resource metrics display', () => {
     });
 
     expect(screen.queryAllByTestId('arc')).toHaveLength(0);
+  });
+
+  test('passes structuredClone-safe arguments to getConfigurationValue IPC', async () => {
+    let capturedConnection: unknown;
+    vi.mocked(window.getConfigurationValue).mockImplementation((_id, connection) => {
+      capturedConnection = connection;
+      return Promise.resolve(4);
+    });
+
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: podmanContainerConnection,
+      providerInternalId: '0',
+      properties: resourceProperties,
+    });
+
+    await vi.waitFor(() => {
+      expect(window.getConfigurationValue).toHaveBeenCalled();
+    });
+
+    expect(capturedConnection).toBeDefined();
+    expect(() => structuredClone(capturedConnection)).not.toThrow();
   });
 });

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
+import { onDestroy } from 'svelte';
 
 import type { TypeaheadGroupedItems, TypeaheadHeadings, TypeaheadItem } from './Typeahead';
 
@@ -38,6 +39,12 @@ let {
 }: Props = $props();
 
 let inputDelayTimeout: NodeJS.Timeout | undefined = undefined;
+
+// the pending input must not be processed once the component is gone
+onDestroy(() => {
+  clearTimeout(inputDelayTimeout);
+});
+
 let input: HTMLInputElement | undefined = $state();
 let list: HTMLDivElement | undefined = $state();
 let inputDiv: HTMLDivElement | undefined = $state();

@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { ContainerInfo, ProviderInfo } from '@desktop-framework/api';
 import { fireEvent, render, type RenderResult, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
@@ -1305,7 +1305,7 @@ test('Expect create container dialog opens when Create button is clicked', async
   await fireEvent.click(createButton);
 
   await waitFor(() => {
-    expect(screen.getByRole('dialog', { name: 'Create a new container' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Create container' })).toBeInTheDocument();
   });
 });
 
@@ -1320,9 +1320,9 @@ test('Expect create container dialog has both choice buttons styled as secondary
   const createButton = screen.getByTitle('Create a container');
   await fireEvent.click(createButton);
 
-  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create container' }));
   const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Build from Containerfile' });
 
   expect(existingImageButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
   expect(containerfileButton.className).toContain('bg-[var(--pd-button-secondary-bg)]');
@@ -1344,8 +1344,8 @@ test('Expect clicking Containerfile button navigates to build image page', async
   const createButton = screen.getByTitle('Create a container');
   await fireEvent.click(createButton);
 
-  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create container' }));
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Build from Containerfile' });
   await fireEvent.click(containerfileButton);
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
@@ -1363,9 +1363,28 @@ test('Expect clicking Existing image button closes dialog', async () => {
   const createButton = screen.getByTitle('Create a container');
   await fireEvent.click(createButton);
 
-  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create container' }));
   const existingImageButton = within(dialog).getByRole('button', { name: 'Use existing image' });
   await fireEvent.click(existingImageButton);
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+test('Expect clicking Close button closes create container dialog', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const createButton = screen.getByTitle('Create a container');
+  await fireEvent.click(createButton);
+
+  const closeButton = await screen.findByText('Close');
+  await fireEvent.click(closeButton);
 
   await waitFor(() => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -1439,7 +1458,7 @@ test('Expect search not to match the raw compose-prefixed container name', async
 
   // the stripped name still matches, as it did before the store held ContainerInfoUI
   const { unmount } = await waitRender({ searchTerm: 'web-1' });
-  expect(screen.queryByText('web-1')).toBeInTheDocument();
+  expect(screen.getByText('web-1')).toBeInTheDocument();
   unmount();
 
   // the raw prefixed name must not

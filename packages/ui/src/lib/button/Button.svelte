@@ -5,23 +5,94 @@ import { createEventDispatcher, untrack } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
-import type { ButtonType } from './Button';
+import type { ActionButtonType } from './Button';
 
-interface Props {
+interface BaseProps {
+  /**
+   * Native tooltip, shown on mouse hover only, so keyboard and touch users never see it. Use it for extra
+   * hints, not as the only name of an icon-only button: set `aria-label` for that.
+   */
   title?: string;
+
+  /**
+   * Shows a spinner in place of the icon, sets `aria-busy`, and disables the button until the action finishes.
+   */
   inProgress?: boolean;
+
+  /**
+   * Disables the button. A disabled button is removed from the tab order, so explain why it is disabled
+   * in visible text near the button rather than in `title`.
+   */
   disabled?: boolean;
-  type?: ButtonType;
+
+  /**
+   * Icon shown before the label. An icon-only button needs `aria-label`. The component throws on mount when
+   * there is no label, `title` or `aria-label`, but any body counts as a label, even an empty `{''}`, so the
+   * check does not catch an empty label variable.
+   */
   icon?: IconDefinition | Component | string;
-  selected?: boolean;
+
+  /**
+   * Makes the button a toggle and sets `aria-pressed`. Leave undefined for a regular button,
+   * since `false` still announces it as a toggle.
+   */
   pressed?: boolean;
+
+  /**
+   * Tailwind padding classes. Replaces the default padding entirely (`px-[16px] py-[5px]`, or
+   * `px-[16px] pb-1` for tabs), so set both axes.
+   */
   padding?: string;
+
+  /**
+   * Extra classes, appended after the built-in ones. Use for layout (width, margins), not to restyle the button.
+   */
   class?: string;
+
+  /** Hides the button with the native `hidden` attribute. */
   hidden?: boolean;
+
+  /**
+   * Accessible name. Icon-only buttons need it; `title` also passes the icon-only check, but use it as an
+   * extra tooltip, not as the only name. When the button also has visible text, the label must
+   * contain that text (WCAG 2.5.3 Label in Name), for example `Delete container web-1` for a `Delete` button.
+   */
   'aria-label'?: string;
+
+  /** Click handler. Prefer it over the legacy `on:click` event, which is kept for Svelte 4 callers. */
   onclick?: () => void;
+
+  /** Visible label. Use sentence case, see CODE-GUIDELINES.md. */
   children?: Snippet;
 }
+
+interface ActionButtonProps extends BaseProps {
+  /**
+   * Visual style: `primary` (default) for the main action, `secondary` for other actions, `danger` for
+   * destructive actions, `link` for Cancel, Close and other low-emphasis actions. An unknown value falls
+   * back to `primary` with a console warning. Use `tab` for tab-like filters and navigation, which
+   * requires `selected`.
+   */
+  type?: ActionButtonType;
+  /**
+   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
+   * Use `pressed` for toggle buttons instead.
+   */
+  selected?: boolean;
+}
+
+interface TabButtonProps extends BaseProps {
+  /** Tab-like filter or navigation button. It requires `selected`. */
+  type: 'tab';
+  /**
+   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
+   * Use `pressed` for toggle buttons instead.
+   */
+  selected: boolean;
+}
+
+// A tab button must say whether it is the active tab, so `selected` is required for type 'tab' (checked by svelte-check)
+type Props = TabButtonProps | ActionButtonProps;
 
 // support legacy usage (on:click)
 const dispatch = createEventDispatcher<{ click: undefined }>();

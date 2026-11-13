@@ -28,16 +28,22 @@ import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
+import { LoginMinimizeHandler } from './system/window/login-minimize-handler.js';
 import type { WindowHandler } from './system/window/window-handler.js';
 import { isLinux, isMac, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
+const loginMinimizeHandler = new LoginMinimizeHandler();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
 
 // development mode for extensions
+export interface WindowConfig {
+  icon?: Electron.NativeImage;
+}
+
 let isExtensionsDevelopmentModeEnabled = false;
 
-async function createWindow(): Promise<BrowserWindow> {
+async function createWindow(config?: WindowConfig): Promise<BrowserWindow> {
   const INITIAL_APP_WIDTH = 1050;
   const INITIAL_APP_MIN_WIDTH = 640;
   const INITIAL_APP_HEIGHT = 700;
@@ -56,6 +62,7 @@ async function createWindow(): Promise<BrowserWindow> {
     minHeight: INITIAL_APP_MIN_HEIGHT,
     height: INITIAL_APP_HEIGHT,
     backgroundColor: INITIAL_APP_BACKGROUND_COLOR,
+    ...(config?.icon && { icon: config.icon }),
     webPreferences: {
       webSecurity: false,
       //nativeWindowOpen: true,
@@ -116,8 +123,13 @@ async function createWindow(): Promise<BrowserWindow> {
         app.dock?.hide();
       }
     } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
-      // On macOS login item launch, defer showing until we can check the minimize preference
-      deferredShow = true;
+      // On macOS login item launch, apply the minimize preference now if the configuration
+      // registry has already arrived, otherwise defer until it does
+      if (configurationRegistry) {
+        loginMinimizeHandler.apply(browserWindow, configurationRegistry);
+      } else {
+        deferredShow = true;
+      }
     } else {
       browserWindow.show();
     }
@@ -140,13 +152,7 @@ async function createWindow(): Promise<BrowserWindow> {
     // check the minimize preference and show or hide accordingly
     if (deferredShow) {
       deferredShow = false;
-      const preferencesConfig = configurationRegistry.getConfiguration('preferences');
-      const minimize = preferencesConfig.get<boolean>('login.minimize');
-      if (minimize) {
-        app.dock?.hide();
-      } else {
-        browserWindow.show();
-      }
+      loginMinimizeHandler.apply(browserWindow, configurationRegistry);
     }
 
     // refresh the value of the development mode config property
@@ -266,10 +272,10 @@ async function createWindow(): Promise<BrowserWindow> {
 }
 
 // Create a new window if there is no existing window
-export async function createNewWindow(): Promise<BrowserWindow> {
+export async function createNewWindow(config?: WindowConfig): Promise<BrowserWindow> {
   let window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
 
-  window ??= await createWindow();
+  window ??= await createWindow(config);
   return window;
 }
 

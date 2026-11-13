@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { ImageInfo } from '@podman-desktop/api';
-import type { ViewInfoUI } from '@podman-desktop/core-api';
+import type { ViewInfoUI } from '@desktop-framework/api';
+import type { ImageInfo } from '@desktop-framework/extension-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
@@ -136,10 +136,10 @@ $effect(() => {
           <ImageDetailsInspect image={image} />
         </Route>
         <Route path="/check" breadcrumb="Check" navigationHint="tab">
-          <ImageDetailsCheck imageInfo={imageInfo} />
+          <ImageDetailsCheck engineId={engineId} imageId={imageID} />
         </Route>
         <Route path="/files" breadcrumb="Files" navigationHint="tab">
-          <ImageDetailsFiles imageInfo={imageInfo} />
+          <ImageDetailsFiles engineId={engineId} imageId={imageID} />
         </Route>
       {/if}
     {/snippet}

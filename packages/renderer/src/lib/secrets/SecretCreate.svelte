@@ -1,10 +1,6 @@
 <script lang="ts">
-import {
-  NavigationPage,
-  type ProviderContainerConnectionInfo,
-  type SecretCreateOptions,
-} from '@podman-desktop/core-api';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { NavigationPage, type ProviderContainerConnectionInfo, type SecretCreateOptions } from '@desktop-framework/api';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -104,10 +100,10 @@ function close(): void {
           class="w-full" />
       </div>
 
-      <div class="flex items-center justify-end gap-3">
+      <ButtonRow>
         <Button type="secondary" onclick={close}>Cancel</Button>
         <Button disabled={!valid || loading} inProgress={loading} onclick={createSecret}>Create</Button>
-      </div>
+      </ButtonRow>
 
       {#if createError}
         <ErrorMessage class="text-sm" error={createError} />

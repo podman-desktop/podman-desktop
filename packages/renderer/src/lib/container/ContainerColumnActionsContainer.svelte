@@ -14,4 +14,4 @@ let { object }: Props = $props();
 {#if object.actionError}
   <ErrorMessage error={object.actionError} icon wrapMessage />
 {/if}
-<ContainerActions container={object} dropdownMenu={true} on:update />
+<ContainerActions container={object} dropdownMenu={true} />

@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { DisplayItem } from '@podman-desktop/core-api';
 import type { BrowserWindow, ContextMenuParams, MenuItem, MenuItemConstructorOptions } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -38,12 +37,6 @@ const browserWindowMock = {
 class TestNavigationItemsMenuBuilder extends NavigationItemsMenuBuilder {
   override buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
     return super.buildHideMenuItem(linkText);
-  }
-  override buildGroupedPinMenuItem(
-    linkText: string | undefined,
-    allowLeafMatch = true,
-  ): MenuItemConstructorOptions | undefined {
-    return super.buildGroupedPinMenuItem(linkText, allowLeafMatch);
   }
   override buildNavigationToggleMenuItems(): MenuItemConstructorOptions[] {
     return super.buildNavigationToggleMenuItems();
@@ -114,67 +107,6 @@ describe('buildHideMenuItem', async () => {
       'navbar.itemOrder',
       expect.anything(),
       'DEFAULT',
-    );
-  });
-});
-
-describe('buildGroupedPinMenuItem', () => {
-  const resources: DisplayItem = {
-    name: 'Settings > Resources',
-    visible: true,
-  };
-  const pinnedResources: DisplayItem = { ...resources, index: 0 };
-
-  test('offers Pin to Navigation for an unpinned settings item via linkText', () => {
-    getConfigurationMock.mockReturnValue({
-      get: (key: string) => (key === 'itemOrder' ? [] : 160),
-    } as unknown as ConfigurationRegistry);
-    navigationItemsMenuBuilder.receiveNavigationItems([{ name: 'Pods', visible: true, index: 0 }, resources]);
-
-    const menu = navigationItemsMenuBuilder.buildGroupedPinMenuItem('Resources');
-    expect(menu?.label).toBe('Pin Resources to Navigation');
-
-    menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
-    expect(configurationRegistryMock.updateConfigurationValue).toBeCalledWith(
-      'navbar.itemOrder',
-      ['Settings > Resources', 'Pods'],
-      'DEFAULT',
-    );
-  });
-
-  test('offers Unpin for a pinned main-nav item via linkText', () => {
-    getConfigurationMock.mockReturnValue({
-      get: (key: string) => (key === 'itemOrder' ? ['Settings > Resources', 'Pods'] : 160),
-    } as unknown as ConfigurationRegistry);
-    navigationItemsMenuBuilder.receiveNavigationItems([pinnedResources, { name: 'Pods', visible: true, index: 1 }]);
-
-    const menu = navigationItemsMenuBuilder.buildGroupedPinMenuItem('Settings > Resources');
-    expect(menu?.label).toBe('Unpin Resources');
-
-    menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
-    expect(configurationRegistryMock.updateConfigurationValue).toBeCalledWith('navbar.itemOrder', ['Pods'], 'DEFAULT');
-  });
-
-  test('returns undefined for top-level (non-grouped) items', () => {
-    navigationItemsMenuBuilder.receiveNavigationItems([{ name: 'Pods', visible: true, index: 0 }]);
-    expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Pods')).toBeUndefined();
-  });
-
-  test('leaf match is disabled so main-nav Pods is not confused with Kubernetes > Pods', () => {
-    getConfigurationMock.mockReturnValue({
-      get: (key: string) => (key === 'itemOrder' ? [] : 160),
-    } as unknown as ConfigurationRegistry);
-    navigationItemsMenuBuilder.receiveNavigationItems([
-      { name: 'Pods', visible: true, index: 0 },
-      { name: 'Kubernetes', visible: true, index: 1 },
-      { name: 'Kubernetes > Pods', visible: true },
-    ]);
-
-    expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Pods', false)).toBeUndefined();
-    expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Kubernetes', false)).toBeUndefined();
-    expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Pods', true)?.label).toBe('Pin Pods to Navigation');
-    expect(navigationItemsMenuBuilder.buildGroupedPinMenuItem('Kubernetes > Pods', false)?.label).toBe(
-      'Pin Pods to Navigation',
     );
   });
 });
@@ -350,29 +282,6 @@ describe('buildNavigationMenu', async () => {
 
     expect(menu[0]?.label).toBe('Hide Pods');
     expect(menu.some(i => i.label?.includes('Pin'))).toBe(false);
-  });
-
-  test('Unpin appears before Reset Order when right-clicking a pinned main-nav item', async () => {
-    getConfigurationMock.mockReturnValue({
-      get: (key: string) => {
-        if (key === 'itemOrder') return ['Settings > Resources', 'Pods'];
-        if (key === 'disabledItems') return [];
-        return 160;
-      },
-    } as unknown as ConfigurationRegistry);
-    navigationItemsMenuBuilder.receiveNavigationItems([
-      { name: 'Settings > Resources', visible: true, index: 0 },
-      { name: 'Pods', visible: true, index: 1 },
-    ]);
-
-    const menu = navigationItemsMenuBuilder.buildNavigationMenu({
-      linkText: 'Settings > Resources',
-      x: 30,
-      y: 100,
-    } as unknown as ContextMenuParams);
-
-    expect(menu[0]?.label).toBe('Unpin Resources');
-    expect(menu[1]?.label).toBe('Reset Order');
   });
 
   test('Reset Order and Show All placement: before checklist on bare nav, after hide on specific item', async () => {

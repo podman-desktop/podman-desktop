@@ -18,8 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { OnboardingInfo } from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { OnboardingInfo } from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -60,6 +60,7 @@ test('Expect to have onboarding button for extension', async () => {
     publisher: '',
     removable: true,
     devMode: false,
+    bundled: false,
     version: 'v1.2.3',
     state: '',
     path: '',
@@ -100,6 +101,7 @@ test('expect edit properties button being enabled', async () => {
     publisher: '',
     removable: true,
     devMode: false,
+    bundled: false,
     version: 'v1.2.3',
     state: '',
     path: '',

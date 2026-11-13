@@ -16,18 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import type { ImageInfo, ImageUpdateResult, ViewInfoUI } from '@desktop-framework/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { ContextUI } from '/@/lib/context/context';
 
 import { ImageUtils } from './image-utils';
+import type { ImageInfoUI } from './ImageInfoUI';
 
 let imageUtils: ImageUtils;
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   imageUtils = new ImageUtils();
 });
 
@@ -93,6 +94,34 @@ test('should expect icon to be ContainerIcon if no context/view is passed', asyn
   const imageinfoUIs = imageUtils.getImagesInfoUI(imageInfo, []);
   expect(imageinfoUIs[0].icon).toBeDefined();
   expect(typeof imageinfoUIs[0].icon !== 'string').toBe(true);
+});
+
+test('should return untagged row when RepoTags is empty array', async () => {
+  const imageInfo = {
+    Id: 'sha256:dangling1234567890',
+    Size: 456,
+    RepoTags: [],
+  } as unknown as ImageInfo;
+  const imageinfoUIs = imageUtils.getImagesInfoUI(imageInfo, []);
+  expect(imageinfoUIs).toHaveLength(1);
+  expect(imageinfoUIs[0].name).toBe('<none>');
+  expect(imageinfoUIs[0].tag).toBe('');
+  expect(imageinfoUIs[0].status).toBe('UNUSED');
+});
+
+test('should describe an image carrying no repo tag as <none>', async () => {
+  // an image pulled by digest, or left untagged by a retag, reports an empty RepoTags
+  const imageInfo = {
+    Id: 'sha256:1234',
+    Size: 123,
+    RepoTags: [],
+    RepoDigests: ['docker.io/library/alpine@sha256:abc'],
+  } as unknown as ImageInfo;
+
+  const imageInfoUIs = imageUtils.getImagesInfoUI(imageInfo, []);
+  expect(imageInfoUIs).toHaveLength(1);
+  expect(imageInfoUIs[0].name).toBe('<none>');
+  expect(imageInfoUIs[0].tag).toBe('');
 });
 
 test('check parsing of image info without labels', async () => {
@@ -279,6 +308,65 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     );
     expect(imageInfoUIs.length).toBe(1);
     expect(imageInfoUIs[0].id).toBe('manifest1');
+  });
+});
+
+describe('updateImages', () => {
+  let image: ImageInfoUI;
+
+  beforeEach(() => {
+    image = {
+      id: 'sha256:abc',
+      shortId: 'abc',
+      name: 'nginx',
+      engineId: 'podman',
+      engineName: 'Podman',
+      tag: 'latest',
+      createdAt: 1599888000,
+      age: '1 day',
+      arch: 'amd64',
+      size: 1024,
+      humanSize: '1.02 kB',
+      base64RepoTag: 'bmdpbng6bGF0ZXN0',
+      selected: false,
+      status: 'UNUSED',
+      badges: [],
+      digest: 'sha256:abc',
+    };
+  });
+
+  test('forwards an empty batch to the backend', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([]);
+
+    await expect(imageUtils.updateImages([])).resolves.toEqual([]);
+    expect(window.updateImages).toHaveBeenCalledExactlyOnceWith([]);
+  });
+
+  test('propagates backend errors to the caller', async () => {
+    const error = new Error('Registry unavailable');
+    vi.mocked(window.updateImages).mockRejectedValue(error);
+
+    await expect(imageUtils.updateImages([image])).rejects.toThrow(error);
+  });
+
+  test('forwards engine and image IDs in one batch and returns all backend tag results', async () => {
+    const backendResults: ImageUpdateResult[] = [
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'nginx:1.29', updated: false, status: 'normal', message: 'Up to date' },
+      { imageRef: 'redis:7', updated: true, status: 'updated', message: 'Updated' },
+    ];
+    vi.mocked(window.updateImages).mockResolvedValue(backendResults);
+
+    const results = await imageUtils.updateImages([
+      image,
+      { ...image, id: 'sha256:redis', name: 'redis', tag: '7', engineId: 'docker' },
+    ]);
+
+    expect(window.updateImages).toHaveBeenCalledExactlyOnceWith([
+      { engineId: 'podman', id: 'sha256:abc' },
+      { engineId: 'docker', id: 'sha256:redis' },
+    ]);
+    expect(results).toEqual(backendResults);
   });
 });
 

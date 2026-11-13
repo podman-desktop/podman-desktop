@@ -18,17 +18,20 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { Uri } from '@podman-desktop/api';
+import type { Uri } from '@desktop-framework/extension-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
 import ContainerExport from './ContainerExport.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
+
+vi.mock(import('tinro'));
 
 // the store holds ContainerInfoUI now
 const container: ContainerInfoUI = {
@@ -64,7 +67,7 @@ test('Expect export button to be enabled when output target is selected', async 
   containersInfos.set([container]);
   vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
   await waitRender();
-  const btnSelectOutputDir = screen.getByRole('button', { name: 'Select output file' });
+  const btnSelectOutputDir = screen.getByRole('button', { name: 'Browse... output file' });
   expect(btnSelectOutputDir).toBeInTheDocument();
   await userEvent.click(btnSelectOutputDir);
 
@@ -79,7 +82,7 @@ test('Expect export function called when export button is clicked', async () => 
   vi.mocked(window.exportContainer).mockResolvedValue(undefined);
   const goToMock = vi.spyOn(router, 'goto');
   await waitRender();
-  const btnSelectOutputDir = screen.getByRole('button', { name: 'Select output file' });
+  const btnSelectOutputDir = screen.getByRole('button', { name: 'Browse... output file' });
   expect(btnSelectOutputDir).toBeInTheDocument();
   await userEvent.click(btnSelectOutputDir);
 
@@ -100,7 +103,7 @@ test('Expect error shown if export function fails', async () => {
   vi.mocked(window.exportContainer).mockRejectedValue('error while exporting');
   const goToMock = vi.spyOn(router, 'goto');
   await waitRender();
-  const btnSelectOutputDir = screen.getByRole('button', { name: 'Select output file' });
+  const btnSelectOutputDir = screen.getByRole('button', { name: 'Browse... output file' });
   expect(btnSelectOutputDir).toBeInTheDocument();
   await userEvent.click(btnSelectOutputDir);
 
@@ -108,7 +111,7 @@ test('Expect error shown if export function fails', async () => {
   expect(btnExportcontainer).toBeInTheDocument();
   await userEvent.click(btnExportcontainer);
 
-  const errorDiv = screen.getByLabelText('Error Message Content');
+  const errorDiv = screen.getByRole('alert');
 
   expect(window.exportContainer).toBeCalledWith(container.engineId, {
     id: container.id,
@@ -117,4 +120,15 @@ test('Expect error shown if export function fails', async () => {
   expect(goToMock).not.toBeCalled();
   expect(errorDiv).toBeInTheDocument();
   expect((errorDiv as HTMLDivElement).innerHTML).toContain('error while exporting');
+});
+
+test('Expect Close button to navigate to last page when clicked', async () => {
+  containersInfos.set([container]);
+  lastPage.set({ name: 'Containers', path: '/containers' });
+  await waitRender();
+
+  const closeButton = await screen.findByText('Close');
+  await userEvent.click(closeButton);
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/containers');
 });

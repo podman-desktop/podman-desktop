@@ -2,7 +2,7 @@
 import './app.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-import type { KubernetesNavigationRequest, NavigationRequest } from '@podman-desktop/core-api';
+import type { KubernetesNavigationRequest, NavigationRequest } from '@desktop-framework/api';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
@@ -225,7 +225,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/existing-image-create-container" breadcrumb="Select image" >
             <CreateContainerFromExistingImage />
           </Route>
-          <Route path="/build" breadcrumb="Build an Image" let:meta>
+          <Route path="/build/*" breadcrumb="Build an Image" let:meta>
             <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
           </Route>
           <Route path="/pull" breadcrumb="Pull an Image">

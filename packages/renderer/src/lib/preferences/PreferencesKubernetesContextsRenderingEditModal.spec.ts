@@ -18,8 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { KubeContext } from '@desktop-framework/api';
 import type { Cluster, User } from '@kubernetes/client-node';
-import type { KubeContext } from '@podman-desktop/core-api';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -73,6 +73,15 @@ beforeEach(() => {
 });
 
 describe('UpdateContext', () => {
+  test('dialog title is Edit context', () => {
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback: closeCallback,
+    });
+
+    expect(screen.getByRole('dialog', { name: 'Edit context' })).toBeInTheDocument();
+  });
+
   test('Expect that modal has and save button displays', async () => {
     render(PreferencesKubernetesContextsRenderingEditModal, {
       contextToEdit: mockContext1,

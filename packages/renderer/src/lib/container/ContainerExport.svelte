@@ -1,12 +1,14 @@
 <script lang="ts">
+import { NavigationPage } from '@desktop-framework/api';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
-import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { router } from 'tinro';
 
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
 import { handleNavigation } from '/@/navigation';
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
@@ -108,17 +110,19 @@ async function exportContainer(): Promise<void> {
               <Button
                 on:click={selectFolderPath}
                 title="Open dialog to select the output file"
-                aria-label="Select output file">Browse...</Button>
+                aria-label="Browse... output file">Browse...</Button>
             </div>
-            <Button
-              on:click={exportContainer}
-              class="w-full mt-5"
-              icon={faDownload}
-              inProgress={inProgress}
-              disabled={invalidFields}
-              aria-label="Export container">
-              Export Container
-            </Button>
+            <ButtonRow class="mt-5">
+              <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+              <Button
+                on:click={exportContainer}
+                icon={faDownload}
+                inProgress={inProgress}
+                disabled={invalidFields}
+                aria-label="Export container">
+                Export Container
+              </Button>
+            </ButtonRow>
             <div aria-label="createError">
               {#if exportedError}
                 <ErrorMessage class="py-2 text-sm" error={exportedError} />

@@ -18,9 +18,9 @@
 
 import type { RequestOptions } from 'node:http';
 
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@podman-desktop/api';
-import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@podman-desktop/core-api';
-import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
+import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@desktop-framework/api';
+import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@desktop-framework/api/libpod';
+import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@desktop-framework/extension-api';
 import type DockerModem from 'docker-modem';
 import type { DialOptions } from 'docker-modem';
 import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
@@ -396,10 +396,9 @@ export class LibpodDockerode {
         path: `/v4.2.0/libpod/containers/${containerId}/attach?stdin=true&stdout=true&stderr=true&`,
         method: 'POST',
         isStream: true,
-        openStdin: true,
+        hijack: true,
         allowEmpty: true,
         statusCodes: {
-          200: true,
           404: 'no such container',
           500: 'server error',
         },
@@ -407,7 +406,7 @@ export class LibpodDockerode {
       };
 
       // patch the modem to not send any data. By default dockerode send query parameters as JSON payload
-      // but podman REST API will then echo the response, so send empty data '' instead
+      // but podman REST API will then echo the response, so send empty data '' instead and Content-Length: 0
       const originalBuildRequest = this.modem.buildRequest;
       this.modem.buildRequest = function (
         options: RequestOptions,
@@ -417,6 +416,9 @@ export class LibpodDockerode {
       ): void {
         if (context.allowEmpty && context.path.includes('/attach?')) {
           data = '';
+          if (options.headers && !Array.isArray(options.headers)) {
+            (options.headers as Record<string, string | number | string[] | undefined>)['Content-Length'] = 0;
+          }
         }
         originalBuildRequest.call(this, options, context, data, callback);
       };
@@ -947,8 +949,13 @@ export class LibpodDockerode {
     prototypeOfDockerode.resolveShortnameImage = function (shortname: string): Promise<{
       Names: string[];
     }> {
+      // encodeURIComponent leaves dots untouched, and a '.' or '..' segment makes the Podman API
+      // answer with a redirect that docker-modem is unable to follow (it throws an uncaught
+      // 'TypeError: Invalid URL'), so dots are encoded as well to keep the segment as-is.
+      const encodedShortname = encodeURIComponent(shortname).replaceAll('.', '%2E');
+
       const optsf = {
-        path: `/v5.0.0/libpod/images/${shortname}/resolve`,
+        path: `/v5.0.0/libpod/images/${encodedShortname}/resolve`,
         method: 'GET',
         statusCodes: {
           // in the documentation it says code 204, but only code 200 works as intended

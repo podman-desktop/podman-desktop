@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ListOrganizerItem, SavedListOrganizerConfig } from '@podman-desktop/core-api';
-import { IDisposable } from '@podman-desktop/core-api';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { ListOrganizerItem, SavedListOrganizerConfig } from '@desktop-framework/api';
+import { IDisposable } from '@desktop-framework/api';
+import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framework/api/configuration';
 import { inject, injectable } from 'inversify';
 
 @injectable()
@@ -46,8 +46,6 @@ export class ListOrganizerRegistry implements IDisposable {
     try {
       // Auto-register the list if not already registered
       if (!this.registeredLists[listKind]) {
-        this.registeredLists[listKind] = availableColumns;
-
         // Register the configuration with the configuration registry
         const listConfiguration: IConfigurationNode = {
           id: 'preferences',
@@ -57,7 +55,6 @@ export class ListOrganizerRegistry implements IDisposable {
             [`list.${listKind}`]: {
               description: `Preferred list of columns for ${listKind}`,
               type: 'array',
-              default: this.parseConfiguration(availableColumns),
               hidden: true,
             },
           },
@@ -65,6 +62,8 @@ export class ListOrganizerRegistry implements IDisposable {
 
         this.#disposables.push(this.configurationRegistry.registerConfigurations([listConfiguration]));
       }
+      // Available columns can change at runtime (e.g. dashboard sections depending on a feature flag), keep defaults in sync
+      this.registeredLists[listKind] = availableColumns;
 
       const config = this.configurationRegistry.getConfiguration('list');
       const savedConfig = config.get<SavedListOrganizerConfig[]>(`${listKind}`, []);

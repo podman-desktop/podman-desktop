@@ -35,6 +35,7 @@ test('Expect to have description and version', async () => {
     publisher: '',
     removable: true,
     devMode: false,
+    bundled: false,
     version: 'v1.2.3',
     state: '',
     path: '',
@@ -68,6 +69,7 @@ test('Expect to have podman desktop extension info (removable = false)', async (
     publisher: '',
     removable: false,
     devMode: false,
+    bundled: false,
     version: 'v1.2.3',
     state: '',
     path: '',
@@ -81,4 +83,27 @@ test('Expect to have podman desktop extension info (removable = false)', async (
 
   // region contains the details
   expect(region).toHaveTextContent('Pre-installed');
+});
+
+test('Expect the update button next to the version when an update is available', async () => {
+  const extension: CombinedExtensionInfoUI = {
+    type: 'pd',
+    id: 'podman-desktop.quadlet',
+    name: 'quadlet',
+    description: 'my description',
+    displayName: 'Podman Quadlet',
+    publisher: 'podman-desktop',
+    removable: true,
+    devMode: false,
+    bundled: false,
+    version: '0.12.0',
+    state: 'started',
+    path: '/plugins/quadlet',
+    readme: '',
+    update: { version: '0.12.1', ociUri: 'ghcr.io/podman-desktop/pd-extension-quadlet:0.12.1' },
+  };
+  render(InstalledExtensionCardRight, { extension });
+
+  const version = screen.getByLabelText('Version');
+  expect(version).toContainElement(screen.getByRole('button', { name: 'Update available' }));
 });

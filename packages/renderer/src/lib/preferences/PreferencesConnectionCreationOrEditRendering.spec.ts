@@ -21,8 +21,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { get } from 'svelte/store';
@@ -444,6 +444,31 @@ test(`Check itemsAudit receive updated values`, async () => {
     'test.factoryProperty': '2',
     'test.fileProperty': 'somefile',
   });
+});
+
+test('Markdown configuration descriptions keep the compact inherited styling', async () => {
+  const callback = mockCallback(async () => {});
+  const markdownProperty: IConfigurationPropertyRecordedSchema = {
+    title: 'MarkdownProperty',
+    parentId: '',
+    scope: 'ContainerProviderConnectionFactory',
+    id: 'test.markdownProperty',
+    type: 'string',
+    markdownDescription: 'Details about this configuration property.',
+  };
+
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: [markdownProperty],
+    providerInfo,
+    connectionInfo: undefined,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+  });
+
+  const markdownContent = await screen.findByRole('region', { name: 'markdown-content' });
+  expect(markdownContent.parentElement).toHaveClass('[&>section]:pb-0', '[&_p]:text-inherit');
+  expect(markdownContent).toHaveTextContent('Details about this configuration property.');
 });
 
 test(`Expect create with unchecked and checked checkboxes`, async () => {

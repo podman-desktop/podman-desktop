@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { NetworkInspectInfo } from '@podman-desktop/core-api';
+import type { NetworkInspectInfo } from '@desktop-framework/api';
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -92,7 +92,7 @@ test('Expect redirect to previous page if current network is deleted', async () 
   );
 
   vi.mocked(window.removeNetwork).mockImplementation(async () => {
-    networksListInfo.update(networks => networks.filter(network => network1.Id !== network.Id));
+    networksListInfo.update(networks => networks.filter(network => network1.Id !== network.id));
   });
 
   // defines a fake lastPage so we can check where we will be redirected

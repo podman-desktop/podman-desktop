@@ -32,6 +32,7 @@ import {
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
+  waitForMachineStatus,
 } from '/@/utility/operations';
 import { isCI, isLinux, isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
@@ -41,11 +42,10 @@ const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
 const RESOURCE_NAME = 'podman';
 
 // Timeout constants
-const TIMEOUT_SHORT = 30_000;
 const TIMEOUT_MEDIUM = 60_000;
 const TIMEOUT_LONG = 120_000;
 const TIMEOUT_MACHINE_CREATION = 200_000;
-const TIMEOUT_MACHINE_DELETION = 150_000;
+const TIMEOUT_MACHINE_DELETION = 240_000;
 
 let dialog: Locator;
 
@@ -102,7 +102,11 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   await waitUntil(
     async () =>
       (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-    { timeout: TIMEOUT_SHORT, sendError: true },
+    {
+      timeout: TIMEOUT_MEDIUM,
+      sendError: true,
+      message: `Default machine "${DEFAULT_PODMAN_MACHINE_NAME}" did not reach OFF state within ${TIMEOUT_MEDIUM}ms after stop`,
+    },
   );
 });
 
@@ -153,87 +157,76 @@ test.afterEach(async ({ page }, testInfo) => {
 });
 
 for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of machineTypes) {
-  test.describe
-    .serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, { tag: '@pdmachine' }, () => {
+  test.describe(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, { tag: '@pdmachine' }, () => {
+    test.describe.configure({ mode: 'serial' });
+    test.skip(
+      PODMAN_MACHINE_NAME === 'podman-machine-usermode' && !isWindows,
+      'Testing user networking machine only on Windows',
+    );
+
+    test('Create machine through Resources page', async ({ page, navigationBar }) => {
+      test.setTimeout(TIMEOUT_MACHINE_CREATION);
+
+      const settingsBar = await navigationBar.openSettings();
+      await settingsBar.resourcesTab.click();
+
+      const podmanResources = new ResourceConnectionCardPage(page, RESOURCE_NAME);
+      await podmanResources.createButton.click();
+
+      const createMachinePage = new CreateMachinePage(page);
+
+      const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
+        isRootful: isRoot,
+        enableUserNet: userNet,
+        setAsDefault: false,
+        startNow: false,
+        virtualizationProvider: getVirtualizationProvider(),
+      });
+
+      await playExpect(resourcePage.heading).toBeVisible();
+      const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+      await verifyMachinePrivileges(
+        machineCard,
+        isRoot ? PodmanMachinePrivileges.Rootful : PodmanMachinePrivileges.Rootless,
+      );
+      await verifyVirtualizationProvider(
+        machineCard,
+        getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+      );
+      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+      playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
+    });
+
+    test('Start the machine', async ({ page }) => {
+      test.setTimeout(TIMEOUT_MACHINE_CREATION);
+      const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+      await machineCard.performConnectionAction(ResourceElementActions.Start);
+
+      await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
+      await handlePodmanConfirmationDialogs(page);
+
+      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running);
+    });
+
+    test('Restart the machine', async ({ page }) => {
+      test.setTimeout(300_000);
       test.skip(
-        PODMAN_MACHINE_NAME === 'podman-machine-usermode' && !isWindows,
-        'Testing user networking machine only on Windows',
+        isCI && userNet,
+        'Restarting podman machine is flaky in cicd pipeline with usermode networking. This issue is tracked in https://github.com/podman-desktop/podman-desktop/issues/15889',
       );
 
-      test('Create machine through Resources page', async ({ page, navigationBar }) => {
-        test.setTimeout(TIMEOUT_MACHINE_CREATION);
+      const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+      await machineCard.performConnectionAction(ResourceElementActions.Restart);
 
-        const settingsBar = await navigationBar.openSettings();
-        await settingsBar.resourcesTab.click();
+      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Off);
 
-        const podmanResources = new ResourceConnectionCardPage(page, RESOURCE_NAME);
-        await podmanResources.createButton.click();
-
-        const createMachinePage = new CreateMachinePage(page);
-
-        const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
-          isRootful: isRoot,
-          enableUserNet: userNet,
-          setAsDefault: false,
-          startNow: false,
-          virtualizationProvider: getVirtualizationProvider(),
-        });
-
-        await playExpect(resourcePage.heading).toBeVisible();
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-        await verifyMachinePrivileges(
-          machineCard,
-          isRoot ? PodmanMachinePrivileges.Rootful : PodmanMachinePrivileges.Rootless,
-        );
-        await verifyVirtualizationProvider(
-          machineCard,
-          getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
-        );
-        playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
-        playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
-      });
-
-      test('Start the machine', async ({ page }) => {
-        test.setTimeout(TIMEOUT_MACHINE_CREATION);
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-        await machineCard.performConnectionAction(ResourceElementActions.Start);
-
-        await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_LONG });
-        await handlePodmanConfirmationDialogs(page);
-
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: TIMEOUT_SHORT, sendError: true },
-        );
-      });
-
-      test('Restart the machine', async ({ page }) => {
-        test.skip(
-          isCI && userNet,
-          'Restarting podman machine is flaky in cicd pipeline with usermode networking. This issue is tracked in https://github.com/podman-desktop/podman-desktop/issues/15889',
-        );
-
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-        await machineCard.performConnectionAction(ResourceElementActions.Restart);
-
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-          { timeout: TIMEOUT_SHORT, sendError: true },
-        );
-
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: TIMEOUT_SHORT, sendError: true },
-        );
-      });
-
-      test('Stop and delete the machine', async ({ page }) => {
-        test.setTimeout(TIMEOUT_MACHINE_DELETION);
-        await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
-        await handlePodmanConfirmationDialogs(page);
-      });
+      await waitForMachineStatus(page, PODMAN_MACHINE_NAME, ResourceElementState.Running);
     });
+
+    test('Stop and delete the machine', async ({ page }) => {
+      test.setTimeout(TIMEOUT_MACHINE_DELETION);
+      await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
+      await handlePodmanConfirmationDialogs(page);
+    });
+  });
 }

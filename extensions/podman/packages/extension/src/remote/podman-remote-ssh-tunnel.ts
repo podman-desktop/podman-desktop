@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { EventEmitter } from 'node:events';
 import * as net from 'node:net';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
@@ -54,6 +55,8 @@ export class PodmanRemoteSshTunnel {
       host: this.host,
       port: this.port,
       username: this.username,
+      // Allow extensions like direct-streamlocal@openssh.com to be attempted on non-OpenSSH-identifying servers
+      strictVendor: false,
     };
     if (this.privateKey) {
       this.#sshConfig.privateKey = this.privateKey;
@@ -76,8 +79,27 @@ export class PodmanRemoteSshTunnel {
     return this.#sshConfig;
   }
 
-  protected createServer(connectionListener: (socket: net.Socket) => void): net.Server {
-    return net.createServer(connectionListener);
+  protected logSocketError(side: 'local' | 'remote', error: unknown): void {
+    console.error(
+      `Podman ssh tunnel ${side} socket error using configuration`,
+      {
+        host: this.host,
+        port: this.port,
+        username: this.username,
+      },
+      error,
+    );
+  }
+
+  protected registerSocketErrorHandler(
+    socket: EventEmitter,
+    peerSocket: { end(): unknown },
+    side: 'local' | 'remote',
+  ): void {
+    socket.on('error', error => {
+      this.logSocketError(side, error);
+      peerSocket.end();
+    });
   }
 
   dispose(): void {
@@ -137,16 +159,10 @@ export class PodmanRemoteSshTunnel {
             });
 
             // Handle local socket error
-            localSocket.on('error', err => {
-              console.error('Podman ssh tunnel local socket error using configuration', this.#sshConfig, err);
-              remoteSocket.end();
-            });
+            this.registerSocketErrorHandler(localSocket, remoteSocket, 'local');
 
             // Handle remote socket error
-            remoteSocket.on('error', (err: unknown) => {
-              console.error('Podman ssh tunnel remote socket error using configuration', this.#sshConfig, err);
-              localSocket.end();
-            });
+            this.registerSocketErrorHandler(remoteSocket, localSocket, 'remote');
           });
         });
 

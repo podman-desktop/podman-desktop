@@ -34,7 +34,7 @@ export class KubeContextPage extends SettingsPage {
     this.heading = this.page.getByLabel('Title', { exact: true });
     this.content = this.page.getByLabel('Content');
     this.contextTable = this.content.getByLabel('Contexts');
-    this.editContextDialog = this.page.getByRole('dialog', { name: 'Edit Context' });
+    this.editContextDialog = this.page.getByRole('dialog', { name: 'Edit context' });
   }
 
   async pageIsEmpty(): Promise<boolean> {

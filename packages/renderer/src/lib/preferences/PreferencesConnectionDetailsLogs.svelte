@@ -1,8 +1,8 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
-import type { ProviderContainerConnectionInfo, ProviderKubernetesConnectionInfo } from '@podman-desktop/core-api';
-import { TerminalSettings } from '@podman-desktop/core-api/terminal';
+import type { ProviderContainerConnectionInfo, ProviderKubernetesConnectionInfo } from '@desktop-framework/api';
+import { TerminalSettings } from '@desktop-framework/api/terminal';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
@@ -94,7 +94,7 @@ onMount(async () => {
       (data: unknown[]) => logHandler(data, ''),
       (data: unknown[]) => logHandler(data, ''),
       (data: unknown[]) => logHandler(data, ''),
-      connectionInfo,
+      $state.snapshot(connectionInfo),
     );
   }
 });

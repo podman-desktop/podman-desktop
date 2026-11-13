@@ -1,15 +1,16 @@
 <script lang="ts">
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
 import { faCircleArrowDown, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 
 let containersToImport: { imagePath: string; nameWhenImporting: string }[] = $state([]);
@@ -140,15 +141,17 @@ async function importContainers(): Promise<void> {
     {/each}
 
     <div class="pt-5">
-      <Button
-        on:click={importContainers}
-        inProgress={inProgress}
-        class="w-full"
-        icon={faCircleArrowDown}
-        aria-label="Import containers"
-        disabled={importDisabled}>
-        Import Containers
-      </Button>
+      <ButtonRow>
+        <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+        <Button
+          on:click={importContainers}
+          inProgress={inProgress}
+          icon={faCircleArrowDown}
+          aria-label="Import containers"
+          disabled={importDisabled}>
+          Import Containers
+        </Button>
+      </ButtonRow>
       <div aria-label="importError">
         {#if importError !== ''}
           <ErrorMessage class="py-2 text-sm" error={importError} />

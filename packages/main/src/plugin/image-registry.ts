@@ -23,16 +23,15 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 
-import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   ImageSearchOptions,
   ImageSearchResult,
   ImageTagsListOptions,
   ImageUpdateStatus,
-} from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+} from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
 import type * as Dockerode from 'dockerode';
-import * as fzstd from 'fzstd';
 import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import { Agent, ProxyAgent } from 'undici';
@@ -45,6 +44,7 @@ import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
+import { decompressZstd } from './util/zstd.js';
 
 export interface RegistryAuthInfo {
   authUrl: string;
@@ -55,6 +55,8 @@ export interface RegistryAuthInfo {
 
 @injectable()
 export class ImageRegistry {
+  static readonly DANGLING_IMAGE_MESSAGE = 'Image is dangling and cannot be checked for updates';
+
   private registries: containerDesktopAPI.Registry[] = [];
   private suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
   private providers: Map<string, containerDesktopAPI.RegistryProvider> = new Map();
@@ -552,6 +554,12 @@ export class ImageRegistry {
       throw new Error(`No gzip or zstd layers found for the image ${imageName}`);
     }
 
+    // the declared size bounds each download, so it must be a valid byte count
+    const invalidLayer = layers.find(layer => !Number.isSafeInteger(layer.size) || layer.size < 0);
+    if (invalidLayer) {
+      throw new Error(`Invalid size declared for layer ${invalidLayer.digest} of the image ${imageName}`);
+    }
+
     // total size of all layers
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalSize = layers.reduce((acc: number, layer: any) => acc + layer.size, 0);
@@ -567,6 +575,7 @@ export class ImageRegistry {
       await this.fetchAndExtractLayer(
         imageData,
         layerDigest,
+        layer.size,
         compressionType,
         destFolder,
         token,
@@ -581,6 +590,7 @@ export class ImageRegistry {
   protected async fetchAndExtractLayer(
     imageData: ImageRegistryNameTag,
     digest: string,
+    expectedSize: number,
     compressionType: 'gzip' | 'zstd',
     destFolder: string,
     token: string,
@@ -618,38 +628,60 @@ export class ImageRegistry {
       throw new Error(`Failed to fetch blob ${blobURL}: ${response.statusText}`);
     }
 
+    // fail fast when the announced length already disagrees with the manifest
+    // (skipped for encoded responses, where content-length is the encoded length)
+    const contentLength = response.headers.get('content-length');
+    if (contentLength !== null && !response.headers.has('content-encoding') && Number(contentLength) !== expectedSize) {
+      await response.body.cancel();
+      throw new Error(
+        `Blob ${digest} size mismatch: expected ${expectedSize} bytes, registry announced ${contentLength}`,
+      );
+    }
+
     const body = response.body;
     let transferred = 0;
 
-    // pipeline handles backpressure, error propagation and stream teardown
-    await pipeline(async function* () {
-      for await (const chunk of body) {
-        transferred += chunk.byteLength;
+    // in case of zstd, the downloaded file is decompressed to a separate tar file before being extracted
+    const unpackedFileName = compressionType === 'zstd' ? tmpFileName.replace('.zst', '.tar') : undefined;
 
-        const downloaded = currentDownloaded + transferred;
-        const progress = Math.round((downloaded / totalSize) * 100);
+    try {
+      // pipeline handles backpressure, error propagation and stream teardown
+      await pipeline(async function* () {
+        for await (const chunk of body) {
+          transferred += chunk.byteLength;
+          // stop as soon as the registry sends more than the manifest declared
+          if (transferred > expectedSize) {
+            throw new Error(`Blob ${digest} exceeds its declared size of ${expectedSize} bytes`);
+          }
 
-        logger({
-          message: `Downloading ${digest}${suffix} - ${progress}% - (${downloaded}/${totalSize})`,
-          progress,
-        });
+          const downloaded = currentDownloaded + transferred;
+          const progress = Math.round((downloaded / totalSize) * 100);
 
-        yield chunk;
+          logger({
+            message: `Downloading ${digest}${suffix} - ${progress}% - (${downloaded}/${totalSize})`,
+            progress,
+          });
+
+          yield chunk;
+        }
+        if (transferred !== expectedSize) {
+          throw new Error(`Blob ${digest} size mismatch: expected ${expectedSize} bytes, received ${transferred}`);
+        }
+      }, createWriteStream(tmpFileName));
+
+      if (unpackedFileName) {
+        await decompressZstd(tmpFileName, unpackedFileName);
+        await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
+      } else {
+        await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
       }
-    }, createWriteStream(tmpFileName));
-
-    if (compressionType === 'zstd') {
-      //use fstd library to extract the file
-      const content = await fs.promises.readFile(tmpFileName);
-      const decompressed = fzstd.decompress(content);
-      const unpackedFileName = tmpFileName.replace('.zst', '.tar');
-      await fs.promises.writeFile(unpackedFileName, decompressed);
-      await nodeTar.extract({ file: unpackedFileName, cwd: destFolder });
-    } else {
-      await nodeTar.extract({ file: tmpFileName, cwd: destFolder });
+    } finally {
+      // remove the temporary files, even if the download, the decompression or the extraction failed
+      await fs.promises.rm(tmpFileName, { force: true });
+      if (unpackedFileName) {
+        await fs.promises.rm(unpackedFileName, { force: true });
+      }
     }
-    // remove the temporary file
-    await fs.promises.rm(tmpFileName);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -866,7 +898,7 @@ export class ImageRegistry {
       return {
         status: 'skipped',
         updateAvailable: false,
-        message: 'Image is dangling and cannot be checked for updates',
+        message: ImageRegistry.DANGLING_IMAGE_MESSAGE,
       };
     }
 

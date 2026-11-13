@@ -29,7 +29,7 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '@podman-desktop/podma
 import { Mutex } from 'async-mutex';
 import { compare } from 'semver';
 
-import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
@@ -120,6 +120,7 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
 let rosettaProvisioner: RosettaProvisioner;
+let socketCompatibility: SocketCompatibility | undefined;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -999,12 +1000,19 @@ export async function startMachine(
 
   try {
     // start the machine
+    const startLogger = new LoggerDelegator(context, logger);
     const runOptions: extensionApi.RunOptions = {
-      logger: new LoggerDelegator(context, logger),
+      logger: startLogger,
     };
 
     if (autoStart) {
       runOptions.detached = true;
+    }
+
+    // a stale API socket left behind by a Windows restart prevents the API forwarding from starting
+    // only clean it up for a stopped machine: a running one may own the socket
+    if (extensionApi.env.isWindows && podmanMachinesStatuses.get(machineInfo.name) === 'stopped') {
+      telemetryRecords.staleApiSocketRemoved = await winPlatform.removeStaleApiSocket(machineInfo.name, startLogger);
     }
 
     await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
@@ -1174,10 +1182,6 @@ export function initTelemetryLogger(): void {
 
 export function initExtensionContext(extensionContext: extensionApi.ExtensionContext): void {
   storedExtensionContext = extensionContext;
-}
-
-export function initExtensionNotification(): void {
-  extensionNotifications = new ExtensionNotifications(telemetryLogger);
 }
 
 export function initPodmanRemoteConnections(remoteConnections: PodmanRemoteConnections): void {
@@ -1424,6 +1428,8 @@ export async function initInversify(
   winPlatform = inversifyContainer.get(WinPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
+  socketCompatibility = inversifyContainer.get(SocketCompatibility, { optional: true });
+  extensionNotifications = inversifyContainer.get(ExtensionNotifications);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
   return { podmanInstall, winPlatform, podmanProvider };
@@ -1435,8 +1441,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   initExtensionContext(extensionContext);
 
   initTelemetryLogger();
-
-  initExtensionNotification();
 
   if (telemetryLogger) {
     await initializeCertificateDetection(telemetryLogger);
@@ -1462,25 +1466,25 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const provider = podmanProvider.provider;
 
   // Compatibility mode status bar item
-  // only available for macOS
-  if (extensionApi.env.isMac) {
+  // only available for macOS, the only platform where SocketCompatibility is bound
+  // (local const so the narrowed type is kept inside the command closures below)
+  const socketCompatibilityMode = socketCompatibility;
+  if (socketCompatibilityMode) {
     // Register the command for disabling the do not show mac helper setting permanently
     extensionContext.subscriptions.push(extensionNotifications.setupNotificationMacPodman());
 
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(
       extensionApi.commands.registerCommand('podman.disableCompatibilityMode', async () => {
-        await switchCompatibilityMode(false);
+        await switchCompatibilityMode(socketCompatibilityMode, false);
       }),
     );
     extensionContext.subscriptions.push(
       extensionApi.commands.registerCommand('podman.enableCompatibilityMode', async () => {
-        await switchCompatibilityMode(true);
+        await switchCompatibilityMode(socketCompatibilityMode, true);
       }),
     );
 
-    // Get the socketCompatibilityClass for the current OS.
-    const socketCompatibilityMode = getSocketCompatibility();
     // update the initial context value
     const compatibilityEnabled = socketCompatibilityMode.isEnabled();
     extensionApi.context.setValue(PODMAN_DOCKER_COMPAT_ENABLE_KEY, compatibilityEnabled);
@@ -1506,7 +1510,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         );
 
         if (result === 'Enable') {
-          await switchCompatibilityMode(true);
+          await switchCompatibilityMode(socketCompatibilityMode, true);
         }
       } else {
         const result = await extensionApi.window.showInformationMessage(
@@ -1516,7 +1520,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         );
 
         if (result === 'Disable') {
-          await switchCompatibilityMode(false);
+          await switchCompatibilityMode(socketCompatibilityMode, false);
         }
       }
     });
@@ -1749,6 +1753,7 @@ export async function start(
           result.push({
             name: check.title,
             successful: checkResult.successful,
+            severity: checkResult.severity,
             description: checkResult.description,
             docLinks: checkResult.docLinks,
             docLinksDescription: checkResult.docLinksDescription,
@@ -1779,7 +1784,7 @@ export async function start(
 
       for (const res of result) {
         const warning = {
-          state: res.successful ? 'successful' : 'failed',
+          state: res.successful ? 'successful' : res.severity === 'warning' ? 'warning' : 'failed',
           description: res.description ?? res.name,
           docDescription: res.docLinksDescription,
           docLinks: res.docLinks,
@@ -2253,6 +2258,17 @@ export async function createMachine(
 
   const podmanInstallation = await podmanBinary.getBinaryInfo();
   const version = podmanInstallation?.version;
+
+  // WSL machines do not work when WSL is too old for the Podman version, fail early with a meaningful message
+  if (extensionApi.env.isWindows && provider === 'wsl' && version) {
+    const result = await winPlatform.wslPodmanVersionCheck.executeFor(version);
+    if (!result.successful) {
+      telemetryRecords.errorCode = 'ErrUnsupportedWSLVersion';
+      sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
+      throw new Error(`${result.description} ${result.docLinksDescription}`);
+    }
+  }
+
   // check for podman major version
   const isPodmanV5OrLater = version ? isPodman5OrLater(version) : false;
   // image
@@ -2415,17 +2431,11 @@ export async function createMachine(
   extensionNotifications.disposeNotification();
 }
 
-export function resetShouldNotifySetup(): void {
-  extensionNotifications.shouldNotifySetup = true;
-}
-
 export function resetWSLWarningFlag(): void {
   wslWarningShown = false;
 }
 
-async function switchCompatibilityMode(enabled: boolean): Promise<void> {
-  const socketCompatibilityMode = getSocketCompatibility();
-
+async function switchCompatibilityMode(socketCompatibilityMode: SocketCompatibility, enabled: boolean): Promise<void> {
   if (enabled) {
     await socketCompatibilityMode.enable();
   } else {

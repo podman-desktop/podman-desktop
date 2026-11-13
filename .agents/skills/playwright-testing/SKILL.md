@@ -232,6 +232,12 @@ async openImages(): Promise<ImagesPage> {
 
 ## Writing Spec Files
 
+### Maintain the test specification
+
+Read [TESTS_SPECIFICATION.md](../../../tests/playwright/TESTS_SPECIFICATION.md) to identify related suites and shared execution requirements. When adding, renaming, moving, or removing a spec, or changing its documented coverage or execution contract, update the inventory in the same change. Shared fixture, helper, runner, or script changes can require updates to several entries.
+
+Follow [Test specification maintenance](../../../tests/playwright/AGENTS.md#test-specification-maintenance) for grouping, required information, and verification. Keep each spec linked once; document actual prerequisites, input defaults, selection/skip conditions, and cleanup limits. No inventory edit is needed for an internal refactor that leaves the documented contract unchanged.
+
 ### Template
 
 ```typescript

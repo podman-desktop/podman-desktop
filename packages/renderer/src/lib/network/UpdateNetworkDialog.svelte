@@ -26,7 +26,7 @@ async function updateNetwork(): Promise<void> {
 }
 </script>
 <Dialog
-  title={`Update Network ${network.name}`}
+  title={`Update network ${network.name}`}
   onclose={onClose}>
   {#snippet content()}
     <div  class="flex flex-col text-[var(--pd-modal-text)] space-y-5">

@@ -153,6 +153,71 @@ test('Expect basic error styling', async () => {
 
   const err = screen.getByText(error);
   expect(err).toBeInTheDocument();
+
+  expect(element).toBeInvalid();
+  expect(screen.queryByLabelText('error')).not.toBeInTheDocument();
+  expect(document.querySelector('span[aria-hidden="true"]')).toBeInTheDocument();
+});
+
+test.each([
+  { name: 'aria-invalid false overrides error', props: { error: 'Test error', 'aria-invalid': false }, invalid: false },
+  { name: 'showError false hides invalid state', props: { error: 'Test error', showError: false }, invalid: false },
+  { name: 'aria-invalid true without error', props: { 'aria-invalid': true }, invalid: true },
+])('Expect aria-invalid precedence: $name', ({ props, invalid }) => {
+  render(Input, { value: 'test', placeholder: 'test', ...props });
+
+  const element = screen.getByPlaceholderText('test');
+  if (invalid) {
+    expect(element).toBeInvalid();
+  } else {
+    expect(element).not.toBeInvalid();
+  }
+});
+
+describe('error description', () => {
+  test('error text is exposed as the accessible description', () => {
+    render(Input, { value: 'test', error: 'Test error' });
+
+    expect(screen.getByRole('textbox')).toHaveAccessibleDescription('Test error');
+  });
+
+  test.each([
+    { name: 'no error', props: {} },
+    { name: 'empty error', props: { error: '' } },
+    { name: 'showError false', props: { error: 'Test error', showError: false } },
+  ])('no accessible description with $name', ({ props }) => {
+    render(Input, { value: 'test', ...props });
+
+    const element = screen.getByRole('textbox');
+    expect(element).not.toHaveAttribute('aria-describedby');
+    expect(element).toHaveAccessibleDescription('');
+  });
+
+  test('explicit aria-describedby wins over the error text', () => {
+    const hint = document.createElement('span');
+    hint.id = 'custom-hint';
+    hint.textContent = 'Custom hint';
+    document.body.appendChild(hint);
+
+    render(Input, { value: 'test', error: 'Test error', 'aria-describedby': 'custom-hint' });
+
+    const element = screen.getByRole('textbox');
+    expect(element).toHaveAttribute('aria-describedby', 'custom-hint');
+    expect(element).toHaveAccessibleDescription('Custom hint');
+
+    hint.remove();
+  });
+
+  test('description is removed when the error is cleared', async () => {
+    const { rerender } = render(Input, { value: 'test', error: 'Test error' });
+    const element = screen.getByRole('textbox');
+    expect(element).toHaveAccessibleDescription('Test error');
+
+    await rerender({ error: undefined });
+
+    expect(element).not.toHaveAttribute('aria-describedby');
+    expect(element).toHaveAccessibleDescription('');
+  });
 });
 
 test('Expect inputClass styling', async () => {

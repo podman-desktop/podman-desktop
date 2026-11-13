@@ -1,11 +1,12 @@
 <script lang="ts">
 import { faDownload, faMinusCircle } from '@fortawesome/free-solid-svg-icons';
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import EngineFormPage from '/@/lib/ui//EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
+import { lastPage } from '/@/stores/breadcrumb';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -139,7 +140,7 @@ async function saveImages(): Promise<void> {
         <Button
           on:click={selectOutputPath}
           title="Open dialog to select the output folder"
-          aria-label="Select output folder">Browse...</Button>
+          aria-label="Browse... output folder">Browse...</Button>
       </div>
 
       {#if !singleItemMode && imagesToSave.length > 0}
@@ -163,15 +164,17 @@ async function saveImages(): Promise<void> {
       {/if}
 
       <div class="pt-5 w-full">
-        <Button
-          on:click={saveImages}
-          inProgress={inProgress}
-          class="w-full"
-          icon={faDownload}
-          aria-label="Save images"
-          disabled={saveDisabled}>
-          Save Images
-        </Button>
+        <ButtonRow>
+          <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+          <Button
+            on:click={saveImages}
+            inProgress={inProgress}
+            icon={faDownload}
+            aria-label="Save images"
+            disabled={saveDisabled}>
+            Save Images
+          </Button>
+        </ButtonRow>
         <div aria-label="saveError">
           {#if saveError !== ''}
             <ErrorMessage class="py-2 text-sm" error={saveError} />

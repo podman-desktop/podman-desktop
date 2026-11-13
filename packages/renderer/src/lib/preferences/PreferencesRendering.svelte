@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { SearchInput } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
@@ -34,6 +34,8 @@ const matchingRecords = $derived(
       property =>
         !searchValue ||
         matchValue(property.title, searchValue) ||
+        (!!property.id && matchValue(property.id, searchValue)) ||
+        (!!property.displayName && matchValue(property.displayName, searchValue)) ||
         (!!property.description && matchValue(property.description, searchValue)) ||
         (!!property.markdownDescription && matchValue(property.markdownDescription, searchValue)),
     )

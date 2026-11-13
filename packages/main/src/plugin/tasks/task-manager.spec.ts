@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
@@ -69,7 +69,7 @@ test('task manager init should register a configuration option', async () => {
           'tasks.Toast': {
             type: 'boolean',
             description: 'Display a notification toast when task is created',
-            default: false,
+            default: true,
           },
         }),
       }),

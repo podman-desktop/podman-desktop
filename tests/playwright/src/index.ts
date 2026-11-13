@@ -30,6 +30,7 @@ export * from './utility/cleanup';
 export * from './utility/cluster-operations';
 export * from './utility/dialog';
 export * from './utility/fixtures';
+export * from './utility/installer-checksums';
 export * from './utility/kubernetes';
 export * from './utility/operations';
 export * from './utility/platform';
@@ -38,6 +39,7 @@ export * from './utility/registry-auth-config';
 export * from './utility/wait';
 
 // exports Podman Desktop Page Object Module
+export * from './model/core/data-subdirectories';
 export * from './model/core/extensions';
 export * from './model/core/operations';
 export * from './model/core/platforms';
@@ -110,3 +112,4 @@ export * from './model/workbench/status-bar';
 
 // export components
 export * from './model/components/dropdown-component';
+export * from './model/components/help-menu-component';

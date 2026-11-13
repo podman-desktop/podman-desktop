@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
+
 export const sendGoatCounterEvent = (path: string, title: string): void => {
   window.goatcounter?.count({
     path: path,
@@ -23,3 +26,23 @@ export const sendGoatCounterEvent = (path: string, title: string): void => {
     event: true,
   });
 };
+
+// Utility to detect platform
+export function getClientPlatform(): {
+  os: string;
+  url: string;
+  icon: IconProp;
+} | null {
+  const ua = navigator.userAgent;
+
+  if (ua.includes('Windows')) {
+    return { os: 'Windows', url: 'windows', icon: faWindows };
+  }
+  if (ua.includes('Mac')) {
+    return { os: 'macOS', url: 'macos', icon: faApple };
+  }
+  if (ua.includes('Linux')) {
+    return { os: 'Linux', url: 'linux', icon: faLinux };
+  }
+  return null;
+}

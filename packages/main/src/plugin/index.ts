@@ -24,25 +24,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import type {
-  Cluster,
-  Context as KubernetesContext,
-  KubernetesObject,
-  User,
-  V1ConfigMap,
-  V1CronJob,
-  V1Deployment,
-  V1Ingress,
-  V1Job,
-  V1NamespaceList,
-  V1Node,
-  V1PersistentVolumeClaim,
-  V1Pod,
-  V1PodList,
-  V1Secret,
-  V1Service,
-} from '@kubernetes/client-node';
-import type * as containerDesktopAPI from '@podman-desktop/api';
-import type {
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -75,10 +56,13 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImageSearchOptions,
   ImageSearchResult,
   ImagesSaveOptions,
   ImageTagsListOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   ImageUpdateStatus,
   KubeContext,
   KubernetesContextResources,
@@ -127,32 +111,51 @@ import type {
   VolumeListInfo,
   WebviewInfo,
   WelcomeMessages,
-} from '@podman-desktop/core-api';
-import type { ApiSenderChannelMap } from '@podman-desktop/core-api/api-sender';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { AuthenticationProviderInfo } from '@podman-desktop/core-api/authentication';
+} from '@desktop-framework/api';
+import type { ApiSenderChannelMap } from '@desktop-framework/api/api-sender';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { AuthenticationProviderInfo } from '@desktop-framework/api/authentication';
 import {
   type IConfigurationPropertyRecordedSchema,
   IConfigurationRegistry,
-} from '@podman-desktop/core-api/configuration';
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
-import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+} from '@desktop-framework/api/configuration';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
+import type { FeaturedExtension } from '@desktop-framework/api/featured';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
   KubernetesGeneratorInfo,
   KubernetesGeneratorSelector,
-} from '@podman-desktop/core-api/kubernetes';
+} from '@desktop-framework/api/kubernetes';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
   PlayKubeInput,
-} from '@podman-desktop/core-api/libpod';
-import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
-import type { PinOption } from '@podman-desktop/core-api/status-bar';
-import checkDiskSpacePkg from 'check-disk-space';
+} from '@desktop-framework/api/libpod';
+import type { ExtensionBanner, RecommendedRegistry } from '@desktop-framework/api/recommendations';
+import type { PinOption } from '@desktop-framework/api/status-bar';
+import type * as containerDesktopAPI from '@desktop-framework/extension-api';
+import type {
+  Cluster,
+  Context as KubernetesContext,
+  KubernetesObject,
+  User,
+  V1ConfigMap,
+  V1CronJob,
+  V1Deployment,
+  V1Ingress,
+  V1Job,
+  V1NamespaceList,
+  V1Node,
+  V1PersistentVolumeClaim,
+  V1Pod,
+  V1PodList,
+  V1Secret,
+  V1Service,
+} from '@kubernetes/client-node';
+import { checkDiskSpace } from 'check-disk-space';
 import type Dockerode from 'dockerode';
-import type { IpcMainEvent, WebContents } from 'electron';
+import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
@@ -215,6 +218,7 @@ import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
+import { ExtensionInstaller } from './extension/extension-installer.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -225,7 +229,6 @@ import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
-import { ExtensionInstaller } from './install/extension-installer.js';
 import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
@@ -246,6 +249,7 @@ import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js'
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
+import { CIDetection } from './telemetry/ci-detection.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
@@ -261,12 +265,17 @@ import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
 
-// workaround for ESM
-const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
-  path: string,
-) => Promise<{ free: number }>;
-
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
+
+/**
+ * Subset of Electron's WebContents used by PluginSystem for IPC sends.
+ * Keeps the coupling narrow so the class never depends on the full WebContents surface.
+ */
+interface MainWindowWebContentsSender {
+  send(channel: string, ...args: unknown[]): void;
+  on(eventName: 'dom-ready', listener: () => void): void;
+  isDestroyed(): boolean;
+}
 
 export interface LoggerWithEnd extends containerDesktopAPI.Logger {
   // when task is finished, this function is called
@@ -274,6 +283,13 @@ export interface LoggerWithEnd extends containerDesktopAPI.Logger {
 }
 
 export class PluginSystem {
+  // used when no window is available anymore, so sends are simply dropped
+  private static readonly DESTROYED_WEB_CONTENTS_SENDER: MainWindowWebContentsSender = {
+    send: (): void => {},
+    on: (): void => {},
+    isDestroyed: (): boolean => true,
+  };
+
   // ready is when we've finished to initialize extension system
   private isReady = false;
 
@@ -299,8 +315,29 @@ export class PluginSystem {
     });
   }
 
-  getWebContentsSender(): WebContents {
-    const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+  // the web contents can already be gone while the window is still listed, for example when the
+  // renderer process crashed, so both have to be checked before sending anything
+  private findMainWindow(): BrowserWindow | undefined {
+    return BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && !w.webContents.isDestroyed());
+  }
+
+  /**
+   * Sender for fire-and-forget sends, looked up for every send. It falls back to a sender doing
+   * nothing when the window is gone, so that streams still running while the application is being
+   * closed do not fail.
+   */
+  getWebContentsSender(): MainWindowWebContentsSender {
+    return this.findMainWindow()?.webContents ?? PluginSystem.DESTROYED_WEB_CONTENTS_SENDER;
+  }
+
+  /**
+   * Sender for the callers resolving it once and keeping the reference, like the api sender.
+   * Falling back to a sender doing nothing here would leave such a caller unable to ever reach the
+   * UI, so the missing window is reported instead.
+   * @throws when there is no window to send to
+   */
+  getRequiredWebContentsSender(): MainWindowWebContentsSender {
+    const window = this.findMainWindow();
     if (!window) {
       throw new Error('Unable to find the main window');
     }
@@ -397,12 +434,17 @@ export class PluginSystem {
     logTypes.forEach(logType => this.redirectConsole(logType));
   }
 
-  getApiSender(webContents: WebContents): ApiSenderType {
+  getApiSender(webContents: MainWindowWebContentsSender): ApiSenderType {
     const queuedEvents: { channel: string; data: unknown[] }[] = [];
 
     const flushQueuedEvents = (): void => {
       // flush queued events ?
       if (this.uiReady && this.isReady && queuedEvents.length > 0) {
+        // the window may have been destroyed while the events were queued, drop them instead of failing
+        if (webContents.isDestroyed()) {
+          queuedEvents.length = 0;
+          return;
+        }
         console.log(`Delayed startup, flushing ${queuedEvents.length} events`);
         queuedEvents.forEach(({ channel, data }) => {
           webContents.send('api-sender', channel, ...data);
@@ -516,7 +558,7 @@ export class PluginSystem {
     this.redirectLogging();
 
     // init api sender
-    const apiSender = this.getApiSender(this.getWebContentsSender());
+    const apiSender = this.getApiSender(this.getRequiredWebContentsSender());
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
@@ -560,6 +602,7 @@ export class PluginSystem {
     const exec = new Exec(proxy);
     container.bind<Exec>(Exec).toConstantValue(exec);
 
+    container.bind<CIDetection>(CIDetection).toSelf().inSingletonScope();
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
@@ -1328,6 +1371,17 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'container-provider-registry:resolveImage',
+      async (
+        _listener,
+        providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+        reference: string,
+      ): Promise<ImageLocation | undefined> => {
+        return containerProviderRegistry.resolveImage(providerContainerConnectionInfo, reference);
+      },
+    );
+
+    this.ipcHandle(
       'container-provider-registry:pullImage',
       async (
         _listener,
@@ -1381,6 +1435,52 @@ export class PluginSystem {
         localDigests: string[],
       ): Promise<ImageUpdateStatus> => {
         return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:updateImages',
+      async (_listener, images: ImageUpdateInfo[], cancellableTokenId?: number): Promise<ImageUpdateResult[]> => {
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          cancellableTokenId,
+        );
+        const task = taskManager.createTask({
+          title: `Updating image${images.length > 1 ? 's' : ''}`,
+          cancellable: cancellableTokenId !== undefined,
+          cancellationTokenSourceId: cancellableTokenId,
+        });
+
+        try {
+          const results = await containerProviderRegistry.updateImages(images, abortController?.signal);
+          const failures = results.filter(result => result.status === 'error');
+          const counts = {
+            updated: results.filter(result => result.status === 'updated').length,
+            'up to date': results.filter(result => result.status === 'normal').length,
+            skipped: results.filter(result => result.status === 'skipped').length,
+            failed: failures.length,
+          };
+          const summary = Object.entries(counts)
+            .filter(([, count]) => count > 0)
+            .map(([status, count]) => `${count} ${status}`)
+            .join(', ');
+          task.name = `Image update: ${summary || 'No images updated'}`;
+          if (abortController?.signal.aborted) {
+            task.status = 'canceled';
+          } else if (failures.length > 0) {
+            task.error = failures.map(result => `${result.imageRef}: ${result.message}`).join('\n');
+          } else {
+            task.status = 'success';
+          }
+          return results;
+        } catch (error: unknown) {
+          if (abortController?.signal.aborted) {
+            task.status = 'canceled';
+          } else {
+            task.error = String(error);
+          }
+          throw error;
+        }
       },
     );
 
@@ -2395,6 +2495,13 @@ export class PluginSystem {
       return extensionsCatalog.refreshCatalog();
     });
 
+    this.ipcHandle(
+      'catalog:fetchReadme',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<string> => {
+        return extensionsCatalog.fetchReadme(extensionId);
+      },
+    );
+
     this.ipcHandle('documentation:getItems', async (): Promise<DocumentationInfo[]> => {
       return documentationService.getDocumentationItems();
     });
@@ -2440,6 +2547,13 @@ export class PluginSystem {
       'extension-loader:ensureExtensionIsEnabled',
       async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<void> => {
         return this.extensionLoader.ensureExtensionIsEnabled(extensionId);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-loader:setExtensionAutoUpdate',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string, enabled: boolean): Promise<void> => {
+        return this.extensionLoader.setExtensionAutoUpdate(extensionId, enabled);
       },
     );
 
@@ -2525,7 +2639,7 @@ export class PluginSystem {
           action: {
             name: 'Go to task >',
             execute: () => {
-              navigationManager.navigateToResources().catch((err: unknown) => console.error(err));
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
             },
           },
         });
@@ -2561,7 +2675,7 @@ export class PluginSystem {
           action: {
             name: 'Go to task >',
             execute: () => {
-              navigationManager.navigateToResources().catch((err: unknown) => console.error(err));
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
             },
           },
         });
@@ -2604,7 +2718,7 @@ export class PluginSystem {
         }
 
         const task = taskManager.createTask({
-          title: `Creating ${providerConnectionInfo.name} provider`,
+          title: `Updating ${providerConnectionInfo.name} provider`,
           action: {
             name: 'Open task',
             execute: () => {
@@ -2620,7 +2734,7 @@ export class PluginSystem {
             return result;
           })
           .catch((err: unknown) => {
-            task.error = `Something went wrong while creating container provider: ${err}`;
+            task.error = `Something went wrong while updating container provider: ${err}`;
             logger.error(err);
             throw err;
           })
@@ -3323,7 +3437,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<containerDesktopAPI.ImageChecks | undefined> => {
         let token;
@@ -3331,6 +3446,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageChecker.check(id, image, token);
       },
     );
@@ -3344,7 +3460,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<ImageFilesystemLayersUI | undefined> => {
         let token;
@@ -3352,6 +3469,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageFiles.getFilesystemLayers(id, image, token);
       },
     );

@@ -19,14 +19,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type express from 'express';
 import type { Router } from 'express';
 import type { MockInstance } from 'vitest';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
 import type { DevToolsManager } from './devtools-manager.js';
-import type { WebviewPanelImpl } from './webview-panel-impl.js';
+import { WebviewPanelImpl } from './webview-panel-impl.js';
 import { WebviewRegistry } from './webview-registry.js';
 
 // mock node:fs
@@ -236,7 +236,7 @@ test('check configureRouter with valid uuid but no matching webview', async () =
 
 test('check configureRouter with valid uuid and file exists', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -275,7 +275,7 @@ test('check configureRouter with valid uuid and file exists', async () => {
 
 test('check configureRouter with valid uuid and file does not exist', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -317,7 +317,7 @@ test('check configureRouter with valid uuid and file does not exist', async () =
 
 test('check configureRouter with valid uuid and file from another directory', async () => {
   // spy fs.existsSync
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
 
   // register the webview first
   const panel = webviewRegistry.createWebviewPanel(
@@ -354,6 +354,100 @@ test('check configureRouter with valid uuid and file from another directory', as
   expect(sendMock).toHaveBeenCalledWith('not found');
 
   // sendfile not to have been called
+  expect(res.sendFile).not.toHaveBeenCalled();
+});
+
+test('check configureRouter rejects sibling directory sharing the root as prefix', () => {
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+
+  const panel = webviewRegistry.createWebviewPanel(
+    { id: 'extensionId', extensionPath: '/extensionPath' },
+    'viewTypeInfo',
+    'customTitle',
+  );
+  assert(panel instanceof WebviewPanelImpl);
+  const uuid = panel.webview.uuid;
+
+  const func = getRouterFunction('/{*splat}');
+  const req = {
+    path: '/../extensionPath-sibling/package.json',
+    hostname: `${uuid}.webview.localhost`,
+    headers: {
+      referer: 'foo',
+    },
+  };
+  const sendMock = vi.fn();
+  const res = {
+    sendFile: vi.fn(),
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
+    }),
+  };
+
+  func(req, res);
+
+  expect(res.status).toHaveBeenCalledWith(404);
+  expect(sendMock).toHaveBeenCalledWith('not found');
+  expect(res.sendFile).not.toHaveBeenCalled();
+});
+
+function callRouterWithPath(requestPath: string): {
+  sendFile: ReturnType<typeof vi.fn>;
+  status: ReturnType<typeof vi.fn>;
+  sendMock: ReturnType<typeof vi.fn>;
+} {
+  const panel = webviewRegistry.createWebviewPanel(
+    { id: 'extensionId', extensionPath: '/extensionPath' },
+    'viewTypeInfo',
+    'customTitle',
+  );
+  assert(panel instanceof WebviewPanelImpl);
+  const uuid = panel.webview.uuid;
+
+  const func = getRouterFunction('/{*splat}');
+  const req = {
+    path: requestPath,
+    hostname: `${uuid}.webview.localhost`,
+    headers: {
+      referer: 'foo',
+    },
+  };
+  const sendMock = vi.fn();
+  const res = {
+    sendFile: vi.fn(),
+    status: vi.fn().mockReturnValue({
+      send: sendMock,
+    }),
+  };
+
+  func(req, res);
+  return { ...res, sendMock };
+}
+
+test('check configureRouter decodes percent-encoded path', () => {
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+
+  const res = callRouterWithPath('/my%20folder/my%20file.js');
+
+  expect(fs.existsSync).toHaveBeenCalledWith(
+    expect.stringContaining(`${path.sep}extensionPath${path.sep}my folder${path.sep}my file.js`),
+  );
+  expect(res.sendFile).toHaveBeenCalledWith(
+    expect.stringContaining(`${path.sep}extensionPath${path.sep}my folder${path.sep}my file.js`),
+    { dotfiles: 'allow' },
+  );
+});
+
+test.each([
+  ['encoded traversal', '/..%2f..%2fextensionPath-sibling/package.json'],
+  ['malformed encoding', '/%E0%A4%A'],
+])('check configureRouter rejects %s', (_name, requestPath) => {
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+
+  const res = callRouterWithPath(requestPath);
+
+  expect(res.status).toHaveBeenCalledWith(404);
+  expect(res.sendMock).toHaveBeenCalledWith('not found');
   expect(res.sendFile).not.toHaveBeenCalled();
 });
 

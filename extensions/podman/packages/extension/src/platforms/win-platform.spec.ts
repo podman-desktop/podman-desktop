@@ -16,7 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
-import type { CheckResult, ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
+import { unlink } from 'node:fs/promises';
+
+import type { CheckResult, ExtensionContext, Logger, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -28,10 +30,13 @@ import type { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualizati
 import type { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import type { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import type { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import type { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import type { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import type { WSL2Check } from '/@/checks/windows/wsl2-check';
 
 import { WinPlatform } from './win-platform';
+
+vi.mock(import('node:fs/promises'));
 
 const EXTENSION_CONTEXT_MOCK = {} as ExtensionContext;
 const TELEMETRY_LOGGER_MOCK = {} as TelemetryLogger;
@@ -48,6 +53,10 @@ const VIRTUALIZATION_FIRMWARE_CHECK_MOCK = {
 const VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK = { execute: vi.fn() } as unknown as VirtualMachinePlatformCheck;
 const WSL_VERSION_CHECK_MOCK = { execute: vi.fn() } as unknown as WSLVersionCheck;
 const WSL2_CHECK_MOCK = { execute: vi.fn() } as unknown as WSL2Check;
+const WSL_PODMAN_VERSION_CHECK_MOCK = {
+  title: 'WSL Version for Podman',
+  execute: vi.fn(),
+} as unknown as WSLPodmanVersionCheck;
 
 const SUCCESSFUL_CHECK_RESULT: CheckResult = { successful: true };
 const FAILED_CHECK_RESULT: CheckResult = { successful: false };
@@ -67,14 +76,36 @@ beforeEach(() => {
     VIRTUAL_MACHINE_PLATFORM_CHECK_MOCK,
     WSL_VERSION_CHECK_MOCK,
     WSL2_CHECK_MOCK,
+    WSL_PODMAN_VERSION_CHECK_MOCK,
   );
 });
 
 test('getPreflightChecks should include a warning-wrapped BIOS virtualization check', () => {
   const checks = winPlatform.getPreflightChecks();
-  expect(checks).toHaveLength(6);
+  expect(checks).toHaveLength(7);
   expect(checks[3]).toBeInstanceOf(WarningCheck);
   expect(checks[3].title).toEqual('BIOS Virtualization Enabled');
+});
+
+test('getPreflightChecks should include a warning-wrapped WSL check for the bundled Podman version', async () => {
+  vi.mocked(WSL_PODMAN_VERSION_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  const checks = winPlatform.getPreflightChecks();
+
+  expect(checks[6]).toBeInstanceOf(WarningCheck);
+  expect(checks[6].title).toEqual('WSL Version for Podman');
+  await expect(checks[6].execute()).resolves.toEqual({ successful: false, severity: 'warning' });
+});
+
+test('getUpdatePreflightChecks should only include a warning-wrapped WSL check for the bundled Podman version', async () => {
+  vi.mocked(WSL_PODMAN_VERSION_CHECK_MOCK.execute).mockResolvedValue(FAILED_CHECK_RESULT);
+
+  const checks = winPlatform.getUpdatePreflightChecks();
+
+  expect(checks).toHaveLength(1);
+  expect(checks[0]).toBeInstanceOf(WarningCheck);
+  expect(checks[0].title).toEqual('WSL Version for Podman');
+  await expect(checks[0].execute()).resolves.toEqual({ successful: false, severity: 'warning' });
 });
 
 test('isHyperVEnabled should return false if it is not a Windows environment', async () => {
@@ -186,5 +217,76 @@ describe('calcPipeName', () => {
   ])('$description', ({ machineName, expectedPipeName }) => {
     const result = winPlatform.calcPipeName(machineName);
     expect(result).toBe(expectedPipeName);
+  });
+});
+
+describe('API socket', () => {
+  const SOCKET_PATH = 'C:\\Users\\foo\\AppData\\Local\\Temp\\podman\\podman-machine-default-api.sock';
+  const loggerMock = { log: vi.fn(), warn: vi.fn() } as unknown as Logger;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.unstubAllEnvs();
+    vi.stubEnv('TEMP', 'C:\\Users\\foo\\AppData\\Local\\Temp');
+    vi.stubEnv('LOCALAPPDATA', 'C:\\Users\\foo\\AppData\\Local');
+  });
+
+  test('getApiSocketPath uses %TEMP%\\podman', () => {
+    expect(winPlatform.getApiSocketPath('podman-machine-default')).toBe(SOCKET_PATH);
+  });
+
+  test('getApiSocketPath falls back to %LOCALAPPDATA%\\Temp\\podman when TEMP is not set', () => {
+    vi.stubEnv('TEMP', undefined);
+    expect(winPlatform.getApiSocketPath('podman-machine-default')).toBe(SOCKET_PATH);
+  });
+
+  test('getApiSocketPath returns undefined when neither TEMP nor LOCALAPPDATA is set', () => {
+    vi.stubEnv('TEMP', undefined);
+    vi.stubEnv('LOCALAPPDATA', undefined);
+    expect(winPlatform.getApiSocketPath('podman-machine-default')).toBeUndefined();
+  });
+
+  test('removeStaleApiSocket removes the socket file and logs it', async () => {
+    vi.mocked(unlink).mockResolvedValue(undefined);
+
+    const result = await winPlatform.removeStaleApiSocket('podman-machine-default', loggerMock);
+
+    expect(result).toBe(true);
+    expect(unlink).toHaveBeenCalledWith(SOCKET_PATH);
+    expect(loggerMock.log).toHaveBeenCalledWith(`Removed stale API socket ${SOCKET_PATH}`);
+    expect(loggerMock.warn).not.toHaveBeenCalled();
+  });
+
+  test('removeStaleApiSocket does not unlink anything when the socket path cannot be located', async () => {
+    vi.stubEnv('TEMP', undefined);
+    vi.stubEnv('LOCALAPPDATA', undefined);
+
+    const result = await winPlatform.removeStaleApiSocket('podman-machine-default', loggerMock);
+
+    expect(result).toBe(false);
+    expect(unlink).not.toHaveBeenCalled();
+    expect(loggerMock.warn).toHaveBeenCalledWith(
+      'Unable to locate the API socket: neither TEMP nor LOCALAPPDATA is set',
+    );
+  });
+
+  test('removeStaleApiSocket does nothing when the socket file does not exist', async () => {
+    vi.mocked(unlink).mockRejectedValue(Object.assign(new Error('not found'), { code: 'ENOENT' }));
+
+    const result = await winPlatform.removeStaleApiSocket('podman-machine-default', loggerMock);
+
+    expect(result).toBe(false);
+    expect(loggerMock.log).not.toHaveBeenCalled();
+    expect(loggerMock.warn).not.toHaveBeenCalled();
+  });
+
+  test('removeStaleApiSocket does not throw when the socket file cannot be removed', async () => {
+    const error = Object.assign(new Error('busy'), { code: 'EBUSY' });
+    vi.mocked(unlink).mockRejectedValue(error);
+
+    await expect(winPlatform.removeStaleApiSocket('podman-machine-default', loggerMock)).resolves.toBe(false);
+
+    expect(loggerMock.log).not.toHaveBeenCalled();
+    expect(loggerMock.warn).toHaveBeenCalledWith(`Unable to remove stale API socket ${SOCKET_PATH}`, error);
   });
 });

@@ -16,16 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { TaskState } from '/@/model/core/states';
-import { CommandPalette } from '/@/model/pages/command-palette';
-import { TasksPage } from '/@/model/pages/tasks-page';
+import { MachineCreationForm } from '/@/model/pages/forms/machine-creation-form';
+import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isCI, isLinux, isWindows } from '/@/utility/platform';
+import { isLinux } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-const syncCertificatesCommand = 'Podman: Synchronize certificates to all VMs';
-const SYNC_TIMEOUT = 180_000;
-const POLL_INTERVAL = 2_000;
+const RESOURCE_NAME = 'podman';
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('certificate-sync-e2e');
@@ -37,43 +34,41 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe('Certificate synchronization to Podman VMs', { tag: ['@smoke'] }, () => {
+test.describe('Certificate import option on Podman machine creation', { tag: ['@smoke'] }, () => {
   test.describe.configure({ mode: 'serial' });
-  test.skip(isLinux, 'Certificate sync targets Podman virtual machines — not applicable on native Linux');
-  test.skip(isWindows && isCI, 'Certificate sync via podman machine ssh hangs on Windows CI runners');
+  test.skip(isLinux, 'Certificate import targets Podman virtual machines — not applicable on native Linux');
 
-  test('Synchronize certificates completes successfully', async ({ page, statusBar }) => {
-    test.setTimeout(SYNC_TIMEOUT + 60_000);
+  test('Import native CA checkbox is visible and checked by default', async ({ page, navigationBar }) => {
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.resourcesTab.click();
 
-    const tasksPage = await statusBar.openTasksPage();
-    await playExpect(tasksPage.heading).toBeVisible();
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
 
-    const commandPalette = new CommandPalette(page);
-    await commandPalette.executeCommand(syncCertificatesCommand);
+    await resourcesPage.goToCreateNewResourcePage(RESOURCE_NAME);
 
-    await playExpect
-      .poll(
-        async () => {
-          try {
-            const status = await tasksPage.getStatusForLatestTask();
-            if (status && !status.includes(TaskState.Success)) {
-              console.log(`Poll: current task status = "${status}"`);
-            }
-            return status;
-          } catch (error: unknown) {
-            console.log('Poll: task status not yet available —', error instanceof Error ? error.message : error);
-            return '';
-          }
-        },
-        { timeout: SYNC_TIMEOUT, intervals: [POLL_INTERVAL] },
-      )
-      .toContain(TaskState.Success);
+    const machineCreationForm = new MachineCreationForm(page);
+    await playExpect(machineCreationForm.podmanMachineConfiguration).toBeVisible({ timeout: 10_000 });
+
+    await playExpect(machineCreationForm.importNativeCACheckbox).toBeVisible();
+    await playExpect(machineCreationForm.importNativeCACheckbox).toBeChecked();
   });
 
-  test('Clear certificate sync tasks', async ({ page }) => {
-    const tasksPage = new TasksPage(page);
-    await playExpect(tasksPage.heading).toBeVisible();
-    await tasksPage.clearAllTasks();
-    await playExpect(tasksPage.taskList).toHaveCount(0);
+  test('Import native CA checkbox can be toggled', async ({ page }) => {
+    const machineCreationForm = new MachineCreationForm(page);
+
+    await machineCreationForm.ensureCheckboxState(false, machineCreationForm.importNativeCACheckbox);
+    await playExpect(machineCreationForm.importNativeCACheckbox).not.toBeChecked();
+
+    await machineCreationForm.ensureCheckboxState(true, machineCreationForm.importNativeCACheckbox);
+    await playExpect(machineCreationForm.importNativeCACheckbox).toBeChecked();
+  });
+
+  test('Navigate back to Resources page', async ({ page }) => {
+    const closePageButton = page.getByRole('button', { name: 'Close page' });
+    await closePageButton.click();
+
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
   });
 });

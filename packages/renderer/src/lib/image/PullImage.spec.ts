@@ -18,9 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ImageInfo } from '@podman-desktop/api';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { NavigationPage, PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
+import { NavigationPage, PreferredRegistriesSettings } from '@desktop-framework/api';
+import type { ImageInfo } from '@desktop-framework/extension-api';
 import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -29,6 +29,8 @@ import { router } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { handleNavigation } from '/@/navigation';
+import { lastPage } from '/@/stores/breadcrumb';
+import { imagesInfos } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 
@@ -36,6 +38,7 @@ import PullImage from './PullImage.svelte';
 
 vi.mock(import('/@/navigation'));
 vi.mock(import('/@/lib/ui/TerminalWindow.svelte'));
+vi.mock(import('tinro'));
 
 const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
   connectionType: 'container',
@@ -65,7 +68,26 @@ const PROVIDER_INFO_MOCK: ProviderInfo = {
   kubernetesProviderConnectionInitialization: false,
 } as unknown as ProviderInfo;
 
+// the backend owns the engine id format, the page only ever echoes what it reports
+const ENGINE_ID = 'an-opaque-engine-id';
+
+const ALPINE_IMAGE = {
+  Id: 'sha256:1234567890123',
+  RepoTags: ['docker.io/library/alpine:latest'],
+  Created: 1644009612,
+  Size: 123,
+  engineId: ENGINE_ID,
+  engineName: 'podman',
+} as unknown as ImageInfo;
+
+// the engine resolves the pulled reference to one of its images, as it does once a pull is over
+function givenEngineResolves(image: ImageInfo, repoTag = image.RepoTags?.[0]): ImageInfo {
+  vi.mocked(window.resolveImage).mockResolvedValue({ Id: image.Id, engineId: image.engineId, repoTag });
+  return image;
+}
+
 const originalConsoleError = console.error;
+const originalConsoleDebug = console.debug;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -83,19 +105,22 @@ beforeEach(() => {
     return undefined;
   });
   console.error = vi.fn();
+  console.debug = vi.fn();
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
   vi.mocked(window.cancelToken).mockResolvedValue(undefined);
   vi.mocked(window.pullImage).mockResolvedValue(undefined);
   vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
-  vi.mocked(window.listImages).mockResolvedValue([]);
+  vi.mocked(window.resolveImage).mockResolvedValue(undefined);
   vi.mocked(window.searchImageInRegistry).mockResolvedValue([]);
 
+  imagesInfos.set([]);
   providerInfos.set([PROVIDER_INFO_MOCK]);
 });
 
 afterEach(() => {
   console.error = originalConsoleError;
+  console.debug = originalConsoleDebug;
 });
 
 const buttonText = 'Pull image';
@@ -160,7 +185,7 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton);
 
     // expect that the error message is displayed
-    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    const errorMessage = screen.getByRole('alert');
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent('Image does not exists');
   });
@@ -181,7 +206,7 @@ describe('PullImage', () => {
     await userEvent.keyboard('image-does-not-exist[Enter]');
 
     // expect that the error message is displayed
-    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    const errorMessage = screen.getByRole('alert');
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent('Image does not exists');
   });
@@ -201,7 +226,7 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton);
 
     // expect that the error message is displayed
-    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    const errorMessage = screen.getByRole('alert');
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent('Image does not exists');
 
@@ -290,7 +315,7 @@ describe('PullImage', () => {
     await vi.waitFor(() => {
       expect(screen.getByRole('button', { name: 'Pull image' })).toBeInTheDocument();
     });
-    expect(screen.queryByRole('alert', { name: 'Error Message Content' })).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 
@@ -368,9 +393,7 @@ test('Expect latest tag warning is displayed when the image does not have latest
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is displayed
-  const errorMessage = screen.getByRole('alert');
-  expect(errorMessage).toBeInTheDocument();
-  expect(errorMessage).toHaveTextContent('"latest" tag not found');
+  expect(screen.getByText(/"latest" tag not found/)).toBeInTheDocument();
 });
 
 test('Expect latest tag warning is not displayed when the image has latest tag', async () => {
@@ -380,78 +403,196 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is not displayed
-  const errorMessage = screen.queryByRole('alert');
-  expect(errorMessage).toBeNull();
+  expect(screen.queryByText(/"latest" tag not found/)).toBeNull();
 });
 
-test('Expect done, details and run actions after a successful pull', async () => {
-  render(PullImage, { imageToPull: 'some-valid-image' });
+test('Expect the finished actions only once the images store holds the pulled image', async () => {
+  givenEngineResolves(ALPINE_IMAGE);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
 
-  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
-  await userEvent.click(pullImagebutton);
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  // the engine is done but the store has not been refreshed yet
+  await vi.waitFor(() =>
+    expect(window.resolveImage).toHaveBeenCalledWith(CONTAINER_CONNECTION_MOCK, 'docker.io/alpine'),
+  );
+  expect(screen.getByText('Pulling image')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
+
+  imagesInfos.set([ALPINE_IMAGE]);
 
   const footer = await screen.findByRole('contentinfo');
+  await vi.waitFor(() => expect(within(footer).getByRole('button', { name: 'Run' })).toBeInTheDocument());
   expect(within(footer).getByRole('button', { name: 'View details' })).toBeInTheDocument();
-  expect(within(footer).getByRole('button', { name: 'Run' })).toBeInTheDocument();
   expect(within(footer).getByRole('button', { name: 'Close' })).toBeInTheDocument();
+  expect(screen.queryByText('Pulling image')).not.toBeInTheDocument();
+});
+
+test('Expect the same image on another engine not to finish the pull', async () => {
+  givenEngineResolves(ALPINE_IMAGE);
+  imagesInfos.set([{ ...ALPINE_IMAGE, engineId: 'another-engine' }]);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  await vi.waitFor(() => expect(window.resolveImage).toHaveBeenCalled());
+  expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
 });
 
 test('Expect details action to open pulled image summary route', async () => {
   const gotoSpy = vi.spyOn(router, 'goto');
-  vi.mocked(window.listImages).mockResolvedValue([
-    {
-      Id: 'sha256:1234567890123',
-      RepoTags: ['docker.io/library/alpine:latest'],
-      Created: 1644009612,
-      Size: 123,
-      engineId: 'podman',
-      engineName: 'podman',
-    } as never,
-  ]);
+  givenEngineResolves(ALPINE_IMAGE);
+  imagesInfos.set([ALPINE_IMAGE]);
   render(PullImage, { imageToPull: 'docker.io/alpine' });
 
-  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
-  await userEvent.click(pullImagebutton);
-  const detailsButton = await screen.findByRole('button', { name: 'View details' });
-  await userEvent.click(detailsButton);
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+  await userEvent.click(await screen.findByRole('button', { name: 'View details' }));
 
-  await vi.waitFor(() => {
-    expect(window.listImages).toHaveBeenCalledWith({
-      provider: CONTAINER_CONNECTION_MOCK,
-    });
-    expect(gotoSpy).toHaveBeenLastCalledWith(
-      '/images/sha256:1234567890123/podman/ZG9ja2VyLmlvL2xpYnJhcnkvYWxwaW5lOmxhdGVzdA==/summary',
-    );
-  });
+  expect(gotoSpy).toHaveBeenLastCalledWith(
+    `/images/${ALPINE_IMAGE.Id}/${ENGINE_ID}/ZG9ja2VyLmlvL2xpYnJhcnkvYWxwaW5lOmxhdGVzdA==/summary`,
+  );
+  // the image was resolved once, when the pull ended
+  expect(window.resolveImage).toHaveBeenCalledTimes(1);
 });
 
 test('Expect run action to set image info and go to run page', async () => {
-  const image = {
-    Id: 'sha256:1234567890123',
-    RepoTags: ['docker.io/library/alpine:latest'],
-    Created: 1644009612,
-    Size: 123,
-    engineId: 'podman',
-    engineName: 'podman',
-  } as unknown as ImageInfo;
-  vi.mocked(window.listImages).mockResolvedValue([image]);
+  givenEngineResolves(ALPINE_IMAGE);
+  imagesInfos.set([ALPINE_IMAGE]);
   render(PullImage, { imageToPull: 'docker.io/alpine' });
 
-  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
-  await userEvent.click(pullImagebutton);
-  const runButton = await screen.findByRole('button', { name: 'Run' });
-  await userEvent.click(runButton);
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Run' }));
 
-  await vi.waitFor(() => {
-    expect(handleNavigation).toHaveBeenCalledWith({
-      page: NavigationPage.IMAGE_RUN,
-      parameters: {
-        tag: image.RepoTags?.[0],
-        engineId: image.engineId,
-        id: image.Id,
-      },
-    });
+  expect(handleNavigation).toHaveBeenCalledWith({
+    page: NavigationPage.IMAGE_RUN,
+    parameters: {
+      tag: ALPINE_IMAGE.RepoTags?.[0],
+      engineId: ENGINE_ID,
+      id: ALPINE_IMAGE.Id,
+    },
   });
+  expect(window.resolveImage).toHaveBeenCalledTimes(1);
+});
+
+test('Expect to report a pull the engine does not list', async () => {
+  // the engine holds no image for the pulled reference, the page must say so instead of waiting for the store
+  vi.mocked(window.resolveImage).mockResolvedValue(undefined);
+  render(PullImage, { imageToPull: 'alpine:1' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  expect(await screen.findByText(/could not be found on test/)).toBeInTheDocument();
+  expect(screen.queryByText('Pulling image')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: buttonText })).toBeEnabled();
+});
+
+test('Expect the finished actions to carry the pulled tag, not another tag of the same image', async () => {
+  // the image is already known under an older tag, the new one must be the one the actions open
+  const shared = { ...ALPINE_IMAGE, RepoTags: ['docker.io/library/alpine:latest', 'docker.io/library/alpine:3.19'] };
+  givenEngineResolves(shared, 'docker.io/library/alpine:3.19');
+  imagesInfos.set([shared]);
+  render(PullImage, { imageToPull: 'docker.io/alpine:3.19' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Run' }));
+
+  expect(handleNavigation).toHaveBeenCalledWith({
+    page: NavigationPage.IMAGE_RUN,
+    parameters: { tag: 'docker.io/library/alpine:3.19', engineId: ENGINE_ID, id: shared.Id },
+  });
+});
+
+test('Expect a tag the images store does not carry yet not to finish the pull', async () => {
+  // the store still only knows the older tag of that same image, the pull is not over
+  const known = { ...ALPINE_IMAGE, RepoTags: ['docker.io/library/alpine:latest'] };
+  givenEngineResolves(known, 'docker.io/library/alpine:3.19');
+  imagesInfos.set([known]);
+  render(PullImage, { imageToPull: 'docker.io/alpine:3.19' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  await vi.waitFor(() => expect(window.resolveImage).toHaveBeenCalled());
+  expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
+  expect(screen.getByText('Pulling image')).toBeInTheDocument();
+});
+
+test('Expect an image pulled by digest to finish the pull', async () => {
+  // an image pulled by digest carries no repo tag, it still has to unlock the actions
+  const untagged = { ...ALPINE_IMAGE, RepoTags: [], RepoDigests: ['docker.io/library/alpine@sha256:abc'] };
+  // a digest pull names no tag, the image carries none either
+  givenEngineResolves(untagged);
+  imagesInfos.set([untagged]);
+  render(PullImage, { imageToPull: 'docker.io/alpine@sha256:abc' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  const footer = await screen.findByRole('contentinfo');
+  expect(await within(footer).findByRole('button', { name: 'Run' })).toBeInTheDocument();
+  expect(screen.queryByText('Pulling image')).not.toBeInTheDocument();
+});
+
+test('Expect a cancelled pull that resolves not to be reported as missing', async () => {
+  // aborting can end the pull stream cleanly, there is simply no image to look for
+  givenEngineResolves(ALPINE_IMAGE);
+  const pendingPull = Promise.withResolvers<void>();
+  vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  pendingPull.resolve();
+
+  await vi.waitFor(() => expect(screen.getByRole('button', { name: buttonText })).toBeEnabled());
+  expect(window.resolveImage).not.toHaveBeenCalled();
+  expect(screen.queryByText(/could not be found on/)).toBeNull();
+});
+
+test('Expect a failing resolve to be reported apart from the pull', async () => {
+  // the pull succeeded, an engine that cannot be asked must not be reported as a pull failure
+  vi.mocked(window.resolveImage).mockRejectedValue(new Error('socket hang up'));
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  expect(await screen.findByText(/could not be asked about it/)).toBeInTheDocument();
+  expect(screen.queryByText(/Error while pulling image/)).toBeNull();
+  expect(screen.queryByText('Pulling image')).not.toBeInTheDocument();
+});
+
+test('Expect a rejected pull not to keep the previous report', async () => {
+  vi.mocked(window.resolveImage).mockResolvedValue(undefined);
+  render(PullImage);
+
+  await userEvent.keyboard('docker.io/alpine[Enter]');
+  expect(await screen.findByText(/could not be found on/)).toBeInTheDocument();
+
+  // the next attempt is rejected before it starts, the stale report must not outlive it
+  await userEvent.clear(screen.getByPlaceholderText('Image name'));
+  await userEvent.keyboard('[Enter]');
+
+  expect(await screen.findByText('No image to pull')).toBeInTheDocument();
+  expect(screen.queryByText(/could not be found on/)).toBeNull();
+});
+
+test('Expect to close instead of cancel while only the images store is awaited', async () => {
+  const pendingPull = Promise.withResolvers<void>();
+  vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
+  givenEngineResolves(ALPINE_IMAGE);
+
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  await userEvent.click(screen.getByRole('button', { name: buttonText }));
+
+  // the engine is pulling, it holds a cancellation token and the footer close is hidden
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  const closeButtonsWhilePulling = screen.getAllByRole('button', { name: 'Close' }).length;
+
+  pendingPull.resolve();
+
+  // nothing left to cancel once the token is cleared, but the page must still offer a way out
+  await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument());
+  expect(screen.getByText('Pulling image')).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: 'Close' }).length).toBeGreaterThan(closeButtonsWhilePulling);
 });
 
 test('input component should not raise an error when the input is valid', async () => {
@@ -553,6 +694,30 @@ describe('container connections', () => {
     expect(dropdown).toBeEnabled();
     // default to the first one
     expect(dropdown).toHaveTextContent(MULTI_CONNECTIONS.containerConnections[0].name);
+  });
+
+  test('the dropdown should be disabled from the start of the pull so that the engine cannot change', async () => {
+    providerInfos.set([MULTI_CONNECTIONS]);
+    const pendingPull = Promise.withResolvers<void>();
+    vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
+    givenEngineResolves(ALPINE_IMAGE);
+
+    render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+    const dropdown = screen.getByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeEnabled();
+
+    await userEvent.click(screen.getByRole('button', { name: buttonText }));
+    expect(dropdown).toBeDisabled();
+
+    // still disabled while the images store catches up, and once it did
+    pendingPull.resolve();
+    await vi.waitFor(() => expect(screen.getByText('Pulling image')).toBeInTheDocument());
+    expect(dropdown).toBeDisabled();
+
+    imagesInfos.set([ALPINE_IMAGE]);
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Run' })).toBeInTheDocument());
+    expect(dropdown).toBeDisabled();
   });
 
   test('selecting a provider should update the dropdown button', { timeout: 10_000 }, async () => {
@@ -752,5 +917,50 @@ describe('Preferred Registries', () => {
       // Should fall back to docker.io
       expect(window.searchImageInRegistry).toHaveBeenCalledWith(expect.objectContaining({ registry: 'docker.io' }));
     });
+  });
+});
+
+test('Expect Close button to navigate to last page when clicked', async () => {
+  lastPage.set({ name: 'Images', path: '/images' });
+  render(PullImage);
+
+  const closeButton = await screen.findByText('Close');
+  await userEvent.click(closeButton);
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images');
+});
+
+describe('image name the engine cannot parse', () => {
+  test('should report the engine error when pulling a name it cannot parse', async () => {
+    vi.mocked(window.pullImage).mockRejectedValue(new Error('invalid reference format'));
+    render(PullImage);
+
+    await userEvent.keyboard('.[Enter]');
+
+    const errorMessage = await screen.findByRole('alert');
+    expect(errorMessage).toHaveTextContent('Error while pulling image from test: invalid reference format');
+  });
+
+  // the engine rejects a name like ':' that it cannot parse, and the rejection used to escape
+  // the onChange handler as an 'Uncaught (in promise)' error
+  test('should not leak a rejection when the engine cannot resolve the name', async () => {
+    vi.mocked(window.resolveShortnameImage).mockRejectedValue(
+      new Error('(HTTP code 400) bad parameter - resolving ":": cannot parse input: ":": invalid reference format'),
+    );
+    render(PullImage);
+
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
+    await userEvent.click(textbox);
+    await userEvent.paste(':');
+
+    await vi.waitFor(() => {
+      expect(console.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Could not resolve shortname'),
+        expect.anything(),
+      );
+    });
+
+    // nothing could be resolved, so no Podman FQN is proposed
+    expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
   });
 });

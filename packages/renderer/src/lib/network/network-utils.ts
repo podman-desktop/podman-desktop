@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NetworkInspectInfo } from '@podman-desktop/core-api';
-import { NavigationPage } from '@podman-desktop/core-api';
+import type { NetworkInspectInfo } from '@desktop-framework/api';
+import { NavigationPage } from '@desktop-framework/api';
 
 import { handleNavigation } from '/@/navigation';
 
@@ -38,6 +38,9 @@ export class NetworkUtils {
       status: Object.keys(networkInspectInfo.Containers ?? {}).length > 0 ? 'USED' : 'UNUSED',
       containers: this.getNetworkContainers(networkInspectInfo),
       ipv6_enabled: networkInspectInfo.EnableIPv6,
+      labels: networkInspectInfo.Labels,
+      options: networkInspectInfo.Options,
+      subnets: networkInspectInfo.IPAM?.Config?.flatMap(config => config.Subnet ?? []),
     };
   }
 

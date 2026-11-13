@@ -25,6 +25,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
+import type { ButtonType } from './Button';
 import Button from './Button.svelte';
 
 interface CommonClassOptions {
@@ -139,7 +140,7 @@ test('Check disabled/in-progress link button styling', async () => {
 });
 
 test('Check tab button styling', async () => {
-  render(Button, { type: 'tab' });
+  render(Button, { type: 'tab', selected: false });
 
   const button = screen.getByRole('button');
   expect(button).toBeInTheDocument();
@@ -311,4 +312,33 @@ test('Disabled pressed button should keep aria-pressed but use disabled styling'
   expect(button).toHaveAttribute('aria-pressed', 'true');
   expect(button).toHaveClass('bg-[var(--pd-button-disabled-bg)]');
   expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+});
+
+// the focus ring classes must use the focus ring tokens, and keep the 2px gap that separates the ring from the fill
+const RING = 'focus-visible:outline-[var(--pd-button-focus-ring)]';
+const RING_DANGER = 'focus-visible:outline-[var(--pd-button-focus-ring-danger)]';
+const RING_TYPES: [ButtonType, string][] = [
+  ['primary', RING],
+  ['secondary', RING],
+  ['link', RING],
+  ['tab', RING],
+  ['danger', RING_DANGER],
+];
+
+test.each(RING_TYPES.flatMap(([type, ring]) => [false, true].map(pressed => [type, pressed, ring] as const)))(
+  'Check %s button (pressed: %s) uses its focus ring token',
+  (type, pressed, ringClass) => {
+    render(Button, { type, pressed, selected: false });
+
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass(ringClass);
+    expect(button).toHaveClass('focus-visible:outline-offset-2');
+  },
+);
+
+// The @ts-expect-error is checked by `pnpm typecheck:ui` (svelte-check also covers spec files), not by vitest
+test('Tab button without the selected prop is rejected by the types and still renders', () => {
+  // @ts-expect-error a tab button without `selected` must not typecheck
+  render(Button, { type: 'tab' });
+  expect(screen.getByRole('button')).toBeInTheDocument();
 });

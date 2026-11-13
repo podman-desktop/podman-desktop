@@ -22,8 +22,8 @@ import type { RunError, RunOptions, RunResult } from '@podman-desktop/api';
 import { env as envAPI, process as processAPI, window as windowAPI } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { PodmanBinary } from './podman-binary';
 import type { PodmanConfiguration } from './podman-configuration';
+import { PodmanMachineLifecycle } from './podman-machine-lifecycle';
 import { RosettaProvisioner } from './rosetta';
 import { execPodman } from './util';
 
@@ -40,14 +40,14 @@ vi.mock(import('node:os'), async () => {
 });
 
 vi.mock(import('./util'));
+vi.mock(import('./podman-machine-lifecycle'));
 
 let rosettaProvisioner: RosettaProvisioner;
 
 beforeEach(() => {
   vi.resetAllMocks();
 
-  const podmanBinary = {} as PodmanBinary;
-  rosettaProvisioner = new RosettaProvisioner(podmanBinary);
+  rosettaProvisioner = new RosettaProvisioner(new PodmanMachineLifecycle());
 });
 
 describe('checkRosettaMacArm', async () => {
@@ -272,16 +272,14 @@ describe('provisionAndRestartForRosetta', () => {
     expect(execPodman).toHaveBeenCalledTimes(1);
   });
 
-  test('stops and restarts the machine when file is created', async () => {
+  test('restarts the machine through the lifecycle service when file is created', async () => {
     vi.mocked(envAPI).isMac = true;
     vi.mocked(arch).mockReturnValue('arm64');
     vi.mocked(release).mockReturnValue(tahoeRelease);
     vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(true);
-    // test -f fails → file missing; touch succeeds; stop succeeds; start succeeds
+    // test -f fails → file missing; touch succeeds
     vi.mocked(execPodman)
       .mockRejectedValueOnce(new Error('exit code 1'))
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
       .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult);
 
     const result = await rosettaProvisioner.provisionAndRestartForRosetta(
@@ -291,21 +289,24 @@ describe('provisionAndRestartForRosetta', () => {
       podmanVersion,
     );
     expect(result).toBe(true);
-    // ssh test -f, ssh sudo touch, machine stop, machine start
-    expect(execPodman).toHaveBeenCalledTimes(4);
-    expect(execPodman).toHaveBeenNthCalledWith(3, ['machine', 'stop', machineName], vmType);
-    expect(execPodman).toHaveBeenNthCalledWith(4, ['machine', 'start', machineName], vmType, undefined);
+    // ssh test -f, ssh sudo touch
+    expect(execPodman).toHaveBeenCalledTimes(2);
+    expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledOnce();
+    expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledWith({
+      machineName,
+      vmType,
+      podmanVersion,
+      runOptions: undefined,
+    });
   });
 
-  test('passes options to the start command', async () => {
+  test('passes options to the lifecycle restart', async () => {
     vi.mocked(envAPI).isMac = true;
     vi.mocked(arch).mockReturnValue('arm64');
     vi.mocked(release).mockReturnValue(tahoeRelease);
     vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(true);
     vi.mocked(execPodman)
       .mockRejectedValueOnce(new Error('exit code 1'))
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
       .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult);
 
     const options = { logger: { log: vi.fn() } } as unknown as RunOptions;
@@ -316,7 +317,12 @@ describe('provisionAndRestartForRosetta', () => {
       podmanVersion,
       options,
     );
-    expect(execPodman).toHaveBeenNthCalledWith(4, ['machine', 'start', machineName], vmType, options);
+    expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledWith({
+      machineName,
+      vmType,
+      podmanVersion,
+      runOptions: options,
+    });
   });
 
   test('returns false when conditions are not met (non-AppleHV)', async () => {
@@ -354,19 +360,18 @@ describe('provisionAndRestartForRosetta', () => {
     );
     expect(result).toBe(false);
     expect(warnSpy).toHaveBeenCalled();
-    // stop/start should not have been attempted
+    // restart should not have been attempted
     expect(execPodman).toHaveBeenCalledTimes(2);
+    expect(PodmanMachineLifecycle.prototype.restart).not.toHaveBeenCalled();
   });
 
-  test('omits machine name from stop/start commands when machineName is empty', async () => {
+  test('omits machine name from ssh commands and passes it empty to restart when machineName is empty', async () => {
     vi.mocked(envAPI).isMac = true;
     vi.mocked(arch).mockReturnValue('arm64');
     vi.mocked(release).mockReturnValue(tahoeRelease);
     vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(true);
     vi.mocked(execPodman)
       .mockRejectedValueOnce(new Error('exit code 1'))
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
       .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult);
 
     const result = await rosettaProvisioner.provisionAndRestartForRosetta(
@@ -376,31 +381,35 @@ describe('provisionAndRestartForRosetta', () => {
       podmanVersion,
     );
     expect(result).toBe(true);
-    expect(execPodman).toHaveBeenCalledTimes(4);
+    expect(execPodman).toHaveBeenCalledTimes(2);
     expect(execPodman).toHaveBeenNthCalledWith(1, ['machine', 'ssh', 'test -f /etc/containers/enable-rosetta'], vmType);
     expect(execPodman).toHaveBeenNthCalledWith(
       2,
       ['machine', 'ssh', 'sudo touch /etc/containers/enable-rosetta'],
       vmType,
     );
-    expect(execPodman).toHaveBeenNthCalledWith(3, ['machine', 'stop'], vmType);
-    expect(execPodman).toHaveBeenNthCalledWith(4, ['machine', 'start'], vmType, undefined);
+    // the lifecycle service drops the empty machine name from the restart command
+    expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledWith({
+      machineName: '',
+      vmType,
+      podmanVersion,
+      runOptions: undefined,
+    });
   });
 
-  test('propagates error when machine start fails after stop', async () => {
+  test('propagates error when machine restart fails', async () => {
     vi.mocked(envAPI).isMac = true;
     vi.mocked(arch).mockReturnValue('arm64');
     vi.mocked(release).mockReturnValue(tahoeRelease);
     vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(true);
-    // test -f fails, touch succeeds, stop succeeds, start fails
+    // test -f fails, touch succeeds, restart fails
     vi.mocked(execPodman)
       .mockRejectedValueOnce(new Error('exit code 1'))
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
-      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
-      .mockRejectedValueOnce(new Error('start failed'));
+      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult);
+    vi.mocked(PodmanMachineLifecycle.prototype.restart).mockRejectedValue(new Error('restart failed'));
 
     await expect(
       rosettaProvisioner.provisionAndRestartForRosetta(machineName, vmType, podmanConfiguration, podmanVersion),
-    ).rejects.toThrow('start failed');
+    ).rejects.toThrow('restart failed');
   });
 });

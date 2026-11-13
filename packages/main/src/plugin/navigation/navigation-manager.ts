@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,20 @@
  ***********************************************************************/
 
 import type {
+  DisposableGroup,
+  NavigationRequest,
+  NavigationSearchEntryInfo,
+  ProviderConnectionInfo,
+} from '@desktop-framework/api';
+import { IDisposable, NavigationPage } from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type {
   NavigateToExtensionsCatalogOptions,
   NavigateToHistoryEvent,
   NavigationHistoryEntry,
   NavigationSearchEntry,
   ProviderContainerConnection,
-} from '@podman-desktop/api';
-import type { DisposableGroup, NavigationRequest, NavigationSearchEntryInfo } from '@podman-desktop/core-api';
-import { IDisposable, NavigationPage } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+} from '@desktop-framework/extension-api';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
@@ -209,6 +214,39 @@ export class NavigationManager {
         taskId: taskId,
       },
     });
+  }
+
+  navigateToProviderConnection(internalProviderId: string, connectionInfo: ProviderConnectionInfo): void {
+    switch (connectionInfo.connectionType) {
+      case 'container':
+        this.navigateTo({
+          page: NavigationPage.CONTAINER_CONNECTION,
+          parameters: {
+            provider: internalProviderId,
+            name: connectionInfo.name,
+            socketPath: connectionInfo.endpoint.socketPath,
+          },
+        });
+        return;
+      case 'kubernetes':
+        this.navigateTo({
+          page: NavigationPage.KUBERNETES_CONNECTION,
+          parameters: {
+            provider: internalProviderId,
+            apiURL: connectionInfo.endpoint.apiURL,
+          },
+        });
+        return;
+      case 'vm':
+        this.navigateTo({
+          page: NavigationPage.VM_CONNECTION,
+          parameters: {
+            provider: internalProviderId,
+            name: connectionInfo.name,
+          },
+        });
+        return;
+    }
   }
 
   async navigateToCliTools(): Promise<void> {

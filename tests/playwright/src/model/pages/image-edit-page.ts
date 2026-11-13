@@ -33,7 +33,7 @@ export class ImageEditPage extends BasePage {
 
   constructor(page: Page, name: string) {
     super(page);
-    this.editDialog = page.getByRole('dialog', { name: 'Edit Image' });
+    this.editDialog = page.getByRole('dialog', { name: 'Edit image' });
     this.imageName = this.editDialog.getByLabel('imageName');
     this.cancelButton = this.editDialog.getByRole('button', {
       name: 'Cancel',
@@ -45,7 +45,7 @@ export class ImageEditPage extends BasePage {
     });
     this.name = name;
     this.imageTag = this.editDialog.getByLabel('imageTag');
-    this.alertDialog = page.getByLabel('Error Message Content');
+    this.alertDialog = this.editDialog.getByRole('alert');
   }
 
   async renameImage(name: string, tag = ''): Promise<ImagesPage> {

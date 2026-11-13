@@ -16,9 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { join } from 'node:path';
+
 import { mergeConfig } from 'vite';
 import baseConfig from '../vite.base.config';
 
 export default mergeConfig(baseConfig, {
   root: __dirname,
+  resolve: {
+    alias: {
+      '/@package.json': join(__dirname, 'package.json'),
+    },
+  },
 });

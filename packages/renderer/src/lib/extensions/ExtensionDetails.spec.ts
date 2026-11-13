@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
+import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -239,4 +239,29 @@ test('Expect details page to update when extensionId prop changes', async () => 
   await vi.waitFor(() =>
     expect(screen.queryByRole('heading', { name: 'A installed Extension extension' })).not.toBeInTheDocument(),
   );
+});
+
+test('Expect the update button when an update of the installed extension is available', async () => {
+  catalogExtensionInfos.set([aFakeExtension]);
+  extensionInfos.set([
+    {
+      id: 'idAInstalled',
+      name: 'A extension',
+      description: 'A extension',
+      displayName: 'A installed Extension',
+      publisher: 'FooPublisher',
+      removable: true,
+      devMode: false,
+      bundled: false,
+      version: '1.0.0',
+      state: 'started',
+      path: '/plugins/a-extension',
+      readme: '',
+      update: { version: '2.0.0', ociUri: 'linkA:2.0.0' },
+    },
+  ]);
+
+  await waitRender({ extensionId: 'idAInstalled' });
+
+  screen.getByRole('button', { name: 'Update available' });
 });

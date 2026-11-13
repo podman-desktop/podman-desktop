@@ -20,8 +20,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@desktop-framework/api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -80,6 +80,39 @@ test('Expect to see one record when filtering with unknown keyword', async () =>
   const noSettingsDiv = screen.getAllByText('No Settings Found');
   expect(noSettingsDiv.length > 0).toBe(true);
   expect(noSettingsDiv[0].parentElement).toHaveClass('text-[var(--pd-content-header)]');
+});
+
+test('Expect to see the record when filtering with a keyword from its id', async () => {
+  const feedbackRecord: IConfigurationPropertyRecordedSchema = {
+    title: 'Feedback reminder',
+    id: 'feedback.dialog',
+    parentId: 'key',
+    type: 'boolean',
+    default: true,
+    description: 'Show periodic feedback reminder for experimental features',
+    scope: CONFIGURATION_DEFAULT_SCOPE,
+  };
+  render(PreferencesRendering, { properties: [feedbackRecord, record], key: 'key', searchValue: 'Dialog' });
+  expect(
+    screen.getByRole('checkbox', { name: 'Show periodic feedback reminder for experimental features' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('checkbox', { name: 'record' })).not.toBeInTheDocument();
+});
+
+test('Expect to see the record when filtering with a keyword from its display name', async () => {
+  const displayNameRecord: IConfigurationPropertyRecordedSchema = {
+    title: 'Some section',
+    id: 'section.setting',
+    displayName: 'Confirm before quitting',
+    parentId: 'key',
+    type: 'boolean',
+    default: true,
+    description: 'Ask the user',
+    scope: CONFIGURATION_DEFAULT_SCOPE,
+  };
+  render(PreferencesRendering, { properties: [displayNameRecord, record], key: 'key', searchValue: 'quitting' });
+  expect(screen.getByRole('checkbox', { name: 'Ask the user' })).toBeInTheDocument();
+  expect(screen.queryByRole('checkbox', { name: 'record' })).not.toBeInTheDocument();
 });
 
 test('Expect extension title used a section name', async () => {

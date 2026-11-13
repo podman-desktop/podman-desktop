@@ -20,7 +20,10 @@ import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { isLinux } from '/@/utility/platform';
 
-const pluginsInitializationRegexp = new RegExp('PluginSystem: initialization done');
+interface ExtensionSystemWindow extends Window {
+  extensionSystemIsExtensionsStarted: () => Promise<boolean>;
+}
+
 const applicationDisabledRegexp = new RegExp(
   'Application update is disabled with preferences.update.appUpdate settings',
 );
@@ -40,20 +43,22 @@ test.use({
         'podman-desktop.kind',
         'podman-desktop.kube-context',
         'podman-desktop.kubectl-cli',
-        'podman-desktop.lima',
         'podman-desktop.registries',
       ],
     },
   }),
 });
 
-test.beforeAll(async ({ runner }) => {
+test.beforeAll(async ({ runner, page }) => {
   runner.setVideoAndTraceName('disabled-update-e2e');
   await playExpect
-    .poll(() => runner.getConsoleMessages().some((msg: string) => pluginsInitializationRegexp.test(msg)), {
-      timeout: 30_000,
-      intervals: [500],
-    })
+    .poll(
+      () => page.evaluate(() => (window as unknown as ExtensionSystemWindow).extensionSystemIsExtensionsStarted()),
+      {
+        timeout: 30_000,
+        intervals: [500],
+      },
+    )
     .toBeTruthy();
 });
 
@@ -62,29 +67,29 @@ test.afterAll(async ({ runner }) => {
   await runner.close(45_000);
 });
 
-test.describe
-  .serial('Application update can be disabled', { tag: '@update-install' }, () => {
-    test('Application update disabled message appears in console log', async ({ runner }) => {
-      await playExpect
-        .poll(() => runner.getConsoleMessages().some((msg: string) => applicationDisabledRegexp.test(msg)), {
-          timeout: 10_000,
-          intervals: [500],
-        })
-        .toBeTruthy();
-    });
-
-    test('No update on startup', async ({ page, welcomePage }) => {
-      const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop.*/ });
-      await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 5_000 });
-      await welcomePage.handleWelcomePage(true);
-    });
-
-    test('Version button is visible', async ({ statusBar }) => {
-      await playExpect(statusBar.content).toBeVisible();
-      await playExpect(statusBar.versionButton).toBeVisible();
-    });
-
-    test('Update button option is not available', async ({ statusBar }) => {
-      await playExpect(statusBar.updateButtonTitle).not.toBeVisible();
-    });
+test.describe('Application update can be disabled', { tag: '@update-install' }, () => {
+  test.describe.configure({ mode: 'serial', retries: 1 });
+  test('Application update disabled message appears in console log', async ({ runner }) => {
+    await playExpect
+      .poll(() => runner.getConsoleMessages().some((msg: string) => applicationDisabledRegexp.test(msg)), {
+        timeout: 10_000,
+        intervals: [500],
+      })
+      .toBeTruthy();
   });
+
+  test('No update on startup', async ({ page, welcomePage }) => {
+    const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop.*/ });
+    await playExpect(updateAvailableDialog).not.toBeVisible({ timeout: 5_000 });
+    await welcomePage.handleWelcomePage(true);
+  });
+
+  test('Version button is visible', async ({ statusBar }) => {
+    await playExpect(statusBar.content).toBeVisible();
+    await playExpect(statusBar.versionButton).toBeVisible();
+  });
+
+  test('Update button option is not available', async ({ statusBar }) => {
+    await playExpect(statusBar.updateButtonTitle).not.toBeVisible();
+  });
+});

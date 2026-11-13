@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,18 @@
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
-import type { PullEvent } from '@podman-desktop/api';
-import type { NotificationCardOptions, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
+import type {
+  ImageFilesystemLayersUI,
+  ImageInfo,
+  ImageUpdateInfo,
+  ImageUpdateResult,
+  NotificationCardOptions,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+} from '@desktop-framework/api';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
+import type { PlayKubeInfo } from '@desktop-framework/api/libpod';
+import type { ImageChecks, PullEvent } from '@desktop-framework/extension-api';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
@@ -40,6 +48,8 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { ImageCheckerImpl } from './image-checker.js';
+import { ImageFilesRegistry } from './image-files-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
@@ -95,6 +105,8 @@ vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
 );
 vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
+vi.mock(import('./image-checker.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageCheckerImpl'));
+vi.mock(import('./image-files-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageFilesRegistry'));
 
 let pluginSystem: TestPluginSystem;
 
@@ -166,6 +178,7 @@ beforeEach(async () => {
   } as unknown as Task);
   vi.mocked(NavigationManager.prototype.navigateToResources).mockResolvedValue(undefined);
   vi.mocked(NavigationManager.prototype.navigateToProviderTask).mockResolvedValue(undefined);
+  vi.mocked(NavigationManager.prototype.navigateToProviderConnection).mockReturnValue(undefined);
   vi.mocked(NavigationManager.prototype.navigateToImageBuild).mockResolvedValue(undefined);
 
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
@@ -196,6 +209,28 @@ test('Should queue events until we are ready', async () => {
 
   // data should be sent when flushing queue
   expect(webContents.send).toBeCalledWith('api-sender', 'foo', 'hello-world');
+});
+
+test('Should drop the queued events when the window has been destroyed while they were queued', async () => {
+  const apiSender = pluginSystem.getApiSender(webContents);
+  pluginSystem.markAsReady();
+
+  // the UI has not reported being ready yet, so the event is queued
+  apiSender.send('foo', 'hello-world');
+  expect(webContents.send).not.toHaveBeenCalled();
+
+  // the user closes the window while the event is still queued
+  vi.mocked(webContents.isDestroyed).mockReturnValue(true);
+
+  // flushing the queue must drop the events instead of sending to the destroyed window
+  expect(() => emitter.emit('dom-ready')).not.toThrow();
+  expect(webContents.send).not.toHaveBeenCalled();
+
+  // and the events are not kept around to be flushed again later
+  vi.mocked(webContents.isDestroyed).mockReturnValue(false);
+  apiSender.send('bar', 'hello-again');
+  expect(webContents.send).toHaveBeenCalledTimes(1);
+  expect(webContents.send).toHaveBeenCalledWith('api-sender', 'bar', 'hello-again');
 });
 
 test('Check SecurityRestrictions on Links and user accept', async () => {
@@ -757,7 +792,8 @@ describe.each<{
           _loggerId: string,
         ) => Promise<void>
       >(handler);
-    await handle(undefined, 'internal1', { name: 'name1' } as unknown as PlayKubeInfo, 'logger');
+    const connectionInfo = { name: 'name1' } as unknown as ProviderContainerConnectionInfo;
+    await handle(undefined, 'internal1', connectionInfo, 'logger');
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
     assert(params, 'params should be defined');
@@ -767,7 +803,15 @@ describe.each<{
     const execute = params.action?.execute;
     assert(execute, 'execute should be defined');
     execute(new TaskImpl('task1id', 'task1name'));
-    expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+    // delete navigates back to resources, start/stop deep-link to the connection page
+    if (expectedActionName === 'Go to resources') {
+      expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+    } else {
+      expect(NavigationManager.prototype.navigateToProviderConnection).toHaveBeenCalledWith(
+        'internal1',
+        connectionInfo,
+      );
+    }
   });
 
   test(`${methodName} is called and is resolved`, async () => {
@@ -868,7 +912,7 @@ describe.each<{
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
     assert(params, 'params should be defined');
-    expect(params.title).toEqual('Creating name1 provider');
+    expect(params.title).toEqual('Updating name1 provider');
     expect(params.action?.name).toEqual('Open task');
 
     const execute = params.action?.execute;
@@ -950,7 +994,7 @@ describe.each<{
     expect(onEndMock).toHaveBeenCalled();
     expect(errorMock).toHaveBeenCalledWith(rejectError);
     expect(originalTask.status).toEqual('in-progress');
-    expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
+    expect(originalTask.error).toEqual('Something went wrong while updating container provider: Error: an error');
   });
 });
 
@@ -968,6 +1012,103 @@ describe('Log race condition fix', () => {
       logger.error('test');
       logger.onEnd();
     }).not.toThrow();
+  });
+});
+
+describe('getWebContentsSender', () => {
+  test('should return the webContents of the first window that is not destroyed', () => {
+    const destroyedWebContents = { send: vi.fn() } as unknown as WebContents;
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+      { isDestroyed: () => true, webContents: destroyedWebContents } as unknown as BrowserWindow,
+      { isDestroyed: () => false, webContents } as unknown as BrowserWindow,
+    ]);
+
+    expect(pluginSystem.getWebContentsSender()).toBe(webContents);
+  });
+
+  // the windows are built lazily: test.each evaluates its table before beforeEach assigns webContents
+  test.each([
+    // all the windows are gone, like when the application has been closed
+    { scenario: 'there is no window anymore', getWindows: (): BrowserWindow[] => [] },
+    // the windows are still listed while being closed, but they are already destroyed
+    {
+      scenario: 'every window is destroyed',
+      getWindows: (): BrowserWindow[] => [{ isDestroyed: () => true, webContents } as unknown as BrowserWindow],
+    },
+    // the renderer is gone, so the window is still alive but it has nothing to send to anymore
+    {
+      scenario: 'the web contents of the window are destroyed',
+      getWindows: (): BrowserWindow[] => [
+        { isDestroyed: () => false, webContents: { isDestroyed: () => true } } as unknown as BrowserWindow,
+      ],
+    },
+  ])('should return a sender doing nothing when $scenario', ({ getWindows }) => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(getWindows());
+
+    const sender = pluginSystem.getWebContentsSender();
+
+    expect(sender).not.toBe(webContents);
+    expect(sender.isDestroyed()).toBe(true);
+    expect(() => sender.send('api-sender', 'foo')).not.toThrow();
+    expect(() => sender.on('dom-ready', vi.fn())).not.toThrow();
+  });
+});
+
+describe('getRequiredWebContentsSender', () => {
+  test('should return the webContents of the first window that is not destroyed', () => {
+    const destroyedWebContents = { send: vi.fn() } as unknown as WebContents;
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+      { isDestroyed: () => true, webContents: destroyedWebContents } as unknown as BrowserWindow,
+      { isDestroyed: () => false, webContents } as unknown as BrowserWindow,
+    ]);
+
+    expect(pluginSystem.getRequiredWebContentsSender()).toBe(webContents);
+  });
+
+  test.each([
+    { scenario: 'there is no window anymore', getWindows: (): BrowserWindow[] => [] },
+    {
+      scenario: 'every window is destroyed',
+      getWindows: (): BrowserWindow[] => [{ isDestroyed: () => true, webContents } as unknown as BrowserWindow],
+    },
+    {
+      scenario: 'the web contents of the window are destroyed',
+      getWindows: (): BrowserWindow[] => [
+        { isDestroyed: () => false, webContents: { isDestroyed: () => true } } as unknown as BrowserWindow,
+      ],
+    },
+  ])('should throw when $scenario', ({ getWindows }) => {
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(getWindows());
+
+    expect(() => pluginSystem.getRequiredWebContentsSender()).toThrow('Unable to find the main window');
+  });
+});
+
+describe('container-provider-registry:logsContainer', () => {
+  type LogsContainerHandler = (
+    _event: unknown,
+    logsParams: { engineId: string; containerId: string; onDataId: number },
+  ) => Promise<void>;
+
+  test('should keep streaming container logs when there is no window anymore', async () => {
+    // the window is gone, like when the application is being closed
+    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([]);
+
+    const logsContainerMock = vi.mocked(ContainerProviderRegistry.prototype.logsContainer).mockResolvedValue(undefined);
+
+    const handle = getHandler<LogsContainerHandler>('container-provider-registry:logsContainer');
+    await handle(undefined, { engineId: 'engine1', containerId: 'container1', onDataId: 1 });
+
+    // the handler asked the registry for the logs, renaming containerId to id
+    expect(logsContainerMock).toHaveBeenCalledWith(expect.objectContaining({ engineId: 'engine1', id: 'container1' }));
+
+    // it gave the registry the callback sending the logs to the renderer
+    const logsParams = logsContainerMock.mock.calls[0]?.[0];
+    assert(logsParams, 'logsContainer should have been called');
+    const sendLogLineToRenderer = logsParams.callback;
+
+    // sending a log line was throwing 'Unable to find the main window' before, and it should not throw anymore
+    expect(() => sendLogLineToRenderer('data', 'a log line')).not.toThrow();
   });
 });
 
@@ -1143,6 +1284,193 @@ describe('checkImageUpdateStatus handler', () => {
   });
 });
 
+describe('updateImages handler', () => {
+  type UpdateImagesHandler = (
+    event: unknown,
+    images: ImageUpdateInfo[],
+    cancellableTokenId?: number,
+  ) => Promise<{ result: ImageUpdateResult[] } | { error: Error }>;
+
+  let task: TaskImpl;
+
+  beforeEach(() => {
+    task = new TaskImpl('update-image-task', 'Updating image');
+    vi.mocked(TaskManager.prototype.createTask).mockReturnValue(task);
+  });
+
+  test('should delegate image updates to the container provider registry', async () => {
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: ImageUpdateInfo[],
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images: ImageUpdateInfo[] = [
+      { engineId: 'podman.podman-machine-default', id: 'sha256:nginx' },
+      { engineId: 'podman.podman-machine-default', id: 'sha256:redis' },
+    ];
+    const expectedResults = [
+      { imageRef: 'nginx', updated: true, status: 'updated', message: 'Image updated successfully' },
+      { imageRef: 'redis', updated: false, status: 'normal', message: 'Already up to date' },
+    ] as const;
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([...expectedResults]);
+
+    const result = await handle(undefined, images);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledExactlyOnceWith(images, undefined);
+    expect(result.result).toEqual(expectedResults);
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating images',
+      cancellable: false,
+      cancellationTokenSourceId: undefined,
+    });
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('success');
+    expect(task.name).toBe('Image update: 1 updated, 1 up to date');
+  });
+
+  test.each([
+    {
+      status: 'updated',
+      updated: true,
+      message: 'Image updated successfully',
+      taskStatus: 'success',
+      summary: '1 updated',
+    },
+    { status: 'normal', updated: false, message: 'Already up to date', taskStatus: 'success', summary: '1 up to date' },
+    { status: 'skipped', updated: false, message: 'Image has no tags', taskStatus: 'success', summary: '1 skipped' },
+    { status: 'error', updated: false, message: 'Registry unavailable', taskStatus: 'failure', summary: '1 failed' },
+  ] as const)('records a $status result', async ({ status, updated, message, taskStatus, summary }) => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const results: ImageUpdateResult[] = [{ imageRef: 'nginx:latest', status, updated, message }];
+    const { promise, resolve } = Promise.withResolvers<ImageUpdateResult[]>();
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockReturnValue(promise);
+
+    const pending = handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }]);
+
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating image',
+      cancellable: false,
+      cancellationTokenSourceId: undefined,
+    });
+    expect(task.state).toBe('running');
+    expect(task.status).toBe('in-progress');
+
+    resolve(results);
+    await expect(pending).resolves.toEqual({ result: results });
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe(taskStatus);
+    expect(task.name).toBe(`Image update: ${summary}`);
+    if (taskStatus === 'failure') {
+      expect(task.error).toBe('nginx:latest: Registry unavailable');
+    } else {
+      expect(task.error).toBeUndefined();
+    }
+  });
+
+  test('summarizes tag outcomes and includes details only for failures', async () => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const results: ImageUpdateResult[] = [
+      { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'nginx:alpine', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'nginx:stable', updated: false, status: 'normal', message: 'Already up to date' },
+      { imageRef: 'sha256:untagged', updated: false, status: 'skipped', message: 'Image has no tags' },
+      { imageRef: 'other:latest', updated: false, status: 'error', message: 'Registry unavailable' },
+      { imageRef: 'private:latest', updated: false, status: 'error', message: 'Unauthorized' },
+    ];
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue(results);
+
+    await expect(handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }])).resolves.toEqual({ result: results });
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('failure');
+    expect(task.error).toBe('other:latest: Registry unavailable\nprivate:latest: Unauthorized');
+    expect(task.name).toBe('Image update: 2 updated, 1 up to date, 1 skipped, 2 failed');
+  });
+
+  test('completes the task when no results are returned', async () => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
+
+    await expect(handle(undefined, [])).resolves.toEqual({ result: [] });
+
+    expect(task.state).toBe('completed');
+    expect(task.name).toBe('Image update: No images updated');
+  });
+
+  test('marks a rejected update as failed and preserves the IPC error', async () => {
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const error = new Error('Engine unavailable');
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockRejectedValue(error);
+
+    await expect(handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }])).resolves.toEqual({ error });
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('failure');
+    expect(task.error).toBe('Error: Engine unavailable');
+  });
+
+  test.each(['result', 'rejection'] as const)('marks cancellation as canceled for a backend %s', async outcome => {
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
+    const { promise, resolve, reject } = Promise.withResolvers<ImageUpdateResult[]>();
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockReturnValue(promise);
+
+    const pending = handle(undefined, [{ engineId: 'podman', id: 'sha256:nginx' }], tokenId);
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
+      title: 'Updating image',
+      cancellable: true,
+      cancellationTokenSourceId: tokenId,
+    });
+    await cancelTokenHandler(undefined, tokenId);
+    const signal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
+    expect(signal?.aborted).toBe(true);
+
+    if (outcome === 'result') {
+      resolve([{ imageRef: 'nginx:latest', updated: false, status: 'error', message: 'Update canceled' }]);
+    } else {
+      reject(new Error('Update canceled'));
+    }
+    await pending;
+
+    expect(task.state).toBe('completed');
+    expect(task.status).toBe('canceled');
+    expect(task.error).toBeUndefined();
+  });
+
+  test('should forward an abort signal when a cancellation token id is passed', async () => {
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+    const { result: tokenId } = await createTokenHandler();
+
+    const handle = getHandler<
+      (
+        _event: unknown,
+        images: ImageUpdateInfo[],
+        cancellableTokenId?: number,
+      ) => Promise<{ result: Awaited<ReturnType<ContainerProviderRegistry['updateImages']>> }>
+    >('container-provider-registry:updateImages');
+
+    const images: ImageUpdateInfo[] = [{ engineId: 'podman.podman-machine-default', id: 'sha256:nginx' }];
+    vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue([]);
+
+    await handle(undefined, images, tokenId);
+
+    expect(ContainerProviderRegistry.prototype.updateImages).toHaveBeenCalledOnce();
+    const abortSignal = vi.mocked(ContainerProviderRegistry.prototype.updateImages).mock.calls[0]?.[1];
+    expect(abortSignal).toBeInstanceOf(AbortSignal);
+    expect(abortSignal?.aborted).toBe(false);
+
+    await cancelTokenHandler(undefined, tokenId);
+
+    expect(abortSignal?.aborted).toBe(true);
+  });
+});
+
 describe('container-provider-registry:playKube', () => {
   type PlayKubeHandler = (
     _listener: undefined,
@@ -1273,4 +1601,102 @@ test('navigation:getSearchableRoutes handler should delegate to navigationManage
 
   expect(NavigationManager.prototype.getSearchableRoutes).toHaveBeenCalled();
   expect(result).toEqual({ result: mockRoutes });
+});
+
+describe('image handlers resolving the image by engine and image id', () => {
+  const fakeImage: ImageInfo = {
+    Id: 'sha256:abc',
+    ParentId: '',
+    RepoTags: ['quay.io/podman/hello:latest'],
+    Created: 0,
+    Size: 0,
+    VirtualSize: 0,
+    SharedSize: 0,
+    Labels: {},
+    Containers: 0,
+    engineId: 'podman.podman',
+    engineName: 'podman',
+    engineType: 'podman',
+    Digest: 'sha256:abc',
+  };
+
+  type ImageHandler<T> = (
+    _listener: unknown,
+    id: string,
+    engineId: string,
+    imageId: string,
+    tokenId?: number,
+  ) => Promise<{ result?: T; error?: Error }>;
+
+  test('image-checker:check resolves the image and delegates to the checker', async () => {
+    const fakeChecks: ImageChecks = { checks: [] };
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockResolvedValue(fakeImage);
+    vi.mocked(ImageCheckerImpl.prototype.check).mockResolvedValue(fakeChecks);
+
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<ImageHandler<ImageChecks>>('image-checker:check');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc', tokenId);
+
+    expect(ContainerProviderRegistry.prototype.getImageInfo).toHaveBeenCalledExactlyOnceWith(
+      'podman.podman',
+      'sha256:abc',
+    );
+    expect(ImageCheckerImpl.prototype.check).toHaveBeenCalledExactlyOnceWith(
+      'provider1',
+      fakeImage,
+      expect.objectContaining({ isCancellationRequested: false }),
+    );
+    expect(result.result).toEqual(fakeChecks);
+  });
+
+  test('image-checker:check returns the error when the image is not found', async () => {
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockRejectedValue(
+      new Error('Image sha256:abc not found on engine podman.podman'),
+    );
+    const handle = getHandler<ImageHandler<ImageChecks>>('image-checker:check');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc');
+
+    assert(result.error instanceof Error);
+    expect(result.error.message).toBe('Image sha256:abc not found on engine podman.podman');
+    expect(ImageCheckerImpl.prototype.check).not.toHaveBeenCalled();
+  });
+
+  test('image-files:getFilesystemLayers resolves the image and delegates to the registry', async () => {
+    const fakeLayers: ImageFilesystemLayersUI = { layers: [] };
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockResolvedValue(fakeImage);
+    vi.mocked(ImageFilesRegistry.prototype.getFilesystemLayers).mockResolvedValue(fakeLayers);
+
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<ImageHandler<ImageFilesystemLayersUI>>('image-files:getFilesystemLayers');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc', tokenId);
+
+    expect(ContainerProviderRegistry.prototype.getImageInfo).toHaveBeenCalledExactlyOnceWith(
+      'podman.podman',
+      'sha256:abc',
+    );
+    expect(ImageFilesRegistry.prototype.getFilesystemLayers).toHaveBeenCalledExactlyOnceWith(
+      'provider1',
+      fakeImage,
+      expect.objectContaining({ isCancellationRequested: false }),
+    );
+    expect(result.result).toEqual(fakeLayers);
+  });
+
+  test('image-files:getFilesystemLayers returns the error when the image is not found', async () => {
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockRejectedValue(
+      new Error('Image sha256:abc not found on engine podman.podman'),
+    );
+    const handle = getHandler<ImageHandler<ImageFilesystemLayersUI>>('image-files:getFilesystemLayers');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc');
+
+    assert(result.error instanceof Error);
+    expect(result.error.message).toBe('Image sha256:abc not found on engine podman.podman');
+    expect(ImageFilesRegistry.prototype.getFilesystemLayers).not.toHaveBeenCalled();
+  });
 });

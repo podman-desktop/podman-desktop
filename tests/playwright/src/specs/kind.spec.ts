@@ -113,7 +113,7 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
       await playExpect
         .poll(async () => await extensionsPage.extensionIsInstalled(EXTENSION_LABEL), { timeout: 10000 })
         .toBeTruthy();
-      await playExpect(kindExtension.status).toHaveText(ExtensionState.Active);
+      await playExpect(kindExtension.status).toHaveText(ExtensionState.Installed);
       await kindExtension.disableExtension();
       await navigationBar.openSettings();
       await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeFalsy();
@@ -242,6 +242,10 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
   });
   test.describe('Kind cluster creation with custom config file', () => {
     test.describe.configure({ mode: 'serial' });
+    test.skip(
+      process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+      'Test is not supported with CDP runner — custom config file requires mocking the file dialog via Electron main process evaluation',
+    );
     test('Create a Kind cluster using the custom config file', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
 

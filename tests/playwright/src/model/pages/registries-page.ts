@@ -42,7 +42,7 @@ export class RegistriesPage extends SettingsPage {
     this.heading = page.getByRole('heading').and(page.getByText(Registries.TABLE_ARIA_LABEL, { exact: true }));
     this.addRegistryButton = page.getByRole('button', { name: 'Add registry' });
     this.registriesTable = page.getByRole('table', { name: Registries.TABLE_ARIA_LABEL });
-    this.addRegistryDialog = page.getByRole('dialog', { name: 'Add Registry' });
+    this.addRegistryDialog = page.getByRole('dialog', { name: 'Add registry' });
     this.cancelDialogButton = this.addRegistryDialog.getByRole('button', {
       name: 'Cancel',
     });

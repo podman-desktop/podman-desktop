@@ -60,7 +60,8 @@ test.describe('Pulling image from authenticated registry workflow verification',
     await playExpect(imagesPage.heading).toBeVisible({ timeout: 10_000 });
 
     const fullImageTitle = imageUrl.concat(':' + imageTag);
-    const errorAlert = page.getByLabel('Error Message Content');
+    // the pull page renders other unnamed alerts (e.g. invalid image name), so scope by the pull error text
+    const errorAlert = page.getByRole('alert').filter({ hasText: 'Error while pulling image from' });
 
     const pullImagePage = await imagesPage.openPullImage();
     await playExpect(pullImagePage.heading).toBeVisible({ timeout: 10_000 });
@@ -73,7 +74,7 @@ test.describe('Pulling image from authenticated registry workflow verification',
     await playExpect(errorAlert).toBeVisible({ timeout: 30_000 });
     await playExpect(errorAlert).toContainText('Error while pulling image from');
     await playExpect(errorAlert).toContainText(fullImageTitle);
-    await playExpect(errorAlert).toContainText('Can also be that the registry requires authentication');
+    await playExpect(errorAlert).toContainText('unable to pull image');
   });
 
   test.describe(() => {

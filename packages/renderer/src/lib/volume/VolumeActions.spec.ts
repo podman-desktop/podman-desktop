@@ -19,7 +19,10 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { get } from 'svelte/store';
 import { beforeAll, expect, test, vi } from 'vitest';
+
+import { volumeListInfos } from '/@/stores/volumes';
 
 import VolumeActions from './VolumeActions.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
@@ -53,6 +56,7 @@ test('Expect prompt dialog and deletion', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   const volume: VolumeInfoUI = new VolumeInfoUIImpl('dummy', 'UNUSED') as unknown as VolumeInfoUI;
+  volumeListInfos.set([volume]);
 
   render(VolumeActions, {
     volume,
@@ -65,6 +69,7 @@ test('Expect prompt dialog and deletion', async () => {
     expect(window.showMessageBox).toHaveBeenCalledOnce();
   });
 
-  expect(volume.status).toBe('DELETING');
+  expect(get(volumeListInfos)[0].status).toBe('DELETING');
+  expect(volume.status).toBe('UNUSED');
   expect(removeVolumeMock).toHaveBeenCalled();
 });

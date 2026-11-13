@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { DisplayItem, GoToInfo } from '@desktop-framework/api';
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import type { DisplayItem, GoToInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
@@ -36,6 +36,8 @@ import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte
 
 export interface NavigationRegistryEntry {
   name: string;
+  /** The parent name, composed with `name` only when a qualified label or identifier is needed. */
+  parentName?: string;
   icon: {
     iconImage?: string | { readonly light: string; readonly dark: string };
     iconComponent?: Component;

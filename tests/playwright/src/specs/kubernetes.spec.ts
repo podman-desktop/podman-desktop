@@ -298,6 +298,10 @@ test.describe('Kubernetes resources End-to-End test', { tag: ['@k8s_e2e', '@k8s_
 
   test.describe('Apply YAML button test', () => {
     test.describe.configure({ mode: 'serial' });
+    test.skip(
+      process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+      'Test is not supported with CDP runner — Apply YAML requires mocking the file dialog via Electron main process evaluation',
+    );
     test('Apply a ConfigMap resource via Apply YAML button', async ({ page }) => {
       await applyKubernetesYaml(
         page,

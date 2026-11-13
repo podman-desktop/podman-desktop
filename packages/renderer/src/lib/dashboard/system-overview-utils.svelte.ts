@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/api';
-import type { ProviderConnectionInfo, ProviderInfo, SystemOverviewStatus } from '@podman-desktop/core-api';
-import type { ButtonType } from '@podman-desktop/ui-svelte';
+import type { ProviderConnectionInfo, ProviderInfo, SystemOverviewStatus } from '@desktop-framework/api';
+import type { ProviderConnectionStatus, ProviderStatus } from '@desktop-framework/extension-api';
+import type { ActionButtonType } from '@podman-desktop/ui-svelte';
 
 import {
   type ConnectionCallback,
@@ -43,7 +43,7 @@ export const STATUS_BG_CLASS: Record<SystemOverviewStatus, string> = {
 export interface ConnectionStatusConfig {
   label: string;
   buttonText: string;
-  buttonType: ButtonType;
+  buttonType: ActionButtonType;
 }
 
 export function hasStartLifecycle(provider: ProviderInfo): boolean {

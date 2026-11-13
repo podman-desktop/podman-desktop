@@ -18,7 +18,7 @@
 
 import path, { join } from 'node:path';
 
-import type { Uri as APIUri } from '@podman-desktop/api';
+import type { Uri as APIUri } from '@desktop-framework/extension-api';
 
 import { isWindows } from '/@/util.js';
 
@@ -42,7 +42,13 @@ export class Uri {
       // remove the ? character
       updatedSearch = search.substring(1);
     }
-    return new Uri(url.protocol.substring(0, url.protocol.length - 1), url.host, url.pathname, updatedSearch, url.hash);
+    return new Uri(
+      url.protocol.substring(0, url.protocol.length - 1),
+      url.host,
+      url.pathname,
+      updatedSearch,
+      url.hash.substring(1),
+    );
   }
 
   static file(path: string): Uri {

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
-import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
+import { Button, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -57,6 +57,17 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
+const filterSummary = $derived.by(() => {
+  switch (screen) {
+    case 'installed':
+      return { filtered: filteredInstalledItems, total: $combinedInstalledExtensions.length };
+    case 'catalog':
+      return { filtered: filteredCatalogItems, total: enhancedCatalogExtensions.length };
+    default:
+      return undefined;
+  }
+});
+
 function closeModal(): void {
   installManualImageModal = false;
 }
@@ -72,7 +83,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'installed' && screen !== 'catalog'} title="extensions">
   {#snippet additionalActions()}
     {#if enableCustomExtensions}
       <Button
@@ -82,19 +93,6 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         icon={faCloudDownload}
         title="Install manually an extension"
         aria-label="Install custom">Install custom...</Button>
-    {/if}
-  {/snippet}
-
-  {#snippet bottomAdditionalActions()}
-    <!-- display filter out items-->
-    {#if filteredInstalledItems > 0 && screen === 'installed'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
-      </div>
-    {:else if filteredCatalogItems > 0 && screen === 'catalog'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
-      </div>
     {/if}
   {/snippet}
 
@@ -124,6 +122,18 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
  {/snippet}
 
   {#snippet content()}
+  {#if screen === 'installed' || (screen === 'catalog' && enableCatalog)}
+    <div class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
+      <div class="pl-5 w-72">
+        <SearchInput bind:searchTerm={searchTerm} title="extensions" />
+      </div>
+      <div class="flex flex-1 items-center px-5 text-sm text-(--pd-content-text)" role="status">
+        {#if filterSummary && filterSummary.filtered > 0}
+          Filtered out {filterSummary.filtered} items of {filterSummary.total}
+        {/if}
+      </div>
+    </div>
+  {/if}
   <div class="flex min-w-full grow">
     {#if screen === 'installed'}
       {#if searchTerm && filteredInstalledExtensions.length === 0}

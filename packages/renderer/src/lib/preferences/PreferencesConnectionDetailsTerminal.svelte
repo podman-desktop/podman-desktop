@@ -1,9 +1,9 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
-import type { ProviderConnectionShellDimensions, ProviderConnectionStatus } from '@podman-desktop/api';
-import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@podman-desktop/core-api';
-import { TerminalSettings } from '@podman-desktop/core-api/terminal';
+import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@desktop-framework/api';
+import { TerminalSettings } from '@desktop-framework/api/terminal';
+import type { ProviderConnectionShellDimensions, ProviderConnectionStatus } from '@desktop-framework/extension-api';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
@@ -58,7 +58,7 @@ function receiveEndCallback(): void {
         window
           .shellInProviderConnection(
             provider.internalId,
-            connectionInfo,
+            $state.snapshot(connectionInfo),
             receiveDataCallback,
             () => {},
             receiveEndCallback,
@@ -93,7 +93,7 @@ async function executeShellIntoProviderConnection(): Promise<void> {
   // grab logs of the provider
   const callbackId = await window.shellInProviderConnection(
     provider.internalId,
-    connectionInfo,
+    $state.snapshot(connectionInfo),
     receiveDataCallback,
     () => {},
     receiveEndCallback,

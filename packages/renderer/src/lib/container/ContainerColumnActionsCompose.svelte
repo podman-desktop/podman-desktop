@@ -8,6 +8,8 @@ interface Props {
 }
 
 let { object }: Props = $props();
+
+let containerInProgress = $derived(object.containers.find(container => container.actionInProgress));
 </script>
 
 {#if object.status && object.engineId && object.engineType}
@@ -17,6 +19,7 @@ let { object }: Props = $props();
       name: object.name,
       engineId: object.engineId,
       engineType: object.engineType,
+      actionInProgress: containerInProgress?.actionInProgress ?? false,
       containers: object.containers,
     }}
     dropdownMenu={true}
