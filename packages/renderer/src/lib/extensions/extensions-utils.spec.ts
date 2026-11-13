@@ -202,6 +202,24 @@ beforeEach(() => {
 });
 
 describe('extractCatalogExtensions', () => {
+  test.each(['started', 'stopped', 'failed', 'starting', 'stopping'])(
+    'carries the matching installed extension with state %s',
+    state => {
+      const installed = { ...installedExtensions[0], state };
+      const [extension] = extensionsUtils.extractCatalogExtensions([aFakeExtension], [], [installed]);
+
+      expect(extension.installedExtension).toBe(installed);
+      expect(extension.isInstalled).toBe(true);
+    },
+  );
+
+  test('does not attach an unrelated installed extension', () => {
+    const [extension] = extensionsUtils.extractCatalogExtensions([bFakeExtension], [], installedExtensions);
+
+    expect(extension.installedExtension).toBeUndefined();
+    expect(extension.isInstalled).toBe(false);
+  });
+
   test('Expect first one should be featured even having a name starting with Y letter then Z extension, then A extension and then B extension', async () => {
     // get UI objects
     const catalogExtensionsUI = extensionsUtils.extractCatalogExtensions(
