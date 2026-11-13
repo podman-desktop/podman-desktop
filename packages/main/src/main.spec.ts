@@ -15,19 +15,28 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { App as ElectronApp } from 'electron';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { IConfigurationRegistry } from '@desktop-framework/api/configuration';
+import type { App as ElectronApp, BrowserWindow, Menu as ElectronMenu } from 'electron';
+import { Menu } from 'electron';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { restoreWindow } from '/@/mainWindow.js';
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
-import { isLinux, isMac, isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows, stoppedExtensions } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+import { ApplicationMenuBuilder } from './application-menu-builder.js';
 import { Main } from './main.js';
+import type { Emitter } from './plugin/events/emitter.js';
+import { PluginSystem } from './plugin/index.js';
+import { readShowTrayIconSetting } from './plugin/util/read-tray-setting.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
+import { AnimatedDevTray } from './tray-animate-dev-icon.js';
+import { TrayMenu } from './tray-menu.js';
 
 vi.mock(import('/@/plugin/app-ready/app-identity-plugin.js'));
 vi.mock(import('/@/plugin/app-ready/dev-icon-builder.js'));
@@ -42,6 +51,7 @@ vi.mock(import('./system/window/window-handler.js'));
 vi.mock(import('./system/startup-install.js'));
 vi.mock(import('./plugin/util/read-tray-setting.js'));
 vi.mock(import('./tray-menu.js'));
+vi.mock(import('./tray-animate-dev-icon.js'));
 vi.mock(import('/@/security-restrictions.js'));
 vi.mock(import('electron-context-menu'), () => ({
   default: vi.fn(),
@@ -213,6 +223,101 @@ describe('ElectronApp#on will-finish-launching', () => {
 
     expect(event.preventDefault).toHaveBeenCalledOnce();
     expect(ProtocolLauncher.prototype.handleOpenUrl).toHaveBeenCalledWith('podman-desktop:experimental');
+  });
+});
+
+describe('plugin system', () => {
+  let whenReady: PromiseWithResolvers<void>;
+
+  beforeEach(() => {
+    whenReady = Promise.withResolvers<void>();
+    vi.mocked(ELECTRON_APP_MOCK.whenReady).mockReturnValue(whenReady.promise);
+    vi.mocked(PluginSystem.prototype.initExtensions).mockResolvedValue({} as ExtensionLoader);
+  });
+
+  test('should set the application menu once the configuration registry and the window are ready', async () => {
+    const main = new Main(ELECTRON_APP_MOCK);
+    main.main([]);
+    whenReady.resolve();
+    await vi.waitFor(() => expect(PluginSystem.prototype.initExtensions).toHaveBeenCalledOnce());
+
+    const menu = {} as ElectronMenu;
+    vi.mocked(ApplicationMenuBuilder.prototype.build).mockReturnValue(menu);
+    const onDidCreateConfigurationRegistry = vi.mocked(PluginSystem.prototype.initExtensions).mock.calls[0]?.[0] as
+      | Emitter<IConfigurationRegistry>
+      | undefined;
+    assert(onDidCreateConfigurationRegistry);
+    onDidCreateConfigurationRegistry.fire({
+      getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }),
+    } as unknown as IConfigurationRegistry);
+    main.mainWindowDeferred.resolve({} as BrowserWindow);
+
+    await vi.waitFor(() => expect(Menu.setApplicationMenu).toHaveBeenCalledWith(menu));
+  });
+
+  test('should stop the extensions before quitting', async () => {
+    const extensionLoader = { asyncDispose: vi.fn().mockResolvedValue(undefined) } as unknown as ExtensionLoader;
+    vi.mocked(PluginSystem.prototype.initExtensions).mockResolvedValue(extensionLoader);
+    new Main(ELECTRON_APP_MOCK).main([]);
+    whenReady.resolve();
+    await vi.waitFor(() => expect(PluginSystem.prototype.initExtensions).toHaveBeenCalledOnce());
+
+    const beforeQuit = vi
+      .mocked(ELECTRON_APP_MOCK.once)
+      .mock.calls.find(([event]) => String(event) === 'before-quit')?.[1] as
+      | ((event: { preventDefault: () => void }) => void)
+      | undefined;
+    assert(beforeQuit);
+    const event = { preventDefault: vi.fn() };
+    beforeQuit(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    await vi.waitFor(() => expect(ELECTRON_APP_MOCK.quit).toHaveBeenCalled());
+    expect(extensionLoader.asyncDispose).toHaveBeenCalled();
+    expect(stoppedExtensions.val).toBe(true);
+  });
+
+  test('should mark the extensions as stopped when quitting before they are loaded', () => {
+    new Main(ELECTRON_APP_MOCK).main([]);
+
+    const beforeQuit = vi
+      .mocked(ELECTRON_APP_MOCK.once)
+      .mock.calls.find(([event]) => String(event) === 'before-quit')?.[1] as
+      | ((event: { preventDefault: () => void }) => void)
+      | undefined;
+    assert(beforeQuit);
+    stoppedExtensions.val = false;
+    const event = { preventDefault: vi.fn() };
+    beforeQuit(event);
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(stoppedExtensions.val).toBe(true);
+  });
+
+  test('should not create a tray when the tray icon is disabled', async () => {
+    vi.mocked(readShowTrayIconSetting).mockReturnValue(false);
+    new Main(ELECTRON_APP_MOCK).main([]);
+    whenReady.resolve();
+
+    await vi.waitFor(() => expect(TrayMenu).toHaveBeenCalledWith(undefined, undefined));
+    expect(AnimatedDevTray).not.toHaveBeenCalled();
+  });
+
+  test('should create the tray and dispose it on will-quit', async () => {
+    vi.mocked(readShowTrayIconSetting).mockReturnValue(true);
+    new Main(ELECTRON_APP_MOCK).main([]);
+    whenReady.resolve();
+
+    await vi.waitFor(() => expect(TrayMenu).toHaveBeenCalledOnce());
+    const [tray, animatedTray] = vi.mocked(TrayMenu).mock.calls[0] ?? [];
+    assert(tray);
+    expect(animatedTray).toBeInstanceOf(AnimatedDevTray);
+    expect(AnimatedDevTray.prototype.setTray).toHaveBeenCalledWith(tray);
+
+    getElectronAppListener('will-quit')();
+
+    expect(AnimatedDevTray.prototype.dispose).toHaveBeenCalledOnce();
+    expect(tray.destroy).toHaveBeenCalledOnce();
   });
 });
 
