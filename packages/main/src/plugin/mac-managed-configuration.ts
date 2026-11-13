@@ -23,22 +23,27 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { CONFIGURATION_LOCKED_KEY } from '@desktop-framework/api/configuration';
+import { inject, injectable } from 'inversify';
 
 import product from '/@product.json' with { type: 'json' };
 
-import type { Directories } from './directories.js';
+import { Directories } from './directories.js';
 import type { ManagedSettings } from './managed-settings.js';
 
 /**
  * Device plists use default-settings.json keys plus the locked.json array.
  * Per-user plists use settings.json keys and cannot add locks.
  */
+@injectable()
 export class MacManagedConfiguration {
   private readonly plutilPath = '/usr/bin/plutil';
   private readonly fileNotFoundCode = 'ENOENT';
   private readonly execFileAsync = promisify(execFile);
 
-  constructor(private readonly directories: Directories) {}
+  constructor(
+    @inject(Directories)
+    private readonly directories: Directories,
+  ) {}
 
   async getContent(): Promise<ManagedSettings> {
     const directory = this.directories.getManagedPreferencesDir();

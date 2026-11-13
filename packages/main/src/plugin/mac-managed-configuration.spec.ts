@@ -22,10 +22,12 @@ import { userInfo } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { Container } from 'inversify';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import product from '/@product.json' with { type: 'json' };
 
+import { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
 import { MacManagedConfiguration } from './mac-managed-configuration.js';
 
@@ -88,6 +90,21 @@ test('read both scopes with the native converter and the operating system userna
   expect(access).toHaveBeenCalledWith(USER_PLIST);
   expect(convertPlist).toHaveBeenCalledWith('/usr/bin/plutil', ['-convert', 'json', '-o', '-', DEVICE_PLIST]);
   expect(convertPlist).toHaveBeenCalledWith('/usr/bin/plutil', ['-convert', 'json', '-o', '-', USER_PLIST]);
+});
+
+test('resolve managed preferences through the injected directories', async () => {
+  const container = new Container();
+  container.bind(Directories).toConstantValue(directories);
+  container.bind(MacManagedConfiguration).toSelf().inSingletonScope();
+  mockConversion(JSON.stringify({ 'test.setting': 'device' }));
+
+  const injected = container.get(MacManagedConfiguration);
+
+  expect(await injected.getContent()).toEqual({
+    defaults: { 'test.setting': 'device' },
+    user: {},
+    locked: [],
+  });
 });
 
 test('preserve setting types and extract only device locks', async () => {

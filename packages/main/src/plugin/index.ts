@@ -536,10 +536,7 @@ export class PluginSystem {
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
   ): Promise<ConfigurationRegistry> {
     const configurationRegistry = container.get<ConfigurationRegistry>(ConfigurationRegistry);
-    const managedSettings = isMac()
-      ? await new MacManagedConfiguration(container.get<Directories>(Directories)).getContent()
-      : undefined;
-    notifications.push(...(await configurationRegistry.init(managedSettings)));
+    notifications.push(...(await configurationRegistry.init()));
     configurationRegistryEmitter.fire(configurationRegistry);
     return configurationRegistry;
   }
@@ -584,6 +581,7 @@ export class PluginSystem {
     container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
+    container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
       container,

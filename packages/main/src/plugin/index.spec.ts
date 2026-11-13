@@ -113,7 +113,9 @@ vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(im
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
 vi.mock(import('./image-checker.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageCheckerImpl'));
 vi.mock(import('./image-files-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageFilesRegistry'));
-vi.mock(import('./mac-managed-configuration.js'));
+vi.mock(import('./mac-managed-configuration.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'MacManagedConfiguration'),
+);
 
 let pluginSystem: TestPluginSystem;
 
@@ -137,6 +139,9 @@ class TestPluginSystem extends PluginSystem {
         getContent: vi.fn().mockResolvedValue({}),
       } as unknown as LockedConfiguration;
       container.bind<LockedConfiguration>(LockedConfiguration).toConstantValue(lockedConfigurationMock);
+    }
+    if (!container.isBound(MacManagedConfiguration)) {
+      container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
     }
     return super.initConfigurationRegistry(container, notifications, configurationRegistryEmitter);
   }
@@ -210,14 +215,14 @@ test('plugin startup does not read host managed preferences', async () => {
   expect(fsPromises.access).not.toHaveBeenCalledWith(expect.stringContaining('/Library/Managed Preferences/'));
 });
 
-test('skip macOS managed configuration on other platforms', () => {
-  expect(MacManagedConfiguration).not.toHaveBeenCalled();
-  expect(MacManagedConfiguration.prototype.getContent).not.toHaveBeenCalled();
+test('load managed configuration through injection on other platforms', () => {
+  expect(MacManagedConfiguration.prototype.getContent).toHaveBeenCalledOnce();
 });
 
 test('apply macOS preferences before the registry event', async () => {
   vi.mocked(isMac).mockReturnValue(true);
   vi.mocked(isLinux).mockReturnValue(false);
+  vi.mocked(MacManagedConfiguration.prototype.getContent).mockClear();
   vi.mocked(MacManagedConfiguration.prototype.getContent).mockResolvedValue({
     defaults: { 'test.device': 'device' },
     user: { 'test.device': 'user', 'test.user': 'user' },
@@ -231,7 +236,6 @@ test('apply macOS preferences before the registry event', async () => {
 
   await pluginSystem.initExtensions(configurationRegistryEmitter);
 
-  expect(MacManagedConfiguration).toHaveBeenCalledOnce();
   expect(MacManagedConfiguration.prototype.getContent).toHaveBeenCalledOnce();
   expect(onConfiguration).toHaveBeenCalledWith('device', 'user');
 });
