@@ -34,6 +34,14 @@ vi.mock(import('/@/plugin/app-ready/dev-icon-builder.js'));
 vi.mock(import('/@/util.js'));
 vi.mock(import('/@/mainWindow.js'));
 vi.mock(import('./protocol-launcher.js'));
+vi.mock(import('./plugin/index.js'));
+vi.mock(import('electron-util/main'), () => ({ aboutMenuItem: vi.fn() }));
+vi.mock(import('./application-menu-builder.js'));
+vi.mock(import('./plugin/zoom-level-handler.js'));
+vi.mock(import('./system/window/window-handler.js'));
+vi.mock(import('./system/startup-install.js'));
+vi.mock(import('./plugin/util/read-tray-setting.js'));
+vi.mock(import('./tray-menu.js'));
 vi.mock(import('/@/security-restrictions.js'));
 vi.mock(import('electron-context-menu'), () => ({
   default: vi.fn(),
@@ -52,6 +60,7 @@ const ELECTRON_APP_MOCK: ElectronApp = {
   setAppUserModelId: vi.fn(),
   quit: vi.fn(),
   on: vi.fn(),
+  once: vi.fn(),
   whenReady: vi.fn(),
   setAsDefaultProtocolClient: vi.fn(),
   isReady: vi.fn(),
