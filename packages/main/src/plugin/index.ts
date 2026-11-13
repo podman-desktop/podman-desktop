@@ -502,10 +502,10 @@ export class PluginSystem {
       const urlObject = new URL(url);
       const validDomains = ['podman-desktop.io', 'podman.io', 'localhost', '127.0.0.1'];
       const skipConfirmationUrl = validDomains.some(
-        domain => urlObject.hostname.endsWith(domain) || urlObject.hostname === domain,
+        domain => urlObject.hostname === domain || urlObject.hostname.endsWith(`.${domain}`),
       );
 
-      if (skipConfirmationUrl || urlObject.protocol === 'file:') {
+      if (skipConfirmationUrl) {
         await shell.openExternal(url);
         return true;
       }
