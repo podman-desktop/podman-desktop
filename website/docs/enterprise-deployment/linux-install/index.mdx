@@ -1,0 +1,118 @@
+---
+sidebar_position: 3
+title: Linux
+description: How Podman Desktop is updated on Linux, and how to manage rpm and Flatpak deployments in enterprise environments.
+tags: [podman-desktop, enterprise, linux, rpm, flatpak]
+keywords: [podman desktop, enterprise deployment, linux, rpm, dnf, rhel, flatpak, flathub]
+---
+
+# Linux
+
+On Linux, Podman Desktop does not update itself from the interface, and it does not install or update the Podman CLI from the GUI. Deployment and updates are handled by the package manager that installed the application: rpm (`dnf`) or Flatpak.
+
+:::tip[TL;DR]
+
+| Item                                   | Value                                                                                         |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Podman Desktop self-update             | None. Use `dnf upgrade podman-desktop` (rpm) or `flatpak update` (Flatpak).                   |
+| Podman CLI install/update from the GUI | Not supported. Use `dnf install podman` / `dnf upgrade podman`.                               |
+| App data (XDG layout)                  | `${XDG_DATA_HOME:-$HOME/.local/share}/containers/podman-desktop`                              |
+| App config (XDG layout)                | `${XDG_CONFIG_HOME:-$HOME/.config}/containers/podman-desktop`                                 |
+| App data (legacy layout)               | `$PODMAN_DESKTOP_HOME_DIR` when set, otherwise `$HOME/.local/share/containers/podman-desktop` |
+| Flatpak data                           | `$HOME/.var/app/io.podman_desktop.PodmanDesktop`                                              |
+| rpm verification                       | `rpm -q --qf '%{NAME} %{VERSION}-%{RELEASE}\n' podman-desktop`, then `rpm --checksig <rpm>`   |
+| Flatpak verification                   | `flatpak info` and `flatpak remote-info <remote> io.podman_desktop.PodmanDesktop`             |
+
+The application prefers the XDG layout only when `PODMAN_DESKTOP_HOME_DIR` is unset and no legacy configuration exists at `$HOME/.local/share/containers/podman-desktop/configuration`. Otherwise it uses the legacy layout. Calculate the paths on the target machine:
+
+```shell-session
+$ if [ -n "$PODMAN_DESKTOP_HOME_DIR" ] || [ -d "$HOME/.local/share/containers/podman-desktop/configuration" ]; then
+    home="${PODMAN_DESKTOP_HOME_DIR:-$HOME/.local/share/containers/podman-desktop}"
+    data="$home"; config="$home/configuration"
+  else
+    data="${XDG_DATA_HOME:-$HOME/.local/share}/containers/podman-desktop"
+    config="${XDG_CONFIG_HOME:-$HOME/.config}/containers/podman-desktop"
+  fi
+$ echo "$data"; echo "$config"
+$ [ -n "$FLATPAK_ID" ] && echo "Flatpak data: $HOME/.var/app/io.podman_desktop.PodmanDesktop"
+```
+
+Inside a Flatpak sandbox, `XDG_DATA_HOME` and `XDG_CONFIG_HOME` are remapped under `$HOME/.var/app/io.podman_desktop.PodmanDesktop`, so the same expressions resolve to the sandboxed location.
+
+:::
+
+## No in-application updates on Linux
+
+The updater only initializes on Windows and macOS. Linux builds show the installed version without an **Update** entry, so all Podman Desktop updates on Linux come from the package manager:
+
+- rpm (`dnf`) for RHEL and compatible distributions installed from a distro repository.
+- Flatpak for Flathub and bundle installations.
+
+Because no in-application updater runs on Linux, pre-authorizing `electron-updater` behaviors is not needed. Plan for rpm or Flatpak upgrades instead.
+
+## Podman CLI install and update from the GUI
+
+Podman Desktop does not ship a bundled Podman installer for Linux and does not install or update the Podman CLI from the interface: the GUI install flow exists only for Windows and macOS.
+
+Manage Podman itself with your distribution's package manager, for example:
+
+```shell-session
+$ sudo dnf install podman
+$ sudo dnf upgrade podman
+```
+
+If users have no administrator rights, install and update Podman through your MDM or configuration management tool so that the GUI does not need to elevate.
+
+## rpm package updates
+
+When Podman Desktop is installed from the distro repository, for example with `dnf install podman-desktop` on RHEL 10, updates are ordinary package upgrades managed by `dnf`:
+
+```shell-session
+$ sudo dnf upgrade podman-desktop
+```
+
+Notes for managed environments:
+
+- **Privilege:** the upgrade requires root. Pre-authorize the package manager rather than the application, or run upgrades from a scheduled MDM or configuration management task.
+- **Signature:** packages are verified by the repository metadata and GPG key configured for that repository, not by the application. Trust is established when the repository key is imported, as during the initial `dnf install`.
+- **Version pinning:** use `dnf versionlock` or your configuration management tool if you must stage versions. Podman Desktop does not offer a built-in version selector.
+- **Update notifications:** since the application does not check for updates on Linux, users are not prompted in the GUI. Schedule upgrades and communicate them through your normal change process.
+- **RHEL subscriptions:** the repository is the RHEL extensions repository, so the machine must stay registered with a valid subscription to receive updates.
+
+See [Installing on RHEL 10](/docs/installation/linux-install/install-on-rhel10) for the repository setup steps.
+
+## Flatpak updates
+
+When Podman Desktop is installed from Flathub, updates are delivered by Flatpak:
+
+```shell-session
+$ flatpak update --user io.podman_desktop.PodmanDesktop
+```
+
+Notes for managed environments:
+
+- **Scope:** use the same scope as the installation. The Flathub instructions install per user (`--user`), so updates run in user context without administrator rights. If you deploy the application system-wide, update it system-wide instead.
+- **Unattended updates:** for a per-user installation there is no privileged component to pre-authorize, so control the cadence with a scheduled task that runs `flatpak update` in the user session. For a system-wide deployment, run the update job as root.
+- **Bundle installs:** if you install from a downloaded `.flatpak` bundle instead of Flathub, use the same scope as the original installation, because Flatpak tracks the two scopes separately. Reinstalling a bundle over an existing Flathub installation can leave an older cached permission profile active. Uninstall the previous installation first and follow [Testing a Flatpak from a release](/docs/troubleshooting/troubleshooting-flatpak).
+- **Permission changes:** Flatpak does not re-apply changed sandbox permissions during an update of an existing installation. If a release changes the declared permissions and Podman Desktop loses filesystem or socket access after an upgrade, remove and reinstall the application from the trusted remote. See [Testing a Flatpak from a release](/docs/troubleshooting/troubleshooting-flatpak).
+- **Signature:** Flatpak verifies the remote's configured GPG key and the commit it downloads. Confirm the remote and its key during validation with `flatpak remotes --show-details` and `flatpak remote-info <remote> io.podman_desktop.PodmanDesktop`.
+
+See [Installing Podman Desktop on Linux](/docs/installation/linux-install) and [Installing from a Flatpak bundle](/docs/installation/linux-install/installing-podman-desktop-from-a-flatpak-bundle) for details.
+
+## Verifying an installation
+
+```shell-session
+$ rpm -qi podman-desktop
+$ rpm -V podman-desktop
+$ rpm --checksig podman-desktop-*.rpm
+$ flatpak info io.podman_desktop.PodmanDesktop
+$ flatpak remote-info flathub io.podman_desktop.PodmanDesktop
+```
+
+Use the same commands in your change-management checklist so that a signature, package version, or permission change in a new release is detected before rollout.
+
+## Related resources
+
+- [Enterprise Deployment](/docs/enterprise-deployment)
+- [Controlling updates in managed environments](/docs/enterprise-deployment#controlling-updates-in-managed-environments)
+- [Installing Podman Desktop on Linux](/docs/installation/linux-install)

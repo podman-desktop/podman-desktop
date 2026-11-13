@@ -1,0 +1,84 @@
+---
+sidebar_position: 118
+title: Enterprise Deployment
+description: Reference for administrators planning to deploy Podman Desktop in managed, least-privilege enterprise environments.
+tags: [podman-desktop, enterprise, deployment, mdm, intune, epm, iam]
+keywords:
+  [
+    podman desktop,
+    enterprise deployment,
+    intune,
+    mdm,
+    endpoint privilege manager,
+    silent install,
+    code signing,
+    podman-mac-helper,
+    flatpak,
+    rpm,
+  ]
+---
+
+# Enterprise Deployment
+
+This section describes how Podman Desktop behaves when it installs or updates Podman, when it updates itself, and when it manages the macOS Docker socket helper. Use it to write, review, and maintain allowlist rules for endpoint protection, Endpoint Privilege Manager (EPM), and Mobile Device Management (MDM) platforms such as Microsoft Intune, without reverse-engineering the application.
+
+You can deploy Podman Desktop on:
+
+- [Windows](/docs/enterprise-deployment/windows-install)
+- [macOS](/docs/enterprise-deployment/macos-install)
+- [Linux](/docs/enterprise-deployment/linux-install)
+
+## Audience and scope
+
+This section targets administrators who deploy Podman Desktop to users that do **not** have local administrator rights, and who must pre-authorize every privileged operation.
+
+:::important[This is a behavioral reference, not a stability contract]
+
+This section describes what Podman Desktop does today, derived from its source code. It is not an API or a compatibility promise, and the paths, file names, process names, and command-line arguments it lists can change in any release. A rule copied from this page may stop matching after an upgrade, and when that happens the allowlisted operation is blocked rather than silently allowed, so the impact is usually a broken install or update rather than a security bypass.
+
+The behavior is not stable by design, for four reasons:
+
+1. **Most of it is not Podman Desktop code.** The Windows self-update is performed by the upstream `electron-updater` library (currently `6.8.11`), and its cache location, installer arguments, and signature verification follow that library, not this project. The macOS installer flow is Apple's `open` plus Launch Services, and the rpm and Flatpak flows are owned by `dnf` and Flatpak. Podman Desktop cannot promise behavior it does not implement.
+2. **Version and architecture data are data, not code.** The bundled Podman package names come from a version manifest (`podman.json`) that is updated as Podman releases new versions. In the version this page was written against, the macOS Intel entry pointed at `podman-installer-macos-amd64-v5.8.9.pkg` while Apple silicon pointed at `podman-installer-macos-aarch64-v6.1.4.pkg`, so the package file name already differs between architectures. The macOS names embed a version and change with each Podman bump, while the Windows MSI names do not; a rule cannot assume either pattern holds across releases.
+3. **Installer and updater behavior is owned by other projects.** A new Electron, NSIS, or `electron-updater` release can change the update flags, the cache layout, or which process starts the installer. Apple can change the process tree behind `open` for `.pkg` files, and Flatpak already documents that a release can change an application's sandbox permissions. None of these changes require a Podman Desktop change to reach your fleet.
+4. **Nothing enforces this page.** There is no test that fails when the documented paths or flags drift from the implementation, so the page can lag behind a release. It is maintained by hand.
+
+Treat it as a starting point for building and reviewing allowlist rules, not as a contract you can rely on without re-checking. Before you put a rule into production:
+
+- Verify every path and flag against the exact Podman Desktop and Podman versions you deploy. Each operating system page ends with commands that print the authoritative values for the installed build.
+- Run those commands again after every upgrade, and diff the result against what your allowlist expects.
+- Prefer rules that resolve the value at runtime over rules that hard-code a path, a version, or an exact command line.
+- Report a mismatch to the Podman Desktop project so the page can be corrected.
+
+:::
+
+### Summary of privileged operations
+
+| Operation                            | Platform | Privilege needed                       | Entry point                             |
+| ------------------------------------ | -------- | -------------------------------------- | --------------------------------------- |
+| Install or update Podman CLI         | Windows  | Administrator                          | `msiexec /package <path>`               |
+| Install or update Podman CLI         | macOS    | Apple installer prompt                 | `open <pkg> -W`                         |
+| Enable/disable Docker socket         | macOS    | Administrator (via `osascript`)        | `podman-mac-helper install`/`uninstall` |
+| Self-update Podman Desktop           | Windows  | Depends on the installation scope      | NSIS `podman-desktop-*-setup-*.exe`     |
+| Self-update Podman Desktop           | macOS    | User (Squirrel.Mac, signed app bundle) | In-place application update             |
+| Self-update Podman Desktop (rpm)     | Linux    | Administrator                          | `dnf upgrade`, by the package manager   |
+| Self-update Podman Desktop (Flatpak) | Linux    | User or system, per Flatpak scope      | `flatpak update`                        |
+
+## Controlling updates in managed environments
+
+You are not required to allow in-application updates. The following settings can be enforced with [managed configuration](/docs/configuration/managed-configuration) on every platform:
+
+- `preferences.update.appUpdate`: when `false`, Podman Desktop does not check for or offer application updates. Use this when the deployment cycle is fully managed by Intune or another MDM solution. This setting has no effect on Linux, where the in-application updater does not run.
+- `preferences.update.reminder`: set to `never` to suppress startup update reminders while keeping manual update checks.
+- `preferences.update.disableDifferentialDownload`: disables differential downloads, so every update is a full download. Differential downloads are disabled by default on Windows.
+
+Lock these keys in `locked.json` when users must not change them.
+
+## Related resources
+
+- [Configuring a managed user environment](/docs/configuration/managed-configuration)
+- [Settings reference](/docs/configuration/settings-reference)
+- [Managing Docker compatibility](/docs/migrating-from-docker/managing-docker-compatibility)
+- [Installing Podman Desktop on Windows](/docs/installation/windows-install)
+- [Installing Podman Desktop on macOS](/docs/installation/macos-install)
+- [Installing Podman Desktop on Linux](/docs/installation/linux-install)
