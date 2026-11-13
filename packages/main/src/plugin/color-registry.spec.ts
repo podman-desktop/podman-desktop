@@ -375,6 +375,31 @@ test('initDropdown registers dropdown-border', async () => {
   expect(dropdownBorderDark?.value).toBe('transparent');
 });
 
+test('initDropdown registers dropdown-separator and dropdown-label-text', async () => {
+  colorRegistry.initColors();
+
+  const expected = {
+    'dropdown-separator': {
+      light: tailwindColorPalette.gray[600],
+      dark: tailwindColorPalette.charcoal[400],
+      'hc-light': tailwindColorPalette.black,
+      'hc-dark': tailwindColorPalette.white,
+    },
+    'dropdown-label-text': {
+      light: tailwindColorPalette.charcoal[100],
+      dark: tailwindColorPalette.gray[800],
+      'hc-light': tailwindColorPalette.black,
+      'hc-dark': tailwindColorPalette.white,
+    },
+  };
+  for (const [id, themes] of Object.entries(expected)) {
+    for (const [theme, value] of Object.entries(themes)) {
+      const color = colorRegistry.listColors(theme).find(c => c.id === id);
+      expect(color?.value, `${id} ${theme}`).toBe(value);
+    }
+  }
+});
+
 describe('registerColor', () => {
   test('registerColor not yet defined', async () => {
     // spy notifyUpdate
