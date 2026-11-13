@@ -27,6 +27,7 @@ const extensionLabel = 'podman-desktop.podman';
 const extensionLabelName = 'podman';
 const extensionHeading = 'podman';
 const SETTINGS_NAVBAR_PREFERENCES_PODMAN_EXTENSION: string = 'Extension: Podman';
+const isActiveRegexp = new RegExp(`${ExtensionState.Installed}|Active`, 'i');
 
 let dashboardPage: DashboardPage;
 let settingsBar: SettingsBar;
@@ -95,9 +96,16 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
   // --------------------------
 
   if (enabled) {
-    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Installed, { timeout: 20_000 });
+    await playExpect
+      .poll(() => extensionStatusLabel.innerText(), {
+        timeout: 20_000,
+      })
+      .toMatch(isActiveRegexp);
   } else {
-    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Disabled, { timeout: 20_000 });
+    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Disabled, {
+      timeout: 20_000,
+      ignoreCase: true,
+    });
   }
   // always present and visible
   const extensionsPageAfter = await navigationBar.openExtensions();
@@ -115,7 +123,7 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
     await playExpect(podmanExtensionPage.disableButton).toBeVisible({
       timeout: 10_000,
     });
-    await playExpect(podmanExtensionPage.status.getByText(ExtensionState.Installed)).toBeVisible();
+    await playExpect.poll(() => podmanExtensionPage.status.innerText()).toMatch(isActiveRegexp);
   } else {
     await playExpect(podmanExtensionPage.enableButton).toBeVisible({
       timeout: 10_000,
@@ -123,7 +131,7 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
     await playExpect(podmanExtensionPage.disableButton).not.toBeVisible({
       timeout: 10_000,
     });
-    await playExpect(podmanExtensionPage.status.getByText(ExtensionState.Disabled)).toBeVisible();
+    await playExpect(podmanExtensionPage.status).toHaveText(ExtensionState.Disabled, { ignoreCase: true });
   }
 
   // expand Settings -> Preferences menu

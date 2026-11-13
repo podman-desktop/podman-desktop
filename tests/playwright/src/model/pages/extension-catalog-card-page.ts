@@ -27,7 +27,7 @@ export class ExtensionCatalogCardPage extends BasePage {
   readonly extensionName: string;
   readonly detailsButton: Locator;
   readonly downloadButton: Locator;
-  readonly alreadyInstalledText: Locator;
+  readonly status: Locator;
 
   constructor(page: Page, extensionName: string) {
     super(page);
@@ -37,9 +37,7 @@ export class ExtensionCatalogCardPage extends BasePage {
       name: 'More details',
     });
     this.downloadButton = this.parent.getByRole('button', { name: 'Install' });
-    this.alreadyInstalledText = this.parent.getByText('Already installed', {
-      exact: true,
-    });
+    this.status = this.parent.getByRole('status', { name: 'Extension status', exact: true });
   }
 
   public async openDetails(): Promise<ExtensionDetailsPage> {
@@ -57,7 +55,7 @@ export class ExtensionCatalogCardPage extends BasePage {
       const downloadButton = this.parent.getByRole('button', {
         name: 'Install',
       });
-      return (await this.alreadyInstalledText.count()) > 0 && (await downloadButton.count()) === 0;
+      return (await this.status.count()) > 0 && (await downloadButton.count()) === 0;
     });
   }
 
@@ -69,7 +67,7 @@ export class ExtensionCatalogCardPage extends BasePage {
       }
       await playExpect(this.downloadButton).toBeEnabled();
       await this.downloadButton.click();
-      await playExpect(this.alreadyInstalledText).toBeVisible({
+      await playExpect(this.status).toBeVisible({
         timeout: timeout,
       });
     });

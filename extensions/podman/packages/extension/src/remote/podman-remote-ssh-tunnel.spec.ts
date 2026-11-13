@@ -17,6 +17,11 @@
  ***********************************************************************/
 
 import * as net from 'node:net';
+import { EventEmitter } from 'node:events';
+import { rm } from 'node:fs/promises';
+import { type AddressInfo, createConnection, createServer } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import type { ExtensionContext } from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
@@ -38,6 +43,10 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
 
   getSshConfig(): ConnectConfig {
     return super.getSshConfig();
+  }
+
+  registerSocketErrorHandler(socket: EventEmitter, peerSocket: { end(): unknown }, side: 'local' | 'remote'): void {
+    super.registerSocketErrorHandler(socket, peerSocket, side);
   }
 }
 
@@ -152,6 +161,55 @@ test('does not add a verifier or alter timeouts for a localhost tunnel', () => {
 test('uses the private key instead of the ssh-agent', () => {
   expect(tunnel.getSshConfig().privateKey).toBe('key');
   expect(tunnel.getSshConfig().agent).toBeUndefined();
+});
+
+test('logs safe configuration when either tunnel socket emits an error', () => {
+  const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const tunnel = new TestPodmanRemoteSshTunnel('localhost', 22, 'foo', dummyKey, '/tmp/remote.sock', '/tmp/local.sock');
+  tunnel.getSshConfig().password = 'test-password';
+  tunnel.getSshConfig().passphrase = 'test-passphrase';
+  const localSocket = new EventEmitter();
+  const remoteSocket = new EventEmitter();
+  const localEnd = vi.fn();
+  const remoteEnd = vi.fn();
+  tunnel.registerSocketErrorHandler(localSocket, { end: remoteEnd }, 'local');
+  tunnel.registerSocketErrorHandler(remoteSocket, { end: localEnd }, 'remote');
+
+  const localError = new Error('local socket failure');
+  const remoteError = new Error('remote socket failure');
+  localSocket.emit('error', localError);
+  remoteSocket.emit('error', remoteError);
+
+  expect(logSpy).toHaveBeenNthCalledWith(
+    1,
+    'Podman ssh tunnel local socket error using configuration',
+    { host: 'localhost', port: 22, username: 'foo' },
+    localError,
+  );
+  expect(logSpy).toHaveBeenNthCalledWith(
+    2,
+    'Podman ssh tunnel remote socket error using configuration',
+    { host: 'localhost', port: 22, username: 'foo' },
+    remoteError,
+  );
+  expect(logSpy).toHaveBeenCalledTimes(2);
+  expect(localEnd).toHaveBeenCalledOnce();
+  expect(remoteEnd).toHaveBeenCalledOnce();
+  expect(logSpy.mock.calls.flat().join(' ')).not.toContain(dummyKey);
+});
+
+test('should use the provided private key over the ssh-agent', () => {
+  const tunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    'my-private-key',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+  const config = tunnel.getSshConfig();
+  expect(config.privateKey).toBe('my-private-key');
+  expect(config.agent).toBeUndefined();
 });
 
 test('falls back to the ssh-agent without a private key', () => {

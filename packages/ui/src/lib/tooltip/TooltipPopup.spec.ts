@@ -62,6 +62,22 @@ test('applies the class prop to the inner tooltip element', () => {
   expect(screen.getByRole('tooltip')).toHaveClass('custom-class');
 });
 
+test('uses the tooltip theme colors on the inner tooltip element', () => {
+  render(TooltipPopup, { reference, id: 'my-tooltip', tip: 'hello' });
+
+  const tooltip = screen.getByRole('tooltip');
+  expect(tooltip).toHaveClass('bg-[var(--pd-tooltip-bg)]');
+  expect(tooltip).toHaveClass('text-[var(--pd-tooltip-text)]');
+  expect(tooltip).toHaveClass('border-[var(--pd-tooltip-inner-border)]');
+  expect(tooltip).toHaveClass('backdrop-blur-sm');
+});
+
+test('renders above other content', () => {
+  render(TooltipPopup, { reference, id: 'my-tooltip', tip: 'hello' });
+
+  expect(screen.getByRole('tooltip').parentElement).toHaveClass('z-[9999]');
+});
+
 test('renders tipSnippet when no tip is given', () => {
   const tipSnippet = createRawSnippet(() => ({ render: (): string => '<span>snippet content</span>' }));
   render(TooltipPopup, { reference, id: 'my-tooltip', tipSnippet });
