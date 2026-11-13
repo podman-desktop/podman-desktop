@@ -39,6 +39,7 @@ vi.mock(import('electron'), async () => {
     setToolTip = vi.fn();
     setContextMenu = vi.fn();
     isDestroyed = vi.fn();
+    destroy = vi.fn();
     on = vi.fn();
   }
 
