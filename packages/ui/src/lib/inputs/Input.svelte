@@ -72,7 +72,6 @@ let {
 let enabled = $derived(!readonly && !disabled);
 
 const errorId = $props.id();
-let hasErrorText = $derived(!!error && error.length > 0 && showError);
 
 // clear the value if the parent doesn't override
 async function onClear(): Promise<void> {
@@ -128,7 +127,7 @@ async function onClear(): Promise<void> {
       {pattern}
       aria-label={ariaLabel}
       aria-invalid={ariaInvalid ?? (error && showError ? true : undefined)}
-      aria-describedby={ariaDescribedBy ?? (hasErrorText ? errorId : undefined)}
+      aria-describedby={ariaDescribedBy ?? (error && showError ? errorId : undefined)}
       bind:value />
     {#if error && showError}
       <span class="px-0.5 text-[color:var(--pd-input-field-error-text)]" aria-hidden="true">
@@ -147,7 +146,7 @@ async function onClear(): Promise<void> {
     {/if}
     {@render right?.()}
   </div>
-  {#if hasErrorText}
+  {#if error && error.length > 0 && showError}
     <span id={errorId} class="text-sm text-[color:var(--pd-input-field-error-text)]">{error}</span>
   {/if}
 </div>
