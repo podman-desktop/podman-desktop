@@ -29,6 +29,7 @@ import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 import type { LockedConfiguration } from './locked-configuration.js';
+import type { MacManagedConfiguration } from './mac-managed-configuration.js';
 import type { ProviderRegistry } from './provider-registry.js';
 
 let configurationRegistry: ConfigurationRegistry;
@@ -55,6 +56,7 @@ beforeAll(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
+    {} as MacManagedConfiguration,
   );
   providerRegistry = {} as unknown as ProviderRegistry;
   autostartEngine = new AutostartEngine(configurationRegistry, providerRegistry);
