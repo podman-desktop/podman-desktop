@@ -32,14 +32,16 @@ export class PodmanRemoteSshTunnel {
 
   #status: ProviderConnectionStatus = 'unknown';
 
-  #reconnect: boolean = false;
+  #error: string | undefined;
+
+  #reconnect = false;
 
   #reconnectTimeout: NodeJS.Timeout | undefined;
 
   #resolveConnected: (value: boolean) => void = () => {};
   #connected: Promise<boolean>;
 
-  #listening: boolean = false;
+  #listening = false;
 
   constructor(
     private host: string,
@@ -108,6 +110,10 @@ export class PodmanRemoteSshTunnel {
     return this.#status;
   }
 
+  get error(): string | undefined {
+    return this.#error;
+  }
+
   connect(): void {
     this.#reconnect = true;
     this.#listening = false;
@@ -119,11 +125,12 @@ export class PodmanRemoteSshTunnel {
     this.#client
       .on('ready', () => {
         this.#status = 'started';
+        this.#error = undefined;
 
         this.#resolveConnected(true);
 
         // Create a local server to listen on the local file socket
-        this.#server = net.createServer(localSocket => {
+        this.#server = this.createServer(localSocket => {
           // Create a connection to the remote socket via SSH
           this.#client?.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
             if (err) {
@@ -166,26 +173,45 @@ export class PodmanRemoteSshTunnel {
 
         // Handle server error
         this.#server.on('error', err => {
+          this.#status = 'unknown';
+          this.#error = err.message;
           console.error('Server error:', err);
         });
       })
       .connect(this.#sshConfig);
 
     this.#client.on('error', err => {
+      this.#error = err.message;
       console.error('SSH connection error:', err);
       this.#status = 'unknown';
+      this.#closeServer();
       this.handleReconnect();
     });
 
+    // ssh2 emits 'end' and 'close' after 'error', so keep any more specific error already set
     this.#client.on('end', () => {
       this.#status = 'stopped';
+      if (this.#reconnect) {
+        this.#error ??= 'SSH connection ended unexpectedly';
+        this.#closeServer();
+      }
       this.handleReconnect();
     });
 
     this.#client.on('close', () => {
       this.#status = 'stopped';
+      if (this.#reconnect) {
+        this.#error ??= 'SSH connection closed unexpectedly';
+        this.#closeServer();
+      }
       this.handleReconnect();
     });
+  }
+
+  #closeServer(): void {
+    this.#server?.close();
+    this.#server = undefined;
+    this.#listening = false;
   }
 
   handleReconnect(): void {
