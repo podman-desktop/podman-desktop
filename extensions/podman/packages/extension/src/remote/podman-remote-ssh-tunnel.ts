@@ -19,8 +19,11 @@ import type { EventEmitter } from 'node:events';
 import * as net from 'node:net';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
+import { window } from '@podman-desktop/api';
 import type { ConnectConfig } from 'ssh2';
 import { Client } from 'ssh2';
+
+import type { SshHostKeyStore } from '/@/utils/ssh-host-key-store';
 
 export class PodmanRemoteSshTunnel {
   #sshConfig: ConnectConfig;
@@ -48,6 +51,7 @@ export class PodmanRemoteSshTunnel {
     private privateKey: string | undefined,
     private remotePath: string,
     private localPath: string,
+    private readonly sshHostKeyStore: SshHostKeyStore,
   ) {
     this.#sshConfig = {
       host: this.host,
@@ -116,6 +120,14 @@ export class PodmanRemoteSshTunnel {
       this.#resolveConnected = resolve;
     });
 
+    const verificationConfig = this.sshHostKeyStore.getConnectionConfig(this.#client, this.host, this.port, error => {
+      this.#resolveConnected(false);
+      this.disconnect();
+      console.error('SSH host key verification failed:', error);
+      window.showErrorMessage(error.message).catch((notificationError: unknown) => {
+        console.error('Unable to display SSH host key verification error:', notificationError);
+      });
+    });
     this.#client
       .on('ready', () => {
         this.#status = 'started';
@@ -169,7 +181,7 @@ export class PodmanRemoteSshTunnel {
           console.error('Server error:', err);
         });
       })
-      .connect(this.#sshConfig);
+      .connect({ ...this.#sshConfig, ...verificationConfig });
 
     this.#client.on('error', err => {
       console.error('SSH connection error:', err);
@@ -206,7 +218,9 @@ export class PodmanRemoteSshTunnel {
       this.#reconnectTimeout = undefined;
     }
     this.#client?.end();
+    this.#listening = false;
     this.#server?.close();
+    this.#server = undefined;
   }
 
   isConnected(): Promise<boolean> {
