@@ -2210,6 +2210,58 @@ export class ColorRegistry {
       dark: white,
       light: white,
     });
+
+    // new design-system status bar tokens, registered alongside legacy ones for rollout behind experimental flag
+    this.registerColor(`${statusbar}bg-new`, {
+      dark: charcoal[900],
+      light: gray[50],
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${statusbar}text-new`, {
+      dark: neutral[400],
+      light: neutral[600],
+      hcDark: white,
+      hcLight: black,
+    });
+
+    this.registerColorDefinition(
+      this.color(`${statusbar}sep`)
+        .withDark(colorPaletteHelper(white).withAlpha(0.1))
+        .withLight(colorPaletteHelper(black).withAlpha(0.1))
+        .withHcDark(colorPaletteHelper(white))
+        .withHcLight(colorPaletteHelper(black))
+        .build(),
+    );
+
+    this.registerColor(`${statusbar}error-bg`, {
+      dark: red[700],
+      light: red[600],
+      hcDark: red[400],
+      hcLight: red[800],
+    });
+
+    this.registerColor(`${statusbar}error-color`, {
+      dark: white,
+      light: white,
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${statusbar}warning-bg`, {
+      dark: yellow[500],
+      light: yellow[500],
+      hcDark: yellow[400],
+      hcLight: yellow[500],
+    });
+
+    this.registerColor(`${statusbar}warning-color`, {
+      dark: black,
+      light: black,
+      hcDark: black,
+      hcLight: black,
+    });
   }
 
   protected initOnboarding(): void {
