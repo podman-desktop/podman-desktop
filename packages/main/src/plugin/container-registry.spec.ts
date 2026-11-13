@@ -8904,3 +8904,93 @@ describe('getImageInfo', () => {
     );
   });
 });
+
+describe('getContainerStats', () => {
+  test('forwards each stats object to the callback with the engine name and id', async () => {
+    const stream = new PassThrough();
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: {
+        getContainer: vi.fn().mockReturnValue({ stats: vi.fn().mockResolvedValue(stream) }),
+      } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+    const callback = vi.fn();
+
+    await containerRegistry.getContainerStats('podman1', 'container1', callback);
+    stream.write(JSON.stringify({ cpu_stats: { online_cpus: 4 } }));
+
+    await vi.waitFor(() =>
+      expect(callback).toHaveBeenCalledWith({
+        engineName: 'podman',
+        engineId: 'podman1',
+        cpu_stats: { online_cpus: 4 },
+      }),
+    );
+
+    stream.write(JSON.stringify({ cpu_stats: { online_cpus: 8 } }));
+
+    await vi.waitFor(() =>
+      expect(callback).toHaveBeenCalledWith({
+        engineName: 'podman',
+        engineId: 'podman1',
+        cpu_stats: { online_cpus: 8 },
+      }),
+    );
+  });
+
+  test.each([
+    { name: 'the engine is unknown', engineId: 'unknown', message: 'no engine matching this container' },
+    {
+      name: 'the engine has no api',
+      engineId: 'podman1',
+      message: 'no running provider for the matching container',
+    },
+  ])('rejects and tracks the error when $name', async ({ engineId, message }) => {
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    await expect(containerRegistry.getContainerStats(engineId, 'container1', vi.fn())).rejects.toThrow(message);
+
+    expect(telemetryTrackMock).toHaveBeenCalledWith('containerStats', {
+      error: expect.objectContaining({ message }),
+    });
+  });
+
+  test('a failing stream unregisters itself but not a stream started afterwards', async () => {
+    const firstStream = new PassThrough();
+    const secondStream = new PassThrough();
+    const statsMock = vi.fn().mockResolvedValueOnce(firstStream).mockResolvedValueOnce(secondStream);
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: { getContainer: vi.fn().mockReturnValue({ stats: statsMock }) } as unknown as Dockerode,
+      connection: { type: 'podman' },
+    } as InternalContainerProvider);
+
+    const firstId = await containerRegistry.getContainerStats('podman1', 'container1', vi.fn());
+    const secondId = await containerRegistry.getContainerStats('podman1', 'container2', vi.fn());
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const firstDestroySpy = vi.spyOn(firstStream, 'destroy');
+
+    // invalid JSON makes the first pipeline fail, after the second stream has been registered
+    firstStream.end('}');
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error while grabbing stats', expect.anything()),
+    );
+    const destroyCallsAfterError = firstDestroySpy.mock.calls.length;
+
+    await containerRegistry.stopContainerStats(firstId);
+    await containerRegistry.stopContainerStats(secondId);
+
+    expect(firstId).not.toBe(secondId);
+    // the failed stream is no longer registered, so stopping it does not destroy it again
+    expect(firstDestroySpy).toHaveBeenCalledTimes(destroyCallsAfterError);
+    expect(secondStream.destroyed).toBeTruthy();
+  });
+});
