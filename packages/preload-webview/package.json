@@ -8,7 +8,7 @@
     "@desktop-framework/api": "workspace:*",
     "@podman-desktop/webview-api": "workspace:*",
     "electron": "45.2.3",
-    "vite": "^8.3.6",
-    "vitest": "^5.0.5"
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
   }
 }

@@ -71,15 +71,6 @@ app.once('before-quit', event => {
 
 let tray: Tray | undefined;
 
-// Handle the open-url event (macOS/Linux). For Windows, it needs to be handle in the second-instance event
-app.on('will-finish-launching', () => {
-  app.on('open-url', (event, url) => {
-    event.preventDefault();
-    // delegate to the handler
-    podmanDesktopMain.protocolLauncher.handleOpenUrl(url);
-  });
-});
-
 app.whenReady().then(
   async () => {
     // Setup the default tray icon + menu items (skip if user disabled tray)

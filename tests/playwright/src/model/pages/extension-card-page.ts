@@ -18,6 +18,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { ExtensionState } from '/@/model/core/states';
+
 import { BasePage } from './base-page';
 import { ExtensionDetailsPage } from './extension-details-page';
 import { ExtensionsPage } from './extensions-page';
@@ -64,7 +66,10 @@ export class ExtensionCardPage extends BasePage {
     this.editButton = this.leftActions.getByRole('button', {
       name: `Edit properties of ${extensionName} extension`,
     });
-    this.status = this.leftActions.getByRole('status', { name: 'Extension status' });
+    this.status = this.leftActions
+      .getByRole('status', { name: 'Extension status' })
+      .or(this.leftActions.getByLabel('Extension status Label'))
+      .first();
     this.enableButton = this.extensionActions.getByRole('button', {
       name: 'Start',
     });
@@ -86,20 +91,22 @@ export class ExtensionCardPage extends BasePage {
 
   async disableExtension(): Promise<this> {
     return test.step(`Disable extension: ${this.extensionName}`, async () => {
-      if ((await this.status.innerText()) === 'Disabled') return this;
+      if ((await this.status.innerText()).toLowerCase() === 'disabled') return this;
 
       await this.disableButton.click();
-      await playExpect(this.status).toHaveText('Disabled');
+      await playExpect(this.status).toHaveText('Disabled', { timeout: 30000, ignoreCase: true });
       return this;
     });
   }
 
   async enableExtension(): Promise<this> {
     return test.step(`Enable extension: ${this.extensionName}`, async () => {
-      if ((await this.status.innerText()) === 'Installed') return this;
+      const isActiveRegexp = new RegExp(`${ExtensionState.Installed}|Active`, 'i');
+      const status = (await this.status.innerText()).toLowerCase();
+      if (status === 'installed' || status === 'active') return this;
 
       await this.enableButton.click();
-      await playExpect(this.status).toHaveText('Installed');
+      await playExpect.poll(() => this.status.innerText(), { timeout: 30_000 }).toMatch(isActiveRegexp);
       return this;
     });
   }

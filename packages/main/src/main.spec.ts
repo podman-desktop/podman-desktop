@@ -187,6 +187,26 @@ describe('ElectronApp#on second-instance', () => {
   });
 });
 
+describe('ElectronApp#on will-finish-launching', () => {
+  beforeEach(() => {
+    new Main(ELECTRON_APP_MOCK).main([]);
+  });
+
+  test('should not register the open-url listener before will-finish-launching', () => {
+    expect(ELECTRON_APP_MOCK.on).not.toHaveBeenCalledWith('open-url', expect.any(Function));
+  });
+
+  test('should delegate the open-url event to the protocol launcher', () => {
+    getElectronAppListener('will-finish-launching')();
+
+    const event = { preventDefault: vi.fn() };
+    getElectronAppListener('open-url')(event, 'podman-desktop:experimental');
+
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(ProtocolLauncher.prototype.handleOpenUrl).toHaveBeenCalledWith('podman-desktop:experimental');
+  });
+});
+
 describe('ElectronApp#on window-all-closed', () => {
   let code: Main;
   beforeEach(() => {
