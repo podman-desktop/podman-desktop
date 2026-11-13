@@ -81,6 +81,13 @@ jobs:
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@b88d2d400b93a6050b4bcd36426aa191168cc5aa
 
+      - name: Lower Podman default stop timeout
+        # Test images such as alpine run /bin/sh as PID 1, which ignores SIGTERM,
+        # so every stop/delete of a running container waits the full 10s default.
+        run: |
+          mkdir -p ~/.config/containers/containers.conf.d
+          printf '[engine]\nstop_timeout = 2\n' > ~/.config/containers/containers.conf.d/99-e2e-stop-timeout.conf
+
       - name: Remove pre-installed Docker images
         run: |
           echo "Removing pre-installed Docker images to prevent E2E test flakiness"
