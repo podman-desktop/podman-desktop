@@ -146,3 +146,19 @@ describe('enforceFirstRun', () => {
     expect(vi.mocked(window.updateConfigurationValue)).not.toHaveBeenCalled();
   });
 });
+
+describe('getProviderCardClass', () => {
+  test.each([
+    { count: 1, expected: ['col-span-2 col-start-3'] },
+    { count: 2, expected: Array(2).fill('col-span-3') },
+    { count: 3, expected: Array(3).fill('col-span-2') },
+    { count: 4, expected: Array(4).fill('col-span-3') },
+    { count: 5, expected: [...Array(3).fill('col-span-2'), 'col-span-2 col-start-2', 'col-span-2'] },
+    { count: 6, expected: Array(6).fill('col-span-2') },
+    { count: 7, expected: [...Array(6).fill('col-span-2'), 'col-span-2 col-start-3'] },
+    { count: 10, expected: [...Array(9).fill('col-span-2'), 'col-span-2 col-start-3'] },
+  ])('lays out $count cards', ({ count, expected }) => {
+    const classes = Array.from({ length: count }, (_, index) => welcomeUtils.getProviderCardClass(index, count));
+    expect(classes).toEqual(expected);
+  });
+});
