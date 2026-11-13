@@ -23,6 +23,7 @@ import { context } from '/@/stores/context';
 /* eslint-enable import/no-duplicates */
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
+import { ConnectionOperationSummary } from './connection-operation-summary';
 import EditableConnectionResourceItem from './item-formats/EditableConnectionResourceItem.svelte';
 import {
   clearCreateTask,
@@ -318,6 +319,10 @@ function restoreConfigurationValues(): void {
   }
 }
 
+function getSuccessSummary(): ConnectionOperationSummary {
+  return new ConnectionOperationSummary({ providerInfo, propertyScope, connectionInfo, formData: existingFormData });
+}
+
 function getLoggerHandler(): ConnectionCallback {
   return {
     log: (args): void => {
@@ -515,7 +520,15 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
 
 <div class="flex flex-col w-full h-full overflow-hidden">
   {#if operationSuccessful && !disableEmptyScreen}
-    <EmptyScreen icon={faCubes} title={operationLabel} message="Successful operation">
+    {@const successSummary = getSuccessSummary()}
+    {@const connectionName = successSummary.getConnectionName()}
+    <EmptyScreen icon={faCubes} title={successSummary.getTitle(operationLabel)} message="Successful operation">
+      {#snippet upperContent()}
+        {#if connectionName}
+          <span class="font-mono text-(--pd-details-empty-header) wrap-anywhere mx-2"
+            >{connectionName}</span>
+        {/if}
+      {/snippet}
       <Button
         class="py-3"
         on:click={async (): Promise<void> => {

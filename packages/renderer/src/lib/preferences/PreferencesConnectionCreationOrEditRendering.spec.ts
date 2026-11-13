@@ -25,9 +25,10 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-fra
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import type { ComponentProps } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
+import { assert, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
@@ -390,6 +391,74 @@ describe.each([
     await fireEvent.input(inputElement as Element, { target: { value: '2' } });
     await vi.waitFor(() => expect(vi.mocked(window.auditConnectionParameters)).toBeCalledTimes(2));
     await vi.waitFor(() => expect(createButton).toBeEnabled());
+  });
+});
+
+describe('success screen', () => {
+  const namedProviderInfo: ProviderInfo = {
+    ...providerInfo,
+    containerProviderConnectionCreationDisplayName: 'Test machine',
+  };
+  const nameProperty: IConfigurationPropertyRecordedSchema = {
+    title: 'Name',
+    parentId: '',
+    scope: 'ContainerProviderConnectionFactory',
+    id: 'test.factory.machine.name',
+    type: 'string',
+    default: 'my-machine',
+    description: 'test.name',
+  };
+
+  async function finishOperation(
+    props: Partial<ComponentProps<typeof PreferencesConnectionCreationOrEditRendering>>,
+  ): Promise<void> {
+    let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
+    const callback = mockCallback(async keyLogger => {
+      providedKeyLogger = keyLogger;
+    });
+    const taskId = 5;
+
+    render(PreferencesConnectionCreationOrEditRendering, {
+      properties: [nameProperty],
+      providerInfo: namedProviderInfo,
+      propertyScope,
+      callback,
+      pageIsLoading: false,
+      taskId,
+      ...props,
+    });
+    await screen.findByRole('textbox');
+    await fireEvent.click(screen.getByRole('button', { name: props.connectionInfo ? 'Update' : 'Create' }));
+
+    const operationKey = get(operationConnectionsInfo).get(taskId)?.operationKey;
+    assert(providedKeyLogger);
+    assert(operationKey);
+    providedKeyLogger(operationKey, 'finish', []);
+  }
+
+  test('Expect the name of the created connection to be displayed', async () => {
+    await finishOperation({});
+
+    expect(await screen.findByRole('heading', { name: 'Test machine created' })).toBeInTheDocument();
+    expect(screen.getByText('my-machine')).toBeInTheDocument();
+    expect(screen.getByText('Successful operation')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Go back to resources' })).toBeInTheDocument();
+  });
+
+  test('Expect the name of the edited connection to be displayed', async () => {
+    await finishOperation({ connectionInfo });
+
+    expect(await screen.findByRole('heading', { name: 'Test machine updated' })).toBeInTheDocument();
+    expect(screen.getByText('test connection')).toBeInTheDocument();
+    expect(screen.getByText('Successful operation')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Go back to resources' })).toBeInTheDocument();
+  });
+
+  test('Expect the operation label to be displayed when the connection name is unknown', async () => {
+    await finishOperation({ properties });
+
+    expect(await screen.findByText('Creation')).toBeInTheDocument();
+    expect(screen.getByText('Successful operation')).toBeInTheDocument();
   });
 });
 
