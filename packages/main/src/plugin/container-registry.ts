@@ -2817,8 +2817,10 @@ export class ContainerProviderRegistry {
       if (!provider.api) {
         throw new Error('no running provider for the matching container');
       }
-      const imageObject = provider.api.getImage(id);
-      const imageInspect = await imageObject.inspect();
+      // prefer the libpod API on Podman, as it returns more information than the Docker compatible API
+      const imageInspect = provider.libpodApi
+        ? await provider.libpodApi.podmanInspectImage(id)
+        : await provider.api.getImage(id).inspect();
       return {
         engineName: provider.name,
         engineId: provider.id,
