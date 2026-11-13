@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type extensionApi from '@podman-desktop/api';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { coerce, compare } from 'semver';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
@@ -25,27 +25,28 @@ import { WslHelper } from '/@/helpers/wsl-helper';
 
 @injectable()
 export class WSLVersionCheck extends MemoizedBaseCheck {
+  @inject(WslHelper)
+  private readonly wslHelper!: WslHelper;
+
   title = 'WSL Version';
 
   minVersion = '1.2.5';
 
   async executeImpl(): Promise<extensionApi.CheckResult> {
     try {
-      const wslHelper = new WslHelper();
-      const wslVersionData = await wslHelper.getWSLVersionData();
+      const wslVersionData = await this.wslHelper.getWSLVersionData();
       if (wslVersionData.wslVersion) {
         const wslVersion = coerce(wslVersionData.wslVersion);
         if (wslVersion && compare(wslVersion, this.minVersion) >= 0) {
           return this.createSuccessfulResult();
-        } else {
-          return this.createFailureResult({
-            description: `Your WSL version is ${wslVersionData.wslVersion} but it should be >= ${this.minVersion}.`,
-            docLinksDescription: `Call 'wsl --update' to update your WSL installation. If you do not have access to the Windows store you can run 'wsl --update --web-download'. If you still receive an error please contact your IT administator as 'Windows Store Applications' may have been disabled.`,
-          });
         }
+        return this.createFailureResult({
+          description: `Your WSL version is ${wslVersionData.wslVersion} but it should be >= ${this.minVersion}.`,
+          docLinksDescription: `Call 'wsl --update' to update your WSL installation. If you do not have access to the Windows store you can run 'wsl --update --web-download'. If you still receive an error please contact your IT administator as 'Windows Store Applications' may have been disabled.`,
+        });
       }
-    } catch (err) {
-      // ignore error
+    } catch (error: unknown) {
+      console.debug('Unable to read the WSL version', error);
     }
     return this.createFailureResult({
       description: `WSL version should be >= ${this.minVersion}.`,

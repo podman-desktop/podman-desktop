@@ -38,6 +38,7 @@ import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
+import { WslHelper } from '/@/helpers/wsl-helper';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
@@ -82,6 +83,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(HyperVCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(VirtualizationFirmwareCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(VirtualMachinePlatformCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WslHelper).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSLVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSLPodmanVersionCheck).toSelf().inSingletonScope();
