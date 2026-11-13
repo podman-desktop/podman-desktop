@@ -186,18 +186,18 @@ export class TrayMenu {
       childItems: [],
     };
     this.menuContainerProviderConnectionItems.set(
-      `${providerContainerConnectionInfoMenuItem.name}.${providerContainerConnectionInfoMenuItem.endpoint.socketPath}`,
+      this.getProviderContainerConnectionKey(providerInfo, providerContainerConnectionInfo),
       providerContainerConnectionInfoMenuItem,
     );
     this.updateMenu();
   }
 
   public updateProviderContainerConnectionItems(
-    _provider: ProviderInfo,
+    provider: ProviderInfo,
     providerContainerConnectionInfo: ProviderContainerConnectionInfo,
   ): void {
     const menuProviderItem = this.menuContainerProviderConnectionItems.get(
-      `${providerContainerConnectionInfo.name}.${providerContainerConnectionInfo.endpoint.socketPath}`,
+      this.getProviderContainerConnectionKey(provider, providerContainerConnectionInfo),
     );
     if (menuProviderItem) {
       menuProviderItem.status = providerContainerConnectionInfo.status;
@@ -206,13 +206,22 @@ export class TrayMenu {
   }
 
   public deleteProviderContainerConnectionItems(
-    _provider: ProviderInfo,
+    provider: ProviderInfo,
     providerContainerConnectionInfo: ProviderContainerConnectionInfo,
   ): void {
     this.menuContainerProviderConnectionItems.delete(
-      `${providerContainerConnectionInfo.name}.${providerContainerConnectionInfo.endpoint.socketPath}`,
+      this.getProviderContainerConnectionKey(provider, providerContainerConnectionInfo),
     );
     this.updateMenu();
+  }
+
+  // the owning provider is part of the key, so two providers exposing a connection
+  // with the same name and socket path do not overwrite each other
+  private getProviderContainerConnectionKey(
+    provider: ProviderInfo,
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+  ): string {
+    return `${provider.internalId}.${providerContainerConnectionInfo.name}.${providerContainerConnectionInfo.endpoint.socketPath}`;
   }
 
   public addProviderItems(provider: ProviderInfo & { childItems?: MenuItemConstructorOptions[] }): void {
