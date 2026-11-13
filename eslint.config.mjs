@@ -255,6 +255,26 @@ export default [
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
 
+      // dialogs should not have more than three buttons
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CallExpression[callee.property.name="showMessageBox"] > ObjectExpression > Property[key.name="buttons"] > ArrayExpression[elements.length>3]',
+          message: 'Dialogs should have at most three buttons. Move secondary options into a `dropdownButton`.',
+        },
+        {
+          // showDialog and the show*Message calls take plain string buttons, so a dropdownButton is not available.
+          selector: 'CallExpression[callee.property.name="showDialog"] > ArrayExpression[elements.length>3]',
+          message: 'Dialogs should have at most three buttons. Keep the three most important choices.',
+        },
+        {
+          selector:
+            'CallExpression[callee.property.name=/^show(Information|Warning|Error)Message$/][arguments.length>4]',
+          message: 'Dialogs should have at most three buttons. Keep the three most important choices.',
+        },
+      ],
+
       // new rule that has been added as a recommended one in eslint v10
       // but comment it by default until we can fix all the issues in the codebase
       'preserve-caught-error': 'off',
