@@ -2833,6 +2833,38 @@ export class ContainerProviderRegistry {
     }
   }
 
+  /**
+   * Same as getImageInspect, but returns the engine native result: on Podman, the libpod API result
+   * (which has more information than the Docker compatible API), otherwise the Docker compatible one.
+   * The shape differs from the Docker one, so this is not exposed to extensions.
+   */
+  async getImageInspectDetails(engineId: string, id: string): Promise<ImageInspectInfo> {
+    let telemetryOptions = {};
+    try {
+      const provider = this.internalProviders.get(engineId);
+      if (!provider) {
+        throw new Error('no engine matching this container');
+      }
+      if (!provider.api) {
+        throw new Error('no running provider for the matching container');
+      }
+      const imageInspect = provider.libpodApi
+        ? await provider.libpodApi.podmanInspectImage(id)
+        : await provider.api.getImage(id).inspect();
+      return {
+        engineName: provider.name,
+        engineId: provider.id,
+        engineType: provider.connection.type,
+        ...imageInspect,
+      };
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('imageInspect', telemetryOptions);
+    }
+  }
+
   async getImageHistory(engineId: string, id: string): Promise<HistoryInfo[]> {
     let telemetryOptions = {};
     try {

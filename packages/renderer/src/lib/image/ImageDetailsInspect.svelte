@@ -16,7 +16,7 @@ let inspectDetails: string | undefined = $state();
 
 onMount(async () => {
   // grab inspect result from the container
-  const inspectResult = (await window.getImageInspect(image.engineId, image.id)) as Partial<ImageInspectInfo>;
+  const inspectResult = (await window.getImageInspectDetails(image.engineId, image.id)) as Partial<ImageInspectInfo>;
 
   // remove engine* properties from the inspect result as it's more internal
   delete inspectResult.engineId;

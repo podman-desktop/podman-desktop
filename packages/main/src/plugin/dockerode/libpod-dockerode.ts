@@ -18,7 +18,13 @@
 
 import type { RequestOptions } from 'node:http';
 
-import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, ListImagesOptions } from '@desktop-framework/api';
+import type {
+  ImageInfo,
+  LibPodImageInspectInfo,
+  LibPodPodInfo,
+  LibPodPodInspectInfo,
+  ListImagesOptions,
+} from '@desktop-framework/api';
 import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@desktop-framework/api/libpod';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@desktop-framework/extension-api';
 import type DockerModem from 'docker-modem';
@@ -256,6 +262,7 @@ export interface LibPod {
   podmanInfo(): Promise<Info>;
   getImages(options: GetImagesOptions): Promise<NodeJS.ReadableStream>;
   podmanListImages(options?: ListImagesOptions): Promise<ImageInfo[]>;
+  podmanInspectImage(imageName: string): Promise<LibPodImageInspectInfo>;
   podmanCreateManifest(manifestOptions: ManifestCreateOptions): Promise<{ engineId: string; Id: string }>;
   podmanInspectManifest(manifestName: string): Promise<ManifestInspectInfo>;
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
@@ -893,6 +900,33 @@ export class LibpodDockerode {
     };
 
     // add inspectManifest
+    prototypeOfDockerode.podmanInspectImage = function (imageName: string): Promise<LibPodImageInspectInfo> {
+      // make sure encodeURI component for the name ex. domain.com/foo/bar:latest
+      const encodedImageName = encodeURIComponent(imageName);
+
+      const optsf = {
+        path: `/v4.2.0/libpod/images/${encodedImageName}/json`,
+        method: 'GET',
+
+        // Match the status codes from https://docs.podman.io/en/latest/_static/api.html#tag/images/operation/ImageInspectLibpod
+        statusCodes: {
+          200: true,
+          404: 'no such image',
+          500: 'server error',
+        },
+        options: {},
+      };
+
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<LibPodImageInspectInfo>(data));
+        });
+      });
+    };
+
     prototypeOfDockerode.podmanInspectManifest = function (manifestName: string): Promise<ManifestInspectInfo> {
       // make sure encodeURI component for the name ex. domain.com/foo/bar:latest
       const encodedManifestName = encodeURIComponent(manifestName);

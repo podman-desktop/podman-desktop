@@ -29,6 +29,7 @@ import type {
   HostConfig,
   ImageInspectInfo,
   ImageUpdateStatus,
+  LibPodImageInspectInfo,
   ProviderContainerConnectionInfo,
 } from '@desktop-framework/api';
 import type { ApiSenderType } from '@desktop-framework/api/api-sender';
@@ -8432,7 +8433,116 @@ describe('getImageInspect', () => {
     expect(internalContainerProvider.api.getImage).toHaveBeenCalledExactlyOnceWith('bar');
     expect(imageMock.inspect).toHaveBeenCalledOnce();
   });
+
+  test('should not use the libpod API, to keep the Docker compatible shape for extensions', async () => {
+    const { provider, imageMock } = givenPodmanProviderWithLibpod();
+    containerRegistry.addInternalProvider('podman1', provider);
+
+    await containerRegistry.getImageInspect('podman1', 'bar');
+
+    expect(provider.api.getImage).toHaveBeenCalledExactlyOnceWith('bar');
+    expect(imageMock.inspect).toHaveBeenCalledOnce();
+    expect(provider.libpodApi.podmanInspectImage).not.toHaveBeenCalled();
+  });
 });
+
+describe('getImageInspectDetails', () => {
+  test('should throw if no matching engine', async () => {
+    await expect(containerRegistry.getImageInspectDetails('nonexistent', 'image1')).rejects.toThrow(
+      'no engine matching this container',
+    );
+  });
+
+  test('should use the libpod API when available', async () => {
+    const { provider, imageMock, libpodInspectMock } = givenPodmanProviderWithLibpod();
+    containerRegistry.addInternalProvider('podman1', provider);
+
+    const image = await containerRegistry.getImageInspectDetails('podman1', 'bar');
+
+    expect(image).toEqual({
+      ...libpodInspectMock,
+      engineId: 'podman1',
+      engineName: 'podman',
+      engineType: 'podman',
+    });
+    expect(provider.libpodApi.podmanInspectImage).toHaveBeenCalledExactlyOnceWith('bar');
+    expect(provider.api.getImage).not.toHaveBeenCalled();
+    expect(imageMock.inspect).not.toHaveBeenCalled();
+  });
+
+  test('should fall back to the Docker compatible API without libpod API', async () => {
+    const imageMock: Dockerode.Image = {
+      inspect: vi.fn(),
+    } as unknown as Dockerode.Image;
+    const imageInspectMock = { Id: 'sha256:1234' } as unknown as Dockerode.ImageInspectInfo;
+    vi.mocked(imageMock.inspect).mockResolvedValue(imageInspectMock);
+
+    const provider: InternalContainerProvider & { api: Dockerode } = {
+      name: 'docker',
+      id: 'docker1',
+      api: {
+        getImage: vi.fn().mockReturnValue(imageMock),
+      } as unknown as Dockerode,
+      connection: {
+        type: 'docker',
+        name: 'docker',
+        displayName: 'docker',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+        status: () => 'started',
+      },
+    };
+    containerRegistry.addInternalProvider('docker1', provider);
+
+    const image = await containerRegistry.getImageInspectDetails('docker1', 'bar');
+
+    expect(image).toEqual({
+      ...imageInspectMock,
+      engineId: 'docker1',
+      engineName: 'docker',
+      engineType: 'docker',
+    });
+    expect(provider.api.getImage).toHaveBeenCalledExactlyOnceWith('bar');
+    expect(imageMock.inspect).toHaveBeenCalledOnce();
+  });
+});
+
+function givenPodmanProviderWithLibpod(): {
+  provider: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod };
+  imageMock: Dockerode.Image;
+  libpodInspectMock: LibPodImageInspectInfo;
+} {
+  const imageMock: Dockerode.Image = {
+    inspect: vi.fn().mockResolvedValue({}),
+  } as unknown as Dockerode.Image;
+  const libpodInspectMock = {
+    Id: 'sha256:1234',
+    Digest: 'sha256:5678',
+    NamesHistory: ['localhost/foo:old'],
+  } as unknown as LibPodImageInspectInfo;
+
+  const provider: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
+    name: 'podman',
+    id: 'podman1',
+    api: {
+      getImage: vi.fn().mockReturnValue(imageMock),
+    } as unknown as Dockerode,
+    libpodApi: {
+      podmanInspectImage: vi.fn().mockResolvedValue(libpodInspectMock),
+    } as unknown as LibPod,
+    connection: {
+      type: 'podman',
+      name: 'podman',
+      displayName: 'podman',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status: () => 'started',
+    },
+  };
+  return { provider, imageMock, libpodInspectMock };
+}
 
 describe('imageExist', () => {
   test('should use ContainerRegistry#getImageInspect', async () => {

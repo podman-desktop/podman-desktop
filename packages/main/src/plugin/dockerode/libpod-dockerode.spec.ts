@@ -401,6 +401,46 @@ test('Check using libpod/manifests/{name}/json endpoint', async () => {
   expect(manifest.manifests[0]?.urls).toEqual([]);
 });
 
+test('Check using libpod/images/{name}/json endpoint', async () => {
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/images/localhost%2Ffoo%3Alatest/json', () =>
+      HttpResponse.json(
+        {
+          Id: 'sha256:1234',
+          Digest: 'sha256:5678',
+          RepoTags: ['localhost/foo:latest'],
+          NamesHistory: ['localhost/foo:old'],
+          ManifestType: 'application/vnd.oci.image.manifest.v1+json',
+        },
+        { status: 200 },
+      ),
+    ),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+  const image = await (api as unknown as LibPod).podmanInspectImage('localhost/foo:latest');
+
+  expect(image.Id).toBe('sha256:1234');
+  expect(image.Digest).toBe('sha256:5678');
+  expect(image.RepoTags).toEqual(['localhost/foo:latest']);
+  expect(image.NamesHistory).toEqual(['localhost/foo:old']);
+  expect(image.ManifestType).toBe('application/vnd.oci.image.manifest.v1+json');
+});
+
+test('Check libpod/images/{name}/json endpoint rejects when image does not exist', async () => {
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/images/unknown/json', () =>
+      HttpResponse.json({ message: 'no such image' }, { status: 404 }),
+    ),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  await expect((api as unknown as LibPod).podmanInspectImage('unknown')).rejects.toThrow();
+});
+
 test('Check create volume', async () => {
   server = setupServer(
     http.post('http://localhost/volumes/create', () =>

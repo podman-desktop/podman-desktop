@@ -18,7 +18,24 @@
 
 import type Dockerode from 'dockerode';
 
-export interface ImageInspectInfo extends Dockerode.ImageInspectInfo {
+// Fields only returned by the Podman libpod API (not by the Docker compatible API)
+export interface LibPodImageInspectInfo extends Dockerode.ImageInspectInfo {
+  Digest?: string;
+  NamesHistory?: string[];
+  ManifestType?: string;
+  User?: string;
+  Version?: string;
+  Annotations?: { [key: string]: string };
+  History?: {
+    created?: string;
+    created_by?: string;
+    author?: string;
+    comment?: string;
+    empty_layer?: boolean;
+  }[];
+}
+
+export interface ImageInspectInfo extends LibPodImageInspectInfo {
   engineId: string;
   engineName: string;
   engineType: 'podman' | 'docker';
