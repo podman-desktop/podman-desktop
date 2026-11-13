@@ -22,6 +22,3 @@ import { Main } from './main.js';
 // Main startup
 const podmanDesktopMain = new Main(app);
 podmanDesktopMain.main(process.argv);
-
-// TODO: remove when index.spec.ts tests are migrated in podmanDesktopMain-main.spec
-export const mainWindowDeferred = podmanDesktopMain.mainWindowDeferred;
