@@ -29,8 +29,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('Expect title is defined', async () => {
-  const title = 'My Dummy Title';
+test('Makes a capped title reachable with the keyboard', async () => {
+  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
   render(DetailsPage, {
     title,
   });
@@ -38,6 +38,10 @@ test('Expect title is defined', async () => {
   const titleElement = screen.getByRole('heading', { level: 1, name: title });
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
+  expect(titleElement).toHaveClass('line-clamp-2');
+
+  await userEvent.tab();
+  expect(titleElement).toHaveFocus();
 });
 
 test('Expect page name is defined', async () => {

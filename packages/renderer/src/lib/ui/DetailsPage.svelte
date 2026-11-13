@@ -27,7 +27,7 @@ const {
   iconSnippet: localIconSnippet,
   subtitleSnippet: localSubtitleSnippet,
   actionsSnippet: localActionsSnippet,
-  detailSnippet: localDetailSnippet,
+  detailSnippet,
 }: Props = $props();
 
 export function close(): void {
@@ -42,12 +42,12 @@ export function close(): void {
   breadcrumbLeftPart={$lastPage.name}
   breadcrumbRightPart={$currentPage.name}
   onclose={close}
-  onbreadcrumbClick={close}>
+  onbreadcrumbClick={close}
+  {detailSnippet}>
 
   {#snippet iconSnippet()}{@render localIconSnippet?.()}{/snippet}
   {#snippet subtitleSnippet()}{@render localSubtitleSnippet?.()}{/snippet}
   {#snippet actionsSnippet()}{@render localActionsSnippet?.()}{/snippet}
-  {#snippet detailSnippet()}{@render localDetailSnippet?.()}{/snippet}
   {#snippet tabsSnippet()}{@render localTabsSnippet?.()}{/snippet}
   {#snippet contentSnippet()}{@render localContentSnippet?.()}{/snippet}
 </DetailsPage>

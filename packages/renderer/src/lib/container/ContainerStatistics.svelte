@@ -70,7 +70,7 @@ onDestroy(async () => {
 </script>
 
 {#if container.state === 'RUNNING'}
-  <div class="flex flex-row gap-1">
+  <div class="flex flex-wrap justify-end gap-1">
     <Donut title="vCPUs" size={45} value={cpuUsage} percent={cpuUsagePercentage} />
     <Donut title="MEM" size={45} value={memoryUsage} percent={memoryUsagePercentage} />
   </div>
