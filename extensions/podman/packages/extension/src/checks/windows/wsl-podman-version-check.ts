@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { CheckResult } from '@podman-desktop/api';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { coerce, lt } from 'semver';
 
 import { BaseCheck } from '/@/checks/base-check';
@@ -34,6 +34,9 @@ import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
 @injectable()
 export class WSLPodmanVersionCheck extends BaseCheck {
   static readonly MINIMUM_WSL_VERSION_FOR_PODMAN_6 = '2.7.5';
+
+  @inject(WslHelper)
+  private readonly wslHelper!: WslHelper;
 
   title = 'WSL Version for Podman';
 
@@ -75,7 +78,7 @@ export class WSLPodmanVersionCheck extends BaseCheck {
 
   private async getWSLVersion(): Promise<string | undefined> {
     try {
-      return (await new WslHelper().getWSLVersionData()).wslVersion;
+      return (await this.wslHelper.getWSLVersionData()).wslVersion;
     } catch (error: unknown) {
       console.debug('Unable to read the WSL version', error);
       return undefined;

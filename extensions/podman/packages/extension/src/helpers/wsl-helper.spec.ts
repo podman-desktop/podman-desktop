@@ -123,3 +123,27 @@ Windows version﹕10.0.22621.2134
   // expect called with wsl --version
   expect(extensionApi.process.exec).toHaveBeenCalledWith('wsl', ['--version'], { encoding: 'utf16le' });
 });
+
+test('should return an undefined WSL version when the first line does not contain any colon symbol', async () => {
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: 'unknown message',
+    stderr: '',
+    command: 'wsl --version',
+  });
+
+  const { wslVersion } = await wslHelper.getWSLVersionData();
+
+  expect(wslVersion).toBeUndefined();
+});
+
+test('should return an undefined WSL version when the first line does not contain the wsl label', async () => {
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: 'unknown message: 1.2.5.0',
+    stderr: '',
+    command: 'wsl --version',
+  });
+
+  const { wslVersion } = await wslHelper.getWSLVersionData();
+
+  expect(wslVersion).toBeUndefined();
+});
