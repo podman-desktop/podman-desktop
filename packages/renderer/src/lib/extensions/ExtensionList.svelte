@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
-import { Button, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -11,6 +11,7 @@ import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { CatalogInstallStatusFilter } from './catalog-install-status-filter';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { ExtensionsUtils } from './extensions-utils';
@@ -68,6 +69,16 @@ const filterSummary = $derived.by(() => {
   }
 });
 
+const installStatusFilter = $derived(new CatalogInstallStatusFilter(searchTerm));
+
+function getInstallStatus(): string {
+  return installStatusFilter.value;
+}
+
+function changeInstallStatus(status: string): void {
+  searchTerm = installStatusFilter.withStatus(status);
+}
+
 function closeModal(): void {
   installManualImageModal = false;
 }
@@ -123,11 +134,33 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 
   {#snippet content()}
   {#if screen === 'installed' || (screen === 'catalog' && enableCatalog)}
-    <div class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
+    <div
+      class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4"
+      class:flex-wrap={screen === 'catalog'}
+      class:items-center={screen === 'catalog'}
+      class:gap-y-2={screen === 'catalog'}
+      role="region"
+      aria-label="search">
       <div class="pl-5 w-72">
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
       </div>
-      <div class="flex flex-1 items-center px-5 text-sm text-(--pd-content-text)" role="status">
+      {#if screen === 'catalog'}
+        <div class="flex items-center gap-2 pl-5">
+          <Dropdown
+            class="w-40"
+            bind:value={getInstallStatus, changeInstallStatus}
+            options={CatalogInstallStatusFilter.OPTIONS}>
+            {#snippet left()}
+              <span class="sr-only">Install status </span>
+            {/snippet}
+          </Dropdown>
+        </div>
+      {/if}
+      <div
+        class="flex items-center px-5 text-sm text-(--pd-content-text)"
+        class:flex-1={screen !== 'catalog'}
+        class:whitespace-nowrap={screen === 'catalog'}
+        role="status">
         {#if filterSummary && filterSummary.filtered > 0}
           Filtered out {filterSummary.filtered} items of {filterSummary.total}
         {/if}
