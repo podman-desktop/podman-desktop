@@ -954,6 +954,13 @@ export function initExposure(): void {
   );
 
   contextBridge.exposeInMainWorld(
+    'getImageInspectDetails',
+    async (engine: string, imageId: string): Promise<ImageInspectInfo> => {
+      return ipcInvoke('container-provider-registry:getImageInspectDetails', engine, imageId);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
     'getImageHistory',
     async (engine: string, imageId: string): Promise<HistoryInfo[]> => {
       return ipcInvoke('container-provider-registry:getImageHistory', engine, imageId);

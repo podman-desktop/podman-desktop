@@ -1255,6 +1255,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:getImageInspectDetails',
+      async (_listener, engine: string, imageId: string): Promise<ImageInspectInfo> => {
+        return containerProviderRegistry.getImageInspectDetails(engine, imageId);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:getImageHistory',
       async (_listener, engine: string, imageId: string): Promise<HistoryInfo[]> => {
         return containerProviderRegistry.getImageHistory(engine, imageId);
