@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { faCircleCheck, faRocket } from '@fortawesome/free-solid-svg-icons';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
@@ -166,10 +166,10 @@ test('expect button to not have inline-flex when hidden is true', async () => {
     menu: false,
   });
 
-  const listItemSpan = screen.getByTitle(title);
-  expect(listItemSpan).toBeInTheDocument();
-  expect(listItemSpan).toHaveClass('hidden');
-  expect(listItemSpan).not.toHaveClass('inline-flex');
+  const listItemButton = screen.getByRole('button', { name: title });
+  expect(listItemButton).toBeInTheDocument();
+  expect(listItemButton).toHaveClass('hidden');
+  expect(listItemButton).not.toHaveClass('inline-flex');
 });
 
 test('expect button to have inline-flex when hidden is false', async () => {
@@ -182,8 +182,60 @@ test('expect button to have inline-flex when hidden is false', async () => {
     menu: false,
   });
 
-  const listItemSpan = screen.getByTitle(title);
-  expect(listItemSpan).toBeInTheDocument();
-  expect(listItemSpan).not.toHaveClass('hidden');
-  expect(listItemSpan).toHaveClass('inline-flex');
+  const listItemButton = screen.getByRole('button', { name: title });
+  expect(listItemButton).toBeInTheDocument();
+  expect(listItemButton).not.toHaveClass('hidden');
+  expect(listItemButton).toHaveClass('inline-flex');
+});
+
+test('expect button to show the title as tooltip on hover instead of a native title', async () => {
+  render(ListItemButtonIcon, {
+    title: 'Delete Container',
+    icon: faRocket,
+    menu: false,
+  });
+
+  const listItemButton = screen.getByRole('button', { name: 'Delete Container' });
+  expect(listItemButton).not.toHaveAttribute('title');
+
+  await fireEvent.mouseEnter(listItemButton);
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Delete Container');
+  // the tooltip repeats the aria-label, so it is not referenced as a description
+  expect(listItemButton).not.toHaveAttribute('aria-describedby');
+
+  await fireEvent.mouseLeave(listItemButton);
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+});
+
+test('expect button to show the tooltip prop rather than the title on hover', async () => {
+  render(ListItemButtonIcon, {
+    title: 'Update Image',
+    tooltip: 'Cannot update an image used by a container',
+    icon: faRocket,
+    menu: false,
+    enabled: false,
+  });
+
+  const listItemButton = screen.getByRole('button', { name: 'Update Image' });
+  await fireEvent.mouseEnter(listItemButton);
+
+  const tooltip = screen.getByRole('tooltip');
+  expect(tooltip).toHaveTextContent('Cannot update an image used by a container');
+  expect(listItemButton).toHaveAttribute('aria-describedby', tooltip.id);
+});
+
+test('expect a visible tooltip to update its text when the tooltip prop changes', async () => {
+  const { rerender } = render(ListItemButtonIcon, {
+    title: 'Update Image',
+    tooltip: 'Update all tags of this image',
+    icon: faRocket,
+    menu: false,
+  });
+
+  const listItemButton = screen.getByRole('button', { name: 'Update Image' });
+  await fireEvent.mouseEnter(listItemButton);
+
+  await rerender({ tooltip: 'Updating image' });
+
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Updating image');
 });

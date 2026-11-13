@@ -54,34 +54,34 @@ beforeEach(() => {
 });
 
 test('actions should be defined', () => {
-  const { getByTitle } = render(PortForwardActions, {
+  const { getByRole } = render(PortForwardActions, {
     object: MOCKED_USER_FORWARD_CONFIG,
   });
 
-  const openBtn = getByTitle('Open forwarded port');
+  const openBtn = getByRole('button', { name: 'Open forwarded port' });
   expect(openBtn).toBeDefined();
 
-  const deleteBtn = getByTitle('Delete forwarded port');
+  const deleteBtn = getByRole('button', { name: 'Delete forwarded port' });
   expect(deleteBtn).toBeDefined();
 });
 
 test('open should call openExternal', async () => {
-  const { getByTitle } = render(PortForwardActions, {
+  const { getByRole } = render(PortForwardActions, {
     object: MOCKED_USER_FORWARD_CONFIG,
   });
 
-  const openBtn = getByTitle('Open forwarded port');
+  const openBtn = getByRole('button', { name: 'Open forwarded port' });
   await fireEvent.click(openBtn);
 
   expect(window.openExternal).toHaveBeenCalledWith('http://localhost:55087');
 });
 
 test('remove should call deleteKubernetesPortForward', async () => {
-  const { getByTitle } = render(PortForwardActions, {
+  const { getByRole } = render(PortForwardActions, {
     object: MOCKED_USER_FORWARD_CONFIG,
   });
 
-  const deleteBtn = getByTitle('Delete forwarded port');
+  const deleteBtn = getByRole('button', { name: 'Delete forwarded port' });
   await fireEvent.click(deleteBtn);
 
   expect(window.deleteKubernetesPortForward).toHaveBeenCalledWith(MOCKED_USER_FORWARD_CONFIG);

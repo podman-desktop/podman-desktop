@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import { DropdownMenu } from '@podman-desktop/ui-svelte';
+import { DropdownMenu, tooltip as tooltipAttachment } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
@@ -112,14 +112,14 @@ const styleClass = $derived(
 {:else}
   <!-- enabled button -->
   <button
-    title={title}
     aria-label={title}
     onclick={handleClick}
     class="{styleClass} relative"
     class:disabled={inProgress}
     class:hidden={hidden}
     class:inline-flex={!hidden}
-    disabled={!enabled}>
+    disabled={!enabled}
+    {@attach tooltipAttachment(() => tooltip || title)}>
     <LoadingIcon
       icon={icon}
       loading={inProgress}
