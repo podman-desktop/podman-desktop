@@ -42,8 +42,7 @@ export class Main implements IDisposable {
   public app: ElectronApp;
   // TODO: should be renamed to #mainWindowDeferred
   public mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
-  // TODO: should be renamed to #protocolLauncher
-  public protocolLauncher: ProtocolLauncher;
+  readonly #protocolLauncher: ProtocolLauncher;
 
   /**
    * Represents a collection of application plugins.
@@ -60,7 +59,7 @@ export class Main implements IDisposable {
     this.app = app;
     this.app.name = product.name;
     this.mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
-    this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
+    this.#protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
     const identity = import.meta.env.DEV
       ? new AppIdentityDevPlugin(this.app, new DevIconBuilder(this.app.getAppPath()))
       : undefined;
@@ -165,7 +164,7 @@ export class Main implements IDisposable {
   ): void {
     // if we are on Windows, we need to handle the protocol
     if (isWindows() && additionalData && (additionalData as AdditionalData).argv) {
-      this.protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
+      this.#protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
     }
 
     restoreWindow().catch((error: unknown) => {
@@ -181,7 +180,7 @@ export class Main implements IDisposable {
     this.app.on('open-url', (event, url) => {
       event.preventDefault();
       // delegate to the handler
-      this.protocolLauncher.handleOpenUrl(url);
+      this.#protocolLauncher.handleOpenUrl(url);
     });
   }
 
