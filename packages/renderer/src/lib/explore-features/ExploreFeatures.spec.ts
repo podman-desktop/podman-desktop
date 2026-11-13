@@ -23,9 +23,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { DASHBOARD_SECTION_CONTEXT, type DashboardSectionContext } from '/@/lib/dashboard/dashboard-section-context';
 import { exploreFeaturesInfo } from '/@/stores/explore-features';
 
 import ExploreFeatures from './ExploreFeatures.svelte';
+
+function enhancedContext(): Map<string, DashboardSectionContext> {
+  return new Map([[DASHBOARD_SECTION_CONTEXT, { enhanced: true, label: () => 'Explore features', hide: vi.fn() }]]);
+}
 
 vi.mock(import('svelte/transition'), () => ({
   slide: (): { delay: number; duration: number } => ({
@@ -94,6 +99,23 @@ test('Carousel does not show when there are 0 features to show', async () => {
   const title = screen.queryByText('Explore Features');
 
   expect(title).not.toBeInTheDocument();
+});
+
+test('enhanced dashboard: no header when there are no features to show', async () => {
+  exploreFeaturesInfo.set([{ ...exploreFeatures[0], show: false }]);
+
+  render(ExploreFeatures, { context: enhancedContext() });
+  await tick();
+
+  expect(screen.queryByRole('button', { name: 'Explore features' })).not.toBeInTheDocument();
+});
+
+test('enhanced dashboard: title is the context label', async () => {
+  render(ExploreFeatures, { context: enhancedContext() });
+
+  await waitFor(() => expect(screen.getByText(exploreFeatures[0].title)).toBeVisible());
+
+  expect(screen.getByRole('button', { name: 'Explore features' })).toBeInTheDocument();
 });
 
 test('Clicking on ExploreFeatures title hides carousel with features', async () => {
