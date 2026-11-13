@@ -23,20 +23,23 @@ import { homedir } from 'node:os';
 import * as path from 'node:path';
 
 import type { IDisposable } from '@desktop-framework/api';
-import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { IConfigurationNode, IConfigurationPropertySchema } from '@desktop-framework/api/configuration';
 import {
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '@desktop-framework/api/configuration';
+import { Container } from 'inversify';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import product from '/@product.json' with { type: 'json' };
 
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type { DefaultConfiguration } from './default-configuration.js';
-import type { Directories } from './directories.js';
-import type { LockedConfiguration } from './locked-configuration.js';
+import { DefaultConfiguration } from './default-configuration.js';
+import { Directories } from './directories.js';
+import { LockedConfiguration } from './locked-configuration.js';
+import { MacManagedConfiguration } from './mac-managed-configuration.js';
+import type { ManagedSettings } from './managed-settings.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
 // mock the fs module
@@ -103,6 +106,14 @@ const lockedConfiguration = {
   getContent: getLockedContentMock,
 } as unknown as LockedConfiguration;
 
+const macManagedConfiguration = {
+  getContent: vi.fn<MacManagedConfiguration['getContent']>(),
+} as unknown as MacManagedConfiguration;
+
+function createRegistry(locked = lockedConfiguration): ConfigurationRegistry {
+  return new ConfigurationRegistry(apiSender, directories, defaultConfiguration, locked, macManagedConfiguration);
+}
+
 beforeEach(async () => {
   vi.resetAllMocks();
   vi.clearAllMocks();
@@ -132,8 +143,9 @@ beforeEach(async () => {
 
   // Setup LockedConfiguration mock for the new functionality
   getLockedContentMock.mockResolvedValue({});
+  vi.mocked(macManagedConfiguration.getContent).mockResolvedValue({ defaults: {}, user: {}, locked: [] });
 
-  configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+  configurationRegistry = createRegistry();
   await configurationRegistry.init();
 
   const node: IConfigurationNode = {
@@ -251,7 +263,7 @@ test('should work with an invalid configuration file', async () => {
 
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
-  configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+  configurationRegistry = createRegistry();
   readFileSyncMock.mockReturnValue('invalid JSON content');
 
   // Mock promises methods for this test
@@ -488,7 +500,7 @@ describe('applyManagedDefaults function tests', () => {
     getContentMock.mockResolvedValue(managedDefaults);
 
     // Create the test registry
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // Setup the values
@@ -516,7 +528,7 @@ describe('applyManagedDefaults function tests', () => {
 
     getContentMock.mockResolvedValue(managedDefaults);
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const configurationValues = (
@@ -533,7 +545,7 @@ describe('applyManagedDefaults function tests', () => {
   test('make sure that the user config remains unchanged when defaults are empty', async () => {
     getContentMock.mockResolvedValue({});
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const configurationValues = (
@@ -556,7 +568,7 @@ describe('applyManagedDefaults function tests', () => {
     };
     getContentMock.mockResolvedValue(managedDefaults);
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
     const configurationValues = (
       testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
@@ -586,7 +598,7 @@ describe('applyManagedDefaults function tests', () => {
 
     // Make sure that the console log is called when the settings are applied on each run
     try {
-      const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+      const testRegistry = createRegistry();
       await testRegistry.init();
 
       expect(mockedConsoleLog).toHaveBeenCalledWith(
@@ -600,7 +612,7 @@ describe('applyManagedDefaults function tests', () => {
   });
 
   test('check the applyManagedDefaults returns array of applied keys', async () => {
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const configData: Record<string, unknown> = { existingKey: 'existingValue' };
@@ -632,7 +644,7 @@ describe('applyManagedDefaults function tests', () => {
 
     getContentMock.mockResolvedValue(managedDefaults);
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // saveDefault should have been called (via atomic write)
@@ -645,7 +657,7 @@ describe('applyManagedDefaults function tests', () => {
     // No managed defaults
     getContentMock.mockResolvedValue({});
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // saveDefault should NOT have been called (no rename means no atomic write was scheduled)
@@ -660,7 +672,7 @@ describe('applyManagedDefaults function tests', () => {
 
     getContentMock.mockResolvedValue(managedDefaults);
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // Register the configuration with schema default 'myDefault' (same as managed default)
@@ -703,7 +715,7 @@ describe('applyManagedDefaults function tests', () => {
 
     getContentMock.mockResolvedValue(managedDefaults);
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // Register the configuration with schema default 'myDefault' (different from managed default)
@@ -747,7 +759,7 @@ describe('Managed Defaults', () => {
     getContentMock.mockResolvedValue(managedDefaults);
 
     // Create new registry instance to test the managed defaults loading
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // Access private configurationValues to verify managed defaults were loaded
@@ -764,7 +776,7 @@ describe('Managed Defaults', () => {
     getContentMock.mockResolvedValue({});
 
     // Create new registry instance
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     // Access private configurationValues to verify empty managed defaults
@@ -788,12 +800,7 @@ describe('Managed Locked', () => {
     } as unknown as LockedConfiguration;
 
     // Create new registry instance to test the managed locked loading
-    const testRegistry = new ConfigurationRegistry(
-      apiSender,
-      directories,
-      defaultConfiguration,
-      testLockedConfiguration,
-    );
+    const testRegistry = createRegistry(testLockedConfiguration);
     await testRegistry.init();
 
     // Access private configurationValues to verify managed locked were loaded
@@ -812,12 +819,7 @@ describe('Managed Locked', () => {
     } as unknown as LockedConfiguration;
 
     // Create new registry instance
-    const testRegistry = new ConfigurationRegistry(
-      apiSender,
-      directories,
-      defaultConfiguration,
-      testLockedConfiguration,
-    );
+    const testRegistry = createRegistry(testLockedConfiguration);
     await testRegistry.init();
 
     // Access private configurationValues to verify empty managed locked
@@ -836,12 +838,7 @@ describe('Managed Locked', () => {
       getContent: vi.fn().mockResolvedValue(managedLocked),
     } as unknown as LockedConfiguration;
 
-    const testRegistry = new ConfigurationRegistry(
-      apiSender,
-      directories,
-      defaultConfiguration,
-      testLockedConfiguration,
-    );
+    const testRegistry = createRegistry(testLockedConfiguration);
     await testRegistry.init();
 
     // Two settings to register
@@ -887,6 +884,134 @@ describe('Managed Locked', () => {
 });
 
 // Tests for configuration.override overrides from product.json
+describe('managed settings', () => {
+  let managedSettings: ManagedSettings;
+
+  beforeEach(() => {
+    managedSettings = { defaults: {}, user: {}, locked: [] };
+  });
+
+  async function initRegistry(): Promise<ConfigurationRegistry> {
+    const container = new Container();
+    container.bind(ApiSenderType).toConstantValue(apiSender);
+    container.bind(Directories).toConstantValue(directories);
+    container.bind(DefaultConfiguration).toConstantValue(defaultConfiguration);
+    container.bind(LockedConfiguration).toConstantValue(lockedConfiguration);
+    vi.mocked(macManagedConfiguration.getContent).mockResolvedValue(managedSettings);
+    container.bind(MacManagedConfiguration).toConstantValue(macManagedConfiguration);
+    container.bind(ConfigurationRegistry).toSelf().inSingletonScope();
+
+    const registry = container.get(ConfigurationRegistry);
+    await registry.init();
+    return registry;
+  }
+
+  test('device preferences override JSON defaults and retain unrelated defaults', async () => {
+    getContentMock.mockResolvedValue({ 'test.value': 'json', 'test.other': 'retained' });
+    managedSettings = {
+      defaults: { 'test.value': 'device' },
+      user: {},
+      locked: [],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('value')).toBe('device');
+    expect(registry.getConfiguration('test').get('other')).toBe('retained');
+  });
+
+  test('user preferences override user JSON and device defaults', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.value': 'local', 'test.other': 'retained' }));
+    getContentMock.mockResolvedValue({ 'test.value': 'json' });
+    managedSettings = {
+      defaults: { 'test.value': 'device' },
+      user: { 'test.value': 'user' },
+      locked: [],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('value')).toBe('user');
+    expect(registry.getConfiguration('test').get('other')).toBe('retained');
+  });
+
+  test('unlocked device defaults retain existing user values', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.value': 'local' }));
+    managedSettings = {
+      defaults: { 'test.value': 'device' },
+      user: {},
+      locked: [],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('value')).toBe('local');
+  });
+
+  test('device locks enforce device values over user preferences and subsequent updates', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.value': true }));
+    getContentMock.mockResolvedValue({ 'test.value': true });
+    managedSettings = {
+      defaults: { 'test.value': false },
+      user: { 'test.value': true },
+      locked: ['test.value'],
+    };
+
+    const registry = await initRegistry();
+    registry.registerConfigurations([
+      {
+        id: 'test',
+        title: 'Test',
+        type: 'object',
+        properties: { 'test.value': { type: 'boolean', default: true } },
+      },
+    ]);
+
+    expect(registry.getConfiguration('test').get('value')).toBe(false);
+    expect(registry.getConfigurationProperties()['test.value']?.locked).toBe(true);
+    await registry.getConfiguration('test').update('value', true);
+    expect(registry.getConfiguration('test').get('value')).toBe(false);
+  });
+
+  test.each(['null', 'true', '1', '"invalid"'])(
+    'device locks remain enforced when locked.json is not a dictionary: %s',
+    async content => {
+      getLockedContentMock.mockResolvedValue(JSON.parse(content));
+      managedSettings = {
+        defaults: { 'test.device': false },
+        user: { 'test.device': true },
+        locked: ['test.device'],
+      };
+
+      const registry = await initRegistry();
+
+      expect(registry.getConfiguration('test').get('device')).toBe(false);
+      expect(registry.getConfiguration(undefined, CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE).get('locked')).toEqual([
+        'test.device',
+      ]);
+    },
+  );
+
+  test('JSON locks remain enforced alongside device locks', async () => {
+    getContentMock.mockResolvedValue({ 'test.json': false });
+    getLockedContentMock.mockResolvedValue({ locked: ['test.json', 'test.device'] });
+    managedSettings = {
+      defaults: { 'test.device': false },
+      user: { 'test.json': true, 'test.device': true },
+      locked: ['test.device'],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('json')).toBe(false);
+    expect(registry.getConfiguration('test').get('device')).toBe(false);
+    expect(registry.getConfiguration(undefined, CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE).get('locked')).toEqual([
+      'test.json',
+      'test.device',
+    ]);
+  });
+});
+
 describe('configuration.override from product.json', () => {
   beforeEach(() => {
     // Reset product mock before each test
@@ -907,7 +1032,7 @@ describe('configuration.override from product.json', () => {
       },
     };
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const node: IConfigurationNode = {
@@ -946,7 +1071,7 @@ describe('configuration.override from product.json', () => {
       },
     };
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const node: IConfigurationNode = {
@@ -987,7 +1112,7 @@ describe('configuration.override from product.json', () => {
       },
     };
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const nodes: IConfigurationNode[] = [
@@ -1040,7 +1165,7 @@ describe('configuration.override from product.json', () => {
     // Empty configuration.override
     (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const node: IConfigurationNode = {
@@ -1074,7 +1199,7 @@ describe('configuration.override from product.json', () => {
       | { [key: string]: Partial<IConfigurationPropertySchema> }
       | undefined) = undefined;
 
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    const testRegistry = createRegistry();
     await testRegistry.init();
 
     const node: IConfigurationNode = {

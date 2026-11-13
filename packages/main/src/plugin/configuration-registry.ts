@@ -34,6 +34,7 @@ import type {
 } from '@desktop-framework/api/configuration';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '@desktop-framework/api/configuration';
@@ -48,6 +49,7 @@ import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
+import { MacManagedConfiguration } from './mac-managed-configuration.js';
 import { Disposable } from './types/disposable.js';
 import { AtomicFileWriter } from './util/atomic-file-writer.js';
 
@@ -80,6 +82,8 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
     private defaultConfiguration: DefaultConfiguration,
     @inject(LockedConfiguration)
     private lockedConfiguration: LockedConfiguration,
+    @inject(MacManagedConfiguration)
+    private macManagedConfiguration: MacManagedConfiguration,
   ) {
     this.configurationProperties = {};
     this.configurationContributors = [];
@@ -139,12 +143,20 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
       configData = {};
     }
 
-    // Load managed defaults
-    const defaults = await this.defaultConfiguration.getContent();
+    // Platform preferences override JSON values within the same configuration scope.
+    const managedSettings = await this.macManagedConfiguration.getContent();
+    configData = { ...configData, ...managedSettings.user };
+    const defaults = { ...(await this.defaultConfiguration.getContent()), ...managedSettings.defaults };
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, defaults);
 
     // Load managed locked
-    const locked = await this.lockedConfiguration.getContent();
+    const locked = { ...(await this.lockedConfiguration.getContent()) };
+    if (managedSettings.locked.length > 0) {
+      const jsonLocked = locked[CONFIGURATION_LOCKED_KEY];
+      locked[CONFIGURATION_LOCKED_KEY] = [
+        ...new Set([...(Array.isArray(jsonLocked) ? jsonLocked : []), ...managedSettings.locked]),
+      ];
+    }
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, locked);
 
     // Apply managed defaults to user config for any undefined keys

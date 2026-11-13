@@ -29,6 +29,7 @@ import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import type { Directories } from '/@/plugin/directories.js';
 import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import type { MacManagedConfiguration } from '/@/plugin/mac-managed-configuration.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import * as util from '/@/util.js';
 
@@ -78,6 +79,7 @@ beforeAll(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
+    {} as MacManagedConfiguration,
   );
   configurationRegistry.registerConfigurations = vi.fn();
   configurationRegistry.deregisterConfigurations = vi.fn();

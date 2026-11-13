@@ -86,6 +86,10 @@ export class LinuxXDGDirectories implements Directories {
     return this.dataDirectory;
   }
 
+  getManagedPreferencesDir(): undefined {
+    return undefined;
+  }
+
   getManagedDefaultsDirectory(): string {
     // biome-ignore lint/complexity/useLiteralKeys: FLATPAK_ID comes from an index signature
     if (process.env['FLATPAK_ID']) {
