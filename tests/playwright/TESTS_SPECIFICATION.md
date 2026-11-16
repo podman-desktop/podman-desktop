@@ -54,14 +54,6 @@ See [README.md](README.md) and [runner-factory.ts](src/runner/runner-factory.ts)
 | `CI`                                         | Shared `isCI` is true only for case-insensitive `true`. Some helpers use any non-empty value instead (registry credential defaults and global cleanup), as noted below.                             |
 | `RunnerOptions`                              | Specs may choose a profile folder, injected settings, or disabled extensions in code. These are not additional command-line environment variables.                                                  |
 
-When `PODMAN_DESKTOP_BINARY` or `PODMAN_DESKTOP_ARGS` is set, the runner
-passes an explicit `executablePath`, so Playwright skips its readiness loader.
-The runner instead starts the app with `--inspect-brk=<free port>`, installs
-the same readiness gate through the Node inspector, and resumes it; Playwright
-releases the gate once attached. Packaged binaries must therefore have the
-`EnableNodeCliInspectArguments` fuse enabled (already required by Playwright).
-See [electron-startup-gate.ts](src/runner/electron-startup-gate.ts).
-
 The runner normally redirects application data to
 `tests/playwright/output/<profile>/<customFolder>` and seeds settings there.
 This does not isolate Podman resources, host CLI installations, registry auth,
@@ -284,17 +276,18 @@ restore host installation/cache state.
 These specs launch the app but do not require a working container engine or
 live Kubernetes cluster. The default platform scope is Linux/macOS/Windows.
 
-| Spec                                                                                     | Tags                                         | Coverage / additional setup                                                                                                           |
-| ---------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| [welcome-page-smoke.spec.ts](src/specs/welcome-page-smoke.spec.ts)                       | `@smoke`, `@windows_sanity`, `@macos_sanity` | Welcome overlay, telemetry consent, Dashboard and sidebar; dedicated `welcome-podman-desktop` profile.                                |
-| [appearance-smoke.spec.ts](src/specs/appearance-smoke.spec.ts)                           | `@smoke`, `@windows_sanity`, `@macos_sanity` | System/light/dark/high-contrast switching and theme application; resets appearance afterwards.                                        |
-| [preferences.spec.ts](src/specs/preferences.spec.ts)                                     | `@macos_sanity`                              | Kubeconfig text persists across preference-page navigation; no real kubeconfig required.                                              |
-| [navigation-history-smoke.spec.ts](src/specs/navigation-history-smoke.spec.ts)           | `@smoke`, `@windows_sanity`, `@macos_sanity` | Back/forward, command-palette actions, history branching and dropdowns.                                                               |
-| [search-bar-smoke.spec.ts](src/specs/search-bar-smoke.spec.ts)                           | `@smoke`, `@windows_sanity`, `@macos_sanity` | Search UI, keyboard interaction, commands and page navigation; arrow-key check skips if fewer than two results.                       |
-| [help-menu-smoke.spec.ts](src/specs/help-menu-smoke.spec.ts)                             | `@smoke`, `@windows_sanity`, `@macos_sanity` | Configured product help items, dismiss behavior, links and commands; dedicated `help-menu` profile.                                   |
-| [troubleshooting-smoke.spec.ts](src/specs/troubleshooting-smoke.spec.ts)                 | `@smoke`                                     | Troubleshooting navigation, reconnect providers, logs and auth-provider store refresh.                                                |
-| [experimental-feature-feedback.spec.ts](src/specs/experimental-feature-feedback.spec.ts) | `@smoke`                                     | Overdue startup feedback reminder appears and can be deferred; dedicated profile with past `remindAt` and enabled status-bar feature. |
-| [kubernetes-context-smoke.spec.ts](src/specs/kubernetes-context-smoke.spec.ts)           | `@smoke`, `@macos_sanity`                    | Load fixture kubeconfig, list/switch/edit/duplicate/delete contexts; no real cluster.                                                 |
+| Spec                                                                                     | Tags                                         | Coverage / additional setup                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [welcome-page-smoke.spec.ts](src/specs/welcome-page-smoke.spec.ts)                       | `@smoke`, `@windows_sanity`, `@macos_sanity` | Welcome overlay, telemetry consent, Dashboard and sidebar; dedicated `welcome-podman-desktop` profile.                                                                                                  |
+| [appearance-smoke.spec.ts](src/specs/appearance-smoke.spec.ts)                           | `@smoke`, `@windows_sanity`, `@macos_sanity` | System/light/dark/high-contrast switching and theme application; resets appearance afterwards.                                                                                                          |
+| [preferences.spec.ts](src/specs/preferences.spec.ts)                                     | `@macos_sanity`                              | Kubeconfig text persists across preference-page navigation; no real kubeconfig required.                                                                                                                |
+| [navigation-history-smoke.spec.ts](src/specs/navigation-history-smoke.spec.ts)           | `@smoke`, `@windows_sanity`, `@macos_sanity` | Back/forward, command-palette actions, history branching and dropdowns.                                                                                                                                 |
+| [search-bar-smoke.spec.ts](src/specs/search-bar-smoke.spec.ts)                           | `@smoke`, `@windows_sanity`, `@macos_sanity` | Search UI, keyboard interaction, commands and page navigation; arrow-key check skips if fewer than two results.                                                                                         |
+| [help-menu-smoke.spec.ts](src/specs/help-menu-smoke.spec.ts)                             | `@smoke`, `@windows_sanity`, `@macos_sanity` | Configured product help items, dismiss behavior, links and commands; dedicated `help-menu` profile.                                                                                                     |
+| [troubleshooting-smoke.spec.ts](src/specs/troubleshooting-smoke.spec.ts)                 | `@smoke`                                     | Troubleshooting navigation, reconnect providers, logs and auth-provider store refresh.                                                                                                                  |
+| [experimental-feature-feedback.spec.ts](src/specs/experimental-feature-feedback.spec.ts) | `@smoke`                                     | Overdue startup feedback reminder appears and can be deferred; dedicated profile with past `remindAt` and enabled status-bar feature.                                                                   |
+| [dashboard-layout-smoke.spec.ts](src/specs/dashboard-layout-smoke.spec.ts)               | `@smoke`, `@experimental`                    | Dashboard layout manager: default sections, hide/show, keyboard and drag reorder, reset, persistence across navigation; runs for standard and enhanced dashboard; dedicated `dashboard-layout` profile. |
+| [kubernetes-context-smoke.spec.ts](src/specs/kubernetes-context-smoke.spec.ts)           | `@smoke`, `@macos_sanity`                    | Load fixture kubeconfig, list/switch/edit/duplicate/delete contexts; no real cluster.                                                                                                                   |
 
 ### Preconditions and inputs
 

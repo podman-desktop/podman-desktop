@@ -396,10 +396,9 @@ export class LibpodDockerode {
         path: `/v4.2.0/libpod/containers/${containerId}/attach?stdin=true&stdout=true&stderr=true&`,
         method: 'POST',
         isStream: true,
-        openStdin: true,
+        hijack: true,
         allowEmpty: true,
         statusCodes: {
-          200: true,
           404: 'no such container',
           500: 'server error',
         },
@@ -407,7 +406,7 @@ export class LibpodDockerode {
       };
 
       // patch the modem to not send any data. By default dockerode send query parameters as JSON payload
-      // but podman REST API will then echo the response, so send empty data '' instead
+      // but podman REST API will then echo the response, so send empty data '' instead and Content-Length: 0
       const originalBuildRequest = this.modem.buildRequest;
       this.modem.buildRequest = function (
         options: RequestOptions,
@@ -417,6 +416,9 @@ export class LibpodDockerode {
       ): void {
         if (context.allowEmpty && context.path.includes('/attach?')) {
           data = '';
+          if (options.headers && !Array.isArray(options.headers)) {
+            (options.headers as Record<string, string | number | string[] | undefined>)['Content-Length'] = 0;
+          }
         }
         originalBuildRequest.call(this, options, context, data, callback);
       };

@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+
 export interface CatalogExtensionInfoUI {
   id: string;
   displayName: string;
@@ -26,6 +28,7 @@ export interface CatalogExtensionInfoUI {
   iconHref?: string;
   publisherDisplayName: string;
   isInstalled: boolean;
+  installedExtension?: CombinedExtensionInfoUI;
   installedVersion?: string;
   shortDescription: string;
   categories: string[];

@@ -15,7 +15,8 @@
     "emitDecoratorMetadata": true,
     "types": ["node"],
     "paths": {
-      "/@/*": ["./src/*"]
+      "/@/*": ["./src/*"],
+      "/@package.json": ["./package.json"]
     }
   },
   "include": ["src", "types/*.d.ts", "scripts"]

@@ -18,6 +18,7 @@
 import type { IDisposable } from '@desktop-framework/api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
+import { restoreWindow } from '/@/mainWindow.js';
 import { AppIdentityDevPlugin } from '/@/plugin/app-ready/app-identity-plugin.js';
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
@@ -41,8 +42,7 @@ export class Main implements IDisposable {
   public app: ElectronApp;
   // TODO: should be renamed to #mainWindowDeferred
   public mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
-  // TODO: should be renamed to #protocolLauncher
-  public protocolLauncher: ProtocolLauncher;
+  readonly #protocolLauncher: ProtocolLauncher;
 
   /**
    * Represents a collection of application plugins.
@@ -59,7 +59,7 @@ export class Main implements IDisposable {
     this.app = app;
     this.app.name = product.name;
     this.mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
-    this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
+    this.#protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
     const identity = import.meta.env.DEV
       ? new AppIdentityDevPlugin(this.app, new DevIconBuilder(this.app.getAppPath()))
       : undefined;
@@ -130,6 +130,8 @@ export class Main implements IDisposable {
     /**
      * Setup {@link ElectronApp.on} listeners
      */
+    this.app.on('second-instance', this.onSecondInstance.bind(this));
+    this.app.on('will-finish-launching', this.onWillFinishLaunching.bind(this));
     this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
     this.app.on('before-quit', this.onBeforeQuit.bind(this));
 
@@ -148,6 +150,38 @@ export class Main implements IDisposable {
    */
   protected async whenReady(): Promise<Array<void>> {
     return Promise.all(this.#plugins.map(plugin => plugin.onReady()));
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('second-instance')} event
+   * do not use _args as it may contain additional arguments
+   */
+  protected onSecondInstance(
+    _event: unknown,
+    _args: string[],
+    _workingDirectory: string,
+    additionalData: unknown,
+  ): void {
+    // if we are on Windows, we need to handle the protocol
+    if (isWindows() && additionalData && (additionalData as AdditionalData).argv) {
+      this.#protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
+    }
+
+    restoreWindow().catch((error: unknown) => {
+      console.error('Error restoring window', error);
+    });
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('will-finish-launching')} event
+   * Handle the open-url event (macOS/Linux). For Windows, it needs to be handled in the second-instance event
+   */
+  protected onWillFinishLaunching(): void {
+    this.app.on('open-url', (event, url) => {
+      event.preventDefault();
+      // delegate to the handler
+      this.#protocolLauncher.handleOpenUrl(url);
+    });
   }
 
   /**

@@ -24,7 +24,6 @@ import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
 import { _electron as electron } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
-import { getFreePort, installStartupGate } from '/@/runner/electron-startup-gate';
 import { Runner } from '/@/runner/podman-desktop-runner';
 import { RunnerFactory } from '/@/runner/runner-factory';
 import type { RunnerOptions } from '/@/runner/runner-options';
@@ -38,8 +37,7 @@ type WindowState = {
 export class ElectronRunner extends Runner {
   protected _app: ElectronApplication | undefined;
 
-  protected static readonly MAX_STARTUP_ATTEMPTS = 3;
-  protected static readonly APP_RENDER_TIMEOUT_MS = 15_000;
+  protected static readonly MAX_STARTUP_ATTEMPTS = 5;
 
   public constructor(options?: { runnerOptions?: RunnerOptions }) {
     super(options);
@@ -91,9 +89,9 @@ export class ElectronRunner extends Runner {
 
   /**
    * Attempt a single Electron launch cycle: launch the app, wait for the first
-   * window, and verify the renderer actually painted (Svelte mounted into #app).
+   * window, and verify that its preload ran.
    *
-   * @returns `true` when the app rendered successfully and is ready for use.
+   * @returns `true` when the app started with its preload and is ready for use.
    * @throws when this is the final allowed attempt and the app still failed.
    */
   private async launchAndVerify(attempt: number, maxAttempts: number): Promise<boolean> {
@@ -103,7 +101,9 @@ export class ElectronRunner extends Runner {
       Object.keys(this._options).forEach(key => {
         console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
       });
-      this._app = await this.launchWithStartupGate(this._options as Parameters<typeof electron.launch>[0]);
+      this._app = await electron.launch({
+        ...this._options,
+      });
       this._page = await this.getElectronApp().firstWindow();
       this._running = true;
 
@@ -115,85 +115,23 @@ export class ElectronRunner extends Runner {
       throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
     }
 
-    const rendered = await this.waitForAppRendered(ElectronRunner.APP_RENDER_TIMEOUT_MS);
-    if (rendered) {
-      if (attempt > 1) {
-        console.log(`Podman Desktop rendered successfully on attempt ${attempt}`);
+    // With a packaged app, Playwright skips its loader.js and can attach during the first navigation,
+    // which loses the preload and leaves a blank window. Relaunch: a reload would recover the window,
+    // but not the startup logs the missing preload did not collect.
+    await this.getPage().waitForLoadState('domcontentloaded');
+    if (!(await this.getPage().evaluate(() => 'events' in window))) {
+      console.log(`Preload missing on attempt ${attempt}/${maxAttempts}, relaunching`);
+      await this.closeAfterFailedStart();
+      if (attempt >= maxAttempts) {
+        throw new Error(`Podman Desktop started without its preload on all ${maxAttempts} attempts.`);
       }
-      return true;
-    }
-
-    console.log(
-      `Blank screen detected on attempt ${attempt}/${maxAttempts} — ` +
-        `app did not render within ${ElectronRunner.APP_RENDER_TIMEOUT_MS}ms`,
-    );
-    await this.closeAfterFailedStart();
-
-    if (attempt >= maxAttempts) {
-      throw new Error(
-        `Podman Desktop started with a blank screen on all ${maxAttempts} attempts. ` +
-          'The Electron renderer never mounted the application UI.',
-      );
-    }
-
-    return false;
-  }
-
-  /**
-   * Playwright delays app readiness until it is attached only when it launches its own Electron
-   * executable with its loader.js. With an explicit `executablePath`, install the readiness gate
-   * copied from loader.js through the inspector. See {@link installStartupGate}.
-   */
-  private async launchWithStartupGate(options: Parameters<typeof electron.launch>[0]): Promise<ElectronApplication> {
-    if (!options?.executablePath) {
-      return electron.launch(options);
-    }
-
-    const port = await getFreePort();
-    const abort = new AbortController();
-    const launch = electron.launch({ ...options, args: [`--inspect-brk=${port}`, ...(options.args ?? [])] });
-    try {
-      const [app] = await Promise.all([launch, installStartupGate(port, abort.signal)]);
-      return app;
-    } catch (err) {
-      // The gate failed while the launch may still complete: close that app when it does.
-      // Not awaited: if the app is still paused, the launch only settles at its timeout.
-      launch
-        .then(app =>
-          this.raceWithTimeout(app.close(), 10_000, 'close() after late launch timed out').catch(
-            (closeErr: unknown) => {
-              console.log(`Failed to close app cleanly after startup gate failure: ${closeErr}`);
-              this.ensureElectronProcessesStopped(app.process()?.pid);
-            },
-          ),
-        )
-        .catch(() => {});
-      throw err;
-    } finally {
-      abort.abort();
-    }
-  }
-
-  /**
-   * Wait for the Svelte application to mount inside the `#app` root element.
-   * Returns `true` when the app has rendered meaningful content, `false` on timeout.
-   */
-  private async waitForAppRendered(timeout: number): Promise<boolean> {
-    if (!this._page) return false;
-    try {
-      await this._page.waitForFunction(
-        () => {
-          const app = document.getElementById('app');
-          return app !== null && app.children.length > 0;
-        },
-        undefined,
-        { timeout },
-      );
-      console.log('Application UI rendered successfully');
-      return true;
-    } catch {
       return false;
     }
+
+    if (attempt > 1) {
+      console.log(`Podman Desktop started with its preload on attempt ${attempt}`);
+    }
+    return true;
   }
 
   /**

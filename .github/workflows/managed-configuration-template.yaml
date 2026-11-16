@@ -44,7 +44,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup testenv using external action
-        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@b88d2d400b93a6050b4bcd36426aa191168cc5aa
 
       - name: Install pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -101,7 +101,7 @@ jobs:
           pnpm test:e2e:managed-configuration
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@4a26df3e2ae132254ba12a53f65a388d0961e786 # v6.7.0
+        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
         if: always()
         with:
           fail_on_failure: true

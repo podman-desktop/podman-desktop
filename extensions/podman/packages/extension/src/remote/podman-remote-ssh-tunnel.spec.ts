@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -45,6 +46,10 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
   getSshConfig(): ConnectConfig {
     return super.getSshConfig();
   }
+
+  registerSocketErrorHandler(socket: EventEmitter, peerSocket: { end(): unknown }, side: 'local' | 'remote'): void {
+    super.registerSocketErrorHandler(socket, peerSocket, side);
+  }
 }
 
 let dummyKey: string;
@@ -62,6 +67,9 @@ test('should be able to connect', async () => {
   const sshServer = new Server(
     {
       hostKeys: [dummyKey],
+      // explicitly identify as something non-OpenSSH
+      // the server doesn't need to be OpenSSH, just needs to support some @openssh.com vendor extensions
+      ident: 'some-custom-name',
     },
     client => {
       connected = true;
@@ -72,6 +80,10 @@ test('should be able to connect', async () => {
         })
         .on('ready', () => {
           authenticated = true;
+        })
+        .on('openssh.streamlocal', (accept, _reject, info) => {
+          const stream = accept();
+          stream.pipe(createConnection(info.socketPath)).pipe(stream);
         });
     },
   ).listen(0, '127.0.0.1', () => {
@@ -101,7 +113,7 @@ test('should be able to connect', async () => {
   let listenReady = false;
 
   // start a remote server
-  const npipeServer = createServer(_socket => {}).listen(socketOrNpipePathRemote, () => {
+  const npipeServer = createServer(socket => socket.end('pong')).listen(socketOrNpipePathRemote, () => {
     listenReady = true;
   });
 
@@ -121,13 +133,14 @@ test('should be able to connect', async () => {
   // wait authenticated and connected
   await vi.waitFor(() => expect(connected && authenticated && podmanRemoteSshTunnel.isListening()).toBeTruthy());
 
-  let connectedToLocal = false;
-  // send a request to the tunnel using the socket path
-  const client = createConnection({ path: socketOrNpipePathLocal }, () => {
-    connectedToLocal = true;
+  // send a request to the tunnel using the socket path and expect the remote server's reply
+  let received = '';
+  const client = createConnection({ path: socketOrNpipePathLocal });
+  client.on('data', data => {
+    received += data.toString();
   });
 
-  await vi.waitFor(() => expect(connectedToLocal).toBeTruthy());
+  await vi.waitFor(() => expect(received).toBe('pong'));
 
   client.end();
   npipeServer.close();
@@ -153,6 +166,41 @@ test('disconnect should clear pending reconnect timeout', () => {
 
   vi.advanceTimersByTime(30000);
   expect(connectSpy).toHaveBeenCalledTimes(1);
+});
+
+test('logs safe configuration when either tunnel socket emits an error', () => {
+  const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const tunnel = new TestPodmanRemoteSshTunnel('localhost', 22, 'foo', dummyKey, '/tmp/remote.sock', '/tmp/local.sock');
+  tunnel.getSshConfig().password = 'test-password';
+  tunnel.getSshConfig().passphrase = 'test-passphrase';
+  const localSocket = new EventEmitter();
+  const remoteSocket = new EventEmitter();
+  const localEnd = vi.fn();
+  const remoteEnd = vi.fn();
+  tunnel.registerSocketErrorHandler(localSocket, { end: remoteEnd }, 'local');
+  tunnel.registerSocketErrorHandler(remoteSocket, { end: localEnd }, 'remote');
+
+  const localError = new Error('local socket failure');
+  const remoteError = new Error('remote socket failure');
+  localSocket.emit('error', localError);
+  remoteSocket.emit('error', remoteError);
+
+  expect(logSpy).toHaveBeenNthCalledWith(
+    1,
+    'Podman ssh tunnel local socket error using configuration',
+    { host: 'localhost', port: 22, username: 'foo' },
+    localError,
+  );
+  expect(logSpy).toHaveBeenNthCalledWith(
+    2,
+    'Podman ssh tunnel remote socket error using configuration',
+    { host: 'localhost', port: 22, username: 'foo' },
+    remoteError,
+  );
+  expect(logSpy).toHaveBeenCalledTimes(2);
+  expect(localEnd).toHaveBeenCalledOnce();
+  expect(remoteEnd).toHaveBeenCalledOnce();
+  expect(logSpy.mock.calls.flat().join(' ')).not.toContain(dummyKey);
 });
 
 test('should use the provided private key over the ssh-agent', () => {

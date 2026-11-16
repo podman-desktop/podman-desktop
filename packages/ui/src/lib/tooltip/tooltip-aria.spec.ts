@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { getTooltipAriaTarget } from './tooltip-aria';
+import { addAriaDescribedBy, getTooltipAriaTarget, removeAriaDescribedBy } from './tooltip-aria';
 
 let element: HTMLElement;
 
@@ -55,5 +55,55 @@ describe('getTooltipAriaTarget', () => {
 
   test('returns the root when it has no descendants', () => {
     expect(getTooltipAriaTarget(element)).toBe(element);
+  });
+});
+
+describe('addAriaDescribedBy', () => {
+  test('sets the id when there is no aria-describedby', () => {
+    addAriaDescribedBy(element, 'tip');
+
+    expect(element).toHaveAttribute('aria-describedby', 'tip');
+  });
+
+  test('appends the id to existing ids', () => {
+    element.setAttribute('aria-describedby', 'err');
+
+    addAriaDescribedBy(element, 'tip');
+
+    expect(element).toHaveAttribute('aria-describedby', 'err tip');
+  });
+
+  test('does not add the id twice', () => {
+    element.setAttribute('aria-describedby', 'err tip');
+
+    addAriaDescribedBy(element, 'tip');
+
+    expect(element).toHaveAttribute('aria-describedby', 'err tip');
+  });
+});
+
+describe('removeAriaDescribedBy', () => {
+  test('removes only the id and keeps the current other ids', () => {
+    element.setAttribute('aria-describedby', 'err2 tip other');
+
+    removeAriaDescribedBy(element, 'tip');
+
+    expect(element).toHaveAttribute('aria-describedby', 'err2 other');
+  });
+
+  test('removes the attribute when the id was the only one', () => {
+    element.setAttribute('aria-describedby', 'tip');
+
+    removeAriaDescribedBy(element, 'tip');
+
+    expect(element).not.toHaveAttribute('aria-describedby');
+  });
+
+  test('leaves the attribute untouched when the id is not referenced', () => {
+    element.setAttribute('aria-describedby', 'err');
+
+    removeAriaDescribedBy(element, 'tip');
+
+    expect(element).toHaveAttribute('aria-describedby', 'err');
   });
 });

@@ -1000,12 +1000,19 @@ export async function startMachine(
 
   try {
     // start the machine
+    const startLogger = new LoggerDelegator(context, logger);
     const runOptions: extensionApi.RunOptions = {
-      logger: new LoggerDelegator(context, logger),
+      logger: startLogger,
     };
 
     if (autoStart) {
       runOptions.detached = true;
+    }
+
+    // a stale API socket left behind by a Windows restart prevents the API forwarding from starting
+    // only clean it up for a stopped machine: a running one may own the socket
+    if (extensionApi.env.isWindows && podmanMachinesStatuses.get(machineInfo.name) === 'stopped') {
+      telemetryRecords.staleApiSocketRemoved = await winPlatform.removeStaleApiSocket(machineInfo.name, startLogger);
     }
 
     await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
@@ -1746,6 +1753,7 @@ export async function start(
           result.push({
             name: check.title,
             successful: checkResult.successful,
+            severity: checkResult.severity,
             description: checkResult.description,
             docLinks: checkResult.docLinks,
             docLinksDescription: checkResult.docLinksDescription,
@@ -1776,7 +1784,7 @@ export async function start(
 
       for (const res of result) {
         const warning = {
-          state: res.successful ? 'successful' : 'failed',
+          state: res.successful ? 'successful' : res.severity === 'warning' ? 'warning' : 'failed',
           description: res.description ?? res.name,
           docDescription: res.docLinksDescription,
           docLinks: res.docLinks,
@@ -2250,6 +2258,17 @@ export async function createMachine(
 
   const podmanInstallation = await podmanBinary.getBinaryInfo();
   const version = podmanInstallation?.version;
+
+  // WSL machines do not work when WSL is too old for the Podman version, fail early with a meaningful message
+  if (extensionApi.env.isWindows && provider === 'wsl' && version) {
+    const result = await winPlatform.wslPodmanVersionCheck.executeFor(version);
+    if (!result.successful) {
+      telemetryRecords.errorCode = 'ErrUnsupportedWSLVersion';
+      sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
+      throw new Error(`${result.description} ${result.docLinksDescription}`);
+    }
+  }
+
   // check for podman major version
   const isPodmanV5OrLater = version ? isPodman5OrLater(version) : false;
   // image

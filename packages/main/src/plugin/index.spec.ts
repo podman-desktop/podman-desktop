@@ -334,7 +334,47 @@ test('Check SecurityRestrictions on known domains', async () => {
   expect(shell.openExternal).toBeCalledWith('https://www.podman-desktop.io');
 });
 
-test('Check no securityRestrictions on open external files', async () => {
+test.each(['https://podman.io', 'https://docs.podman-desktop.io', 'http://localhost:8080', 'http://127.0.0.1'])(
+  'Check SecurityRestrictions skips confirmation for exact domain or subdomain %s',
+  async url => {
+    const showMessageBoxMock = vi.fn();
+    const messageBox = {
+      showMessageBox: showMessageBoxMock,
+    } as unknown as MessageBox;
+
+    await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
+
+    const value = await securityRestrictionCurrentHandler.handler?.(url);
+    expect(value).toBeTruthy();
+
+    expect(showMessageBoxMock).not.toBeCalled();
+    expect(shell.openExternal).toBeCalledWith(url);
+  },
+);
+
+test.each([
+  'https://evilpodman.io',
+  'https://notlocalhost.com',
+  'https://evilpodman-desktop.io',
+  'https://podman.io.evil.com',
+])('Check SecurityRestrictions asks confirmation for look-alike domain %s', async url => {
+  const showMessageBoxMock = vi.fn();
+  const messageBox = {
+    showMessageBox: showMessageBoxMock,
+  } as unknown as MessageBox;
+
+  await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
+
+  showMessageBoxMock.mockResolvedValue({ response: 'Cancel' });
+
+  const value = await securityRestrictionCurrentHandler.handler?.(url);
+  expect(value).toBeFalsy();
+
+  expect(showMessageBoxMock).toBeCalledWith(expect.objectContaining({ detail: url }));
+  expect(shell.openExternal).not.toBeCalled();
+});
+
+test('Check SecurityRestrictions asks confirmation on open external files', async () => {
   const showMessageBoxMock = vi.fn();
   const messageBox = {
     showMessageBox: showMessageBoxMock,
@@ -343,15 +383,14 @@ test('Check no securityRestrictions on open external files', async () => {
   // configure
   await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
 
+  showMessageBoxMock.mockResolvedValue({ response: 'Cancel' });
+
   // call with a file link
   const value = await securityRestrictionCurrentHandler.handler?.('file:///foobar');
-  expect(value).toBeTruthy();
+  expect(value).toBeFalsy();
 
-  expect(showMessageBoxMock).not.toBeCalled();
-
-  // expect openExternal has been called
-  expect(shell.openExternal).toBeCalledWith(expect.stringContaining('file://'));
-  expect(shell.openExternal).toBeCalledWith(expect.stringContaining('foobar'));
+  expect(showMessageBoxMock).toBeCalledWith(expect.objectContaining({ detail: 'file:///foobar' }));
+  expect(shell.openExternal).not.toBeCalled();
 });
 
 test('Should apiSender handle local receive events', async () => {

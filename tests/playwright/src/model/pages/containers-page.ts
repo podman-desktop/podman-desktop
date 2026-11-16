@@ -53,12 +53,12 @@ export class ContainersPage extends MainPage {
     this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
     this.stopSelectedContainersButton = this.page.getByLabel('Stop selected containers and pods');
     this.createDialog = this.page.getByRole('dialog', {
-      name: 'Create a new container',
+      name: 'Create container',
       exact: true,
     });
     this.createDialogCloseButton = this.createDialog.getByLabel('Close');
     this.createDialogContainerOrDockerfileButton = this.createDialog.getByRole('button', {
-      name: 'Use Containerfile',
+      name: 'Build from Containerfile',
     });
     this.createDialogExistingImageButton = this.createDialog.getByRole('button', {
       name: 'Use existing image',

@@ -17,11 +17,11 @@
  ********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import product from '/@product.json' with { type: 'json' };
@@ -62,7 +62,8 @@ const MANIFEST_MOCK = {
   },
 };
 
-const TMP_EXTENSION_DEST = join(TMP_DIR, REMOTE_INFO_MOCK.name);
+// folder returned by mkdtemp: it is not derived from the extension name
+const TMP_EXTENSION_DEST = join(TMP_DIR, 'pd-remote-extension-abc123');
 const TMP_EXTENSION_PACKAGE_JSON = join(TMP_EXTENSION_DEST, 'extension', 'package.json');
 
 const FINAL_EXTENSION_DEST = join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name);
@@ -73,6 +74,7 @@ beforeEach(() => {
   vi.unstubAllEnvs();
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
+  vi.mocked(mkdtemp).mockResolvedValue(TMP_EXTENSION_DEST);
   vi.mocked(product).extensions = {
     remote: [],
     developmentDocumentation: '',
@@ -211,6 +213,19 @@ describe('findAuthEnvironment', () => {
 });
 
 describe('downloadExtension', () => {
+  const originalConsoleLog = console.log;
+  const originalConsoleWarn = console.warn;
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.warn = originalConsoleWarn;
+  });
+
+  beforeEach(() => {
+    console.log = vi.fn();
+    console.warn = vi.fn();
+  });
+
   test('should call ImageRegistry#downloadAndExtractImage with appropriate argument', async () => {
     await downloadExtension({
       destination: ABS_DEST_DIR,
@@ -274,9 +289,14 @@ describe('downloadExtension', () => {
     // ensure we read the digest file
     expect(readFile).toHaveBeenCalledOnce();
 
-    // ensure we rm the final destination
-    expect(rm).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DEST, {
+    // ensure we rm the final destination, then the tmp folder
+    expect(rm).toHaveBeenCalledTimes(2);
+    expect(rm).toHaveBeenNthCalledWith(1, FINAL_EXTENSION_DEST, {
       recursive: true,
+    });
+    expect(rm).toHaveBeenNthCalledWith(2, TMP_EXTENSION_DEST, {
+      recursive: true,
+      force: true,
     });
 
     // ensure we did call ImageRegistry#downloadAndExtractImage
@@ -290,12 +310,77 @@ describe('downloadExtension', () => {
     });
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
-      join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
+      join(TMP_EXTENSION_DEST, 'extension'),
       join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
 
     expect(cp).not.toHaveBeenCalled();
-    expect(rm).not.toHaveBeenCalled();
+    // the only rm is the cleanup of the tmp folder
+    expect(rm).toHaveBeenCalledExactlyOnceWith(TMP_EXTENSION_DEST, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  test('should download in a unique tmp folder', async () => {
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
+
+    expect(mkdtemp).toHaveBeenCalledExactlyOnceWith(join(TMP_DIR, 'pd-remote-extension-'));
+    expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledExactlyOnceWith(
+      REMOTE_INFO_MOCK.oci,
+      TMP_EXTENSION_DEST,
+      expect.any(Function),
+    );
+  });
+
+  test('should log the download progress', async () => {
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockImplementation(async (_image, _dest, logger) => {
+      logger({ message: 'Downloading layer 1/1', progress: 100 });
+    });
+
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
+
+    expect(console.log).toHaveBeenCalledWith('Downloading layer 1/1');
+  });
+
+  test('should keep the original error when the tmp folder cannot be removed', async () => {
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockRejectedValue(new Error('layer download failed'));
+    const cleanupError = new Error('EPERM');
+    vi.mocked(rm).mockRejectedValue(cleanupError);
+
+    await expect(
+      downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      }),
+    ).rejects.toThrowError('layer download failed');
+
+    expect(console.warn).toHaveBeenCalledWith(
+      `unable to remove the temporary folder ${TMP_EXTENSION_DEST}`,
+      cleanupError,
+    );
+  });
+
+  test('should remove the tmp folder when the download fails', async () => {
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockRejectedValue(new Error('layer download failed'));
+
+    await expect(
+      downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      }),
+    ).rejects.toThrowError('layer download failed');
+
+    expect(rm).toHaveBeenCalledExactlyOnceWith(TMP_EXTENSION_DEST, {
+      recursive: true,
+      force: true,
+    });
   });
 
   test('invalid OCI registry name with auth should throw an error', async () => {
@@ -351,14 +436,19 @@ describe('downloadExtension', () => {
       extension: REMOTE_INFO_MOCK,
     });
 
-    const tmpFolder = join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension');
+    const tmpFolder = join(TMP_EXTENSION_DEST, 'extension');
 
     expect(rename).toHaveBeenCalledOnce();
     expect(cp).toHaveBeenCalledExactlyOnceWith(tmpFolder, join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name), {
       recursive: true,
     });
-    expect(rm).toHaveBeenCalledExactlyOnceWith(tmpFolder, {
+    expect(rm).toHaveBeenCalledTimes(2);
+    expect(rm).toHaveBeenNthCalledWith(1, tmpFolder, {
       recursive: true,
+    });
+    expect(rm).toHaveBeenNthCalledWith(2, TMP_EXTENSION_DEST, {
+      recursive: true,
+      force: true,
     });
   });
 
@@ -654,7 +744,7 @@ describe('main', () => {
     ]);
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
-      join(TMP_DIR, 'dummy-extension', 'extension'),
+      join(TMP_EXTENSION_DEST, 'extension'),
       join(ABS_DEST_DIR, 'dummy-extension'),
     );
   });
@@ -673,7 +763,7 @@ describe('main', () => {
     await main(['--output', ABS_DEST_DIR]);
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
-      join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
+      join(TMP_EXTENSION_DEST, 'extension'),
       join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
   });

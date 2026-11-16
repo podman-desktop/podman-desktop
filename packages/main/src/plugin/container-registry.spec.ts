@@ -398,6 +398,10 @@ class TestContainerProviderRegistry extends ContainerProviderRegistry {
     this.streamsPerContainerId.set(id, data);
   }
 
+  hasAttachListeners(id: string): boolean {
+    return this.attachListenersPerContainerId.has(id);
+  }
+
   setRetryDelayEvents(delay: number): void {
     this.retryDelayEvents = delay;
   }
@@ -3753,6 +3757,98 @@ describe('attach container', () => {
 
     expect(telemetry.track).toHaveBeenCalled();
   });
+
+  test('re-attaching to the same container keeps only the latest listeners on the stream', async () => {
+    const stream = new PassThrough();
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: { podmanAttach: vi.fn().mockResolvedValue(stream) } as unknown as LibPod,
+    } as InternalContainerProvider;
+    const container = {
+      id: '1234',
+    } as unknown as Dockerode.Container;
+
+    // keep the stream and the replay buffer of the container, like when it starts
+    await containerRegistry.attachToContainer(engine, container, true, true);
+    const internalDataListeners = stream.listenerCount('data');
+    const internalErrorListeners = stream.listenerCount('error');
+    const internalEndListeners = stream.listenerCount('end');
+
+    stream.write('previous output');
+    await vi.waitFor(() => expect(containerRegistry.getStreamsOutputPerContainerId().get(container.id)).toBeDefined());
+
+    // attach more times than the default max listeners (10)
+    const previousCallbacks = Array.from({ length: 20 }, () => ({ onData: vi.fn(), onError: vi.fn(), onEnd: vi.fn() }));
+    for (const { onData, onError, onEnd } of previousCallbacks) {
+      await containerRegistry.attachContainer('podman1', container.id, onData, onError, onEnd);
+    }
+    const latestCallbacks = { onData: vi.fn(), onError: vi.fn(), onEnd: vi.fn() };
+    await containerRegistry.attachContainer(
+      'podman1',
+      container.id,
+      latestCallbacks.onData,
+      latestCallbacks.onError,
+      latestCallbacks.onEnd,
+    );
+
+    expect(stream.listenerCount('data')).toBe(internalDataListeners + 1);
+    expect(stream.listenerCount('error')).toBe(internalErrorListeners + 1);
+    expect(stream.listenerCount('end')).toBe(internalEndListeners + 1);
+
+    // every attach got the replayed output, and the replaced ones were ended
+    for (const { onData, onEnd } of previousCallbacks) {
+      expect(onData).toHaveBeenCalledExactlyOnceWith('previous output');
+      expect(onEnd).toHaveBeenCalledOnce();
+    }
+    expect(latestCallbacks.onData).toHaveBeenCalledExactlyOnceWith('previous output');
+    expect(latestCallbacks.onEnd).not.toHaveBeenCalled();
+
+    // new output and errors only reach the latest callbacks
+    stream.write('new output');
+    await vi.waitFor(() => expect(latestCallbacks.onData).toHaveBeenLastCalledWith('new output'));
+    stream.emit('error', new Error('attach error'));
+    expect(latestCallbacks.onError).toHaveBeenCalledExactlyOnceWith('Error: attach error');
+    for (const { onData, onError } of previousCallbacks) {
+      expect(onData).not.toHaveBeenCalledWith('new output');
+      expect(onError).not.toHaveBeenCalled();
+    }
+
+    // the replay buffer still gets the output
+    const output = containerRegistry.getStreamsOutputPerContainerId().get(container.id) ?? [];
+    expect(Buffer.concat(output).toString('utf-8')).toBe('previous outputnew output');
+
+    stream.end();
+    await vi.waitFor(() => expect(latestCallbacks.onEnd).toHaveBeenCalledOnce());
+    for (const { onEnd } of previousCallbacks) {
+      expect(onEnd).toHaveBeenCalledOnce();
+    }
+
+    // the stream cleanup still runs and the attach listeners are forgotten
+    expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
+    expect(containerRegistry.getStreamsOutputPerContainerId().get(container.id)).toBeUndefined();
+    expect(containerRegistry.hasAttachListeners(container.id)).toBeFalsy();
+  });
+
+  test('attach listeners are forgotten when the container stream is dropped', async () => {
+    const stream = new PassThrough();
+    containerRegistry.setStreamsPerContainerId('1234', stream);
+
+    await containerRegistry.attachContainer('podman', '1234', vi.fn(), vi.fn(), vi.fn());
+    expect(containerRegistry.hasAttachListeners('1234')).toBeTruthy();
+
+    const onContainerStopped = vi
+      .mocked(apiSender.receive)
+      .mock.calls.find(([channel]) => channel === 'container-stopped-event')?.[1];
+    expect(onContainerStopped).toBeDefined();
+    onContainerStopped?.('1234');
+
+    expect(containerRegistry.getStreamsPerContainerId().get('1234')).toBeUndefined();
+    expect(containerRegistry.hasAttachListeners('1234')).toBeFalsy();
+  });
 });
 
 describe('attachToContainer', () => {
@@ -3868,6 +3964,30 @@ describe('attachToContainer', () => {
     // check that the data has been cleaned-up
     expect(containerRegistry.getStreamsOutputPerContainerId().get(container.id)).toBeUndefined();
     expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
+  });
+
+  test('container attach stream LIBPOD API fails when podmanAttach rejects', async () => {
+    const attachMock = vi.fn().mockRejectedValue(new Error('attach failed'));
+
+    const fakeLibPod = {
+      podmanAttach: attachMock,
+    } as unknown as LibPod;
+
+    const engine = {
+      name: 'podman1',
+      id: 'podman1',
+      connection: {
+        type: 'podman',
+      },
+      libpodApi: fakeLibPod,
+    } as InternalContainerProvider;
+
+    const container = {
+      id: '1234',
+    } as unknown as Dockerode.Container;
+
+    await expect(containerRegistry.attachToContainer(engine, container, true, true)).rejects.toThrow('attach failed');
+    expect(attachMock).toBeCalledWith(container.id);
   });
 
   test('container do not attach stream as no tty', async () => {
@@ -5546,6 +5666,53 @@ describe('createContainerLibPod', () => {
       expect.objectContaining({
         secrets: [{ Source: 'my-secret', Target: '/run/secrets/my-secret' }],
         secret_env: { FOO_DATA: 'foo-data' },
+      }),
+    );
+  });
+
+  test('check that empty env values and values containing = are kept', async () => {
+    const dockerAPI = {
+      createContainer: vi.fn(),
+      getContainer: vi.fn(),
+    } as unknown as Dockerode;
+    const libpodAPI = {
+      createPodmanContainer: vi.fn(),
+    } as unknown as LibPod;
+
+    containerRegistry.addInternalProvider('podman1', {
+      name: 'podman',
+      id: 'podman1',
+      api: dockerAPI,
+      libpodApi: libpodAPI,
+      connection: {
+        type: 'podman',
+      },
+    } as unknown as InternalContainerProvider);
+
+    vi.mocked(dockerAPI.getContainer).mockResolvedValue({
+      start: vi.fn(),
+    } as unknown as Dockerode.Container);
+
+    vi.mocked(libpodAPI.createPodmanContainer).mockResolvedValue({
+      Id: 'id',
+      Warnings: [],
+    });
+
+    vi.spyOn(containerRegistry, 'attachToContainer').mockResolvedValue();
+
+    const options: ContainerCreateOptions = {
+      Image: 'image',
+      name: 'name',
+      pod: 'pod',
+      Env: ['EMPTY=', 'WITH_EQ=a=b', 'NO_EQUAL_SIGN'],
+    };
+
+    await containerRegistry.createContainer('podman1', options);
+
+    expect(dockerAPI.createContainer).not.toHaveBeenCalled();
+    expect(libpodAPI.createPodmanContainer).toBeCalledWith(
+      expect.objectContaining({
+        env: { EMPTY: '', WITH_EQ: 'a=b' },
       }),
     );
   });

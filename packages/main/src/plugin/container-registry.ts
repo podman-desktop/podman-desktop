@@ -127,6 +127,14 @@ interface JSONEvent {
   Actor?: { ID: string };
 }
 
+// listeners added on a container stream by attachContainer()
+interface AttachStreamListeners {
+  stream: NodeJS.ReadWriteStream;
+  data: (chunk: Buffer) => void;
+  error: (err: unknown) => void;
+  end: () => void;
+}
+
 @injectable()
 export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
@@ -183,6 +191,8 @@ export class ContainerProviderRegistry {
   // map of streams per container id
   protected streamsPerContainerId: Map<string, NodeJS.ReadWriteStream> = new Map();
   protected streamsOutputPerContainerId: Map<string, Buffer[]> = new Map();
+  // listeners added by the latest attachContainer() call per container id
+  protected attachListenersPerContainerId: Map<string, AttachStreamListeners> = new Map();
 
   useLibpodApiForImageList(): boolean {
     return this.configurationRegistry
@@ -309,6 +319,7 @@ export class ContainerProviderRegistry {
     const cleanStreamMap = (containerId: unknown): void => {
       this.streamsPerContainerId.delete(String(containerId));
       this.streamsOutputPerContainerId.delete(String(containerId));
+      this.attachListenersPerContainerId.delete(String(containerId));
     };
 
     this.apiSender.receive('container-stopped-event', (containerId: unknown) => {
@@ -2390,17 +2401,36 @@ export class ContainerProviderRegistry {
     let attachStream = this.streamsPerContainerId.get(containerId);
 
     const setupStream = (stream: NodeJS.ReadWriteStream): void => {
-      stream.on('data', chunk => {
-        onData(chunk.toString('utf-8'));
-      });
+      // remove only the listeners added by a previous call on this stream,
+      // the ones added by attachToContainer() need to stay
+      const previousListeners = this.attachListenersPerContainerId.get(containerId);
+      if (previousListeners?.stream === stream) {
+        stream.off('data', previousListeners.data);
+        stream.off('error', previousListeners.error);
+        stream.off('end', previousListeners.end);
+        // the previous caller will not receive anything anymore, let it clean up
+        previousListeners.end();
+      }
 
-      stream.on('error', err => {
-        onError(String(err));
-      });
-
-      stream.on('end', () => {
-        onEnd();
-      });
+      const listeners: AttachStreamListeners = {
+        stream,
+        data: (chunk: Buffer): void => {
+          onData(chunk.toString('utf-8'));
+        },
+        error: (err: unknown): void => {
+          onError(String(err));
+        },
+        end: (): void => {
+          if (this.attachListenersPerContainerId.get(containerId) === listeners) {
+            this.attachListenersPerContainerId.delete(containerId);
+          }
+          onEnd();
+        },
+      };
+      stream.on('data', listeners.data);
+      stream.on('error', listeners.error);
+      stream.on('end', listeners.end);
+      this.attachListenersPerContainerId.set(containerId, listeners);
 
       // do we have previous data?
       const previousData = this.streamsOutputPerContainerId.get(containerId);
@@ -2579,10 +2609,11 @@ export class ContainerProviderRegistry {
     }
 
     // convert env from array of string to an object with key being the env name
+    // the value may be empty or contain '=' signs, entries without '=' are skipped
     const updatedEnv = options.Env?.reduce((acc: { [key: string]: string }, env) => {
-      const [key, value] = env.split('=');
-      if (key && value) {
-        acc[key] = value;
+      const [key, ...values] = env.split('=');
+      if (key && values.length > 0) {
+        acc[key] = values.join('=');
       }
       return acc;
     }, {});
