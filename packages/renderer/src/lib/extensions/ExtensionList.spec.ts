@@ -26,7 +26,10 @@ import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
 
+import { CatalogInstallStatusFilter } from './catalog-install-status-filter';
 import ExtensionList from './ExtensionList.svelte';
+
+vi.mock(import('./catalog-install-status-filter'), { spy: true });
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -341,6 +344,134 @@ test('Local extensions keeps search above the tabs', async () => {
   expect(screen.getAllByRole('textbox', { name: 'search extensions' })).toHaveLength(1);
   expect(searchInput.compareDocumentPosition(catalogTab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getByRole('region', { name: 'content' })).not.toContainElement(searchInput);
+  expect(screen.queryByText('Install status')).not.toBeInTheDocument();
+});
+
+test('Catalog install status shares the sticky search row', async () => {
+  render(ExtensionList, { screen: 'catalog' });
+
+  const dropdown = await screen.findByRole('button', { name: 'Install status All statuses' });
+  expect(dropdown).toHaveTextContent('All statuses');
+  expect(screen.getByRole('region', { name: 'search' })).toContainElement(dropdown);
+});
+
+test('Installed search keeps its layout without the Catalog status control', async () => {
+  render(ExtensionList, { screen: 'installed' });
+
+  const searchRegion = await screen.findByRole('region', { name: 'search' });
+  expect(within(searchRegion).queryByRole('button', { name: /^Install status / })).not.toBeInTheDocument();
+  expect(searchRegion).not.toHaveClass('flex-wrap');
+  const filterStatus = within(searchRegion).getByRole('status');
+  expect(filterStatus).toHaveClass('flex-1');
+  expect(filterStatus).not.toHaveClass('whitespace-nowrap');
+});
+
+test('Catalog install status choices filter results through the search input', async () => {
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set(combined);
+  render(ExtensionList, { screen: 'catalog' });
+
+  const dropdown = await screen.findByRole('button', { name: 'Install status All statuses' });
+  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
+  const searchRow = within(screen.getByRole('region', { name: 'search' }));
+  screen.getByRole('group', { name: 'A Extension' });
+  screen.getByRole('group', { name: 'B Extension' });
+
+  await fireEvent.click(dropdown);
+  await fireEvent.click(searchRow.getByRole('button', { name: 'Installed' }));
+  expect(searchInput).toHaveValue('is:installed');
+  screen.getByRole('group', { name: 'A Extension' });
+  expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
+  screen.getByText('Filtered out 1 items of 2');
+
+  await fireEvent.click(dropdown);
+  await fireEvent.click(screen.getByRole('button', { name: 'Not installed' }));
+  expect(searchInput).toHaveValue('not:installed');
+  expect(screen.queryByRole('group', { name: 'A Extension' })).not.toBeInTheDocument();
+  screen.getByRole('group', { name: 'B Extension' });
+
+  await fireEvent.click(dropdown);
+  await fireEvent.click(screen.getByRole('button', { name: 'All statuses' }));
+  expect(searchInput).toHaveValue('');
+  screen.getByRole('group', { name: 'A Extension' });
+  screen.getByRole('group', { name: 'B Extension' });
+  expect(screen.queryByText('Filtered out 1 items of 2')).not.toBeInTheDocument();
+});
+
+test('Catalog install status preserves text and unrelated filters', async () => {
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set(combined);
+  render(ExtensionList, { screen: 'catalog', searchTerm: 'bar category:foo is:featured keyword:cloud' });
+
+  const dropdown = await screen.findByRole('button', { name: 'Install status All statuses' });
+  await fireEvent.click(dropdown);
+  await fireEvent.click(screen.getByRole('button', { name: 'Not installed' }));
+  expect(screen.getByRole('textbox', { name: 'search extensions' })).toHaveValue(
+    'bar category:foo is:featured keyword:cloud not:installed',
+  );
+
+  await fireEvent.click(dropdown);
+  await fireEvent.click(screen.getByRole('button', { name: 'All statuses' }));
+  expect(screen.getByRole('textbox', { name: 'search extensions' })).toHaveValue(
+    'bar category:foo is:featured keyword:cloud',
+  );
+});
+
+test('Catalog install status reflects typed tokens and clearing the search', async () => {
+  render(ExtensionList, { screen: 'catalog' });
+
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  for (const [searchTerm, label] of [
+    ['bar IS:Installed', 'Installed'],
+    ['not:installed category:foo', 'Not installed'],
+    ['not:installed is:installed', 'Installed'],
+    ['is:featured', 'All statuses'],
+  ]) {
+    await fireEvent.input(searchInput, { target: { value: searchTerm } });
+    screen.getByRole('button', { name: `Install status ${label}` });
+  }
+
+  await fireEvent.input(searchInput, { target: { value: 'is:installed' } });
+  await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+  screen.getByRole('button', { name: 'Install status All statuses' });
+});
+
+test.each([
+  {
+    searchTerm: `is:installed "a 'b" c' not:installed`,
+    option: 'All statuses',
+    expected: `"a 'b" c' not:installed`,
+  },
+  { searchTerm: 'mini -', option: 'Installed', expected: 'is:installed mini -' },
+  { searchTerm: 'mini -', option: 'Not installed', expected: 'not:installed mini -' },
+])('selecting $option preserves query context in $searchTerm', async ({ searchTerm, option, expected }) => {
+  render(ExtensionList, { screen: 'catalog', searchTerm });
+
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  const searchRow = within(screen.getByRole('region', { name: 'search' }));
+  await fireEvent.click(searchRow.getByRole('button', { name: /^Install status / }));
+  await fireEvent.click(searchRow.getByRole('button', { name: option }));
+
+  expect(searchInput).toHaveValue(expected);
+  searchRow.getByRole('button', { name: `Install status ${option}` });
+});
+
+test('a rejected status edit keeps the dropdown and results in sync with the search', async () => {
+  const searchTerm = 'is:installed';
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set(combined);
+  vi.mocked(CatalogInstallStatusFilter.prototype.withStatus).mockReturnValue(searchTerm);
+  render(ExtensionList, { screen: 'catalog', searchTerm });
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  const searchRow = within(screen.getByRole('region', { name: 'search' }));
+  await fireEvent.click(searchRow.getByRole('button', { name: 'Install status Installed' }));
+  await fireEvent.click(searchRow.getByRole('button', { name: 'Not installed' }));
+
+  expect(vi.mocked(CatalogInstallStatusFilter.prototype.withStatus)).toHaveBeenCalledWith('not-installed');
+  expect(searchInput).toHaveValue(searchTerm);
+  searchRow.getByRole('button', { name: 'Install status Installed' });
+  screen.getByRole('group', { name: 'A Extension' });
+  expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
 });
 
 test('Installed search remains below the tabs when optional extension features are disabled', async () => {
@@ -421,6 +552,8 @@ test('Typing and clearing catalog search updates results and the filtered count'
   const filteredCount = screen.getByText('Filtered out 1 items of 2');
   expect(filteredCount).toHaveAttribute('role', 'status');
   expect(screen.getByRole('region', { name: 'search' })).toContainElement(filteredCount);
+  expect(filteredCount).toHaveClass('whitespace-nowrap');
+  expect(filteredCount).not.toHaveClass('flex-1');
 
   await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
 
