@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { OverriddenExtension } from '@desktop-framework/api';
+import type { ExtensionDevelopmentFolderInfo, ExtensionInfo, OverriddenExtension } from '@desktop-framework/api';
 import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
 import type { FeaturedExtension } from '@desktop-framework/api/featured';
 
@@ -24,6 +24,7 @@ import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import type { SelectableExtensionDevelopmentFolderInfoUI } from './dev-mode/development-folder-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
 
 export class ExtensionsUtils {
@@ -226,6 +227,32 @@ export class ExtensionsUtils {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return extensions.filter(extension => {
       return `${extension.displayName} ${extension.description}`.toLowerCase().includes(lowerCaseSearchTerm);
+    });
+  }
+
+  extractDevelopmentFolders(
+    folders: ExtensionDevelopmentFolderInfo[],
+    extensionInfos: ExtensionInfo[],
+  ): SelectableExtensionDevelopmentFolderInfoUI[] {
+    return folders.map(folder => {
+      // do we have a matching extension
+      const matchingExtension = extensionInfos.find(ext => ext.path === folder.path);
+      let extension = undefined;
+      if (matchingExtension) {
+        extension = { name: matchingExtension.name, state: matchingExtension.state, id: matchingExtension.id };
+      }
+
+      return { ...folder, selected: false, name: folder.path, extension };
+    });
+  }
+
+  filterDevelopmentFolders(
+    folders: SelectableExtensionDevelopmentFolderInfoUI[],
+    searchTerm: string,
+  ): SelectableExtensionDevelopmentFolderInfoUI[] {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return folders.filter(folder => {
+      return `${folder.name} ${folder.extension?.name ?? ''}`.toLowerCase().includes(lowerCaseSearchTerm);
     });
   }
 
