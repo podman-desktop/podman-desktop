@@ -30,6 +30,7 @@ import type { RemoteExtension } from './download-remote-extensions.js';
 import {
   DIGEST_FILENAME,
   downloadExtension,
+  extractPinnedDigest,
   findAuthEnvironment,
   getRemoteExtensionFromProductJSON,
   main,
@@ -54,6 +55,12 @@ const ABS_DEST_DIR = '/dest-dir';
 const REMOTE_INFO_MOCK: RemoteExtension = {
   name: 'dummy-extension',
   oci: 'localhost/dummy-extension:latest',
+};
+
+const PINNED_DIGEST = `sha256:${'a'.repeat(64)}`;
+const PINNED_REMOTE_INFO_MOCK: RemoteExtension = {
+  name: 'dummy-extension',
+  oci: `localhost/dummy-extension:latest@${PINNED_DIGEST}`,
 };
 
 const MANIFEST_MOCK = {
@@ -212,6 +219,21 @@ describe('findAuthEnvironment', () => {
   });
 });
 
+describe('extractPinnedDigest', () => {
+  test.each<{ oci: string; expected: string | undefined }>([
+    { oci: `quay.io/org/ext@${PINNED_DIGEST}`, expected: PINNED_DIGEST },
+    { oci: `quay.io/org/ext:1.0.0@${PINNED_DIGEST}`, expected: PINNED_DIGEST },
+    { oci: `localhost:5000/org/ext@${PINNED_DIGEST}`, expected: PINNED_DIGEST },
+    { oci: 'quay.io/org/ext:1.0.0', expected: undefined },
+    { oci: 'quay.io/org/ext', expected: undefined },
+    { oci: 'localhost:5000/org/ext:latest', expected: undefined },
+    { oci: 'quay.io/org/ext@not-a-digest', expected: undefined },
+    { oci: 'user@quay.io/org/ext:1.0.0', expected: undefined },
+  ])('$oci should return $expected', ({ oci, expected }) => {
+    expect(extractPinnedDigest(oci)).toBe(expected);
+  });
+});
+
 describe('downloadExtension', () => {
   const originalConsoleLog = console.log;
   const originalConsoleWarn = console.warn;
@@ -301,6 +323,68 @@ describe('downloadExtension', () => {
 
     // ensure we did call ImageRegistry#downloadAndExtractImage
     expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalled();
+  });
+
+  test('cache hit with a digest pinned in the reference should not contact the registry', async () => {
+    vi.mocked(readFile).mockResolvedValue(PINNED_DIGEST);
+
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: PINNED_REMOTE_INFO_MOCK,
+    });
+
+    expect(readFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, {
+      encoding: 'utf-8',
+    });
+    expect(ImageRegistry.prototype.getManifestFromImageName).not.toHaveBeenCalled();
+    expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
+  });
+
+  test('different digest with a digest pinned in the reference should rm & download OCI', async () => {
+    vi.mocked(readFile).mockResolvedValue('sha256:01');
+    vi.mocked(existsSync).mockImplementation(path => {
+      switch (path) {
+        case TMP_EXTENSION_PACKAGE_JSON:
+        case FINAL_EXTENSION_DEST:
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: PINNED_REMOTE_INFO_MOCK,
+    });
+
+    expect(rm).toHaveBeenNthCalledWith(1, FINAL_EXTENSION_DEST, {
+      recursive: true,
+    });
+    expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledOnce();
+  });
+
+  test('should write the digest pinned in the reference to the digest file', async () => {
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: PINNED_REMOTE_INFO_MOCK,
+    });
+
+    expect(writeFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, PINNED_DIGEST, {
+      encoding: 'utf-8',
+    });
+  });
+
+  test('reference not pinned by digest should still contact the registry for the digest', async () => {
+    vi.mocked(readFile).mockResolvedValue(MANIFEST_MOCK.config.digest);
+    vi.mocked(existsSync).mockImplementation(path => path === FINAL_EXTENSION_DEST);
+
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
+
+    expect(ImageRegistry.prototype.getManifestFromImageName).toHaveBeenCalledOnce();
+    expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
   });
 
   test('should rename tmp directory to destination', async () => {
@@ -766,6 +850,17 @@ describe('main', () => {
       join(TMP_EXTENSION_DEST, 'extension'),
       join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
+  });
+
+  test('product.json extension pinned by digest and already downloaded should not contact the registry', async () => {
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [PINNED_REMOTE_INFO_MOCK];
+    vi.mocked(readFile).mockResolvedValue(PINNED_DIGEST);
+
+    await main(['--output', ABS_DEST_DIR]);
+
+    expect(ImageRegistry.prototype.getManifestFromImageName).not.toHaveBeenCalled();
+    expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
+    expect(process.exit).not.toHaveBeenCalled();
   });
 
   test('should call process.exit(1) when product.json extension download fails', async () => {

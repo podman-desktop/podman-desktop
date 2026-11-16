@@ -75,6 +75,18 @@ export interface DownloadOptions {
   auth?: RegistryAuth;
 }
 
+/**
+ * Extract the digest from an OCI reference pinned by digest (`name@sha256:...` or `name:tag@sha256:...`)
+ * @returns the digest, or undefined if the reference is not pinned
+ */
+export function extractPinnedDigest(oci: string): string | undefined {
+  const atIndex = oci.lastIndexOf('@');
+  if (atIndex === -1 || atIndex < oci.lastIndexOf('/')) return undefined;
+
+  const digest = oci.substring(atIndex + 1);
+  return /^[a-z][a-z0-9]*:[a-f0-9]{32,}$/i.test(digest) ? digest : undefined;
+}
+
 async function findExtensionDigest(extension: string): Promise<string | undefined> {
   try {
     return await readFile(join(extension, DIGEST_FILENAME), { encoding: 'utf-8' });
@@ -109,6 +121,15 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
 }
 
 export async function downloadExtension(options: DownloadOptions): Promise<void> {
+  const finalPath = join(options.destination, options.extension.name);
+
+  // when the reference is pinned by digest, the expected digest is known without contacting the registry
+  const pinnedDigest = extractPinnedDigest(options.extension.oci);
+  if (pinnedDigest && (await findExtensionDigest(finalPath)) === pinnedDigest) {
+    console.log(`cache hit for ${options.extension.name} ${pinnedDigest.substring(0, 18)}`);
+    return;
+  }
+
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
   const registry = imageRegistry.extractRegistryServerFromImage(options.extension.oci);
@@ -127,8 +148,6 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     });
   }
 
-  const finalPath = join(options.destination, options.extension.name);
-
   const { config } = await imageRegistry.getManifestFromImageName(options.extension.oci);
   if (!config) {
     throw new Error(
@@ -141,11 +160,14 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     );
   }
 
+  // a digest pinned in the reference is authoritative, otherwise use the config digest of the manifest
+  const expectedDigest = pinnedDigest ?? config.digest;
+
   // check if the extension is already downloaded
   if (existsSync(finalPath)) {
     const existingDigest = await findExtensionDigest(finalPath);
-    if (existingDigest === config.digest) {
-      console.log(`cache hit for ${options.extension.name} ${config.digest.substring(0, 18)}`);
+    if (existingDigest === expectedDigest) {
+      console.log(`cache hit for ${options.extension.name} ${expectedDigest.substring(0, 18)}`);
       return;
     } else {
       console.log(`invalid digest for ${options.extension.name}, cleanup ${finalPath}`);
@@ -172,7 +194,7 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
 
     // rename tmp to destination
     await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
-    await writeFile(join(finalPath, DIGEST_FILENAME), config.digest, { encoding: 'utf-8' });
+    await writeFile(join(finalPath, DIGEST_FILENAME), expectedDigest, { encoding: 'utf-8' });
   } finally {
     // delete the tmp folder, whether the download succeeded or not
     // a cleanup failure must not hide the error of the download
