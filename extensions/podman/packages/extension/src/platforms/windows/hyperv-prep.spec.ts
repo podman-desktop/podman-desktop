@@ -328,12 +328,12 @@ describe('HyperVPrep.run', () => {
     vi.mocked(execPodman).mockResolvedValueOnce({
       stdout: '',
       stderr: '',
-      command: 'podman system hyperv-prep',
+      command: 'podman system hyperv-prep --mounts 3',
     });
 
     await hyperVPrep.runPrep();
 
-    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, { isAdmin: true });
   });
 });
 
@@ -392,7 +392,7 @@ describe('HyperVPrep command handler', () => {
       'No',
     );
     expect(extensionApi.window.withProgress).toHaveBeenCalled();
-    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, { isAdmin: true });
     expect(telemetryLoggerMock.logUsage).toHaveBeenCalledWith('podman.hypervPrep', { status: 'applied' });
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining('Hyper-V preparation completed successfully.'),
@@ -410,7 +410,9 @@ describe('HyperVPrep command handler', () => {
     await callback();
 
     expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--status']);
-    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, {
+      isAdmin: true,
+    });
   });
 
   test('shows status when prep is already applied', async () => {
@@ -420,7 +422,9 @@ describe('HyperVPrep command handler', () => {
     await callback();
 
     expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--status']);
-    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, {
+      isAdmin: true,
+    });
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining('Hyper-V preparation is already applied.'),
     );

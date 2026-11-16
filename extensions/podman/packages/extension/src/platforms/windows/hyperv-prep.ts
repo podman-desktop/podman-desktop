@@ -131,7 +131,7 @@ export class HyperVPrep {
   }
 
   protected async run(): Promise<void> {
-    await execPodman(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    await execPodman(['system', 'hyperv-prep', '--mounts', '3'], undefined, { isAdmin: true });
   }
 
   private async prepare(): Promise<void> {
