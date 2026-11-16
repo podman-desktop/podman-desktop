@@ -8,10 +8,13 @@ import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
+import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
+import { extensionInfos } from '/@/stores/extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
+import type { SelectableExtensionDevelopmentFolderInfoUI } from './dev-mode/development-folder-info-ui';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { ExtensionsUtils } from './extensions-utils';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
@@ -57,14 +60,25 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
+const developmentFolders: SelectableExtensionDevelopmentFolderInfoUI[] = $derived(
+  extensionsUtils.extractDevelopmentFolders($extensionDevelopmentFolders, $extensionInfos),
+);
+
+const filteredDevelopmentFolders: SelectableExtensionDevelopmentFolderInfoUI[] = $derived(
+  extensionsUtils.filterDevelopmentFolders(developmentFolders, searchTerm),
+);
+
 const filterSummary = $derived.by(() => {
   switch (screen) {
     case 'installed':
       return { filtered: filteredInstalledItems, total: $combinedInstalledExtensions.length };
     case 'catalog':
       return { filtered: filteredCatalogItems, total: enhancedCatalogExtensions.length };
-    default:
-      return undefined;
+    case 'development':
+      return {
+        filtered: developmentFolders.length - filteredDevelopmentFolders.length,
+        total: developmentFolders.length,
+      };
   }
 });
 
@@ -83,7 +97,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'installed' && screen !== 'catalog'} title="extensions">
+<NavPage searchEnabled={false} title="extensions">
   {#snippet additionalActions()}
     {#if enableCustomExtensions}
       <Button
@@ -122,13 +136,13 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
  {/snippet}
 
   {#snippet content()}
-  {#if screen === 'installed' || (screen === 'catalog' && enableCatalog)}
+  {#if screen === 'installed' || (screen === 'catalog' && enableCatalog) || (screen === 'development' && enableLocalExtensions)}
     <div class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
       <div class="pl-5 w-72">
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
       </div>
       <div class="flex flex-1 items-center px-5 text-sm text-(--pd-content-text)" role="status">
-        {#if filterSummary && filterSummary.filtered > 0}
+        {#if filterSummary.filtered > 0}
           Filtered out {filterSummary.filtered} items of {filterSummary.total}
         {/if}
       </div>
@@ -154,7 +168,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
       {/if}
       <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={filteredCatalogExtensions} />
     {:else if screen === 'development' && enableLocalExtensions}
-      <DevelopmentExtensionList />
+      <DevelopmentExtensionList extensionFolders={filteredDevelopmentFolders} bind:searchTerm={searchTerm} />
     {/if}
   </div>
   {/snippet}

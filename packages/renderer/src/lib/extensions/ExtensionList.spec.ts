@@ -24,6 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
+import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
 import { extensionInfos } from '/@/stores/extensions';
 
 import ExtensionList from './ExtensionList.svelte';
@@ -31,6 +32,7 @@ import ExtensionList from './ExtensionList.svelte';
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  extensionDevelopmentFolders.set([]);
 });
 
 export const aFakeExtension: CatalogExtension = {
@@ -283,7 +285,7 @@ test('Switching tabs keeps only terms in search term', async () => {
   expect(myExtension1).toBeInTheDocument();
 });
 
-test.each(['installed', 'catalog'] as const)(
+test.each(['installed', 'catalog', 'development'] as const)(
   '%s search is below the tabs and outside the page header',
   async currentScreen => {
     render(ExtensionList, { screen: currentScreen });
@@ -296,7 +298,7 @@ test.each(['installed', 'catalog'] as const)(
   },
 );
 
-test.each(['installed', 'catalog'] as const)(
+test.each(['installed', 'catalog', 'development'] as const)(
   '%s search stays above scrolling content with an opaque themed background',
   async currentScreen => {
     render(ExtensionList, { screen: currentScreen });
@@ -307,11 +309,12 @@ test.each(['installed', 'catalog'] as const)(
   },
 );
 
-test.each(['installed', 'catalog'] as const)(
+test.each(['installed', 'catalog', 'development'] as const)(
   '%s keeps the filter status mounted before filtering and after clearing',
   async currentScreen => {
     catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
     extensionInfos.set(combined);
+    extensionDevelopmentFolders.set([{ path: '/dev/foo' }, { path: '/dev/bar' }, { path: '/dev/baz' }]);
     render(ExtensionList, { screen: currentScreen });
 
     const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
@@ -323,7 +326,11 @@ test.each(['installed', 'catalog'] as const)(
 
     expect(searchRegion.getByRole('status')).toBe(filterStatus);
     expect(filterStatus).toHaveTextContent(
-      currentScreen === 'installed' ? 'Filtered out 1 items of 1' : 'Filtered out 2 items of 2',
+      {
+        installed: 'Filtered out 1 items of 1',
+        catalog: 'Filtered out 2 items of 2',
+        development: 'Filtered out 3 items of 3',
+      }[currentScreen],
     );
 
     await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
@@ -333,14 +340,41 @@ test.each(['installed', 'catalog'] as const)(
   },
 );
 
-test('Local extensions keeps search above the tabs', async () => {
+test('Typing and clearing local extensions search updates results and the filtered count', async () => {
+  extensionDevelopmentFolders.set([{ path: '/dev/foo' }, { path: '/dev/bar' }]);
   render(ExtensionList, { screen: 'development' });
 
-  const catalogTab = await screen.findByRole('button', { name: 'Catalog' });
-  const searchInput = screen.getByRole('textbox', { name: 'search extensions' });
-  expect(screen.getAllByRole('textbox', { name: 'search extensions' })).toHaveLength(1);
-  expect(searchInput.compareDocumentPosition(catalogTab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(screen.getByRole('region', { name: 'content' })).not.toContainElement(searchInput);
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  await screen.findByText('/dev/foo');
+  screen.getByText('/dev/bar');
+
+  await fireEvent.input(searchInput, { target: { value: 'bar' } });
+
+  screen.getByText('/dev/bar');
+  expect(screen.queryByText('/dev/foo')).not.toBeInTheDocument();
+  const filteredCount = screen.getByText('Filtered out 1 items of 2');
+  expect(screen.getByRole('region', { name: 'search' })).toContainElement(filteredCount);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+
+  expect(searchInput).toHaveValue('');
+  screen.getByText('/dev/foo');
+  screen.getByText('/dev/bar');
+  expect(screen.queryByText(/Filtered out/)).not.toBeInTheDocument();
+});
+
+test('Clearing the local extensions no-match state restores the search input and results', async () => {
+  extensionDevelopmentFolders.set([{ path: '/dev/foo' }]);
+  render(ExtensionList, { screen: 'development', searchTerm: 'no-match' });
+
+  const searchInput = await screen.findByRole('textbox', { name: 'search extensions' });
+  await screen.findByText(`No extensions matching 'no-match' found`);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }));
+
+  expect(searchInput).toHaveValue('');
+  screen.getByText('/dev/foo');
+  expect(screen.queryByText(/No extensions matching/)).not.toBeInTheDocument();
 });
 
 test('Installed search remains below the tabs when optional extension features are disabled', async () => {
@@ -469,7 +503,7 @@ test('Switching tabs preserves search text between installed, catalog and local 
   const localSearchInput = screen.getByRole('textbox', { name: 'search extensions' });
   expect(localSearchInput).toHaveValue('bar');
   expect(screen.getAllByRole('textbox', { name: 'search extensions' })).toHaveLength(1);
-  expect(screen.getByRole('region', { name: 'content' })).not.toContainElement(localSearchInput);
+  expect(screen.getByRole('region', { name: 'content' })).toContainElement(localSearchInput);
 
   await fireEvent.click(screen.getByRole('button', { name: 'Installed' }));
 

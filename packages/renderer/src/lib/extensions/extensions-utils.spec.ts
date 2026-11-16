@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ExtensionInfo } from '@desktop-framework/api';
 import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
 import type { FeaturedExtension } from '@desktop-framework/api/featured';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -503,6 +504,36 @@ describe('filters', () => {
     const filteredInstalledExtensions = extensionsUtils.filterInstalledExtensions(combined, 'bar');
     expect(filteredInstalledExtensions.length).toBe(1);
     expect(filteredInstalledExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('extractDevelopmentFolders links folders to the extension loaded from the same path', () => {
+    const folders = extensionsUtils.extractDevelopmentFolders(
+      [{ path: '/dev/foo' }, { path: '/dev/bar' }],
+      [{ id: 'idFoo', name: 'Foo Extension', state: 'started', path: '/dev/foo' } as ExtensionInfo],
+    );
+
+    expect(folders).toEqual([
+      {
+        path: '/dev/foo',
+        name: '/dev/foo',
+        selected: false,
+        extension: { id: 'idFoo', name: 'Foo Extension', state: 'started' },
+      },
+      { path: '/dev/bar', name: '/dev/bar', selected: false, extension: undefined },
+    ]);
+  });
+
+  test('filterDevelopmentFolders matches the folder path and the extension name', () => {
+    const folders = extensionsUtils.extractDevelopmentFolders(
+      [{ path: '/dev/foo' }, { path: '/dev/bar' }],
+      [{ id: 'idFoo', name: 'Foo Extension', state: 'started', path: '/dev/foo' } as ExtensionInfo],
+    );
+
+    expect(extensionsUtils.filterDevelopmentFolders(folders, 'BAR').map(folder => folder.path)).toEqual(['/dev/bar']);
+    expect(extensionsUtils.filterDevelopmentFolders(folders, 'extension').map(folder => folder.path)).toEqual([
+      '/dev/foo',
+    ]);
+    expect(extensionsUtils.filterDevelopmentFolders(folders, '')).toHaveLength(2);
   });
 
   describe('quoted values with spaces', () => {

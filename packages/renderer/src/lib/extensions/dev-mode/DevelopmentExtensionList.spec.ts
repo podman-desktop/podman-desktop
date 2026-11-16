@@ -18,21 +18,15 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ExtensionInfo } from '@desktop-framework/api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
-import { extensionInfos } from '/@/stores/extensions';
 
 import DevelopmentExtensionList from './DevelopmentExtensionList.svelte';
 
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();
-  extensionDevelopmentFolders.set([]);
-  extensionInfos.set([]);
 });
 
 const devModeNotEnabledText = 'Enable Preferences > Extensions > Development Mode to test local extensions';
@@ -41,7 +35,7 @@ test('Expect empty list if dev mode is not enabled', async () => {
   // not enabled
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
-  render(DevelopmentExtensionList);
+  render(DevelopmentExtensionList, { extensionFolders: [] });
 
   // wait the getConfigurationValue to be called
   await vi.waitFor(() => expect(window.getConfigurationValue).toHaveBeenCalled());
@@ -54,7 +48,7 @@ test('Expect no empty screen if dev mode is enabled but table is empty', async (
   // enabled
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  render(DevelopmentExtensionList);
+  render(DevelopmentExtensionList, { extensionFolders: [] });
 
   // wait the getConfigurationValue to be called
   await vi.waitFor(() => expect(window.getConfigurationValue).toHaveBeenCalled());
@@ -70,7 +64,7 @@ test('expect addLocalFolderExtension is working', async () => {
   // enabled
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  render(DevelopmentExtensionList);
+  render(DevelopmentExtensionList, { extensionFolders: [] });
 
   // mock openDialog and returning the foo folder
   vi.mocked(window.openDialog).mockResolvedValue(['foo']);
@@ -91,7 +85,7 @@ test('expect report error of addLocalFolderExtension', async () => {
   // enabled
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  render(DevelopmentExtensionList);
+  render(DevelopmentExtensionList, { extensionFolders: [] });
 
   // mock openDialog and returning the foo folder
   vi.mocked(window.openDialog).mockResolvedValue(['foo']);
@@ -115,15 +109,25 @@ test('expect report error of addLocalFolderExtension', async () => {
 });
 
 test('expect list displayed if enabled', async () => {
-  // create a folder and an extension having the same path
-  extensionDevelopmentFolders.set([{ path: 'foo' }]);
-  extensionInfos.set([{ id: 'extensionid', name: 'extension A', path: 'foo' } as ExtensionInfo]);
-
   // enabled
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  render(DevelopmentExtensionList);
+  render(DevelopmentExtensionList, {
+    extensionFolders: [
+      { path: 'foo', name: 'foo', selected: false, extension: { id: 'extensionid', name: 'extension A' } },
+    ],
+  });
 
   // wait the text "extension A" to be displayed
   await vi.waitFor(() => expect(screen.getByText('extension A')).toBeInTheDocument());
+});
+
+test('expect filtered empty screen when the search matches no folder', async () => {
+  // enabled
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+  render(DevelopmentExtensionList, { extensionFolders: [], searchTerm: 'no-match' });
+
+  await vi.waitFor(() => expect(screen.getByText(`No extensions matching 'no-match' found`)).toBeInTheDocument());
+  expect(screen.queryByText('No extension for now')).not.toBeInTheDocument();
 });
