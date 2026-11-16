@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NotificationTaskInfo, TaskInfo } from '@desktop-framework/api';
 import type { Logger as LoggerType } from '@desktop-framework/extension-api';
 import { get } from 'svelte/store';
 
@@ -88,19 +89,6 @@ export function removeOperation(key: symbol): void {
   });
 }
 
-// clear all data related to the operations that are not in progress
-export function clearCompletedOperations(): void {
-  operationConnectionsInfo.update(map => {
-    for (const [taskId, operation] of map) {
-      if (!operation.operationInProgress) {
-        clearTaskLogs(operation.operationKey);
-        map.delete(taskId);
-      }
-    }
-    return map;
-  });
-}
-
 // clear all data related to the operation of the given task
 export function removeTaskOperation(taskId: number): void {
   const operation = get(operationConnectionsInfo).get(taskId);
@@ -109,14 +97,13 @@ export function removeTaskOperation(taskId: number): void {
   }
 }
 
+// operation id by task manager task id
 const connectionTasks = new Map<string, number>();
 
-export function registerConnectionTask(taskId: string, connectionTaskId: number): void {
-  connectionTasks.set(taskId, connectionTaskId);
-}
-
-// remove taskId operation unless another taskId references the same operation
-export function removeConnectionTask(taskId: string): void {
+// remove the operation of the removed task, unless another task (e.g. a retry) references the same operation.
+// Every removal path (single delete, bulk delete, clear all) sends task-removed.
+window.events?.receive('task-removed', (task: unknown) => {
+  const taskId = (task as TaskInfo | NotificationTaskInfo).id;
   const connectionTaskId = connectionTasks.get(taskId);
   if (connectionTaskId === undefined) {
     return;
@@ -125,7 +112,12 @@ export function removeConnectionTask(taskId: string): void {
   if (![...connectionTasks.values()].includes(connectionTaskId)) {
     removeTaskOperation(connectionTaskId);
   }
-}
+});
+
+window.events?.receive('connection-task-created', (data: unknown) => {
+  const { taskId, connectionTaskId } = data as { taskId: string; connectionTaskId: number };
+  connectionTasks.set(taskId, connectionTaskId);
+});
 
 // ids are never reused, even when operations are removed or created with a given id
 let lastTaskId = 0;

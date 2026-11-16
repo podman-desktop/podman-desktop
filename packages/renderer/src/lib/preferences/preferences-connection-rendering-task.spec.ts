@@ -16,24 +16,37 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderInfo } from '@desktop-framework/api';
+import type { IDisposable, ProviderInfo } from '@desktop-framework/api';
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { type OperationConnectionInfo, operationConnectionsInfo } from '/@/stores/operation-connections';
 
 import {
-  clearCompletedOperations,
   clearTaskLogs,
   type ConnectionCallback,
   getNextTaskId,
   registerConnectionCallback,
-  registerConnectionTask,
-  removeConnectionTask,
   removeOperation,
   removeTaskOperation,
 } from './preferences-connection-rendering-task';
 import { disconnectUI, eventCollect, reconnectUI } from './preferences-connection-rendering-task';
+
+// the module registers its window.events listeners at load time
+const { listeners } = vi.hoisted(() => {
+  const listeners = new Map<string, (data: unknown) => void>();
+  vi.mocked(window.events.receive).mockImplementation((channel: string, func: (...args: unknown[]) => void) => {
+    listeners.set(channel, func);
+    return {} as IDisposable;
+  });
+  return { listeners };
+});
+
+function emit(channel: string, data: unknown): void {
+  const listener = listeners.get(channel);
+  assert(listener, `no listener for ${channel}`);
+  listener(data);
+}
 
 const dummyCallback: ConnectionCallback = {
   log: vi.fn(),
@@ -113,14 +126,14 @@ const providerInfo: ProviderInfo = {
   vmProviderConnectionInitialization: false,
 };
 
-function buildOperation(key: symbol, inProgress = false): OperationConnectionInfo {
+function buildOperation(key: symbol): OperationConnectionInfo {
   return {
     operationKey: key,
     providerInfo,
     connectionInfo: undefined,
     properties: [],
     propertyScope: 'ContainerProviderConnectionFactory',
-    operationInProgress: inProgress,
+    operationInProgress: false,
     operationSuccessful: false,
     operationStarted: true,
     errorMessage: '',
@@ -155,11 +168,10 @@ test('clearTaskLogs clears the logs and keeps the operation', () => {
 test.each([
   { name: 'removeOperation', remove: (key: symbol): void => removeOperation(key) },
   { name: 'removeTaskOperation', remove: (): void => removeTaskOperation(1) },
-  { name: 'clearCompletedOperations', remove: (): void => clearCompletedOperations() },
 ])('$name clears the logs and removes only the matching operation', ({ remove }) => {
   const removedKey = registerConnectionCallback(dummyCallback);
   const keptKey = registerConnectionCallback(dummyCallback);
-  setOperations(buildOperation(removedKey), buildOperation(keptKey, true));
+  setOperations(buildOperation(removedKey), buildOperation(keptKey));
 
   remove(removedKey);
 
@@ -168,16 +180,16 @@ test.each([
   expectLogsCleared(keptKey, false);
 });
 
-test('removeConnectionTask removes the operation once no task references it', () => {
+test('task-removed removes the operation once no connection task references it', () => {
   setOperations(buildOperation(registerConnectionCallback(dummyCallback)));
-  registerConnectionTask('task-1', 1);
-  registerConnectionTask('task-2', 1);
+  emit('connection-task-created', { taskId: 'task-1', connectionTaskId: 1 });
+  emit('connection-task-created', { taskId: 'task-2', connectionTaskId: 1 });
 
-  removeConnectionTask('task-unknown');
-  removeConnectionTask('task-1');
+  emit('task-removed', { id: 'task-unknown' });
+  emit('task-removed', { id: 'task-1' });
   expect(get(operationConnectionsInfo).size).toBe(1);
 
-  removeConnectionTask('task-2');
+  emit('task-removed', { id: 'task-2' });
   expect(get(operationConnectionsInfo).size).toBe(0);
 });
 
