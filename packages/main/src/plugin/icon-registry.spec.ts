@@ -89,3 +89,55 @@ test('should register icon contribution', async () => {
   ]);
   expect(icon?.definition.font?.fontId).toBe(`${extensionId}-${fontPath}`);
 });
+
+function registerIcon(iconId: string, fontPath: string, fontCharacter: string): void {
+  const extension = {
+    path: `${path.sep}root${path.sep}path`,
+    id: 'myextension.id',
+  } as AnalyzedExtension;
+  iconRegistry.registerIconContribution(extension, { [iconId]: { default: { fontPath, fontCharacter } } });
+}
+
+test.each([
+  { iconId: 'kind-icon', fontPath: 'kind-icon.woff2', fontCharacter: '\\EA01' },
+  { iconId: 'my_icon2', fontPath: 'fonts/my icons.woff2', fontCharacter: '\\0041' },
+  { iconId: 'single-char', fontPath: 'icons.woff2', fontCharacter: 'A' },
+])('should register valid icon $iconId', ({ iconId, fontPath, fontCharacter }) => {
+  registerIcon(iconId, fontPath, fontCharacter);
+
+  expect(iconRegistry.listIcons().find(icon => icon.id === iconId)?.definition.fontCharacter).toBe(fontCharacter);
+});
+
+test.each([
+  { name: 'id with a space', iconId: 'kind icon', fontPath: 'icons.woff2', fontCharacter: '\\EA01' },
+  { name: 'id with braces', iconId: 'x{color:red}', fontPath: 'icons.woff2', fontCharacter: '\\EA01' },
+  { name: 'id with a comma', iconId: 'a,b', fontPath: 'icons.woff2', fontCharacter: '\\EA01' },
+  { name: 'escape with extra character', iconId: 'reject-1', fontPath: 'icons.woff2', fontCharacter: '\\EA01X' },
+  { name: 'escape with 7 digits', iconId: 'reject-2', fontPath: 'icons.woff2', fontCharacter: '\\1234567' },
+  { name: 'two characters', iconId: 'reject-3', fontPath: 'icons.woff2', fontCharacter: 'AB' },
+  { name: 'single quote', iconId: 'reject-4', fontPath: 'icons.woff2', fontCharacter: `'` },
+  { name: 'empty character', iconId: 'reject-5', fontPath: 'icons.woff2', fontCharacter: '' },
+  {
+    name: 'CSS injection in fontCharacter',
+    iconId: 'reject-6',
+    fontPath: 'icons.woff2',
+    fontCharacter: `'; .podman-desktop-icon-exfil:before { content: ''; } /*`,
+  },
+  { name: 'quote in fontPath', iconId: 'reject-7', fontPath: `it's.woff2`, fontCharacter: '\\EA01' },
+  { name: 'backslash in fontPath', iconId: 'reject-8', fontPath: 'x\\.woff2', fontCharacter: '\\EA01' },
+  { name: 'parenthesis in fontPath', iconId: 'reject-9', fontPath: 'x).woff2', fontCharacter: '\\EA01' },
+  {
+    name: 'fontPath outside the folder',
+    iconId: 'reject-10',
+    fontPath: '../path-evil/x.woff2',
+    fontCharacter: '\\EA01',
+  },
+])('should not register icon with $name', ({ iconId, fontPath, fontCharacter }) => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  registerIcon(iconId, fontPath, fontCharacter);
+
+  expect(iconRegistry.listIcons().find(icon => icon.id === iconId)).toBeUndefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(iconId));
+});
