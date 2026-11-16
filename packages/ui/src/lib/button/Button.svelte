@@ -2,12 +2,13 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { Component, Snippet } from 'svelte';
 import { createEventDispatcher, untrack } from 'svelte';
+import type { HTMLButtonAttributes } from 'svelte/elements';
 
 import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
 import type { ActionButtonType } from './Button';
 
-interface BaseProps {
+interface BaseProps extends Omit<HTMLButtonAttributes, 'type'> {
   /**
    * Native tooltip, shown on mouse hover only, so keyboard and touch users never see it. Use it for extra
    * hints, not as the only name of an icon-only button: set `aria-label` for that.
@@ -27,8 +28,8 @@ interface BaseProps {
 
   /**
    * Icon shown before the label. An icon-only button needs `aria-label`. The component throws on mount when
-   * there is no label, `title` or `aria-label`, but any body counts as a label, even an empty `{''}`, so the
-   * check does not catch an empty label variable.
+   * there is no label, `title`, `aria-label` or `aria-labelledby`, but any body counts as a label, even an
+   * empty `{''}`, so the check does not catch an empty label variable.
    */
   icon?: IconDefinition | Component | string;
 
@@ -111,9 +112,10 @@ let {
   'aria-label': ariaLabel,
   onclick = dispatch.bind(undefined, 'click'),
   children,
+  ...restProps
 }: Props = $props();
 
-if (untrack(() => icon !== undefined && !title && !children && !ariaLabel)) {
+if (untrack(() => icon !== undefined && !title && !children && !ariaLabel && !restProps['aria-labelledby'])) {
   throw new Error('Icon-only buttons must have an aria-label for accessibility');
 }
 
@@ -168,6 +170,7 @@ let classes = $derived.by(() => {
 </script>
 
 <button
+  {...restProps}
   type="button"
   class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] select-none {classes} {classNames}"
   class:border-[var(--pd-button-tab-border-selected)]={(type === 'tab' && selected === true && !disabled && !inProgress) ||
