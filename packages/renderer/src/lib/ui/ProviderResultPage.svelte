@@ -181,7 +181,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
         </div>
       {/each}
     </div>
-    <div class="h-full w-full pr-4 overflow-y-scroll pb-16"  aria-label="Analysis Results">
+    <div class="h-full w-full pr-4 overflow-y-auto pb-16"  aria-label="Analysis Results">
       {#each filtered as result, index (index)}
         <div
           role="row" aria-label="{result.check.name}" 

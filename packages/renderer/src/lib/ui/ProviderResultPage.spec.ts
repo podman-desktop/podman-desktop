@@ -128,6 +128,18 @@ describe('test ProviderResultPage', async () => {
     };
   });
 
+  test('results pane only shows a scrollbar when its content overflows', async () => {
+    render(ProviderResultPage, {
+      providers: JSON.parse(JSON.stringify(providers)),
+      results: JSON.parse(JSON.stringify(results)),
+      headerInfo: snippet,
+    });
+
+    const resultsPane = screen.getByLabelText('Analysis Results');
+    expect(resultsPane).toHaveClass('overflow-y-auto');
+    expect(resultsPane).not.toHaveClass('overflow-y-scroll');
+  });
+
   test('all providers are displayed as running', async () => {
     const checkProviderRunning = (text: string): void => {
       const providerEntry = screen.getByRole('row', { name: text });
