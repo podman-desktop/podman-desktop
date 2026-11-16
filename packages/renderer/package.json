@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@desktop-framework/api": "workspace:*",
+    "@dnd-kit/svelte": "^0.5.3",
     "@podman-desktop/ui-svelte": "workspace:*",
     "@zerodevx/svelte-toast": "^0.9.6",
     "electron-context-menu": "5.1.0",
