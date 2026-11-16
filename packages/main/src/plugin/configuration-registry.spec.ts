@@ -38,7 +38,7 @@ import { ConfigurationRegistry } from './configuration-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { LockedConfiguration } from './locked-configuration.js';
-import { MacManagedConfiguration } from './mac-managed-configuration.js';
+import { ManagedConfiguration } from './managed-configuration.js';
 import type { ManagedSettings } from './managed-settings.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
@@ -106,12 +106,12 @@ const lockedConfiguration = {
   getContent: getLockedContentMock,
 } as unknown as LockedConfiguration;
 
-const macManagedConfiguration = {
-  getContent: vi.fn<MacManagedConfiguration['getContent']>(),
-} as unknown as MacManagedConfiguration;
+const managedConfiguration: ManagedConfiguration = {
+  getSettings: vi.fn<ManagedConfiguration['getSettings']>(),
+};
 
 function createRegistry(locked = lockedConfiguration): ConfigurationRegistry {
-  return new ConfigurationRegistry(apiSender, directories, defaultConfiguration, locked, macManagedConfiguration);
+  return new ConfigurationRegistry(apiSender, directories, defaultConfiguration, locked, managedConfiguration);
 }
 
 beforeEach(async () => {
@@ -143,7 +143,7 @@ beforeEach(async () => {
 
   // Setup LockedConfiguration mock for the new functionality
   getLockedContentMock.mockResolvedValue({});
-  vi.mocked(macManagedConfiguration.getContent).mockResolvedValue({ defaults: {}, user: {}, locked: [] });
+  vi.mocked(managedConfiguration.getSettings).mockResolvedValue({ defaults: {}, user: {}, locked: [] });
 
   configurationRegistry = createRegistry();
   await configurationRegistry.init();
@@ -891,14 +891,33 @@ describe('managed settings', () => {
     managedSettings = { defaults: {}, user: {}, locked: [] };
   });
 
+  test('load JSON settings without a platform provider', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.user': 'local', 'test.locked': 'local' }));
+    getContentMock.mockResolvedValue({ 'test.default': 'managed', 'test.locked': 'device' });
+    getLockedContentMock.mockResolvedValue({ locked: ['test.locked'] });
+    const container = new Container();
+    container.bind(ApiSenderType).toConstantValue(apiSender);
+    container.bind(Directories).toConstantValue(directories);
+    container.bind(DefaultConfiguration).toConstantValue(defaultConfiguration);
+    container.bind(LockedConfiguration).toConstantValue(lockedConfiguration);
+    container.bind(ConfigurationRegistry).toSelf().inSingletonScope();
+
+    const registry = container.get(ConfigurationRegistry);
+    await registry.init();
+
+    expect(registry.getConfiguration('test').get('user')).toBe('local');
+    expect(registry.getConfiguration('test').get('default')).toBe('managed');
+    expect(registry.getConfiguration('test').get('locked')).toBe('device');
+  });
+
   async function initRegistry(): Promise<ConfigurationRegistry> {
     const container = new Container();
     container.bind(ApiSenderType).toConstantValue(apiSender);
     container.bind(Directories).toConstantValue(directories);
     container.bind(DefaultConfiguration).toConstantValue(defaultConfiguration);
     container.bind(LockedConfiguration).toConstantValue(lockedConfiguration);
-    vi.mocked(macManagedConfiguration.getContent).mockResolvedValue(managedSettings);
-    container.bind(MacManagedConfiguration).toConstantValue(macManagedConfiguration);
+    vi.mocked(managedConfiguration.getSettings).mockResolvedValue(managedSettings);
+    container.bind(ManagedConfiguration).toConstantValue(managedConfiguration);
     container.bind(ConfigurationRegistry).toSelf().inSingletonScope();
 
     const registry = container.get(ConfigurationRegistry);

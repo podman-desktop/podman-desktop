@@ -30,6 +30,7 @@ import product from '/@product.json' with { type: 'json' };
 import { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
 import { MacManagedConfiguration } from './mac-managed-configuration.js';
+import { ManagedConfiguration } from './managed-configuration.js';
 
 const convertPlist = vi.fn<(command: string, args: string[]) => Promise<{ stdout: string; stderr: string }>>();
 
@@ -84,7 +85,7 @@ beforeEach(() => {
 });
 
 test('read both scopes with the native converter and the operating system username', async () => {
-  await configuration.getContent();
+  await configuration.getSettings();
 
   expect(access).toHaveBeenCalledWith(DEVICE_PLIST);
   expect(access).toHaveBeenCalledWith(USER_PLIST);
@@ -95,12 +96,12 @@ test('read both scopes with the native converter and the operating system userna
 test('resolve managed preferences through the injected directories', async () => {
   const container = new Container();
   container.bind(Directories).toConstantValue(directories);
-  container.bind(MacManagedConfiguration).toSelf().inSingletonScope();
+  container.bind<ManagedConfiguration>(ManagedConfiguration).to(MacManagedConfiguration).inSingletonScope();
   mockConversion(JSON.stringify({ 'test.setting': 'device' }));
 
-  const injected = container.get(MacManagedConfiguration);
+  const injected = container.get<ManagedConfiguration>(ManagedConfiguration);
 
-  expect(await injected.getContent()).toEqual({
+  expect(await injected.getSettings()).toEqual({
     defaults: { 'test.setting': 'device' },
     user: {},
     locked: [],
@@ -122,7 +123,7 @@ test('preserve setting types and extract only device locks', async () => {
     JSON.stringify({ ...user, locked: ['preferences.appearance'] }),
   );
 
-  expect(await configuration.getContent()).toEqual({
+  expect(await configuration.getSettings()).toEqual({
     defaults,
     user,
     locked: ['telemetry.enabled'],
@@ -132,7 +133,7 @@ test('preserve setting types and extract only device locks', async () => {
 test('skip preference access when managed preference directories are unavailable', async () => {
   vi.mocked(directories.getManagedPreferencesDir).mockReturnValue(undefined);
 
-  expect(await configuration.getContent()).toEqual(EMPTY_SETTINGS);
+  expect(await configuration.getSettings()).toEqual(EMPTY_SETTINGS);
   expect(access).not.toHaveBeenCalled();
   expect(convertPlist).not.toHaveBeenCalled();
   expect(userInfo).not.toHaveBeenCalled();
@@ -141,7 +142,7 @@ test('skip preference access when managed preference directories are unavailable
 test('use the product application ID for both filenames', async () => {
   product.appId = 'io.test.Desktop';
 
-  await configuration.getContent();
+  await configuration.getSettings();
 
   expect(access).toHaveBeenCalledWith(join(MANAGED_DIRECTORY, 'io.test.Desktop.plist'));
   expect(access).toHaveBeenCalledWith(join(MANAGED_DIRECTORY, 'testuser', 'io.test.Desktop.plist'));
@@ -151,7 +152,7 @@ test('retain device preferences when the user directory is unavailable', async (
   vi.mocked(directories.getManagedPreferencesDir).mockReturnValueOnce(MANAGED_DIRECTORY).mockReturnValueOnce(undefined);
   mockConversion(JSON.stringify({ 'test.setting': 'device', locked: ['test.setting'] }));
 
-  expect(await configuration.getContent()).toEqual({
+  expect(await configuration.getSettings()).toEqual({
     defaults: { 'test.setting': 'device' },
     user: {},
     locked: ['test.setting'],
@@ -162,7 +163,7 @@ test('retain device preferences when the user directory is unavailable', async (
 test('return empty settings without logs when both files are absent', async () => {
   vi.mocked(access).mockRejectedValue(Object.assign(new Error('File not found'), { code: 'ENOENT' }));
 
-  expect(await configuration.getContent()).toEqual(EMPTY_SETTINGS);
+  expect(await configuration.getSettings()).toEqual(EMPTY_SETTINGS);
   expect(convertPlist).not.toHaveBeenCalled();
   expect(console.log).not.toHaveBeenCalled();
   expect(console.error).not.toHaveBeenCalled();
@@ -173,7 +174,7 @@ test('load user preferences when the device file is absent', async () => {
   vi.mocked(access).mockRejectedValueOnce(Object.assign(new Error('File not found'), { code: 'ENOENT' }));
   mockConversion('{}', JSON.stringify({ 'test.setting': 'user' }));
 
-  expect(await configuration.getContent()).toEqual({
+  expect(await configuration.getSettings()).toEqual({
     defaults: {},
     user: { 'test.setting': 'user' },
     locked: [],
@@ -186,7 +187,7 @@ test('load device preferences when the user file is absent', async () => {
     .mockRejectedValueOnce(Object.assign(new Error('File not found'), { code: 'ENOENT' }));
   mockConversion(JSON.stringify({ 'test.setting': 'device', locked: ['test.setting'] }));
 
-  expect(await configuration.getContent()).toEqual({
+  expect(await configuration.getSettings()).toEqual({
     defaults: { 'test.setting': 'device' },
     user: {},
     locked: ['test.setting'],
@@ -200,7 +201,7 @@ test('retain device policy when the operating system account lookup fails', asyn
   });
   mockConversion(JSON.stringify({ 'test.setting': 'device', locked: ['test.setting'] }));
 
-  expect(await configuration.getContent()).toEqual({
+  expect(await configuration.getSettings()).toEqual({
     defaults: { 'test.setting': 'device' },
     user: {},
     locked: ['test.setting'],
@@ -214,7 +215,7 @@ test('log permission errors and continue with the other scope', async () => {
   vi.mocked(access).mockRejectedValueOnce(error);
   mockConversion('{}', JSON.stringify({ 'test.setting': 'user' }));
 
-  const result = await configuration.getContent();
+  const result = await configuration.getSettings();
 
   expect(result.user).toEqual({ 'test.setting': 'user' });
   expect(console.error).toHaveBeenCalledWith(expect.stringContaining(DEVICE_PLIST), error);
@@ -224,7 +225,7 @@ test('log conversion failures and continue with the other scope', async () => {
   const error = new Error('Invalid plist');
   mockConversion('', JSON.stringify({ 'test.setting': 'user' }), error);
 
-  const result = await configuration.getContent();
+  const result = await configuration.getSettings();
 
   expect(result.defaults).toEqual({});
   expect(result.user).toEqual({ 'test.setting': 'user' });
@@ -236,7 +237,7 @@ test.each(['invalid json', 'null', '[]', 'true', '"text"'])(
   async content => {
     mockConversion(content, JSON.stringify({ 'test.setting': 'user' }));
 
-    const result = await configuration.getContent();
+    const result = await configuration.getSettings();
 
     expect(result.defaults).toEqual({});
     expect(result.user).toEqual({ 'test.setting': 'user' });
@@ -247,6 +248,6 @@ test.each(['invalid json', 'null', '[]', 'true', '"text"'])(
 test.each(['"telemetry.enabled"', '[true]', '{}'])('reject invalid lock arrays: %s', async locked => {
   mockConversion(`{"telemetry.enabled":false,"locked":${locked}}`);
 
-  expect(await configuration.getContent()).toEqual(EMPTY_SETTINGS);
+  expect(await configuration.getSettings()).toEqual(EMPTY_SETTINGS);
   expect(console.error).toHaveBeenCalledWith(expect.stringContaining(DEVICE_PLIST), expect.any(Error));
 });

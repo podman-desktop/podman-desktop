@@ -28,6 +28,7 @@ import { inject, injectable } from 'inversify';
 import product from '/@product.json' with { type: 'json' };
 
 import { Directories } from './directories.js';
+import type { ManagedConfiguration } from './managed-configuration.js';
 import type { ManagedSettings } from './managed-settings.js';
 
 /**
@@ -35,7 +36,7 @@ import type { ManagedSettings } from './managed-settings.js';
  * Per-user plists use settings.json keys and cannot add locks.
  */
 @injectable()
-export class MacManagedConfiguration {
+export class MacManagedConfiguration implements ManagedConfiguration {
   private readonly plutilPath = '/usr/bin/plutil';
   private readonly fileNotFoundCode = 'ENOENT';
   private readonly execFileAsync = promisify(execFile);
@@ -45,7 +46,7 @@ export class MacManagedConfiguration {
     private readonly directories: Directories,
   ) {}
 
-  async getContent(): Promise<ManagedSettings> {
+  async getSettings(): Promise<ManagedSettings> {
     const directory = this.directories.getManagedPreferencesDir();
     if (!directory) {
       return { defaults: {}, user: {}, locked: [] };

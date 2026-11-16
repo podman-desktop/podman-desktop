@@ -27,7 +27,6 @@ import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 import type { LockedConfiguration } from './locked-configuration.js';
-import type { MacManagedConfiguration } from './mac-managed-configuration.js';
 
 let configurationRegistry: ConfigurationRegistry;
 
@@ -43,7 +42,6 @@ beforeAll(() => {
     {} as Directories,
     {} as DefaultConfiguration,
     {} as LockedConfiguration,
-    {} as MacManagedConfiguration,
   );
   configurationRegistry.registerConfigurations = vi.fn();
   configurationRegistry.deregisterConfigurations = vi.fn();

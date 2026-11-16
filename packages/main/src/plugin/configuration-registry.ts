@@ -39,7 +39,7 @@ import {
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '@desktop-framework/api/configuration';
 import type * as containerDesktopAPI from '@desktop-framework/extension-api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 
 import product from '/@product.json' with { type: 'json' };
 
@@ -49,7 +49,7 @@ import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
-import { MacManagedConfiguration } from './mac-managed-configuration.js';
+import { ManagedConfiguration } from './managed-configuration.js';
 import { Disposable } from './types/disposable.js';
 import { AtomicFileWriter } from './util/atomic-file-writer.js';
 
@@ -82,8 +82,9 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
     private defaultConfiguration: DefaultConfiguration,
     @inject(LockedConfiguration)
     private lockedConfiguration: LockedConfiguration,
-    @inject(MacManagedConfiguration)
-    private macManagedConfiguration: MacManagedConfiguration,
+    @inject(ManagedConfiguration)
+    @optional()
+    private managedConfiguration?: ManagedConfiguration,
   ) {
     this.configurationProperties = {};
     this.configurationContributors = [];
@@ -144,7 +145,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry, IAsyncDisp
     }
 
     // Platform preferences override JSON values within the same configuration scope.
-    const managedSettings = await this.macManagedConfiguration.getContent();
+    const managedSettings = (await this.managedConfiguration?.getSettings()) ?? { defaults: {}, user: {}, locked: [] };
     configData = { ...configData, ...managedSettings.user };
     const defaults = { ...(await this.defaultConfiguration.getContent()), ...managedSettings.defaults };
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, defaults);
