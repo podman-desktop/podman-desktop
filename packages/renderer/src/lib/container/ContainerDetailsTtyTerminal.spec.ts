@@ -19,24 +19,28 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, waitFor } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { Terminal } from '@xterm/xterm';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import ContainerDetailsTtyTerminal from './ContainerDetailsTtyTerminal.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-const getConfigurationValueMock = vi.fn();
-const attachContainerMock = vi.fn();
+const attachContainerMock = vi.mocked(window.attachContainer);
 
-beforeAll(() => {
-  getConfigurationValueMock.mockImplementation((key: string) => {
+beforeEach(() => {
+  vi.restoreAllMocks();
+  vi.resetAllMocks();
+  vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
       return 1000;
     }
     return undefined;
   });
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
-  Object.defineProperty(window, 'attachContainer', { value: attachContainerMock });
-  Object.defineProperty(window, 'attachContainerSend', { value: vi.fn() });
+  vi.mocked(window.attachContainerSend).mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 test('expect being able to attach terminal ', async () => {
@@ -50,7 +54,7 @@ test('expect being able to attach terminal ', async () => {
 
   const sendCallbackId = 12345;
   attachContainerMock.mockImplementation(
-    (
+    async (
       _engineId: string,
       _containerId: string,
       onData: (data: Buffer) => void,
@@ -83,4 +87,74 @@ test('expect being able to attach terminal ', async () => {
 
   // check we have called attachContainer
   expect(attachContainerMock).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  ['restart', ['RESTARTING']],
+  ['stop/start', ['STOPPING', 'EXITED', 'STARTING']],
+])('reattaches TTY input and output after %s', async (_operation, states) => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const container = {
+    id: 'myContainer',
+    state: 'RUNNING',
+    engineId: 'podman',
+  } as ContainerInfoUI;
+  const open = vi.spyOn(Terminal.prototype, 'open');
+  attachContainerMock.mockResolvedValueOnce(101).mockResolvedValueOnce(202).mockResolvedValue(303);
+  const { rerender, container: element } = render(ContainerDetailsTtyTerminal, { container, screenReaderMode: true });
+
+  await waitFor(() => expect(open).toHaveBeenCalledOnce());
+  await waitFor(() => expect(attachContainerMock).toHaveBeenCalledOnce());
+  const terminal = open.mock.instances[0];
+  if (!(terminal instanceof Terminal)) throw new Error('Terminal did not initialize');
+  terminal.input('before', true);
+  await waitFor(() => expect(window.attachContainerSend).toHaveBeenCalledExactlyOnceWith(101, 'before'));
+
+  attachContainerMock.mock.calls[0][4]();
+  for (const state of states) {
+    await rerender({ container: { ...container, state } });
+  }
+  vi.mocked(window.attachContainerSend).mockClear();
+
+  await rerender({ container: { ...container, state: 'RUNNING' } });
+  await waitFor(() => expect(attachContainerMock).toHaveBeenCalledTimes(2));
+  attachContainerMock.mock.calls[0][4]();
+  terminal.input('after', true);
+  await waitFor(() => expect(window.attachContainerSend).toHaveBeenCalledExactlyOnceWith(202, 'after'));
+  attachContainerMock.mock.calls[1][2](Buffer.from('reconnected output\n'));
+  await waitFor(() =>
+    expect(element.querySelector('div[aria-live="assertive"]')).toHaveTextContent('reconnected output'),
+  );
+
+  // The engine can report RUNNING before the old process and its stream finish exiting.
+  attachContainerMock.mock.calls[1][4]();
+  await vi.advanceTimersByTimeAsync(2000);
+  await waitFor(() => expect(attachContainerMock).toHaveBeenCalledTimes(3));
+  vi.mocked(window.attachContainerSend).mockClear();
+  terminal.input('after old stream closes', true);
+  await waitFor(() =>
+    expect(window.attachContainerSend).toHaveBeenCalledExactlyOnceWith(303, 'after old stream closes'),
+  );
+
+  await rerender({ container: { ...container, uptime: '1 minute' } });
+  expect(attachContainerMock).toHaveBeenCalledTimes(3);
+});
+
+test('retries a rejected TTY attachment and forwards input through the recovered stream', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const container = { id: 'myContainer', state: 'RUNNING', engineId: 'podman' } as ContainerInfoUI;
+  const open = vi.spyOn(Terminal.prototype, 'open');
+  const error = new Error('container is restarting');
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  attachContainerMock.mockRejectedValueOnce(error).mockResolvedValue(202);
+  render(ContainerDetailsTtyTerminal, { container });
+  await waitFor(() => expect(attachContainerMock).toHaveBeenCalledOnce());
+  await waitFor(() => expect(console.error).toHaveBeenCalledWith('Error attaching to container myContainer', error));
+
+  await vi.advanceTimersByTimeAsync(2000);
+  await waitFor(() => expect(attachContainerMock).toHaveBeenCalledTimes(2));
+  const terminal = open.mock.instances[0];
+  if (!(terminal instanceof Terminal)) throw new Error('Terminal did not initialize');
+  terminal.input('recovered', true);
+  await waitFor(() => expect(window.attachContainerSend).toHaveBeenCalledExactlyOnceWith(202, 'recovered'));
 });

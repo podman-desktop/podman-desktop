@@ -20,6 +20,7 @@ import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
+import type { OutgoingHttpHeaders } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
@@ -94,7 +95,7 @@ import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { isWindows } from '/@/util.js';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type { LibPod } from './dockerode/libpod-dockerode.js';
+import type { DockerodeInternals, LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import { EnvfileParser } from './env-file-parser.js';
 import { Emitter } from './events/emitter.js';
@@ -352,6 +353,18 @@ export class ContainerProviderRegistry {
     }
 
     internalProvider.api = new Dockerode({ socketPath: containerProviderConnection.endpoint.socketPath });
+    const modem = (internalProvider.api as unknown as DockerodeInternals).modem;
+    const originalBuildRequest = modem.buildRequest.bind(modem);
+    modem.buildRequest = (options, context, data, callback): void => {
+      // An attach socket becomes stdin, so the modem's JSON POST body would become shell input.
+      if (context.openStdin && context.path.includes('/attach?')) {
+        data = '';
+        const headers: OutgoingHttpHeaders = { ...(options.headers as OutgoingHttpHeaders), 'Content-Length': 0 };
+        delete headers['Transfer-Encoding'];
+        options.headers = headers;
+      }
+      originalBuildRequest(options, context, data, callback);
+    };
     if (containerProviderConnection.type === 'podman') {
       internalProvider.libpodApi = internalProvider.api as unknown as LibPod;
     }
@@ -2433,17 +2446,9 @@ export class ContainerProviderRegistry {
         }
       };
 
-      getAttachStream()
-        .then(readWriteStream => {
-          attachStream = readWriteStream;
-          setupStream(attachStream);
-        })
-        .catch((err: unknown) => {
-          console.log('error in attach', err);
-        });
-    } else {
-      setupStream(attachStream);
+      attachStream = await getAttachStream();
     }
+    setupStream(attachStream);
 
     this.telemetryService.track('attachContainer');
 

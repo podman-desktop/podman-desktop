@@ -18,6 +18,8 @@
 
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
+import type { ClientRequest } from 'node:http';
+import nodeHttp from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
@@ -3603,7 +3605,89 @@ describe('unpauseContainer', () => {
   });
 });
 
+describe('attachment HTTP payload', () => {
+  let provider: InternalContainerProvider;
+  let request: PassThrough;
+  let attached: PassThrough;
+
+  beforeEach(() => {
+    const connection: podmanDesktopAPI.ContainerProviderConnection = {
+      name: 'docker',
+      displayName: 'Docker',
+      type: 'docker',
+      endpoint: { socketPath: '/fixture.sock' },
+      status: () => 'started',
+    };
+    provider = { id: 'docker', name: 'Docker', connection };
+    vi.spyOn(containerRegistry, 'handleEvents').mockImplementation(() => {});
+    containerRegistry.setupConnectionAPI(provider, connection);
+    containerRegistry.addInternalProvider('docker', provider);
+    request = new PassThrough();
+    attached = new PassThrough();
+    vi.spyOn(request, 'write');
+    vi.spyOn(nodeHttp, 'request').mockImplementation(() => {
+      queueMicrotask(() => request.emit('upgrade', {}, attached, Buffer.alloc(0)));
+      return request as unknown as ClientRequest;
+    });
+  });
+
+  afterEach(() => {
+    request.destroy();
+    attached.destroy();
+    vi.restoreAllMocks();
+  });
+
+  test.each(['attachContainer', 'attachToContainer'])('does not write JSON into stdin through %s', async operation => {
+    const onData = vi.fn();
+    if (operation === 'attachContainer') {
+      const send = await containerRegistry.attachContainer('docker', 'fixture', onData, vi.fn(), vi.fn());
+      send('first command\n');
+      expect(onData).toHaveBeenCalledExactlyOnceWith('first command\n');
+    } else {
+      if (!provider.api) throw new Error('Container API was not initialized');
+      await containerRegistry.attachToContainer(provider, provider.api.getContainer('fixture'), true, true);
+    }
+
+    expect(request.write).toHaveBeenCalledExactlyOnceWith('');
+    expect(nodeHttp.request).toHaveBeenCalledWith(
+      expect.objectContaining({ headers: expect.objectContaining({ 'Content-Length': 0 }) }),
+      expect.any(Function),
+    );
+    const options = vi.mocked(nodeHttp.request).mock.calls[0]?.[0];
+    expect(options).toHaveProperty('path', expect.stringContaining('stdin=true'));
+    expect(options).toHaveProperty('path', expect.stringContaining('stdout=true'));
+  });
+
+  test('preserves the JSON body of ordinary POST requests', async () => {
+    vi.mocked(nodeHttp.request).mockImplementation(() => {
+      const response = Object.assign(Readable.from([Buffer.from('{"Id":"created"}')]), { statusCode: 201 });
+      queueMicrotask(() => request.emit('response', response));
+      return request as unknown as ClientRequest;
+    });
+    if (!provider.api) throw new Error('Container API was not initialized');
+    const options = { Image: 'alpine:3.20', Cmd: ['/bin/sh'] };
+    await provider.api.createContainer(options);
+    expect(request.write).toHaveBeenCalledExactlyOnceWith(JSON.stringify(options));
+  });
+});
+
 describe('attach container', () => {
+  test.each(['compat', 'libpod'])('propagates %s attachment failures so the caller can retry', async api => {
+    const attachError = new Error('container is restarting');
+    const dockerodeContainer = { id: '1234', attach: vi.fn() } as unknown as Dockerode.Container;
+    vi.mocked(dockerodeContainer.attach).mockRejectedValue(attachError);
+    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+    if (api === 'libpod') {
+      const libpod = { podmanAttach: vi.fn() } as unknown as LibPod;
+      vi.mocked(libpod.podmanAttach).mockRejectedValue(attachError);
+      vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(libpod);
+    }
+
+    await expect(containerRegistry.attachContainer('podman', '1234', vi.fn(), vi.fn(), vi.fn())).rejects.toBe(
+      attachError,
+    );
+  });
+
   test('container attach stream', async () => {
     // create a read/write stream
     const stream = new PassThrough();

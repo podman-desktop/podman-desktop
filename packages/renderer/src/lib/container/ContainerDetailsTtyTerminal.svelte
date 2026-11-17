@@ -3,7 +3,6 @@ import '@xterm/xterm/css/xterm.css';
 
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
-import { onMount } from 'svelte';
 
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
@@ -18,78 +17,74 @@ interface Props {
 let { container, screenReaderMode = false }: Props = $props();
 let attachContainerTerminal: Terminal | undefined = $state(undefined);
 let closed = $state(false);
-let callbackId: number | undefined = $state(undefined);
+const containerState = $derived(container.state);
+const containerId = $derived(container.id);
+const engineId = $derived(container.engineId);
 
-let listened = false;
 $effect(() => {
-  listenTerminalData(attachContainerTerminal, callbackId);
-});
+  const terminal = attachContainerTerminal;
+  if (!terminal || containerState !== 'RUNNING') {
+    return;
+  }
 
-// listenTerminalData only when attachContainerTerminal is bound from TerminalWindow component
-// and callbackId is defined
-function listenTerminalData(terminal: Terminal | undefined, cbId: number | undefined): void {
-  if (!attachContainerTerminal || !cbId) {
-    return;
-  }
-  if (listened) {
-    return;
-  }
-  listened = true;
-  // pass data from xterm to container
-  terminal?.onData(data => {
-    if (!callbackId) {
+  let active = true;
+  let callbackId: number | undefined;
+  let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const input = terminal.onData(data => {
+    if (callbackId === undefined) {
       return;
     }
     window
       .attachContainerSend(callbackId, data)
-      .catch((err: unknown) => console.log(`Error sending data to container ${container.id}`, err));
+      .catch((err: unknown) => console.log(`Error sending data to container ${containerId}`, err));
   });
-}
 
-// update terminal when receiving data
-function receiveDataCallback(data: Buffer): void {
-  attachContainerTerminal?.write(data.toString());
-}
-
-function receiveEndCallback(): void {
-  closed = true;
-}
-
-// call exec command
-async function attachToContainer(): Promise<void> {
-  if (container.state !== 'RUNNING') {
-    return;
+  function scheduleReconnect(): void {
+    if (!active || reconnectTimer) return;
+    closed = true;
+    callbackId = undefined;
+    reconnectTimer = setTimeout(attachToContainer, 2000);
   }
 
-  // attach to the container
-  callbackId = await window.attachContainer(
-    container.engineId,
-    container.id,
-    receiveDataCallback,
-    () => {},
-    receiveEndCallback,
-  );
+  function attachToContainer(): void {
+    reconnectTimer = undefined;
+    closed = false;
+    window
+      .attachContainer(
+        engineId,
+        containerId,
+        data => {
+          if (active) terminal?.write(data.toString());
+        },
+        scheduleReconnect,
+        scheduleReconnect,
+      )
+      .then(id => {
+        if (active) callbackId = id;
+      })
+      .catch((err: unknown) => {
+        scheduleReconnect();
+        console.error(`Error attaching to container ${containerId}`, err);
+      });
+  }
 
-  // pass data from xterm to container
-  attachContainerTerminal?.onData(async data => {
-    if (!callbackId) {
-      return;
-    }
-    await window.attachContainerSend(callbackId, data);
-  });
-}
+  attachToContainer();
 
-onMount(async () => {
-  await attachToContainer();
+  return (): void => {
+    active = false;
+    clearTimeout(reconnectTimer);
+    input.dispose();
+  };
 });
 </script>
 
-<div class="h-full" class:hidden={container.state !== 'RUNNING'}>
+<div class="h-full" class:hidden={container.state !== 'RUNNING' || closed}>
   <TerminalWindow class="h-full" bind:terminal={attachContainerTerminal} screenReaderMode={screenReaderMode} disableStdIn={false} showCursor={true} />
 </div>
 
 <EmptyScreen
-  hidden={!closed && container.state !== 'RUNNING'}
+  hidden={!closed || container.state !== 'RUNNING'}
   icon={NoLogIcon}
   title="No TTY"
   message="TTY has stopped" />
