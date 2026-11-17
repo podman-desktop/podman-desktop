@@ -253,6 +253,7 @@ test('apply macOS preferences before the registry event', async () => {
   const container = onConfigurationInit.mock.lastCall?.[0];
   assert(container);
   expect(container.get(ManagedConfiguration)).toBeInstanceOf(MacManagedConfiguration);
+  expect(container.get(ManagedConfiguration)).toBe(container.get(MacManagedConfiguration));
 });
 
 test('Should queue events until we are ready', async () => {

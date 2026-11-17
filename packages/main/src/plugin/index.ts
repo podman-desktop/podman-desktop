@@ -583,7 +583,8 @@ export class PluginSystem {
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
     if (isMac()) {
-      container.bind<ManagedConfiguration>(ManagedConfiguration).to(MacManagedConfiguration).inSingletonScope();
+      container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
+      container.bind<ManagedConfiguration>(ManagedConfiguration).toService(MacManagedConfiguration);
     }
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
