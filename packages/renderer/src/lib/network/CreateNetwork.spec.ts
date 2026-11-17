@@ -357,6 +357,33 @@ test('Expect routing to network details when the network is already in the store
   expect(screen.queryByText(/before initialization/)).not.toBeInTheDocument();
 });
 
+test('Expect routing to network details after 10 seconds when the network does not reach the store', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  try {
+    const gotoSpy = vi.spyOn(router, 'goto');
+    const engineId = 'engine1';
+    vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId });
+
+    renderCreate();
+
+    const networkNameInput = screen.getByRole('textbox', { name: 'Name *' });
+    await userEvent.type(networkNameInput, 'my-test-network');
+
+    const createButton = screen.getByRole('button', { name: 'Create' });
+    await userEvent.click(createButton);
+    await waitFor(() => expect(window.createNetwork).toHaveBeenCalled());
+
+    // the network never reaches the store
+    await vi.advanceTimersByTimeAsync(9000);
+    expect(gotoSpy).not.toHaveBeenCalledWith(`/networks/my-test-network/${engineId}/summary`);
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(gotoSpy).toHaveBeenCalledWith(`/networks/my-test-network/${engineId}/summary`);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 test('Expect to switch to Advanced tab and see advanced options', async () => {
   renderCreate();
 

@@ -9,7 +9,6 @@ import { faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -38,6 +37,9 @@ let networkInfo: NetworkCreateFormInfo = $state({
 
 let createError: string | undefined = $state(undefined);
 let createNetworkInProgress: boolean = $state(false);
+// The network created by this page, until the page navigates to its details
+let createdNetwork: { id: string; engineId: string; name: string } | undefined = $state(undefined);
+let navigationTimeout: ReturnType<typeof setTimeout> | undefined;
 let selectedProvider: ProviderContainerConnectionInfo | undefined = $derived(networkInfo.selectedProvider);
 
 // Fetch available network drivers for selected provider
@@ -112,51 +114,40 @@ async function createNetwork(): Promise<void> {
       }
     }
 
-    await waitForNetworkInStore(result.Id, result.engineId);
-
-    // Route to the network details page
-    handleNavigation({
-      page: NavigationPage.NETWORK,
-      parameters: {
-        name: networkInfo.networkName,
-        engineId: result.engineId,
-      },
-    });
+    // Route to the network details page once the network is in the store, or after 10 seconds
+    navigationTimeout = setTimeout(navigateToCreatedNetwork, 10000);
+    createdNetwork = { id: result.Id, engineId: result.engineId, name: networkInfo.networkName };
   } catch (error: unknown) {
     createError = error instanceof Error ? error.message : String(error);
     console.error('Error creating network:', error);
-  } finally {
     createNetworkInProgress = false;
   }
 }
 
-/**
- * Wait for the network to appear in the store before navigating.
- */
-async function waitForNetworkInStore(networkId: string, engineId: string): Promise<void> {
-  return new Promise<void>(resolve => {
-    // subscribe() calls the callback synchronously with the current value, so the
-    // network can be found before subscribe() has returned the unsubscriber.
-    let unsubscribe: Unsubscriber | undefined;
-    let found = false;
+let createdNetworkInStore = $derived(
+  !!createdNetwork &&
+    $networksListInfo.some(
+      network => network.id === createdNetwork?.id && network.engineId === createdNetwork?.engineId,
+    ),
+);
 
-    const timeout = setTimeout(() => {
-      unsubscribe?.();
-      resolve();
-    }, 10000);
+$effect(() => {
+  if (createdNetworkInStore) {
+    navigateToCreatedNetwork();
+  }
+});
 
-    unsubscribe = networksListInfo.subscribe(networks => {
-      if (!found && networks.some(network => network.id === networkId && network.engineId === engineId)) {
-        found = true;
-        clearTimeout(timeout);
-        unsubscribe?.();
-        resolve();
-      }
-    });
-
-    if (found) {
-      unsubscribe();
-    }
+function navigateToCreatedNetwork(): void {
+  clearTimeout(navigationTimeout);
+  if (!createdNetwork) {
+    return;
+  }
+  const { name, engineId } = createdNetwork;
+  createdNetwork = undefined;
+  createNetworkInProgress = false;
+  handleNavigation({
+    page: NavigationPage.NETWORK,
+    parameters: { name, engineId },
   });
 }
 
