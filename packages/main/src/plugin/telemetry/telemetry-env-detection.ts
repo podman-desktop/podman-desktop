@@ -18,6 +18,8 @@
 
 import { injectable } from 'inversify';
 
+import { CIDetection } from './ci-detection.js';
+
 @injectable()
 export class TelemetryEnvDetection {
   /**
@@ -25,15 +27,12 @@ export class TelemetryEnvDetection {
    */
   static readonly DISABLE_TELEMETRY_VARIABLE = 'PODMAN_DESKTOP_DISABLE_TELEMETRY';
 
-  // values not turning telemetry off, same as the ones ignored by the CI detection
-  protected static readonly IGNORED_VALUES = ['', 'false', '0'];
-
   /**
    * Detect if telemetry has been turned off through the environment.
+   * The variable is read the same way as the CI ones: an empty value, false or 0 are ignored.
    * @param env the environment variables to inspect, defaults to the ones of the current process
    */
   isTelemetryDisabled(env: NodeJS.ProcessEnv = process.env): boolean {
-    const value = env[TelemetryEnvDetection.DISABLE_TELEMETRY_VARIABLE];
-    return value !== undefined && !TelemetryEnvDetection.IGNORED_VALUES.includes(value.toLowerCase());
+    return CIDetection.isVariableSet(env, TelemetryEnvDetection.DISABLE_TELEMETRY_VARIABLE);
   }
 }

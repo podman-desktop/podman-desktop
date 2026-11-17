@@ -33,7 +33,7 @@ import type * as TelemetryJSON from '../../../../../telemetry.json';
 import type { CIDetection } from './ci-detection.js';
 import type { EventType } from './telemetry.js';
 import { Telemetry, TelemetryLoggerImpl } from './telemetry.js';
-import type { TelemetryEnvDetection } from './telemetry-env-detection.js';
+import { TelemetryEnvDetection } from './telemetry-env-detection.js';
 
 const getConfigurationMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();
@@ -59,9 +59,7 @@ const ciDetectionMock = {
   isCIEnvironment: vi.fn(),
 } as unknown as CIDetection;
 
-const telemetryEnvDetectionMock = {
-  isTelemetryDisabled: vi.fn(),
-} as unknown as TelemetryEnvDetection;
+vi.mock(import('./telemetry-env-detection.js'));
 
 vi.mock(
   import('../../../../../telemetry.json'),
@@ -89,7 +87,7 @@ class TelemetryTest extends Telemetry {
       defaultConfigurationMock,
       lockedConfigurationMock,
       ciDetectionMock,
-      telemetryEnvDetectionMock,
+      new TelemetryEnvDetection(),
     );
   }
   public getLastTimeEvents(): Map<string, number> {
@@ -145,7 +143,7 @@ beforeEach(() => {
     get: vi.fn(),
   });
   vi.mocked(ciDetectionMock.isCIEnvironment).mockReturnValue(false);
-  vi.mocked(telemetryEnvDetectionMock.isTelemetryDisabled).mockReturnValue(false);
+  vi.mocked(TelemetryEnvDetection.prototype.isTelemetryDisabled).mockReturnValue(false);
 });
 
 afterEach(() => {
@@ -310,7 +308,7 @@ describe('Telemetry disabled through the environment', () => {
 
   beforeEach(() => {
     consoleWarnMock = vi.spyOn(console, 'warn').mockReturnValue(undefined);
-    vi.mocked(telemetryEnvDetectionMock.isTelemetryDisabled).mockReturnValue(true);
+    vi.mocked(TelemetryEnvDetection.prototype.isTelemetryDisabled).mockReturnValue(true);
   });
 
   test('Telemetry is disabled on init without updating the configuration', async () => {

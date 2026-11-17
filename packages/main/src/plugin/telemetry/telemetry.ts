@@ -300,8 +300,7 @@ export class Telemetry {
 
   async configureTelemetry(): Promise<void> {
     // the welcome screen asks to configure the telemetry when the user accepts it, keep it disabled on a CI
-    // or when turned off through the environment
-    if (this.telemetryInitialized || this.isCIEnvironment || this.isDisabledByEnvironment) {
+    if (this.telemetryInitialized || this.isCIEnvironment) {
       return;
     }
 

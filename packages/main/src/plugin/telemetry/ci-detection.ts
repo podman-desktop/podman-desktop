@@ -51,13 +51,20 @@ export class CIDetection {
   protected static readonly DISABLED_VALUES = ['', 'false', '0'];
 
   /**
+   * Check if an environment variable is set to a value turning it on: an empty value, false or 0 are ignored.
+   * @param env the environment variables to inspect
+   * @param name the name of the variable
+   */
+  static isVariableSet(env: NodeJS.ProcessEnv, name: string): boolean {
+    const value = env[name];
+    return value !== undefined && !CIDetection.DISABLED_VALUES.includes(value.toLowerCase());
+  }
+
+  /**
    * Detect if the current process is running inside a CI environment.
    * @param env the environment variables to inspect, defaults to the ones of the current process
    */
   isCIEnvironment(env: NodeJS.ProcessEnv = process.env): boolean {
-    return CIDetection.CI_ENVIRONMENT_VARIABLES.some(name => {
-      const value = env[name];
-      return value !== undefined && !CIDetection.DISABLED_VALUES.includes(value.toLowerCase());
-    });
+    return CIDetection.CI_ENVIRONMENT_VARIABLES.some(name => CIDetection.isVariableSet(env, name));
   }
 }
