@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { execFile } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import { userInfo } from 'node:os';
 import { join } from 'node:path';
@@ -37,6 +36,7 @@ const convertPlist = vi.fn<(command: string, args: string[]) => Promise<{ stdout
 vi.mock(import('node:child_process'));
 vi.mock(import('node:fs/promises'));
 vi.mock(import('node:os'));
+vi.mock(import('node:util'));
 vi.mock(import('./directories-legacy.js'));
 vi.mock(import('/@product.json'));
 
@@ -75,8 +75,7 @@ beforeEach(() => {
   product.appId = 'io.podman_desktop.PodmanDesktop';
   mockConversion('{}');
 
-  // Preserve the native promise result shape without a custom module factory.
-  Object.assign(execFile, { [promisify.custom]: convertPlist });
+  vi.mocked(promisify).mockReturnValue(convertPlist);
   configuration = new MacManagedConfiguration(directories);
 
   console.log = vi.fn();

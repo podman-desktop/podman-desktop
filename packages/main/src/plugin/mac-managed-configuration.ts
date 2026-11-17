@@ -31,6 +31,10 @@ import { Directories } from './directories.js';
 import type { ManagedConfiguration } from './managed-configuration.js';
 import type { ManagedSettings } from './managed-settings.js';
 
+interface ManagedPreferences extends Record<string, unknown> {
+  [CONFIGURATION_LOCKED_KEY]?: string[];
+}
+
 /**
  * Device plists use default-settings.json keys plus the locked.json array.
  * Per-user plists use settings.json keys and cannot add locks.
@@ -66,7 +70,7 @@ export class MacManagedConfiguration implements ManagedConfiguration {
       console.error('[Managed-by]: Failed to read per-user managed preferences:', error);
     }
 
-    const locked = defaults[CONFIGURATION_LOCKED_KEY] as string[] | undefined;
+    const locked = defaults[CONFIGURATION_LOCKED_KEY];
 
     // Locks belong to the device policy, never to user settings.
     delete defaults[CONFIGURATION_LOCKED_KEY];
@@ -75,22 +79,14 @@ export class MacManagedConfiguration implements ManagedConfiguration {
     return { defaults, user, locked: locked ?? [] };
   }
 
-  private async readPreferences(filename: string): Promise<Record<string, unknown>> {
+  private async readPreferences(filename: string): Promise<ManagedPreferences> {
     try {
       await access(filename);
 
       // The native converter supports XML and binary plists.
       const { stdout } = await this.execFileAsync(this.plutilPath, ['-convert', 'json', '-o', '-', filename]);
-      const content: unknown = JSON.parse(stdout);
-      if (!content || typeof content !== 'object' || Array.isArray(content)) {
-        throw new Error('Managed preferences must contain a dictionary');
-      }
-
-      const preferences = content as Record<string, unknown>;
-      const locked = preferences[CONFIGURATION_LOCKED_KEY];
-      if (locked !== undefined && (!Array.isArray(locked) || !locked.every(key => typeof key === 'string'))) {
-        throw new Error('Managed preference locks must contain an array of strings');
-      }
+      const preferences: unknown = JSON.parse(stdout);
+      this.validatePreferences(preferences);
 
       console.log(`[Managed-by]: Loaded managed preferences from: ${filename}`);
       return preferences;
@@ -101,6 +97,18 @@ export class MacManagedConfiguration implements ManagedConfiguration {
 
       console.error(`[Managed-by]: Failed to read managed preferences from ${filename}:`, error);
       return {};
+    }
+  }
+
+  // Preserve the lock type after runtime validation.
+  private validatePreferences(content: unknown): asserts content is ManagedPreferences {
+    if (!content || typeof content !== 'object' || Array.isArray(content)) {
+      throw new Error('Managed preferences must contain a dictionary');
+    }
+
+    const locked = CONFIGURATION_LOCKED_KEY in content ? content[CONFIGURATION_LOCKED_KEY] : undefined;
+    if (locked !== undefined && (!Array.isArray(locked) || !locked.every(key => typeof key === 'string'))) {
+      throw new Error('Managed preference locks must contain an array of strings');
     }
   }
 }
