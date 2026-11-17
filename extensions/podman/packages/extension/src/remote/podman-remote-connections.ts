@@ -161,7 +161,7 @@ export class PodmanRemoteConnections {
         }
 
         sshTunnel = this.createTunnel(host, port, username, privateKey, remotePath, localPath);
-        sshTunnel.connect();
+        await sshTunnel.connect();
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 

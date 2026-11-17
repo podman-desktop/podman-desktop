@@ -16,25 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { createHash } from 'node:crypto';
-import { link, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { createHmac } from 'node:crypto';
+import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { isIP } from 'node:net';
-import { join } from 'node:path';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
 
-import type { ExtensionContext } from '@podman-desktop/api';
-import { window } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
-import type { Client, ConnectConfig, HostVerifier } from 'ssh2';
+import { injectable } from 'inversify';
+import { type ConnectConfig, type HostVerifier, type ServerHostKeyAlgorithm, utils } from 'ssh2';
 
-import { ExtensionContextSymbol } from '/@/inject/symbols';
+interface KnownHost {
+  hosts: string;
+  type: string;
+  key: Buffer;
+  marker?: string;
+}
 
 @injectable()
 export class SshHostKeyStore {
-  private static readonly TRUST = 'Trust and Save';
-  private static readonly HANDSHAKE_TIMEOUT = 20000;
-  readonly #pending = new Map<string, { fingerprint: string; result: Promise<boolean> }>();
+  #pending: Promise<void> = Promise.resolve();
 
-  constructor(@inject(ExtensionContextSymbol) private readonly extensionContext: ExtensionContext) {}
+  protected getKnownHostsPath(): string {
+    return join(homedir(), '.ssh', 'known_hosts');
+  }
 
   protected isLocalhost(host: string): boolean {
     const hostname = host.toLowerCase().replace(/^\[|\]$/g, '');
@@ -46,83 +50,44 @@ export class SshHostKeyStore {
     );
   }
 
-  getConnectionConfig(
-    client: Client,
+  async getConnectionConfig(
     host: string,
     port: number,
     onRejected: (error: Error) => void,
-  ): Pick<ConnectConfig, 'readyTimeout'> & { hostVerifier?: HostVerifier } {
+  ): Promise<Pick<ConnectConfig, 'algorithms'> & { hostVerifier?: HostVerifier }> {
     if (this.isLocalhost(host)) {
       return {};
     }
-    return this.withHostVerificationTimeout(client, this.createVerifier(host, port, onRejected));
-  }
-
-  protected withHostVerificationTimeout(
-    client: Client,
-    verifier: HostVerifier,
-  ): { readyTimeout: number; hostVerifier: HostVerifier } {
-    let finished = false;
-    let ready = false;
-    let timeout: NodeJS.Timeout | undefined;
-    const clear = (): void => {
-      clearTimeout(timeout);
-      timeout = undefined;
-    };
-    const start = (): void => {
-      clear();
-      timeout = setTimeout(() => {
-        client.emit('error', new Error('Timed out while waiting for SSH handshake or authentication.'));
-        client.destroy();
-      }, SshHostKeyStore.HANDSHAKE_TIMEOUT);
-      timeout.unref();
-    };
-    const finish = (): void => {
-      finished = true;
-      clear();
-    };
-    client
-      .once('ready', () => {
-        ready = true;
-        clear();
-      })
-      .once('error', finish)
-      .once('close', finish)
-      .once('end', finish);
-    start();
+    const endpoint = this.getEndpoint(host, port);
+    const known = await this.readKnownHosts();
+    const types = known
+      .filter(entry => !entry.marker && this.matchesHost(entry.hosts, endpoint))
+      .flatMap((entry): ServerHostKeyAlgorithm[] => {
+        switch (entry.type) {
+          case 'ssh-rsa':
+            return ['rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa'];
+          case 'ssh-ed25519':
+          case 'ecdsa-sha2-nistp256':
+          case 'ecdsa-sha2-nistp384':
+          case 'ecdsa-sha2-nistp521':
+          case 'ssh-dss':
+            return [entry.type];
+          default:
+            return [];
+        }
+      });
     return {
-      // ssh2's built-in timeout cannot be paused while the user verifies a fingerprint.
-      readyTimeout: 0,
+      // Prefer keys already recorded for servers offering several host-key algorithms, like the Podman CLI.
+      algorithms: types.length ? { serverHostKey: [...new Set(types)] } : undefined,
       hostVerifier: (key, callback): void => {
-        clear();
-        verifier(key, trusted => {
-          if (finished) {
+        this.verify(host, port, key).then(
+          trusted => callback(trusted),
+          (error: unknown) => {
+            onRejected(error instanceof Error ? error : new Error(String(error)));
             callback(false);
-            return;
-          }
-          if (trusted && !ready) {
-            start();
-          }
-          callback(trusted);
-        });
+          },
+        );
       },
-    };
-  }
-
-  protected createVerifier(host: string, port: number, onRejected: (error: Error) => void): HostVerifier {
-    return (key, callback): void => {
-      this.verify(host, port, key).then(
-        trusted => {
-          if (!trusted) {
-            onRejected(new Error(`SSH host key approval declined for \`[${host}]:${port}\`.`));
-          }
-          callback(trusted);
-        },
-        (error: unknown) => {
-          onRejected(error instanceof Error ? error : new Error(String(error)));
-          callback(false);
-        },
-      );
     };
   }
 
@@ -130,144 +95,101 @@ export class SshHostKeyStore {
     if (this.isLocalhost(host)) {
       return true;
     }
-    if (!this.extensionContext.storagePath) {
-      throw new Error('Cannot verify SSH host key: Podman extension storage is unavailable.');
-    }
-    const endpoint = `[${host.toLowerCase()}]:${port}`;
-    const directory = join(this.extensionContext.storagePath, 'ssh-host-keys');
-    const file = this.getPinPath(host, port);
-    const fingerprint = this.getFingerprint(key);
-    const existing = this.#pending.get(file);
-    if (existing) {
-      if (existing.fingerprint === fingerprint) {
-        return existing.result;
-      }
-      await Promise.allSettled([existing.result]);
-      return this.verify(host, port, key);
-    }
-    const result = this.verifyAndSave(endpoint, directory, file, fingerprint);
-    this.#pending.set(file, { fingerprint, result });
-    try {
-      return await result;
-    } finally {
-      this.#pending.delete(file);
-    }
-  }
-
-  private async verifyAndSave(
-    endpoint: string,
-    directory: string,
-    file: string,
-    fingerprint: string,
-  ): Promise<boolean> {
-    const saved = await this.readSavedPin(file);
-    if (saved !== undefined) {
-      this.assertFingerprint(endpoint, file, saved, fingerprint);
-      return true;
-    }
-    const approval = await window.showWarningMessage(
-      `The SSH server \`${endpoint}\` is not yet trusted. Host key fingerprint: \`${fingerprint}\`. ` +
-        'Verify this fingerprint with the server administrator through a trusted channel before approving.',
-      'Cancel',
-      SshHostKeyStore.TRUST,
+    // Serialize read/append operations so simultaneous first connections cannot save conflicting keys.
+    const result = this.#pending.then(() => this.verifyAndSave(this.getEndpoint(host, port), key));
+    this.#pending = result.then(
+      () => undefined,
+      () => undefined,
     );
-    if (approval !== SshHostKeyStore.TRUST) {
-      return false;
-    }
-    await mkdir(directory, { recursive: true, mode: 0o700 });
-    const temporaryDirectory = await mkdtemp(join(directory, '.pending-'));
-    const temporaryFile = join(temporaryDirectory, 'pin');
-    try {
-      await writeFile(temporaryFile, fingerprint, { flag: 'wx', mode: 0o600, flush: true });
-      // Publish a complete pin atomically, without replacing an existing one.
-      try {
-        await link(temporaryFile, file);
-      } catch (error) {
-        if (this.isUnsupportedHardLink(error)) {
-          await this.publishPinWithDirectoryRename(directory, file, endpoint, fingerprint);
-        } else if (this.isPinAlreadyExists(error)) {
-          this.assertFingerprint(endpoint, file, await this.readSavedPin(file), fingerprint);
-        } else {
-          throw error;
-        }
-      }
-    } finally {
-      await rm(temporaryDirectory, { recursive: true, force: true });
-    }
-    return true;
+    return result;
   }
 
-  private async readSavedPin(file: string): Promise<string | undefined> {
-    let stats: Awaited<ReturnType<typeof lstat>>;
+  private getEndpoint(host: string, port: number): string {
+    const hostname = host.toLowerCase().replace(/^\[|\]$/g, '');
+    return port === 22 ? hostname : `[${hostname}]:${port}`;
+  }
+
+  private async readKnownHosts(): Promise<KnownHost[]> {
+    let content: string;
+    const file = this.getKnownHostsPath();
     try {
-      stats = await lstat(file);
+      content = await readFile(file, 'utf8');
     } catch (error) {
-      if (this.isErrorCode(error, 'ENOENT')) {
-        return undefined;
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        return [];
       }
       throw error;
     }
-    return stats.isDirectory() ? readFile(join(file, 'fingerprint'), 'utf8') : readFile(file, 'utf8');
-  }
-
-  private async publishPinWithDirectoryRename(
-    directory: string,
-    file: string,
-    endpoint: string,
-    fingerprint: string,
-  ): Promise<void> {
-    const temporaryDirectory = await mkdtemp(join(directory, '.pending-pin-'));
-    try {
-      await writeFile(join(temporaryDirectory, 'fingerprint'), fingerprint, {
-        flag: 'wx',
-        mode: 0o600,
-        flush: true,
-      });
-      try {
-        // Same-filesystem directory rename atomically publishes the complete pin without hard links.
-        await rename(temporaryDirectory, file);
-      } catch (error) {
-        if (!this.isPinAlreadyExists(error)) {
-          throw error;
-        }
-        this.assertFingerprint(endpoint, file, await this.readSavedPin(file), fingerprint);
+    return content.split(/\r?\n/).flatMap((line, index) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) {
+        return [];
       }
-    } finally {
-      await rm(temporaryDirectory, { recursive: true, force: true });
-    }
+      const fields = trimmed.split(/\s+/);
+      const marker = fields[0]?.startsWith('@') ? fields.shift() : undefined;
+      const [hosts, type, encoded] = fields;
+      if (!hosts || !type || !encoded || (marker && !['@revoked', '@cert-authority'].includes(marker))) {
+        throw new Error(`Invalid SSH known_hosts entry at ${file}:${index + 1}`);
+      }
+      const parsed = utils.parseKey(`${type} ${encoded}`);
+      if (parsed instanceof Error || parsed.type !== type) {
+        throw new Error(`Invalid SSH host key at ${file}:${index + 1}`);
+      }
+      return [{ hosts, type, key: parsed.getPublicSSH(), marker }];
+    });
   }
 
-  private isUnsupportedHardLink(error: unknown): boolean {
-    return ['ENOSYS', 'ENOTSUP', 'EOPNOTSUPP', 'EPERM'].some(code => this.isErrorCode(error, code));
-  }
-
-  private isPinAlreadyExists(error: unknown): boolean {
-    return ['EEXIST', 'ENOTEMPTY', 'ENOTDIR'].some(code => this.isErrorCode(error, code));
-  }
-
-  private isErrorCode(error: unknown, code: string): boolean {
-    return error instanceof Error && 'code' in error && error.code === code;
-  }
-
-  protected getFingerprint(key: Buffer): string {
-    return `SHA256:${createHash('sha256').update(key).digest('base64').replace(/=+$/, '')}`;
-  }
-
-  protected getPinPath(host: string, port: number): string {
-    const endpoint = `[${host.toLowerCase()}]:${port}`;
-    return join(
-      this.extensionContext.storagePath,
-      'ssh-host-keys',
-      createHash('sha256').update(endpoint).digest('hex'),
-    );
-  }
-
-  private assertFingerprint(endpoint: string, file: string, saved: string | undefined, fingerprint: string): void {
-    if (saved !== fingerprint) {
-      throw new Error(
-        `SSH host key changed for \`${endpoint}\`. Connection refused. Expected \`${saved}\`, received \`${fingerprint}\`. ` +
-          `Verify the server key with its administrator before removing the saved pin at \`${file}\`.`,
+  private matchesHost(hosts: string, endpoint: string): boolean {
+    if (hosts.startsWith('|1|')) {
+      const [, , salt, hash] = hosts.split('|');
+      return (
+        !!salt && !!hash && createHmac('sha1', Buffer.from(salt, 'base64')).update(endpoint).digest('base64') === hash
       );
     }
+    let matched = false;
+    for (const host of hosts.split(',')) {
+      const negated = host.startsWith('!');
+      const pattern = (negated ? host.slice(1) : host)
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '.*')
+        .replace(/\?/g, '.');
+      if (new RegExp(`^${pattern}$`, 'i').test(endpoint)) {
+        if (negated) {
+          return false;
+        }
+        matched = true;
+      }
+    }
+    return matched;
+  }
+
+  private async verifyAndSave(endpoint: string, key: Buffer): Promise<boolean> {
+    const known = await this.readKnownHosts();
+    const matches = known.filter(entry => this.matchesHost(entry.hosts, endpoint));
+    if (known.some(entry => entry.marker === '@revoked' && entry.key.equals(key))) {
+      throw new Error(`SSH host key revoked for \`${endpoint}\`. Connection refused.`);
+    }
+    const keys = matches.filter(entry => !entry.marker);
+    if (keys.some(entry => entry.key.equals(key))) {
+      return true;
+    }
+    if (keys.length || matches.some(entry => entry.marker === '@cert-authority')) {
+      throw new Error(
+        `SSH host key changed for \`${endpoint}\`. Connection refused. ` +
+          `Verify the server key with its administrator before updating \`${this.getKnownHostsPath()}\`.`,
+      );
+    }
+    if (key.length < 4 || key.readUInt32BE(0) > key.length - 4) {
+      throw new Error('Invalid SSH server host key.');
+    }
+    const type = key.subarray(4, 4 + key.readUInt32BE(0)).toString();
+    const parsed = utils.parseKey(`${type} ${key.toString('base64')}`);
+    if (parsed instanceof Error) {
+      throw parsed;
+    }
+    const file = this.getKnownHostsPath();
+    await mkdir(dirname(file), { recursive: true, mode: 0o700 });
+    await appendFile(file, `\n${endpoint} ${parsed.type} ${key.toString('base64')}\n`, { mode: 0o600 });
+    return true;
   }
 }

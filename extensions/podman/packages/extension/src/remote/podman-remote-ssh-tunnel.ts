@@ -112,7 +112,7 @@ export class PodmanRemoteSshTunnel {
     return this.#status;
   }
 
-  connect(): void {
+  async connect(): Promise<void> {
     this.#reconnect = true;
     this.#listening = false;
     this.#client = new Client();
@@ -120,68 +120,80 @@ export class PodmanRemoteSshTunnel {
       this.#resolveConnected = resolve;
     });
 
-    const verificationConfig = this.sshHostKeyStore.getConnectionConfig(this.#client, this.host, this.port, error => {
+    const client = this.#client;
+    const onRejected = (error: Error): void => {
+      if (this.#client !== client || !this.#reconnect) {
+        return;
+      }
       this.#resolveConnected(false);
       this.disconnect();
       console.error('SSH host key verification failed:', error);
       window.showErrorMessage(error.message).catch((notificationError: unknown) => {
         console.error('Unable to display SSH host key verification error:', notificationError);
       });
-    });
-    this.#client
-      .on('ready', () => {
-        this.#status = 'started';
+    };
+    let verificationConfig: Awaited<ReturnType<SshHostKeyStore['getConnectionConfig']>>;
+    try {
+      verificationConfig = await this.sshHostKeyStore.getConnectionConfig(this.host, this.port, onRejected);
+    } catch (error) {
+      onRejected(error instanceof Error ? error : new Error(String(error)));
+      return;
+    }
+    if (!this.#reconnect || this.#client !== client) {
+      return;
+    }
+    client.on('ready', () => {
+      this.#status = 'started';
 
-        this.#resolveConnected(true);
+      this.#resolveConnected(true);
 
-        // Create a local server to listen on the local file socket
-        this.#server = net.createServer(localSocket => {
-          // Create a connection to the remote socket via SSH
-          this.#client?.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
-            if (err) {
-              localSocket.end();
-              return;
-            }
+      // Create a local server to listen on the local file socket
+      this.#server = net.createServer(localSocket => {
+        // Create a connection to the remote socket via SSH
+        this.#client?.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
+          if (err) {
+            localSocket.end();
+            return;
+          }
 
-            // Forward data from local to remote
-            localSocket.on('data', data => {
-              remoteSocket.write(data);
-            });
-
-            // Forward data from remote to local
-            remoteSocket.on('data', (data: string | Uint8Array) => {
-              localSocket.write(data);
-            });
-
-            // Handle local socket close
-            localSocket.on('close', () => {
-              remoteSocket.end();
-            });
-
-            // Handle remote socket close
-            remoteSocket.on('close', () => {
-              localSocket.end();
-            });
-
-            // Handle local socket error
-            this.registerSocketErrorHandler(localSocket, remoteSocket, 'local');
-
-            // Handle remote socket error
-            this.registerSocketErrorHandler(remoteSocket, localSocket, 'remote');
+          // Forward data from local to remote
+          localSocket.on('data', data => {
+            remoteSocket.write(data);
           });
-        });
 
-        // Listen on the local file socket
-        this.#server.listen(this.localPath, () => {
-          this.#listening = true;
-        });
+          // Forward data from remote to local
+          remoteSocket.on('data', (data: string | Uint8Array) => {
+            localSocket.write(data);
+          });
 
-        // Handle server error
-        this.#server.on('error', err => {
-          console.error('Server error:', err);
+          // Handle local socket close
+          localSocket.on('close', () => {
+            remoteSocket.end();
+          });
+
+          // Handle remote socket close
+          remoteSocket.on('close', () => {
+            localSocket.end();
+          });
+
+          // Handle local socket error
+          this.registerSocketErrorHandler(localSocket, remoteSocket, 'local');
+
+          // Handle remote socket error
+          this.registerSocketErrorHandler(remoteSocket, localSocket, 'remote');
         });
-      })
-      .connect({ ...this.#sshConfig, ...verificationConfig });
+      });
+
+      // Listen on the local file socket
+      this.#server.listen(this.localPath, () => {
+        this.#listening = true;
+      });
+
+      // Handle server error
+      this.#server.on('error', err => {
+        console.error('Server error:', err);
+      });
+    });
 
     this.#client.on('error', err => {
       console.error('SSH connection error:', err);
@@ -198,6 +210,7 @@ export class PodmanRemoteSshTunnel {
       this.#status = 'stopped';
       this.handleReconnect();
     });
+    client.connect({ ...this.#sshConfig, ...verificationConfig });
   }
 
   handleReconnect(): void {
@@ -205,7 +218,9 @@ export class PodmanRemoteSshTunnel {
     if (this.#reconnect && !this.#reconnectTimeout) {
       this.#reconnectTimeout = setTimeout(() => {
         this.#reconnectTimeout = undefined;
-        this.connect();
+        this.connect().catch((error: unknown) => {
+          console.error('SSH reconnection failed:', error);
+        });
       }, 30000);
     }
   }

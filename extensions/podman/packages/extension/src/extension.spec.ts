@@ -302,9 +302,7 @@ beforeEach(async () => {
         case PodmanProvider:
           return PODMAN_PROVIDER_MOCK;
         case SshHostKeyStore:
-          sshHostKeyStore ??= new SshHostKeyStore({
-            storagePath: '/extension-storage',
-          } as extensionApi.ExtensionContext);
+          sshHostKeyStore ??= new SshHostKeyStore();
           return sshHostKeyStore;
         case RosettaProvisioner:
           return ROSETTA_PROVISIONER_MOCK;

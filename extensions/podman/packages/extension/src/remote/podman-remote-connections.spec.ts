@@ -27,7 +27,7 @@ import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 const extensionContext = {} as extensionApi.ExtensionContext;
 
 const provider = {} as extensionApi.Provider;
-const sshHostKeyStore = new SshHostKeyStore(extensionContext);
+const sshHostKeyStore = new SshHostKeyStore();
 vi.mock(import('/@/utils/ssh-host-key-store'));
 vi.mock(import('./podman-remote-ssh-tunnel'));
 

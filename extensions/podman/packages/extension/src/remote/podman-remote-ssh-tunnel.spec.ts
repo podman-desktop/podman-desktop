@@ -16,14 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as net from 'node:net';
 import { EventEmitter } from 'node:events';
-import { rm } from 'node:fs/promises';
-import { type AddressInfo, createConnection, createServer } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import * as net from 'node:net';
 
-import type { ExtensionContext } from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
 import { Client, type ConnectConfig } from 'ssh2';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -62,7 +57,7 @@ beforeEach(() => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
   vi.resetAllMocks();
-  store = new SshHostKeyStore({} as ExtensionContext);
+  store = new SshHostKeyStore();
   client = new Client();
   server = new net.Server();
   events = new Map();
@@ -81,18 +76,19 @@ beforeEach(() => {
     if (typeof callback === 'function') callback();
     return this;
   });
-  vi.mocked(store.getConnectionConfig).mockImplementation((_client, _host, _port, onRejected) => {
+  vi.mocked(store.getConnectionConfig).mockImplementation(async (_host, _port, onRejected) => {
     rejected = onRejected;
-    return { hostVerifier, readyTimeout: 0 };
+    return { hostVerifier };
   });
   vi.mocked(window.showErrorMessage).mockResolvedValue(undefined);
   tunnel = new TestPodmanRemoteSshTunnel('remote.example', 22, 'user', 'key', '/remote.sock', '/local.sock', store);
 });
 
-test('uses the injected singleton to configure verification before authentication', () => {
-  tunnel.connect();
-  expect(store.getConnectionConfig).toHaveBeenCalledWith(client, 'remote.example', 22, expect.any(Function));
-  expect(client.connect).toHaveBeenCalledWith(expect.objectContaining({ hostVerifier, readyTimeout: 0 }));
+test('uses the injected singleton to configure verification before authentication', async () => {
+  await tunnel.connect();
+  expect(store.getConnectionConfig).toHaveBeenCalledWith('remote.example', 22, expect.any(Function));
+  expect(client.connect).toHaveBeenCalledWith(expect.objectContaining({ hostVerifier }));
+  expect(vi.mocked(client.connect).mock.lastCall?.[0]).not.toHaveProperty('readyTimeout');
   expect(net.createServer).not.toHaveBeenCalled();
 });
 
@@ -101,7 +97,7 @@ test('allows OpenSSH extensions on servers with a non-OpenSSH identifier', () =>
 });
 
 test('creates the listener only when the SSH client is ready', async () => {
-  tunnel.connect();
+  await tunnel.connect();
   events.get('ready')?.();
   await expect(tunnel.isConnected()).resolves.toBe(true);
   expect(tunnel.isListening()).toBe(true);
@@ -110,10 +106,10 @@ test('creates the listener only when the SSH client is ready', async () => {
 });
 
 test('host-key rejection closes the old listener and prevents retries', async () => {
-  tunnel.connect();
+  await tunnel.connect();
   events.get('ready')?.();
   expect(tunnel.isListening()).toBe(true);
-  tunnel.connect();
+  await tunnel.connect();
   vi.useFakeTimers();
   tunnel.handleReconnect();
   rejected?.(new Error('SSH host key changed'));
@@ -129,7 +125,7 @@ test('host-key rejection closes the old listener and prevents retries', async ()
 
 test('host-key rejection cancels a reconnect timer that was already pending', async () => {
   vi.useFakeTimers();
-  tunnel.connect();
+  await tunnel.connect();
   tunnel.handleReconnect();
   expect(vi.getTimerCount()).toBe(1);
   rejected?.(new Error('SSH host key changed'));
@@ -138,20 +134,37 @@ test('host-key rejection cancels a reconnect timer that was already pending', as
   expect(client.connect).toHaveBeenCalledOnce();
 });
 
-test('disconnect clears a pending reconnect', () => {
+test('disconnect clears a pending reconnect', async () => {
   vi.useFakeTimers();
-  tunnel.connect();
+  await tunnel.connect();
   tunnel.handleReconnect();
   tunnel.disconnect();
   vi.advanceTimersByTime(30000);
   expect(client.connect).toHaveBeenCalledOnce();
 });
 
-test('does not add a verifier or alter timeouts for a localhost tunnel', () => {
-  vi.mocked(store.getConnectionConfig).mockReturnValue({});
+test('does not connect after disconnecting while known_hosts is being read', async () => {
+  const connecting = tunnel.connect();
+  tunnel.disconnect();
+  await connecting;
+  expect(client.connect).not.toHaveBeenCalled();
+});
+
+test('surfaces known_hosts read failures without connecting or retrying', async () => {
+  vi.useFakeTimers();
+  vi.mocked(store.getConnectionConfig).mockRejectedValue(new Error('Cannot read known_hosts'));
+  await tunnel.connect();
+  await expect(tunnel.isConnected()).resolves.toBe(false);
+  expect(window.showErrorMessage).toHaveBeenCalledWith('Cannot read known_hosts');
+  expect(client.connect).not.toHaveBeenCalled();
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+test('does not add a verifier or alter timeouts for a localhost tunnel', async () => {
+  vi.mocked(store.getConnectionConfig).mockResolvedValue({});
   const local = new TestPodmanRemoteSshTunnel('localhost', 22, 'user', 'key', '/remote.sock', '/local.sock', store);
-  local.connect();
-  expect(store.getConnectionConfig).toHaveBeenCalledWith(client, 'localhost', 22, expect.any(Function));
+  await local.connect();
+  expect(store.getConnectionConfig).toHaveBeenCalledWith('localhost', 22, expect.any(Function));
   const config = vi.mocked(client.connect).mock.lastCall?.[0];
   expect(config?.hostVerifier).toBeUndefined();
   expect(config?.readyTimeout).toBeUndefined();
@@ -165,7 +178,16 @@ test('uses the private key instead of the ssh-agent', () => {
 
 test('logs safe configuration when either tunnel socket emits an error', () => {
   const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-  const tunnel = new TestPodmanRemoteSshTunnel('localhost', 22, 'foo', dummyKey, '/tmp/remote.sock', '/tmp/local.sock');
+  const privateKey = 'test-private-key';
+  const tunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    privateKey,
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+    store,
+  );
   tunnel.getSshConfig().password = 'test-password';
   tunnel.getSshConfig().passphrase = 'test-passphrase';
   const localSocket = new EventEmitter();
@@ -195,7 +217,7 @@ test('logs safe configuration when either tunnel socket emits an error', () => {
   expect(logSpy).toHaveBeenCalledTimes(2);
   expect(localEnd).toHaveBeenCalledOnce();
   expect(remoteEnd).toHaveBeenCalledOnce();
-  expect(logSpy.mock.calls.flat().join(' ')).not.toContain(dummyKey);
+  expect(logSpy.mock.calls.flat().join(' ')).not.toContain(privateKey);
 });
 
 test('should use the provided private key over the ssh-agent', () => {
@@ -206,6 +228,7 @@ test('should use the provided private key over the ssh-agent', () => {
     'my-private-key',
     '/tmp/remote.sock',
     '/tmp/local.sock',
+    store,
   );
   const config = tunnel.getSshConfig();
   expect(config.privateKey).toBe('my-private-key');

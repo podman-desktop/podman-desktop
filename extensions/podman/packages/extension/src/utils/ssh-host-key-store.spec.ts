@@ -16,326 +16,191 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { createHmac } from 'node:crypto';
 import * as fs from 'node:fs/promises';
+import type { AddressInfo } from 'node:net';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import type { ExtensionContext } from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
-import { Client } from 'ssh2';
+import { Client, Server } from 'ssh2';
+import { generatePrivateKey } from 'sshpk';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { SshHostKeyStore } from './ssh-host-key-store';
 
 vi.mock(import('node:fs/promises'));
-vi.mock(import('ssh2'));
 
-class TestSshHostKeyStore extends SshHostKeyStore {
-  getFingerprint(key: Buffer): string {
-    return super.getFingerprint(key);
-  }
-
-  getPinPath(host: string, port: number): string {
-    return super.getPinPath(host, port);
-  }
-}
-
-const key = Buffer.from('server public key');
-const context = { storagePath: '/extension-storage' } as ExtensionContext;
-let store: TestSshHostKeyStore;
-let client: Client;
-let events: Map<string, () => void>;
+const privateKey = generatePrivateKey('ed25519');
+const key = privateKey.toPublic().toBuffer('rfc4253');
+const otherKey = generatePrivateKey('ed25519').toPublic().toBuffer('rfc4253');
+const publicKey = `ssh-ed25519 ${key.toString('base64')}`;
+const otherPublicKey = `ssh-ed25519 ${otherKey.toString('base64')}`;
+const knownHostsPath = join(homedir(), '.ssh', 'known_hosts');
+let store: SshHostKeyStore;
+let contents: string | undefined;
 
 beforeEach(() => {
-  vi.useRealTimers();
   vi.resetAllMocks();
-  store = new TestSshHostKeyStore(context);
-  client = new Client();
-  events = new Map();
-  vi.mocked(client.once).mockImplementation(function (
-    this: Client,
-    event: string,
-    listener: (...args: never[]) => void,
-  ) {
-    events.set(event, listener);
-    return this;
-  });
-  vi.mocked(fs.lstat).mockRejectedValue(Object.assign(new Error('Not found'), { code: 'ENOENT' }));
-  vi.mocked(fs.readFile).mockRejectedValue(Object.assign(new Error('Not found'), { code: 'ENOENT' }));
-  vi.mocked(fs.mkdtemp).mockImplementation(async prefix => `${prefix}test`);
-  vi.mocked(window.showWarningMessage).mockResolvedValue('Trust and Save');
-});
-
-test('requires explicit approval and publishes a complete fingerprint without overwriting a pin', async () => {
-  const fingerprint = store.getFingerprint(key);
-  await expect(store.verify('server', 22, key)).resolves.toBe(true);
-  expect(window.showWarningMessage).toHaveBeenCalledWith(
-    expect.stringContaining(`\`[server]:22\` is not yet trusted. Host key fingerprint: \`${fingerprint}\``),
-    'Cancel',
-    'Trust and Save',
-  );
-  expect(fs.writeFile).toHaveBeenCalledWith('/extension-storage/ssh-host-keys/.pending-test/pin', fingerprint, {
-    flag: 'wx',
-    mode: 0o600,
-    flush: true,
-  });
-  expect(fs.link).toHaveBeenCalledWith(
-    '/extension-storage/ssh-host-keys/.pending-test/pin',
-    store.getPinPath('server', 22),
-  );
-  expect(vi.mocked(fs.writeFile).mock.invocationCallOrder[0]).toBeLessThan(
-    vi.mocked(fs.link).mock.invocationCallOrder[0] ?? 0,
-  );
-  expect(fs.rm).toHaveBeenCalledWith('/extension-storage/ssh-host-keys/.pending-test', {
-    recursive: true,
-    force: true,
-  });
-});
-
-test.each(['Cancel', undefined, 'unexpected'])('refuses unapproved keys (%s)', async approval => {
-  vi.mocked(window.showWarningMessage).mockResolvedValue(approval);
-  await expect(store.verify('server', 22, key)).resolves.toBe(false);
-  expect(fs.writeFile).not.toHaveBeenCalled();
-});
-
-test('accepts a saved fingerprint without prompting', async () => {
-  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
-  vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
-  await expect(store.verify('SERVER', 22, key)).resolves.toBe(true);
-  expect(fs.readFile).toHaveBeenCalledWith(store.getPinPath('server', 22), 'utf8');
-  expect(window.showWarningMessage).not.toHaveBeenCalled();
-});
-
-test('rejects changed keys without offering replacement', async () => {
-  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
-  vi.mocked(fs.readFile).mockResolvedValue('SHA256:old-key');
-  await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key changed');
-  expect(window.showWarningMessage).not.toHaveBeenCalled();
-  expect(fs.writeFile).not.toHaveBeenCalled();
-});
-
-test('pins independently by hostname and port', () => {
-  expect(store.getPinPath('server', 22)).not.toBe(store.getPinPath('other', 22));
-  expect(store.getPinPath('server', 22)).not.toBe(store.getPinPath('server', 2222));
-  expect(store.getPinPath('SERVER', 22)).toBe(store.getPinPath('server', 22));
-});
-
-test('deduplicates simultaneous prompts in the singleton', async () => {
-  await expect(Promise.all([store.verify('server', 22, key), store.verify('server', 22, key)])).resolves.toEqual([
-    true,
-    true,
-  ]);
-  expect(window.showWarningMessage).toHaveBeenCalledOnce();
-});
-
-test('rechecks a pinned key after a concurrent mismatch fails', async () => {
-  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
-  vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
-  const results = await Promise.allSettled([
-    store.verify('server', 22, Buffer.from('attacker')),
-    store.verify('server', 22, key),
-  ]);
-  expect(results[0]).toMatchObject({ status: 'rejected' });
-  expect(results[1]).toEqual({ status: 'fulfilled', value: true });
-});
-
-test.each([true, false])('accepts only an identical concurrently published pin (same: %s)', async same => {
-  vi.mocked(fs.link).mockRejectedValue(Object.assign(new Error('Exists'), { code: 'EEXIST' }));
-  let lstatCount = 0;
-  vi.mocked(fs.lstat).mockImplementation(async () => {
-    if (lstatCount++ === 0) {
+  store = new SshHostKeyStore();
+  contents = undefined;
+  vi.mocked(fs.readFile).mockImplementation(async () => {
+    if (contents === undefined) {
       throw Object.assign(new Error('Not found'), { code: 'ENOENT' });
     }
-    return { isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>;
+    return contents;
   });
-  vi.mocked(fs.readFile).mockImplementation(async () => (same ? store.getFingerprint(key) : 'SHA256:other-key'));
-  if (same) {
-    await expect(store.verify('server', 22, key)).resolves.toBe(true);
-  } else {
-    await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key changed');
-  }
-  expect(fs.rm).toHaveBeenCalled();
+  vi.mocked(fs.appendFile).mockImplementation(async (_file, data) => {
+    contents = (contents ?? '') + data;
+  });
 });
 
-test.each(['ENOTSUP', 'EOPNOTSUPP', 'EPERM'])(
-  'atomically publishes and subsequently reads a pin when hard links are unsupported (%s)',
-  async code => {
-    vi.mocked(fs.link).mockRejectedValue(Object.assign(new Error('Hard links unavailable'), { code }));
-    vi.mocked(fs.lstat).mockImplementation(async path => {
-      if (path === store.getPinPath('server', 22)) {
-        if (vi.mocked(fs.rename).mock.calls.length > 0) {
-          return { isDirectory: () => true } as Awaited<ReturnType<typeof fs.lstat>>;
-        }
-        throw Object.assign(new Error('Not found'), { code: 'ENOENT' });
-      }
-      return { isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>;
-    });
+test('automatically adds unknown hosts to the CLI known_hosts file without prompting', async () => {
+  await expect(store.verify('server', 22, key)).resolves.toBe(true);
+  expect(fs.mkdir).toHaveBeenCalledWith(join(homedir(), '.ssh'), { recursive: true, mode: 0o700 });
+  expect(fs.appendFile).toHaveBeenCalledWith(knownHostsPath, `\nserver ${publicKey}\n`, { mode: 0o600 });
+  expect(window.showWarningMessage).not.toHaveBeenCalled();
 
+  await expect(store.verify('server', 22, key)).resolves.toBe(true);
+  expect(fs.appendFile).toHaveBeenCalledOnce();
+});
+
+test.each([
+  ['server', 22, 'server'],
+  ['server', 2222, '[server]:2222'],
+  ['2001:db8::1', 22, '2001:db8::1'],
+  ['[2001:db8::1]', 2222, '[2001:db8::1]:2222'],
+])('uses the OpenSSH endpoint format for %s:%s', async (host, port, endpoint) => {
+  await expect(store.verify(host, port, key)).resolves.toBe(true);
+  expect(contents).toBe(`\n${endpoint} ${publicKey}\n`);
+});
+
+test.each(['server', 'other,server', '*.example,server', 'ser?er', '!excluded,server'])(
+  'accepts existing known_hosts patterns (%s) and rejects changed keys',
+  async hosts => {
+    contents = `# Existing SSH hosts\r\n${hosts} ${publicKey} comment\r\n`;
     await expect(store.verify('server', 22, key)).resolves.toBe(true);
-    expect(fs.rename).toHaveBeenCalledWith(
-      '/extension-storage/ssh-host-keys/.pending-pin-test',
-      store.getPinPath('server', 22),
-    );
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      '/extension-storage/ssh-host-keys/.pending-pin-test/fingerprint',
-      store.getFingerprint(key),
-      { flag: 'wx', mode: 0o600, flush: true },
-    );
-    const writeCallOrder = vi.mocked(fs.writeFile).mock.invocationCallOrder;
-    expect(writeCallOrder[writeCallOrder.length - 1]).toBeLessThan(
-      vi.mocked(fs.rename).mock.invocationCallOrder[0] ?? 0,
-    );
-    vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
-    await expect(store.verify('server', 22, key)).resolves.toBe(true);
-    expect(fs.readFile).toHaveBeenCalledWith(join(store.getPinPath('server', 22), 'fingerprint'), 'utf8');
+    await expect(store.verify('server', 22, otherKey)).rejects.toThrow('SSH host key changed');
+    expect(fs.appendFile).not.toHaveBeenCalled();
   },
 );
 
-test('rejects a concurrently published different pin when hard links are unsupported', async () => {
-  vi.mocked(fs.link).mockRejectedValue(Object.assign(new Error('Hard links unavailable'), { code: 'ENOTSUP' }));
-  vi.mocked(fs.rename).mockRejectedValue(Object.assign(new Error('Pin already exists'), { code: 'ENOTEMPTY' }));
-  let lstatCount = 0;
-  vi.mocked(fs.lstat).mockImplementation(async path => {
-    if (path === store.getPinPath('server', 22)) {
-      if (lstatCount++ === 0) {
-        throw Object.assign(new Error('Not found'), { code: 'ENOENT' });
-      }
-      return { isDirectory: () => true } as Awaited<ReturnType<typeof fs.lstat>>;
-    }
-    return { isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>;
-  });
-  vi.mocked(fs.readFile).mockResolvedValue('SHA256:other-key');
-
-  await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key changed');
-  expect(fs.rm).toHaveBeenCalledWith('/extension-storage/ssh-host-keys/.pending-pin-test', {
-    recursive: true,
-    force: true,
-  });
+test('does not match excluded hosts or entries for another port', async () => {
+  contents = `!server,* ${otherPublicKey}\n[server]:2222 ${otherPublicKey}\n`;
+  await expect(store.verify('server', 22, key)).resolves.toBe(true);
+  expect(fs.appendFile).toHaveBeenCalledOnce();
 });
 
-test('does not publish a partially written pin', async () => {
-  vi.mocked(fs.writeFile).mockRejectedValue(new Error('Disk full'));
-  await expect(store.verify('server', 22, key)).rejects.toThrow('Disk full');
-  expect(fs.link).not.toHaveBeenCalled();
-  expect(fs.rm).toHaveBeenCalled();
+test.each([22, 2222])('checks hashed known_hosts entries for port %s', async port => {
+  const endpoint = port === 22 ? 'server' : `[server]:${port}`;
+  const salt = Buffer.from('known-hosts-test-salt');
+  const hash = createHmac('sha1', salt).update(endpoint).digest('base64');
+  contents = `|1|${salt.toString('base64')}|${hash} ${publicKey}\n`;
+  await expect(store.verify('server', port, key)).resolves.toBe(true);
+  await expect(store.verify('server', port, otherKey)).rejects.toThrow('SSH host key changed');
+  expect(fs.appendFile).not.toHaveBeenCalled();
 });
 
-test('fails closed on unreadable storage', async () => {
-  vi.mocked(fs.lstat).mockResolvedValue({ isDirectory: () => false } as Awaited<ReturnType<typeof fs.lstat>>);
-  vi.mocked(fs.readFile).mockRejectedValue(new Error('Permission denied'));
+test('accepts any recorded key but rejects revoked keys', async () => {
+  contents = `server ${publicKey}\nserver ${otherPublicKey}\n`;
+  await expect(store.verify('server', 22, key)).resolves.toBe(true);
+  await expect(store.verify('server', 22, otherKey)).resolves.toBe(true);
+  contents += `@revoked * ${publicKey}\n`;
+  await expect(store.verify('server', 22, key)).rejects.toThrow('SSH host key revoked');
+  expect(fs.appendFile).not.toHaveBeenCalled();
+});
+
+test('does not replace a certificate-authority entry with a newly trusted raw key', async () => {
+  contents = `@cert-authority server ${publicKey}\n`;
+  await expect(store.verify('server', 22, otherKey)).rejects.toThrow('Connection refused');
+  expect(fs.appendFile).not.toHaveBeenCalled();
+});
+
+test('serializes simultaneous first connections and rejects a conflicting key', async () => {
+  const results = await Promise.allSettled([
+    store.verify('server', 22, key),
+    store.verify('server', 22, otherKey),
+    store.verify('server', 22, key),
+  ]);
+  expect(results[0]).toEqual({ status: 'fulfilled', value: true });
+  expect(results[1]).toMatchObject({ status: 'rejected', reason: expect.any(Error) });
+  expect(results[2]).toEqual({ status: 'fulfilled', value: true });
+  expect(fs.appendFile).toHaveBeenCalledOnce();
+});
+
+test.each(['invalid entry', 'server ssh-ed25519 invalid', '@unknown server key data'])(
+  'fails closed on malformed known_hosts data (%s)',
+  async entry => {
+    contents = entry;
+    await expect(store.verify('server', 22, key)).rejects.toThrow('Invalid SSH');
+    expect(fs.appendFile).not.toHaveBeenCalled();
+  },
+);
+
+test('fails closed on unreadable known_hosts or failed writes', async () => {
+  vi.mocked(fs.readFile).mockRejectedValueOnce(new Error('Permission denied'));
   await expect(store.verify('server', 22, key)).rejects.toThrow('Permission denied');
-  expect(window.showWarningMessage).not.toHaveBeenCalled();
-});
-
-test('fails closed when approval fails', async () => {
-  vi.mocked(window.showWarningMessage).mockRejectedValue(new Error('Dialog failed'));
-  await expect(store.verify('server', 22, key)).rejects.toThrow('Dialog failed');
+  expect(fs.appendFile).not.toHaveBeenCalled();
+  vi.mocked(fs.appendFile).mockRejectedValueOnce(new Error('Disk full'));
+  await expect(store.verify('server', 22, key)).rejects.toThrow('Disk full');
 });
 
 test.each(['localhost', 'LOCALHOST', 'localhost.', '127.0.0.1', '127.99.0.2', '::1', '[::1]', '0:0:0:0:0:0:0:1'])(
-  'does not verify localhost endpoint %s or require storage',
+  'leaves localhost endpoint %s unchanged',
   async host => {
-    const localStore = new TestSshHostKeyStore({} as ExtensionContext);
-    expect(localStore.getConnectionConfig(client, host, 22, vi.fn())).toEqual({});
-    await expect(localStore.verify(host, 22, key)).resolves.toBe(true);
+    await expect(store.getConnectionConfig(host, 22, vi.fn())).resolves.toEqual({});
+    await expect(store.verify(host, 22, key)).resolves.toBe(true);
     expect(fs.readFile).not.toHaveBeenCalled();
-    expect(window.showWarningMessage).not.toHaveBeenCalled();
-    expect(client.once).not.toHaveBeenCalled();
+    expect(fs.appendFile).not.toHaveBeenCalled();
   },
 );
 
-test.each(['remote.example', 'localhost.example.com', '192.168.0.1', '128.0.0.1', '::2'])(
-  'requires verification for non-localhost endpoint %s',
-  host => {
-    const config = store.getConnectionConfig(client, host, 22, vi.fn());
-    expect(config.hostVerifier).toBeTypeOf('function');
-    expect(config.readyTimeout).toBe(0);
-    events.get('close')?.();
-  },
-);
+test('prefers recorded host-key algorithms and preserves the default handshake timeout', async () => {
+  contents = `server ${publicKey}\n`;
+  const config = await store.getConnectionConfig('server', 22, vi.fn());
+  expect(config.algorithms?.serverHostKey).toEqual(['ssh-ed25519']);
+  expect(config).not.toHaveProperty('readyTimeout');
+});
 
-test('reports rejection to ssh2 and the caller', async () => {
+test('reports verification failures to ssh2 and the tunnel', async () => {
+  contents = `server ${otherPublicKey}\n`;
   const rejected = vi.fn();
   const callback = vi.fn();
-  const config = store.getConnectionConfig(client, 'server', 22, rejected);
-  vi.mocked(window.showWarningMessage).mockResolvedValue(undefined);
-  // The configuration uses a raw-key asynchronous verifier, not a fingerprint overload.
-  if (!config.hostVerifier) throw new Error('Missing raw host verifier');
-  const verifier = config.hostVerifier;
-  verifier(key, callback);
+  const config = await store.getConnectionConfig('server', 22, rejected);
+  if (!config.hostVerifier) throw new Error('Missing host verifier');
+  config.hostVerifier(key, callback);
   await vi.waitFor(() => expect(callback).toHaveBeenCalledWith(false));
-  expect(rejected).toHaveBeenCalledWith(expect.any(Error));
-  events.get('close')?.();
+  expect(rejected).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('changed') }));
 });
 
-test('pauses the timeout while approval is pending and resumes after approval', async () => {
-  vi.useFakeTimers();
-  let approve: ((value: string) => void) | undefined;
-  vi.mocked(window.showWarningMessage).mockReturnValue(
-    new Promise(resolve => {
-      approve = resolve;
-    }),
-  );
-  const config = store.getConnectionConfig(client, 'server', 22, vi.fn());
-  const verifier = config.hostVerifier;
-  if (!verifier) throw new Error('Missing raw host verifier');
-  const callback = vi.fn();
-  verifier(key, callback);
-  await vi.advanceTimersByTimeAsync(60000);
-  expect(client.destroy).not.toHaveBeenCalled();
-  approve?.('Trust and Save');
-  await vi.advanceTimersByTimeAsync(0);
-  expect(callback).toHaveBeenCalledWith(true);
-  await vi.advanceTimersByTimeAsync(20000);
-  expect(client.emit).toHaveBeenCalledWith('error', expect.any(Error));
-  expect(client.destroy).toHaveBeenCalledOnce();
-});
-
-test('bounds handshake time before approval and clears the timer when ready', () => {
-  vi.useFakeTimers();
-  store.getConnectionConfig(client, 'server', 22, vi.fn());
-  vi.advanceTimersByTime(20000);
-  expect(client.destroy).toHaveBeenCalledOnce();
-  events.get('close')?.();
-  store.getConnectionConfig(client, 'server', 22, vi.fn());
-  events.get('ready')?.();
-  vi.advanceTimersByTime(20000);
-  expect(client.destroy).toHaveBeenCalledOnce();
-});
-
-test('does not resume a closed connection after approval', async () => {
-  vi.useFakeTimers();
-  let approve: ((value: string) => void) | undefined;
-  vi.mocked(window.showWarningMessage).mockReturnValue(
-    new Promise(resolve => {
-      approve = resolve;
-    }),
-  );
-  const config = store.getConnectionConfig(client, 'server', 22, vi.fn());
-  if (!config.hostVerifier) throw new Error('Missing raw host verifier');
-  const callback = vi.fn();
-  config.hostVerifier(key, callback);
-  await vi.advanceTimersByTimeAsync(0);
-  events.get('close')?.();
-  approve?.('Trust and Save');
-  await vi.advanceTimersByTimeAsync(0);
-  expect(callback).toHaveBeenCalledWith(false);
-  expect(vi.getTimerCount()).toBe(0);
-});
-
-test('verifies rekeying without restarting the handshake timer', async () => {
-  vi.useFakeTimers();
-  vi.mocked(fs.readFile).mockResolvedValue(store.getFingerprint(key));
-  const config = store.getConnectionConfig(client, 'server', 22, vi.fn());
-  if (!config.hostVerifier) throw new Error('Missing raw host verifier');
-  events.get('ready')?.();
-  const callback = vi.fn();
-  config.hostVerifier(key, callback);
-  await vi.advanceTimersByTimeAsync(0);
-  expect(callback).toHaveBeenCalledWith(true);
-  expect(vi.getTimerCount()).toBe(0);
-});
-
-test('reports unavailable remote trust storage rather than accepting the host', async () => {
-  const missingStorage = new TestSshHostKeyStore({} as ExtensionContext);
-  await expect(missingStorage.verify('server', 22, key)).rejects.toThrow('extension storage is unavailable');
+test.each([false, true])('verifies a multi-key SSH server before authenticating (changed: %s)', async changed => {
+  const authenticated = vi.fn();
+  const rejected = vi.fn();
+  const ecdsaKey = generatePrivateKey('ecdsa');
+  const server = new Server({ hostKeys: [privateKey.toString('ssh'), ecdsaKey.toString('ssh')] }, connection => {
+    connection.on('error', () => {});
+    connection.on('authentication', context => {
+      authenticated();
+      context.accept();
+    });
+  });
+  const client = new Client();
+  try {
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    const port = (server.address() as AddressInfo).port;
+    contents = `[server]:${port} ${changed ? otherPublicKey : ecdsaKey.toPublic().toString('ssh')}\n`;
+    const config = await store.getConnectionConfig('server', port, rejected);
+    const outcome = new Promise<string>(resolve => {
+      client.on('ready', () => resolve('ready'));
+      client.on('error', () => resolve('error'));
+    });
+    client.connect({ host: '127.0.0.1', port, username: 'test', ...config });
+    await expect(outcome).resolves.toBe(changed ? 'error' : 'ready');
+    expect(authenticated).toHaveBeenCalledTimes(changed ? 0 : 1);
+    expect(rejected).toHaveBeenCalledTimes(changed ? 1 : 0);
+    expect(fs.appendFile).not.toHaveBeenCalled();
+  } finally {
+    client.destroy();
+    await new Promise<void>(resolve => server.close(() => resolve()));
+  }
 });
