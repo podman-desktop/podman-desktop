@@ -61,14 +61,14 @@ beforeEach(() => {
 test('onMount should call isExperimentalConfigurationEnabled', async () => {
   render(StatusBar);
 
-  await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toBeCalledTimes(2));
+  await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toHaveBeenCalledTimes(2));
 
-  expect(window.isExperimentalConfigurationEnabled).nthCalledWith(
+  expect(window.isExperimentalConfigurationEnabled).toHaveBeenNthCalledWith(
     1,
     `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
   );
 
-  expect(window.isExperimentalConfigurationEnabled).nthCalledWith(2, `statusbarProviders.showProviders`);
+  expect(window.isExperimentalConfigurationEnabled).toHaveBeenNthCalledWith(2, `statusbarProviders.showProviders`);
 });
 
 test('tasks should be visible when isExperimentalConfigurationEnabled is true', async () => {
@@ -132,7 +132,7 @@ describe('providers', () => {
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
     render(StatusBar);
 
-    await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toBeCalledTimes(1));
+    await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toHaveBeenCalledTimes(1));
 
     expect(Providers).not.toHaveBeenCalled();
 
