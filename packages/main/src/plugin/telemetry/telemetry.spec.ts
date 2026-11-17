@@ -33,6 +33,7 @@ import type * as TelemetryJSON from '../../../../../telemetry.json';
 import type { CIDetection } from './ci-detection.js';
 import type { EventType } from './telemetry.js';
 import { Telemetry, TelemetryLoggerImpl } from './telemetry.js';
+import type { TelemetryEnvDetection } from './telemetry-env-detection.js';
 
 const getConfigurationMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();
@@ -58,6 +59,10 @@ const ciDetectionMock = {
   isCIEnvironment: vi.fn(),
 } as unknown as CIDetection;
 
+const telemetryEnvDetectionMock = {
+  isTelemetryDisabled: vi.fn(),
+} as unknown as TelemetryEnvDetection;
+
 vi.mock(
   import('../../../../../telemetry.json'),
   () =>
@@ -79,7 +84,13 @@ vi.mock(import('/@product.json'));
 
 class TelemetryTest extends Telemetry {
   constructor() {
-    super(configurationRegistryMock, defaultConfigurationMock, lockedConfigurationMock, ciDetectionMock);
+    super(
+      configurationRegistryMock,
+      defaultConfigurationMock,
+      lockedConfigurationMock,
+      ciDetectionMock,
+      telemetryEnvDetectionMock,
+    );
   }
   public getLastTimeEvents(): Map<string, number> {
     return this.lastTimeEvents;
@@ -134,6 +145,7 @@ beforeEach(() => {
     get: vi.fn(),
   });
   vi.mocked(ciDetectionMock.isCIEnvironment).mockReturnValue(false);
+  vi.mocked(telemetryEnvDetectionMock.isTelemetryDisabled).mockReturnValue(false);
 });
 
 afterEach(() => {
@@ -290,6 +302,61 @@ describe('CI environment', () => {
     expect(consoleWarnMock).not.toHaveBeenCalledWith(expect.stringContaining('CI environment detected'));
     // regular flow, the enterprise telemetry is loaded
     expect(defaultConfigurationMock.getTelemetryInfo).toHaveBeenCalled();
+  });
+});
+
+describe('Telemetry disabled through the environment', () => {
+  let consoleWarnMock: MockInstance<typeof console.warn>;
+
+  beforeEach(() => {
+    consoleWarnMock = vi.spyOn(console, 'warn').mockReturnValue(undefined);
+    vi.mocked(telemetryEnvDetectionMock.isTelemetryDisabled).mockReturnValue(true);
+  });
+
+  test('Telemetry is disabled on init without updating the configuration', async () => {
+    // telemetry is enabled and the user has been prompted
+    getConfigurationMock.mockReturnValue({
+      get: () => true,
+    });
+
+    await telemetry.init();
+
+    expect(telemetry.isEnabled()).toBeFalsy();
+    expect(telemetry.isInitialized()).toBeTruthy();
+    expect(telemetry.isTelemetryEnabled()).toBeFalsy();
+    expect(consoleWarnMock).toHaveBeenCalledWith(
+      'PODMAN_DESKTOP_DISABLE_TELEMETRY environment variable detected: telemetry is disabled for this run.',
+    );
+    // the user configuration and the welcome screen prompt are left untouched
+    expect(configurationRegistryMock.updateConfigurationValue).not.toHaveBeenCalled();
+  });
+
+  test('Pending and later events are dropped', async () => {
+    telemetry.track('event-sent-before-init');
+    expect(telemetry.getPendingItems()).toHaveLength(1);
+
+    await telemetry.init();
+    telemetry.track('event-sent-after-init');
+
+    expect(telemetry.getPendingItems()).toHaveLength(0);
+  });
+
+  test('Telemetry stays disabled if the welcome screen asks to configure it', async () => {
+    await telemetry.init();
+
+    await telemetry.configureTelemetry();
+
+    expect(telemetry.isEnabled()).toBeFalsy();
+    expect(telemetry.isInitialized()).toBeTruthy();
+  });
+
+  test('Only the CI warning is logged when both a CI and the variable are detected', async () => {
+    vi.mocked(ciDetectionMock.isCIEnvironment).mockReturnValue(true);
+
+    await telemetry.init();
+
+    expect(consoleWarnMock).toHaveBeenCalledWith('CI environment detected: telemetry is disabled for this run.');
+    expect(consoleWarnMock).not.toHaveBeenCalledWith(expect.stringContaining('PODMAN_DESKTOP_DISABLE_TELEMETRY'));
   });
 });
 
