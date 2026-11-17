@@ -75,7 +75,6 @@ import TabItem from '@theme/TabItem';
 | `proxy.https`                                | string  | `""`               | HTTPS proxy URL                                                                                                                                                                                                                                                                                                      |
 | `proxy.no`                                   | string  | `""`               | No-proxy pattern (comma-separated)                                                                                                                                                                                                                                                                                   |
 | `registries.defaults`                        | array   | `[]`               | Default registries and mirrors for container image pulls. See [Managed configuration use cases](/docs/configuration/managed-configuration-use-cases#configuring-default-registries-and-mirrors) and [containers-registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md) |
-| `statusbarProviders.showProviders`           | object  | `null`             | **EXPERIMENTAL:** Show providers in status bar. Example: `{"remindAt": 1758312136049, "disabled": false}`                                                                                                                                                                                                            |
 | `tasks.manager`                              | object  | `null`             | **EXPERIMENTAL:** New task manager widget. Example: `{}`                                                                                                                                                                                                                                                             |
 | `tasks.statusBar`                            | object  | `null`             | **EXPERIMENTAL:** Show tasks in status bar. Example: `{}`                                                                                                                                                                                                                                                            |
 | `tasks.toast`                                | boolean | `true`             | Show task creation notifications                                                                                                                                                                                                                                                                                     |
@@ -149,10 +148,6 @@ Detecting a CI environment only turns the reporting off for the current run: you
   "extensions.autoUpdate": true,
   "userConfirmation.bulk": true,
   "proxy.http": "https://127.0.0.1:8081",
-  "statusbarProviders.showProviders": {
-    "remindAt": 1758312136049,
-    "disabled": false
-  },
   "window.bounds": {
     "x": 2008,
     "y": 310,
