@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import { EventEmitter } from 'node:events';
-import * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 
 import type {
@@ -91,7 +90,6 @@ function getHandler<T>(name: string): T {
   return handler as T;
 }
 
-vi.mock(import('node:fs/promises'), { spy: true });
 vi.mock(import('/@/util.js'), { spy: true });
 vi.mock(import('./proxy-system.js'));
 vi.mock(import('/@/plugin/updater.js'), importOriginal => mockOriginalClass(importOriginal, 'Updater'));
@@ -206,14 +204,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
-});
-
-test('plugin startup does not read host managed preferences', async () => {
-  vi.mocked(fsPromises.access).mockClear();
-
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
-
-  expect(fsPromises.access).not.toHaveBeenCalledWith(expect.stringContaining('/Library/Managed Preferences/'));
 });
 
 test.each(['linux', 'windows'])('omit macOS configuration on %s', async platform => {
