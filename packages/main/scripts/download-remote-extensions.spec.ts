@@ -30,7 +30,6 @@ import type { RemoteExtension } from './download-remote-extensions.js';
 import {
   DIGEST_FILENAME,
   downloadExtension,
-  extractPinnedDigest,
   findAuthEnvironment,
   getRemoteExtensionFromProductJSON,
   main,
@@ -89,6 +88,13 @@ beforeEach(() => {
 
   vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue(MANIFEST_MOCK);
   vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue('quay.io');
+  // for a reference pinned by digest, the digest is returned as the tag
+  vi.mocked(ImageRegistry.prototype.extractImageDataFromImageName).mockImplementation(oci => ({
+    registry: 'quay.io',
+    registryURL: 'https://quay.io/v2',
+    name: 'dummy-extension',
+    tag: oci === PINNED_REMOTE_INFO_MOCK.oci ? PINNED_DIGEST : 'latest',
+  }));
 
   // mock final check to be valid
   vi.mocked(existsSync).mockImplementation(path => {
@@ -219,21 +225,6 @@ describe('findAuthEnvironment', () => {
   });
 });
 
-describe('extractPinnedDigest', () => {
-  test.each<{ oci: string; expected: string | undefined }>([
-    { oci: `quay.io/org/ext@${PINNED_DIGEST}`, expected: PINNED_DIGEST },
-    { oci: `quay.io/org/ext:1.0.0@${PINNED_DIGEST}`, expected: PINNED_DIGEST },
-    { oci: `localhost:5000/org/ext@${PINNED_DIGEST}`, expected: PINNED_DIGEST },
-    { oci: 'quay.io/org/ext:1.0.0', expected: undefined },
-    { oci: 'quay.io/org/ext', expected: undefined },
-    { oci: 'localhost:5000/org/ext:latest', expected: undefined },
-    { oci: 'quay.io/org/ext@not-a-digest', expected: undefined },
-    { oci: 'user@quay.io/org/ext:1.0.0', expected: undefined },
-  ])('$oci should return $expected', ({ oci, expected }) => {
-    expect(extractPinnedDigest(oci)).toBe(expected);
-  });
-});
-
 describe('downloadExtension', () => {
   const originalConsoleLog = console.log;
   const originalConsoleWarn = console.warn;
@@ -360,6 +351,7 @@ describe('downloadExtension', () => {
     expect(rm).toHaveBeenNthCalledWith(1, FINAL_EXTENSION_DEST, {
       recursive: true,
     });
+    expect(ImageRegistry.prototype.getManifestFromImageName).not.toHaveBeenCalled();
     expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledOnce();
   });
 
