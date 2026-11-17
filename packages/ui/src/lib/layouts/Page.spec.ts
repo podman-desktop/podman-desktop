@@ -20,13 +20,64 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, getByRole, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { createRawSnippet } from 'svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { createRawSnippet, tick } from 'svelte';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import Page from './Page.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test('Only focuses truncated titles and reveals their full text without expanding the heading', async () => {
+  let notifyResize = (): void => {};
+  const disconnect = vi.fn();
+  vi.spyOn(globalThis, 'ResizeObserver').mockImplementation(
+    class {
+      constructor(callback: ResizeObserverCallback) {
+        this.observe = vi.fn((element: Element) => {
+          if (element.tagName === 'H1') notifyResize = (): void => callback([], this);
+        });
+      }
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = disconnect;
+    },
+  );
+
+  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
+  const page = render(Page, { title, clampTitle: true });
+  const heading = screen.getByRole('heading', { level: 1, name: title });
+  expect(heading).not.toHaveAttribute('tabindex');
+
+  let scrollHeight = 80;
+  Object.defineProperties(heading, {
+    scrollHeight: { get: (): number => scrollHeight },
+    clientHeight: { value: 40 },
+  });
+  notifyResize();
+  await tick();
+  expect(heading).toHaveAttribute('tabindex', '0');
+
+  await userEvent.tab();
+  expect(heading).toHaveFocus();
+  expect(screen.getByRole('tooltip')).toHaveTextContent(title);
+  expect(heading).toHaveAttribute('aria-describedby', screen.getByRole('tooltip').id);
+  expect(heading).toHaveClass('line-clamp-2');
+
+  scrollHeight = 40;
+  notifyResize();
+  await tick();
+  expect(heading).not.toHaveAttribute('tabindex');
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  expect(heading).not.toHaveAttribute('aria-describedby');
+
+  page.unmount();
+  expect(disconnect).toHaveBeenCalled();
 });
 
 test('Exposes the full title on the heading', () => {

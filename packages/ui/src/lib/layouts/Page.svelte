@@ -4,6 +4,7 @@ import { createEventDispatcher, type Snippet } from 'svelte';
 import { LinearProgress } from '..';
 import CloseButton from '../button/CloseButton.svelte';
 import Link from '../link/Link.svelte';
+import Tooltip from '../tooltip/Tooltip.svelte';
 
 interface Props {
   title: string;
@@ -48,6 +49,32 @@ const {
 }: Props = $props();
 
 let showBreadcrumb = breadcrumbLeftPart ?? breadcrumbRightPart;
+let titleElement = $state<HTMLHeadingElement>();
+let isTitleTruncated = $state(false);
+
+$effect(() => {
+  const heading = titleElement;
+  const headingText = title;
+  const shouldClamp = clampTitle;
+  if (!heading || !shouldClamp) {
+    isTitleTruncated = false;
+    return;
+  }
+
+  const updateTitleOverflow = (): void => {
+    isTitleTruncated = shouldClamp && headingText.length > 0 && heading.scrollHeight > heading.clientHeight;
+  };
+
+  const observer = new ResizeObserver(updateTitleOverflow);
+  observer.observe(heading);
+  const fonts = heading.ownerDocument.fonts;
+  fonts?.addEventListener('loadingdone', updateTitleOverflow);
+  updateTitleOverflow();
+  return (): void => {
+    observer.disconnect();
+    fonts?.removeEventListener('loadingdone', updateTitleOverflow);
+  };
+});
 
 const dispatchClose = createEventDispatcher<{ close: undefined }>();
 
@@ -84,8 +111,8 @@ function handleKeydown(e: KeyboardEvent): void {
           {/if}
         </div>
       {/if}
-      <div class="flex flex-wrap items-center gap-x-2 gap-y-2 pt-1">
-        <div class="flex min-w-0 grow basis-18 items-center">
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
+        <div class="flex min-w-0 grow basis-44 items-center">
           {#if icon}
             <div class="shrink-0 pr-3">
               {@render icon()}
@@ -93,19 +120,22 @@ function handleKeydown(e: KeyboardEvent): void {
           {/if}
           <div class="flex min-w-0 grow flex-col wrap-anywhere">
             <div class="flex flex-wrap items-baseline gap-x-2">
-              <!-- svelte-ignore a11y_no_noninteractive_tabindex (focus reveals the full clamped title) -->
-              <h1
-                aria-label={title}
-                {title}
-                tabindex={clampTitle ? 0 : undefined}
-                class="min-w-0 text-xl font-bold leading-tight text-(--pd-content-header)"
-                class:line-clamp-2={clampTitle}
-                class:focus:line-clamp-none={clampTitle}
-                class:focus:max-h-[40vh]={clampTitle}
-                class:focus:overflow-auto={clampTitle}
-                class:focus-visible:outline-(--pd-button-focus-ring)={clampTitle}>
-                {title}
-              </h1>
+              <Tooltip
+                bottomLeft
+                containerClass="min-w-0"
+                class="block max-w-[calc(100vw-1rem)]"
+                tip={isTitleTruncated ? title : undefined}>
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex (focus exposes the truncated title in a tooltip) -->
+                <h1
+                  bind:this={titleElement}
+                  aria-label={title}
+                  {title}
+                  tabindex={isTitleTruncated ? 0 : undefined}
+                  class="min-w-0 text-xl font-bold leading-tight text-(--pd-content-header) focus-visible:outline-(--pd-button-focus-ring)"
+                  class:line-clamp-2={clampTitle}>
+                  {title}
+                </h1>
+              </Tooltip>
               <div class="leading-normal text-(--pd-table-body-text-sub-secondary)" class:hidden={!titleDetail}>
                 {titleDetail}
               </div>

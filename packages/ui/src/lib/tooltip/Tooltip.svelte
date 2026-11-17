@@ -43,9 +43,8 @@ const tooltipId = nextTooltipId();
 let referenceElement: HTMLElement | undefined = $state(undefined);
 let isVisible = $state(false);
 
-function setTooltipAriaDescribedBy(root: HTMLElement | undefined, id: string | undefined): void {
-  if (!root) return;
-  const target = getTooltipAriaTarget(root);
+function setTooltipAriaDescribedBy(target: HTMLElement | undefined, id: string | undefined): void {
+  if (!target) return;
 
   if (id) {
     target.setAttribute('aria-describedby', id);
@@ -89,10 +88,11 @@ $effect(() => {
 
 $effect(() => {
   const shouldDescribe = isVisible && !$tooltipHidden && (tip ?? tipSnippet);
-  setTooltipAriaDescribedBy(referenceElement, shouldDescribe ? tooltipId : undefined);
+  const target = referenceElement ? getTooltipAriaTarget(referenceElement) : undefined;
+  setTooltipAriaDescribedBy(target, shouldDescribe ? tooltipId : undefined);
 
   return (): void => {
-    setTooltipAriaDescribedBy(referenceElement, undefined);
+    setTooltipAriaDescribedBy(target, undefined);
   };
 });
 </script>

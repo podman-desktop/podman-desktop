@@ -29,8 +29,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('Makes a capped title reachable with the keyboard', async () => {
-  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
+test('Skips a fully visible title during keyboard navigation', async () => {
+  const title = 'My container';
   render(DetailsPage, {
     title,
   });
@@ -39,9 +39,10 @@ test('Makes a capped title reachable with the keyboard', async () => {
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
   expect(titleElement).toHaveClass('line-clamp-2');
+  expect(titleElement).not.toHaveAttribute('tabindex');
 
   await userEvent.tab();
-  expect(titleElement).toHaveFocus();
+  expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
 });
 
 test('Expect page name is defined', async () => {
