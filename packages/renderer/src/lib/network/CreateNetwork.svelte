@@ -9,6 +9,7 @@ import { faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
+import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -134,18 +135,28 @@ async function createNetwork(): Promise<void> {
  */
 async function waitForNetworkInStore(networkId: string, engineId: string): Promise<void> {
   return new Promise<void>(resolve => {
+    // subscribe() calls the callback synchronously with the current value, so the
+    // network can be found before subscribe() has returned the unsubscriber.
+    let unsubscribe: Unsubscriber | undefined;
+    let found = false;
+
     const timeout = setTimeout(() => {
-      unsubscribe();
+      unsubscribe?.();
       resolve();
     }, 10000);
 
-    const unsubscribe = networksListInfo.subscribe(networks => {
-      if (networks.some(network => network.id === networkId && network.engineId === engineId)) {
+    unsubscribe = networksListInfo.subscribe(networks => {
+      if (!found && networks.some(network => network.id === networkId && network.engineId === engineId)) {
+        found = true;
         clearTimeout(timeout);
-        unsubscribe();
+        unsubscribe?.();
         resolve();
       }
     });
+
+    if (found) {
+      unsubscribe();
+    }
   });
 }
 

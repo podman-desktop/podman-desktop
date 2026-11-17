@@ -316,6 +316,47 @@ test('Expect automatic routing to network details after successful network creat
   );
 });
 
+test('Expect routing to network details when the network is already in the store', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
+  const networkId = 'network123';
+  const engineId = 'engine1';
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId, engineId });
+
+  // The store already holds the new network when the wait starts (e.g. a refresh landed first)
+  networksListInfo.set([
+    {
+      id: networkId,
+      shortId: networkId.slice(0, 12),
+      name: 'my-test-network',
+      driver: 'bridge',
+      created: '',
+      engineId,
+      engineName: 'Podman',
+      engineType: 'podman',
+      selected: false,
+      status: 'UNUSED',
+      containers: [],
+      ipv6_enabled: false,
+      labels: {},
+      options: {},
+      subnets: [],
+    },
+  ]);
+
+  renderCreate();
+
+  const networkNameInput = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkNameInput, 'my-test-network');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  await waitFor(() => {
+    expect(gotoSpy).toHaveBeenCalledWith(`/networks/my-test-network/${engineId}/summary`);
+  });
+  expect(screen.queryByText(/before initialization/)).not.toBeInTheDocument();
+});
+
 test('Expect to switch to Advanced tab and see advanced options', async () => {
   renderCreate();
 
