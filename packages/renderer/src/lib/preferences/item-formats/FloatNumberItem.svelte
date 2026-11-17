@@ -3,6 +3,7 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { uncertainStringToNumber } from '/@/lib/preferences/Util';
 
 import { checkNumericValueValid } from './NumberItemUtils';
@@ -92,6 +93,6 @@ function assertNumericValueIsValid(value: number): boolean {
       onkeypress={onNumberInputKeyPress}
       oninput={onInput}
       disabled={!!record.readonly}
-      aria-label={record.description} />
+      aria-label={t(`${record.id}.description`) ?? record.description} />
   </Tooltip>
 </div>

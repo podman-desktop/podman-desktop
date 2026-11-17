@@ -20,9 +20,17 @@ import '@testing-library/jest-dom/vitest';
 
 import type { V1ObjectMeta } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import KubeObjectMetaArtifact from './KubeObjectMetaArtifact.svelte';
+
+vi.mock(import('/@/lib/i18n/translations.svelte'));
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 const fakeObjectMeta: V1ObjectMeta = {
   name: 'test-name',
@@ -47,4 +55,24 @@ test('Renders object meta correctly', () => {
   expect(screen.getByText('custom-label: custom-value')).toBeInTheDocument();
   expect(screen.getByText('Annotations')).toBeInTheDocument();
   expect(screen.getByText('custom-annotation: custom-value')).toBeInTheDocument();
+});
+
+test('renders Japanese metadata labels without translating resource data', () => {
+  const translations: Record<string, string> = {
+    'workloads.metadata': 'メタデータ',
+    'workloads.name': '名前',
+    'workloads.namespace': '名前空間',
+    'workloads.created': '作成日時',
+    'workloads.labels': 'ラベル',
+    'workloads.annotations': 'アノテーション',
+  };
+  vi.mocked(t).mockImplementation(key => translations[key]);
+  render(KubeObjectMetaArtifact, { artifact: fakeObjectMeta });
+
+  screen.getByText('メタデータ');
+  screen.getByText('名前空間');
+  screen.getByText('アノテーション');
+  screen.getByText('test-name');
+  screen.getByText('test-namespace');
+  screen.getByText('custom-label: custom-value');
 });

@@ -18,10 +18,14 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import { withConfirmation } from './messagebox-utils';
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
 });
 
 test('expect withConfirmation call callback if result OK', async () => {
@@ -126,4 +130,33 @@ test('expect withConfirmation to use default variant explicitly', async () => {
     });
     expect(callback).toHaveBeenCalled();
   });
+});
+
+test('expect localized delete confirmation to invoke the action only for the localized button', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'common.delete': '削除',
+    'common.cancel': 'キャンセル',
+  });
+  await initTranslations();
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: '削除' });
+  const callback = vi.fn();
+  withConfirmation(callback, 'delete container demo', {
+    title: 'コンテナーを削除しますか？',
+    message: 'コンテナーdemoを削除してもよろしいですか？',
+    variant: 'delete',
+  });
+
+  await vi.waitFor(() => expect(callback).toHaveBeenCalledOnce());
+  expect(window.showMessageBox).toHaveBeenCalledWith({
+    title: 'コンテナーを削除しますか？',
+    message: 'コンテナーdemoを削除してもよろしいですか？',
+    buttons: ['削除', 'キャンセル'],
+    type: 'danger',
+  });
+
+  callback.mockClear();
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'キャンセル' });
+  withConfirmation(callback, 'delete container demo', { title: 'コンテナーを削除しますか？', variant: 'delete' });
+  await vi.waitFor(() => expect(window.showMessageBox).toHaveBeenCalledTimes(2));
+  expect(callback).not.toHaveBeenCalled();
 });

@@ -14,6 +14,9 @@ import { onMount } from 'svelte';
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
 import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import PodIcon from '/@/lib/images/PodIcon.svelte';
 import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
@@ -178,7 +181,7 @@ function label(pod: PodInfoUI): string {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="pods">
+<NavPage bind:searchTerm={searchTerm} title={t('resources.pods') ?? 'pods'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     {#if $podsInfos.length > 0}
       <Prune type="pods" engines={enginesList} />
@@ -196,12 +199,15 @@ function label(pod: PodInfoUI): string {
           withBulkConfirmation(
             deleteSelectedPods,
             `delete ${selectedItemsNumber} pod${selectedItemsNumber > 1 ? 's' : ''}`,
-            { title: 'Delete Pods?', variant:'delete' }
+            {
+              title: t('resources.delete-pods') ?? 'Delete Pods?', variant: 'delete',
+              message: t('resources.confirm-delete-selected', { count: selectedItemsNumber }) ?? `Are you sure you want to delete ${selectedItemsNumber} pod${selectedItemsNumber > 1 ? 's' : ''}?`,
+            }
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title={t('resources.delete-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('resources.selected-items', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
   {/snippet}
 
@@ -214,7 +220,7 @@ function label(pod: PodInfoUI): string {
               .filter(pattern => pattern !== 'is:running' && pattern !== 'is:stopped')
               .join(' ');
           }}
-          selected={!searchTerm.includes('is:stopped') && !searchTerm.includes('is:running')}>All</Button>
+          selected={!searchTerm.includes('is:stopped') && !searchTerm.includes('is:running')}>{t('resources.all') ?? 'All'}</Button>
         <Button
           type="tab"
           on:click={(): void => {
@@ -226,7 +232,7 @@ function label(pod: PodInfoUI): string {
               .trim();
             searchTerm = temp ? `${temp} is:running` : 'is:running';
           }}
-          selected={searchTerm.includes('is:running')}>Running</Button>
+          selected={searchTerm.includes('is:running')}>{t('resources.running') ?? 'Running'}</Button>
         <Button
           type="tab"
           on:click={(): void => {
@@ -238,7 +244,7 @@ function label(pod: PodInfoUI): string {
               .trim();
             searchTerm = temp ? `${temp} is:stopped` : 'is:stopped';
           }}
-          selected={searchTerm.includes('is:stopped')}>Stopped</Button>
+          selected={searchTerm.includes('is:stopped')}>{t('resources.stopped') ?? 'Stopped'}</Button>
   {/snippet}
 
   {#snippet content()}
@@ -249,6 +255,7 @@ function label(pod: PodInfoUI): string {
     {:else if filteredPods.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen
+          labels={getFilteredEmptyLabels('pods', searchTerm)}
           icon={PodIcon}
           kind="pods"
           bind:searchTerm={searchTerm}
@@ -257,12 +264,13 @@ function label(pod: PodInfoUI): string {
             e.preventDefault();
           }} />
       {:else if selectedEnvironment && pods.length > 0}
-        <FilteredEmptyScreen icon={PodIcon} kind="pods" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
+        <FilteredEmptyScreen labels={getFilteredEmptyLabels('pods', t('common.environment') ?? 'selected environment')} icon={PodIcon} kind="pods" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
       {:else}
         <PodEmptyScreen />
       {/if}
     {:else}
       <Table
+        labels={getTableLabels()}
         kind="pod"
         bind:selectedItemsNumber={selectedItemsNumber}
         data={filteredPods}

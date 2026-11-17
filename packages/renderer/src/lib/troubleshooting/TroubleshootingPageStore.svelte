@@ -2,6 +2,7 @@
 import { faRefresh } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { EventStoreInfo } from '/@/stores/event-store';
 
 import TroubleshootingPageStoreDetails from './TroubleshootingPageStoreDetails.svelte';
@@ -31,27 +32,27 @@ let openDetails = $state(false);
     <button
       disabled={fetchInProgress}
       class="underline outline-hidden"
-      title="Open Details"
-      aria-label="Open Details"
+      title={t('management.details.open') ?? 'Open Details'}
+      aria-label={t('management.details.open') ?? 'Open Details'}
       onclick={(): boolean => (openDetails = true)}>
       {eventStoreInfo.name}
     </button>
   </div>
-  <div class="text-sm">({eventStoreInfo.size} items)</div>
+  <div class="text-sm">({t('management.items', { count: eventStoreInfo.size }) ?? `${eventStoreInfo.size} items`})</div>
   <div class="">
     <Button
       inProgress={fetchInProgress}
       class="my-1"
-      aria-label="Refresh"
+      aria-label={t('management.refresh') ?? 'Refresh'}
       on:click={fetch}
       icon={faRefresh}>
-      Refresh
+      {t('management.refresh') ?? 'Refresh'}
     </Button>
   </div>
   {#if eventStoreInfo.bufferEvents.length > 0}
     {@const lastUpdate = eventStoreInfo.bufferEvents[eventStoreInfo.bufferEvents.length - 1]}
     {#if lastUpdate.humanDuration}
-      <div class="text-xs italic" title="Time to update">{lastUpdate.humanDuration}</div>
+      <div class="text-xs italic" title={t('management.updateTime') ?? 'Time to update'}>{lastUpdate.humanDuration}</div>
     {/if}
   {/if}
 

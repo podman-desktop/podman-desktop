@@ -19,9 +19,19 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
+
+beforeEach(async () => {
+  Object.defineProperty(window, 'i18nGetActiveTranslations', {
+    value: vi.fn().mockResolvedValue({}),
+    configurable: true,
+  });
+  await initTranslations();
+});
 
 test('displays what the cleanup action will and will not delete', () => {
   render(TroubleshootingRepairCleanup);
@@ -112,4 +122,29 @@ test('Check errors are displayed with clipboard button', async () => {
   // the decorative icon is hidden from assistive tech and exposes no image role
   expect(alterSection.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   expect(within(alterSection).queryByRole('img')).not.toBeInTheDocument();
+});
+
+test.each(['データを消去', 'キャンセル'])('Japanese cleanup confirmation handles %s', async response => {
+  vi.mocked(window.cleanupProviders).mockReset();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'management.cleanup.action': 'データを消去',
+    'management.cleanup.title': 'データを消去しますか？',
+    'management.cleanup.confirm': 'この操作はデータを削除し、元に戻すことはできません。続行しますか？',
+    'management.cleanup.warning': 'この操作を実行するとデータが失われます。',
+    'common.cancel': 'キャンセル',
+  });
+  await initTranslations();
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response });
+  render(TroubleshootingRepairCleanup);
+
+  screen.getByText('この操作を実行するとデータが失われます。');
+  await fireEvent.click(screen.getByRole('button', { name: 'データを消去' }));
+
+  expect(window.showMessageBox).toHaveBeenCalledWith({
+    title: 'データを消去しますか？',
+    type: 'danger',
+    message: 'この操作はデータを削除し、元に戻すことはできません。続行しますか？',
+    buttons: ['データを消去', 'キャンセル'],
+  });
+  expect(window.cleanupProviders).toHaveBeenCalledTimes(response === 'データを消去' ? 1 : 0);
 });

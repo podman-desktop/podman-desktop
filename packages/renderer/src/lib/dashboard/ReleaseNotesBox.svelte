@@ -4,6 +4,7 @@ import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { updateAvailable } from '/@/stores/update-store';
@@ -88,9 +89,9 @@ onDestroy(async () => {
           </div>
         {/if}
         <ButtonRow class="mt-2">
-          <Button type="secondary" on:click={onClose}>Dismiss</Button>
-          <Link on:click={openReleaseNotes}>Learn more</Link>
-          <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>Update</Button>
+          <Button type="secondary" on:click={onClose}>{t('workloads.dismiss') ?? 'Dismiss'}</Button>
+          <Link on:click={openReleaseNotes}>{t('workloads.learnMore') ?? 'Learn more'}</Link>
+          <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>{t('workloads.update') ?? 'Update'}</Button>
         </ButtonRow>
       </div>
     </div>
@@ -98,9 +99,9 @@ onDestroy(async () => {
     <div class="flex bg-[var(--pd-content-card-bg)] rounded-md p-5 flex-col flex-nowrap h-auto items-center">
       <div class="flex flex-row items-center justify-between w-full">
         <p class="text-[var(--pd-content-card-header-text)] font-bold text-lg w-full items-center">
-          Release notes are currently unavailable, please check again later
+          {t('workloads.releaseNotesUnavailable') ?? 'Release notes are currently unavailable, please check again later'}
           {#if notesURL}
-            or try this <Link on:click={openReleaseNotes}>link</Link>
+            {t('workloads.orTryLink') ?? 'or try this'} <Link on:click={openReleaseNotes}>{t('workloads.link') ?? 'link'}</Link>
           {/if}
         </p>
         <CloseButton onclick={onClose} />

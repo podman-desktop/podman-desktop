@@ -22,6 +22,7 @@ import type { ImageInfo, ProviderContainerConnectionInfo, ProviderInfo } from '@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { providerInfos } from '/@/stores/providers';
 
 import PodEmptyScreen from './PodEmptyScreen.svelte';
@@ -51,8 +52,25 @@ beforeAll(() => {
   ]);
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('localizes the empty state without translating the pod command', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'resources.no-pods': 'Pod がありません',
+    'resources.start-your-first-pod': '最初の Pod を起動',
+  });
+  await initTranslations();
+  render(PodEmptyScreen);
+  screen.getByText('Pod がありません');
+  screen.getByRole('button', { name: '最初の Pod を起動' });
+  await fireEvent.click(screen.getByTitle('Copy To Clipboard'));
+  expect(window.clipboardWriteText).toHaveBeenCalledWith(
+    'podman run -dt --pod new:my-first-pod quay.io/podman/hello:latest',
+  );
 });
 
 const helloImage = 'quay.io/podman/hello:latest';

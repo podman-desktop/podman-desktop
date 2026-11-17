@@ -2,6 +2,7 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import type { SelectableExtensionDevelopmentFolderInfoUI } from '/@/lib/extensions/dev-mode/development-folder-info-ui';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 interface Props {
@@ -19,7 +20,7 @@ async function untrackExtensionFolder(): Promise<void> {
 </script>
 
 <ListItemButtonIcon
-  title="Untrack extension folder"
+  title={t('workloads.untrackExtension') ?? 'Untrack extension folder'}
   hidden={extensionFolder.extension && extensionFolder.extension?.state !== 'stopped'}
   onClick={untrackExtensionFolder}
   icon={faTrash} />

@@ -4,6 +4,7 @@ import { Button, Checkbox } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { imageFilesProviders } from '/@/stores/image-files-providers';
 
 import FilesystemLayerView from './FilesystemLayerView.svelte';
@@ -80,10 +81,10 @@ onDestroy(async () => {
 </script>
 
 {#if loading}
-  <div class="p-4">Layers are being loaded. This can take a while for large images, please wait...</div>
+  <div class="p-4">{t('resources.layers-are-being-loaded-this-can-take-a-while-for-large-images-please-wait') ?? 'Layers are being loaded. This can take a while for large images, please wait...'}</div>
 {/if}
 {#if showFetchButton}
-  <div aria-label="fetch" class="p-4"><Button on:click={onFetchLayers}>Fetch Layers</Button></div>
+  <div aria-label="fetch" class="p-4"><Button on:click={onFetchLayers}>{t('resources.fetch-layers') ?? 'Fetch Layers'}</Button></div>
 {/if}
 {#if error}
   <div class="p-4 text-[var(--pd-state-error)]">
@@ -92,11 +93,11 @@ onDestroy(async () => {
 {:else if imageLayers}
   <div class="flex flex-col w-full h-full p-8 pr-0 text-[var(--pd-content-text)] bg-[var(--pd-content-bg)]">
     <div class="mb-2 flex flex-row pr-12 pb-2">
-      <span class="grow">Layers</span>
-      <span><Checkbox bind:checked={showLayerOnly}>Show layer only</Checkbox></span>
+      <span class="grow">{t('resources.layers') ?? 'Layers'}</span>
+      <span><Checkbox bind:checked={showLayerOnly}>{t('resources.show-layer-only') ?? 'Show layer only'}</Checkbox></span>
     </div>
     <div class="h-full flex flex-row space-x-8">
-      <div role="list" aria-label="layers" class="h-full overflow-y-auto w-3/4">
+      <div role="list" aria-label={t('resources.layers') ?? 'layers'} class="h-full overflow-y-auto w-3/4">
         <ImageDetailsFilesLayers on:selected={onSelectedLayer} layers={imageLayers.layers} />
       </div>
       <div aria-label="tree" class="h-full w-full pr-4 overflow-y-auto pb-16">

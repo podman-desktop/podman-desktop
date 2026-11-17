@@ -3,6 +3,8 @@ import type { CheckStatus, ProviderInfo } from '@desktop-framework/api';
 import { faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   provider: ProviderInfo;
   onPreflightChecks: (status: CheckStatus[]) => void;
@@ -60,6 +62,6 @@ async function performUpdate(provider: ProviderInfo): Promise<void> {
     icon={faBoxOpen}
     padding="px-3 py-0.5"
     on:click={(): Promise<void> => performUpdate(provider)}>
-    Update to {provider.updateInfo.version}
+    {t('workloads.updateToVersion', { version: provider.updateInfo.version }) ?? `Update to ${provider.updateInfo.version}`}
   </Button>
 {/if}

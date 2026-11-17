@@ -27,4 +27,5 @@ export enum AppearanceSettings {
   ZoomLevel = 'zoomLevel',
   NavigationBarWidth = 'navigationBarWidth',
   SearchBar = 'searchBar',
+  Language = 'language',
 }

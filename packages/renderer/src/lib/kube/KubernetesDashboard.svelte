@@ -4,6 +4,7 @@ import type { KubernetesObject } from '@kubernetes/client-node';
 import { Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import { containersInfos } from '/@/stores/containers';
@@ -185,14 +186,13 @@ const activeCounts = $derived.by(() => {
           <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
           {#snippet title()}
             <div class="flex flex-row w-full items-center">
-              <div class="text-xl font-bold capitalize text-[var(--pd-content-header)]">Dashboard</div>
+              <div class="text-xl font-bold capitalize text-[var(--pd-content-header)]">{t('workloads.dashboard') ?? 'Dashboard'}</div>
               <div class="flex grow justify-end"><KubernetesCurrentContextConnectionBadge /></div>
             </div>
           {/snippet}
           <div class="flex flex-col gap-4">
-            <div>Here you can manage and interact with Kubernetes clusters with features like connecting to clusters, and
-              viewing workloads like deployments and services.</div>
-            <div>Get up and running by clicking one of the menu items!</div>
+            <div>{t('workloads.kubernetesDescription') ?? 'Here you can manage and interact with Kubernetes clusters with features like connecting to clusters, and viewing workloads like deployments and services.'}</div>
+            <div>{t('workloads.kubernetesGetStarted') ?? 'Get up and running by clicking one of the menu items!'}</div>
           </div>
         </Expandable>
        </div>
@@ -204,7 +204,7 @@ const activeCounts = $derived.by(() => {
               {#if currentContextName}
                 <!-- Metrics - non-collapsible -->
                 <div class="flex flex-row">
-                  <div class="text-xl pt-2 grow">Metrics</div>
+                  <div class="text-xl pt-2 grow">{t('workloads.metrics') ?? 'Metrics'}</div>
                   <div class="justify-end"><NamespaceDropdown/></div>
                 </div>
                 <div class="grid grid-cols-4 gap-4">
@@ -225,11 +225,11 @@ const activeCounts = $derived.by(() => {
               <div class="flex flex-1 flex-col pt-2">
                 <Expandable>
                   <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
-                  {#snippet title()}<div class="text-xl">Explore articles and blog posts</div>{/snippet}
+                  {#snippet title()}<div class="text-xl">{t('workloads.exploreArticles') ?? 'Explore articles and blog posts'}</div>{/snippet}
                   <div class="grid grid-cols-3 gap-4 pt-2">
-                    <KubernetesDashboardGuideCard title='Deploy and test Kubernetes containers using Podman Desktop' image={deployAndTestKubernetesImage} link='https://developers.redhat.com/articles/2023/06/09/deploy-and-test-kubernetes-containers-using-podman-desktop'/>
-                    <KubernetesDashboardGuideCard title='Working with Kubernetes in Podman Desktop' image={workingWithKubernetesImage} link='https://developers.redhat.com/articles/2023/11/06/working-kubernetes-podman-desktop'/>
-                    <KubernetesDashboardGuideCard title='Share your local podman images with the Kubernetes cluster' image={shareYourLocalProdmanImagesWithTheKubernetesImage} link='https://podman-desktop.io/blog/sharing-podman-images-with-kubernetes-cluster'/>
+                    <KubernetesDashboardGuideCard title={t('workloads.deployArticle') ?? 'Deploy and test Kubernetes containers using Podman Desktop'} image={deployAndTestKubernetesImage} link='https://developers.redhat.com/articles/2023/06/09/deploy-and-test-kubernetes-containers-using-podman-desktop'/>
+                    <KubernetesDashboardGuideCard title={t('workloads.kubernetesArticle') ?? 'Working with Kubernetes in Podman Desktop'} image={workingWithKubernetesImage} link='https://developers.redhat.com/articles/2023/11/06/working-kubernetes-podman-desktop'/>
+                    <KubernetesDashboardGuideCard title={t('workloads.shareImagesArticle') ?? 'Share your local podman images with the Kubernetes cluster'} image={shareYourLocalProdmanImagesWithTheKubernetesImage} link='https://podman-desktop.io/blog/sharing-podman-images-with-kubernetes-cluster'/>
                   </div>
                 </Expandable>
               </div>

@@ -25,6 +25,8 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import PreferencesCliTool from './PreferencesCliTool.svelte';
 
 const cliToolInfoItem1: CliToolInfo = {
@@ -141,6 +143,7 @@ beforeAll(() => {
       updateCliTool: vi.fn(),
       uninstallCliTool: vi.fn(),
       showMessageBox: vi.fn(),
+      i18nGetActiveTranslations: vi.fn(),
       executeCommand: vi.fn(),
       getUrlProtocol: vi.fn().mockResolvedValue('podman-desktop'),
       selectCliToolVersionToUpdate: vi.fn(),
@@ -154,12 +157,43 @@ beforeAll(() => {
   });
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 describe('CLI Tool item', () => {
+  test('Japanese uninstall confirmation accepts the translated response without changing the CLI ID', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'settings.uninstall': 'アンインストール',
+      'settings.cancel': 'キャンセル',
+      'settings.cli.uninstallTitle': '{name}をアンインストールしますか？',
+      'settings.cli.uninstallMessage': '{name} {version}をアンインストールしますか？',
+      'settings.cli.registeredBy': '登録元: {name}',
+    });
+    await initTranslations();
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'アンインストール' });
+    render(PreferencesCliTool, { cliTool: cliToolInfoItem7 });
+    screen.getByText('登録元: ext-label7');
+    await userEvent.click(screen.getByRole('button', { name: 'Uninstall' }));
+    expect(window.showMessageBox).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'tools-display-name7をアンインストールしますか？',
+        message: 'tools-display-name7 1.0.1をアンインストールしますか？',
+        buttons: ['アンインストール', 'キャンセル'],
+      }),
+    );
+    await vi.waitFor(() =>
+      expect(window.uninstallCliTool).toHaveBeenCalledWith(
+        cliToolInfoItem7.id,
+        expect.anything(),
+        expect.any(Function),
+      ),
+    );
+  });
+
   test('check tool infos are displayed as expected if version is not specified', () => {
     render(PreferencesCliTool, {
       cliTool: cliToolInfoItem1,

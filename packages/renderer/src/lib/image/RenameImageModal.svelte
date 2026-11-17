@@ -4,6 +4,7 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 
@@ -18,8 +19,12 @@ let { closeCallback, detailed = false, imageInfoToRename }: Props = $props();
 let imageName = $state('');
 let imageTag = $state('');
 
-let imageNameErrorMessage = $derived(imageName === '' ? 'Please enter a value' : '');
-let imageTagErrorMessage = $derived(imageTag === '' ? 'Please enter a value' : '');
+let imageNameErrorMessage = $derived(
+  imageName === '' ? (t('resources.please-enter-a-value') ?? 'Please enter a value') : '',
+);
+let imageTagErrorMessage = $derived(
+  imageTag === '' ? (t('resources.please-enter-a-value') ?? 'Please enter a value') : '',
+);
 
 onMount(async () => {
   if (imageInfoToRename.name !== '<none>') {
@@ -64,16 +69,16 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
 </script>
 
 <Dialog
-  title="Edit image"
+  title={t('resources.edit-image') ?? 'Edit image'}
   onclose={closeCallback}>
   {#snippet content()}
     <div  class="w-full">
-      <label for="imageName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Name</label>
+      <label for="imageName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">{t('resources.image-name') ?? 'Image Name'}</label>
       <Input
         bind:value={imageName}
         name="imageName"
         id="imageName"
-        placeholder="Enter image name (e.g. quay.io/namespace/my-image-name)"
+        placeholder={t('resources.enter-image-name-e-g-quay-io-namespace-my-image-name') ?? 'Enter image name (e.g. quay.io/namespace/my-image-name)'}
         aria-invalid={imageNameErrorMessage !== ''}
         aria-label="imageName"
         required />
@@ -81,12 +86,12 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
         <ErrorMessage error={imageNameErrorMessage} />
       {/if}
 
-      <label for="imageTag" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Tag</label>
+      <label for="imageTag" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">{t('resources.image-tag') ?? 'Image Tag'}</label>
       <Input
         bind:value={imageTag}
         name="imageTag"
         id="imageTag"
-        placeholder="Enter image tag (e.g. latest)"
+        placeholder={t('resources.enter-image-tag-e-g-latest') ?? 'Enter image tag (e.g. latest)'}
         aria-invalid={imageTagErrorMessage !== ''}
         aria-label="imageTag"
         required />
@@ -100,14 +105,14 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
       <Button
         class="pcol-start-3"
         type="link"
-        on:click={closeCallback}>Cancel</Button>
+        on:click={closeCallback}>{t('resources.cancel') ?? 'Cancel'}</Button>
       <Button
         class="col-start-4"
         type="primary"
         disabled={disableSave(imageName, imageTag)}
         on:click={async (): Promise<void> => {
           await renameImage(imageName, imageTag);
-        }}>Save</Button>
+        }}>{t('resources.save') ?? 'Save'}</Button>
     
   {/snippet}
 </Dialog>

@@ -2,6 +2,7 @@
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { providerInfos } from '/@/stores/providers';
 
 interface Props {
@@ -29,11 +30,11 @@ let selectedProviderConnection = $derived(
 function getTitle(runningOnly: boolean, stoppedOnly: boolean): string {
   // eslint-disable-next-line sonarjs/no-selector-parameter
   if (runningOnly) {
-    return 'No running containers';
+    return t('resources.no-running-containers') ?? 'No running containers';
   } else if (stoppedOnly) {
-    return 'No stopped containers';
+    return t('resources.no-stopped-containers') ?? 'No stopped containers';
   } else {
-    return 'No containers';
+    return t('resources.no-containers') ?? 'No containers';
   }
 }
 function getMessageCommandLine(stoppedOnly: boolean): string {
@@ -41,7 +42,10 @@ function getMessageCommandLine(stoppedOnly: boolean): string {
   if (stoppedOnly) {
     return '';
   } else {
-    return 'Run a first container using the following command line:';
+    return (
+      t('resources.run-a-first-container-using-the-following-command-line') ??
+      'Run a first container using the following command line:'
+    );
   }
 }
 function getMessageButton(stoppedOnly: boolean): string {
@@ -49,7 +53,10 @@ function getMessageButton(stoppedOnly: boolean): string {
   if (stoppedOnly) {
     return '';
   } else {
-    return 'Run a first container by clicking on this button:';
+    return (
+      t('resources.run-a-first-container-by-clicking-on-this-button') ??
+      'Run a first container by clicking on this button:'
+    );
   }
 }
 function getCommandLine(stoppedOnly: boolean): string {
@@ -71,18 +78,23 @@ async function runContainer(commandLine: string): Promise<void> {
         await window.createAndStartContainer(image.engineId, { Image: helloImage });
       } else {
         await window.showMessageBox({
-          title: 'Run Container Failed',
-          message: `Could not find ${helloImage} in images`,
-          buttons: ['Dismiss'],
+          title: t('resources.run-container-failed') ?? 'Run Container Failed',
+          message:
+            t('resources.could-not-find-image', { name: helloImage }) ?? `Could not find ${helloImage} in images`,
+          buttons: [t('resources.dismiss') ?? 'Dismiss'],
         });
       }
       await window.telemetryTrack('startFirstContainerByButton');
     }
   } catch (err) {
     await window.showMessageBox({
-      title: 'Run Container Failed',
-      message: `Error while executing ${commandLine}: ${err instanceof Error ? err.message : String(err)}`,
-      buttons: ['Dismiss'],
+      title: t('resources.run-container-failed') ?? 'Run Container Failed',
+      message:
+        t('resources.command-error', {
+          command: commandLine,
+          error: err instanceof Error ? err.message : String(err),
+        }) ?? `Error while executing ${commandLine}: ${err instanceof Error ? err.message : String(err)}`,
+      buttons: [t('resources.dismiss') ?? 'Dismiss'],
     });
   }
   inProgress = false;
@@ -100,12 +112,12 @@ async function runContainer(commandLine: string): Promise<void> {
     <span class="text-[var(--pd-details-empty-sub-header)] max-w-[800px] text-pretty mx-2">{messageButton}</span>
     <div class="flex gap-2 justify-center p-3">
       <Button
-        title="Pull {helloImage} image and start container"
+        title={t('resources.pull-helloimage-image-and-start-container', { helloImage: helloImage }) ?? `Pull ${helloImage} image and start container`}
         type="primary"
         inProgress={inProgress}
-        on:click={(): Promise<void> => runContainer(commandLine)}>Start your first container</Button>
+        on:click={(): Promise<void> => runContainer(commandLine)}>{t('resources.start-your-first-container') ?? 'Start your first container'}</Button>
     </div>
-    <h1 class="text-xl text-[var(--pd-details-empty-header)]">OR</h1>
+    <h1 class="text-xl text-[var(--pd-details-empty-header)]">{t('resources.or') ?? 'OR'}</h1>
   </div>
   {/snippet}
 </EmptyScreen>

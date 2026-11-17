@@ -8,6 +8,7 @@ import { stringify } from 'yaml';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import type { EventUI } from '/@/lib/events/EventUI';
+import { t } from '/@/lib/i18n/translations.svelte';
 import PodIcon from '/@/lib/images/PodIcon.svelte';
 import KubeEditYaml from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
@@ -76,7 +77,9 @@ async function loadDetails(): Promise<void> {
   if (getKubePod) {
     kubePod = getKubePod;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${pod?.name}`;
+    kubeError =
+      t('workloads.unableToRetrieveDetails', { name: pod?.name ?? '' }) ??
+      `Unable to retrieve Kubernetes details for ${pod?.name}`;
   }
 }
 </script>
@@ -95,30 +98,30 @@ async function loadDetails(): Promise<void> {
       </div>
     {/snippet}
     {#snippet tabsSnippet()}
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
-      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title={t('workloads.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title={t('workloads.logs') ?? 'Logs'} selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+      <Tab title={t('workloads.inspect') ?? 'Inspect'} selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
       <Tab
-          title="Terminal"
+          title={t('workloads.terminal') ?? 'Terminal'}
           selected={isTabSelected($router.path, 'k8s-terminal')}
           url={getTabUrl($router.path, 'k8s-terminal')} />
     {/snippet}
     {#snippet contentSnippet()}
       {#if pod}
-        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+        <Route path="/summary" breadcrumb={t('workloads.summary') ?? 'Summary'} navigationHint="tab">
           <PodDetailsSummary pod={kubePod} kubeError={kubeError} events={events} />
         </Route>
-        <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
+        <Route path="/logs" breadcrumb={t('workloads.logs') ?? 'Logs'} navigationHint="tab">
           <PodDetailsLogs pod={pod} />
         </Route>
-        <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+        <Route path="/inspect" breadcrumb={t('workloads.inspect') ?? 'Inspect'} navigationHint="tab">
           <MonacoEditor content={JSON.stringify(kubePod, undefined, 2)} language="json" />
         </Route>
         <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
           <KubeEditYaml content={stringify(kubePod)} />
         </Route>
-        <Route path="/k8s-terminal" breadcrumb="Terminal" navigationHint="tab">
+        <Route path="/k8s-terminal" breadcrumb={t('workloads.terminal') ?? 'Terminal'} navigationHint="tab">
           <KubernetesTerminalBrowser pod={pod} />
         </Route>
       {/if}

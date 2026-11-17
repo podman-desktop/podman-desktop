@@ -3,6 +3,7 @@ import type { WorkloadKind } from '@desktop-framework/api';
 import type { V1Container } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import KubePortsList from './KubePortsList.svelte';
 
@@ -17,15 +18,15 @@ let { kind, artifact, resourceName, namespace }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Cell>Name</Cell>
+    <Cell>{t('workloads.name') ?? 'Name'}</Cell>
     <Cell>{artifact.name}</Cell>
   </tr>
   <tr>
-    <Cell>Image</Cell>
+    <Cell>{t('workloads.image') ?? 'Image'}</Cell>
     <Cell>{artifact.image}</Cell>
   </tr>
   <tr>
-    <Cell>Image Pull Policy</Cell>
+    <Cell>{t('workloads.imagePullPolicy') ?? 'Image Pull Policy'}</Cell>
     <Cell>{artifact.imagePullPolicy}</Cell>
   </tr>
   <KubePortsList namespace={namespace} resourceName={resourceName} kind={kind} ports={artifact.ports?.map((port) => ({
@@ -36,7 +37,7 @@ let { kind, artifact, resourceName, namespace }: Props = $props();
   }))}/>
   {#if artifact.env}
     <tr>
-      <Cell>Environment Variables</Cell>
+      <Cell>{t('workloads.environmentVariables') ?? 'Environment Variables'}</Cell>
       <Cell>
         {#each artifact.env ? artifact.env.map(e => `${e.name}: ${e.value}`) : [] as env (env)}
           <div>{env}</div>
@@ -46,7 +47,7 @@ let { kind, artifact, resourceName, namespace }: Props = $props();
   {/if}
   {#if artifact.volumeMounts}
     <tr>
-      <Cell>Volume Mounts</Cell>
+      <Cell>{t('workloads.volumeMounts') ?? 'Volume Mounts'}</Cell>
       <Cell>{artifact.volumeMounts?.map(vm => vm.name).join(', ') || ''}</Cell>
     </tr>
   {/if}

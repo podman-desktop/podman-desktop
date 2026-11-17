@@ -7,6 +7,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
 const TIMESTAMPS_CONFIG_KEY = 'troubleshooting.logsTimestamps';
@@ -45,17 +46,17 @@ async function copyLogsToClipboard(): Promise<void> {
 <div class="flex flex-col w-full m-4 p-4 rounded-lg bg-[var(--pd-content-card-bg)]">
   <div class="flex flex-row align-middle items-center w-full mb-4">
     <Icon size="1.875x" class="pr-3" icon={faFileLines} />
-    <div class="text-xl">Logs</div>
+    <div class="text-xl">{t('management.logs') ?? 'Logs'}</div>
     <div class="flex flex-1 justify-end items-center gap-1">
-      <Button title="Toggle Timestamps" pressed={showTimestamps} on:click={async (): Promise<void> => { showTimestamps = !showTimestamps; await window.updateConfigurationValue(TIMESTAMPS_CONFIG_KEY, showTimestamps); }} type="link"
+      <Button title={t('management.logs.timestamps') ?? 'Toggle Timestamps'} pressed={showTimestamps} on:click={async (): Promise<void> => { showTimestamps = !showTimestamps; await window.updateConfigurationValue(TIMESTAMPS_CONFIG_KEY, showTimestamps); }} type="link"
         ><Icon class="h-5 w-5 cursor-pointer text-xl {showTimestamps ? 'text-(--pd-button-icon-primary-text)' : 'text-(--pd-content-text)'}" icon={faClock} /></Button>
-      <Button title="Copy To Clipboard" on:click={async (): Promise<void> => await copyLogsToClipboard()} type="link"
+      <Button title={t('common.copyToClipboard') ?? 'Copy To Clipboard'} on:click={async (): Promise<void> => await copyLogsToClipboard()} type="link"
         ><Icon class="h-5 w-5 cursor-pointer text-xl text-(--pd-button-icon-primary-text)" icon={faPaste} /></Button>
     </div>
   </div>
   {#if logs.length > 0}
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)]">
-      <ul aria-label="logs">
+      <ul aria-label={t('management.logs') ?? 'logs'}>
         {#each logs as log, index (index)}
           <li class="py-[3px] px-1 rounded-sm {index % 2 === 0 ? 'bg-(--pd-invert-content-table-row-stripe)' : ''}">
             <div class="flex flex-row items-start gap-2">

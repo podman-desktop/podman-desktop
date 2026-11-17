@@ -1,4 +1,6 @@
 <script lang="ts">
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import type { ExtensionDetailsUI } from './extension-details-ui';
 
 interface Props {
@@ -12,8 +14,8 @@ let { extension }: Props = $props();
     <div class="py-2">Error: {extension.error.message}</div>
     {#if extension.error.stack}
       <div class="text-xs">
-        <div>Stack trace:</div>
-        <pre role="group" aria-label="Stack Trace">{extension.error.stack}</pre>
+        <div>{t('workloads.stackTraceLabel') ?? 'Stack trace:'}</div>
+        <pre role="group" aria-label={t('workloads.stackTrace') ?? 'Stack Trace'}>{extension.error.stack}</pre>
       </div>
     {/if}
   </div>

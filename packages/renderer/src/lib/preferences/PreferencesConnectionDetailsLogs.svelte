@@ -8,6 +8,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
@@ -107,8 +108,8 @@ onDestroy(() => {
 
 <EmptyScreen
   icon={NoLogIcon}
-  title="No Log"
-  message="Log output"
+  title={t('settings.connection.noLog') ?? 'No Log'}
+  message={t('settings.connection.logOutput') ?? 'Log output'}
   hidden={noLogs === false}
   class="bg-[var(--pd-details-bg)]" />
 

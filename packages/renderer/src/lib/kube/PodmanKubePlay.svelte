@@ -2,6 +2,8 @@
 import { Button } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import KubePlayIcon from './KubePlayIcon.svelte';
 
 function runContainerYaml(): void {
@@ -9,6 +11,6 @@ function runContainerYaml(): void {
 }
 </script>
 
-<Button onclick={runContainerYaml} title="Create containers, pods and volumes based on Kubernetes YAML" icon={KubePlayIcon}>
+<Button onclick={runContainerYaml} title={t('workloads.playYamlTip') ?? 'Create containers, pods and volumes based on Kubernetes YAML'} icon={KubePlayIcon}>
   Podman kube play
 </Button>

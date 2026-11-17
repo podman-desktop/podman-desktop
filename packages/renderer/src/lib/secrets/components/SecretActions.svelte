@@ -6,6 +6,7 @@ import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
@@ -33,13 +34,19 @@ function onDeleteSecret(): void {
       }
     },
     `delete secret ${object.Name}`,
-    { title: 'Delete Secret?', variant: 'delete' },
+    {
+      title: t('kubernetes.resources.deleteTitle', { kind: 'Secret' }) ?? 'Delete Secret?',
+      message:
+        t('kubernetes.resources.deleteMessage', { kind: 'Secret', name: object.Name }) ??
+        `Are you sure you want to delete secret ${object.Name}?`,
+      variant: 'delete',
+    },
   );
 }
 </script>
 
 <ListItemButtonIcon
-  title="Delete Secret"
+  title={t('kubernetes.resources.delete', { kind: 'Secret' }) ?? 'Delete Secret'}
   onClick={onDeleteSecret}
   icon={faTrash}
   inProgress={loading}

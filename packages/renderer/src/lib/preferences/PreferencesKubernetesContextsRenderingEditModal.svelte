@@ -6,6 +6,7 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 
 interface Props {
@@ -33,9 +34,12 @@ $effect(() => {
   const context = contexts?.find(ctx => ctx.name === contextName);
   // Show error when is the new name identical with any other context name in the kubeConfig
   if (context && context.name !== contextToEdit.name) {
-    contextNameErrorMessage = `This context name already exists in ${kubeConfig}`;
+    contextNameErrorMessage = (t('settings.context.exists') ?? 'This context name already exists in {path}').replace(
+      '{path}',
+      kubeConfig,
+    );
   } else {
-    contextNameErrorMessage = contextName === '' ? 'Please enter a value' : '';
+    contextNameErrorMessage = contextName === '' ? (t('settings.required') ?? 'Please enter a value') : '';
   }
 });
 
@@ -103,16 +107,16 @@ function onUserStateChange(key: unknown): void {
 </script>
 
 <Dialog
-    title="Edit context"
+    title={t('settings.context.edit') ?? 'Edit context'}
     onclose={closeCallback}>
     {#snippet content()}
     <div  class="w-full">
-      <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Name</label>
+      <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">{t('settings.name') ?? 'Name'}</label>
       <Input
           bind:value={contextName}
           name="contextName"
           id="contextName"
-          placeholder="Enter context name (e.g. kind-context-name-1)"
+          placeholder={t('settings.context.namePlaceholder') ?? 'Enter context name (e.g. kind-context-name-1)'}
           aria-invalid={contextNameErrorMessage !== ''}
           aria-label="contextName"
           required />
@@ -120,7 +124,7 @@ function onUserStateChange(key: unknown): void {
           <ErrorMessage error={contextNameErrorMessage} />
       {/if}
 
-      <label for="contextCluster" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Cluster</label>
+      <label for="contextCluster" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">{t('settings.cluster') ?? 'Cluster'}</label>
       <Dropdown
         class="text-sm"
         id="contextCluster"
@@ -132,7 +136,7 @@ function onUserStateChange(key: unknown): void {
         }))}>
       </Dropdown>
 
-      <label for="contextUser" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">User</label>
+      <label for="contextUser" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">{t('settings.user') ?? 'User'}</label>
       <Dropdown
         class="text-sm"
         id="contextUser"
@@ -144,12 +148,12 @@ function onUserStateChange(key: unknown): void {
         }))}>
       </Dropdown>
 
-      <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
+      <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">{t('settings.namespace') ?? 'Namespace'}</label>
       <Input
           bind:value={contextNamespace}
           name="contextNamespace"
           id="contextNamespace"
-          placeholder="Enter context namespace (e.g. production)"
+          placeholder={t('settings.context.namespacePlaceholder') ?? 'Enter context namespace (e.g. production)'}
           aria-invalid={contextNamespaceErrorMessage !== ''}
           aria-label="contextNamespace"
           required />
@@ -163,14 +167,14 @@ function onUserStateChange(key: unknown): void {
       <Button
           class="pcol-start-3"
           type="link"
-          on:click={closeCallback}>Cancel</Button>
+          on:click={closeCallback}>{t('settings.cancel') ?? 'Cancel'}</Button>
       <Button
           class="col-start-4"
           type="primary"
           disabled={disableSave(contextName, contextNamespace)}
           on:click={async (): Promise<void> => {
           await editContext(contextName, contextNamespace, contextUser, contextCluster);
-          }}>Save</Button>
+          }}>{t('settings.save') ?? 'Save'}</Button>
       
   {/snippet}
 </Dialog>

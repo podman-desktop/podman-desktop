@@ -8,6 +8,8 @@ import { AppearanceSettings } from '@desktop-framework/api/appearance';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import AuthActions from './lib/authentication/AuthActions.svelte';
 import { CommandRegistry } from './lib/CommandRegistry';
 import NewContentOnDashboardBadge from './lib/dashboard/NewContentOnDashboardBadge.svelte';
@@ -208,14 +210,14 @@ function onDidChangeConfigurationCallback(e: Event): void {
   aria-label="AppNavigation"
   class:select-none={isDragging}
   style:width="{navWidth}px">
-  <NavItem href="/" tooltip="Dashboard" bind:meta={meta} {expanded}>
+  <NavItem href="/" tooltip={t('navigation.Dashboard') ?? 'Dashboard'} bind:meta={meta} {expanded}>
     <div class="flex items-center w-full">
       <div class="flex items-center justify-center flex-shrink-0 w-6 relative">
         <DashboardIcon size={iconSize} />
         <NewContentOnDashboardBadge />
       </div>
       {#if expanded}
-        <span class="text-sm truncate ml-3 flex-1 min-w-0" aria-label="Dashboard title">Dashboard</span>
+        <span class="text-sm truncate ml-3 flex-1 min-w-0" aria-label="Dashboard title">{t('navigation.Dashboard') ?? 'Dashboard'}</span>
       {/if}
     </div>
   </NavItem>
@@ -264,14 +266,14 @@ function onDidChangeConfigurationCallback(e: Event): void {
     aria-hidden="true"></div>
 
     <div bind:this={outsideWindow}>
-      <NavItem href="/accounts" tooltip="Accounts" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)} {expanded}>
+      <NavItem href="/accounts" tooltip={t('navigation.Accounts') ?? 'Accounts'} bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)} {expanded}>
           <div class="flex items-center w-full">
             <div class="flex-shrink-0 flex items-center justify-center w-6">
               <AccountIcon size={iconSize} />
             </div>
             {#if expanded}
               <span class="text-sm truncate ml-3" aria-label="Accounts title">
-                Accounts
+                {t('navigation.Accounts') ?? 'Accounts'}
               </span>
             {/if}
           </div>
@@ -279,14 +281,14 @@ function onDidChangeConfigurationCallback(e: Event): void {
       </NavItem>
     </div>
 
-  <NavItem href="/preferences" tooltip="Settings" bind:meta={meta} onClick={handleClick} {expanded}>
+  <NavItem href="/preferences" tooltip={t('navigation.Settings') ?? 'Settings'} bind:meta={meta} onClick={handleClick} {expanded}>
     <div class="flex items-center w-full">
       <div class="flex-shrink-0 flex items-center justify-center w-6">
         <SettingsIcon size={iconSize} />
       </div>
       {#if expanded}
         <span class="text-sm truncate ml-3" aria-label="Settings title">
-          Settings
+          {t('navigation.Settings') ?? 'Settings'}
         </span>
       {/if}
     </div>

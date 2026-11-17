@@ -7,6 +7,7 @@ import { derived, get, type Readable, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
 import { isDefaultScope, isPropertyValidInContext } from '/@/lib/preferences/Util';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -79,8 +80,8 @@ function handleProperties(): void {
 </script>
 
 <Button
-  aria-label="Onboarding {extension.name}"
-  title="Onboarding {extension.name}"
+  aria-label={t('workloads.onboardingExtension', { name: extension.name }) ?? `Onboarding ${extension.name}`}
+  title={t('workloads.onboardingExtension', { name: extension.name }) ?? `Onboarding ${extension.name}`}
   type="primary"
   class="m-auto {!isOnboardingEnabled ? 'cursor-not-allowed' : ''}"
   disabled={!isOnboardingEnabled}
@@ -89,8 +90,8 @@ function handleProperties(): void {
 </Button>
 
 <Button
-  aria-label="Edit properties of {extension.name} extension"
-  title="Edit properties of {extension.name} extension"
+  aria-label={t('workloads.editExtensionProperties', { name: extension.name }) ?? `Edit properties of ${extension.name} extension`}
+  title={t('workloads.editExtensionProperties', { name: extension.name }) ?? `Edit properties of ${extension.name} extension`}
   type="secondary"
   class="m-auto {!hasAnyConfiguration ? 'cursor-not-allowed' : ''}"
   disabled={!hasAnyConfiguration}

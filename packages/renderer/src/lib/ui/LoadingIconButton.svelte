@@ -2,6 +2,7 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { ILoadingStatus } from '/@/lib/preferences/Util';
 
 import LoadingIcon from './LoadingIcon.svelte';
@@ -16,7 +17,8 @@ interface Props {
   clickAction: () => Promise<void> | void;
 }
 
-const { action, icon, state, color = 'secondary', tooltip = capitalize(action), clickAction }: Props = $props();
+const { action, icon, state, color = 'secondary', tooltip, clickAction }: Props = $props();
+const actionLabel = $derived(t(`connection.action.${action}`) ?? capitalize(action));
 
 const disable = $derived.by(() => {
   if (state?.inProgress || state?.status === 'unsupported') {
@@ -50,8 +52,8 @@ const style = $derived(
 );
 </script>
 
-<Tooltip bottom tip={tooltip}>
-  <button aria-label={capitalize(action)} class="px-2.5 py-2 {style}" onclick={clickAction} disabled={disable}>
+<Tooltip bottom tip={tooltip ?? actionLabel}>
+  <button aria-label={actionLabel} class="px-2.5 py-2 {style}" onclick={clickAction} disabled={disable}>
     <LoadingIcon
       icon={icon}
       loading={loading} />

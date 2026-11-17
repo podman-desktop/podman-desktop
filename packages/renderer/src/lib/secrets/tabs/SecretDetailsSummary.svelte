@@ -4,6 +4,7 @@ import type { SecretInfo } from '@desktop-framework/api';
 import DetailsCell from '/@/lib/details/DetailsCell.svelte';
 import DetailsTable from '/@/lib/details/DetailsTable.svelte';
 import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   secret: SecretInfo;
@@ -15,10 +16,10 @@ let labels = $derived(secret?.Labels ? Object.entries(secret.Labels) : []);
 
 <DetailsTable>
   <tr>
-    <DetailsTitle>Details</DetailsTitle>
+    <DetailsTitle>{t('kubernetes.resources.details') ?? 'Details'}</DetailsTitle>
   </tr>
   <tr>
-    <DetailsCell>Name</DetailsCell>
+    <DetailsCell>{t('kubernetes.resources.name') ?? 'Name'}</DetailsCell>
     <DetailsCell>{secret.Name}</DetailsCell>
   </tr>
   <tr>
@@ -26,31 +27,31 @@ let labels = $derived(secret?.Labels ? Object.entries(secret.Labels) : []);
     <DetailsCell>{secret.Id}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Created</DetailsCell>
+    <DetailsCell>{t('kubernetes.resources.created') ?? 'Created'}</DetailsCell>
     <DetailsCell>{secret.CreatedAt ?? 'N/A'}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Updated</DetailsCell>
+    <DetailsCell>{t('kubernetes.resources.updated') ?? 'Updated'}</DetailsCell>
     <DetailsCell>{secret.UpdatedAt ?? 'N/A'}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Engine Name</DetailsCell>
+    <DetailsCell>{t('kubernetes.resources.engineName') ?? 'Engine Name'}</DetailsCell>
     <DetailsCell>{secret.engineName}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Engine ID</DetailsCell>
+    <DetailsCell>{t('kubernetes.resources.engineId') ?? 'Engine ID'}</DetailsCell>
     <DetailsCell>{secret.engineId}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Engine Type</DetailsCell>
+    <DetailsCell>{t('kubernetes.resources.engineType') ?? 'Engine Type'}</DetailsCell>
     <DetailsCell>{secret.engineType}</DetailsCell>
   </tr>
   <tr>
-    <DetailsTitle>Labels</DetailsTitle>
+    <DetailsTitle>{t('kubernetes.resources.labels') ?? 'Labels'}</DetailsTitle>
   </tr>
   {#if labels.length === 0}
     <tr>
-      <DetailsCell>No labels</DetailsCell>
+      <DetailsCell>{t('kubernetes.resources.noLabels') ?? 'No labels'}</DetailsCell>
     </tr>
   {:else}
     {#each labels as [key, value] (key)}

@@ -4,6 +4,7 @@ import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
 import { manualProxySettings } from '/@/stores/manual-proxy-settings.svelte';
 
@@ -98,23 +99,26 @@ async function updateProxySettings(): Promise<void> {
 
   // show a simple message to confirm that the settings are applied,
   // or a longer warning if the user may need to take action
-  let message = 'Proxy settings have been applied.';
+  let message = t('settings.proxy.applied') ?? 'Proxy settings have been applied.';
   let type: DialogType = 'info';
   if (hasMachineConnections) {
     message +=
+      t('settings.proxy.restartMachine') ??
       ' You might need to restart the Podman machine for the changes to take effect. Running containers without a restart policy will need to be restarted manually after the machine restart.';
     type = 'warning';
   }
   if (hasNativeConnections) {
-    message += ' Running containers will need to be restarted to pick up the new proxy settings.';
+    message +=
+      t('settings.proxy.restartContainers') ??
+      ' Running containers will need to be restarted to pick up the new proxy settings.';
     type = 'warning';
   }
 
   await window.showMessageBox({
-    title: 'Proxy Settings Updated',
+    title: t('settings.proxy.updated') ?? 'Proxy Settings Updated',
     type: type,
     message: message,
-    buttons: ['Dismiss'],
+    buttons: [t('settings.dismiss') ?? 'Dismiss'],
   });
 }
 
@@ -135,7 +139,7 @@ function validate(event: any): void {
   <div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] rounded-md p-3 space-y-4">
     <div class="space-y-2">
       <label for="toggle-proxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
-        >Proxy configuration</label>
+        >{t('settings.proxy.configuration') ?? 'Proxy configuration'}</label>
       <Dropdown
         id="toggle-proxy"
         disabled={proxyEnabledLocked}
@@ -143,7 +147,7 @@ function validate(event: any): void {
         value={PROXY_LABELS.get(proxyState)}
         options={Array.from(PROXY_LABELS.values()).map((label) => ({
           value: label,
-          label: label,
+          label: t(`settings.proxy.${label}`) ?? label,
         }))}>
       </Dropdown>
       {#if proxyEnabledLocked}
@@ -153,14 +157,14 @@ function validate(event: any): void {
 
     <div class="space-y-2">
       <label for="httpProxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
-        >Web Proxy (HTTP)</label
+        >{t('settings.proxy.http') ?? 'Web Proxy (HTTP)'}</label
       >
       <Input
         name="httpProxy"
         id="httpProxy"
         disabled={proxyState !== ProxyState.PROXY_MANUAL || httpProxyLocked}
         bind:value={httpProxy}
-        placeholder="URL of the proxy for http: URLs (eg http://myproxy.domain.com:8080)"
+        placeholder={t('settings.proxy.httpPlaceholder') ?? 'URL of the proxy for http: URLs (eg http://myproxy.domain.com:8080)'}
         required
         on:input={validate} />
       {#if httpProxyLocked}
@@ -173,14 +177,14 @@ function validate(event: any): void {
 
     <div class="space-y-2">
       <label for="httpsProxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
-        >Secure Web Proxy (HTTPS)</label
+        >{t('settings.proxy.https') ?? 'Secure Web Proxy (HTTPS)'}</label
       >
       <Input
         name="httpsProxy"
         id="httpsProxy"
         disabled={proxyState !== ProxyState.PROXY_MANUAL || httpsProxyLocked}
         bind:value={httpsProxy}
-        placeholder="URL of the proxy for https: URLs (eg http://myproxy.domain.com:8080)"
+        placeholder={t('settings.proxy.httpsPlaceholder') ?? 'URL of the proxy for https: URLs (eg http://myproxy.domain.com:8080)'}
         required
         on:input={validate} />
       {#if httpsProxyLocked}
@@ -193,14 +197,14 @@ function validate(event: any): void {
 
     <div class="space-y-2">
       <label for="noProxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
-        >Bypass proxy settings for these hosts and domains</label
+        >{t('settings.proxy.bypass') ?? 'Bypass proxy settings for these hosts and domains'}</label
       >
       <Input
         name="noProxy"
         id="noProxy"
         disabled={proxyState !== ProxyState.PROXY_MANUAL || noProxyLocked}
         bind:value={noProxy}
-        placeholder="Example: *.domain.com, 192.168.*.*"
+        placeholder={t('settings.proxy.bypassPlaceholder') ?? 'Example: *.domain.com, 192.168.*.*'}
         required />
       {#if noProxyLocked}
         <PreferencesManagedInput />
@@ -208,7 +212,7 @@ function validate(event: any): void {
     </div>
 
     <ButtonRow class="pt-2">
-      <Button on:click={updateProxySettings} title="Update" icon={faPen}>Update</Button>
+      <Button on:click={updateProxySettings} title={t('settings.update') ?? 'Update'} icon={faPen}>{t('settings.update') ?? 'Update'}</Button>
     </ButtonRow>
   </div>
 </SettingsPage>

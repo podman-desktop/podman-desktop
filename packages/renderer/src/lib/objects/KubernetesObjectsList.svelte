@@ -8,6 +8,9 @@ import { onDestroy, onMount, type Snippet } from 'svelte';
 import { type Readable, type Unsubscriber, type Writable } from 'svelte/store';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import NamespaceDropdown from '/@/lib/kube/NamespaceDropdown.svelte';
 import { listenResources } from '/@/lib/kube/resources-listen';
@@ -120,9 +123,24 @@ async function deleteSelectedObjects(): Promise<void> {
 }
 
 let selectedItemsNumber = $state<number>(0);
+const displayName = $derived(t(`resource.kind.${plural}`) ?? plural);
+
+function confirmDeleteSelectedObjects(): void {
+  withBulkConfirmation(
+    deleteSelectedObjects,
+    `delete ${selectedItemsNumber} ${selectedItemsNumber > 1 ? plural : singular}`,
+    {
+      title:
+        t('kubernetes.resources.deleteTitle', { kind: displayName }) ??
+        `Delete ${plural.charAt(0).toUpperCase() + plural.slice(1)}?`,
+      message: t('kubernetes.resources.deleteSelectedMessage', { kind: displayName, count: selectedItemsNumber }),
+      variant: 'delete',
+    },
+  );
+}
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title={plural}>
+<NavPage bind:searchTerm={searchTerm} title={displayName} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     <KubeActions />
   {/snippet}
@@ -133,16 +151,11 @@ let selectedItemsNumber = $state<number>(0);
     {/if}
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={(): void =>
-          withBulkConfirmation(
-            deleteSelectedObjects,
-            `delete ${selectedItemsNumber} ${selectedItemsNumber > 1 ? plural : singular}`,
-            { title: `Delete ${plural.charAt(0).toUpperCase() + plural.slice(1)}?`, variant:'delete' }
-          )}
-        title="Delete {selectedItemsNumber} selected items"
+        on:click={confirmDeleteSelectedObjects}
+        title={t('kubernetes.resources.deleteSelected', { count: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('kubernetes.resources.selected', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
     <div class="flex grow justify-end">
       <KubernetesCurrentContextConnectionBadge />
@@ -152,6 +165,7 @@ let selectedItemsNumber = $state<number>(0);
   {#snippet content()}
   <div class="flex min-w-full grow">
     <Table
+      labels={getTableLabels()}
       kind={singular}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={objects}
@@ -163,6 +177,7 @@ let selectedItemsNumber = $state<number>(0);
     {#if started && objects.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen
+          labels={getFilteredEmptyLabels(plural, searchTerm)}
           icon={icon}
           kind={plural}
           searchTerm={searchTerm}

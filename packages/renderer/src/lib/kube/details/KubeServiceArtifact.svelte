@@ -4,6 +4,7 @@ import type { V1ServiceSpec } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubePorts from '/@/lib/kube/details/KubePortsList.svelte';
 
 interface Props {
@@ -16,24 +17,24 @@ let { artifact, serviceName, namespace }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Details</Title>
+    <Title>{t('workloads.details') ?? 'Details'}</Title>
   </tr>
   <tr>
-    <Cell>Type</Cell>
+    <Cell>{t('workloads.type') ?? 'Type'}</Cell>
     <Cell>{artifact?.type}</Cell>
   </tr>
   <tr>
-    <Cell>Cluster IP</Cell>
+    <Cell>{t('workloads.clusterIP') ?? 'Cluster IP'}</Cell>
     <Cell>{artifact?.clusterIP}</Cell>
   </tr>
   {#if artifact?.externalIPs}
     <tr>
-      <Cell>External IPs</Cell>
+      <Cell>{t('workloads.externalIPs') ?? 'External IPs'}</Cell>
       <Cell>{artifact?.externalIPs?.join(', ') || ''}</Cell>
     </tr>
   {/if}
   <tr>
-    <Cell>Session Affinity</Cell>
+    <Cell>{t('workloads.sessionAffinity') ?? 'Session Affinity'}</Cell>
     <Cell>{artifact?.sessionAffinity}</Cell>
   </tr>
   <KubePorts namespace={namespace} resourceName={serviceName} kind={WorkloadKind.SERVICE} ports={artifact.ports?.map((port) => ({
@@ -44,7 +45,7 @@ let { artifact, serviceName, namespace }: Props = $props();
   }))}/>
   {#if artifact.selector}
     <tr>
-      <Cell>Selectors</Cell>
+      <Cell>{t('workloads.selectors') ?? 'Selectors'}</Cell>
       <Cell>
         {#each Object.entries(artifact.selector) as [key, value] (key)}
           <div>{key}: {value}</div>

@@ -165,7 +165,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.id).toBe('preferences.appearance');
   expect(configurationNode?.title).toBe('Appearance');
   expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(3);
+  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(4);
   expect(configurationNode?.properties?.['preferences.zoomLevel']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.markdownDescription).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.type).toBe('number');
@@ -178,4 +178,15 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.minimum).toBe(50);
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.maximum).toBe(240);
   expect(configurationNode?.properties?.['preferences.navigationBarWidth']?.default).toBe(160);
+
+  expect(configurationNode?.properties?.['preferences.language']).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.language']?.description).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.language']?.type).toBe('string');
+  expect(configurationNode?.properties?.['preferences.language']?.enum).toStrictEqual(['system', 'en', 'ja']);
+  expect(configurationNode?.properties?.['preferences.language']?.default).toBe('system');
+  // display labels must stay aligned by index with the enum values
+  expect(configurationNode?.properties?.['preferences.language']?.enumLabels?.length).toBe(
+    configurationNode?.properties?.['preferences.language']?.enum?.length,
+  );
+  expect(configurationNode?.properties?.['preferences.language']?.enumLabels?.[0]).toBe('Follow system language');
 });

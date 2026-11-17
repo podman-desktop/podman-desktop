@@ -2,6 +2,7 @@
 import type { ForwardConfig, WorkloadKind } from '@desktop-framework/api';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
 
 import type { KubePortInfo } from './kube-port';
@@ -27,7 +28,7 @@ let forwardConfigs: Map<number, ForwardConfig> = $derived(
 
 {#if ports && ports.length > 0}
   <tr>
-    <Cell class="flex">Ports</Cell>
+    <Cell class="flex">{t('workloads.ports') ?? 'Ports'}</Cell>
     <Cell>
       <div class="flex gap-y-1 flex-col">
         {#each ports as port, index (index)}

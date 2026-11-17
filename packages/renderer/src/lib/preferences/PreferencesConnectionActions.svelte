@@ -6,6 +6,7 @@ import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 
 import {
@@ -161,6 +162,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             <LoadingIconButton
               clickAction={(): Promise<void> => startConnectionProvider(provider, connection)}
               action="start"
+              tooltip={t('settings.start') ?? 'Start'}
               icon={faPlay}
               state={connectionStatus} />
           </div>
@@ -169,6 +171,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
           <LoadingIconButton
             clickAction={(): Promise<void> => restartConnectionProvider(provider, connection)}
             action="restart"
+            tooltip={t('settings.restart') ?? 'Restart'}
             icon={faRotateRight}
             state={connectionStatus}
             />
@@ -177,6 +180,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
           <LoadingIconButton
             clickAction={(): Promise<void> => stopConnectionProvider(provider, connection)}
             action="stop"
+            tooltip={t('settings.stop') ?? 'Stop'}
             icon={faStop}
             state={connectionStatus}
             />
@@ -185,14 +189,16 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
           <LoadingIconButton
             clickAction={(): Promise<void> => editConnectionProvider(provider, connection)}
             action="edit"
+            tooltip={t('settings.edit') ?? 'Edit'}
             icon={faEdit}
             state={connectionStatus}
             />
         {/if}
         {#if connection.canDelete}
           <LoadingIconButton
-            clickAction={withConfirmation.bind(undefined, deleteConnectionProvider.bind(undefined, provider, connection), `delete ${connection.name}`, { title: 'Delete Connection?', variant: 'delete' })}
+            clickAction={withConfirmation.bind(undefined, deleteConnectionProvider.bind(undefined, provider, connection), `delete ${connection.name}`, { title: t('settings.connection.deleteTitle') ?? 'Delete Connection?', message: t('settings.connection.deleteMessage')?.replace('{name}', connection.name), variant: 'delete' })}
             action="delete"
+            tooltip={t('settings.delete') ?? 'Delete'}
             icon={faTrash}
             state={connectionStatus}
             />

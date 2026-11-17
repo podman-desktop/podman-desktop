@@ -3,6 +3,8 @@ import type { OpenDialogOptions } from '@desktop-framework/extension-api';
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   placeholder?: string;
   id?: string;
@@ -67,5 +69,5 @@ function onInput(event: Event): void {
     aria-label={ariaLabel}
     aria-invalid={ariaInvalid}>
   </Input>
-  <Button aria-label="browse" icon={faFolderOpen} on:click={openDialog} disabled={disabled} />
+  <Button aria-label={t('common.browse') ?? 'browse'} icon={faFolderOpen} on:click={openDialog} disabled={disabled} />
 </div>

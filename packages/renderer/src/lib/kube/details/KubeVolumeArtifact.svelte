@@ -41,6 +41,7 @@ import type { V1Volume } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   artifact?: V1Volume;
@@ -103,18 +104,18 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.emptyDir}
     <tr>
-      <Cell>Empty Directory</Cell>
+      <Cell>{t('workloads.emptyDirectory') ?? 'Empty Directory'}</Cell>
       <Cell
-        >Medium: {artifact.emptyDir.medium ?? 'Default'}
+        >{t('workloads.mediumLabel') ?? 'Medium:'} {artifact.emptyDir.medium ?? t('workloads.default') ?? 'Default'}
         {#if artifact.emptyDir.sizeLimit}
-          • Size Limit: {artifact.emptyDir.sizeLimit}
+          • {t('workloads.sizeLimitLabel') ?? 'Size Limit:'} {artifact.emptyDir.sizeLimit}
         {/if}
       </Cell>
     </tr>
   {/if}
   {#if artifact.ephemeral}
     <tr>
-      <Cell>Ephemeral</Cell>
+      <Cell>{t('workloads.ephemeral') ?? 'Ephemeral'}</Cell>
     </tr>
   {/if}
   {#if artifact.fc}
@@ -149,7 +150,7 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.gitRepo}
     <tr>
-      <Cell>Git Repository</Cell>
+      <Cell>{t('workloads.gitRepository') ?? 'Git Repository'}</Cell>
       <Cell>{artifact.gitRepo.repository}</Cell>
     </tr>
   {/if}
@@ -161,7 +162,7 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.hostPath}
     <tr>
-      <Cell>Host Path</Cell>
+      <Cell>{t('workloads.hostPath') ?? 'Host Path'}</Cell>
       <Cell>{artifact.hostPath.path}</Cell>
     </tr>
   {/if}
@@ -173,13 +174,13 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.nfs}
     <tr>
-      <Cell>NFS (Network File System)</Cell>
+      <Cell>{t('workloads.nfs') ?? 'NFS (Network File System)'}</Cell>
       <Cell>{artifact.nfs.path}</Cell>
     </tr>
   {/if}
   {#if artifact.persistentVolumeClaim}
     <tr>
-      <Cell>Persistent Volume Claim</Cell>
+      <Cell>{t('workloads.resource.PersistentVolumeClaim') ?? 'Persistent Volume Claim'}</Cell>
       <Cell>{artifact.persistentVolumeClaim.claimName}</Cell>
     </tr>
   {/if}
@@ -197,7 +198,7 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.projected}
     <tr>
-      <Cell>Projected</Cell>
+      <Cell>{t('workloads.projected') ?? 'Projected'}</Cell>
     </tr>
   {/if}
   {#if artifact.quobyte}

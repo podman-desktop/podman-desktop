@@ -10,6 +10,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
 import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
 import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
 
@@ -100,16 +101,16 @@ async function handleActionButtonClick(): Promise<void> {
 <SystemOverviewProviderCardBase {provider} {connection} name={displayName} version={provider.version} {vmType}>
   {#snippet subtitle()}
     <div class="flex items-center gap-1.5 mt-0.5">
-      <span class="text-sm {STATUS_TEXT_CLASS[connectionStatus.status]}" aria-label='Connection status'>{statusConfig.label}</span>
+      <span class="text-sm {STATUS_TEXT_CLASS[connectionStatus.status]}" aria-label={t('workloads.connectionStatus') ?? 'Connection status'}>{statusConfig.label}</span>
       {#if connectionStatus.status === 'stable'}
         <div class="text-sm text-[var(--pd-content-text-sub)]">
           -
           {#if connection.connectionType === 'container'}
-            Required to run containers and pods
+            {t('workloads.requiredForContainers') ?? 'Required to run containers and pods'}
           {:else if connection.connectionType === 'kubernetes'}
-            Start to deploy Kubernetes workloads locally
+            {t('workloads.startForKubernetes') ?? 'Start to deploy Kubernetes workloads locally'}
           {:else}
-            Not running
+            {t('workloads.notRunning') ?? 'Not running'}
           {/if}
         </div>
       {/if}
@@ -127,7 +128,7 @@ async function handleActionButtonClick(): Promise<void> {
   {/snippet}
 
   {#if provider.warnings.length || (connection.error ?? errorMessage)}
-    <div class="flex items-center gap-1.5 text-sm text-[var(--pd-status-terminated)]" aria-label='Connection error'>
+    <div class="flex items-center gap-1.5 text-sm text-[var(--pd-status-terminated)]" aria-label={t('workloads.connectionError') ?? 'Connection error'}>
       {#each provider.warnings as warning, index (index)}
         {warning.details ?? warning.name}
       {/each}

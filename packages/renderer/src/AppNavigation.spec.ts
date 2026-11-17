@@ -24,8 +24,9 @@ import type { KubernetesObject } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import AppNavigation from './AppNavigation.svelte';
@@ -34,6 +35,12 @@ import { contributions } from './stores/contribs';
 import { fetchNavigationRegistries } from './stores/navigation/navigation-registry';
 
 const callbacks = new Map<string, (arg: unknown) => void>();
+
+vi.mock(import('/@/lib/i18n/translations.svelte'));
+
+beforeEach(() => {
+  vi.mocked(t).mockReset();
+});
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
@@ -217,4 +224,24 @@ test('resize handle captures pointer and persists width on drag end', async () =
 
   window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   await vi.waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(NAV_BAR_WIDTH_KEY, 180));
+});
+
+test('translates fixed navigation labels without changing their destinations', async () => {
+  const labels: Record<string, string> = {
+    'navigation.Dashboard': '\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9',
+    'navigation.Accounts': '\u30a2\u30ab\u30a6\u30f3\u30c8',
+    'navigation.Settings': '\u8a2d\u5b9a',
+  };
+  vi.mocked(t).mockImplementation(key => labels[key]);
+  render(AppNavigation, {
+    meta: { url: '/' } as TinroRouteMeta,
+    exitSettingsCallback: vi.fn(),
+  });
+
+  expect(screen.getByRole('link', { name: labels['navigation.Dashboard'] })).toHaveAttribute('href', '/');
+  screen.getByRole('link', { name: labels['navigation.Accounts'] });
+  screen.getByRole('link', { name: labels['navigation.Settings'] });
+  expect(screen.getByLabelText('Dashboard title')).toHaveTextContent(labels['navigation.Dashboard']!);
+  expect(screen.getByLabelText('Accounts title')).toHaveTextContent(labels['navigation.Accounts']!);
+  expect(screen.getByLabelText('Settings title')).toHaveTextContent(labels['navigation.Settings']!);
 });

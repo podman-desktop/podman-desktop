@@ -7,6 +7,7 @@ import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -56,7 +57,10 @@ let invalidName = $derived.by(() => {
 });
 
 let volumeNameError: string | undefined = $derived(
-  invalidName ? `The name "${volumeName}" already exists. Please choose a different name.` : undefined,
+  invalidName
+    ? (t('resources.volume-name-exists', { name: volumeName }) ??
+        `The name "${volumeName}" already exists. Please choose a different name.`)
+    : undefined,
 );
 
 async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
@@ -79,7 +83,7 @@ function end(): void {
 </script>
 
 <EngineFormPage
-  title="Create a volume"
+  title={t('resources.create-a-volume') ?? 'Create a volume'}
   inProgress={createVolumeInProgress}
   showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
@@ -89,16 +93,16 @@ function end(): void {
   <div class="space-y-6">
     <div>
       <label for="containerBuildContextDirectory" class="block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
-        >Volume name:</label>
-      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} error={volumeNameError} aria-invalid={invalidName || undefined} required />
+        >{t('resources.volume-name') ?? 'Volume name:'}</label>
+      <Input clearable aria-label={t('resources.volume-name') ?? 'Volume Name'} disabled={createVolumeFinished} bind:value={volumeName} error={volumeNameError} aria-invalid={invalidName || undefined} required />
     </div>
     <div class:hidden={providerConnections.length < 2}>
       {#if providerConnections.length > 1}
         <label for="providerChoice" class="py-3 block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
-          >Container Engine
+          >{t('resources.container-engine') ?? 'Container Engine'}
           <select
             class="w-full p-2 outline-hidden bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
-            aria-label="Provider Choice"
+            aria-label={t('resources.provider-choice') ?? 'Provider Choice'}
             disabled={createVolumeFinished}
             bind:value={selectedIndex}>
             {#each providerConnections as providerConnection, index (index)}
@@ -109,7 +113,7 @@ function end(): void {
       {/if}
     </div>
     {#if providerConnections.length === 1 && providerConnections[0]}
-      <input type="hidden" aria-label="Provider Choice" readonly value={selectedIndex} />
+      <input type="hidden" aria-label={t('resources.provider-choice') ?? 'Provider Choice'} readonly value={selectedIndex} />
     {/if}
 
     <ButtonRow>
@@ -120,12 +124,12 @@ function end(): void {
           disabled={createVolumeInProgress || invalidName}
           inProgress={createVolumeInProgress}
           icon={faPlusCircle}>
-          Create
+          {t('resources.create') ?? 'Create'}
         </Button>
       {/if}
 
       {#if createVolumeFinished}
-        <Button onclick={end}>Done</Button>
+        <Button onclick={end}>{t('resources.done') ?? 'Done'}</Button>
       {/if}
     </ButtonRow>
 

@@ -7,6 +7,7 @@ import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
 import SecretCreate from '/@/lib/secrets/SecretCreate.svelte';
 import SecretDetails from '/@/lib/secrets/SecretDetails.svelte';
@@ -165,7 +166,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 tablePersistence.storage = new PodmanDesktopStoragePersist();
 </script>
 
-<Route path="/*" breadcrumb="Home" let:meta>
+<Route path="/*" breadcrumb={t('workloads.home') ?? 'Home'} let:meta>
   <main class="flex flex-col w-screen h-screen overflow-hidden">
     <IconsStyle />
     <Appearance />
@@ -196,58 +197,58 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <SendFeedback />
         <ToastHandler />
         <ToastTaskNotifications />
-        <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
+        <Route path="/" breadcrumb={t('workloads.dashboard') ?? 'Dashboard Page'} navigationHint="root">
           <DashboardPage />
         </Route>
 
-        <Route path="/containers/*" breadcrumb="Containers" navigationHint="root" firstmatch>
-          <Route path="/" breadcrumb="Containers" navigationHint="root">
+        <Route path="/containers/*" breadcrumb={t('workloads.containers') ?? 'Containers'} navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb={t('workloads.containers') ?? 'Containers'} navigationHint="root">
             <ContainerList searchTerm={meta.query.filter ?? ''} />
           </Route>
           <Route path="/:id/*" let:meta firstmatch>
-            <Route path="/export" breadcrumb="Export Container">
+            <Route path="/export" breadcrumb={t('workloads.exportContainer') ?? 'Export Container'}>
               <ContainerExport containerID={meta.params.id} />
             </Route>
-            <Route breadcrumb="Container Details" navigationHint="details" path="/*">
+            <Route breadcrumb={t('workloads.containerDetails') ?? 'Container Details'} navigationHint="details" path="/*">
               <ContainerDetails containerID={meta.params.id} />
             </Route>
           </Route>
         </Route>
 
-        <Route path="/kube/play" breadcrumb="Podman kube play">
+        <Route path="/kube/play" breadcrumb={t('workloads.podmanKubePlay') ?? 'Podman kube play'}>
           <KubePlayYAML />
         </Route>
 
-        <Route path="/images/*" breadcrumb="Images" navigationHint="root" firstmatch>
-          <Route path="/" breadcrumb="Images" navigationHint="root">
+        <Route path="/images/*" breadcrumb={t('workloads.images') ?? 'Images'} navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb={t('workloads.images') ?? 'Images'} navigationHint="root">
             <ImagesList />
           </Route>
-          <Route path="/existing-image-create-container" breadcrumb="Select image" >
+          <Route path="/existing-image-create-container" breadcrumb={t('workloads.selectImage') ?? 'Select image'} >
             <CreateContainerFromExistingImage />
           </Route>
-          <Route path="/build/*" breadcrumb="Build an Image" let:meta>
+          <Route path="/build/*" breadcrumb={t('workloads.buildImage') ?? 'Build an Image'} let:meta>
             <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
           </Route>
-          <Route path="/pull" breadcrumb="Pull an Image">
+          <Route path="/pull" breadcrumb={t('workloads.pullImage') ?? 'Pull an Image'}>
             <PullImage />
           </Route>
-          <Route path="/import" breadcrumb="Import Containers">
+          <Route path="/import" breadcrumb={t('workloads.importContainers') ?? 'Import Containers'}>
             <ImportContainersImages />
           </Route>
-          <Route path="/save" breadcrumb="Save Images">
+          <Route path="/save" breadcrumb={t('workloads.saveImages') ?? 'Save Images'}>
             <SaveImages />
           </Route>
-          <Route path="/load" breadcrumb="Load Images">
+          <Route path="/load" breadcrumb={t('workloads.loadImages') ?? 'Load Images'}>
             <LoadImages />
           </Route>
-          <Route path="/:id/:engineId" breadcrumb="Images" let:meta navigationHint="root">
+          <Route path="/:id/:engineId" breadcrumb={t('workloads.images') ?? 'Images'} let:meta navigationHint="root">
             <ImagesList searchTerm={meta.params.id} imageEngineId={meta.params.engineId} />
           </Route>
           <Route
             path="/:id/:engineId/:base64RepoTag/*"
             let:meta
             firstmatch>
-            <Route path="/run/*" breadcrumb="Run Image">
+            <Route path="/run/*" breadcrumb={t('workloads.runImage') ?? 'Run Image'}>
               <RunImage
                 imageID={meta.params.id}
                 engineId={decodeURI(meta.params.engineId)}
@@ -256,7 +257,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             </Route>
             <Route
               path="/*"
-              breadcrumb="Image Details"
+              breadcrumb={t('workloads.imageDetails') ?? 'Image Details'}
               navigationHint="details">
               <ImageDetails
                 imageID={meta.params.id}
@@ -267,7 +268,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route
           path="/manifests/:id/:engineId/:base64RepoTag/*"
-          breadcrumb="Manifest Details"
+          breadcrumb={t('workloads.manifestDetails') ?? 'Manifest Details'}
           let:meta
           navigationHint="details">
           <ManifestDetails
@@ -276,67 +277,67 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             base64RepoTag={meta.params.base64RepoTag} />
         </Route>
 
-        <Route path="/networks/*" breadcrumb="Networks" navigationHint="root" firstmatch>
-          <Route path="/" breadcrumb="Networks" navigationHint="root">
+        <Route path="/networks/*" breadcrumb={t('workloads.networks') ?? 'Networks'} navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb={t('workloads.networks') ?? 'Networks'} navigationHint="root">
             <NetworksList />
           </Route>
-          <Route path="/create/*" breadcrumb="Create a network">
+          <Route path="/create/*" breadcrumb={t('workloads.createNetwork') ?? 'Create a network'}>
             <CreateNetwork />
           </Route>
-          <Route path="/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
+          <Route path="/:name/:engineId/*" breadcrumb={t('workloads.networkDetails') ?? 'Network Details'} let:meta navigationHint="details">
             <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
           </Route>
         </Route>
 
-        <Route path="/pods" breadcrumb="Pods" navigationHint="root">
+        <Route path="/pods" breadcrumb={t('workloads.pods') ?? 'Pods'} navigationHint="root">
           <PodsList />
         </Route>
-        <Route path="/deploy-to-kube/:resourceId/:engineId/*" breadcrumb="Deploy to Kubernetes" let:meta>
+        <Route path="/deploy-to-kube/:resourceId/:engineId/*" breadcrumb={t('workloads.deployToKubernetes') ?? 'Deploy to Kubernetes'} let:meta>
           <DeployPodToKube
             resourceId={decodeURI(meta.params.resourceId)}
             engineId={decodeURI(meta.params.engineId)}
             type="container" />
         </Route>
         <!-- Same DeployPodToKube route, but instead we pass in the compose group name, then redirect to DeployPodToKube -->
-        <Route path="/compose/deploy-to-kube/:composeGroupName/:engineId/*" breadcrumb="Deploy to Kubernetes" let:meta>
+        <Route path="/compose/deploy-to-kube/:composeGroupName/:engineId/*" breadcrumb={t('workloads.deployToKubernetes') ?? 'Deploy to Kubernetes'} let:meta>
           <DeployPodToKube
             resourceId={decodeURI(meta.params.composeGroupName)}
             engineId={decodeURI(meta.params.engineId)}
             type="compose" />
         </Route>
-        <Route path="/compose/details/:name/:engineId/*" breadcrumb="Compose Details" let:meta navigationHint="details">
+        <Route path="/compose/details/:name/:engineId/*" breadcrumb={t('workloads.composeDetails') ?? 'Compose Details'} let:meta navigationHint="details">
           <ComposeDetails composeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
         </Route>
-        <Route path="/pods/podman/:name/:engineId/*" breadcrumb="Pod Details" let:meta navigationHint="details">
+        <Route path="/pods/podman/:name/:engineId/*" breadcrumb={t('workloads.podDetails') ?? 'Pod Details'} let:meta navigationHint="details">
           <PodDetails
             podName={decodeURI(meta.params.name)}
             engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
-        <Route path="/pod-create-from-containers" breadcrumb="Create Pod">
+        <Route path="/pod-create-from-containers" breadcrumb={t('workloads.createPod') ?? 'Create Pod'}>
           <PodCreateFromContainers />
         </Route>
 
-        <Route path="/volumes/*" breadcrumb="Volumes" navigationHint="root" firstmatch>
-          <Route path="/" breadcrumb="Volumes" navigationHint="root">
+        <Route path="/volumes/*" breadcrumb={t('workloads.volumes') ?? 'Volumes'} navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb={t('workloads.volumes') ?? 'Volumes'} navigationHint="root">
             <VolumesList />
           </Route>
-          <Route path="/create" breadcrumb="Create a Volume">
+          <Route path="/create" breadcrumb={t('workloads.createVolume') ?? 'Create a Volume'}>
             <CreateVolume />
           </Route>
-          <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
+          <Route path="/:name/:engineId/*" breadcrumb={t('workloads.volumeDetails') ?? 'Volume Details'} let:meta navigationHint="details">
             <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
           </Route>
         </Route>
 
         <!--- secrets -->
-        <Route path="/secrets/*" breadcrumb="Secrets" navigationHint="root" firstmatch>
-          <Route path="/" breadcrumb="Secrets" navigationHint="root">
+        <Route path="/secrets/*" breadcrumb={t('workloads.secrets') ?? 'Secrets'} navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb={t('workloads.secrets') ?? 'Secrets'} navigationHint="root">
             <SecretsList />
           </Route>
-          <Route path="/create" breadcrumb="Create a secret">
+          <Route path="/create" breadcrumb={t('workloads.createSecret') ?? 'Create a secret'}>
             <SecretCreate />
           </Route>
-          <Route path="/:engineId/:secretId/*" breadcrumb="Secret Details" let:meta navigationHint="details">
+          <Route path="/:engineId/:secretId/*" breadcrumb={t('workloads.secretDetails') ?? 'Secret Details'} let:meta navigationHint="details">
             <SecretDetails secretId={decodeURIComponent(meta.params.secretId)} engineId={decodeURIComponent(meta.params.engineId)} />
           </Route>
         </Route>
@@ -348,133 +349,133 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
          <Route path="/kubernetes" breadcrumb="Kubernetes" navigationHint="root">
             <KubernetesRoot />
           </Route>
-          <Route path="/kubernetes/dashboard" breadcrumb="Dashboard" navigationHint="root">
+          <Route path="/kubernetes/dashboard" breadcrumb={t('workloads.dashboard') ?? 'Dashboard'} navigationHint="root">
             <KubernetesDashboard />
           </Route>
-          <Route path="/kubernetes/nodes" breadcrumb="Nodes" navigationHint="root">
+          <Route path="/kubernetes/nodes" breadcrumb={t('workloads.resource.Node') ?? 'Nodes'} navigationHint="root">
             <NodesList />
           </Route>
-          <Route path="/kubernetes/nodes/:name/*" breadcrumb="Node Details" let:meta navigationHint="details">
+          <Route path="/kubernetes/nodes/:name/*" breadcrumb={t('workloads.nodeDetails') ?? 'Node Details'} let:meta navigationHint="details">
             <NodeDetails name={decodeURI(meta.params.name)} />
           </Route>
-          <Route path="/kubernetes/pods" breadcrumb="Pods" navigationHint="root">
+          <Route path="/kubernetes/pods" breadcrumb={t('workloads.pods') ?? 'Pods'} navigationHint="root">
             <KubePodsList />
           </Route>
           <Route
             path="/kubernetes/pods/:name/:namespace/*"
-            breadcrumb="Pod Details"
+            breadcrumb={t('workloads.podDetails') ?? 'Pod Details'}
             let:meta
             navigationHint="details">
             <KubePodDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/persistentvolumeclaims" breadcrumb="Persistent Volume Claims" navigationHint="root">
+          <Route path="/kubernetes/persistentvolumeclaims" breadcrumb={t('workloads.resource.PersistentVolumeClaim') ?? 'Persistent Volume Claims'} navigationHint="root">
             <PVCList />
           </Route>
           <Route
             path="/kubernetes/persistentvolumeclaims/:name/:namespace/*"
-            breadcrumb="Persistent Volume Claim Details"
+            breadcrumb={t('workloads.pvcDetails') ?? 'Persistent Volume Claim Details'}
             let:meta
             navigationHint="details">
             <PVCDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/deployments" breadcrumb="Deployments" navigationHint="root">
+          <Route path="/kubernetes/deployments" breadcrumb={t('workloads.resource.Deployment') ?? 'Deployments'} navigationHint="root">
             <DeploymentsList />
           </Route>
           <Route
             path="/kubernetes/deployments/:name/:namespace/*"
-            breadcrumb="Deployment Details"
+            breadcrumb={t('workloads.deploymentDetails') ?? 'Deployment Details'}
             let:meta
             navigationHint="details">
             <DeploymentDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/services" breadcrumb="Services" navigationHint="root">
+          <Route path="/kubernetes/services" breadcrumb={t('workloads.resource.Service') ?? 'Services'} navigationHint="root">
             <ServicesList />
           </Route>
           <Route
             path="/kubernetes/services/:name/:namespace/*"
-            breadcrumb="Service Details"
+            breadcrumb={t('workloads.serviceDetails') ?? 'Service Details'}
             let:meta
             navigationHint="details">
             <ServiceDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/ingressesRoutes" breadcrumb="Ingresses & Routes" navigationHint="root">
+          <Route path="/kubernetes/ingressesRoutes" breadcrumb={t('workloads.resource.Ingress') ?? 'Ingresses & Routes'} navigationHint="root">
             <IngressesRoutesList />
           </Route>
-          <Route path="/kubernetes/jobs" breadcrumb="Jobs" navigationHint="root">
+          <Route path="/kubernetes/jobs" breadcrumb={t('workloads.resource.Job') ?? 'Jobs'} navigationHint="root">
             <JobList />
           </Route>
-          <Route path="/kubernetes/jobs/:name/:namespace/*" breadcrumb="Job Details" let:meta navigationHint="details">
+          <Route path="/kubernetes/jobs/:name/:namespace/*" breadcrumb={t('workloads.jobDetails') ?? 'Job Details'} let:meta navigationHint="details">
             <JobDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/cronjobs" breadcrumb="CronJobs" navigationHint="root">
+          <Route path="/kubernetes/cronjobs" breadcrumb={t('workloads.resource.CronJob') ?? 'CronJobs'} navigationHint="root">
             <CronJobList />
           </Route>
-          <Route path="/kubernetes/cronjobs/:name/:namespace/*" breadcrumb="CronJob Details" let:meta navigationHint="details">
+          <Route path="/kubernetes/cronjobs/:name/:namespace/*" breadcrumb={t('workloads.cronJobDetails') ?? 'CronJob Details'} let:meta navigationHint="details">
             <CronJobDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route
             path="/kubernetes/ingressesRoutes/ingress/:name/:namespace/*"
-            breadcrumb="Ingress Details"
+            breadcrumb={t('workloads.ingressDetails') ?? 'Ingress Details'}
             let:meta
             navigationHint="details">
             <IngressDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/configmapsSecrets" breadcrumb="ConfigMaps & Secrets" navigationHint="root">
+          <Route path="/kubernetes/configmapsSecrets" breadcrumb={t('workloads.resource.ConfigMap') ?? 'ConfigMaps & Secrets'} navigationHint="root">
             <ConfigMapSecretList />
           </Route>
           <Route
             path="/kubernetes/configmapsSecrets/configmap/:name/:namespace/*"
-            breadcrumb="ConfigMap Details"
+            breadcrumb={t('workloads.configMapDetails') ?? 'ConfigMap Details'}
             let:meta
             navigationHint="details">
             <ConfigMapDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route
             path="/kubernetes/configmapsSecrets/secret/:name/:namespace/*"
-            breadcrumb="Secret Details"
+            breadcrumb={t('workloads.secretDetails') ?? 'Secret Details'}
             let:meta
             navigationHint="details">
             <KubernetesSecretDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route
             path="/kubernetes/ingressesRoutes/route/:name/:namespace/*"
-            breadcrumb="Route Details"
+            breadcrumb={t('workloads.routeDetails') ?? 'Route Details'}
             let:meta
             navigationHint="details">
             <RouteDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
-          <Route path="/kubernetes/portForward" breadcrumb="Port Forwarding" navigationHint="root">
+          <Route path="/kubernetes/portForward" breadcrumb={t('workloads.portForwarding') ?? 'Port Forwarding'} navigationHint="root">
             <PortForwardingList />
           </Route>
         {/if}
-        <Route path="/preferences/*" breadcrumb="Settings">
+        <Route path="/preferences/*" breadcrumb={t('workloads.settings') ?? 'Settings'}>
           <PreferencesPage />
         </Route>
 
-        <Route path="/global-onboarding" breadcrumb="Extension Onboarding" let:meta navigationHint="details">
+        <Route path="/global-onboarding" breadcrumb={t('workloads.extensionOnboarding') ?? 'Extension Onboarding'} let:meta navigationHint="details">
           <Onboarding
             extensionIds={meta.query.ids ? decodeURIComponent(meta.query.ids).split(',') : []}
             global={true} />
         </Route>
-        <Route path="/contribs/:name/*" breadcrumb="Extension" let:meta>
+        <Route path="/contribs/:name/*" breadcrumb={t('workloads.extension') ?? 'Extension'} let:meta>
           <DockerExtension name={decodeURI(meta.params.name)} />
         </Route>
-        <Route path="/webviews/:id/*" breadcrumb="Webview" let:meta>
+        <Route path="/webviews/:id/*" breadcrumb={t('workloads.webview') ?? 'Webview'} let:meta>
           <Webview id={meta.params.id} />
         </Route>
-        <Route path="/troubleshooting/*" breadcrumb="Troubleshooting">
+        <Route path="/troubleshooting/*" breadcrumb={t('workloads.troubleshooting') ?? 'Troubleshooting'}>
           <TroubleshootingPage />
         </Route>
 
-        <Route path="/extensions/*" breadcrumb="Extensions" navigationHint="root" firstmatch>
-          <Route path="/" breadcrumb="Extensions" navigationHint="root" let:meta>
+        <Route path="/extensions/*" breadcrumb={t('workloads.extensions') ?? 'Extensions'} navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb={t('workloads.extensions') ?? 'Extensions'} navigationHint="root" let:meta>
             {@const request = parseExtensionListRequest(meta)}
             <ExtensionList
               searchTerm={request.searchTerm}
               screen={request.screen}
             />
           </Route>
-          <Route path="/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
+          <Route path="/details/:id/*" breadcrumb={t('workloads.extensionDetails') ?? 'Extension Details'} let:meta navigationHint="details">
             <ExtensionDetails extensionId={meta.params.id} />
           </Route>
         </Route>

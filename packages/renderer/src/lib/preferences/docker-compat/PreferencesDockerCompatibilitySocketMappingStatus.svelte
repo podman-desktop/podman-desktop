@@ -6,6 +6,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Label from '/@/lib/ui/Label.svelte';
 import ProviderInfoCircle from '/@/lib/ui/ProviderInfoCircle.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
@@ -47,27 +48,27 @@ onMount(async () => {
   <div class="flex flex-row grow px-2 py-2 justify-between text-[color:var(--pd-invert-content-card-text)]">
     <div class="flex flex-col">
       <div class="flex flex-row items-center text-[color:var(--pd-invert-content-card-text)]">
-        System socket status
+        {t('settings.docker.socketStatus') ?? 'System socket status'}
 
         <div class="mx-2">
-          <RefreshButton label="Refresh the status" onclick={refreshSocketMappingStatus} />
+          <RefreshButton label={t('settings.docker.refresh') ?? 'Refresh the status'} onclick={refreshSocketMappingStatus} />
         </div>
         {#if dockerSocketMappingStatusInfo?.status === 'running' && dockerSocketMappingStatusInfo?.serverInfo}
-          <Label name="{dockerSocketMappingStatusInfo.serverInfo.type} is listening">
+          <Label name={(t('settings.docker.listening') ?? '{name} is listening').replace('{name}', dockerSocketMappingStatusInfo.serverInfo.type)}>
             <ProviderInfoCircle type={engineType} />
           </Label>
         {:else if dockerSocketMappingStatusInfo?.status === 'unreachable'}
-          <Label name="socket not reachable">
+          <Label name={t('settings.docker.unreachable') ?? 'socket not reachable'}>
             <ProviderInfoCircle type={undefined} />
           </Label>
         {/if}
       </div>
       <div class="flex flex-col mt-2 text-sm" role="status" aria-label="description of the status">
-        Status of the system {isLinux || isMac ? '/var/run/docker.sock socket' : ''}{isWindows
+        {t('settings.docker.systemStatus') ?? 'Status of the system'} {isLinux || isMac ? '/var/run/docker.sock socket' : ''}{isWindows
           ? '//./pipe/docker_engine'
           : ''}.
         {#if dockerSocketMappingStatusInfo?.serverInfo?.type === 'podman'}
-          <div>Any docker commands using this socket are redirected to the Podman Engine instead</div>
+          <div>{t('settings.docker.redirected') ?? 'Any docker commands using this socket are redirected to the Podman Engine instead'}</div>
         {/if}
       </div>
     </div>
@@ -80,13 +81,13 @@ onMount(async () => {
       role="status"
       aria-label="Connection information">
       <div class="flex flex-col grow">
-        <div>Provided by {connectionInfo.provider.name}</div>
+        <div>{(t('settings.docker.providedBy') ?? 'Provided by {name}').replace('{name}', connectionInfo.provider.name)}</div>
         <div class="font-thin text-xs">{connectionInfo.displayName}</div>
       </div>
 
-      <Tooltip class="m-2" bottom tip="{connectionInfo.provider.name} details">
+      <Tooltip class="m-2" bottom tip={(t('settings.details') ?? '{name} details').replace('{name}', connectionInfo.provider.name)}>
         <button
-          aria-label="{connectionInfo.provider.name} details"
+          aria-label={(t('settings.details') ?? '{name} details').replace('{name}', connectionInfo.provider.name)}
           type="button"
           onclick={(): void => router.goto(connectionInfo.link)}>
           <Icon icon={faCircleInfo} />
@@ -99,16 +100,16 @@ onMount(async () => {
       role="status"
       aria-label="Server information">
       <div class="grid grid-cols-2 gap-x-8 gap-y-2">
-        <div>Server:</div>
+        <div>{t('settings.server') ?? 'Server'}:</div>
         <div>{dockerSocketMappingStatusInfo.serverInfo.type}</div>
 
-        <div>Version:</div>
+        <div>{t('settings.version') ?? 'Version'}:</div>
         <div>{dockerSocketMappingStatusInfo.serverInfo.serverVersion}</div>
 
-        <div>Operating System:</div>
+        <div>{t('settings.operatingSystem') ?? 'Operating System'}:</div>
         <div>{dockerSocketMappingStatusInfo.serverInfo.operatingSystem}</div>
 
-        <div>OS/Arch:</div>
+        <div>{t('settings.osArch') ?? 'OS/Arch'}:</div>
         <div>
           {dockerSocketMappingStatusInfo.serverInfo.osType}/{dockerSocketMappingStatusInfo.serverInfo.architecture}
         </div>

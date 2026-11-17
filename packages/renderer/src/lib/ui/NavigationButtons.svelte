@@ -6,6 +6,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Component } from 'svelte';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import {
   BACK,
   type Direction,
@@ -43,22 +44,22 @@ interface NavButton {
   ariaLabel: string;
   canNavigate: () => boolean;
 }
-const navButtons: NavButton[] = [
+const navButtons: NavButton[] = $derived([
   {
     direction: BACK,
     icon: faArrowLeft,
-    label: 'Back (hold for history)',
-    ariaLabel: 'Back history',
+    label: t('navigation.back') ?? 'Back (hold for history)',
+    ariaLabel: t('navigation.backHistory') ?? 'Back history',
     canNavigate: (): boolean => canGoBack,
   },
   {
     direction: FORWARD,
     icon: faArrowRight,
-    label: 'Forward (hold for history)',
-    ariaLabel: 'Forward history',
+    label: t('navigation.forward') ?? 'Forward (hold for history)',
+    ariaLabel: t('navigation.forwardHistory') ?? 'Forward history',
     canNavigate: (): boolean => canGoForward,
   },
-];
+]);
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
 
 function resolveIcon(icon: HistoryEntryIcon | undefined, fallback: IconDefinition): IconType {

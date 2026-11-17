@@ -20,6 +20,7 @@ import type { ProviderInfo } from '@desktop-framework/api';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { providerInfos } from '/@/stores/providers';
 
 import * as PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
@@ -44,6 +45,36 @@ const defaultProviderInfo = {
 } as unknown as ProviderInfo;
 
 vi.mock(import('./PreferencesConnectionCreationOrEditRendering.svelte'));
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test.each([
+  { id: 'podman', name: 'Podman machine', expected: 'Podmanマシンを作成' },
+  { id: 'kind', name: 'Kind cluster', expected: 'Kindクラスターを作成' },
+  { id: 'external', name: 'External {name}', expected: 'External {name}を作成' },
+])('localizes built-in creation names without changing provider identity: $id', async ({ id, name, expected }) => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'settings.connection.createTitle': '{provider}を作成',
+    'settings.provider.podman.creationDisplayName': 'Podmanマシン',
+    'settings.provider.kind.creationDisplayName': 'Kindクラスター',
+  });
+  await initTranslations();
+  const provider: ProviderInfo = {
+    ...defaultProviderInfo,
+    id,
+    containerProviderConnectionCreation: true,
+    containerProviderConnectionCreationDisplayName: name,
+  };
+  providerInfos.set([provider]);
+  render(PreferencesProviderRendering, { providerInternalId: provider.internalId });
+
+  await screen.findByRole('heading', { name: expected });
+  expect(provider.id).toBe(id);
+  expect(provider.containerProviderConnectionCreationDisplayName).toBe(name);
+});
 
 describe.each<{
   name: string;

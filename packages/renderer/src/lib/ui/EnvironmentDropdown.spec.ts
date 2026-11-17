@@ -23,6 +23,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import * as providers from '/@/stores/providers';
 
 import EnvironmentDropdown from './EnvironmentDropdown.svelte';
@@ -110,8 +111,10 @@ const STOPPED_PROVIDER: ProviderInfo = {
   ],
 } as unknown as ProviderInfo;
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
 });
 
 test('Expect dropdown to be hidden with zero running environments', async () => {
@@ -159,6 +162,26 @@ test('Expect "All" to be the default option', async () => {
 
   const dropdown = screen.getByRole('button');
   expect(dropdown.textContent).toContain('All');
+});
+
+test('Expect a language change to preserve the selected environment', async () => {
+  vi.mocked(providers).providerInfos = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+  render(EnvironmentDropdown);
+  await fireEvent.click(screen.getByRole('button'));
+  await fireEvent.click(screen.getByRole('button', { name: 'Docker' }));
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'common.all': 'すべて',
+    'common.environment': '環境',
+    'common.environment.label': '環境：',
+  });
+  await initTranslations();
+
+  const dropdown = await screen.findByLabelText('環境');
+  expect(dropdown).toHaveTextContent('Docker');
+  await fireEvent.click(screen.getByRole('button', { name: /Docker$/ }));
+  await fireEvent.click(screen.getByRole('button', { name: 'すべて' }));
+  expect(dropdown).toHaveTextContent('すべて');
 });
 
 test('Expect running environments to appear in dropdown options', async () => {

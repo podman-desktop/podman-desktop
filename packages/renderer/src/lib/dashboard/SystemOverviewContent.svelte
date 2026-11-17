@@ -13,6 +13,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
 import SystemOverviewProviderCardDetailed from '/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte';
 import SystemOverviewProviderSetup from '/@/lib/dashboard/SystemOverviewProviderSetup.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 import { containersInfos } from '/@/stores/containers';
 import { systemOverviewInfos } from '/@/stores/dashboard/system-overview.svelte';
@@ -144,19 +145,19 @@ async function navigateToResources(): Promise<void> {
 }
 </script>
 
-<div class="pt-2" aria-label="System Overview">
+<div class="pt-2" aria-label={t('workloads.systemOverview') ?? 'System Overview'}>
   <button
     class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors border border-transparent {backgroundClass} {STATUS_TEXT_CLASS[$systemOverviewInfos.status.status]}"
-    aria-label="System Overview - Overall status"
+    aria-label={t('workloads.systemOverviewStatus') ?? 'System Overview - Overall status'}
     onclick={navigateToResources}>
     {#key $systemOverviewInfos.status.status}
       <Icon icon={$systemOverviewInfos.status.icon} size={$systemOverviewInfos.status.status === 'progressing' ? '1.25em' : 'lg'} />
     {/key}
-    <span class="text-sm leading-none">{$systemOverviewInfos.text}</span>
+    <span class="text-sm leading-none">{t(`dashboard.status.${$systemOverviewInfos.text}`) ?? $systemOverviewInfos.text}</span>
     <Icon icon={faChevronRight} size="sm" />
   </button>
 
-  <div class="text-md font-semibold text-[var(--pd-content-card-header-text)] pt-2">Container providers:</div>
+  <div class="text-md font-semibold text-[var(--pd-content-card-header-text)] pt-2">{t('workloads.containerProviders') ?? 'Container providers:'}</div>
   <div class="flex flex-col gap-2 pt-2">
     {#each providersNeedingSetup as provider (provider.id)}
       <SystemOverviewProviderSetup {provider} />
@@ -169,7 +170,7 @@ async function navigateToResources(): Promise<void> {
 
     <!-- Standalone K8s/VM connections as stacked minimal cards -->
     {#if standaloneConnections.length > 0}
-      <div class="text-md font-semibold text-[var(--pd-content-card-header-text)]">Kubernetes/VM connections:</div>
+      <div class="text-md font-semibold text-[var(--pd-content-card-header-text)]">{t('workloads.kubernetesVmConnections') ?? 'Kubernetes/VM connections:'}</div>
       <div class="rounded-lg p-2 bg-[var(--pd-content-card-carousel-card-bg)]">
         <div class="flex flex-wrap items-center gap-2">
           {#each standaloneConnections as { connection, provider } (provider.id + ':' + connection.name)}

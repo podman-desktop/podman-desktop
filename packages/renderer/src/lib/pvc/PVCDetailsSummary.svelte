@@ -3,6 +3,7 @@ import type { V1PersistentVolumeClaim } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 import KubePVCArtifact from '/@/lib/kube/details/KubePVCArtifact.svelte';
 import KubePVCStatusArtifact from '/@/lib/kube/details/KubePVCStatusArtifact.svelte';
@@ -27,6 +28,6 @@ basic information -->
     <KubePVCStatusArtifact artifact={pvc.status} />
     <KubePVCArtifact artifact={pvc.spec} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

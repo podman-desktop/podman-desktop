@@ -3,6 +3,8 @@ import type { ProviderContainerConnectionInfo } from '@desktop-framework/api';
 import { faSignal } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   providerContainerEngine: ProviderContainerConnectionInfo;
 }
@@ -17,13 +19,14 @@ async function grabContainers(): Promise<void> {
   const start = performance.now();
   listInProgress = true;
   listError = '';
-  listContainersResult = 'Waiting for response...';
+  listContainersResult = t('management.waiting') ?? 'Waiting for response...';
   try {
     const result = await window.listContainersFromEngine($state.snapshot(providerContainerEngine));
-    listContainersResult = `Responded: ${result.length} containers`;
+    listContainersResult =
+      t('management.containerResponse', { count: result.length }) ?? `Responded: ${result.length} containers`;
   } catch (e) {
     listError = String(e);
-    listContainersResult = 'Failed';
+    listContainersResult = t('management.failed') ?? 'Failed';
   } finally {
     listInProgress = false;
   }
@@ -35,7 +38,7 @@ async function grabContainers(): Promise<void> {
 <div class="flex flex-row items-center">
   <div class="w-36">
     <Button inProgress={listInProgress} class="my-1 w-full" on:click={grabContainers} icon={faSignal}>
-      Check containers
+      {t('management.checkContainers') ?? 'Check containers'}
     </Button>
   </div>
   <div role="status" class="mx-2">{listContainersResult}</div>

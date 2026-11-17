@@ -17,6 +17,7 @@ import { router } from 'tinro';
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { ContainerUtils } from '/@/lib/container/container-utils';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { clearPodActionInProgress, setPodActionError, setPodStatus } from '/@/stores/pods';
@@ -138,22 +139,25 @@ const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
-  title="Start Pod"
+  title={t('resources.start-pod') ?? 'Start Pod'}
   onClick={startPod}
   hidden={pod.status === 'RUNNING' || pod.status === 'STOPPING'}
   detailed={detailed}
   inProgress={pod.actionInProgress && pod.status === 'STARTING'}
   icon={faPlay} />
 <ListItemButtonIcon
-  title="Stop Pod"
+  title={t('resources.stop-pod') ?? 'Stop Pod'}
   onClick={stopPod}
   hidden={!(pod.status === 'RUNNING' || pod.status === 'STOPPING')}
   detailed={detailed}
   inProgress={pod.actionInProgress && pod.status === 'STOPPING'}
   icon={faStop} />
 <ListItemButtonIcon
-  title="Delete Pod"
-  onClick={(): void => withConfirmation(deletePod, `delete pod ${pod.name}`, { title: 'Delete Pod?', variant: 'delete' })}
+  title={t('resources.delete-pod') ?? 'Delete Pod'}
+  onClick={(): void => withConfirmation(deletePod, `delete pod ${pod.name}`, {
+    title: t('resources.delete-pod') ?? 'Delete Pod?', variant: 'delete',
+    message: t('resources.confirm-delete-pod', { name: pod.name }) ?? `Are you sure you want to delete pod ${pod.name}?`,
+  })}
   icon={faTrash}
   detailed={detailed}
   inProgress={pod.actionInProgress && pod.status === 'DELETING'} />
@@ -162,21 +166,21 @@ const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 <MenuComponent>
   {#if !detailed}
     <ListItemButtonIcon
-      title="Generate Kube"
+      title={t('resources.generate-kube') ?? 'Generate Kube'}
       onClick={openGenerateKube}
       menu={dropdownMenu}
       detailed={detailed}
       icon={faFileCode} />
   {/if}
   <ListItemButtonIcon
-    title="Deploy to Kubernetes"
+    title={t('resources.deploy-to-kubernetes') ?? 'Deploy to Kubernetes'}
     onClick={deployToKubernetes}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faRocket} />
   {#if openingUrls.length === 0}
     <ListItemButtonIcon
-      title="Open Exposed Port"
+      title={t('resources.open-exposed-port') ?? 'Open Exposed Port'}
       menu={dropdownMenu}
       enabled={false}
       hidden={dropdownMenu}
@@ -184,7 +188,7 @@ const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
       icon={faExternalLinkSquareAlt} />
   {:else if openingUrls.length === 1}
     <ListItemButtonIcon
-      title="Open {extractPort(openingUrls[0])}"
+      title={t('resources.open-port', { port: String(extractPort(openingUrls[0])) }) ?? `Open ${extractPort(openingUrls[0])}`}
       onClick={(): Promise<void> => window.openExternal(openingUrls[0])}
       menu={dropdownMenu}
       enabled={pod.status === 'RUNNING'}
@@ -195,7 +199,7 @@ const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
     <DropdownMenu icon={faExternalLinkSquareAlt} hidden={dropdownMenu} shownAsMenuActionItem={true}>
       {#each openingUrls as url, index (index)}
         <ListItemButtonIcon
-          title="Open {extractPort(url)}"
+          title={t('resources.open-port', { port: String(extractPort(url)) }) ?? `Open ${extractPort(url)}`}
           onClick={(): Promise<void> => window.openExternal(url)}
           menu={!dropdownMenu}
           enabled={pod.status === 'RUNNING'}
@@ -206,7 +210,7 @@ const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
     </DropdownMenu>
   {/if}
   <ListItemButtonIcon
-    title="Restart Pod"
+    title={t('resources.restart-pod') ?? 'Restart Pod'}
     onClick={restartPod}
     menu={dropdownMenu}
     detailed={detailed}

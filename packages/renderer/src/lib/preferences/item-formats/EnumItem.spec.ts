@@ -20,12 +20,48 @@ import '@testing-library/jest-dom/vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { tick } from 'svelte';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import EnumItem from './EnumItem.svelte';
 
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
+});
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('Translate enum labels and accessible description while preserving configuration values', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'preferences.appearance',
+    title: 'Appearance',
+    parentId: 'preferences.appearance',
+    description: 'Select a theme',
+    enum: ['system', 'dark'],
+    enumLabels: ['System', 'Dark'],
+  };
+  const onChange = vi.fn().mockResolvedValue(undefined);
+  render(EnumItem, { record, value: 'system', onChange });
+  expect(screen.getByLabelText('Select a theme')).toHaveTextContent('System');
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'preferences.appearance.description': 'テーマを選択',
+    'preferences.appearance.enum.system': 'システム設定に従う',
+    'preferences.appearance.enum.dark': 'ダーク',
+  });
+  await initTranslations();
+  await tick();
+  const dropdown = screen.getByLabelText('テーマを選択');
+  expect(dropdown).toHaveTextContent('システム設定に従う');
+  await userEvent.click(screen.getByRole('button', { name: 'システム設定に従う' }));
+  await userEvent.click(screen.getByRole('button', { name: 'ダーク' }));
+  expect(onChange).toHaveBeenCalledWith('preferences.appearance', 'dark');
 });
 
 test('Enum without default', async () => {
@@ -54,6 +90,54 @@ test('Enum with default', async () => {
   };
 
   render(EnumItem, { record, value: record.default });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect(input).toHaveTextContent('world');
+});
+
+test('Expect enumLabels to be used as display labels when provided', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    enum: ['system', 'en', 'ja'],
+    enumLabels: ['Follow system language', 'English', '日本語'],
+  };
+
+  render(EnumItem, { record, value: 'ja' });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect(input).toHaveTextContent('日本語');
+});
+
+test('Expect enum value fallback when enumLabels is absent', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    enum: ['hello', 'world'],
+  };
+
+  render(EnumItem, { record, value: 'world' });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect(input).toHaveTextContent('world');
+});
+
+test('Expect enum value fallback when enumLabels index is out of range', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    enum: ['hello', 'world'],
+    enumLabels: ['hello-label'],
+  };
+
+  // 'world' is at index 1, outside enumLabels (length 1): it falls back to the raw enum value
+  render(EnumItem, { record, value: 'world' });
   const input = screen.getByLabelText('record-description');
   expect(input).toBeInTheDocument();
   expect(input).toHaveTextContent('world');

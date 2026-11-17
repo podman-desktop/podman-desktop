@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 
 interface Props {
@@ -24,9 +25,9 @@ function onInput(event: Event): void {
   oninput={onInput}
   class="grow"
   name={record.id}
-  placeholder={record.placeholder}
+  placeholder={t(`${record.id}.placeholder`) ?? record.placeholder}
   password={value}
   readonly={!!record.readonly}
   id="input-standard-{record.id}"
   aria-invalid={invalidEntry}
-  aria-label={record.description} />
+  aria-label={t(`${record.id}.description`) ?? record.description} />

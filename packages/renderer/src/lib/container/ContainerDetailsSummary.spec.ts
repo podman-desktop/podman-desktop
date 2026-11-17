@@ -22,11 +22,15 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import ContainerDetailsSummary from './ContainerDetailsSummary.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
 });
 
@@ -95,6 +99,29 @@ const fakeStandaloneContainer: ContainerInfoUI = {
   imageId: 'fakeImageID2',
   names: ['/fakeStandaloneContainer'],
 };
+
+test('localizes detail labels without changing resource names or port URLs', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'resources.details': '詳細',
+    'resources.name': '名前',
+    'resources.ports': 'ポート',
+  });
+  await initTranslations();
+  render(ContainerDetailsSummary, {
+    container: {
+      ...fakeStandaloneContainer,
+      hasPublicPort: true,
+      ports: [{ IP: '0.0.0.0', PrivatePort: 80, PublicPort: 8080, Type: 'tcp' }],
+    },
+  });
+  screen.getByText('詳細');
+  expect(screen.getAllByText('名前')).not.toHaveLength(0);
+  screen.getByText('ポート');
+  screen.getByText('fakeStandaloneContainer');
+  expect(screen.getAllByText('Engine type')).toHaveLength(2);
+  await userEvent.click(screen.getByText('8080'));
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
+});
 
 // Test render ContainerDetailsSummary with ContainerInfoUI object with a pod group
 test('ContainerDetailsSummary renders with ContainerInfoUI object with a pod group', async () => {

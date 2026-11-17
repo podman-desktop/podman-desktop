@@ -2,6 +2,7 @@
 import { onMount } from 'svelte';
 import { derived, type Readable } from 'svelte/store';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
@@ -22,7 +23,7 @@ interface Props {
 let {
   category,
   keywords = [],
-  title = 'Available extensions',
+  title = t('workloads.availableExtensions') ?? 'Available extensions',
   showEmptyScreen = true,
   oninstall = (_extensionId: string): void => {},
   ondetails = (_extensionId: string): void => {},

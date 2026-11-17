@@ -5,6 +5,9 @@ import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } fr
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
@@ -110,7 +113,7 @@ const columns = [
 
 const row = new TableRow<NetworkInfoUI>({
   selectable: (network): boolean => network.status === 'UNUSED',
-  disabledText: 'Network is used by a container',
+  disabledText: t('resources.network-is-used-by-a-container') ?? 'Network is used by a container',
 });
 
 /**
@@ -121,12 +124,12 @@ function key(network: NetworkInfoUI): string {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="networks">
+<NavPage bind:searchTerm={searchTerm} title={t('resources.networks') ?? 'networks'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
 
   {#snippet additionalActions()}
     {#if providerConnections.length > 0}
-      <Button onclick={gotoCreateNetwork} icon={faPlusCircle} title="Create a network" aria-label="Create"
-        >Create</Button>
+      <Button onclick={gotoCreateNetwork} icon={faPlusCircle} title={t('resources.create-a-network') ?? 'Create a network'} aria-label={t('resources.create') ?? 'Create'}
+        >{t('resources.create') ?? 'Create'}</Button>
     {/if}
   {/snippet}
 
@@ -138,12 +141,15 @@ function key(network: NetworkInfoUI): string {
           withBulkConfirmation(
             deleteSelectedNetworks,
             `delete ${selectedItemsNumber} network${selectedItemsNumber > 1 ? 's' : ''}`,
-            { title: 'Delete Networks?', variant:'delete' }
+            {
+              title: t('resources.delete-networks') ?? 'Delete Networks?', variant: 'delete',
+              message: t('resources.confirm-delete-selected', { count: selectedItemsNumber }) ?? `Are you sure you want to delete ${selectedItemsNumber} network${selectedItemsNumber > 1 ? 's' : ''}?`,
+            }
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title={t('resources.delete-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('resources.selected-items', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
   {/snippet}
 
@@ -154,14 +160,15 @@ function key(network: NetworkInfoUI): string {
       <NoContainerEngineEmptyScreen />
     {:else if networks.length === 0}
       {#if searchTerm}
-          <FilteredEmptyScreen icon={ContainerIcon} kind="networks" bind:searchTerm={searchTerm} />
+          <FilteredEmptyScreen labels={getFilteredEmptyLabels('networks', searchTerm)} icon={ContainerIcon} kind="networks" bind:searchTerm={searchTerm} />
         {:else}
           <NetworkEmptyScreen />
         {/if}
     {:else if filteredNetworks.length === 0 && selectedEnvironment}
-      <FilteredEmptyScreen icon={ContainerIcon} kind="networks" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
+      <FilteredEmptyScreen labels={getFilteredEmptyLabels('networks', t('common.environment') ?? 'selected environment')} icon={ContainerIcon} kind="networks" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
+        labels={getTableLabels()}
         kind="network"
         bind:selectedItemsNumber={selectedItemsNumber}
         data={filteredNetworks}

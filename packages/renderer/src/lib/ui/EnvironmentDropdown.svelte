@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Dropdown } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { providerInfos } from '/@/stores/providers';
 
 import { capitalize } from './Util';
@@ -36,7 +37,7 @@ const runningConnectionCount = $derived(
 
 // Get all running container connections as environment options
 const environmentOptions = $derived.by(() => {
-  const options: { label: string; value: string }[] = [{ label: 'All', value: '' }];
+  const options: { label: string; value: string }[] = [{ label: t('common.all') ?? 'All', value: '' }];
 
   runningConnections.forEach(connection => {
     // Show connection type if there's only one of that type, otherwise show displayName
@@ -77,20 +78,20 @@ function handleChange(value: string): void {
   <div class="inline-grid max-w-64">
     <!-- Sizer: renders longest option to establish grid cell width -->
     <div class="invisible col-start-1 row-start-1 flex items-center px-1 py-1 whitespace-nowrap" aria-hidden="true">
-      <span class="mr-1">Environment:</span>
+      <span class="mr-1">{t('common.environment.label') ?? 'Environment:'}</span>
       <span class="truncate">{longestLabel}</span>
       <span class="w-4 shrink-0"></span>
     </div>
     <!-- Actual dropdown in same grid cell -->
     <Dropdown
-      ariaLabel="Environment"
+      ariaLabel={t('common.environment') ?? 'Environment'}
       name="environment"
       class="col-start-1 row-start-1 whitespace-nowrap !grow-0"
       value={selectedEnvironment}
       onChange={handleChange}
       options={environmentOptions}>
       {#snippet left()}
-        <div class="mr-1 text-[var(--pd-input-field-placeholder-text)]">Environment:</div>
+        <div class="mr-1 text-[var(--pd-input-field-placeholder-text)]">{t('common.environment.label') ?? 'Environment:'}</div>
       {/snippet}
     </Dropdown>
   </div>

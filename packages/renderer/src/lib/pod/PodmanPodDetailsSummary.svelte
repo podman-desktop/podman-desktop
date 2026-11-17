@@ -6,6 +6,7 @@ import DetailsCell from '/@/lib/details/DetailsCell.svelte';
 import DetailsSubtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import DetailsTable from '/@/lib/details/DetailsTable.svelte';
 import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 
 import type { PodInfoContainerUI, PodInfoUI } from './PodInfoUI';
@@ -26,10 +27,10 @@ function navigateToLogs(container: PodInfoContainerUI): void {
 <DetailsTable>
   {#if pod}
     <tr>
-      <DetailsTitle>Details</DetailsTitle>
+      <DetailsTitle>{t('resources.details') ?? 'Details'}</DetailsTitle>
     </tr>
     <tr>
-      <DetailsCell>Name</DetailsCell>
+      <DetailsCell>{t('resources.name') ?? 'Name'}</DetailsCell>
       <DetailsCell>{pod.name}</DetailsCell>
     </tr>
     <tr>
@@ -37,22 +38,22 @@ function navigateToLogs(container: PodInfoContainerUI): void {
       <DetailsCell>{pod.id}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Created</DetailsCell>
+      <DetailsCell>{t('resources.created') ?? 'Created'}</DetailsCell>
       <DetailsCell>{creationTime}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Age</DetailsCell>
+      <DetailsCell>{t('resources.age') ?? 'Age'}</DetailsCell>
       <DetailsCell>{pod.age}</DetailsCell>
     </tr>
     <tr>
-      <DetailsTitle>Pod Status</DetailsTitle>
+      <DetailsTitle>{t('resources.pod-status') ?? 'Pod Status'}</DetailsTitle>
     </tr>
     <tr>
-      <DetailsCell>Status</DetailsCell>
-      <DetailsCell>{pod.status.toLowerCase()}</DetailsCell>
+      <DetailsCell>{t('resources.status') ?? 'Status'}</DetailsCell>
+      <DetailsCell>{t(`resources.status.${pod.status.toLowerCase()}`) ?? pod.status.toLowerCase()}</DetailsCell>
     </tr>
     <tr>
-      <DetailsTitle>Containers</DetailsTitle>
+      <DetailsTitle>{t('resources.containers') ?? 'Containers'}</DetailsTitle>
     </tr>
     {#if pod.containers.length > 0}
       {#each pod.containers as container (container.Id)}
@@ -68,16 +69,16 @@ function navigateToLogs(container: PodInfoContainerUI): void {
           <DetailsCell>{container.Id}</DetailsCell>
         </tr>
         <tr>
-          <DetailsCell>Status</DetailsCell>
-          <DetailsCell>{container.Status}</DetailsCell>
+          <DetailsCell>{t('resources.status') ?? 'Status'}</DetailsCell>
+          <DetailsCell>{t(`resources.status.${container.Status.toLowerCase()}`) ?? container.Status}</DetailsCell>
         </tr>
       {/each}
     {:else}
       <tr>
-        <DetailsCell>No containers</DetailsCell>
+        <DetailsCell>{t('resources.no-containers') ?? 'No containers'}</DetailsCell>
       </tr>
     {/if}
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('resources.loading') ?? 'Loading...'}</p>
   {/if}
 </DetailsTable>

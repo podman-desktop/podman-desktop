@@ -5,6 +5,7 @@ import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelt
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
 import { handleNavigation } from '/@/navigation';
@@ -47,7 +48,7 @@ async function selectFolderPath(): Promise<void> {
   if (!container) return;
 
   const result = await window.saveDialog({
-    title: 'Select the directory where to export the container content',
+    title: t('resources.select-export-directory') ?? 'Select the directory where to export the container content',
     defaultUri: {
       fsPath: `${container.name}.tar`,
       path: `${container.name}.tar`,
@@ -88,7 +89,7 @@ async function exportContainer(): Promise<void> {
 </script>
 
 {#if container}
-  <EngineFormPage title="Export container {container.name}">
+  <EngineFormPage title={t('resources.export-container-name', { name: container.name }) ?? `Export container ${container.name}`}>
     {#snippet icon()}
       <i class="fas fa-download fa-2x" aria-hidden="true"></i>
     {/snippet}
@@ -98,7 +99,7 @@ async function exportContainer(): Promise<void> {
         <div class="space-y-2">
           <div>
             <label for="modalSelectTarget" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-              >Export to:</label>
+              >{t('resources.export-to') ?? 'Export to:'}</label>
             <div class="flex w-full">
               <Input
                 class="grow mr-2"
@@ -109,18 +110,18 @@ async function exportContainer(): Promise<void> {
                 aria-invalid={invalidFolder} />
               <Button
                 on:click={selectFolderPath}
-                title="Open dialog to select the output file"
-                aria-label="Browse... output file">Browse...</Button>
+                title={t('resources.open-dialog-to-select-the-output-file') ?? 'Open dialog to select the output file'}
+                aria-label={t('resources.browse-output-file') ?? 'Browse... output file'}>{t('resources.browse') ?? 'Browse...'}</Button>
             </div>
             <ButtonRow class="mt-5">
-              <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+              <Button type="link" on:click={(): void => router.goto($lastPage.path)}>{t('resources.close') ?? 'Close'}</Button>
               <Button
                 on:click={exportContainer}
                 icon={faDownload}
                 inProgress={inProgress}
                 disabled={invalidFields}
-                aria-label="Export container">
-                Export Container
+                aria-label={t('resources.export-container') ?? 'Export container'}>
+                {t('resources.export-container') ?? 'Export Container'}
               </Button>
             </ButtonRow>
             <div aria-label="createError">

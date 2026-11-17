@@ -8,6 +8,7 @@ import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import FormPage from '/@/lib/ui/FormPage.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import Route from '/@/Route.svelte';
@@ -51,17 +52,23 @@ onMount(() => {
 let providerInfo = $derived(providers.filter(provider => provider.internalId === providerInternalId)[0]);
 
 let providerDisplayName: string = $derived(
-  (providerInfo?.containerProviderConnectionCreation
-    ? (providerInfo?.containerProviderConnectionCreationDisplayName ?? undefined)
-    : providerInfo?.kubernetesProviderConnectionCreation
-      ? providerInfo?.kubernetesProviderConnectionCreationDisplayName
-      : providerInfo?.vmProviderConnectionCreation
-        ? providerInfo?.vmProviderConnectionCreationDisplayName
-        : undefined) ?? providerInfo?.name,
+  t(`settings.provider.${providerInfo?.id}.creationDisplayName`) ??
+    (providerInfo?.containerProviderConnectionCreation
+      ? (providerInfo?.containerProviderConnectionCreationDisplayName ?? undefined)
+      : providerInfo?.kubernetesProviderConnectionCreation
+        ? providerInfo?.kubernetesProviderConnectionCreationDisplayName
+        : providerInfo?.vmProviderConnectionCreation
+          ? providerInfo?.vmProviderConnectionCreationDisplayName
+          : undefined) ??
+    providerInfo?.name,
 );
 
 let title: string = $derived(
-  connectionInfo ? `Update ${providerDisplayName} ${connectionInfo.name}` : `Create ${providerDisplayName}`,
+  connectionInfo
+    ? (t('settings.connection.updateTitle', { provider: providerDisplayName ?? '', name: connectionInfo.name }) ??
+        `Update ${providerDisplayName ?? ''} ${connectionInfo.name}`)
+    : (t('settings.connection.createTitle', { provider: providerDisplayName ?? '' }) ??
+        `Create ${providerDisplayName ?? ''}`),
 );
 
 let logsTerminal = $state<Terminal>();
@@ -102,8 +109,8 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
       <!-- Manage lifecycle-->
       {#if providerInfo?.lifecycleMethods}
         <div class="pl-1 py-2 px-6">
-          <div class="text-sm italic text-[var(--pd-content-text)]">Status</div>
-          <div class="pl-3">{providerInfo.status}</div>
+          <div class="text-sm italic text-[var(--pd-content-text)]">{t('settings.status') ?? 'Status'}</div>
+          <div class="pl-3">{t(`settings.status.${providerInfo.status}`) ?? providerInfo.status}</div>
         </div>
 
         <div class="py-2 px-6 flex flex:row">
@@ -111,7 +118,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           {#if providerInfo?.canStart}
             <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
               <Button disabled={providerInfo.status !== 'stopped'} on:click={startProvider} icon={faPlay}>
-                Start
+                {t('settings.start') ?? 'Start'}
               </Button>
             </div>
           {/if}
@@ -120,12 +127,12 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           {#if providerInfo.canStop}
             <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
               <Button disabled={providerInfo.status !== 'started'} on:click={stopProvider} icon={faStop}>
-                Stop
+                {t('settings.stop') ?? 'Stop'}
               </Button>
             </div>
           {/if}
           <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
-            <Button on:click={(): ProviderInfo | undefined => (showModalProviderInfo = providerInfo)} icon={faHistory}>Show Logs</Button>
+            <Button on:click={(): ProviderInfo | undefined => (showModalProviderInfo = providerInfo)} icon={faHistory}>{t('settings.showLogs') ?? 'Show Logs'}</Button>
           </div>
 
           {#if providerLifecycleError}

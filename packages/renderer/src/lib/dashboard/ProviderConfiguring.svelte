@@ -8,6 +8,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import Steps from '/@/lib/ui/Steps.svelte';
 
@@ -99,7 +100,7 @@ onDestroy(() => {
         <Steps steps={InitializationSteps} />
       {/if}
       <div class="flex flex-col text-[var(--pd-content-text)] items-center" aria-label="Transitioning State">
-        <div>Initializing</div>
+        <div>{t('workloads.initializing') ?? 'Initializing'}</div>
         <div class="my-2">
           <Spinner />
         </div>

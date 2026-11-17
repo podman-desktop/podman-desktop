@@ -3,6 +3,7 @@ import type { V1CronJob } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeCronJobArtifact from '/@/lib/kube/details/KubeCronJobArtifact.svelte';
 import KubeCronJobStatusArtifact from '/@/lib/kube/details/KubeCronJobStatusArtifact.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
@@ -27,6 +28,6 @@ basic information -->
     <KubeCronJobStatusArtifact artifact={cronjob.status} />
     <KubeCronJobArtifact artifact={cronjob.spec} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

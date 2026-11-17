@@ -19,9 +19,16 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import CopyToClipboard from './CopyToClipboard.svelte';
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
 
 test('Expect text to be copied to clipboard', async () => {
   const textToCopy = 'Podman Text';
@@ -43,4 +50,19 @@ test('Expect text to be copied to clipboard', async () => {
   await fireEvent.click(button);
 
   expect(clipboardWriteTextMock).toBeCalledWith(textToCopy);
+});
+
+test('Expect Japanese labels without translating the clipboard data', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'common.copyToClipboard': 'クリップボードにコピー',
+    'common.copyValue': '{value}をクリップボードにコピー',
+  });
+  await initTranslations();
+  const clipboardData = 'podman-machine-default';
+  render(CopyToClipboard, { clipboardData, title: 'Podman' });
+
+  screen.getByLabelText('Podmanをクリップボードにコピー');
+  await fireEvent.click(screen.getByRole('button', { name: 'クリップボードにコピー' }));
+
+  expect(window.clipboardWriteText).toHaveBeenCalledWith(clipboardData);
 });

@@ -1,6 +1,8 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'svelte/elements';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import { ExtensionStatusMapper } from './extension-status';
 import StatusDotIcon from './StatusDotIcon.svelte';
 
@@ -23,6 +25,6 @@ const presentation = $derived(mapper.getPresentation(status));
     <StatusDotIcon status={presentation.icon} size="12" decorative />
   </span>
   <span class="min-w-0 truncate {presentation.labelClass}">
-    {presentation.label}
+    {t(`extensionStatus.${status}`) ?? presentation.label}
   </span>
 </div>

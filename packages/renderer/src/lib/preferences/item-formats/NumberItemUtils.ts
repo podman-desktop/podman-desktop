@@ -18,6 +18,8 @@
 
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 export interface NumericValue {
   valid: boolean;
   error?: string;
@@ -27,21 +29,32 @@ export function checkNumericValueValid(record: IConfigurationPropertyRecordedSch
   if (isNaN(value)) {
     return {
       valid: false,
-      error: `Expecting a number. The value cannot be less than ${record.minimum}${
-        record.maximum ? ` or greater than ${record.maximum}` : ''
-      }`,
+      error: (
+        t(record.maximum ? 'settings.number.expectedRange' : 'settings.number.expectedMinimum') ??
+        `Expecting a number. The value cannot be less than ${record.minimum}${
+          record.maximum ? ` or greater than ${record.maximum}` : ''
+        }`
+      )
+        .replace('{minimum}', `${record.minimum}`)
+        .replace('{maximum}', `${record.maximum}`),
     };
   }
   if (record.maximum && typeof record.maximum === 'number' && value > record.maximum) {
     return {
       valid: false,
-      error: `The value cannot be greater than ${record.maximum}`,
+      error: (t('settings.number.maximum') ?? 'The value cannot be greater than {maximum}').replace(
+        '{maximum}',
+        `${record.maximum}`,
+      ),
     };
   }
   if (record.minimum && typeof record.minimum === 'number' && value < record.minimum) {
     return {
       valid: false,
-      error: `The value cannot be less than ${record.minimum}`,
+      error: (t('settings.number.minimum') ?? 'The value cannot be less than {minimum}').replace(
+        '{minimum}',
+        `${record.minimum}`,
+      ),
     };
   }
   return {

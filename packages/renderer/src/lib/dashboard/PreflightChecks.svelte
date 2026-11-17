@@ -4,6 +4,8 @@ import { faCheck, faCircleExclamation, faTriangleExclamation } from '@fortawesom
 import { Link, Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   preflightChecks: CheckStatus[];
 }
@@ -34,7 +36,7 @@ async function openLink(url: string): Promise<void> {
           <div aria-label="precheck-title" class="ml-2">{preCheck.name}</div>
         </div>
         {#if preCheck.description}
-          Details: <p
+          {t('workloads.detailsLabel') ?? 'Details:'} <p
             aria-label="precheck-description"
             class="text-[var(--pd-invert-content-card-text)] w-full break-all">
             {preCheck.description}
@@ -45,7 +47,7 @@ async function openLink(url: string): Promise<void> {
             </p>
           {/if}
           {#if preCheck.docLinks}
-            See:
+            {t('workloads.seeLabel') ?? 'See:'}
             {#each preCheck.docLinks as link, index (index)}
               <Link aria-label="precheck-link" on:click={async (): Promise<void> => await openLink(link.url)}>{link.title}</Link>
             {/each}

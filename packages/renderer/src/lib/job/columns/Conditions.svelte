@@ -9,6 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { JobCondition } from '/@/lib/job/JobUI';
 import Label from '/@/lib/ui/Label.svelte';
 
@@ -28,27 +29,27 @@ function getConditionAttributes(condition: JobCondition): { name: string; color:
   const conditionMap: { [key: string]: { name: string; color: string; icon: IconDefinition } } = {
     completed: {
       color: 'text-[var(--pd-status-running)]',
-      name: 'Completed',
+      name: t('kubernetes.resources.condition.completed') ?? 'Completed',
       icon: faCheckCircle,
     },
     failed: {
       color: 'text-[var(--pd-status-dead)]',
-      name: 'Failed',
+      name: t('kubernetes.resources.condition.failed') ?? 'Failed',
       icon: faTimesCircle,
     },
     running: {
       color: 'text-[var(--pd-status-running)]',
-      name: 'Running',
+      name: t('kubernetes.resources.condition.running') ?? 'Running',
       icon: faSync,
     },
     pending: {
       color: 'text-[var(--pd-status-starting)]',
-      name: 'Pending',
+      name: t('kubernetes.resources.condition.pending') ?? 'Pending',
       icon: faSync,
     },
     unknown: {
       color: 'text-[var(--pd-status-degraded)]',
-      name: 'Unknown',
+      name: t('kubernetes.resources.condition.unknown') ?? 'Unknown',
       icon: faExclamationTriangle,
     },
   };

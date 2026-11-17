@@ -4,6 +4,7 @@ import type { ImageInfo } from '@desktop-framework/extension-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Badge from '/@/lib/ui/Badge.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
@@ -114,31 +115,31 @@ $effect(() => {
       {/if}
     {/snippet}
     {#snippet tabsSnippet()}
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      <Tab title="History" selected={isTabSelected($router.path, 'history')} url={getTabUrl($router.path, 'history')} />
-      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title={t('resources.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title={t('resources.history') ?? 'History'} selected={isTabSelected($router.path, 'history')} url={getTabUrl($router.path, 'history')} />
+      <Tab title={t('resources.inspect') ?? 'Inspect'} selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       {#if showCheckTab}
-        <Tab title="Check" selected={isTabSelected($router.path, 'check')} url={getTabUrl($router.path, 'check')} />
+        <Tab title={t('resources.check') ?? 'Check'} selected={isTabSelected($router.path, 'check')} url={getTabUrl($router.path, 'check')} />
       {/if}
       {#if showFilesTab}
-        <Tab title="Files" selected={isTabSelected($router.path, 'files')} url={getTabUrl($router.path, 'files')} />
+        <Tab title={t('resources.files') ?? 'Files'} selected={isTabSelected($router.path, 'files')} url={getTabUrl($router.path, 'files')} />
       {/if}
     {/snippet}
     {#snippet contentSnippet()}
       {#if image}
-        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+        <Route path="/summary" breadcrumb={t('resources.summary') ?? 'Summary'} navigationHint="tab">
           <ImageDetailsSummary image={image} />
         </Route>
-        <Route path="/history" breadcrumb="History" navigationHint="tab">
+        <Route path="/history" breadcrumb={t('resources.history') ?? 'History'} navigationHint="tab">
           <ImageDetailsHistory image={image} />
         </Route>
-        <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+        <Route path="/inspect" breadcrumb={t('resources.inspect') ?? 'Inspect'} navigationHint="tab">
           <ImageDetailsInspect image={image} />
         </Route>
-        <Route path="/check" breadcrumb="Check" navigationHint="tab">
+        <Route path="/check" breadcrumb={t('resources.check') ?? 'Check'} navigationHint="tab">
           <ImageDetailsCheck engineId={engineId} imageId={imageID} />
         </Route>
-        <Route path="/files" breadcrumb="Files" navigationHint="tab">
+        <Route path="/files" breadcrumb={t('resources.files') ?? 'Files'} navigationHint="tab">
           <ImageDetailsFiles engineId={engineId} imageId={imageID} />
         </Route>
       {/if}

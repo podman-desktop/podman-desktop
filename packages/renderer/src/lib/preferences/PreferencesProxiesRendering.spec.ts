@@ -24,6 +24,7 @@ import { Dropdown } from '@podman-desktop/ui-svelte';
 import { fireEvent, render } from '@testing-library/svelte';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import PreferencesProxiesRendering from '/@/lib/preferences/PreferencesProxiesRendering.svelte';
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
 import { manualProxySettings } from '/@/stores/manual-proxy-settings.svelte';
@@ -37,8 +38,10 @@ vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
   };
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
 
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
   vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
@@ -46,6 +49,49 @@ beforeEach(() => {
 });
 
 describe('dropdown', () => {
+  test('Japanese labels retain the original proxy values and save the selected state', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'settings.proxy.configuration': 'プロキシ構成',
+      'settings.proxy.System': 'システム設定を使用',
+      'settings.proxy.Manual': '手動設定',
+      'settings.proxy.Disabled': '無効',
+      'settings.update': '更新',
+      'settings.dismiss': '閉じる',
+      'settings.proxy.updated': 'プロキシ設定を更新しました',
+      'settings.proxy.applied': 'プロキシ設定を適用しました。',
+    });
+    await initTranslations();
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_DISABLED);
+    const { getByRole, getByText } = render(PreferencesProxiesRendering);
+    getByText('プロキシ構成');
+    await vi.waitFor(() =>
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          options: [
+            { value: 'System', label: 'システム設定を使用' },
+            { value: 'Manual', label: '手動設定' },
+            { value: 'Disabled', label: '無効' },
+          ],
+          value: 'Disabled',
+        }),
+      ),
+    );
+    const [, props] = vi.mocked(Dropdown).mock.calls.at(-1)!;
+    props.onChange?.('Manual');
+    await fireEvent.click(getByRole('button', { name: '更新' }));
+    await vi.waitFor(() => expect(window.setProxyState).toHaveBeenCalledWith(ProxyState.PROXY_MANUAL));
+    await vi.waitFor(() =>
+      expect(window.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'プロキシ設定を更新しました',
+          message: 'プロキシ設定を適用しました。',
+          buttons: ['閉じる'],
+        }),
+      ),
+    );
+  });
+
   test('dropdown should receive proper options', () => {
     render(PreferencesProxiesRendering);
 

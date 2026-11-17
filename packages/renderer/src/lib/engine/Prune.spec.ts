@@ -21,6 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import Prune from './Prune.svelte';
 
 beforeAll(() => {
@@ -29,13 +31,15 @@ beforeAll(() => {
       showMessageBox: vi.fn(),
       pruneContainers: vi.fn(),
       pruneImages: vi.fn(),
+      i18nGetActiveTranslations: vi.fn(),
     },
     writable: true,
   });
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  await initTranslations();
 });
 
 describe('containers', () => {
@@ -158,4 +162,37 @@ describe('images', () => {
 
     expect(window.pruneImages).not.toBeCalled();
   });
+});
+
+test.each([
+  ['未使用のイメージをすべて削除', true],
+  ['タグのないイメージをすべて削除', false],
+  ['キャンセル', undefined],
+])('Japanese image choice %s preserves API arguments', async (response, all) => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'management.prune.action': '未使用リソースを削除',
+    'management.prune.images': 'イメージ',
+    'management.prune.title': '{resource}を削除しますか？',
+    'management.prune.engine': '{name} エンジンから{resource}を削除します。',
+    'management.prune.unusedImages': '未使用のイメージをすべて削除',
+    'management.prune.untaggedImages': 'タグのないイメージをすべて削除',
+    'common.cancel': 'キャンセル',
+  });
+  await initTranslations();
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response });
+  render(Prune, { type: 'images', engines: [{ id: 'original-id', name: 'My {resource}' }] });
+
+  await fireEvent.click(screen.getByRole('button', { name: '未使用リソースを削除' }));
+
+  expect(window.showMessageBox).toHaveBeenCalledWith({
+    title: 'イメージを削除しますか？',
+    message: 'My {resource} エンジンからイメージを削除します。',
+    type: 'danger',
+    buttons: ['キャンセル', '未使用のイメージをすべて削除', 'タグのないイメージをすべて削除'],
+  });
+  if (all === undefined) {
+    expect(window.pruneImages).not.toHaveBeenCalled();
+  } else {
+    expect(window.pruneImages).toHaveBeenCalledWith('original-id', all);
+  }
 });

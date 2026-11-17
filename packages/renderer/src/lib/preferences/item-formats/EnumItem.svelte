@@ -2,6 +2,8 @@
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
   value?: string;
@@ -30,7 +32,10 @@ function onChangeHandler(newValue: unknown): void {
   onChange={onChangeHandler}
   bind:value={value}
   ariaInvalid={invalidEntry}
-  ariaLabel={record.description}
+   ariaLabel={t(`${record.id}.description`) ?? record.description}
   disabled={!!record.readonly || !!record.locked}
-  options={record.enum?.map(recordEnum => ({label: recordEnum, value: recordEnum}))}>
+  options={record.enum?.map((recordEnum, index) => ({
+    label: t(`${record.id}.enum.${recordEnum}`) ?? record.enumLabels?.[index] ?? recordEnum,
+    value: recordEnum,
+  }))}>
 </Dropdown>

@@ -5,6 +5,7 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { mount, onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
@@ -94,7 +95,7 @@ onDestroy(() => {
 });
 </script>
 
-<EmptyScreen icon={NoLogIcon} title="No Log" message="Log output of {container.name}" hidden={noLogs === false} />
+<EmptyScreen icon={NoLogIcon} title={t('resources.no-log') ?? 'No Log'} message={t('resources.log-output-of-name', { name: container.name }) ?? `Log output of ${container.name}`} hidden={noLogs === false} />
 
 <div
   class="min-w-full flex flex-col"

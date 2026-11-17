@@ -7,6 +7,7 @@ import { router } from 'tinro';
 import { stringify } from 'yaml';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import PVCIcon from '/@/lib/images/PVCIcon.svelte';
 import KubeEditYAML from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
@@ -68,7 +69,7 @@ async function loadDetails(): Promise<void> {
   if (getKubePVC) {
     kubePVC = getKubePVC;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
+    kubeError = t('kubernetes.resources.detailsError', { name }) ?? `Unable to retrieve Kubernetes details for ${name}`;
   }
 }
 </script>
@@ -89,15 +90,15 @@ async function loadDetails(): Promise<void> {
       {/if}
     {/snippet}
     {#snippet tabsSnippet()}
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title={t('kubernetes.resources.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title={t('kubernetes.resources.inspect') ?? 'Inspect'} selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
     {/snippet}
     {#snippet contentSnippet()}
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+      <Route path="/summary" breadcrumb={t('kubernetes.resources.summary') ?? 'Summary'} navigationHint="tab">
         <PVCDetailsSummary pvc={kubePVC} kubeError={kubeError} />
       </Route>
-      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+      <Route path="/inspect" breadcrumb={t('kubernetes.resources.inspect') ?? 'Inspect'} navigationHint="tab">
         <MonacoEditor content={JSON.stringify(kubePVC, undefined, 2)} language="json" />
       </Route>
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">

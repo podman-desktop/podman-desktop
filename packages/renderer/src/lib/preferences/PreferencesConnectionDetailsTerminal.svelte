@@ -10,6 +10,7 @@ import { SerializeAddon } from '@xterm/addon-serialize';
 import { type IDisposable, Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import { getExistingTerminal, registerTerminal } from '/@/stores/provider-terminal-store';
@@ -208,5 +209,5 @@ onDestroy(async () => {
 <EmptyScreen
   hidden={connectionInfo.status === 'started'}
   icon={NoLogIcon}
-  title="No Terminal"
-  message="Provider engine is not running" />
+  title={t('settings.connection.noTerminal') ?? 'No Terminal'}
+  message={t('settings.connection.notRunning') ?? 'Provider engine is not running'} />

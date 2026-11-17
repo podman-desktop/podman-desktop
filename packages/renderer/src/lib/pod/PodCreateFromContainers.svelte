@@ -10,6 +10,7 @@ import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import SolidPodIcon from '/@/lib/images/SolidPodIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
@@ -211,6 +212,14 @@ function updatePortExposure(port: number, checked: boolean): void {
 function getWarningText(): string {
   let text = '';
   containersPorts.forEach(item => {
+    const translated = t('resources.shared-ports', {
+      containers: item.containers.join(', '),
+      ports: item.ports.join(', '),
+    });
+    if (translated !== undefined) {
+      text += translated;
+      return;
+    }
     text += 'Containers ';
     item.containers.forEach((container, index) => {
       text += `${container} `;
@@ -230,7 +239,7 @@ function navigateToContainers(): void {
 }
 </script>
 
-<EngineFormPage title="Copy containers to a pod" inProgress={createInProgress}>
+<EngineFormPage title={t('resources.copy-containers-to-a-pod') ?? 'Copy containers to a pod'} inProgress={createInProgress}>
   {#snippet icon()}
   <SolidPodIcon size="40" />
   {/snippet}
@@ -244,22 +253,22 @@ function navigateToContainers(): void {
         {/if}
         <div class="mb-2">
           <span class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
-            >Name of the pod:</span>
+            >{t('resources.name-of-the-pod') ?? 'Name of the pod:'}</span>
         </div>
         <div class="mb-4">
           <Input
             name="podName"
             id="podName"
             bind:value={podCreation.name}
-            placeholder="Select name of the pod..."
-            aria-label="Pod name"
+            placeholder={t('resources.select-name-of-the-pod') ?? 'Select name of the pod...'}
+            aria-label={t('resources.pod-name') ?? 'Pod name'}
             required />
         </div>
 
         <div class="mb-2">
           <span
             class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
-            aria-label="Containers">Containers to replicate to the pod:</span>
+            aria-label={t('resources.containers') ?? 'Containers'}>{t('resources.containers-to-replicate-to-the-pod') ?? 'Containers to replicate to the pod:'}</span>
         </div>
         <div class="w-full bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
           {#each podCreation.containers as container, index (container.id)}
@@ -276,7 +285,7 @@ function navigateToContainers(): void {
           <div class="mb-2">
             <span
               class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
-              aria-label="Exposed ports">All selected ports will be exposed:</span>
+              aria-label={t('resources.exposed-ports') ?? 'Exposed ports'}>{t('resources.all-selected-ports-will-be-exposed') ?? 'All selected ports will be exposed:'}</span>
           </div>
           <div class="bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
             {#each [...mapPortExposed] as [port, value] (port)}
@@ -285,7 +294,7 @@ function navigateToContainers(): void {
                   class="pt-0.5 mr-5"
                   bind:checked={value.exposed}
                   on:click={(event): void => updatePortExposure(port, event.detail)} />
-                <div class="w-28 mr-5">Port {port.toString()}</div>
+                <div class="w-28 mr-5">{t('resources.port') ?? 'Port'} {port.toString()}</div>
                 <span>{value.container}</span>
               </div>
             {/each}
@@ -297,7 +306,7 @@ function navigateToContainers(): void {
         <label
           for="providerConnectionName"
           class="block mb-2 font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
-          >Container engine:</label>
+          >{t('resources.container-engine') ?? 'Container engine:'}</label>
         <ContainerConnectionDropdown
           class="w-full"
           name="providerChoice"
@@ -310,14 +319,14 @@ function navigateToContainers(): void {
       {/if}
 
       <ButtonRow class="mt-5">
-        <Button type="link" on:click={navigateToContainers}>Close</Button>
+        <Button type="link" on:click={navigateToContainers}>{t('resources.close') ?? 'Close'}</Button>
         <Button
           icon={SolidPodIcon}
           disabled={createInProgress}
           on:click={createPodFromContainers}
           inProgress={createInProgress}
-          aria-label="Create pod">
-          Create Pod
+          aria-label={t('resources.create-pod') ?? 'Create pod'}>
+          {t('resources.create-pod') ?? 'Create Pod'}
         </Button>
       </ButtonRow>
 

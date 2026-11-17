@@ -15,6 +15,7 @@ import { SvelteMap } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import RecommendedRegistry from '/@/lib/image/RecommendedRegistry.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
@@ -125,12 +126,12 @@ function callback(event: PullEvent): void {
 
 async function pullImage(): Promise<void> {
   if (!selectedProviderConnection) {
-    pullError = 'No current provider connection';
+    pullError = t('resources.no-current-provider-connection') ?? 'No current provider connection';
     return;
   }
 
   if (!imageToPull) {
-    pullError = 'No image to pull';
+    pullError = t('resources.no-image-to-pull') ?? 'No image to pull';
     return;
   }
 
@@ -160,7 +161,9 @@ async function pullImage(): Promise<void> {
   } catch (error: unknown) {
     const errorMessage =
       error && typeof error === 'object' && 'message' in error && error.message ? error.message : error;
-    pullError = `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
+    pullError =
+      t('resources.pull-image-error', { name: selectedProviderConnection.name, error: String(errorMessage) }) ??
+      `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
     pullInProgress = false;
   }
 }
@@ -179,7 +182,7 @@ let imageNameIsInvalid = $state(true);
 function validateImageName(image: string): void {
   if (image === undefined || image.trim() === '') {
     imageNameIsInvalid = true;
-    imageNameInvalid = 'Please enter a value';
+    imageNameInvalid = t('resources.please-enter-a-value') ?? 'Please enter a value';
   } else {
     imageNameIsInvalid = false;
     imageNameInvalid = undefined;
@@ -337,8 +340,8 @@ async function searchFunction(value: string): Promise<void> {
   };
 
   values = [
-    ...localImagesValues.map(v => ({ value: v, group: 'Local Images' })),
-    ...remoteSearchResult.images.map(v => ({ value: v, group: 'Registry Images' })),
+    ...localImagesValues.map(v => ({ value: v, group: t('resources.local-images') ?? 'Local Images' })),
+    ...remoteSearchResult.images.map(v => ({ value: v, group: t('resources.registry-images') ?? 'Registry Images' })),
   ];
 }
 
@@ -371,12 +374,12 @@ onMount(() => {
 });
 </script>
 
-<EngineFormPage title="Select an image">
+<EngineFormPage title={t('resources.select-an-image') ?? 'Select an image'}>
   {#snippet icon()}
     <ImageIcon />
   {/snippet}
   {#snippet actions()}
-    <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
+    <Button on:click={gotoManageRegistries} icon={faCog}>{t('resources.manage-registries') ?? 'Manage registries'}</Button>
   {/snippet}
   {#snippet content()}
   <div class="space-y-2 flex flex-col">
@@ -385,7 +388,7 @@ onMount(() => {
         <Typeahead
           id="imageName"
           name="imageName"
-          placeholder="Select or enter an image to run"
+          placeholder={t('resources.select-or-enter-an-image-to-run') ?? 'Select or enter an image to run'}
           onInputChange={searchFunction}
           resultItems={values}
           compare={sortResults}
@@ -402,15 +405,15 @@ onMount(() => {
       {/key}
       {#if selectedProviderConnection?.type === 'podman' && podmanFQN && !matchingLocalImages.includes(podmanFQN)}
         <div class="absolute mt-2 ml-[-18px] self-start">
-          <Tooltip tip="Shortname images will be pulled from Docker Hub" topRight>
+          <Tooltip tip={t('resources.shortname-images-will-be-pulled-from-docker-hub') ?? 'Shortname images will be pulled from Docker Hub'} topRight>
             <Icon size="1.1x" class="text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
           </Tooltip>
         </div>
       {/if}
     </div>
     {#if selectedProviderConnection?.type === 'podman' && podmanFQN  && !matchingLocalImages.includes(podmanFQN)}
-        <Checkbox class="pt-2" bind:checked={usePodmanFQN} title="Use Podman FQN" disabled={podmanFQN === ''}
-          >Use Podman FQN for shortname image</Checkbox>
+        <Checkbox class="pt-2" bind:checked={usePodmanFQN} title={t('resources.use-podman-fqn') ?? 'Use Podman FQN'} disabled={podmanFQN === ''}
+          >{t('resources.use-podman-fqn-for-shortname-image') ?? 'Use Podman FQN for shortname image'}</Checkbox>
       {/if}
     {#if imageNameInvalid}
       <ErrorMessage error={imageNameInvalid} />
@@ -422,7 +425,7 @@ onMount(() => {
     {#if providerConnections.length > 1}
       <div class="pt-4">
         <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-          >Container Engine</label>
+          >{t('resources.container-engine') ?? 'Container Engine'}</label>
         <ContainerConnectionDropdown
           id="providerChoice"
           name="providerChoice"
@@ -439,17 +442,17 @@ onMount(() => {
     <footer>
       <div class="w-full flex flex-col justify-end gap-3 my-3">
         <ButtonRow>
-          <Button type="secondary" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
+          <Button type="secondary" on:click={(): void => router.goto($lastPage.path)}>{t('resources.cancel') ?? 'Cancel'}</Button>
           {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
             <Button
               icon={faArrowCircleDown}
               disabled={imageNameIsInvalid}
               on:click={pullImageAndRun}
               inProgress={pullInProgress}>
-              Pull Image and Run
+              {t('resources.pull-image-and-run') ?? 'Pull Image and Run'}
             </Button>
           {:else}
-            <Button icon={faCircleCheck} disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
+            <Button icon={faCircleCheck} disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>{t('resources.run-image') ?? 'Run Image'}</Button>
           {/if}
         </ButtonRow>
         {#if pullError}
@@ -464,4 +467,3 @@ onMount(() => {
   </div>
   {/snippet}
 </EngineFormPage>
-

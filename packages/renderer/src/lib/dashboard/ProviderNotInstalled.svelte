@@ -2,6 +2,8 @@
 import type { CheckStatus, ProviderInfo } from '@desktop-framework/api';
 import type { ProviderDetectionCheck } from '@desktop-framework/extension-api';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import PreflightChecks from './PreflightChecks.svelte';
 import ProviderCard from './ProviderCard.svelte';
 import ProviderDetectionChecksButton from './ProviderDetectionChecksButton.svelte';
@@ -21,7 +23,7 @@ let preflightChecks: CheckStatus[] = $state([]);
     <div class="flex flex-col grow">
       <div class="flex flex-row items-center flex-row space-x-10 grow flex-nowrap">
         <p class="text-[var(--pd-content-text)] grow text-center" aria-label="Suggested Actions">
-          Could not find an installation. To start working with containers, {provider.name} needs to be detected/installed.
+          {t('workloads.providerNotInstalled', { name: provider.name }) ?? `Could not find an installation. To start working with containers, ${provider.name} needs to be detected/installed.`}
         </p>
         <div class="flex space-x-2 w-full lg:w-1/3 justify-center">
           <ProviderDetectionChecksButton onDetectionChecks={(checks): ProviderDetectionCheck[] => (detectionChecks = checks)} provider={provider} />
@@ -34,7 +36,7 @@ let preflightChecks: CheckStatus[] = $state([]);
             <div class="flex flex-col">
               <p class="mb-4 items-center list-inside">{detectionCheck.status ? '✅' : '❌'} {detectionCheck.name}</p>
               {#if detectionCheck.details}
-                Details: <p class="text-[var(--pd-content-text)] w-full break-all">{detectionCheck.details}</p>
+                {t('workloads.detailsLabel') ?? 'Details:'} <p class="text-[var(--pd-content-text)] w-full break-all">{detectionCheck.details}</p>
               {/if}
             </div>
           {/each}

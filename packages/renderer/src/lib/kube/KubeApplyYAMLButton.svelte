@@ -2,6 +2,7 @@
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import SolidKubeIcon from '/@/lib/images/SolidKubeIcon.svelte';
 
 let inProgress = false;
@@ -13,11 +14,11 @@ async function kubeApply(): Promise<void> {
   }
 
   const result = await window.openDialog({
-    title: 'Select a .yaml file to apply',
+    title: t('workloads.selectYamlToApply') ?? 'Select a .yaml file to apply',
     selectors: ['openFile', 'multiSelections'],
     filters: [
       {
-        name: 'YAML files',
+        name: t('workloads.yamlFiles') ?? 'YAML files',
         extensions: ['yaml', 'yml', 'YAML', 'YML'],
       },
     ],
@@ -33,17 +34,19 @@ async function kubeApply(): Promise<void> {
     let objects: KubernetesObject[] = await window.kubernetesApplyResourcesFromFile(contextName, result, namespace);
     if (objects.length === 0) {
       await window.showMessageBox({
-        title: 'Apply Kubernetes YAML',
+        title: t('workloads.applyKubernetesYaml') ?? 'Apply Kubernetes YAML',
         type: 'warning',
-        message: 'No resource(s) were applied.',
-        buttons: ['Dismiss'],
+        message: t('workloads.noResourcesApplied') ?? 'No resource(s) were applied.',
+        buttons: [t('workloads.dismiss') ?? 'Dismiss'],
       });
     } else if (objects.length === 1) {
       await window.showMessageBox({
-        title: 'Apply Kubernetes YAML',
+        title: t('workloads.applyKubernetesYaml') ?? 'Apply Kubernetes YAML',
         type: 'info',
-        message: `Successfully applied 1 ${objects[0].kind ?? 'unknown resource'}.`,
-        buttons: ['Dismiss'],
+        message:
+          t('workloads.appliedResource', { name: objects[0].kind ?? 'unknown resource' }) ??
+          `Successfully applied 1 ${objects[0].kind ?? 'unknown resource'}.`,
+        buttons: [t('workloads.dismiss') ?? 'Dismiss'],
       });
     } else {
       const counts = objects.reduce(
@@ -58,22 +61,24 @@ async function kubeApply(): Promise<void> {
         .join(', ');
 
       await window.showMessageBox({
-        title: 'Apply Kubernetes YAML',
+        title: t('workloads.applyKubernetesYaml') ?? 'Apply Kubernetes YAML',
         type: 'info',
-        message: `Successfully applied ${objects.length} resources (${resources}).`,
-        buttons: ['Dismiss'],
+        message:
+          t('workloads.appliedResources', { count: objects.length, resources }) ??
+          `Successfully applied ${objects.length} resources (${resources}).`,
+        buttons: [t('workloads.dismiss') ?? 'Dismiss'],
       });
     }
   } catch (error) {
     await window.showMessageBox({
-      title: 'Apply Kubernetes YAML Failed',
+      title: t('workloads.applyKubernetesYamlFailed') ?? 'Apply Kubernetes YAML Failed',
       type: 'error',
-      message: 'Could not apply Kubernetes YAML: ' + error,
-      buttons: ['Dismiss'],
+      message: (t('workloads.couldNotApplyYaml') ?? 'Could not apply Kubernetes YAML: ') + error,
+      buttons: [t('workloads.dismiss') ?? 'Dismiss'],
     });
   }
   inProgress = false;
 }
 </script>
 
-<Button on:click={kubeApply} title="Apply YAML" icon={SolidKubeIcon} inProgress={inProgress}>Apply YAML</Button>
+<Button on:click={kubeApply} title={t('workloads.applyYaml') ?? 'Apply YAML'} icon={SolidKubeIcon} inProgress={inProgress}>{t('workloads.applyYaml') ?? 'Apply YAML'}</Button>

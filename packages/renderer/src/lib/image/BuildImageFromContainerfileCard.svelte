@@ -5,6 +5,8 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Component } from 'svelte';
 import { createEventDispatcher, onMount, tick } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 let iconType: 'fontAwesome' | 'unknown' | undefined = $state(undefined);
 
 let additionalValue: string = $state('');
@@ -115,7 +117,7 @@ onMount(() => {
     </div>
     <div class="ml-2 text-left break-normal w-36 text-[var(--pd-content-card-text)]">{title}</div>
     {#if isDefault}
-      <Tooltip tip="Default platform of your computer">
+      <Tooltip tip={t('resources.default-platform-of-your-computer') ?? 'Default platform of your computer'}>
         <Icon size="0.5x" class="text-[var(--pd-content-card-border-selected)] cursor-pointer" icon={faCircle} />
       </Tooltip>
     {/if}

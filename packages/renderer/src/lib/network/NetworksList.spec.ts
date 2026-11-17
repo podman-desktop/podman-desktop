@@ -25,6 +25,7 @@ import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { networksListInfo, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
 
@@ -96,8 +97,10 @@ async function init(searchTerm?: string): Promise<void> {
   await tick();
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   vi.mocked(window.listNetworks).mockResolvedValue([]);
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
@@ -168,6 +171,26 @@ test('Expect networks to be order by name by default', async () => {
   expect(network2Name).toBeInTheDocument();
 
   expect(network1Name.compareDocumentPosition(network2Name)).toBe(4);
+});
+
+test('localizes table labels while keeping the default Name sort and resource values', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'table.column.Name': '名前',
+    'table.column.Environment': '環境',
+    'table.column.Driver': 'ドライバー',
+    'table.column.Actions': '操作',
+    'table.configureColumns': '表示列の設定',
+  });
+  await initTranslations();
+  await init();
+  screen.getByRole('columnheader', { name: '名前' });
+  screen.getByRole('columnheader', { name: '環境' });
+  screen.getByRole('columnheader', { name: 'ドライバー' });
+  screen.getByRole('columnheader', { name: '操作' });
+  const first = screen.getByRole('cell', { name: 'Network 1' });
+  const second = screen.getByRole('cell', { name: 'Network 2' });
+  expect(first.compareDocumentPosition(second)).toBe(4);
+  expect(get(networksListInfo).map(network => network.name)).toContain('Network 1');
 });
 
 test('Expect network name before ID and match resource table width', async () => {

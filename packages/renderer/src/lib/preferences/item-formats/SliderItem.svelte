@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { calcSliderFillPercent, uncertainStringToNumber } from '/@/lib/preferences/Util';
 
 interface Props {
@@ -41,7 +42,7 @@ async function onInput(event: Event): Promise<void> {
   max={record.maximum}
   step={record.step}
   value={value}
-  aria-label={record.description}
+  aria-label={t(`${record.id}.description`) ?? record.description}
   oninput={onInput}
   disabled={!!record.readonly || !!record.locked}
   style:background={trackBackground}

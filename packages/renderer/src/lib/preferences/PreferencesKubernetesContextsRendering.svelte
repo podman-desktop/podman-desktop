@@ -7,6 +7,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { clearKubeUIContextErrors, setKubeUIContextError } from '/@/lib/kube/KubeContextUI';
 import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
@@ -66,10 +67,10 @@ onMount(async () => {
     if (val !== undefined) {
       kubeconfigFilePath = val;
     } else {
-      kubeconfigFilePath = 'Default is usually ~/.kube/config';
+      kubeconfigFilePath = t('settings.context.defaultPath') ?? 'Default is usually ~/.kube/config';
     }
   } catch (error) {
-    kubeconfigFilePath = 'Default is usually ~/.kube/config';
+    kubeconfigFilePath = t('settings.context.defaultPath') ?? 'Default is usually ~/.kube/config';
   }
 
   try {
@@ -92,14 +93,16 @@ async function handleSetContext(contextName: string): Promise<void> {
 
 async function handleDeleteContext(contextName: string): Promise<void> {
   if (currentContextName === contextName) {
+    const deleteLabel = t('settings.delete') ?? 'Delete';
     const result = await window.showMessageBox({
-      title: 'Delete Context?',
+      title: t('settings.context.deleteTitle') ?? 'Delete Context?',
       type: 'danger',
       message:
+        t('settings.context.deleteMessage') ??
         'You will delete the current context. If you delete it, you will need to switch to another context. Continue?',
-      buttons: ['Delete', 'Cancel'],
+      buttons: [deleteLabel, t('settings.cancel') ?? 'Cancel'],
     });
-    if (result.response !== 'Delete') {
+    if (result.response !== deleteLabel) {
       return;
     }
   }
@@ -205,7 +208,10 @@ function getNotPermittedHelp(podsPermitted: boolean, deploymentsPermitted: boole
   if (!notPermitted.length) {
     return '';
   }
-  return notPermitted.join(' and ') + ' are not accessible';
+  return (t('settings.context.notAccessible') ?? '{resources} are not accessible').replace(
+    '{resources}',
+    notPermitted.join(t('settings.and') ?? ' and '),
+  );
 }
 
 async function connect(contextName: string): Promise<void> {
@@ -225,15 +231,15 @@ async function connect(contextName: string): Promise<void> {
     <EmptyScreen
       aria-label="No Resource Panel"
       icon={EngineIcon}
-      title="No Kubernetes contexts found"
-      message="Check that Kubernetes context is created and selected. You can create local Kubernetes cluster from Podman Desktop. Path to the Kubeconfig file for accessing clusters: {kubeconfigFilePath}"
+      title={t('settings.context.empty') ?? 'No Kubernetes contexts found'}
+      message={(t('settings.context.emptyMessage') ?? 'Check that Kubernetes context is created and selected. You can create local Kubernetes cluster from Podman Desktop. Path to the Kubeconfig file for accessing clusters: {path}').replace('{path}', kubeconfigFilePath)}
       hidden={$kubernetesContexts.length > 0}>
       <Button
         class="py-3"
         on:click={(): void => {
           router.goto('/preferences/resources');
         }}>
-        Go to Resources
+        {t('settings.resources.go') ?? 'Go to Resources'}
       </Button>
     </EmptyScreen>
     {#each kubernetesContextsWithStates as context, index (index)}
@@ -258,7 +264,7 @@ async function connect(contextName: string): Promise<void> {
               <div class="flex flex-col items-left">
                 {#if context.currentContext}
                   <span class="text-sm text-[var(--pd-invert-content-card-text)]" aria-label="Current Context"
-                    >Current Context</span>
+                    >{t('settings.context.current') ?? 'Current Context'}</span>
                 {/if}
                 <span class="font-semibold text-[var(--pd-invert-content-card-header-text)]" aria-label="Context Name"
                   >{context.name}</span>
@@ -267,15 +273,15 @@ async function connect(contextName: string): Promise<void> {
             <!-- Only show the set context button if it is not the current context -->
             {#if !context.currentContext}
               <ListItemButtonIcon
-                title="Set as Current Context"
+                title={t('settings.context.setCurrent') ?? 'Set as Current Context'}
                 icon={faRightToBracket}
                 onClick={(): Promise<void> => handleSetContext(context.name)}></ListItemButtonIcon>
             {/if}
-            <ListItemButtonIcon title="Duplicate Context" icon={faCopy} onClick={(): Promise<void> => handleDuplicateContext(context.name)}
+            <ListItemButtonIcon title={t('settings.context.duplicate') ?? 'Duplicate Context'} icon={faCopy} onClick={(): Promise<void> => handleDuplicateContext(context.name)}
             ></ListItemButtonIcon>
-            <ListItemButtonIcon title="Edit Context" icon={faPenToSquare} onClick={(): Promise<void> => handleEditContext(context)}
+            <ListItemButtonIcon title={t('settings.context.edit') ?? 'Edit Context'} icon={faPenToSquare} onClick={(): Promise<void> => handleEditContext(context)}
               ></ListItemButtonIcon>
-            <ListItemButtonIcon title="Delete Context" icon={faTrash} onClick={(): Promise<void> => handleDeleteContext(context.name)}
+            <ListItemButtonIcon title={t('settings.context.delete') ?? 'Delete Context'} icon={faTrash} onClick={(): Promise<void> => handleDeleteContext(context.name)}
             ></ListItemButtonIcon>
           </div>
           {#if context.error}
@@ -288,12 +294,12 @@ async function connect(contextName: string): Promise<void> {
               {#if context.isReachable || context.isOffline}
                 <div class="flex flex-row pt-2">
                   {#if context.isOffline}
-                    <Tooltip class="flex flex-row" tip="connection lost, resources may be out of sync">
+                    <Tooltip class="flex flex-row" tip={t('settings.context.lostTip') ?? 'connection lost, resources may be out of sync'}>
                       <div class="w-3 h-3 rounded-full bg-[var(--pd-status-paused)]"></div>
                       <div
                         class="ml-1 font-bold text-[9px] text-[var(--pd-status-paused)]"
                         aria-label="Context connection lost">
-                        CONNECTION LOST
+                        {t('settings.context.lost') ?? 'CONNECTION LOST'}
                       </div>
                     </Tooltip>
                   {:else}
@@ -301,13 +307,13 @@ async function connect(contextName: string): Promise<void> {
                     <div
                       class="ml-1 font-bold text-[9px] text-[var(--pd-status-connected)]"
                       aria-label="Context Reachable">
-                      REACHABLE
+                      {t('settings.context.reachable') ?? 'REACHABLE'}
                     </div>
                   {/if}
                 </div>
                 <div class="flex flex-row gap-4 mt-4">
                   <div class="text-center">
-                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted}>PODS</div>
+                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted}>{t('settings.pods') ?? 'PODS'}</div>
                     <div class="text-[16px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted} aria-label="Context Pods Count">
                       {#if context.podsPermitted}
                         {#if context.podsCount !== undefined}{context.podsCount}{/if}
@@ -315,7 +321,7 @@ async function connect(contextName: string): Promise<void> {
                     </div>
                   </div>
                   <div class="text-center">
-                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.deploymentsPermitted}>DEPLOYMENTS</div>
+                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.deploymentsPermitted}>{t('settings.deployments') ?? 'DEPLOYMENTS'}</div>
                     <div
                       class="text-[16px] text-[var(--pd-invert-content-card-text)]"
                       class:opacity-60={!context.deploymentsPermitted}
@@ -327,7 +333,7 @@ async function connect(contextName: string): Promise<void> {
                   </div>
                 </div>
                 {#if context.isOffline}
-                  <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
+                  <div><Button on:click={(): Promise<void> => connect(context.name)}>{t('settings.connect') ?? 'Connect'}</Button></div>
                 {/if}
                 {#if !context.podsPermitted || !context.deploymentsPermitted}
                   <Tooltip tip={context.notPermittedHelp}><div><Icon size="1x" icon={faQuestionCircle} /></div></Tooltip>
@@ -339,7 +345,7 @@ async function connect(contextName: string): Promise<void> {
                       <div class="w-3 h-3 rounded-full bg-[var(--pd-status-dead)]"></div>
                       <div class="ml-1 text-xs text-[var(--pd-status-dead)]">
                         <Tooltip>
-                          <div>ERROR</div>
+                          <div>{t('settings.error') ?? 'ERROR'}</div>
                           <span class="sr-only">{context.errorMessage}</span>
                           {#snippet tipSnippet()}
                           <div class="p-2">
@@ -356,9 +362,9 @@ async function connect(contextName: string): Promise<void> {
                       <div class="w-3 h-3 rounded-full bg-[var(--pd-status-disconnected)]"></div>
                       <div class="ml-1 text-xs text-[var(--pd-status-disconnected)]" aria-label="Context Unreachable">
                         {#if context.isKnown}
-                          UNREACHABLE
+                          {t('settings.context.unreachable') ?? 'UNREACHABLE'}
                         {:else}
-                          UNKNOWN
+                          {t('settings.status.unknown') ?? 'UNKNOWN'}
                         {/if}
                       </div>
                     {/if}
@@ -367,14 +373,14 @@ async function connect(contextName: string): Promise<void> {
                     {/if}
                   </div>
                   {#if !$kubernetesContextsState.get(context.name)}
-                    <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
+                    <div><Button on:click={(): Promise<void> => connect(context.name)}>{t('settings.connect') ?? 'Connect'}</Button></div>
                   {/if}
                 </div>
               {/if}
             </div>
             <div class="grow text-sm">
               <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">CLUSTER</span>
+                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">{t('settings.cluster') ?? 'CLUSTER'}</span>
                 <span
                   class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
                   aria-label="Context Cluster">{context.cluster}</span>
@@ -382,7 +388,7 @@ async function connect(contextName: string): Promise<void> {
 
               {#if context.clusterInfo !== undefined}
                 <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                  <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">SERVER</span>
+                  <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">{t('settings.server') ?? 'SERVER'}</span>
                   <span
                     class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
                     aria-label="Context Server"
@@ -392,14 +398,14 @@ async function connect(contextName: string): Promise<void> {
               {/if}
 
               <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">USER</span>
+                <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">{t('settings.user') ?? 'USER'}</span>
                 <span class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis" aria-label="Context User"
                   >{context.user}</span>
               </div>
 
               {#if context.namespace}
                 <div class="bg-[var(--pd-invert-content-bg)] p-2 rounded-lg mt-1 grid grid-cols-6">
-                  <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">NAMESPACE</span>
+                  <span class="my-auto font-bold col-span-1 text-right overflow-hidden text-ellipsis">{t('settings.namespace') ?? 'NAMESPACE'}</span>
                   <span
                     class="my-auto col-span-5 text-left ml-3 overflow-hidden text-ellipsis"
                     aria-label="Context Namespace">{context.namespace}</span>

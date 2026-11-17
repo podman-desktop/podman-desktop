@@ -3,6 +3,7 @@ import type { V1Secret } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 import KubeSecretArtifact from '/@/lib/kube/details/KubeSecretArtifact.svelte';
 
@@ -25,6 +26,6 @@ basic information -->
     <KubeObjectMetaArtifact artifact={secret.metadata} />
     <KubeSecretArtifact artifact={secret} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

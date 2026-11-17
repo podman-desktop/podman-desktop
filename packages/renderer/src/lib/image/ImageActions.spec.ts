@@ -25,6 +25,7 @@ import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import ImageActions from '/@/lib/image/ImageActions.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
@@ -77,8 +78,10 @@ class Image {
   }
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
 
   vi.mocked(ImageUtils.prototype.deleteImage).mockRejectedValue(new Error('Cannot delete image in test'));
   vi.mocked(ImageUtils.prototype.updateImages).mockResolvedValue([
@@ -247,6 +250,23 @@ test('Expect Save image to be there', async () => {
   expect(goToMock).toBeCalledWith('/images/save');
 });
 
+test('localizes deletion confirmation while retaining the exact image reference', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'resources.delete-image': 'イメージを削除',
+    'resources.confirm-delete-image': 'イメージ {name} を削除してもよろしいですか？',
+  });
+  await initTranslations();
+  getContributedMenusMock.mockResolvedValue([]);
+  const image = { name: 'localhost:5000/example', tag: '1.0', status: 'UNUSED' } as ImageInfoUI;
+  render(ImageActions, { image, onPushImage: vi.fn(), onRenameImage: vi.fn() });
+  await fireEvent.click(screen.getByRole('button', { name: 'イメージを削除' }));
+  expect(withConfirmation).toHaveBeenCalledWith(expect.any(Function), 'delete image localhost:5000/example:1.0', {
+    title: 'イメージを削除',
+    variant: 'delete',
+    message: 'イメージ localhost:5000/example:1.0 を削除してもよろしいですか？',
+  });
+});
+
 test('Expect withConfirmation to indicate image name and tag', async () => {
   getContributedMenusMock.mockResolvedValue([]);
 
@@ -269,6 +289,7 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
     expect(withConfirmation).toHaveBeenNthCalledWith(1, expect.anything(), 'delete image image-name:1.0', {
       title: 'Delete Image?',
       variant: 'delete',
+      message: 'Are you sure you want to delete image image-name:1.0?',
     });
   });
 });
@@ -439,7 +460,11 @@ describe('update', () => {
     expect(withConfirmation).toHaveBeenCalledExactlyOnceWith(
       expect.any(Function),
       'update all tags of image image-name\\:1.0 to latest build',
-      { title: 'Update Image?', buttonLabel: 'Update' },
+      {
+        title: 'Update Image?',
+        buttonLabel: 'Update',
+        message: 'Are you sure you want to update all tags of image image-name\\:1.0 to latest build?',
+      },
     );
     expect(window.showMessageBox).toHaveBeenCalledExactlyOnceWith({
       title: 'Update Image?',

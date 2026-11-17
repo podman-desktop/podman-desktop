@@ -6,6 +6,7 @@ import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { setNetworkStatus } from '/@/stores/networks';
@@ -35,10 +36,14 @@ async function removeNetwork(): Promise<void> {
   } catch (error) {
     setNetworkStatus(object.engineId, object.id, oldStatus);
     await window.showMessageBox({
-      title: 'Delete Network Failed',
-      message: `Error while deleting network ${object.name}: ${error instanceof Error ? error.message : String(error)}`,
+      title: t('resources.delete-network-failed') ?? 'Delete Network Failed',
+      message:
+        t('resources.network-delete-error', {
+          name: object.name,
+          error: error instanceof Error ? error.message : String(error),
+        }) ?? `Error while deleting network ${object.name}: ${error instanceof Error ? error.message : String(error)}`,
       type: 'error',
-      buttons: ['Dismiss'],
+      buttons: [t('resources.dismiss') ?? 'Dismiss'],
     });
   }
 }
@@ -49,15 +54,18 @@ function closeUpdateDialog(): void {
 </script>
 
 <ListItemButtonIcon
-  title="Update Network"
+  title={t('resources.update-network') ?? 'Update Network'}
   onClick={(): void => {showUpdateNetworkDialog = true;}}
   icon={faEdit}
   detailed={detailed}
   enabled={object.engineType === 'podman'} />
 
 <ListItemButtonIcon
-  title="Delete Network"
-  onClick={(): void => withConfirmation(removeNetwork, `delete network ${object.name}`, { title: 'Delete Network?', variant: 'delete' })}
+  title={t('resources.delete-network') ?? 'Delete Network'}
+  onClick={(): void => withConfirmation(removeNetwork, `delete network ${object.name}`, {
+    title: t('resources.delete-network') ?? 'Delete Network?', variant: 'delete',
+    message: t('resources.confirm-delete-network', { name: object.name }) ?? `Are you sure you want to delete network ${object.name}?`,
+  })}
   icon={faTrash}
   detailed={detailed}
   enabled={object.status === 'UNUSED'} />

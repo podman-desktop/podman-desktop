@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import NavPage from './NavPage.svelte';
@@ -32,4 +32,24 @@ test('Expect title is defined', async () => {
   expect(headingElement).toBeInTheDocument();
   // check the text
   expect(headingElement).toHaveTextContent(title);
+});
+
+test('Expect default search text to remain English', () => {
+  render(NavPage, { title: 'containers' });
+  expect(screen.getByRole('textbox', { name: 'search containers' })).toHaveAttribute('placeholder', 'Search...');
+});
+
+test('Expect localized search labels to preserve editable search values', async () => {
+  render(NavPage, {
+    title: 'コンテナー',
+    searchPlaceholder: '検索…',
+    searchAriaLabel: '検索',
+    searchTerm: 'status:running',
+  });
+
+  const input = screen.getByRole('textbox', { name: '検索' });
+  expect(input).toHaveAttribute('placeholder', '検索…');
+  expect(input).toHaveValue('status:running');
+  await fireEvent.input(input, { target: { value: 'name:demo' } });
+  expect(input).toHaveValue('name:demo');
 });

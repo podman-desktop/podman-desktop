@@ -25,6 +25,8 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
 
 vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
@@ -67,12 +69,44 @@ const closeCallback = (): void => {};
 
 const kubernetesUpdateContextMock = vi.fn();
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   Object.defineProperty(window, 'kubernetesUpdateContext', { value: kubernetesUpdateContextMock });
 });
 
 describe('UpdateContext', () => {
+  test('Japanese context form keeps submitted names and namespaces unchanged', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'settings.context.edit': 'コンテキストを編集',
+      'settings.name': '名前',
+      'settings.namespace': '名前空間',
+      'settings.save': '保存',
+      'settings.cancel': 'キャンセル',
+      'settings.context.namePlaceholder': 'コンテキスト名を入力',
+    });
+    await initTranslations();
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback,
+    });
+    screen.getByRole('dialog', { name: 'コンテキストを編集' });
+    screen.getByRole('button', { name: 'キャンセル' });
+    const name = screen.getByPlaceholderText('コンテキスト名を入力');
+    await waitFor(() => expect(name).toHaveValue(mockContext1.name));
+    await userEvent.clear(name);
+    await userEvent.type(name, 'new-context');
+    await userEvent.click(screen.getByRole('button', { name: '保存' }));
+    expect(window.kubernetesUpdateContext).toHaveBeenCalledWith(
+      mockContext1.name,
+      'new-context',
+      mockContext1.namespace,
+      mockContext1.cluster,
+      mockContext1.user,
+    );
+  });
+
   test('dialog title is Edit context', () => {
     render(PreferencesKubernetesContextsRenderingEditModal, {
       contextToEdit: mockContext1,

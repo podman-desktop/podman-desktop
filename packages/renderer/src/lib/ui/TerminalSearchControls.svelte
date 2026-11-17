@@ -6,6 +6,8 @@ import { SearchAddon } from '@xterm/addon-search';
 import type { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   terminal: Terminal;
 }
@@ -64,18 +66,18 @@ function onKeyUp(e: KeyboardEvent): void {
     class="w-200px mx-4">
     <Input
       bind:element={input}
-      placeholder="Find"
-      aria-label="Find"
+      placeholder={t('terminal.find') ?? 'Find'}
+      aria-label={t('terminal.find') ?? 'Find'}
       onkeypress={onKeyPressed}
       oninput={onSearch}
       value={searchTerm}
     />
   </div>
   <div class="space-x-1">
-    <button aria-label="Previous Match" class="p-2 rounded-sm hover:bg-[var(--pd-button-detailed-bg)]" onclick={(): void => onSearchPrevious(true)}>
+    <button aria-label={t('terminal.previousMatch') ?? 'Previous Match'} class="p-2 rounded-sm hover:bg-[var(--pd-button-detailed-bg)]" onclick={(): void => onSearchPrevious(true)}>
       <Icon icon={faArrowUp}/>
     </button>
-    <button aria-label="Next Match" class="p-2 rounded-sm hover:bg-[var(--pd-button-detailed-bg)]" onclick={(): void => onSearchNext(true)}>
+    <button aria-label={t('terminal.nextMatch') ?? 'Next Match'} class="p-2 rounded-sm hover:bg-[var(--pd-button-detailed-bg)]" onclick={(): void => onSearchNext(true)}>
       <Icon icon={faArrowDown}/>
     </button>
   </div>

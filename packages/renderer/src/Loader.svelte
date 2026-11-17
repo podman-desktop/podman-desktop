@@ -2,6 +2,8 @@
 import { onDestroy, onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import App from './App.svelte';
 import SealRocket from './lib/images/SealRocket.svelte';
 import ColorsStyle from './lib/style/ColorsStyle.svelte';
@@ -16,6 +18,9 @@ let loadingSequence: NodeJS.Timeout;
 let extensionsStarterChecker: NodeJS.Timeout;
 
 onMount(async () => {
+  // load the translations of the active language (main process is authoritative)
+  initTranslations().catch((error: unknown) => console.error('Unable to initialize translations', error));
+
   loadingSequence = setInterval(() => {
     toggle = !toggle;
   }, 100);

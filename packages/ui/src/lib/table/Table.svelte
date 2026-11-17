@@ -38,6 +38,16 @@ interface Props {
   label?: (object: T) => string;
   enableLayoutConfiguration?: boolean;
   selectedItemsNumber?: number;
+  /** Display-only labels; column titles and persisted layout IDs remain unchanged. */
+  labels?: {
+    column?: (title: string) => string;
+    configureColumns?: string;
+    resetColumns?: string;
+    toggleAll?: string;
+    toggleItem?: string;
+    expandRow?: string;
+    collapseRow?: string;
+  };
 }
 
 let {
@@ -51,9 +61,13 @@ let {
   label = (item: T): string => item.name ?? String(item),
   enableLayoutConfiguration = false,
   selectedItemsNumber = $bindable(),
+  labels,
 }: Props = $props();
 
 let columnItems = $state<ListOrganizerItem[]>([]);
+const displayedColumnItems = $derived(
+  columnItems.map(item => ({ ...item, label: labels?.column?.(item.id) ?? item.label })),
+);
 let columnOrdering = new SvelteMap<string, number>();
 let isInitialized = $state(false);
 let isLoading = false;
@@ -494,7 +508,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
       {#if row.info.selectable}
         <div class="whitespace-nowrap place-self-center" role="columnheader">
           <Checkbox
-            title="Toggle all"
+            title={labels?.toggleAll ?? 'Toggle all'}
             checked={selectedAllCheckboxes}
             disabled={!row.info.selectable || data.filter(object => row.info.selectable?.(object)).length === 0}
             indeterminate={hasSelectedItems && !selectedAllCheckboxes}
@@ -515,7 +529,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
           onclick={sort.bind(undefined, column)}
           role="columnheader">
           <div class="overflow-hidden text-ellipsis">
-            {column.title}
+            {labels?.column?.(column.title) ?? column.title}
           </div>
           {#if column.info.comparator}<i
               class="fas pl-0.5"
@@ -537,15 +551,15 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
     {#if enableLayoutConfiguration && tablePersistence.storage}
       <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
         <ListOrganizer
-          items={columnItems}
+          items={displayedColumnItems}
           ordering={columnOrdering}
-          title="Configure Columns"
+          title={labels?.configureColumns ?? 'Configure Columns'}
           enableReorder={true}
           enableToggle={true}
           onOrderChange={handleColumnOrderChange}
           onToggle={handleColumnToggle}
           onReset={resetColumns}
-          resetButtonLabel="Reset to default"
+          resetButtonLabel={labels?.resetColumns ?? 'Reset to default'}
         />
       </div>
     {/if}
@@ -576,7 +590,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
             role="cell">
             {#if children.length > 0}
               <button
-                title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
+                title={collapsed.includes(itemKey) ? (labels?.expandRow ?? 'Expand Row') : (labels?.collapseRow ?? 'Collapse Row')}
                 aria-expanded={!collapsed.includes(itemKey)}
                 onclick={toggleChildren.bind(undefined, itemKey)}
               >
@@ -590,7 +604,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
           {#if row.info.selectable}
             <div class="whitespace-nowrap place-self-center" role="cell">
               <Checkbox
-                title="Toggle {kind}"
+                title={labels?.toggleItem ?? `Toggle ${kind}`}
                 checked={selectedItems.has(object)}
                 disabled={!row.info.selectable(object)}
                 disabledTooltip={row.info.disabledText}
@@ -633,7 +647,7 @@ function handleRowKeyDown(object: T, event: KeyboardEvent): void {
               {#if row.info.selectable}
                 <div class="whitespace-nowrap place-self-center" role="cell">
                   <Checkbox
-                    title="Toggle {kind}"
+                    title={labels?.toggleItem ?? `Toggle ${kind}`}
                     checked={selectedItems.has(child)}
                     disabled={!row.info.selectable(child)}
                     disabledTooltip={row.info.disabledText}

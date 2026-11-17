@@ -9,6 +9,7 @@ import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-s
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KeyIcon from '/@/lib/images/KeyIcon.svelte';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
 
@@ -20,8 +21,8 @@ import SettingsPage from './SettingsPage.svelte';
     <!-- Authentication Providers table start -->
     <EmptyScreen
       icon={KeyIcon}
-      title="No authentication providers"
-      message="Install an authentication provider extension to add an authentication provider here."
+      title={t('settings.authentication.empty') ?? 'No authentication providers'}
+      message={t('settings.authentication.install') ?? 'Install an authentication provider extension to add an authentication provider here.'}
       hidden={$authenticationProviders.length > 0}>
       <div class="flex gap-2 justify-center">
         <EmbeddableCatalogExtensionList category="Authentication" showInstalled={false} />
@@ -66,7 +67,7 @@ import SettingsPage from './SettingsPage.svelte';
                       : 'disconnected'})]"
                     aria-label="Provider Status">
                     <span>
-                      {provider.accounts.length > 0 ? 'Logged in' : 'Logged out'}
+                      {provider.accounts.length > 0 ? (t('settings.authentication.loggedIn') ?? 'Logged in') : (t('settings.authentication.loggedOut') ?? 'Logged out')}
                     </span>
                   </div>
                 </div>
@@ -85,9 +86,9 @@ import SettingsPage from './SettingsPage.svelte';
                           aria-label="Logged In Username">
                           {account.label}
                         </span>
-                        <Tooltip bottomRight tip="Sign out of {account.label}">
+                        <Tooltip bottomRight tip={(t('settings.authentication.signOut') ?? 'Sign out of {name}').replace('{name}', account.label)}>
                           <button
-                            aria-label="Sign out of {account.label}"
+                            aria-label={(t('settings.authentication.signOut') ?? 'Sign out of {name}').replace('{name}', account.label)}
                             class="pl-2 hover:cursor-pointer"
                             on:click={(): Promise<void> => window.requestAuthenticationProviderSignOut(provider.id, account.id)}>
                             <Icon class="h-3 w-3 text-md mr-2" icon={faRightFromBracket} />
@@ -105,13 +106,13 @@ import SettingsPage from './SettingsPage.svelte';
             {#if sessionRequests.length === 1}
               {@const request = sessionRequests[0]}
               <!-- Authentication Provider Auth Request Sign In button start -->
-              <Tooltip bottomLeft tip="Sign in to use {request.extensionLabel}">
+              <Tooltip bottomLeft tip={(t('settings.authentication.use') ?? 'Sign in to use {name}').replace('{name}', request.extensionLabel)}>
                 <Button
-                  aria-label="Sign in"
+                  aria-label={t('settings.authentication.signIn') ?? 'Sign in'}
                   class="pl-2 mr-4"
                   on:click={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}>
                   <div class="flex flex-row items-center">
-                    <Icon class="h-3 w-3 text-md mr-2" icon={faRightToBracket} />Sign in
+                    <Icon class="h-3 w-3 text-md mr-2" icon={faRightToBracket} />{t('settings.authentication.signIn') ?? 'Sign in'}
                   </div>
                 </Button>
               </Tooltip>
@@ -121,7 +122,7 @@ import SettingsPage from './SettingsPage.svelte';
               <DropdownMenu>
                 {#each sessionRequests as request (request.id)}
                   <DropdownMenu.Item
-                    title="Sign in to use {request.extensionLabel}"
+                    title={(t('settings.authentication.use') ?? 'Sign in to use {name}').replace('{name}', request.extensionLabel)}
                     onClick={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}
                     icon={faArrowRightToBracket} />
                 {/each}

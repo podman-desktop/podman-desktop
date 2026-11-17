@@ -3,6 +3,7 @@ import { NavigationPage } from '@desktop-framework/api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import SecretIcon from '/@/lib/images/SecretIcon.svelte';
 import SecretActions from '/@/lib/secrets/components/SecretActions.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
@@ -41,15 +42,15 @@ $effect(() => {
     {/snippet}
 
     {#snippet tabsSnippet()}
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title={t('kubernetes.resources.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title={t('kubernetes.resources.inspect') ?? 'Inspect'} selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
     {/snippet}
 
     {#snippet contentSnippet()}
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+      <Route path="/summary" breadcrumb={t('kubernetes.resources.summary') ?? 'Summary'} navigationHint="tab">
         <SecretDetailsSummary {secret} />
       </Route>
-      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+      <Route path="/inspect" breadcrumb={t('kubernetes.resources.inspect') ?? 'Inspect'} navigationHint="tab">
         <SecretDetailsInspect {secret} />
       </Route>
     {/snippet}

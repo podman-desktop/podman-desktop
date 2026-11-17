@@ -3,6 +3,8 @@ import { faFileLines, faScroll } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 let logs = $state<string[]>([]);
 
 // Save files as a zip file (we first ask the user for the dialog, and then save the files to the filepath)
@@ -14,26 +16,26 @@ async function saveLogsAsZip(): Promise<void> {
 <div class="flex flex-col w-full m-4 bg-[var(--pd-content-card-bg)] p-4 rounded-lg">
   <div class="flex flex-row align-middle items-center w-full">
     <Icon size="1.875x" class="pr-3" icon={faFileLines} />
-    <div class="text-xl">Gather Log Files</div>
+    <div class="text-xl">{t('management.gatherLogs.heading') ?? 'Gather Log Files'}</div>
     <div class="flex flex-1 justify-end"></div>
   </div>
-  <div class="mt-4">Bundle all available logs into a .zip</div>
+  <div class="mt-4">{t('management.gatherLogs.help') ?? 'Bundle all available logs into a .zip'}</div>
   <div class="mt-4">
     <Button
       on:click={async (): Promise<void> => {
         await saveLogsAsZip();
       }}
-      title="Collect logs for must gather tool"
-      icon={faScroll}>Collect and save logs as .zip</Button>
+      title={t('management.gatherLogs.tooltip') ?? 'Collect logs for must gather tool'}
+      icon={faScroll}>{t('management.gatherLogs.action') ?? 'Collect and save logs as .zip'}</Button>
   </div>
   {#if logs.length > 0}
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)] mt-3">
-      <ul aria-label="logs">
+      <ul aria-label={t('management.logs') ?? 'logs'}>
         {#each logs as log, index (index)}
           <li>
             <div class="flex flex-row align-middle items-center">
               <div class="font-mono text-[10px] font-thin">
-                {log} generated
+                {t('management.gatherLogs.generated', { name: log }) ?? `${log} generated`}
               </div>
             </div>
           </li>
@@ -41,7 +43,7 @@ async function saveLogsAsZip(): Promise<void> {
         <li>
           <div class="flex flex-row align-middle items-center mt-2">
             <div class="font-mono text-[10px] font-thin">
-              {logs.length} logs collected and bundled as a .zip
+              {t('management.gatherLogs.collected', { count: logs.length }) ?? `${logs.length} logs collected and bundled as a .zip`}
             </div>
           </div>
         </li>

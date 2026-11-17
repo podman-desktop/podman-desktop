@@ -14,6 +14,9 @@ import {
 import moment from 'moment/moment';
 
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import SecretIcon from '/@/lib/images/SecretIcon.svelte';
 import SecretColumnEnvironment from '/@/lib/secrets/columns/SecretColumnEnvironment.svelte';
@@ -95,10 +98,10 @@ function gotoCreateSecret(): void {
 }
 </script>
 
-<NavPage bind:searchTerm={$searchPattern} title="secrets">
+<NavPage bind:searchTerm={$searchPattern} title={t('kubernetes.resources.secrets.title') ?? 'secrets'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     {#if providerConnections.length > 0}
-      <Button onclick={gotoCreateSecret} icon={faPlusCircle} title="Create a secret">Create</Button>
+      <Button onclick={gotoCreateSecret} icon={faPlusCircle} title={t('kubernetes.resources.secrets.create') ?? 'Create a secret'}>{t('kubernetes.resources.create') ?? 'Create'}</Button>
     {/if}
   {/snippet}
 
@@ -110,12 +113,12 @@ function gotoCreateSecret(): void {
           withBulkConfirmation(
             bulkDeleteSecrets,
             `delete ${selectedItemsNumber} secret${selectedItemsNumber > 1 ? 's' : ''}`,
-            { title: 'Delete Secrets?', variant:'delete' }
+            { title: t('kubernetes.resources.secrets.deleteTitle') ?? 'Delete Secrets?', message: t('kubernetes.resources.secrets.deleteMessage', { count: selectedItemsNumber }) ?? `Are you sure you want to delete ${selectedItemsNumber} secret${selectedItemsNumber > 1 ? 's' : ''}?`, variant:'delete' }
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title={t('kubernetes.resources.deleteSelected', { count: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('kubernetes.resources.selected', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
   {/snippet}
 
@@ -126,12 +129,13 @@ function gotoCreateSecret(): void {
         <NoContainerEngineEmptyScreen />
       {:else if secrets.length === 0}
         {#if $searchPattern}
-          <FilteredEmptyScreen icon={SecretIcon} kind="secrets" bind:searchTerm={$searchPattern} />
+          <FilteredEmptyScreen labels={getFilteredEmptyLabels('secrets', $searchPattern)} icon={SecretIcon} kind="secrets" bind:searchTerm={$searchPattern} />
         {:else}
           <SecretEmptyScreen />
         {/if}
       {:else}
         <Table
+          labels={getTableLabels()}
           kind="secrets"
           bind:selectedItemsNumber={selectedItemsNumber}
           data={secrets}

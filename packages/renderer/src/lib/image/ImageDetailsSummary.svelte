@@ -6,6 +6,7 @@ import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Table from '/@/lib/details/DetailsTable.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -33,14 +34,14 @@ onMount(async () => {
 
 <Table>
   <tr>
-    <Title>Details</Title>
+    <Title>{t('resources.details') ?? 'Details'}</Title>
   </tr>
   <tr>
-    <Cell>Name</Cell>
+    <Cell>{t('resources.name') ?? 'Name'}</Cell>
     <Cell>{image.name}</Cell>
   </tr>
   <tr>
-    <Cell>Tag</Cell>
+    <Cell>{t('resources.tag') ?? 'Tag'}</Cell>
     <Cell>{image.tag}</Cell>
   </tr>
   <tr>
@@ -48,32 +49,32 @@ onMount(async () => {
     <Cell>{image.id}</Cell>
   </tr>
   <tr>
-    <Cell>Size</Cell>
+    <Cell>{t('resources.size') ?? 'Size'}</Cell>
     <Cell>{image.humanSize}</Cell>
   </tr>
   <tr>
-    <Cell>Age</Cell>
+    <Cell>{t('resources.age') ?? 'Age'}</Cell>
     <Cell>{image.age}</Cell>
   </tr>
   {#if manifestDetails && manifestDetails.manifests.length > 0}
     <tr>
-      <Title>Manifest Details</Title>
+      <Title>{t('resources.manifest-details') ?? 'Manifest Details'}</Title>
     </tr>
     {#each manifestDetails.manifests as manifest (manifest.digest)}
       <tr>
         <Subtitle>{imageUtils.getShortId(manifest.digest)}</Subtitle>
       </tr>
       <tr>
-        <Cell>Media Type</Cell>
+        <Cell>{t('resources.media-type') ?? 'Media Type'}</Cell>
         <Cell>{manifest.mediaType}</Cell>
       </tr>
       <tr>
-        <Cell>Architecture</Cell>
+        <Cell>{t('resources.architecture') ?? 'Architecture'}</Cell>
         <Cell>{manifest.platform.architecture}</Cell>
       </tr>
       {#if manifest.platform.variant}
         <tr>
-          <Cell>Variant</Cell>
+          <Cell>{t('resources.variant') ?? 'Variant'}</Cell>
           <Cell>{manifest.platform.variant}</Cell>
         </tr>
       {/if}
@@ -82,7 +83,7 @@ onMount(async () => {
         <Cell>{manifest.platform.os}</Cell>
       </tr>
       <tr>
-        <Cell>Size</Cell>
+        <Cell>{t('resources.size') ?? 'Size'}</Cell>
         <Cell>{imageUtils.getHumanSize(manifest.size)}</Cell>
       </tr>
       {#if manifest.urls}

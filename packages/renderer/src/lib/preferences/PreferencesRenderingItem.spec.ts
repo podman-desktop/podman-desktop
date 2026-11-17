@@ -23,6 +23,7 @@ import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
 
 const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
@@ -38,8 +39,10 @@ const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
   },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
   vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
@@ -206,4 +209,70 @@ test('Expect reset enum value to update dropdown value', async () => {
 
   dropdownValue = getByLabelText('hidden input');
   expect(dropdownValue).toHaveValue('first');
+});
+
+test('Translate the title, Markdown and shared actions without modifying the setting', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'hello.world.fooBar.displayName': 'ズームレベル',
+    'hello.world.fooBar.markdownDescription': '**拡大**する値を選択します。',
+    'settings.experimental': '試験的機能',
+    'settings.feedback': 'フィードバックを送信',
+  });
+  await initTranslations();
+  const { getByText, getByRole } = render(PreferencesRenderingItem, {
+    record: { ...EXPERIMENTAL_RECORD, markdownDescription: 'Original **Markdown**' },
+  });
+  expect(getByText('ズームレベル')).toBeInTheDocument();
+  expect(getByText('拡大').tagName).toBe('STRONG');
+  expect(getByText('試験的機能', { selector: 'span' })).toBeInTheDocument();
+  expect(getByRole('button', { name: 'フィードバックを送信' })).toBeInTheDocument();
+  expect(EXPERIMENTAL_RECORD.id).toBe('hello.world.fooBar');
+});
+
+test('Keep the selected setting value when changing the display language', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'preferences.appearance',
+    title: 'Appearance',
+    parentId: 'preferences.appearance',
+    description: 'Select a theme',
+    type: 'string',
+    enum: ['system', 'dark'],
+    default: 'system',
+  };
+  const { getByRole, getByLabelText } = render(PreferencesRenderingItem, { record });
+  await userEvent.click(getByRole('button', { name: 'system' }));
+  await userEvent.click(getByRole('button', { name: 'dark' }));
+  expect(getByLabelText('hidden input')).toHaveValue('dark');
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'preferences.appearance.displayName': '外観',
+    'preferences.appearance.description': 'テーマを選択',
+    'preferences.appearance.enum.dark': 'ダーク',
+    'settings.reset': '既定値に戻す',
+  });
+  await initTranslations();
+  await waitFor(() => expect(getByRole('button', { name: 'ダーク' })).toBeInTheDocument());
+  expect(getByLabelText('hidden input')).toHaveValue('dark');
+  expect(getByRole('button', { name: '既定値に戻す' })).toBeInTheDocument();
+});
+
+test('Expect the translated description to replace the default one', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'hello.world.fooBar.description': '翻訳された説明',
+  });
+  await initTranslations();
+
+  const { getByText, queryByText } = render(PreferencesRenderingItem, { record: EXPERIMENTAL_RECORD });
+
+  await vi.waitFor(() => expect(getByText('翻訳された説明')).toBeInTheDocument());
+  expect(queryByText('record-description')).not.toBeInTheDocument();
+});
+
+test('Expect the description to fall back to the record value when not translated', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+
+  const { getByText } = render(PreferencesRenderingItem, { record: EXPERIMENTAL_RECORD });
+
+  await vi.waitFor(() => expect(getByText('record-description')).toBeInTheDocument());
 });

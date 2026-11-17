@@ -29,6 +29,7 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 
@@ -93,9 +94,55 @@ function mockCallback(
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   operationConnectionsInfo.set(new Map());
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('Japanese dynamic schema labels and placeholders preserve submitted property IDs and values', async () => {
+  vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'test.name.description': '接続名',
+    'test.name.placeholder': '接続名を入力',
+    'settings.create': '作成',
+    'settings.close': '閉じる',
+    'settings.closePage': 'ページを閉じる',
+  });
+  await initTranslations();
+  const callback = vi.fn();
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: [
+      {
+        id: 'test.name',
+        parentId: '',
+        title: 'Name',
+        type: 'string',
+        description: 'Name',
+        placeholder: 'Enter a name',
+        scope: propertyScope,
+      },
+    ],
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+  });
+  const input = await screen.findByPlaceholderText('接続名を入力');
+  expect(input).toHaveAttribute('name', 'test.name');
+  await userEvent.type(input, 'my-machine');
+  await userEvent.click(screen.getByRole('button', { name: '作成' }));
+  await vi.waitFor(() =>
+    expect(callback).toHaveBeenCalledWith(
+      'test',
+      { 'test.name': 'my-machine' },
+      expect.anything(),
+      expect.any(Function),
+      undefined,
+      expect.any(Number),
+    ),
+  );
 });
 
 describe.each([

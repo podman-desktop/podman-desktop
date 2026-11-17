@@ -8,6 +8,7 @@ import {
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 import {
   getConnectionDisplayName,
@@ -77,7 +78,7 @@ function navigateToConnection(): void {
   <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full {STATUS_DOT_CLASS[connectionStatus.status]} z-1"></span>
 
   {#if expanded}
-    <Button type="secondary" onclick={navigateToConnection} title="Navigate to {connectionName}" aria-label="Navigate to {connectionName}" padding="px-2 py-[3px]">
+    <Button type="secondary" onclick={navigateToConnection} title={t('workloads.navigateToConnection', { name: connectionName }) ?? `Navigate to ${connectionName}`} aria-label={t('workloads.navigateToConnection', { name: connectionName }) ?? `Navigate to ${connectionName}`} padding="px-2 py-[3px]">
       <div class="flex items-center gap-1.5">
         <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center">
           {#if provider.images?.icon}
@@ -91,8 +92,8 @@ function navigateToConnection(): void {
     <button
       class="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] transition-colors"
       onclick={navigateToConnection}
-      aria-label="Navigate to {connectionName}"
-      title="Navigate to {connectionName}">
+      aria-label={t('workloads.navigateToConnection', { name: connectionName }) ?? `Navigate to ${connectionName}`}
+      title={t('workloads.navigateToConnection', { name: connectionName }) ?? `Navigate to ${connectionName}`}>
       <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center">
         {#if provider.images?.icon}
           <Icon icon={provider.images.icon} title={provider.name} class="max-w-7 max-h-7 object-contain" />

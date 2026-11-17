@@ -9,6 +9,7 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
@@ -36,7 +37,9 @@ onMount(async () => {
 
 async function addArchivesToLoad(): Promise<void> {
   const archives = await window.openDialog({
-    title: 'Select Tar Archive(s) containing Image(s) to load',
+    title:
+      t('resources.select-tar-archive-s-containing-image-s-to-load') ??
+      'Select Tar Archive(s) containing Image(s) to load',
     selectors: ['multiSelections', 'openFile'],
   });
 
@@ -67,7 +70,9 @@ async function loadImages(): Promise<void> {
         archives: [archive],
       });
     } catch (e) {
-      loadError += `Error while loading ${archive}: ${String(e)}\n`;
+      loadError +=
+        t('resources.load-image-error', { path: archive, error: String(e) }) ??
+        `Error while loading ${archive}: ${String(e)}\n`;
     }
   }
 
@@ -78,7 +83,7 @@ async function loadImages(): Promise<void> {
 }
 </script>
 
-<EngineFormPage title="Load Images">
+<EngineFormPage title={t('resources.load-images') ?? 'Load Images'}>
   {#snippet icon()}
     <i class="fas fa-play fa-2x" aria-hidden="true"></i>
   {/snippet}
@@ -87,7 +92,7 @@ async function loadImages(): Promise<void> {
     {#if providerConnections.length > 1}
     <div class="mb-2">
       <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Container Engine</label>
+        >{t('resources.container-engine') ?? 'Container Engine'}</label>
       <ContainerConnectionDropdown
         id="providerChoice"
         name="providerChoice"
@@ -96,30 +101,30 @@ async function loadImages(): Promise<void> {
       </div>
     {/if}
 
-    <Button on:click={addArchivesToLoad} icon={faPlusCircle} type="link">Add archive</Button>
+    <Button on:click={addArchivesToLoad} icon={faPlusCircle} type="link">{t('resources.add-archive') ?? 'Add archive'}</Button>
     <!-- Display the list of existing imagesToLoad -->
     {#if archivesToLoad.length > 0}
       <div class="flex flex-row justify-center w-full py-1 font-semibold text-[var(--pd-content-card-text)]">
-        <div class="flex flex-col grow pl-2">Image Archives</div>
+        <div class="flex flex-col grow pl-2">{t('resources.image-archives') ?? 'Image Archives'}</div>
       </div>
     {/if}
     {#each archivesToLoad as _, index (index)}
       <div class="flex flex-row justify-center w-full py-1">
-        <Input bind:value={archivesToLoad[index]} aria-label="archive path" readonly={true} />
-        <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} aria-label="Remove archive" />
+        <Input bind:value={archivesToLoad[index]} aria-label={t('resources.archive-path') ?? 'archive path'} readonly={true} />
+        <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} aria-label={t('resources.remove-archive') ?? 'Remove archive'} />
       </div>
     {/each}
 
     <div class="pt-5">
       <ButtonRow>
-        <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+        <Button type="link" on:click={(): void => router.goto($lastPage.path)}>{t('resources.close') ?? 'Close'}</Button>
         <Button
           on:click={loadImages}
           inProgress={inProgress}
           icon={faUpload}
-          aria-label="Load images"
+          aria-label={t('resources.load-images') ?? 'Load images'}
           disabled={loadDisabled}>
-          Load Images
+          {t('resources.load-images') ?? 'Load Images'}
         </Button>
       </ButtonRow>
       <div aria-label="loadError">

@@ -21,13 +21,20 @@ import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import type { TinroRouteMeta } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import { lastSubmenuPages } from './stores/breadcrumb';
 import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 vi.mock(import('@podman-desktop/ui-svelte'));
+vi.mock(import('/@/lib/i18n/translations.svelte'));
+
+beforeEach(() => {
+  vi.mocked(t).mockReset();
+});
 
 test('SubmenuNavigation displays a title and builds SettingsNavItem components', async () => {
   const SettingsNavItemMock = vi.mocked(SettingsNavItem);
@@ -81,4 +88,43 @@ test('set up and update lastSubmenuPages store for each submenu', async () => {
   await tick();
 
   expect(get(lastSubmenuPages)['page 1']).toBe('/page1');
+});
+
+test('translates submenu labels while preserving selection, routes and history keys', async () => {
+  const title = '\u62e1\u5f35\u6a5f\u80fd';
+  const label = '\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9';
+  const labels: Record<string, string> = {
+    'navigation.Extensions': title,
+    'navigation.Dashboard': label,
+  };
+  vi.mocked(t).mockImplementation(key => labels[key]);
+  lastSubmenuPages.set({});
+  render(SubmenuNavigation, {
+    title: 'Extensions',
+    link: '/extensions',
+    items: [
+      { tooltip: 'Dashboard', link: '/extensions/dashboard' } as NavigationRegistryEntry,
+      { tooltip: 'Custom extension', link: '/extensions/custom' } as NavigationRegistryEntry,
+    ],
+    meta: { url: '/extensions/dashboard/details' } as TinroRouteMeta,
+  });
+  await tick();
+
+  screen.getByText(title);
+  expect(SettingsNavItem).toHaveBeenCalledWith(expect.anything(), {
+    title: label,
+    href: '/extensions/dashboard',
+    selected: true,
+    onClick: expect.any(Function),
+  });
+  expect(SettingsNavItem).toHaveBeenCalledWith(expect.anything(), {
+    title: 'Custom extension',
+    href: '/extensions/custom',
+    selected: false,
+    onClick: expect.any(Function),
+  });
+  expect(get(lastSubmenuPages)).toEqual({ Extensions: '/extensions' });
+  const props = vi.mocked(SettingsNavItem).mock.calls.at(-1)?.[1];
+  props?.onClick?.();
+  expect(get(lastSubmenuPages)).toEqual({ Extensions: '/extensions/custom' });
 });

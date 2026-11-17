@@ -19,9 +19,36 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import { checkNumericValueValid } from './NumberItemUtils';
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test.each([
+  [NaN, '数値を入力してください。値は1以上、34以下である必要があります'],
+  [0, '値は1以上である必要があります'],
+  [35, '値は34以下である必要があります'],
+])('Japanese numeric validation preserves the bounds for %s', async (value, error) => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'settings.number.expectedRange': '数値を入力してください。値は{minimum}以上、{maximum}以下である必要があります',
+    'settings.number.expectedMinimum': '数値を入力してください。値は{minimum}以上である必要があります',
+    'settings.number.minimum': '値は{minimum}以上である必要があります',
+    'settings.number.maximum': '値は{maximum}以下である必要があります',
+  });
+  await initTranslations();
+  expect(
+    checkNumericValueValid(
+      { id: 'record', title: 'record', parentId: '', type: 'number', minimum: 1, maximum: 34 },
+      value,
+    ),
+  ).toEqual({ valid: false, error });
+});
 
 test('Expect an error message if value input is NaN', async () => {
   const record: IConfigurationPropertyRecordedSchema = {

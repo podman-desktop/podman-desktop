@@ -7,6 +7,7 @@ import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import { ansi256Colours, colourizedANSIContainerName } from '/@/lib/editor/editor-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
@@ -93,7 +94,7 @@ onMount(async () => {
 });
 </script>
 
-<EmptyScreen icon={NoLogIcon} title="No Log" message="Log output of Pod {pod.name}" hidden={noLogs === false} />
+<EmptyScreen icon={NoLogIcon} title={t('resources.no-log') ?? 'No Log'} message={t('resources.log-output-of-pod-name', { name: pod.name }) ?? `Log output of Pod ${pod.name}`} hidden={noLogs === false} />
 
 <div
   class="min-w-full flex flex-col"

@@ -15,12 +15,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { t } from '/@/lib/i18n/translations.svelte';
+
 type ConfirmationVariant = 'default' | 'delete';
 
 export interface ConfirmationOptions {
   variant?: ConfirmationVariant;
   title: string;
   buttonLabel?: string;
+  message?: string;
 }
 
 /**
@@ -34,13 +37,15 @@ export interface ConfirmationOptions {
  */
 export function withConfirmation(func: (err?: unknown) => unknown, action: string, options: ConfirmationOptions): void {
   const isDelete = options.variant === 'delete';
-  const activationButton = isDelete ? 'Delete' : (options.buttonLabel ?? 'Continue');
+  const activationButton = isDelete
+    ? (t('common.delete') ?? 'Delete')
+    : (options.buttonLabel ?? t('common.continue') ?? 'Continue');
   const title = options.title;
   window
     .showMessageBox({
       title,
-      message: 'Are you sure you want to ' + action + '?',
-      buttons: [activationButton, 'Cancel'],
+      message: options.message ?? 'Are you sure you want to ' + action + '?',
+      buttons: [activationButton, t('common.cancel') ?? 'Cancel'],
       type: isDelete ? 'danger' : 'question',
     })
     .then(result => {

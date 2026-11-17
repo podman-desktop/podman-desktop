@@ -3,6 +3,7 @@ import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { faMicrochip, faSatelliteDish, faServer } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Label from '/@/lib/ui/Label.svelte';
 
 import type { Props } from './props';
@@ -16,13 +17,13 @@ let roleClass = $state<string>();
 $effect(() => {
   switch (object.role) {
     case 'control-plane':
-      roleName = 'Control Plane';
+      roleName = t('kubernetes.resources.role.controlPlane') ?? 'Control Plane';
       // faSatelliteDish: Represents a satellite dish, suitable for the control plane role
       roleIcon = faSatelliteDish;
       roleClass = 'text-[var(--pd-status-running)]';
       break;
     case 'node':
-      roleName = 'Node';
+      roleName = t('kubernetes.resources.role.node') ?? 'Node';
       // faServer: Better represents a "node" / server rack
       roleIcon = faServer;
       roleClass = 'text-[var(--pd-status-updated)]';

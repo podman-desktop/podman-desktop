@@ -3,6 +3,7 @@ import type { V1ConfigMap } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeConfigMapArtifact from '/@/lib/kube/details/KubeConfigMapArtifact.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 
@@ -25,6 +26,6 @@ basic information -->
     <KubeObjectMetaArtifact artifact={configMap.metadata} />
     <KubeConfigMapArtifact artifact={configMap} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

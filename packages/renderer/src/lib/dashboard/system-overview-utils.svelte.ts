@@ -20,6 +20,7 @@ import type { ProviderConnectionInfo, ProviderInfo, SystemOverviewStatus } from 
 import type { ProviderConnectionStatus, ProviderStatus } from '@desktop-framework/extension-api';
 import type { ActionButtonType } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import {
   type ConnectionCallback,
   eventCollect,
@@ -63,17 +64,35 @@ export function getConnectionStatusConfig(
   provider: ProviderInfo,
   error?: string,
 ): ConnectionStatusConfig {
-  const label = error ? 'Error' : (CONNECTION_STATUS_LABELS[status as ProviderConnectionStatus] ?? status);
+  const label = error
+    ? (t('workloads.error') ?? 'Error')
+    : (t(`workloads.connectionState.${status}`) ??
+      CONNECTION_STATUS_LABELS[status as ProviderConnectionStatus] ??
+      status);
 
   if (error && hasStartLifecycle(provider))
-    return { label, buttonText: `Retry ${provider.name}`, buttonType: 'danger' };
+    return {
+      label,
+      buttonText: t('workloads.retryProvider', { name: provider.name }) ?? `Retry ${provider.name}`,
+      buttonType: 'danger',
+    };
   if ((status === 'stopped' || status === 'configured') && hasStartLifecycle(provider))
-    return { label, buttonText: `Start ${provider.name}`, buttonType: 'primary' };
-  if (status === 'unknown') return { label, buttonText: 'See Details in Resources', buttonType: 'danger' };
+    return {
+      label,
+      buttonText: t('workloads.startProvider', { name: provider.name }) ?? `Start ${provider.name}`,
+      buttonType: 'primary',
+    };
+  if (status === 'unknown')
+    return { label, buttonText: t('workloads.seeResourceDetails') ?? 'See Details in Resources', buttonType: 'danger' };
   if (status === 'started' || status === 'starting' || status === 'stopping' || status === 'stopped')
-    return { label, buttonText: 'View', buttonType: 'secondary' };
-  if (status !== 'configured') return { label, buttonText: `Set up ${provider.name}`, buttonType: 'primary' };
-  return { label, buttonText: 'View', buttonType: 'secondary' };
+    return { label, buttonText: t('workloads.view') ?? 'View', buttonType: 'secondary' };
+  if (status !== 'configured')
+    return {
+      label,
+      buttonText: t('workloads.setupProvider', { name: provider.name }) ?? `Set up ${provider.name}`,
+      buttonType: 'primary',
+    };
+  return { label, buttonText: t('workloads.view') ?? 'View', buttonType: 'secondary' };
 }
 
 function createNoopLogger(): ConnectionCallback {

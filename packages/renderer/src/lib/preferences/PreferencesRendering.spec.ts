@@ -24,9 +24,10 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import { CONFIGURATION_DEFAULT_SCOPE } from '@desktop-framework/api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { context } from '/@/stores/context';
 
 import PreferencesRendering from './PreferencesRendering.svelte';
@@ -60,6 +61,49 @@ const record2: IConfigurationPropertyRecordedSchema = {
   scope: CONFIGURATION_DEFAULT_SCOPE,
 };
 const records = [record, record2];
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test.each(['key.title', 'myid.displayName', 'myid.description', 'myid.markdownDescription'])(
+  'Find settings using translated %s while retaining the original search terms',
+  async translationKey => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({ [translationKey]: '日本語の設定' });
+    await initTranslations();
+    const { rerender } = render(PreferencesRendering, {
+      properties: records,
+      key: 'key',
+      searchValue: '日本語',
+    });
+    expect(screen.queryByText('No Settings Found')).not.toBeInTheDocument();
+    expect(screen.getByText(translationKey === 'myid.displayName' ? '日本語の設定' : 'Myid')).toBeInTheDocument();
+
+    await rerender({ properties: records, key: 'key', searchValue: 'boolean' });
+    expect(screen.queryByText('No Settings Found')).not.toBeInTheDocument();
+  },
+);
+
+test('Translate search, empty state and heading and update without remounting', async () => {
+  const { getByText, getByPlaceholderText } = render(PreferencesRendering, {
+    properties: records,
+    key: 'key',
+    searchValue: 'unknown',
+  });
+  expect(getByText('No Settings Found')).toBeInTheDocument();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'settings.preferences': '環境設定',
+    'settings.empty': '設定が見つかりません',
+    'settings.search': '設定を検索…',
+    'settings.search.label': '設定を検索',
+  });
+  await initTranslations();
+  await tick();
+  expect(getByText('環境設定')).toBeInTheDocument();
+  expect(getByText('設定が見つかりません')).toBeInTheDocument();
+  expect(getByPlaceholderText('設定を検索…')).toHaveAccessibleName('設定を検索');
+});
 
 test('Expect to see two record if no active filter', async () => {
   render(PreferencesRendering, { properties: records, key: 'key' });

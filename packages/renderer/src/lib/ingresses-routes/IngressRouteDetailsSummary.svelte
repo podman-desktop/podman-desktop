@@ -4,6 +4,7 @@ import type { V1Ingress } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeIngressArtifact from '/@/lib/kube/details/KubeIngressArtifact.svelte';
 import KubeIngressStatusArtifact from '/@/lib/kube/details/KubeIngressStatusArtifact.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
@@ -39,6 +40,6 @@ basic information -->
       <OpenshiftRouteArtifact artifact={ingressRoute} />
     {/if}
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

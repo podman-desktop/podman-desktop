@@ -3,6 +3,7 @@ import type { V1NodeSpec } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   artifact?: V1NodeSpec;
@@ -12,17 +13,17 @@ let { artifact }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Details</Title>
+    <Title>{t('workloads.details') ?? 'Details'}</Title>
   </tr>
   {#if artifact.externalID}
     <tr>
-      <Cell>External ID</Cell>
+      <Cell>{t('workloads.externalId') ?? 'External ID'}</Cell>
       <Cell>{artifact.externalID}</Cell>
     </tr>
   {/if}
   {#if artifact.podCIDRs}
     <tr>
-      <Cell>Pod CIDRs</Cell>
+      <Cell>{t('workloads.podCidrs') ?? 'Pod CIDRs'}</Cell>
       <Cell>
         {#each artifact.podCIDRs as cidr, index (index)}
           <div>{cidr}</div>
@@ -32,13 +33,13 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.providerID}
     <tr>
-      <Cell>Provider ID</Cell>
+      <Cell>{t('workloads.providerId') ?? 'Provider ID'}</Cell>
       <Cell>{artifact.providerID}</Cell>
     </tr>
   {/if}
   {#if artifact.taints}
     <tr>
-      <Title>Taints</Title>
+      <Title>{t('workloads.taints') ?? 'Taints'}</Title>
       <Cell>
         <table>
           <tbody>
@@ -54,7 +55,7 @@ let { artifact }: Props = $props();
     </tr>
   {/if}
   <tr>
-    <Cell>Unschedulable</Cell>
+    <Cell>{t('workloads.unschedulable') ?? 'Unschedulable'}</Cell>
     <Cell>{artifact.unschedulable ? 'Yes' : 'No'}</Cell>
   </tr>
 {/if}

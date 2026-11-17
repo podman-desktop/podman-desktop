@@ -2,6 +2,7 @@
 import { faFileText } from '@fortawesome/free-solid-svg-icons';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 
 interface Props {
@@ -39,7 +40,7 @@ const readmePromise = $derived.by(async () => {
     <EmptyScreen
       class="w-full h-full"
       icon={faFileText}
-      title="No Readme"
-      message="No readme file is available for this extension" />
+      title={t('workloads.noReadme') ?? 'No Readme'}
+      message={t('workloads.noReadmeMessage') ?? 'No readme file is available for this extension'} />
   {/if}
 {/await}

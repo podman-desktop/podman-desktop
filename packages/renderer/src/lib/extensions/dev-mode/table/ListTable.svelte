@@ -5,6 +5,8 @@ import { Button, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
 import type { SelectableExtensionDevelopmentFolderInfoUI } from '/@/lib/extensions/dev-mode/development-folder-info-ui';
 import DevelopmentExtensionTableActionsColumn from '/@/lib/extensions/dev-mode/table/ActionsColumn.svelte';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   selectedItemsNumber?: number;
@@ -57,6 +59,7 @@ function label(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): str
 </script>
 
 <Table
+  labels={getTableLabels()}
   kind="extensions"
   data={extensionFolderUIInfos}
   {columns}
@@ -74,12 +77,12 @@ function label(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): str
         withBulkConfirmation(
           deleteSelectedFolders,
           `Untrack loading extension from ${selectedItemsNumber} folder${selectedItemsNumber > 1 ? 's' : ''}`,
-          { title: 'Untrack Extensions?', variant: 'delete' },
+          { title: t('workloads.untrackExtensionsTitle') ?? 'Untrack Extensions?', message: t('workloads.untrackExtensionsMessage', { count: selectedItemsNumber }) ?? `Are you sure you want to Untrack loading extension from ${selectedItemsNumber} folder${selectedItemsNumber > 1 ? 's' : ''}?`, variant: 'delete' },
         )}
-      title="Untrack {selectedItemsNumber} selected items"
+      title={t('workloads.untrackSelected', { count: selectedItemsNumber }) ?? `Untrack ${selectedItemsNumber} selected items`}
       inProgress={bulkDeleteInProgress}
       icon={faTrash} />
-    <span>On {selectedItemsNumber} selected items.</span>
+    <span>{t('workloads.selectedItems', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
   {:else}
     <div>&nbsp;</div>
   {/if}

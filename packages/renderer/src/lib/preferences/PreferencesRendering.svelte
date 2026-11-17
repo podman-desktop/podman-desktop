@@ -5,6 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
 
 import type { ContextUI } from '/@/lib/context/context';
+import { t } from '/@/lib/i18n/translations.svelte';
 import Route from '/@/Route.svelte';
 import { context } from '/@/stores/context';
 
@@ -34,6 +35,10 @@ const matchingRecords = $derived(
       property =>
         !searchValue ||
         matchValue(property.title, searchValue) ||
+        matchValue(t(`${property.parentId}.title`) ?? '', searchValue) ||
+        matchValue(t(`${property.id}.displayName`) ?? '', searchValue) ||
+        matchValue(t(`${property.id}.description`) ?? '', searchValue) ||
+        matchValue(t(`${property.id}.markdownDescription`) ?? '', searchValue) ||
         (!!property.id && matchValue(property.id, searchValue)) ||
         (!!property.displayName && matchValue(property.displayName, searchValue)) ||
         (!!property.description && matchValue(property.description, searchValue)) ||
@@ -73,20 +78,20 @@ function updateSearchValue(event: any): void {
 }
 </script>
 
-<Route path="/" breadcrumb={key}>
-  <SettingsPage title="Preferences">
+<Route path="/" breadcrumb={t(`${key}.title`) ?? key}>
+  <SettingsPage title={t('settings.preferences') ?? 'Preferences'}>
     {#snippet header()}
-        <SearchInput  title="preferences" class="mt-4" oninput={updateSearchValue} />
+        <SearchInput title="preferences" placeholder={t('settings.search') ?? 'Search...'} ariaLabel={t('settings.search.label') ?? 'search preferences'} class="mt-4" oninput={updateSearchValue} />
       {/snippet}
     <div class="flex flex-col space-y-5 text-[var(--pd-content-header)] pb-2">
       {#if matchingRecords.size === 0}
-        <div>No Settings Found</div>
+        <div>{t('settings.empty') ?? 'No Settings Found'}</div>
       {:else}
         {#each [...matchingRecords.keys()].toSorted((a, b) => a.localeCompare(b)) as configSection, index (index)}
           {@const records = matchingRecords.get(configSection)}
           {#if records}
             <div>
-              <div class="text-lg font-medium first-letter:uppercase">{records.at(0)?.title}</div>
+              <div class="text-lg font-medium first-letter:uppercase">{t(`${configSection}.title`) ?? records.at(0)?.title}</div>
               {#each records as configItem (configItem.id)}
                 <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2">
                   <PreferencesRenderingItem record={configItem} />

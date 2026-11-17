@@ -3,6 +3,7 @@ import type { CheckStatus, ProviderInfo } from '@desktop-framework/api';
 import { Button, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Steps from '/@/lib/ui/Steps.svelte';
 
 import PreflightChecks from './PreflightChecks.svelte';
@@ -54,21 +55,19 @@ onMount(async () => {
     await runProvider();
   }
 });
+let versionSuffix = $derived(provider.version ? ` v${provider.version}` : '');
 </script>
 
 <ProviderCard provider={provider}>
   {#snippet content()}
     {#if !runAtStart && !runInProgress}
       <p class="text-[var(--pd-content-text)] text-center w-2/3">
-        To start working with containers, {provider.name}
-        {#if provider.version}
-          v{provider.version}
-        {/if} needs to be started.
+        {t('workloads.providerNeedsStart', { name: provider.name, version: versionSuffix }) ?? `To start working with containers, ${provider.name}${versionSuffix} needs to be started.`}
       </p>
       <ProviderWarnings provider={provider} />
       <div class="w-1/3 flex justify-center">
         <Button on:click={runProvider}>
-          Run {provider.name}
+          {t('workloads.runProvider', { name: provider.name }) ?? `Run ${provider.name}`}
         </Button>
       </div>
     {/if}
@@ -78,7 +77,7 @@ onMount(async () => {
           <Steps steps={InitializationSteps} current={1} />
         {/if}
         <div class="flex flex-col text-[var(--pd-content-text)] items-center" aria-label="Transitioning State">
-          <div>Starting</div>
+          <div>{t('workloads.connectionState.starting') ?? 'Starting'}</div>
           <div class="my-2">
             <Spinner />
           </div>

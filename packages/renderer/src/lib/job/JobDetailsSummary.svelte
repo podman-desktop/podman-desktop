@@ -3,6 +3,7 @@ import type { V1Job } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeJobArtifact from '/@/lib/kube/details/KubeJobArtifact.svelte';
 import KubeJobStatusArtifact from '/@/lib/kube/details/KubeJobStatusArtifact.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
@@ -27,6 +28,6 @@ basic information -->
     <KubeJobStatusArtifact artifact={job.status} />
     <KubeJobArtifact artifact={job.spec} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

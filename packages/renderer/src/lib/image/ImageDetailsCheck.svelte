@@ -6,6 +6,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { CheckUI, ProviderUI } from '/@/lib/ui/ProviderResultPage';
 import ProviderResultPage from '/@/lib/ui/ProviderResultPage.svelte';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
@@ -140,20 +141,20 @@ async function handleAbort(): Promise<void> {
 <ProviderResultPage providers={providers} results={results}>
   <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
   {#snippet headerInfo()}
-  <div class="flex flex-row" role="status" aria-label="Analysis Status">
+  <div class="flex flex-row" role="status" aria-label={t('resources.analysis-status') ?? 'Analysis Status'}>
     <div class="w-full flex mb-4 space-x-4">
       <Icon size="1.5x" icon={faStethoscope} />
       {#if aborted}
-        <span>Image analysis canceled</span>
+        <span>{t('resources.image-analysis-canceled') ?? 'Image analysis canceled'}</span>
       {:else if remainingProviders > 0}
-        <span>Image analysis in progress...</span>
+        <span>{t('resources.image-analysis-in-progress') ?? 'Image analysis in progress...'}</span>
       {:else}
-        <span>Image analysis complete</span>
+        <span>{t('resources.image-analysis-complete') ?? 'Image analysis complete'}</span>
       {/if}
     </div>
     {#if remainingProviders > 0}
       <div class="mr-4">
-        <Button on:click={handleAbort}>Cancel</Button>
+        <Button on:click={handleAbort}>{t('resources.cancel') ?? 'Cancel'}</Button>
       </div>
     {/if}
   </div>

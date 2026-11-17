@@ -3,6 +3,7 @@ import type { V1PersistentVolumeClaimSpec } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   artifact?: V1PersistentVolumeClaimSpec;
@@ -13,11 +14,11 @@ let { artifact }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Details</Title>
+    <Title>{t('workloads.details') ?? 'Details'}</Title>
   </tr>
   {#if artifact.accessModes}
     <tr>
-      <Cell>Access Modes</Cell>
+      <Cell>{t('workloads.accessModes') ?? 'Access Modes'}</Cell>
       <Cell>
         {#each artifact.accessModes as mode, index (index)}
           <div>{mode}</div>
@@ -27,19 +28,19 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.storageClassName}
     <tr>
-      <Cell>Storage Class Name</Cell>
+      <Cell>{t('workloads.storageClassName') ?? 'Storage Class Name'}</Cell>
       <Cell>{artifact.storageClassName}</Cell>
     </tr>
   {/if}
   {#if artifact.volumeMode}
     <tr>
-      <Cell>Volume Mode</Cell>
+      <Cell>{t('workloads.volumeMode') ?? 'Volume Mode'}</Cell>
       <Cell>{artifact.volumeMode}</Cell>
     </tr>
   {/if}
   {#if artifact.resources?.requests}
     <tr>
-      <Cell>Requests</Cell>
+      <Cell>{t('workloads.requests') ?? 'Requests'}</Cell>
       {#if artifact.resources.requests}
         <Cell>
           <table>
@@ -57,7 +58,7 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.resources?.limits}
     <tr>
-      <Cell>Limits</Cell>
+      <Cell>{t('workloads.limits') ?? 'Limits'}</Cell>
       <Cell>
         <table>
           <tbody>
@@ -73,7 +74,7 @@ let { artifact }: Props = $props();
 
   {#if artifact.selector}
     <tr>
-      <Title>Selector</Title>
+      <Title>{t('workloads.selector') ?? 'Selector'}</Title>
       {#if artifact.selector.matchLabels}
         <Cell>
           <table>

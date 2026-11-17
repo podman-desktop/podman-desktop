@@ -19,9 +19,16 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import SearchButton from './SearchButton.svelte';
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
 
 test('Expect basic styling', async () => {
   const onclick = vi.fn();
@@ -47,4 +54,22 @@ test('Expect click', async () => {
 
   // check if onclick was called
   expect(onclick).toHaveBeenCalled();
+});
+
+test('Expect language changes to update the search label without changing its action', async () => {
+  const onclick = vi.fn();
+  render(SearchButton, { onclick });
+  screen.getByRole('button', { name: 'Search' });
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({ 'common.search': '検索' });
+  await initTranslations();
+
+  const button = await screen.findByRole('button', { name: '検索' });
+  expect(button).toHaveAttribute('title', '検索');
+  await fireEvent.click(button);
+  expect(onclick).toHaveBeenCalledOnce();
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+  await screen.findByRole('button', { name: 'Search' });
 });

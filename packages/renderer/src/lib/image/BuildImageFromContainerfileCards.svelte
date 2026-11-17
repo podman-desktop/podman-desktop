@@ -9,6 +9,7 @@ import {
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { type Component, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import WebAssemblyIcon from '/@/lib/images/WebAssemblyIcon.svelte';
 
 import BuildImageFromContainerfileCard from './BuildImageFromContainerfileCard.svelte';
@@ -31,7 +32,7 @@ interface CardInfo {
 
 const DEFAULT_CARDS: CardInfo[] = [
   {
-    title: 'Intel and AMD x86_64 systems',
+    title: t('resources.intel-and-amd-x86-64-systems') ?? 'Intel and AMD x86_64 systems',
     badge: 'AMD64',
     isDefault: false,
     checked: false,
@@ -39,7 +40,7 @@ const DEFAULT_CARDS: CardInfo[] = [
     icon: faLinux,
   },
   {
-    title: 'ARM® aarch64 systems',
+    title: t('resources.arm-aarch64-systems') ?? 'ARM® aarch64 systems',
     badge: 'ARM64',
     isDefault: false,
     checked: false,
@@ -50,7 +51,7 @@ const DEFAULT_CARDS: CardInfo[] = [
 
 const ADVANCED_CARDS: CardInfo[] = [
   {
-    title: 'Power ppc64le systems',
+    title: t('resources.power-ppc64le-systems') ?? 'Power ppc64le systems',
     badge: 'PPC64LE',
     isDefault: false,
     checked: false,
@@ -58,7 +59,7 @@ const ADVANCED_CARDS: CardInfo[] = [
     icon: faLinux,
   },
   {
-    title: 'IBM s390x zSystems',
+    title: t('resources.ibm-s390x-zsystems') ?? 'IBM s390x zSystems',
     badge: 'S390X',
     isDefault: false,
     checked: false,
@@ -151,7 +152,7 @@ function addCard(item: { value: string }): void {
 }
 </script>
 
-<div class="flex flex-col" role="region" aria-label="Build Platform Options">
+<div class="flex flex-col" role="region" aria-label={t('resources.build-platform-options') ?? 'Build Platform Options'}>
   <div class="flex flex-row gap-x-4 gap-y-4 flex-wrap">
     {#each sortedCards as card, index (index)}
       <BuildImageFromContainerfileCard
@@ -167,11 +168,11 @@ function addCard(item: { value: string }): void {
 
   {#if !showMoreOptions}
     <button
-      aria-label="Show more options"
+      aria-label={t('resources.show-more-options') ?? 'Show more options'}
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
       onclick={(): boolean => (showMoreOptions = !showMoreOptions)}>
       <Icon icon={faChevronRight} class=" mr-2 " />
-      More Options...
+      {t('resources.more-options') ?? 'More Options...'}
     </button>
   {:else}
     <div class="flex flex-col pt-4">
@@ -187,7 +188,7 @@ function addCard(item: { value: string }): void {
             on:card={handleCard} />
         {/each}
         <BuildImageFromContainerfileCard
-          title="New platform"
+          title={t('resources.new-platform') ?? 'New platform'}
           isDefault={false}
           checked={false}
           badge=""
@@ -197,11 +198,11 @@ function addCard(item: { value: string }): void {
       </div>
     </div>
     <button
-      aria-label="Show less options"
+      aria-label={t('resources.show-less-options') ?? 'Show less options'}
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
       onclick={(): boolean => (showMoreOptions = !showMoreOptions)}>
       <Icon icon={faChevronCircleDown} class=" mr-2 transform rotate-90" />
-      Less Options...
+      {t('resources.less-options') ?? 'Less Options...'}
     </button>
   {/if}
 </div>

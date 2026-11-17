@@ -15,6 +15,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
@@ -167,12 +168,12 @@ async function pullImage(): Promise<void> {
   pullTarget = undefined;
 
   if (!selectedProviderConnection) {
-    pullError = 'No current provider connection';
+    pullError = t('resources.no-current-provider-connection') ?? 'No current provider connection';
     return;
   }
 
   if (!imageToPull) {
-    pullError = 'No image to pull';
+    pullError = t('resources.no-image-to-pull') ?? 'No image to pull';
     return;
   }
 
@@ -210,7 +211,9 @@ async function pullImage(): Promise<void> {
       normalizedErrorMessage.includes('cancelled') ||
       normalizedErrorMessage.includes('canceled');
     if (!pullCanceled) {
-      pullError = `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
+      pullError =
+        t('resources.pull-image-error', { name: selectedProviderConnection.name, error: String(errorMessage) }) ??
+        `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
     }
   } finally {
     pullCancellableTokenId = undefined;
@@ -227,11 +230,15 @@ async function resolvePulledImage(connection: ProviderContainerConnectionInfo, r
   try {
     pullTarget = await window.resolveImage(connection, reference);
     if (!pullTarget) {
-      pullResolveError = `Image ${reference} has been pulled but it could not be found on ${connection.name}.`;
+      pullResolveError =
+        t('resources.pulled-image-not-found', { reference, name: connection.name }) ??
+        `Image ${reference} has been pulled but it could not be found on ${connection.name}.`;
     }
   } catch (error: unknown) {
     console.error(`Error while resolving image ${reference} on ${connection.name}`, error);
-    pullResolveError = `Image ${reference} has been pulled but ${connection.name} could not be asked about it.`;
+    pullResolveError =
+      t('resources.pulled-image-query-failed', { reference, name: connection.name }) ??
+      `Image ${reference} has been pulled but ${connection.name} could not be asked about it.`;
   }
 }
 
@@ -295,7 +302,7 @@ let imageNameIsInvalid = $state(imageToPull === undefined || imageToPull.trim() 
 function validateImageName(image: string): void {
   if (image === undefined || image.trim() === '') {
     imageNameIsInvalid = true;
-    imageNameInvalid = 'Please enter a value';
+    imageNameInvalid = t('resources.please-enter-a-value') ?? 'Please enter a value';
   } else {
     imageNameIsInvalid = false;
     imageNameInvalid = undefined;
@@ -383,7 +390,9 @@ async function searchLatestTag(): Promise<void> {
     isValidName = Boolean(tags);
     const latestFound = tags.includes('latest');
     if (!latestFound) {
-      latestTagMessage = '"latest" tag not found. You can search a tag by appending ":" to the image name';
+      latestTagMessage =
+        t('resources.latest-tag-missing') ??
+        '"latest" tag not found. You can search a tag by appending ":" to the image name';
       isValidName = false;
     } else {
       latestTagMessage = undefined;
@@ -445,7 +454,7 @@ async function searchFunction(value: string): Promise<void> {
 </script>
 
 <EngineFormPage
-  title="Pull an image from a registry"
+  title={t('resources.pull-an-image-from-a-registry') ?? 'Pull an image from a registry'}
   inProgress={pullInProgress}
   showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
@@ -453,22 +462,22 @@ async function searchFunction(value: string): Promise<void> {
   {/snippet}
 
   {#snippet actions()}
-    <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
+    <Button on:click={gotoManageRegistries} icon={faCog}>{t('resources.manage-registries') ?? 'Manage registries'}</Button>
   {/snippet}
 
   {#snippet content()}
   <div class="space-y-6">
     <div class="w-full">
 
-      <div class="self-center text-[var(--pd-table-body-text)] pb-4">Specify preferred registries for pulling images in <Link on:click={gotoManageRegistries}>Settings &gt; Registries</Link>.</div>
+      <div class="self-center text-[var(--pd-table-body-text)] pb-4">{t('resources.specify-preferred-registries-for-pulling-images-in') ?? 'Specify preferred registries for pulling images in'} <Link on:click={gotoManageRegistries}>{t('resources.settings-registries') ?? 'Settings > Registries'}</Link>.</div>
 
       <label for="imageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Image to pull</label>
+        >{t('resources.image-to-pull') ?? 'Image to pull'}</label>
       <div class="flex flex-col">
         <Typeahead
           id="imageName"
           name="imageName"
-          placeholder="Image name"
+          placeholder={t('resources.image-name') ?? 'Image name'}
           onInputChange={searchFunction}
           resultItems={searchResult}
           compare={sortResults}
@@ -484,7 +493,7 @@ async function searchFunction(value: string): Promise<void> {
           initialFocus />
         {#if selectedProviderConnection?.type === 'podman' && podmanFQN}
           <div class="absolute mt-2 ml-[-18px] self-start">
-            <Tooltip tip="Shortname images will be pulled from Docker Hub" topRight>
+            <Tooltip tip={t('resources.shortname-images-will-be-pulled-from-docker-hub') ?? 'Shortname images will be pulled from Docker Hub'} topRight>
               <Icon size="1.1x" class="text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
             </Tooltip>
           </div>
@@ -494,9 +503,9 @@ async function searchFunction(value: string): Promise<void> {
         <Checkbox
           class="pt-2"
           bind:checked={usePodmanFQN}
-          title="Use Podman FQN"
+          title={t('resources.use-podman-fqn') ?? 'Use Podman FQN'}
           disabled={podmanFQN === '' || pullFinished || pullInProgress}
-          >Use Podman FQN for shortname image</Checkbox>
+          >{t('resources.use-podman-fqn-for-shortname-image') ?? 'Use Podman FQN for shortname image'}</Checkbox>
       {/if}
       {#if imageNameInvalid}
         <ErrorMessage error={imageNameInvalid} />
@@ -508,7 +517,7 @@ async function searchFunction(value: string): Promise<void> {
       {#if providerConnections.length > 1}
         <div class="pt-4">
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Container Engine</label>
+            >{t('resources.container-engine') ?? 'Container Engine'}</label>
           <ContainerConnectionDropdown
             id="providerChoice"
             name="providerChoice"
@@ -526,7 +535,7 @@ async function searchFunction(value: string): Promise<void> {
         <ButtonRow>
           {#if !pullFinished}
             {#if !pullCancellable}
-              <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+              <Button type="link" on:click={(): void => router.goto($lastPage.path)}>{t('resources.close') ?? 'Close'}</Button>
             {/if}
             <Button
               icon={faArrowCircleDown}
@@ -536,12 +545,12 @@ async function searchFunction(value: string): Promise<void> {
               {pullInProgress ? 'Pulling image' : 'Pull image'}
             </Button>
             {#if pullCancellable}
-              <Button icon={faBan} on:click={cancelPullImage} type="secondary">Cancel</Button>
+              <Button icon={faBan} on:click={cancelPullImage} type="secondary">{t('resources.cancel') ?? 'Cancel'}</Button>
             {/if}
           {:else}
-            <Button type='link' on:click={pullImageFinished}>Close</Button>
-            <Button type='secondary' on:click={gotoImageDetails}>View details</Button>
-            <Button type='primary' on:click={gotoImageRun}>Run</Button>
+            <Button type='link' on:click={pullImageFinished}>{t('resources.close') ?? 'Close'}</Button>
+            <Button type='secondary' on:click={gotoImageDetails}>{t('resources.view-details') ?? 'View details'}</Button>
+            <Button type='primary' on:click={gotoImageRun}>{t('resources.run') ?? 'Run'}</Button>
           {/if}
         </ButtonRow>
         {#if pullError}

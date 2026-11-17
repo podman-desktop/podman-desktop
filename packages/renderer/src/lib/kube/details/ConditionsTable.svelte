@@ -3,6 +3,8 @@ import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 import type { HTMLAttributes } from 'svelte/elements';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props extends HTMLAttributes<HTMLTableRowElement> {
   conditions: {
     type: string;
@@ -21,7 +23,7 @@ let { conditions, ...restProps }: Props = $props();
     <table class="w-full ml-2.5">
       <tbody>
         <tr>
-          <th align="left">Type</th><th align="left">Status</th><th align="left">Updated</th><th align="left">Reason</th><th align="left">Message</th>
+          <th align="left">{t('workloads.type') ?? 'Type'}</th><th align="left">{t('workloads.status') ?? 'Status'}</th><th align="left">{t('workloads.updated') ?? 'Updated'}</th><th align="left">{t('workloads.reason') ?? 'Reason'}</th><th align="left">{t('workloads.message') ?? 'Message'}</th>
         </tr>
         {#each conditions as condition, index (index)}
           <tr>

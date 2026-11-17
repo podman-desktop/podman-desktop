@@ -2,6 +2,7 @@
 import { NavigationPage, type ProviderInfo } from '@desktop-framework/api';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 
 import { getConnectionStatusConfig, hasStartLifecycle } from './system-overview-utils.svelte';
@@ -21,9 +22,15 @@ let statusConfig = $derived(getConnectionStatusConfig(provider.status, provider)
 
 let subtitleText = $derived.by(() => {
   if (provider.status === 'not-installed') {
-    return `${provider.name} needs to be set up. Some features might not function optimally.`;
+    return (
+      t('workloads.providerNeedsSetup', { name: provider.name }) ??
+      `${provider.name} needs to be set up. Some features might not function optimally.`
+    );
   }
-  return 'No container engine (machine) created yet. Create one to run containers and pods.';
+  return (
+    t('workloads.noContainerEngine') ??
+    'No container engine (machine) created yet. Create one to run containers and pods.'
+  );
 });
 
 function handleClick(): void {

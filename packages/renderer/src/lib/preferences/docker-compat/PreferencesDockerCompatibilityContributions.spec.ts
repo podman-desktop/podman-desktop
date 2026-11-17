@@ -24,14 +24,57 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { extensionInfos } from '/@/stores/extensions';
 
 import PreferencesDockerCompatibilityContributions from './PreferencesDockerCompatibilityContributions.svelte';
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('Japanese Docker compatibility schema and dynamic enum preserve IDs, values and source labels', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'docker.cli.context.displayName': 'Docker CLIコンテキスト',
+    'docker.cli.context.markdownDescription': '使用するコンテキストを選択してください',
+    'docker.cli.context.enum.default': '既定のコンテキスト',
+  });
+  await initTranslations();
+  extensionInfos.set([{ id: 'docker', state: 'started' } as ExtensionInfo]);
+  const contextUi = new ContextUI();
+  const options = [
+    { label: 'Default', value: 'default', selected: true },
+    { label: 'Custom context', value: 'custom', selected: false },
+  ];
+  contextUi.setValue('docker.DockerCompatibility.docker.cli.context', options);
+  context.set(contextUi);
+  configurationProperties.set([
+    {
+      id: 'docker.cli.context',
+      title: 'Context',
+      parentId: '',
+      type: 'string',
+      markdownDescription: 'Select a context',
+      enum: [],
+      scope: 'DockerCompatibility',
+      group: 'docker',
+      extension: { id: 'docker' },
+    },
+  ]);
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue();
+  render(PreferencesDockerCompatibilityContributions);
+  screen.getByRole('status', { name: 'Docker CLIコンテキスト' });
+  screen.getByText('使用するコンテキストを選択してください');
+  await userEvent.click(screen.getByRole('button', { name: '既定のコンテキスト' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Custom context' }));
+  await vi.waitFor(() =>
+    expect(window.updateConfigurationValue).toHaveBeenCalledWith('docker.cli.context', 'custom', 'DockerCompatibility'),
+  );
+  expect(options[0].label).toBe('Default');
 });
 
 test('display group', async () => {

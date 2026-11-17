@@ -3,6 +3,8 @@ import type { CheckStatus, ProviderInfo } from '@desktop-framework/api';
 import { faRocket } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   provider: ProviderInfo;
   onPreflightChecks: (status: CheckStatus[]) => void;
@@ -70,6 +72,6 @@ async function performInstallation(): Promise<void> {
     disabled={preflightChecksFailed}
     icon={faRocket}
     onclick={performInstallation}>
-    {hasWarnings ? 'Proceed with installation' : 'Install'}
+    {hasWarnings ? (t('workloads.proceedInstallation') ?? 'Proceed with installation') : (t('workloads.install') ?? 'Install')}
   </Button>
 {/if}

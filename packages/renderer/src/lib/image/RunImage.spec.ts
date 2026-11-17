@@ -27,6 +27,7 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import RunImage from '/@/lib/image/RunImage.svelte';
 import type { VolumeInfoUI } from '/@/lib/volume/VolumeInfoUI';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
@@ -58,9 +59,11 @@ beforeAll(() => {
   mockBreadcrumb();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   console.error = vi.fn();
   vi.clearAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   secretsInfo.set([]);
   volumeListInfos.set([]);
   router.goto('/basic');
@@ -783,6 +786,35 @@ describe('RunImage container name collision', () => {
 });
 
 describe('RunImage volume mounts', () => {
+  test('localized volume choices submit the original volume name and mount path', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'resources.basic': '基本設定',
+      'resources.host-path': 'ホストのパス',
+      'resources.existing-volume': '既存のボリューム',
+      'resources.select-a-volume': 'ボリュームを選択',
+      'resources.path-inside-the-container-index': 'コンテナー内のパス {index}',
+      'resources.create-and-start': '作成して起動',
+    });
+    await initTranslations();
+    volumeListInfos.set([
+      { name: 'application-data', shortName: 'application-data', engineId: 'engineid' } as VolumeInfoUI,
+    ]);
+    await createRunImage('', []);
+    await fireEvent.click(screen.getByRole('link', { name: '基本設定' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'ホストのパス' }));
+    await fireEvent.click(screen.getByRole('button', { name: '既存のボリューム' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'ボリュームを選択' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'application-data' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'コンテナー内のパス 0' }), '/var/lib/application');
+    await fireEvent.click(screen.getByRole('button', { name: '作成して起動' }));
+    expect(window.createAndStartContainer).toHaveBeenCalledWith(
+      'engineid',
+      expect.objectContaining({
+        HostConfig: expect.objectContaining({ Binds: ['application-data:/var/lib/application'] }),
+      }),
+    );
+  });
+
   test('Expect volumes from volumeListInfos store to be filtered by engine and sorted', async () => {
     volumeListInfos.set([
       {

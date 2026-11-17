@@ -2,6 +2,7 @@
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Onboarding from '/@/lib/onboarding/Onboarding.svelte';
 import ExperimentalPage from '/@/lib/preferences/ExperimentalPage.svelte';
 import PreferencesContainerConnectionEdit from '/@/lib/preferences/PreferencesContainerConnectionEdit.svelte';
@@ -42,56 +43,56 @@ onMount(async () => {
 </script>
 
 <div class="flex flex-col h-full bg-[var(--pd-invert-content-bg)]">
-  <Route path="/*" breadcrumb="Preferences">
+  <Route path="/*" breadcrumb={t('settings.navigation.Preferences') ?? 'Preferences'}>
     {#if defaultPrefPageId !== undefined}
       <PreferencesRendering key={defaultPrefPageId} properties={properties} />
     {:else}
       empty
     {/if}
   </Route>
-  <Route path="/experimental" breadcrumb="Experimental Features">
+  <Route path="/experimental" breadcrumb={t('settings.navigation.Experimental Features') ?? 'Experimental Features'}>
     <ExperimentalPage properties={properties}/>
   </Route>
-  <Route path="/default/:key/*" breadcrumb="Preferences" let:meta>
+  <Route path="/default/:key/*" breadcrumb={t('settings.navigation.Preferences') ?? 'Preferences'} let:meta>
     <PreferencesRendering key={meta.params.key} properties={properties} />
   </Route>
-  <Route path="/resources" breadcrumb="Resources" navigationHint="root" let:meta>
+  <Route path="/resources" breadcrumb={t('settings.navigation.Resources') ?? 'Resources'} navigationHint="root" let:meta>
     <PreferencesResourcesRendering focus={meta.query.focus}/>
   </Route>
-  <Route path="/resources/provider/:providerInternalId/*" breadcrumb="Resources" let:meta navigationHint="details">
+  <Route path="/resources/provider/:providerInternalId/*" breadcrumb={t('settings.navigation.Resources') ?? 'Resources'} let:meta navigationHint="details">
     <PreferencesProviderRendering providerInternalId={meta.params.providerInternalId} properties={properties} />
   </Route>
-  <Route path="/resources/provider-task/:providerInternalId/:taskId/*" breadcrumb="Resources" let:meta navigationHint="details">
+  <Route path="/resources/provider-task/:providerInternalId/:taskId/*" breadcrumb={t('settings.navigation.Resources') ?? 'Resources'} let:meta navigationHint="details">
     <PreferencesProviderRendering
       providerInternalId={meta.params.providerInternalId}
       properties={properties}
       taskId={+meta.params.taskId} />
   </Route>
-  <Route path="/docker-compatibility" breadcrumb="Docker Compatibility">
+  <Route path="/docker-compatibility" breadcrumb={t('settings.navigation.Docker Compatibility') ?? 'Docker Compatibility'}>
     <PreferencesDockerCompatibilityRendering />
   </Route>
-  <Route path="/registries" breadcrumb="Registries">
+  <Route path="/registries" breadcrumb={t('settings.navigation.Registries') ?? 'Registries'}>
     <PreferencesRegistriesEditing />
   </Route>
-  <Route path="/authentication-providers" breadcrumb="Authentication">
+  <Route path="/authentication-providers" breadcrumb={t('settings.navigation.Authentication') ?? 'Authentication'}>
     <PreferencesAuthenticationProvidersRendering />
   </Route>
-  <Route path="/cli-tools" breadcrumb="CLI Tools">
+  <Route path="/cli-tools" breadcrumb={t('settings.navigation.CLI Tools') ?? 'CLI Tools'}>
     <PreferencesCliToolsRendering />
   </Route>
-  <Route path="/kubernetes-contexts" breadcrumb="Kubernetes Contexts">
+  <Route path="/kubernetes-contexts" breadcrumb={t('settings.navigation.Kubernetes Contexts') ?? 'Kubernetes Contexts'}>
     <PreferencesKubernetesContextsRendering />
   </Route>
-  <Route path="/proxies" breadcrumb="Proxy">
+  <Route path="/proxies" breadcrumb={t('settings.navigation.Proxy') ?? 'Proxy'}>
     <PreferencesProxiesRendering />
   </Route>
-  <Route path="/onboarding/:extensionId" breadcrumb="Extension Onboarding" let:meta navigationHint="details">
+  <Route path="/onboarding/:extensionId" breadcrumb={t('settings.navigation.Extension Onboarding') ?? 'Extension Onboarding'} let:meta navigationHint="details">
     <Onboarding extensionIds={[meta.params.extensionId]} />
   </Route>
 
   <Route
     path="/container-connection/view/:provider/:name/:connection/*"
-    breadcrumb="Container Engine"
+    breadcrumb={t('settings.navigation.Container Engine') ?? 'Container Engine'}
     let:meta
     navigationHint="details">
     <PreferencesContainerConnectionRendering
@@ -102,7 +103,7 @@ onMount(async () => {
   </Route>
   <Route
     path="/container-connection/edit/:provider/:name/*"
-    breadcrumb="Container Engine"
+    breadcrumb={t('settings.navigation.Container Engine') ?? 'Container Engine'}
     let:meta
     navigationHint="details">
     <PreferencesContainerConnectionEdit
@@ -112,7 +113,7 @@ onMount(async () => {
   </Route>
   <Route
     path="/kubernetes-connection/:provider/:apiUrlBase64/*"
-    breadcrumb="Kubernetes Engine"
+    breadcrumb={t('settings.navigation.Kubernetes Engine') ?? 'Kubernetes Engine'}
     let:meta
     navigationHint="details">
     <PreferencesKubernetesConnectionRendering
@@ -122,7 +123,7 @@ onMount(async () => {
   </Route>
   <Route
     path="/vm-connection/:provider/:name/*"
-    breadcrumb="VM Engine"
+    breadcrumb={t('settings.navigation.VM Engine') ?? 'VM Engine'}
     let:meta
     navigationHint="details">
     <PreferencesVmConnectionRendering

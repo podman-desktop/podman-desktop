@@ -23,10 +23,14 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import PreferencesContainerConnectionDetailsSummary from './PreferencesContainerConnectionDetailsSummary.svelte';
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
 });
 
 const podmanContainerConnection: ProviderContainerConnectionInfo = {
@@ -142,6 +146,25 @@ describe('resource metrics display', () => {
       hidden: true,
     },
   ];
+
+  test('localizes metric headings as well as chart titles', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({ 'settings.metrics.Memory': 'メモリー' });
+    await initTranslations();
+    vi.mocked(window.getConfigurationValue)
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(50)
+      .mockResolvedValueOnce(8_000_000_000)
+      .mockResolvedValueOnce(25);
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: podmanContainerConnection,
+      providerInternalId: '0',
+      properties: resourceProperties,
+    });
+
+    await screen.findByText('メモリー', { selector: 'span.font-semibold' });
+    expect(screen.queryByText('Memory')).not.toBeInTheDocument();
+    expect(podmanContainerConnection.name).toBe('connection');
+  });
 
   test('renders Donut charts for resource metrics', async () => {
     vi.mocked(window.getConfigurationValue)

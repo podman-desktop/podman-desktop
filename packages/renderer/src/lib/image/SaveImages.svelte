@@ -4,6 +4,7 @@ import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelt
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import EngineFormPage from '/@/lib/ui//EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
 import { lastPage } from '/@/stores/breadcrumb';
@@ -50,7 +51,9 @@ async function selectTargetFilePath(): Promise<void> {
     targetFile = `${imagesToSave[0].name.substring(lastSlashPos, lastColon)}.tar`;
   }
   const result = await window.saveDialog({
-    title: 'Select the directory to export the container content',
+    title:
+      t('resources.select-the-directory-to-export-the-container-content') ??
+      'Select the directory to export the container content',
     defaultUri: {
       fsPath: targetFile,
       path: targetFile,
@@ -70,7 +73,8 @@ async function selectTargetFilePath(): Promise<void> {
 
 async function selectOutputDirectoryPath(): Promise<void> {
   const result = await window.openDialog({
-    title: `Select the directory to save the ${singleItemMode ? 'image' : 'images'}`,
+    title:
+      t('resources.select-save-directory') ?? `Select the directory to save the ${singleItemMode ? 'image' : 'images'}`,
     selectors: ['openDirectory'],
   });
   if (!result?.[0]) {
@@ -122,14 +126,14 @@ async function saveImages(): Promise<void> {
 </script>
 
 {#if imagesToSave}
-  <EngineFormPage title={singleItemMode ? `Save Image ${imagesToSave[0].name}` : 'Save Images'}>
+  <EngineFormPage title={singleItemMode ? (t('resources.save-image-name', { name: imagesToSave[0].name }) ?? `Save Image ${imagesToSave[0].name}`) : (t('resources.save-images') ?? 'Save Images')}>
     {#snippet icon()}
       <i class="fas fa-play fa-2x" aria-hidden="true"></i>
     {/snippet}
     {#snippet content()}
     <div class="space-y-2">
       <label for="modalSelectTarget" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-        >Export to:</label>
+        >{t('resources.export-to') ?? 'Export to:'}</label>
       <div class="flex w-full">
         <Input
           class="grow mr-2"
@@ -139,24 +143,24 @@ async function saveImages(): Promise<void> {
           aria-invalid={invalidOutputPath} />
         <Button
           on:click={selectOutputPath}
-          title="Open dialog to select the output folder"
-          aria-label="Browse... output folder">Browse...</Button>
+          title={t('resources.open-dialog-to-select-the-output-folder') ?? 'Open dialog to select the output folder'}
+          aria-label={t('resources.browse-output-folder') ?? 'Browse... output folder'}>{t('resources.browse') ?? 'Browse...'}</Button>
       </div>
 
       {#if !singleItemMode && imagesToSave.length > 0}
         <!-- Display the list of images to save -->
         <div
           class="flex flex-row justify-center w-full pt-5 text-sm font-medium text-[var(--pd-content-card-header-text)]">
-          <div class="flex flex-col grow">Images to save</div>
+          <div class="flex flex-col grow">{t('resources.images-to-save') ?? 'Images to save'}</div>
         </div>
         {#each imagesToSave as imageToSave, index (`${imageToSave.id}:${imageToSave.tag}:${imageToSave.engineId}`)}
           {@const imageAndTag = `${imageToSave.name}:${imageToSave.tag}`}
           {@const imageDisplayName = `${imageToSave.name === '<none>' ? imageToSave.shortId : imageAndTag}`}
           <div class="flex flex-row justify-center w-full py-1">
-            <Input value={imageDisplayName} aria-label="image {imageDisplayName}" readonly={true} />
+            <Input value={imageDisplayName} aria-label={t('resources.image-imagedisplayname', { imageDisplayName: imageDisplayName }) ?? `image ${imageDisplayName}`} readonly={true} />
             <Button
               type="link"
-              aria-label="Delete image {imageDisplayName}"
+              aria-label={t('resources.delete-image-imagedisplayname', { imageDisplayName: imageDisplayName }) ?? `Delete image ${imageDisplayName}`}
               on:click={(): void => deleteImageToSave(index)}
               icon={faMinusCircle} />
           </div>
@@ -165,14 +169,14 @@ async function saveImages(): Promise<void> {
 
       <div class="pt-5 w-full">
         <ButtonRow>
-          <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+          <Button type="link" on:click={(): void => router.goto($lastPage.path)}>{t('resources.close') ?? 'Close'}</Button>
           <Button
             on:click={saveImages}
             inProgress={inProgress}
             icon={faDownload}
-            aria-label="Save images"
+            aria-label={t('resources.save-images') ?? 'Save images'}
             disabled={saveDisabled}>
-            Save Images
+            {t('resources.save-images') ?? 'Save Images'}
           </Button>
         </ButtonRow>
         <div aria-label="saveError">

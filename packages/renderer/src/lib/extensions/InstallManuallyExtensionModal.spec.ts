@@ -22,7 +22,11 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
+
+vi.mock(import('/@/lib/i18n/translations.svelte'));
 
 const closeCallback = vi.fn();
 
@@ -148,4 +152,29 @@ test('expect dialog title to use sentence case', () => {
   render(InstallManuallyExtensionModal, { closeCallback });
 
   expect(screen.getByRole('dialog', { name: 'Install custom extension' })).toBeInTheDocument();
+});
+
+test('installs the unchanged OCI image from the Japanese dialog', async () => {
+  const translations: Record<string, string> = {
+    'workloads.installCustomExtension': 'カスタム拡張機能をインストール',
+    'workloads.customExtensionImage': 'カスタム拡張機能のインストール用イメージ名',
+    'workloads.install': 'インストール',
+    'workloads.cancel': 'キャンセル',
+    'workloads.extensionImagePlaceholder': '拡張機能の OCI イメージ名を入力',
+  };
+  vi.mocked(t).mockImplementation(key => translations[key]);
+  render(InstallManuallyExtensionModal, { closeCallback });
+
+  screen.getByRole('dialog', { name: 'カスタム拡張機能をインストール' });
+  screen.getByRole('button', { name: 'キャンセル' });
+  const input = screen.getByRole('textbox', { name: 'カスタム拡張機能のインストール用イメージ名' });
+  expect(input).toHaveAttribute('placeholder', '拡張機能の OCI イメージ名を入力');
+  await userEvent.type(input, 'quay.io/example/my-extension');
+  await userEvent.click(screen.getByRole('button', { name: 'インストール' }));
+
+  expect(window.extensionInstallFromImage).toHaveBeenCalledWith(
+    'quay.io/example/my-extension',
+    expect.any(Function),
+    expect.any(Function),
+  );
 });

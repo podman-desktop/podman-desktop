@@ -4,6 +4,8 @@ import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   providerToBeInstalled: { provider: ProviderInfo; displayName: string };
   preflightChecks: CheckStatus[];
@@ -25,7 +27,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
     <div class="inline-block w-full overflow-hidden text-left transition-all" aria-label="install provider">
       <div
         class="flex items-center justify-between px-5 py-4 mb-4 text-[var(--pd-modal-header-text)] bg-[var(--pd-modal-header-bg)]">
-        <h1 class="text-md font-semibold">Create a new {providerToBeInstalled.displayName}</h1>
+        <h1 class="text-md font-semibold">{t('settings.provider.create', { name: t(`settings.provider.${providerToBeInstalled.provider.id}.creationDisplayName`) ?? providerToBeInstalled.displayName }) ?? `Create a new ${providerToBeInstalled.displayName}`}</h1>
         <CloseButton class="px-2 py-1" onclick={closeCallback} />
       </div>
       <div class="overflow-y-auto px-4 pb-4 text-[var(--pd-modal-text)]">
@@ -38,7 +40,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
                 class="mx-auto max-h-12" />
             {/if}
           </div>
-          <div class="flex flex-row mx-auto text-md">Some system requirements are missing.</div>
+          <div class="flex flex-row mx-auto text-md">{t('settings.provider.requirementsMissing') ?? 'Some system requirements are missing.'}</div>
           <div class="flex flex-col min-h-[150px] mt-5 mx-auto py-4 px-10 rounded-md bg-[var(--pd-content-card-bg)]">
             {#each preflightChecks as preCheck, index (index)}
               <div class="flex flex-row mb-2 mx-auto">
@@ -48,7 +50,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
                     <span class="w-full" aria-label={preCheck.description}>{preCheck.description}</span>
                     {#if preCheck.docLinks}
                       <div class="flex flex-row mt-0.5">
-                        <span class="mr-1">See:</span>
+                        <span class="mr-1">{t('settings.see') ?? 'See:'}</span>
                         {#each preCheck.docLinks as link, index (index)}
                           <a href={link.url} target="_blank" class="mr-1" onclick={async (e): Promise<void> => await openLink(e, link.url)}
                             >{link.title}</a>
@@ -63,13 +65,13 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
             {/each}
           </div>
           <div class="text-xs text-[var(--pd-content-text)] mt-2 text-center">
-            Be sure that your system fulfills all the requirements above before proceeding
+            {t('settings.provider.requirements') ?? 'Be sure that your system fulfills all the requirements above before proceeding'}
           </div>
           <ButtonRow class="pt-2">
-            <Button type="link" on:click={closeCallback}>Cancel</Button>
+            <Button type="link" on:click={closeCallback}>{t('settings.cancel') ?? 'Cancel'}</Button>
             <Button
               on:click={(): void => doCreateNew(providerToBeInstalled.provider, providerToBeInstalled.displayName)}
-              >Retry</Button>
+              >{t('settings.retry') ?? 'Retry'}</Button>
           </ButtonRow>
         </div>
       </div>

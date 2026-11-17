@@ -2,6 +2,7 @@
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import type { OpenDialogOptions } from '@desktop-framework/extension-api';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 
 interface Props {
@@ -18,7 +19,10 @@ let {
 
 let invalidEntry = $state(false);
 let dialogOptions: OpenDialogOptions = $derived({
-  title: `Select ${record.description}`,
+  title: (t('settings.select') ?? 'Select {name}').replace(
+    '{name}',
+    t(`${record.id}.description`) ?? `${record.description}`,
+  ),
   selectors: record.format === 'folder' ? ['openDirectory'] : ['openFile'],
 });
 
@@ -39,8 +43,8 @@ function onChangeFileInput(value: string): void {
     onChange={onChangeFileInput}
     readonly={record.readonly ?? record.locked ?? false}
     clearable={true}
-    placeholder={record.placeholder}
+    placeholder={t(`${record.id}.placeholder`) ?? record.placeholder}
     options={dialogOptions}
     aria-invalid={invalidEntry}
-    aria-label={record.description} />
+    aria-label={t(`${record.id}.description`) ?? record.description} />
 </div>

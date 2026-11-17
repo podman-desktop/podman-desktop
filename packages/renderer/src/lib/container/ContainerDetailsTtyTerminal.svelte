@@ -5,6 +5,7 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
@@ -91,11 +92,11 @@ onMount(async () => {
 <EmptyScreen
   hidden={!closed && container.state !== 'RUNNING'}
   icon={NoLogIcon}
-  title="No TTY"
-  message="TTY has stopped" />
+  title={t('resources.no-tty') ?? 'No TTY'}
+  message={t('resources.tty-has-stopped') ?? 'TTY has stopped'} />
 
 <EmptyScreen
   hidden={container.state === 'RUNNING'}
   icon={NoLogIcon}
-  title="No TTY"
-  message="Container is not running" />
+  title={t('resources.no-tty') ?? 'No TTY'}
+  message={t('resources.container-is-not-running') ?? 'Container is not running'} />

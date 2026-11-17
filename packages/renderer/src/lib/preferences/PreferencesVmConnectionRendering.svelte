@@ -7,6 +7,7 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
@@ -151,7 +152,7 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab
-        title="Terminal"
+          title={t('settings.terminal') ?? 'Terminal'}
         selected={isTabSelected($router.path, 'terminal')}
         url={getTabUrl($router.path, 'terminal')} />
     {/snippet}

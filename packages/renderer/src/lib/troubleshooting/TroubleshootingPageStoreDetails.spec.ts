@@ -22,13 +22,20 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import type { EventStoreInfo } from '/@/stores/event-store';
 
 import TroubleshootingPageStoreDetails from './TroubleshootingPageStoreDetails.svelte';
 
-beforeAll(() => {});
+beforeEach(async () => {
+  Object.defineProperty(window, 'i18nGetActiveTranslations', {
+    value: vi.fn().mockResolvedValue({}),
+    configurable: true,
+  });
+  await initTranslations();
+});
 
 test('Check details are displayed and works', async () => {
   const clearEventsMock = vi.fn();
@@ -116,4 +123,60 @@ test('Check ESC key', async () => {
   // now, press the ESC key
   await userEvent.keyboard('{Escape}');
   expect(closeCallback).toBeCalled();
+});
+
+test('Japanese store details preserve the store name and actions', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'management.details.title': '{name} の詳細',
+    'management.size': 'サイズ',
+    'management.refresh': '更新',
+    'management.events.empty': 'バッファー内にイベントはありません',
+    'management.events.help': 'ストアを更新したイベントを追跡します',
+    'management.close': '閉じる',
+  });
+  await initTranslations();
+  const eventStoreInfo: EventStoreInfo = {
+    name: 'original-store',
+    size: 3,
+    bufferEvents: [],
+    clearEvents: vi.fn(),
+    fetch: vi.fn(),
+  };
+  const closeCallback = vi.fn();
+  render(TroubleshootingPageStoreDetails, { eventStoreInfo, closeCallback });
+
+  screen.getByText('original-store の詳細');
+  expect(screen.getByRole('status', { name: 'サイズ' })).toHaveTextContent('3');
+  screen.getByText('バッファー内にイベントはありません');
+  screen.getByText('ストアを更新したイベントを追跡します');
+  await fireEvent.click(screen.getByRole('button', { name: '更新' }));
+  expect(eventStoreInfo.fetch).toHaveBeenCalledOnce();
+  await fireEvent.click(screen.getByRole('button', { name: '閉じる' }));
+  expect(closeCallback).toHaveBeenCalledOnce();
+});
+
+test('Japanese event details localize elapsed time and preserve event data', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'management.events.grab': '{count} 件の項目を取得：',
+    'management.events.name': 'イベント「{name}」',
+    'management.events.ago': '{duration}前。',
+    'management.durationLanguage': 'ja',
+    'management.events.took': '所要時間：{duration}。',
+  });
+  await initTranslations();
+  const eventStoreInfo: EventStoreInfo = {
+    name: 'original-store',
+    size: 3,
+    bufferEvents: [
+      { name: 'event-{count}', args: [], length: 3, date: Date.now() - 1000, skipped: false, humanDuration: 7 },
+    ],
+    clearEvents: vi.fn(),
+    fetch: vi.fn(),
+  };
+  render(TroubleshootingPageStoreDetails, { eventStoreInfo, closeCallback: vi.fn() });
+
+  const event = screen.getByRole('listitem', { name: 'event-{count}' });
+  expect(event).toHaveTextContent('3 件の項目を取得： イベント「event-{count}」');
+  expect(event).toHaveTextContent('1 秒前。');
+  expect(event).toHaveTextContent('所要時間：7。');
 });

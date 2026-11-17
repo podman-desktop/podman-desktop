@@ -12,6 +12,7 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
@@ -58,11 +59,11 @@ async function createNetwork(): Promise<void> {
 
   try {
     if (!networkInfo.selectedProvider) {
-      throw new Error('There is no container engine available.');
+      throw new Error(t('resources.noEngineAvailable') ?? 'There is no container engine available.');
     }
 
     if (requiresSubnet && !networkInfo.subnet) {
-      throw new Error('Subnet is required for ipvlan/macvlan networks.');
+      throw new Error(t('resources.network.subnetRequired') ?? 'Subnet is required for ipvlan/macvlan networks.');
     }
 
     // Build IPAM config if subnet is provided
@@ -100,7 +101,7 @@ async function createNetwork(): Promise<void> {
     const result = await window.createNetwork($state.snapshot(networkInfo.selectedProvider), networkOptions);
 
     if (!result.Id || !result.engineId) {
-      throw new Error('Network creation failed: Missing network ID or engine ID');
+      throw new Error(t('resources.network.missingId') ?? 'Network creation failed: Missing network ID or engine ID');
     }
 
     // Add DNS servers for Podman using libpod API (compat API doesn't support DNS)
@@ -202,7 +203,7 @@ function removeDnsServer(index: number): void {
 
 <Route path="/*">
   <EngineFormPage
-    title="Create a network"
+    title={t('resources.create-a-network') ?? 'Create a network'}
     showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
     {#snippet icon()}
       <Icon icon={NetworkIcon} class="2x" />
@@ -210,16 +211,16 @@ function removeDnsServer(index: number): void {
     {#snippet content()}
       <div class="space-y-2">
         <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
-          <Button type="tab" onclick={(): void => router.goto(getTabUrl($router.path, 'basic'))} selected={isTabSelected($router.path, 'basic')}>Basic</Button>
-          <Button type="tab" onclick={(): void => router.goto(getTabUrl($router.path, 'advanced'))} selected={isTabSelected($router.path, 'advanced')}>Advanced</Button>
+          <Button type="tab" onclick={(): void => router.goto(getTabUrl($router.path, 'basic'))} selected={isTabSelected($router.path, 'basic')}>{t('resources.basic') ?? 'Basic'}</Button>
+          <Button type="tab" onclick={(): void => router.goto(getTabUrl($router.path, 'advanced'))} selected={isTabSelected($router.path, 'advanced')}>{t('resources.advanced') ?? 'Advanced'}</Button>
         </div>
         <div>
-          <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
+          <Route path="/basic" breadcrumb={t('resources.basic') ?? 'Basic'} navigationHint="tab">
             <div class="h-96 overflow-y-auto pr-4 space-y-6">
               {#if providerConnections.length > 1}
                 <div>
                   <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                    >Container engine <span class="text-(--pd-state-error)">*</span></label>
+                    >{t('resources.container-engine') ?? 'Container engine'} <span class="text-(--pd-state-error)">*</span></label>
                   <ContainerConnectionDropdown
                     id="providerChoice"
                     name="providerChoice"
@@ -231,23 +232,23 @@ function removeDnsServer(index: number): void {
 
               <div>
                 <label for="networkName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >Name <span class="text-(--pd-state-error)">*</span></label>
+                  >{t('resources.name') ?? 'Name'} <span class="text-(--pd-state-error)">*</span></label>
                 <Input
                   bind:value={networkInfo.networkName}
                   name="networkName"
                   id="networkName"
-                  placeholder="Network name"
+                  placeholder={t('resources.network-name') ?? 'Network name'}
                   required
                   class="w-full" />
               </div>
             </div>
           </Route>
-          <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
+          <Route path="/advanced" breadcrumb={t('resources.advanced') ?? 'Advanced'} navigationHint="tab">
             <div class="h-96 overflow-y-auto pr-4 space-y-6">
               <!-- Network Driver -->
               <div>
                 <label for="driver" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >Network Driver</label>
+                  >{t('resources.network-driver') ?? 'Network Driver'}</label>
                 <Dropdown class="w-full" name="driver" bind:value={networkInfo.driver}>
                   {#each await driverOptions as option (option)}
                     <option value={option}>{option}</option>
@@ -258,7 +259,7 @@ function removeDnsServer(index: number): void {
               <!-- Subnet -->
               <div>
                 <label for="subnet" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">
-                  Subnet
+                  {t('resources.subnet') ?? 'Subnet'}
                   {#if requiresSubnet}
                     <span class="text-(--pd-state-error)">*</span>
                   {/if}
@@ -275,25 +276,25 @@ function removeDnsServer(index: number): void {
               <!-- IPv6 (dual stack) -->
               <div>
                 <label for="ipv6" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >IPv6 (Dual Stack)</label>
-                <Checkbox bind:checked={networkInfo.ipv6Enabled} title="Enable IPv6">
-                  Enable IPv6 networking alongside IPv4
+                  >{t('resources.ipv6-dual-stack') ?? 'IPv6 (Dual Stack)'}</label>
+                <Checkbox bind:checked={networkInfo.ipv6Enabled} title={t('resources.enable-ipv6') ?? 'Enable IPv6'}>
+                  {t('resources.enable-ipv6-networking-alongside-ipv4') ?? 'Enable IPv6 networking alongside IPv4'}
                 </Checkbox>
               </div>
 
               <!-- Internal Network -->
               <div>
                 <label for="internal" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >Internal Network</label>
-                <Checkbox bind:checked={networkInfo.internalEnabled} title="Internal network">
-                  Disable external connections
+                  >{t('resources.internal-network') ?? 'Internal Network'}</label>
+                <Checkbox bind:checked={networkInfo.internalEnabled} title={t('resources.internal-network') ?? 'Internal network'}>
+                  {t('resources.disable-external-connections') ?? 'Disable external connections'}
                 </Checkbox>
               </div>
 
               <!-- IP Range (IPAM) -->
               <div>
                 <label for="ipRange" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >IP Range</label>
+                  >{t('resources.ip-range') ?? 'IP Range'}</label>
                 <Input
                   bind:value={networkInfo.ipRange}
                   name="ipRange"
@@ -305,7 +306,7 @@ function removeDnsServer(index: number): void {
               <!-- Gateway -->
               <div>
                 <label for="gateway" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >Gateway</label>
+                  >{t('resources.gateway') ?? 'Gateway'}</label>
                 <Input
                   bind:value={networkInfo.gateway}
                   name="gateway"
@@ -318,12 +319,12 @@ function removeDnsServer(index: number): void {
               {#if isPodman}
                 <div class:opacity-50={!dnsAvailable}>
                   <label for="dns" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">
-                    DNS Servers
+                    {t('resources.dns-servers') ?? 'DNS Servers'}
                   </label>
                   
                   {#if dnsAvailable}
-                    <Checkbox bind:checked={networkInfo.dnsEnabled} title="Enable DNS" class="mb-2">
-                      Enable DNS
+                    <Checkbox bind:checked={networkInfo.dnsEnabled} title={t('resources.enable-dns') ?? 'Enable DNS'} class="mb-2">
+                      {t('resources.enable-dns') ?? 'Enable DNS'}
                     </Checkbox>
                   {/if}
                   
@@ -332,20 +333,20 @@ function removeDnsServer(index: number): void {
                       <div class="flex flex-row items-center w-full py-1">
                         <Input
                           bind:value={networkInfo.dnsServers[index]}
-                          aria-label={`DNS server ${index + 1}`}
+                          aria-label={t('resources.dns-server', { index: index + 1 }) ?? `DNS server ${index + 1}`}
                           placeholder="8.8.8.8"
                           class="w-full" />
                         <Button
                           type="link"
                           hidden={index === networkInfo.dnsServers.length - 1}
                           onclick={(): void => removeDnsServer(index)}
-                          title={`Remove DNS server ${index + 1}`}
+                          title={t('resources.remove-dns-server', { index: index + 1 }) ?? `Remove DNS server ${index + 1}`}
                           icon={faMinusCircle} />
                         <Button
                           type="link"
                           hidden={index < networkInfo.dnsServers.length - 1}
                           onclick={addDnsServer}
-                          title="Add DNS server"
+                          title={t('resources.add-dns-server') ?? 'Add DNS server'}
                           icon={faPlusCircle} />
                       </div>
                     {/each}
@@ -353,7 +354,7 @@ function removeDnsServer(index: number): void {
                   
                   {#if networkInfo.driver !== 'bridge'}
                     <p class="text-sm text-[var(--pd-content-card-text)] mt-1">
-                      DNS is only available for bridge networks.
+                      {t('resources.dns-is-only-available-for-bridge-networks') ?? 'DNS is only available for bridge networks.'}
                     </p>
                   {/if}
                 </div>
@@ -363,12 +364,12 @@ function removeDnsServer(index: number): void {
         </div>
 
         <ButtonRow>
-          <Button type="secondary" onclick={cancelRoute}>Cancel</Button>
+          <Button type="secondary" onclick={cancelRoute}>{t('resources.cancel') ?? 'Cancel'}</Button>
           <Button
             disabled={hasInvalidFields || createNetworkInProgress}
             inProgress={createNetworkInProgress}
             onclick={createNetwork}>
-            Create
+            {t('resources.create') ?? 'Create'}
           </Button>
         </ButtonRow>
 

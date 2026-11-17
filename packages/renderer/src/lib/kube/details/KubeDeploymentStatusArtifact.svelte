@@ -3,6 +3,7 @@ import type { V1DeploymentStatus } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import ConditionsTable from './ConditionsTable.svelte';
 
@@ -15,18 +16,18 @@ let { artifact }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Status</Title>
+    <Title>{t('workloads.status') ?? 'Status'}</Title>
   </tr>
   <tr>
-    <Cell>Replicas</Cell>
+    <Cell>{t('workloads.replicas') ?? 'Replicas'}</Cell>
     <Cell>
-      Desired: {artifact.replicas ?? 'N/A'}, Updated: {artifact.updatedReplicas ?? 'N/A'}, Total: {artifact.replicas ??
-        'N/A'}, Available: {artifact.availableReplicas ?? 'N/A'}, Unavailable: {artifact.unavailableReplicas ?? 'N/A'}
+      {t('workloads.desiredLabel') ?? 'Desired:'} {artifact.replicas ?? 'N/A'}, {t('workloads.updatedLabel') ?? 'Updated:'} {artifact.updatedReplicas ?? 'N/A'}, {t('workloads.totalLabel') ?? 'Total:'} {artifact.replicas ??
+        'N/A'}, {t('workloads.availableLabel') ?? 'Available:'} {artifact.availableReplicas ?? 'N/A'}, {t('workloads.unavailableLabel') ?? 'Unavailable:'} {artifact.unavailableReplicas ?? 'N/A'}
     </Cell>
   </tr>
   {#if artifact.conditions}
     <tr>
-      <Title>Conditions</Title>
+      <Title>{t('workloads.conditions') ?? 'Conditions'}</Title>
     </tr>
     <ConditionsTable conditions={artifact.conditions} />
   {/if}

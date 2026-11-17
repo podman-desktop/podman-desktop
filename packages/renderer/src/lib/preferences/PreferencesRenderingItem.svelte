@@ -4,6 +4,7 @@ import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-i
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import Label from '/@/lib/ui/Label.svelte';
@@ -49,10 +50,11 @@ const recordUI = $derived.by(() => {
   const breadCrumbUI = breadCrumb.replace(/\./g, ' > ').concat(':');
 
   return {
-    title: record.displayName ?? startCase(key),
+    title: t(`${record.id}.displayName`) ?? record.displayName ?? startCase(key),
     breadCrumb: breadCrumbUI,
-    description: record.description,
-    markdownDescription: record.markdownDescription,
+    // prefer the active-language translation of the description when defined
+    description: t(`${record.id}.description`) ?? record.description,
+    markdownDescription: t(`${record.id}.markdownDescription`) ?? record.markdownDescription,
     original: record,
     experimental: record.experimental,
   };
@@ -101,15 +103,15 @@ async function openGitHubDiscussion(): Promise<void> {
           {#if record.experimental !== undefined}
             <Label>
               <div class="flex flex-row space-x-1 items-center">
-                <Icon title="experimental" size="xs" icon={faFlask}/>
-                <span>Experimental</span>
+                <Icon title={t('settings.experimental') ?? 'experimental'} size="xs" icon={faFlask}/>
+                <span>{t('settings.experimental') ?? 'Experimental'}</span>
               </div>
             </Label>
           {/if}
         </div>
         {#if showResetButton && !record.locked}
           <div class="ml-2">
-            <RefreshButton label="Reset to default value" onclick={doResetToDefault} />
+            <RefreshButton label={t('settings.reset') ?? 'Reset to default value'} onclick={doResetToDefault} />
           </div>
         {/if}
       </div>
@@ -142,9 +144,9 @@ async function openGitHubDiscussion(): Promise<void> {
     <Button
       padding="px-3 py-1"
       class="w-min"
-      title="Share feedback on GitHub discussion"
+      title={t('settings.feedback.description') ?? 'Share feedback on GitHub discussion'}
       icon={faArrowUpRightFromSquare}
       on:click={openGitHubDiscussion}
-    >Share feedback</Button>
+    >{t('settings.feedback') ?? 'Share feedback'}</Button>
   {/if}
 </div>

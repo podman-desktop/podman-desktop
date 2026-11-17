@@ -1,4 +1,5 @@
 <script lang="ts">
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 import ExtensionDetailsLink from './ExtensionDetailsLink.svelte';
@@ -21,9 +22,9 @@ let { extension }: Props = $props();
   </div>
   <div class="absolute bottom-0 flex flex-col text-[var(--pd-content-text)] text-sm">
     <div>
-      {extension.removable ? '' : 'Pre-installed'}
+      {extension.removable ? '' : (t('workloads.preInstalled') ?? 'Pre-installed')}
     </div>
-    <div aria-label="Version">
+    <div aria-label={t('workloads.version') ?? 'Version'}>
       {#if extension.version}
         v{extension.version}
         <ExtensionUpdateLink {extension} />

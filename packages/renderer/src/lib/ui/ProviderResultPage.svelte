@@ -13,6 +13,8 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Snippet } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import type { ProviderUI } from './ProviderResultPage';
 import SlideToggle from './SlideToggle.svelte';
 import ToggleButton from './ToggleButton.svelte';
@@ -108,7 +110,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
     {@render headerInfo()}
   </div>
   <div class="mb-2 flex flex-row pr-12 pb-2">
-    <span class="grow">Checkers</span>
+    <span class="grow">{t('analysis.checkers') ?? 'Checkers'}</span>
     <div role="group" aria-label="Severity Filters">
       <ToggleButtonGroup>
         <ToggleButton
@@ -117,32 +119,32 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
           icon={faExclamationCircle}
           iconClass="text-[var(--pd-state-error)]"
           on:click={(event): void => onSeverityClicked('critical', event.detail)}
-          >Critical ({countBySeverity.critical})</ToggleButton>
+          >{t('analysis.critical') ?? 'Critical'} ({countBySeverity.critical})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.high === 0}
           icon={faExclamationTriangle}
           iconClass="text-[var(--pd-state-warning)]"
-          on:click={(event): void => onSeverityClicked('high', event.detail)}>High ({countBySeverity.high})</ToggleButton>
+          on:click={(event): void => onSeverityClicked('high', event.detail)}>{t('analysis.high') ?? 'High'} ({countBySeverity.high})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.medium === 0}
           icon={faExclamationTriangle}
           iconClass="text-[var(--pd-severity-medium)]"
-          on:click={(event): void => onSeverityClicked('medium', event.detail)}>Medium ({countBySeverity.medium})</ToggleButton>
+          on:click={(event): void => onSeverityClicked('medium', event.detail)}>{t('analysis.medium') ?? 'Medium'} ({countBySeverity.medium})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.low === 0}
           icon={faCircleMinus}
           iconClass="text-[var(--pd-severity-low)]"
-          on:click={(event): void => onSeverityClicked('low', event.detail)}>Low ({countBySeverity.low})</ToggleButton>
+          on:click={(event): void => onSeverityClicked('low', event.detail)}>{t('analysis.low') ?? 'Low'} ({countBySeverity.low})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.success === 0}
           icon={faCheckSquare}
           iconClass="text-[var(--pd-state-success)]"
           on:click={(event): void => onSeverityClicked('success', event.detail)}
-          >Passed ({countBySeverity.success})</ToggleButton>
+          >{t('analysis.passed') ?? 'Passed'} ({countBySeverity.success})</ToggleButton>
       </ToggleButtonGroup>
     </div>
   </div>
@@ -176,7 +178,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
             <div class="text-[var(--pd-state-error)] text-sm" aria-label="Provider Error">{provider.error}</div>
           {/if}
           {#if provider.state === 'canceled'}
-            <div class="text-[var(--pd-content-text)] text-sm" aria-label="Provider Canceled">Canceled by user</div>
+            <div class="text-[var(--pd-content-text)] text-sm" aria-label="Provider Canceled">{t('analysis.canceled') ?? 'Canceled by user'}</div>
           {/if}
         </div>
       {/each}
@@ -201,7 +203,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
               ><Icon size="1.1x" class="mt-1" icon={getIcon(result.check)} />
             </span>
             <div class="font-bold">{result.check.name}</div>
-            <div class="text-[var(--pd-content-text)] text-sm grow text-right" aria-label="Reported by {result.provider.label}">Reported by {result.provider.label}</div>
+            <div class="text-[var(--pd-content-text)] text-sm grow text-right" aria-label={t('analysis.reportedBy', { provider: result.provider.label }) ?? `Reported by ${result.provider.label}`}>{t('analysis.reportedBy', { provider: result.provider.label }) ?? `Reported by ${result.provider.label}`}</div>
           </div>
           {#if result.check.markdownDescription}
             <div class="mt-4" aria-label="Result Description">{result.check.markdownDescription}</div>

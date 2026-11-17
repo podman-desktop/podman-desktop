@@ -24,6 +24,8 @@ import { tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
+
 import { settingsNavigationEntries } from './PreferencesNavigation';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import { configurationProperties } from './stores/configurationProperties';
@@ -124,7 +126,7 @@ function mockNavigationMeasurements(options: {
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.restoreAllMocks();
   vi.resetAllMocks();
   registeredFeatures.set([]);
@@ -136,6 +138,7 @@ beforeEach(() => {
   Object.defineProperty(global, 'window', {
     value: {
       getConfigurationValue: vi.fn(),
+      i18nGetActiveTranslations: vi.fn().mockResolvedValue({}),
       events: {
         receive: (_channel: string, func: () => void): void => {
           func();
@@ -145,6 +148,40 @@ beforeEach(() => {
     writable: true,
   });
   vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+  await initTranslations();
+});
+
+test('should translate labels without changing configuration routes or expansion state', async () => {
+  configurationProperties.set([LONG_CONFIG]);
+  renderPreferencesNavigation();
+  await fireEvent.click(await screen.findByRole('link', { name: 'preferences' }));
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'settings.title': '\u8a2d\u5b9a',
+    'settings.navigation.Resources': '\u30ea\u30bd\u30fc\u30b9',
+    'settings.navigation.Troubleshooting': '\u30c8\u30e9\u30d6\u30eb\u30b7\u30e5\u30fc\u30c6\u30a3\u30f3\u30b0',
+    'preferences.title': '\u74b0\u5883\u8a2d\u5b9a',
+    'preferences.long-entry.title': '\u8a2d\u5b9a\u9805\u76ee',
+  });
+  await initTranslations();
+
+  expect(await screen.findByText('\u8a2d\u5b9a', { exact: true })).toBeVisible();
+  expect(screen.getByRole('link', { name: '\u30ea\u30bd\u30fc\u30b9' })).toHaveAttribute(
+    'href',
+    '/preferences/resources',
+  );
+  expect(screen.getByRole('link', { name: '\u74b0\u5883\u8a2d\u5b9a' })).toHaveAttribute(
+    'href',
+    '/preferences/default/preferences',
+  );
+  expect(screen.getByRole('link', { name: '\u8a2d\u5b9a\u9805\u76ee' })).toHaveAttribute(
+    'href',
+    '/preferences/default/preferences.long-entry',
+  );
+  expect(
+    screen.getByRole('link', { name: '\u30c8\u30e9\u30d6\u30eb\u30b7\u30e5\u30fc\u30c6\u30a3\u30f3\u30b0' }),
+  ).toHaveAttribute('href', '/troubleshooting/repair-connections');
+  expect(screen.getByRole('link', { name: 'Proxy' })).toBeVisible();
 });
 
 test('Test rendering of the preferences navigation bar and its items', () => {
@@ -389,6 +426,25 @@ describe('Kubernetes menu visibility based on kubernetes-contexts-manager featur
 });
 
 describe('Navigation width measurement and calculation', () => {
+  test('should remeasure navigation width when translations change', async () => {
+    mockNavigationMeasurements({ titleWidths: { 'Localized resources': 260 } });
+    renderPreferencesNavigation();
+    await tick();
+
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'settings.navigation.Resources': 'Localized resources',
+    });
+    await initTranslations();
+
+    await waitForNavigationWidth('292px');
+
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+    await initTranslations();
+    await vi.waitFor(() => {
+      expect(screen.getByRole('navigation', { name: 'PreferencesNavigation' }).style.width).toBe('');
+    });
+  });
+
   test('should render navigation container with correct structure', async () => {
     render(PreferencesNavigation, {
       meta: {
@@ -655,6 +711,26 @@ describe('Static navigation entry children', () => {
 
     expect(await screen.findByRole('link', { name: 'Child One' })).toBeVisible();
     expect(await screen.findByRole('link', { name: 'Child Two' })).toBeVisible();
+  });
+
+  test('should translate static parent and child labels while preserving visibility and links', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'settings.navigation.Test Parent': 'Localized parent',
+      'settings.navigation.Child One': 'Localized child',
+      'settings.navigation.Hidden Child': 'Localized hidden child',
+    });
+    await initTranslations();
+    renderPreferencesNavigation();
+
+    const parent = await screen.findByRole('link', { name: 'Localized parent' });
+    expect(parent).toHaveAttribute('href', '/preferences/test-parent');
+    await fireEvent.click(parent);
+
+    expect(await screen.findByRole('link', { name: 'Localized child' })).toHaveAttribute(
+      'href',
+      '/preferences/test-parent/child-one',
+    );
+    expect(screen.queryByRole('link', { name: 'Localized hidden child' })).toBeNull();
   });
 
   test('should filter out children with visible set to false', async () => {

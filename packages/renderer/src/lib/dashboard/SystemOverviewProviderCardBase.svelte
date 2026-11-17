@@ -2,6 +2,7 @@
 import type { ProviderConnectionInfo, ProviderInfo } from '@desktop-framework/api';
 import type { Snippet } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Label from '/@/lib/ui/Label.svelte';
 
 import SystemOverviewProviderCardCompact from './SystemOverviewProviderCardCompact.svelte';
@@ -31,9 +32,9 @@ let labelText = $derived([vmType, resolvedVersion ? `v${resolvedVersion}` : unde
     <div class="flex-1 min-w-0 flex flex-col gap-0.5">
       <div
         class="flex items-center gap-2 text-[var(--pd-content-card-text)] [--pd-label-bg:var(--pd-content-card-bg)] [--pd-label-text:var(--pd-content-text-sub)]">
-        <span class="font-medium" aria-label='Connection name'>{name ?? provider.name}</span>
+        <span class="font-medium" aria-label={t('workloads.connectionName') ?? 'Connection name'}>{name ?? provider.name}</span>
         {#if labelText}
-          <span aria-label='Connection version'>
+          <span aria-label={t('workloads.connectionVersion') ?? 'Connection version'}>
             <Label name={labelText} />
           </span>
         {/if}

@@ -9,6 +9,7 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
@@ -171,9 +172,9 @@ function setNoLogs(): void {
     {/snippet}
     {#snippet tabsSnippet()}
       {#if connectionInfo}
-        <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+        <Tab title={t('settings.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
         {#if connectionInfo.lifecycleMethods && connectionInfo.lifecycleMethods.length > 0}
-          <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+          <Tab title={t('settings.logs') ?? 'Logs'} selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
         {/if}
       {/if}
     {/snippet}

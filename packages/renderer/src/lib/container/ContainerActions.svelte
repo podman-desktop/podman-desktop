@@ -19,6 +19,7 @@ import { onMount } from 'svelte';
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { ContextUI } from '/@/lib/context/context';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
@@ -186,7 +187,7 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
-  title="Start Container"
+  title={t('resources.start-container') ?? 'Start Container'}
   onClick={container.state === 'PAUSED' ? unpauseContainer : startContainer}
   hidden={container.state === 'RUNNING' || container.state === 'STOPPING'}
   detailed={detailed}
@@ -194,7 +195,7 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
   icon={faPlay}/>
 
 <ListItemButtonIcon
-  title="Stop Container"
+  title={t('resources.stop-container') ?? 'Stop Container'}
   onClick={stopContainer}
   hidden={!(container.state === 'RUNNING' || container.state === 'STOPPING')}
   detailed={detailed}
@@ -202,8 +203,11 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
   icon={faStop} />
 
 <ListItemButtonIcon
-  title="Delete Container"
-  onClick={(): void => withConfirmation(deleteContainer, `delete container ${container.name}`, { title: 'Delete Container?', variant: 'delete' })}
+  title={t('resources.delete-container') ?? 'Delete Container'}
+  onClick={(): void => withConfirmation(deleteContainer, `delete container ${container.name}`, {
+    title: t('resources.delete-container') ?? 'Delete Container?', variant: 'delete',
+    message: t('resources.confirm-delete-container', { name: container.name }) ?? `Are you sure you want to delete container ${container.name}?`,
+  })}
   icon={faTrash}
   detailed={detailed}
   inProgress={container.actionInProgress && container.state === 'DELETING'} />
@@ -212,13 +216,13 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 <ActionsStyle>
   {#if !detailed}
     <ListItemButtonIcon
-      title="Open Logs"
+      title={t('resources.open-logs') ?? 'Open Logs'}
       onClick={openLogs}
       menu={dropdownMenu}
       detailed={false}
       icon={faAlignLeft} />
     <ListItemButtonIcon
-      title="Generate Kube"
+      title={t('resources.generate-kube') ?? 'Generate Kube'}
       onClick={openGenerateKube}
       menu={dropdownMenu}
       hidden={!(container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE)}
@@ -226,14 +230,14 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
       icon={faFileCode} />
   {/if}
   <ListItemButtonIcon
-    title="Deploy to Kubernetes"
+    title={t('resources.deploy-to-kubernetes') ?? 'Deploy to Kubernetes'}
     onClick={deployToKubernetes}
     menu={dropdownMenu}
     hidden={!(container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE)}
     detailed={detailed}
     icon={faRocket} />
   <ListItemButtonIcon
-    title="Open Browser"
+    title={t('resources.open-browser') ?? 'Open Browser'}
     onClick={openBrowser}
     menu={dropdownMenu}
     enabled={container.state === 'RUNNING' && container.hasPublicPort}
@@ -242,7 +246,7 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
     icon={faExternalLinkSquareAlt} />
   {#if !detailed}
     <ListItemButtonIcon
-      title="Open Terminal"
+      title={t('resources.open-terminal') ?? 'Open Terminal'}
       onClick={openTerminalContainer}
       menu={dropdownMenu}
       hidden={container.state !== 'RUNNING'}
@@ -250,14 +254,14 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
       icon={faTerminal} />
   {/if}
   <ListItemButtonIcon
-    title="Restart Container"
+    title={t('resources.restart-container') ?? 'Restart Container'}
     onClick={restartContainer}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowsRotate} />
   <ListItemButtonIcon
-    title="Export Container"
-    tooltip="Exports container's filesystem contents as a tar archive and saves it on the local machine"
+    title={t('resources.export-container') ?? 'Export Container'}
+    tooltip={t('resources.exports-container-s-filesystem-contents-as-a-tar-archive-and-saves-it-on-the-local-machine') ?? 'Exports container\'s filesystem contents as a tar archive and saves it on the local machine'}
     onClick={exportContainer}
     menu={dropdownMenu}
     detailed={detailed}

@@ -21,13 +21,20 @@
 import '@testing-library/jest-dom/vitest';
 
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import type { TinroRouteMeta } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import NavRegistryEntry from './NavRegistryEntry.svelte';
+
+vi.mock(import('/@/lib/i18n/translations.svelte'));
+
+beforeEach(() => {
+  vi.mocked(t).mockReset();
+});
 
 beforeAll(() => {
   // Mock the animate function
@@ -198,4 +205,49 @@ test('forwards title to the navigation link when expanded', () => {
   });
 
   expect(screen.getByRole('link', { name: 'Item1' })).toHaveAttribute('title', 'Hold to reorder');
+});
+
+test.each([true, false])('translates entry labels with expanded=%s without changing registry data', async expanded => {
+  const label = '\u30b3\u30f3\u30c6\u30ca\u30fc';
+  vi.mocked(t).mockImplementation(key => (key === 'navigation.Containers' ? label : undefined));
+  const entry: NavigationRegistryEntry = {
+    name: 'Containers',
+    tooltip: 'Containers',
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    link: '/containers',
+    counter: 3,
+    destinations: [],
+    type: 'entry',
+  };
+  render(NavRegistryEntry, { entry, meta: { url: '/containers' } as TinroRouteMeta, expanded });
+
+  expect(screen.getByRole('link', { name: label })).toHaveAttribute('href', '/containers');
+  if (expanded) {
+    expect(screen.getByLabelText('Containers title')).toHaveTextContent(label);
+  } else {
+    await fireEvent.mouseEnter(screen.getByTestId('tooltip-trigger'));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(`${label} (3)`);
+  }
+  expect(entry.name).toBe('Containers');
+  expect(entry.tooltip).toBe('Containers');
+  expect(t).toHaveBeenCalledWith('navigation.Containers');
+});
+
+test('preserves extension labels when no translation exists', async () => {
+  const entry: NavigationRegistryEntry = {
+    name: 'Custom extension',
+    tooltip: 'Custom extension tooltip',
+    icon: { faIcon: { definition: faPuzzlePiece, size: 'lg' } },
+    link: '/extension/custom',
+    counter: 0,
+    destinations: [],
+    type: 'entry',
+  };
+  const { rerender } = render(NavRegistryEntry, { entry, meta: { url: '/' } as TinroRouteMeta, expanded: true });
+
+  expect(screen.getByRole('link', { name: 'Custom extension' })).toHaveAttribute('href', '/extension/custom');
+  expect(screen.getByLabelText('Custom extension title')).toHaveTextContent('Custom extension');
+  await rerender({ expanded: false });
+  await fireEvent.mouseEnter(screen.getByTestId('tooltip-trigger'));
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('Custom extension tooltip');
 });

@@ -4,6 +4,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ExtensionStatus from '/@/lib/ui/ExtensionStatus.svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
@@ -45,7 +46,7 @@ function openExtensionDetails(): void {
           {#if catalogExtensionUI.isFeatured}
             <span
               class="inline-flex shrink-0 rounded-full border border-(--pd-content-header) px-2 py-0.5 text-xs font-medium leading-none text-(--pd-content-header)">
-              Featured
+              {t('workloads.featured') ?? 'Featured'}
             </span>
           {/if}
         </div>
@@ -79,8 +80,8 @@ function openExtensionDetails(): void {
         <Button
           type="link"
           icon={faCircleInfo}
-          aria-label="More details about {catalogExtensionUI.displayName}"
-          on:click={openExtensionDetails}>More details</Button>
+          aria-label={t('workloads.moreDetailsAbout', { name: catalogExtensionUI.displayName }) ?? `More details about ${catalogExtensionUI.displayName}`}
+          on:click={openExtensionDetails}>{t('workloads.moreDetails') ?? 'More details'}</Button>
       </div>
     </div>
   </div>

@@ -4,6 +4,7 @@ import { Expandable, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import SystemOverviewContent from '/@/lib/dashboard/SystemOverviewContent.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { ExpandableState } from '/@/lib/ui/expandable-state.svelte';
 import { systemOverviewInfos } from '/@/stores/dashboard/system-overview.svelte';
 
@@ -16,9 +17,9 @@ const expandableState = new ExpandableState(SYSTEM_OVERVIEW_EXPANDED);
   <Expandable bind:initialized={expandableState.initialized} bind:expanded={expandableState.expanded} onclick={expandableState.toggle.bind(expandableState)}>
     {#snippet title()}
       <div class="flex items-center gap-2">
-        <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">System Overview</span>
+        <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">{t('workloads.systemOverview') ?? 'System Overview'}</span>
         {#if !expandableState.expanded}
-          <Tooltip tip={$systemOverviewInfos.text} containerClass="inline-flex items-center">
+          <Tooltip tip={t(`dashboard.status.${$systemOverviewInfos.text}`) ?? $systemOverviewInfos.text} containerClass="inline-flex items-center">
             {#key $systemOverviewInfos.status.status}
               <Icon class={STATUS_TEXT_CLASS[$systemOverviewInfos.status.status]} icon={$systemOverviewInfos.status.icon} size={$systemOverviewInfos.status.status === 'progressing' ? '1.25em' : 'lg'} />
             {/key}

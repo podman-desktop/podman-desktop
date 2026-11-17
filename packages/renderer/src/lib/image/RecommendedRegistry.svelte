@@ -3,6 +3,7 @@ import { NavigationPage } from '@desktop-framework/api';
 import { Button } from '@podman-desktop/ui-svelte';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 
@@ -27,19 +28,21 @@ function goToAuthPage(): void {
 </script>
 
 {#each recommendedRegistriesToInstall as registry (registry.id)}
+  {@const action = registry.isInstalled ? (t('resources.check') ?? 'Check') : (t('resources.install') ?? 'Install')}
+  {@const explanation = t('resources.extension-action', { registry: registry.id, action })}
   <div class="text-[var(--pd-state-warning)] flex flex-row min-h-10 items-center pt-2 space-x-2">
     {#if !registry.isInstalled}
       <FeaturedExtensionDownload extension={registry.extensionDetails} />
     {/if}
     <p>
-      {registry.isInstalled ? 'Check' : 'Install'} the &nbsp;<a
+      {explanation ?? `${registry.isInstalled ? 'Check' : 'Install'} the`} &nbsp;<a
         class="text-[var(--pd-state-warning)] underline"
-        href="/extensions/details/{registry.extensionId}">{registry.name} extension</a>
-      to manage {registry.id}
+        href="/extensions/details/{registry.extensionId}">{t('resources.extension-name', { name: registry.name }) ?? `${registry.name} extension`}</a>
+      {#if explanation === undefined}to manage {registry.id}{/if}
     </p>
 
     {#if registry.isInstalled}
-      <Button on:click={goToAuthPage}>Sign in...</Button>
+      <Button on:click={goToAuthPage}>{t('resources.sign-in') ?? 'Sign in...'}</Button>
     {/if}
   </div>
 {/each}

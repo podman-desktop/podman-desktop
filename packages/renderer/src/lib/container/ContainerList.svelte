@@ -17,6 +17,9 @@ import { router } from 'tinro';
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import Prune from '/@/lib/engine/Prune.svelte';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import SolidPodIcon from '/@/lib/images/SolidPodIcon.svelte';
 import { PodUtils } from '/@/lib/pod/pod-utils';
@@ -456,13 +459,13 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="containers">
+<NavPage bind:searchTerm={searchTerm} title={t('resources.containers') ?? 'containers'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     <!-- Only show if there are containers-->
     {#if $containersInfos.length > 0}
       <Prune type="containers" engines={enginesList} />
     {/if}
-    <Button on:click={toggleCreateContainer} icon={faPlusCircle} title="Create a container">Create</Button>
+    <Button on:click={toggleCreateContainer} icon={faPlusCircle} title={t('resources.create-a-container') ?? 'Create a container'}>{t('resources.create') ?? 'Create'}</Button>
   {/snippet}
   {#snippet bottomAdditionalActions()}
     <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
@@ -471,15 +474,15 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
         <Button
           on:click={(): Promise<void> =>
           runSelectedContainers()}
-          aria-label="Run selected containers and pods"
-          title="Run {selectedItemsNumber} selected items"
+          aria-label={t('resources.run-selected-containers-and-pods') ?? 'Run selected containers and pods'}
+          title={t('resources.run-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Run ${selectedItemsNumber} selected items`}
           inProgress={bulkRunInProgress}
           icon={faPlay}>
         </Button>
         <Button
           on:click={stopSelectedContainers}
-          aria-label="Stop selected containers and pods"
-          title="Stop {selectedItemsNumber} selected items"
+          aria-label={t('resources.stop-selected-containers-and-pods') ?? 'Stop selected containers and pods'}
+          title={t('resources.stop-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Stop ${selectedItemsNumber} selected items`}
           inProgress={bulkStopInProgress}
           icon={faStop}>
         </Button>
@@ -489,34 +492,37 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
               withBulkConfirmation(
                 deleteSelectedContainers,
                 `delete ${selectedItemsNumber} container${selectedItemsNumber > 1 ? 's' : ''}`,
-                { title: 'Delete Containers?', variant:'delete' }
+                {
+                  title: t('resources.delete-containers') ?? 'Delete Containers?', variant: 'delete',
+                  message: t('resources.confirm-delete-selected', { count: selectedItemsNumber }) ?? `Are you sure you want to delete ${selectedItemsNumber} container${selectedItemsNumber > 1 ? 's' : ''}?`,
+                }
               );
             }
           }}
-          aria-label="Delete selected containers and pods"
-          title="Delete {selectedItemsNumber} selected items"
+          aria-label={t('resources.delete-selected-containers-and-pods') ?? 'Delete selected containers and pods'}
+          title={t('resources.delete-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
           inProgress={bulkDeleteInProgress}
           icon={faTrash}>
         </Button>
 
         <Button
           on:click={createPodFromContainers}
-          title="Create Pod with {selectedItemsNumber} selected items"
+          title={t('resources.create-pod-with-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Create Pod with ${selectedItemsNumber} selected items`}
           icon={SolidPodIcon}>
-          Create Pod
+          {t('resources.create-pod') ?? 'Create Pod'}
         </Button>
       </div>
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('resources.selected-items', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
   {/snippet}
 
   {#snippet tabs()}
     <Button type="tab" on:click={resetRunningFilter} selected={containerUtils.filterIsAll(searchTerm)}
-      >All</Button>
+      >{t('resources.all') ?? 'All'}</Button>
     <Button type="tab" on:click={setRunningFilter} selected={containerUtils.filterIsRunning(searchTerm)}
-      >Running</Button>
+      >{t('resources.running') ?? 'Running'}</Button>
     <Button type="tab" on:click={setStoppedFilter} selected={containerUtils.filterIsStopped(searchTerm)}
-      >Stopped</Button>
+      >{t('resources.stopped') ?? 'Stopped'}</Button>
   {/snippet}
 
   {#snippet content()}
@@ -526,6 +532,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
       {:else if containerGroups.length === 0}
         {#if containerUtils.filterSearchTerm(searchTerm)}
           <FilteredEmptyScreen
+            labels={getFilteredEmptyLabels('containers', containerUtils.filterSearchTerm(searchTerm))}
             icon={ContainerIcon}
             kind="containers"
             on:resetFilter={(e): void => {
@@ -534,7 +541,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
             }}
             searchTerm={containerUtils.filterSearchTerm(searchTerm)} />
         {:else if selectedEnvironment && currentContainers.length > 0}
-          <FilteredEmptyScreen icon={ContainerIcon} kind="containers" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
+          <FilteredEmptyScreen labels={getFilteredEmptyLabels('containers', t('common.environment') ?? 'selected environment')} icon={ContainerIcon} kind="containers" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
         {:else}
           <ContainerEmptyScreen
             runningOnly={containerUtils.filterIsRunning(searchTerm)}
@@ -542,6 +549,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
         {/if}
       {:else}
         <Table
+          labels={getTableLabels()}
           kind="container"
           bind:selectedItemsNumber={selectedItemsNumber}
           data={containersAndGroups}
@@ -559,24 +567,24 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
 
 {#if openChoiceModal}
   <Dialog
-    title="Create container"
+    title={t('resources.create-container') ?? 'Create container'}
     onclose={(): void => {
       openChoiceModal = false;
     }}>
     {#snippet content()}
         <div  class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
-        <span class="pb-3">How do you want to create the container?</span>
+        <span class="pb-3">{t('resources.how-do-you-want-to-create-the-container') ?? 'How do you want to create the container?'}</span>
         <ul class="list-disc ml-8 space-y-2">
-          <li>Create a container from an image you already have locally.</li>
-          <li>Build an image from a Containerfile, then create a container from it.</li>
+          <li>{t('resources.create-a-container-from-an-image-you-already-have-locally') ?? 'Create a container from an image you already have locally.'}</li>
+          <li>{t('resources.build-an-image-from-a-containerfile-then-create-a-container-from-it') ?? 'Build an image from a Containerfile, then create a container from it.'}</li>
         </ul>
       </div>
       {/snippet}
     {#snippet buttons()}
 
-        <Button type="link" on:click={(): void => {openChoiceModal = false;}}>Close</Button>
-        <Button type="secondary" on:click={fromExistingImage}>Use existing image</Button>
-        <Button type="secondary" on:click={fromDockerfile}>Build from Containerfile</Button>
+        <Button type="link" on:click={(): void => {openChoiceModal = false;}}>{t('resources.close') ?? 'Close'}</Button>
+        <Button type="secondary" on:click={fromExistingImage}>{t('resources.use-existing-image') ?? 'Use existing image'}</Button>
+        <Button type="secondary" on:click={fromDockerfile}>{t('resources.build-from-containerfile') ?? 'Build from Containerfile'}</Button>
 
       {/snippet}
   </Dialog>

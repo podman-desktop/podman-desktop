@@ -8,6 +8,7 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import PreferencesConnectionCreationRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
@@ -72,7 +73,7 @@ async function editConnection(
     {#snippet subtitleSnippet()}
       {#if connectionInfo.status === 'started'}
         <WarningMessage
-          error="This may restart the container or Kubernetes engine. Existing containers or pods may be stopped." />
+          error={t('settings.connection.restartWarning') ?? 'This may restart the container or Kubernetes engine. Existing containers or pods may be stopped.'} />
       {/if}
     {/snippet}
   </DetailsPage>

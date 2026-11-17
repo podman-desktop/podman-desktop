@@ -4,6 +4,7 @@ import { faQuestionCircle, faSquareUpRight, faTrash } from '@fortawesome/free-so
 import { Button, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import CopyToClipboard from '/@/lib/ui/CopyToClipboard.svelte';
 
 import type { KubePortInfo } from './kube-port';
@@ -82,7 +83,7 @@ async function removePortForward(): Promise<void> {
       <CopyToClipboard clipboardData={localhostAddress} title={localhostAddress} />
     {/if}
     <Button
-      title="Open in browser"
+      title={t('workloads.openInBrowser') ?? 'Open in browser'}
       disabled={loading}
       icon={faSquareUpRight}
       on:click={openExternal.bind(undefined)}
@@ -91,7 +92,7 @@ async function removePortForward(): Promise<void> {
       Open
     </Button>
     <Button
-      title="Remove port forward"
+      title={t('workloads.removePortForward') ?? 'Remove port forward'}
       disabled={loading}
       icon={faTrash}
       on:click={removePortForward.bind(undefined)}
@@ -101,12 +102,12 @@ async function removePortForward(): Promise<void> {
     </Button>
   {:else if (port.protocol ?? 'TCP') === 'TCP'}
     <Button
-      title="Forward port {port.value}"
+      title={t('workloads.forwardPort', { port: port.value }) ?? `Forward port ${port.value}`}
       disabled={loading}
       on:click={onForwardRequest.bind(undefined, port)}
       class="px-1 py-0.5"
       padding="0">
-      Forward...
+      {t('workloads.forward') ?? 'Forward...'}
     </Button>
   {:else}
     <Tooltip class="w-min" tip={`${port.protocol} cannot be forwarded.`}>

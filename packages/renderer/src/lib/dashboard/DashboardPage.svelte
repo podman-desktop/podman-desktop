@@ -3,6 +3,7 @@ import { ListOrganizer, type ListOrganizerItem, NavPage, tablePersistence } from
 import { onMount } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import {
   convertFromListOrganizerItems,
   dashboardPageRegistry,
@@ -15,6 +16,9 @@ import NotificationsBox from './NotificationsBox.svelte';
 
 // Dashboard section configuration managed by dashboard page registry
 let dashboardSections = $state<ListOrganizerItem[]>([]);
+const displayedDashboardSections = $derived(
+  dashboardSections.map(section => ({ ...section, label: t(`dashboard.section.${section.id}`) ?? section.label })),
+);
 let dashboardOrdering = new SvelteMap<string, number>();
 
 let orderedSections = $derived(getOrderedDashboardSections());
@@ -164,18 +168,18 @@ function handleDashboardToggle(itemId: string, enabled: boolean): void {
 }
 </script>
 
-<NavPage searchEnabled={false} title="Dashboard">
+<NavPage searchEnabled={false} title={t('workloads.dashboard') ?? 'Dashboard'}>
   {#snippet additionalActions()}
     <ListOrganizer
-      items={dashboardSections}
+      items={displayedDashboardSections}
       ordering={dashboardOrdering}
-      title="Configure Dashboard Sections"
+      title={t('workloads.configureDashboard') ?? 'Configure Dashboard Sections'}
       enableReorder={true}
       enableToggle={true}
       onOrderChange={handleDashboardOrderChange}
       onToggle={handleDashboardToggle}
       onReset={resetDashboardLayout}
-      resetButtonLabel="Reset Layout"
+      resetButtonLabel={t('workloads.resetLayout') ?? 'Reset Layout'}
     />
   {/snippet}
 

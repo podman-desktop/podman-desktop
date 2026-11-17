@@ -3,6 +3,7 @@ import { type ForwardConfig, WorkloadKind } from '@desktop-framework/api';
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { get } from 'svelte/store';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { kubernetesCurrentContextPods } from '/@/stores/kubernetes-contexts-state';
 
 interface Props {
@@ -36,7 +37,7 @@ async function openResourceDetails(): Promise<void> {
 }
 </script>
 
-<button title="Open pod details" class="hover:cursor-pointer flex flex-col max-w-full" disabled={object.kind !== WorkloadKind.POD} onclick={openResourceDetails}>
+<button title={t('kubernetes.resources.portForward.podDetails') ?? 'Open pod details'} class="hover:cursor-pointer flex flex-col max-w-full" disabled={object.kind !== WorkloadKind.POD} onclick={openResourceDetails}>
   <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

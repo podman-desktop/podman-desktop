@@ -1652,6 +1652,10 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld('i18nGetActiveTranslations', async (): Promise<Record<string, string>> => {
+    return ipcInvoke('i18n:get-active-translations');
+  });
+
   // can't send configuration object as it is not serializable
   // https://www.electronjs.org/docs/latest/api/context-bridge#parameter--error--return-type-support
   contextBridge.exposeInMainWorld(

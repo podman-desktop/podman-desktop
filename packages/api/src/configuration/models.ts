@@ -82,6 +82,8 @@ const IConfigurationPropertySchemaSchema = z.object({
   // if hidden is true, the property is not shown in the preferences page. It may still appear in other locations if it uses other scope (like onboarding)
   hidden: z.boolean().optional(),
   enum: z.array(z.string()).optional(),
+  // display labels aligned by index with the enum values. Falls back to the enum value when absent
+  enumLabels: z.array(z.string()).optional(),
   when: z.string().optional(),
   experimental: IExperimentalConfigurationSchema.optional(),
 });

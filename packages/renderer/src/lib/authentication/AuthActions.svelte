@@ -3,6 +3,7 @@ import { NavigationPage } from '@desktop-framework/api';
 import { faKey, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
 
@@ -45,7 +46,7 @@ export function onButtonClick(e: MouseEvent): void {
 {#if showMenu}
   <DropdownMenu.Items clientY={clientY} clientX={clientX}>
     <DropdownMenu.Item
-      title="Manage authentication"
+      title={t('management.auth.manage') ?? 'Manage authentication'}
       icon={faKey}
       onClick={(): void => handleNavigation({ page: NavigationPage.AUTHENTICATION })} />
 
@@ -54,7 +55,7 @@ export function onButtonClick(e: MouseEvent): void {
       {#if provider?.accounts?.length > 0}
         {#each provider.accounts as account (account.id)}
           <DropdownMenu.Item
-            title="Sign out of {provider.displayName} ({account.label})"
+            title={t('management.auth.signOut', { provider: provider.displayName, account: account.label }) ?? `Sign out of ${provider.displayName} (${account.label})`}
             onClick={(): Promise<void> => window.requestAuthenticationProviderSignOut(provider.id, account.id)}
             icon={faSignOut} />
         {/each}
@@ -62,7 +63,7 @@ export function onButtonClick(e: MouseEvent): void {
 
       {#each sessionRequests as request (request.id)}
         <DropdownMenu.Item
-          title="Sign in with {provider.displayName} to use {request.extensionLabel}"
+          title={t('management.auth.signIn', { provider: provider.displayName, extension: request.extensionLabel }) ?? `Sign in with ${provider.displayName} to use ${request.extensionLabel}`}
           onClick={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}
           icon={faSignIn} />
       {/each}

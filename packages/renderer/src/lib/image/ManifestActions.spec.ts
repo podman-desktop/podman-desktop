@@ -92,6 +92,7 @@ test('Expect withConfirmation to be called with delete variant when clicking Del
     expect(withConfirmation).toHaveBeenCalledWith(expect.anything(), 'delete manifest my-manifest', {
       title: 'Delete Manifest?',
       variant: 'delete',
+      message: 'Are you sure you want to delete manifest my-manifest?',
     });
   });
 });

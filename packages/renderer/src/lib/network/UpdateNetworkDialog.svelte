@@ -2,6 +2,7 @@
 import { Button, Input } from '@podman-desktop/ui-svelte';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
@@ -26,17 +27,17 @@ async function updateNetwork(): Promise<void> {
 }
 </script>
 <Dialog
-  title={`Update network ${network.name}`}
+  title={t('resources.update-network-name', { name: network.name }) ?? `Update network ${network.name}`}
   onclose={onClose}>
   {#snippet content()}
     <div  class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
       <div>
-        <div>DNS servers to add (for multiple servers, separate with a space)</div>
+        <div>{t('resources.dns-servers-to-add-for-multiple-servers-separate-with-a-space') ?? 'DNS servers to add (for multiple servers, separate with a space)'}</div>
         <Input placeholder="8.8.8.8 1.1.1.1" bind:value={addDNSServers}></Input>
       </div>
 
       <div>
-        <div>DNS servers to drop (for multiple servers, separate with a space)</div>
+        <div>{t('resources.dns-servers-to-drop-for-multiple-servers-separate-with-a-space') ?? 'DNS servers to drop (for multiple servers, separate with a space)'}</div>
         <Input placeholder="8.8.8.8 1.1.1.1" bind:value={removeDNSServers}></Input>
       </div>
 
@@ -44,11 +45,11 @@ async function updateNetwork(): Promise<void> {
   {/snippet}
   {#snippet buttons()}
     
-    <Button type="link" onclick={onClose}>Cancel</Button>
+    <Button type="link" onclick={onClose}>{t('resources.cancel') ?? 'Cancel'}</Button>
     <Button
       type="primary"
       disabled={!addDNSServers.trim() &&
         !removeDNSServers.trim()}
-      onclick={updateNetwork}>Update</Button>
+      onclick={updateNetwork}>{t('resources.update') ?? 'Update'}</Button>
   {/snippet}
 </Dialog>

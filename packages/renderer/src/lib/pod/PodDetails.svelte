@@ -2,6 +2,7 @@
 import { ErrorMessage, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import PodIcon from '/@/lib/images/PodIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import StateChange from '/@/lib/ui/StateChange.svelte';
@@ -73,19 +74,19 @@ $effect(() => {
       </div>
     {/snippet}
     {#snippet tabsSnippet()}
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
-      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title={t('resources.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title={t('resources.logs') ?? 'Logs'} selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+      <Tab title={t('resources.inspect') ?? 'Inspect'} selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
     {/snippet}
     {#snippet contentSnippet()}
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+      <Route path="/summary" breadcrumb={t('resources.summary') ?? 'Summary'} navigationHint="tab">
         <PodmanPodDetailsSummary pod={currentPod} />
       </Route>
-      <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
+      <Route path="/logs" breadcrumb={t('resources.logs') ?? 'Logs'} navigationHint="tab">
         <PodDetailsLogs pod={currentPod} />
       </Route>
-      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+      <Route path="/inspect" breadcrumb={t('resources.inspect') ?? 'Inspect'} navigationHint="tab">
         <PodDetailsInspect pod={currentPod} />
       </Route>
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">

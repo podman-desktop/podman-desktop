@@ -20,9 +20,17 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import KubeApplyYamlButton from './KubeApplyYAMLButton.svelte';
+
+vi.mock(import('/@/lib/i18n/translations.svelte'));
+
+beforeEach(() => {
+  vi.mocked(t).mockReset();
+});
 
 const currentContext: string = 'test-context';
 const currentNamespace: string = 'test-namespace';
@@ -143,4 +151,41 @@ test('Verify failure will open an error dialog', async () => {
 
   expect(window.showMessageBox).toHaveBeenCalled();
   expect(window.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+});
+
+test('Japanese apply dialogs preserve YAML filters and API arguments', async () => {
+  const translations: Record<string, string> = {
+    'workloads.applyYaml': 'YAML を適用',
+    'workloads.selectYamlToApply': '適用する .yaml ファイルを選択',
+    'workloads.yamlFiles': 'YAML ファイル',
+    'workloads.applyKubernetesYaml': 'Kubernetes YAML を適用',
+    'workloads.dismiss': '閉じる',
+  };
+  vi.mocked(t).mockImplementation((key, parameters) => {
+    if (key === 'workloads.appliedResource') return `${parameters?.name} を 1 件適用しました。`;
+    return translations[key];
+  });
+  openDialogMock.mockResolvedValue(['service.yaml']);
+  kubernetesApplyResourcesFromFileMock.mockResolvedValue([{ kind: 'Service' }]);
+  render(KubeApplyYamlButton);
+
+  await userEvent.click(screen.getByRole('button', { name: 'YAML を適用' }));
+
+  expect(window.openDialog).toHaveBeenCalledWith(
+    expect.objectContaining({
+      title: '適用する .yaml ファイルを選択',
+      filters: [{ name: 'YAML ファイル', extensions: ['yaml', 'yml', 'YAML', 'YML'] }],
+    }),
+  );
+  expect(window.kubernetesApplyResourcesFromFile).toHaveBeenCalledWith(
+    currentContext,
+    ['service.yaml'],
+    currentNamespace,
+  );
+  expect(window.showMessageBox).toHaveBeenCalledWith({
+    title: 'Kubernetes YAML を適用',
+    type: 'info',
+    message: 'Service を 1 件適用しました。',
+    buttons: ['閉じる'],
+  });
 });

@@ -10,6 +10,7 @@ import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import { getExistingTerminal, registerTerminal } from '/@/stores/container-terminal-store';
@@ -227,5 +228,5 @@ onDestroy(() => {
 <EmptyScreen
   hidden={container.state === 'RUNNING'}
   icon={NoLogIcon}
-  title="No Terminal"
-  message="Container is not running" />
+  title={t('resources.no-terminal') ?? 'No Terminal'}
+  message={t('resources.container-is-not-running') ?? 'Container is not running'} />

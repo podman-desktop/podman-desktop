@@ -1,4 +1,6 @@
 <script lang="ts">
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   status: string;
 }
@@ -65,4 +67,4 @@ let statusStyle = $derived(
 </script>
 
 <div aria-label="Connection Status Icon" class="{roundIconStyle} {statusStyle.bgColor}"></div>
-<span aria-label="Connection Status Label" class="{labelStyle} {statusStyle.txtColor}">{statusStyle.label}</span>
+<span aria-label="Connection Status Label" class="{labelStyle} {statusStyle.txtColor}">{t(`status.${statusStyle.label}`) ?? statusStyle.label}</span>

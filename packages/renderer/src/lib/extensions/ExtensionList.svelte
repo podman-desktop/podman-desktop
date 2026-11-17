@@ -4,6 +4,7 @@ import { Button, Dropdown, FilteredEmptyScreen, NavPage, SearchInput } from '@po
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
@@ -70,6 +71,12 @@ const filterSummary = $derived.by(() => {
 });
 
 const installStatusFilter = $derived(new CatalogInstallStatusFilter(searchTerm));
+const installStatusOptions = $derived(
+  CatalogInstallStatusFilter.OPTIONS.map(option => ({
+    ...option,
+    label: t(`workloads.installFilter.${option.value}`) ?? option.label,
+  })),
+);
 
 function getInstallStatus(): string {
   return installStatusFilter.value;
@@ -94,7 +101,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'installed' && screen !== 'catalog'} title="extensions">
+<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'installed' && screen !== 'catalog'} title={t('workloads.extensions') ?? 'extensions'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     {#if enableCustomExtensions}
       <Button
@@ -102,8 +109,8 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
           installManualImageModal = true;
         }}
         icon={faCloudDownload}
-        title="Install manually an extension"
-        aria-label="Install custom">Install custom...</Button>
+        title={t('workloads.installManually') ?? 'Install manually an extension'}
+        aria-label={t('workloads.installCustomLabel') ?? 'Install custom'}>{t('workloads.installCustom') ?? 'Install custom...'}</Button>
     {/if}
   {/snippet}
 
@@ -113,14 +120,14 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
       on:click={(): void => {
         changeScreen('installed');
       }}
-      selected={screen === 'installed'}>Installed</Button>
+      selected={screen === 'installed'}>{t('workloads.installed') ?? 'Installed'}</Button>
     {#if enableCatalog}
       <Button
         type="tab"
         on:click={(): void => {
           changeScreen('catalog');
         }}
-        selected={screen === 'catalog'}>Catalog</Button>
+        selected={screen === 'catalog'}>{t('workloads.catalog') ?? 'Catalog'}</Button>
     {/if}
     {#if enableLocalExtensions}
       <Button
@@ -128,7 +135,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         on:click={(): void => {
           changeScreen('development');
         }}
-        selected={screen === 'development'}>Local extensions</Button>
+        selected={screen === 'development'}>{t('workloads.localExtensions') ?? 'Local extensions'}</Button>
     {/if}
  {/snippet}
 
@@ -142,16 +149,16 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
       role="region"
       aria-label="search">
       <div class="pl-5 w-72">
-        <SearchInput bind:searchTerm={searchTerm} title="extensions" />
+        <SearchInput bind:searchTerm={searchTerm} title={t('workloads.extensions') ?? 'extensions'} placeholder={t('common.search.placeholder')} ariaLabel={t('common.search')} />
       </div>
       {#if screen === 'catalog'}
         <div class="flex items-center gap-2 pl-5">
           <Dropdown
             class="w-40"
             bind:value={getInstallStatus, changeInstallStatus}
-            options={CatalogInstallStatusFilter.OPTIONS}>
+            options={installStatusOptions}>
             {#snippet left()}
-              <span class="sr-only">Install status </span>
+              <span class="sr-only">{t('workloads.installStatus') ?? 'Install status '}</span>
             {/snippet}
           </Dropdown>
         </div>
@@ -162,7 +169,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         class:whitespace-nowrap={screen === 'catalog'}
         role="status">
         {#if filterSummary && filterSummary.filtered > 0}
-          Filtered out {filterSummary.filtered} items of {filterSummary.total}
+          {t('workloads.filteredItems', { filtered: filterSummary.filtered, total: filterSummary.total }) ?? `Filtered out ${filterSummary.filtered} items of ${filterSummary.total}`}
         {/if}
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -35,20 +36,20 @@ async function ondetails(extensionId: string): Promise<void> {
     <div class="flex justify-center text-[var(--pd-details-empty-icon)] py-2">
       <KubeIcon size="80" />
     </div>
-    <h1 class="text-xl text-[var(--pd-details-empty-header)]">No Kubernetes cluster</h1>
+    <h1 class="text-xl text-[var(--pd-details-empty-header)]">{t('workloads.noCluster') ?? 'No Kubernetes cluster'}</h1>
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
-      A Kubernetes cluster is a group of nodes (virtual or physical) that run Kubernetes, a system for automating the deployment and management of containerized applications.
+      {t('workloads.clusterDescription') ?? 'A Kubernetes cluster is a group of nodes (virtual or physical) that run Kubernetes, a system for automating the deployment and management of containerized applications.'}
     </div>
     <!-- Only show the text if there are providers with p.kubernetesProviderConnectionCreation -->
       {#if $providerInfos.some(p => p.kubernetesProviderConnectionCreation)}
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
-      Deploy a Kubernetes cluster of your choice below:
+      {t('workloads.deployCluster') ?? 'Deploy a Kubernetes cluster of your choice below:'}
     </div>
       {/if}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 justify-center">
 
       {#each $providerInfos.filter(p => p.kubernetesProviderConnectionCreation) as provider (provider.id)}
-        {@const label = `${provider.kubernetesProviderConnectionCreationButtonTitle ?? 'Create new'}`}
+        {@const label = provider.kubernetesProviderConnectionCreationButtonTitle ?? t('workloads.createNew') ?? 'Create new'}
       <div class="rounded-xl p-5 text-left bg-[var(--pd-content-card-bg)] ">
 
         <div class="flex justify-left text-[var(--pd-details-empty-icon)] py-2 mb-2">
@@ -83,7 +84,7 @@ async function ondetails(extensionId: string): Promise<void> {
       oninstall={oninstall}
       ondetails={ondetails}
       showEmptyScreen={false}
-      title="Extensions to help you deploy Kubernetes clusters on your machine or connect remotely to:"
+      title={t('workloads.clusterExtensions') ?? 'Extensions to help you deploy Kubernetes clusters on your machine or connect remotely to:'}
       category="Kubernetes"
       keywords={['provider']}
       showInstalled={false} />

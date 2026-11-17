@@ -21,7 +21,9 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import type { NetworkInfoUI } from './NetworkInfoUI';
 import UpdateNetworkDialog from './UpdateNetworkDialog.svelte';
@@ -42,6 +44,33 @@ const network: NetworkInfoUI = {
 };
 
 const closeDialog = vi.fn();
+
+beforeEach(async () => {
+  vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('localizes network update instructions and keeps DNS values unchanged', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'resources.update-network-name': 'ネットワーク {name} を更新',
+    'resources.dns-servers-to-add-for-multiple-servers-separate-with-a-space':
+      '追加する DNS サーバー（複数の場合はスペースで区切ってください）',
+    'resources.update': '更新',
+    'resources.cancel': 'キャンセル',
+  });
+  await initTranslations();
+  render(UpdateNetworkDialog, { network, onClose: closeDialog });
+  screen.getByText('ネットワーク Network 1 を更新');
+  screen.getByText('追加する DNS サーバー（複数の場合はスペースで区切ってください）');
+  screen.getByRole('button', { name: 'キャンセル' });
+  screen.getByText('DNS servers to drop (for multiple servers, separate with a space)');
+  const [addField, removeField] = screen.getAllByPlaceholderText('8.8.8.8 1.1.1.1');
+  await userEvent.type(addField, '1.1.1.1 8.8.8.8');
+  await userEvent.type(removeField, '9.9.9.9');
+  await userEvent.click(screen.getByRole('button', { name: '更新' }));
+  expect(window.updateNetwork).toHaveBeenCalledWith(network.engineId, network.id, ['1.1.1.1', '8.8.8.8'], ['9.9.9.9']);
+});
 
 test('Expect podman used network to have update option but not delete', async () => {
   render(UpdateNetworkDialog, { network: network, onClose: closeDialog });

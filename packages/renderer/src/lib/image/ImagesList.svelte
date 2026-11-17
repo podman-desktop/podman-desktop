@@ -29,6 +29,9 @@ import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { ContextUI } from '/@/lib/context/context';
 import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
@@ -254,8 +257,11 @@ function confirmDeleteSelectedImages(): void {
       deleteSelectedImages,
       `delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
       {
-        title: 'Delete Images?',
+        title: t('resources.delete-images') ?? 'Delete Images?',
         variant: 'delete',
+        message:
+          t('resources.confirm-delete-selected', { count: selectedItemsNumber }) ??
+          `Are you sure you want to delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}?`,
       },
     );
   }
@@ -266,7 +272,13 @@ function confirmUpdateSelectedImages(): void {
     withBulkConfirmation(
       updateSelectedImages,
       `update all tags of ${selectedUpdateCandidatesNumber} image${selectedUpdateCandidatesNumber > 1 ? 's' : ''}`,
-      { title: 'Update Images?', buttonLabel: 'Update' },
+      {
+        title: t('resources.update-images') ?? 'Update Images?',
+        buttonLabel: t('resources.update') ?? 'Update',
+        message:
+          t('resources.confirm-update-selected', { count: selectedUpdateCandidatesNumber }) ??
+          `Are you sure you want to update all tags of ${selectedUpdateCandidatesNumber} image${selectedUpdateCandidatesNumber > 1 ? 's' : ''}?`,
+      },
     );
   }
 }
@@ -373,7 +385,7 @@ const columns = [
 const row = new TableRow<ImageInfoUI>({
   // If it is a manifest, it is not selectable (no delete functionality yet)
   selectable: (image): boolean => image.status === 'UNUSED' && !image.isManifest,
-  disabledText: 'Image is used by a container',
+  disabledText: t('resources.image-is-used-by-a-container') ?? 'Image is used by a container',
   children: (image): ImageInfoUI[] => {
     return image.children ?? [];
   },
@@ -393,7 +405,7 @@ function label(item: ImageInfoUI): string {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="images">
+<NavPage bind:searchTerm={searchTerm} title={t('resources.images') ?? 'images'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     {#if $imagesInfos.length > 0}
       <Prune type="images" engines={enginesList} />
@@ -401,21 +413,21 @@ function label(item: ImageInfoUI): string {
     <Button
       type="secondary"
       on:click={loadImages}
-      title="Load Images From Tar Archives"
+      title={t('resources.load-images-from-tar-archives') ?? 'Load Images From Tar Archives'}
       icon={faUpload}
-      aria-label="Load Images">
-      Load
+      aria-label={t('resources.load-images') ?? 'Load Images'}>
+      {t('resources.load') ?? 'Load'}
     </Button>
     <Button
       type="secondary"
       on:click={importImage}
-      title="Import Containers From Filesystem"
+      title={t('resources.import-containers-from-filesystem') ?? 'Import Containers From Filesystem'}
       icon={faCircleArrowDown}
-      aria-label="Import Image">
-      Import
+      aria-label={t('resources.import-image') ?? 'Import Image'}>
+      {t('resources.import') ?? 'Import'}
     </Button>
-    <Button type="secondary" on:click={gotoPullImage} title="Pull Image From a Registry" icon={faCloudDownload}>Pull</Button>
-    <Button type="primary" on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
+    <Button type="secondary" on:click={gotoPullImage} title={t('resources.pull-image-from-a-registry') ?? 'Pull Image From a Registry'} icon={faCloudDownload}>{t('resources.pull') ?? 'Pull'}</Button>
+    <Button type="primary" on:click={gotoBuildImage} title={t('resources.build-image-from-containerfile') ?? 'Build Image From Containerfile'} icon={faCube}>{t('resources.build') ?? 'Build'}</Button>
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
@@ -423,24 +435,24 @@ function label(item: ImageInfoUI): string {
     {#if selectedItemsNumber && selectedItemsNumber > 0}
       <Button
         on:click={confirmDeleteSelectedImages}
-        title="Delete {selectedItemsNumber} selected items"
-        aria-label="Delete images"
+        title={t('resources.delete-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
+        aria-label={t('resources.delete-images') ?? 'Delete images'}
         inProgress={bulkDeleteInProgress}
         disabled={bulkUpdateInProgress}
         icon={faTrash} />
       <Button
         on:click={saveSelectedImages}
-        title="Save {selectedItemsNumber} selected items"
-        aria-label="Save images"
+        title={t('resources.save-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Save ${selectedItemsNumber} selected items`}
+        aria-label={t('resources.save-images') ?? 'Save images'}
         icon={faDownload} />
       <Button
         on:click={confirmUpdateSelectedImages}
-        title="Update {selectedUpdateCandidatesNumber} image{selectedUpdateCandidatesNumber === 1 ? '' : 's'}"
+        title={t('resources.update-selected-images', { count: selectedUpdateCandidatesNumber }) ?? `Update ${selectedUpdateCandidatesNumber} image${selectedUpdateCandidatesNumber === 1 ? '' : 's'}`}
         inProgress={bulkUpdateInProgress || bulkDeleteInProgress}
         disabled={selectedUpdateCandidatesNumber === 0}
-        aria-label="Update images"
+        aria-label={t('resources.update-images') ?? 'Update images'}
         icon={faSync} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('resources.selected-items', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
   {/snippet}
 
@@ -451,14 +463,15 @@ function label(item: ImageInfoUI): string {
       <NoContainerEngineEmptyScreen />
     {:else if $filtered.length === 0}
       {#if searchTerm}
-        <FilteredEmptyScreen icon={ImageIcon} kind="images" bind:searchTerm={searchTerm} />
+        <FilteredEmptyScreen labels={getFilteredEmptyLabels('images', searchTerm)} icon={ImageIcon} kind="images" bind:searchTerm={searchTerm} />
       {:else}
         <ImageEmptyScreen />
       {/if}
     {:else if filteredImages.length === 0 && selectedEnvironment}
-      <FilteredEmptyScreen icon={ImageIcon} kind="images" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
+      <FilteredEmptyScreen labels={getFilteredEmptyLabels('images', t('common.environment') ?? 'selected environment')} icon={ImageIcon} kind="images" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
+        labels={getTableLabels()}
         kind="image"
         bind:selectedItemsNumber={selectedItemsNumber}
         data={filteredImages}

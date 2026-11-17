@@ -7,6 +7,7 @@ import { createEventDispatcher, onMount } from 'svelte';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { setVolumeStatus } from '/@/stores/volumes';
@@ -46,8 +47,11 @@ let MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 
 {#if volume.status === 'UNUSED'}
   <ListItemButtonIcon
-    title="Delete Volume"
-    onClick={(): void => withConfirmation(removeVolume, `delete volume ${volume.name}`, { title: 'Delete Volume?', variant: 'delete' })}
+    title={t('resources.delete-volume') ?? 'Delete Volume'}
+    onClick={(): void => withConfirmation(removeVolume, `delete volume ${volume.name}`, {
+      title: t('resources.delete-volume') ?? 'Delete Volume?', variant: 'delete',
+      message: t('resources.confirm-delete-volume', { name: volume.name }) ?? `Are you sure you want to delete volume ${volume.name}?`,
+    })}
     detailed={detailed}
     icon={faTrash} />
 {/if}

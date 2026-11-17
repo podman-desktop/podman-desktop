@@ -11,6 +11,7 @@ import { get, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
@@ -37,10 +38,10 @@ interface Props {
 let { taskId = $bindable() }: Props = $props();
 let buildImageInfo: BuildImageInfo = $state(createDefaultBuildImageInfo());
 const BUILD_PATH = '/images/build';
-const BUILD_TABS = [
-  { id: 'basic', label: 'Basic' },
-  { id: 'advanced', label: 'Advanced' },
-] as const;
+const BUILD_TABS = $derived([
+  { id: 'basic', label: t('resources.basic') ?? 'Basic' },
+  { id: 'advanced', label: t('resources.advanced') ?? 'Advanced' },
+] as const);
 
 let activeTab = $derived($router.path === `${BUILD_PATH}/advanced` ? 'advanced' : 'basic');
 // Keep background task links intact across tabs.
@@ -49,9 +50,12 @@ const tabQuery = $derived(query ? `?${query}` : '');
 let validateRegistries = $state(true);
 
 const containerFileDialogOptions: OpenDialogOptions = {
-  title: 'Select Containerfile to build',
+  title: t('resources.select-containerfile-to-build') ?? 'Select Containerfile to build',
 };
-const contextDialogOptions: OpenDialogOptions = { title: 'Select Root Context', selectors: ['openDirectory'] };
+const contextDialogOptions: OpenDialogOptions = {
+  title: t('resources.select-root-context') ?? 'Select Root Context',
+  selectors: ['openDirectory'],
+};
 
 interface BuildOutputItem {
   stream?: string;
@@ -142,7 +146,7 @@ async function buildSinglePlatformImage(): Promise<void> {
   });
   try {
     if (!buildImageInfo.selectedProvider) {
-      throw new Error('There is no container engine available.');
+      throw new Error(t('resources.noEngineAvailable') ?? 'There is no container engine available.');
     }
     // Build the singular image
     await window.buildImage(
@@ -203,7 +207,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
     // We'll iterate over each platform and build the image
     for (const platform of platforms) {
       if (!buildImageInfo.selectedProvider) {
-        throw new Error('There is no container engine available.');
+        throw new Error(t('resources.noEngineAvailable') ?? 'There is no container engine available.');
       }
       // Store the key
       // Build the image for the current platform
@@ -344,7 +348,7 @@ $effect(() => {
 let errorContainerImageName = $derived(
   buildImageInfo.containerImageName === buildImageInfo.containerImageName.toLowerCase()
     ? undefined
-    : 'Image name should be lowercase',
+    : (t('resources.image-name-should-be-lowercase') ?? 'Image name should be lowercase'),
 );
 
 let hasInvalidFields = $derived(
@@ -358,7 +362,7 @@ let hasInvalidFields = $derived(
 </script>
 
 <EngineFormPage
-  title="Build image {buildImageInfo.containerImageName} from Containerfile"
+  title={t('resources.build-image-containerimagename-from-containerfile', { containerImageName: buildImageInfo.containerImageName }) ?? `Build image ${buildImageInfo.containerImageName} from Containerfile`}
   inProgress={buildImageInfo.buildRunning}
   showEmptyScreen={providerConnections.length === 0 && !buildImageInfo.buildRunning}>
   {#snippet icon()}
@@ -381,39 +385,39 @@ let hasInvalidFields = $derived(
           class="pr-4"
           hidden={buildImageInfo.buildRunning || activeTab !== 'basic'}>
           <label for="containerFilePath" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Containerfile path</label>
+            >{t('resources.containerfile-path') ?? 'Containerfile path'}</label>
           <FileInput
             name="containerFilePath"
             id="containerFilePath"
             bind:value={buildImageInfo.containerFilePath}
-            placeholder="Containerfile to build"
+            placeholder={t('resources.containerfile-to-build') ?? 'Containerfile to build'}
             options={containerFileDialogOptions}
             class="w-full" />
 
           <label
             for="containerBuildContextDirectory"
-            class="pt-4 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Build context directory</label>
+            class="pt-4 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">{t('resources.build-context-directory') ?? 'Build context directory'}</label>
           <FileInput
             name="containerBuildContextDirectory"
             id="containerBuildContextDirectory"
             bind:value={buildImageInfo.containerBuildContextDirectory}
-            placeholder="Directory to build in"
+            placeholder={t('resources.directory-to-build-in') ?? 'Directory to build in'}
             options={contextDialogOptions}
             class="w-full" />
 
           <label for="containerImageName" class="pt-4 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Image name</label>
+            >{t('resources.image-name') ?? 'Image name'}</label>
           <Input
             bind:value={buildImageInfo.containerImageName}
             name="containerImageName"
             id="containerImageName"
-            placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
+            placeholder={t('resources.image-name-e-g-quay-io-namespace-my-custom-image') ?? 'Image name (e.g. quay.io/namespace/my-custom-image)'}
             error={errorContainerImageName}
             class="w-full" />
 
           {#if providerConnections.length > 1}
             <label for="providerChoice" class="pt-4 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-              >Container engine</label>
+              >{t('resources.container-engine') ?? 'Container engine'}</label>
             <ContainerConnectionDropdown
               id="providerChoice"
               name="providerChoice"
@@ -422,9 +426,9 @@ let hasInvalidFields = $derived(
           {/if}
 
           <label for="containerBuildPlatform" class="pt-4 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Platform</label>
+            >{t('resources.platform') ?? 'Platform'}</label>
           {#if platforms.length > 1}
-            <p class="text-[var(--pd-content-text)] mb-2">Multiple platforms selected, a manifest will be created</p>
+            <p class="text-[var(--pd-content-text)] mb-2">{t('resources.multiple-platforms-selected-a-manifest-will-be-created') ?? 'Multiple platforms selected, a manifest will be created'}</p>
           {/if}
           <BuildImageFromContainerfileCards bind:platforms={buildImageInfo.containerBuildPlatform} />
         </div>
@@ -440,39 +444,39 @@ let hasInvalidFields = $derived(
           {/if}
 
           <label for="inputKey" class="pt-4 first:pt-0 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Build arguments</label>
+            >{t('resources.build-arguments') ?? 'Build arguments'}</label>
           {#each buildImageInfo.buildArgs as buildArg, index (index)}
             <div class="flex flex-row items-center space-x-2 mb-2">
-              <Input bind:value={buildArg.key} name="inputKey" placeholder="Key" class="grow" required />
-              <Input bind:value={buildArg.value} placeholder="Value" class="grow" required />
+              <Input bind:value={buildArg.key} name="inputKey" placeholder={t('resources.key') ?? 'Key'} class="grow" required />
+              <Input bind:value={buildArg.value} placeholder={t('resources.value') ?? 'Value'} class="grow" required />
               <Button
                 on:click={(): void => deleteBuildArg(index)}
                 icon={faMinusCircle}
                 disabled={buildImageInfo.buildArgs.length === 1 && buildArg.key === '' && buildArg.value === ''}
-                aria-label="Delete build argument" />
-              <Button on:click={addBuildArg} icon={faPlusCircle} title="Add build argument" aria-label="Add build argument" />
+                aria-label={t('resources.delete-build-argument') ?? 'Delete build argument'} />
+              <Button on:click={addBuildArg} icon={faPlusCircle} title={t('resources.add-build-argument') ?? 'Add build argument'} aria-label={t('resources.add-build-argument') ?? 'Add build argument'} />
             </div>
           {/each}
 
           <label for="registryValidation" class="pt-4 block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Registry Validation</label>
-          <Checkbox bind:checked={validateRegistries} title='validate registries'>Validate registries before building</Checkbox>
+            >{t('resources.registry-validation') ?? 'Registry Validation'}</label>
+          <Checkbox bind:checked={validateRegistries} title={t('resources.validate-registries') ?? 'validate registries'}>{t('resources.validate-registries-before-building') ?? 'Validate registries before building'}</Checkbox>
         </div>
       </div>
 
       <ButtonRow class={buildImageInfo.buildRunning ? '' : 'pt-4 pb-2'}>
         {#if buildImageInfo.buildRunning}
-          <Button type="link" on:click={abortBuild}>Cancel</Button>
+          <Button type="link" on:click={abortBuild}>{t('resources.cancel') ?? 'Cancel'}</Button>
         {:else if !buildImageInfo.buildFinished}
-          <Button type="link" on:click={cleanupBuild}>Cancel</Button>
+          <Button type="link" on:click={cleanupBuild}>{t('resources.cancel') ?? 'Cancel'}</Button>
         {/if}
 
         {#if !buildImageInfo.buildRunning}
-          <Button on:click={buildContainerImage} disabled={hasInvalidFields} icon={faCube}>Build</Button>
+          <Button on:click={buildContainerImage} disabled={hasInvalidFields} icon={faCube}>{t('resources.build') ?? 'Build'}</Button>
         {/if}
 
         {#if buildImageInfo.buildFinished}
-          <Button on:click={cleanupBuild}>Done</Button>
+          <Button on:click={cleanupBuild}>{t('resources.done') ?? 'Done'}</Button>
         {/if}
       </ButtonRow>
 

@@ -29,6 +29,7 @@ import type { Terminal } from '@xterm/xterm';
 
 import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 export interface IProviderConnectionConfigurationPropertyRecorded extends IConfigurationPropertyRecordedSchema {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -155,10 +156,10 @@ export function validateProxyAddress(value: string): string | undefined {
     try {
       const u = new URL(value);
       if (!u.hostname) {
-        return `Hostname missing from ${value}`;
+        return (t('settings.proxy.hostnameMissing') ?? 'Hostname missing from {value}').replace('{value}', value);
       }
     } catch (err) {
-      return `Value ${value} should be an URL`;
+      return (t('settings.proxy.invalidUrl') ?? 'Value {value} should be an URL').replace('{value}', value);
     }
   }
 }

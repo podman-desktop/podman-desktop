@@ -16,6 +16,7 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import Donut from '/@/lib/donut/Donut.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
 import BooleanEnumDisplay from '/@/lib/ui/BooleanEnumDisplay.svelte';
@@ -465,17 +466,17 @@ $effect(() => {
 <SettingsPage title="Resources">
   {#snippet subtitle()}
     <span  class:hidden={providers.length === 0}>
-      Additional provider information is available under <a
+      {t('settings.resources.moreInfo') ?? 'Additional provider information is available under'} <a
         href="/extensions"
-        class="text-[var(--pd-content-text)] underline underline-offset-2">Extensions</a>
+        class="text-[var(--pd-content-text)] underline underline-offset-2">{t('navigation.Extensions') ?? 'Extensions'}</a>
     </span>
   {/snippet}
   <div role="region" aria-label="Featured Provider Resources">
     <EmptyScreen
       aria-label="no-resource-panel"
       icon={EngineIcon}
-      title="No resources found"
-      message="Start an extension that manages containers or Kubernetes engines"
+      title={t('settings.resources.empty') ?? 'No resources found'}
+      message={t('settings.resources.emptyMessage') ?? 'Start an extension that manages containers or Kubernetes engines'}
       hidden={providers.length > 0} />
 
     {#each providers as provider (provider.id)}
@@ -521,15 +522,15 @@ $effect(() => {
           role="region"
           aria-label="Provider Connections">
           <PreferencesConnectionsEmptyRendering
-            message={provider.emptyConnectionMarkdownDescription}
+            message={t(`settings.provider.${provider.id}.emptyConnectionMarkdownDescription`) ?? provider.emptyConnectionMarkdownDescription}
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container, index (index)}
             {@const rootfulInfo = getRootfulDisplayInfo(provider, container)}
             <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={container.name}>
               <div class="float-right">
-                <Tooltip bottom tip="{provider.name} details">
+                <Tooltip bottom tip={(t('settings.details') ?? '{name} details').replace('{name}', provider.name)}>
                   <button
-                    aria-label="{provider.name} details"
+                    aria-label={(t('settings.details') ?? '{name} details').replace('{name}', provider.name)}
                     type="button"
                     onclick={(): void =>
                       router.goto(
@@ -561,7 +562,7 @@ $effect(() => {
                 {/if}
               </div>
               <div class="mt-2 text-[var(--pd-content-text)] text-xs" aria-label="{container.name} type">
-                {#if container.type === 'docker'}Docker{:else if container.type === 'podman'}Podman{/if} endpoint
+                {#if container.type === 'docker'}Docker{:else if container.type === 'podman'}Podman{/if} {t('settings.endpoint') ?? 'endpoint'}
               </div>
               <PreferencesResourcesRenderingCopyButton
                 class={container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}
@@ -573,10 +574,10 @@ $effect(() => {
                   role="group"
                   aria-label="Provider Configuration">
                   {#each displayMetrics as metric (metric.title)}
-                    <Donut title={metric.title} value={metric.value} percent={metric.percent} />
+                    <Donut title={t(`settings.metrics.${metric.title}`) ?? metric.title} value={metric.value} percent={metric.percent} />
                   {/each}
                   {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
-                    {connectionSetting.description}: {connectionSetting.value}
+                    {t(`${connectionSetting.id}.description`) ?? connectionSetting.description}: {connectionSetting.value}
                   {/each}
                 </div>
               {/if}
@@ -588,14 +589,14 @@ $effect(() => {
                 addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
                 {#snippet advanced_actions()}
                   <span  class:hidden={providers.length === 0}>
-                    <Tooltip bottom tip="More Options">
+                    <Tooltip bottom tip={t('settings.moreOptions') ?? 'More Options'}>
                       <ActionsMenu
                         dropdownMenu={true}
                         onBeforeToggle={(): void => {
                           globalContext?.setValue('selectedProviderConnectionType', container.type);
                           globalContext?.setValue('selectedProviderConnectionStatus', container.status);
                       }}>
-                        <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => {router.goto(
+                        <DropdownMenu.Item title={t('settings.openTerminal') ?? 'Open Terminal'} icon={faTerminal} onClick={(): void => {router.goto(
                           `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
                             container.name,
                           ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/terminal`);}}/>
@@ -619,9 +620,9 @@ $effect(() => {
           {#each provider.kubernetesConnections as kubeConnection, index (index)}
             <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={kubeConnection.name}>
               <div class="float-right">
-                <Tooltip bottom tip="{provider.name} details">
+                <Tooltip bottom tip={(t('settings.details') ?? '{name} details').replace('{name}', provider.name)}>
                   <button
-                    aria-label="{provider.name} details"
+                    aria-label={(t('settings.details') ?? '{name} details').replace('{name}', provider.name)}
                     type="button"
                     onclick={(): void =>
                       router.goto(
@@ -641,7 +642,7 @@ $effect(() => {
                 <ConnectionErrorIndicator error={kubeConnection.error} />
               </div>
               <div class="mt-2">
-                <div class="text-[var(--pd-content-text)] text-xs">Kubernetes endpoint</div>
+                <div class="text-[var(--pd-content-text)] text-xs">Kubernetes {t('settings.endpoint') ?? 'endpoint'}</div>
                 <div class="mt-1">
                   <span class="my-auto text-xs" class:text-[var(--pd-content-sub-header)]={kubeConnection.status !== 'started'}
                     >{kubeConnection.endpoint.apiURL}</span>
@@ -658,9 +659,9 @@ $effect(() => {
           {#each provider.vmConnections as vmConnection, index (index)}
           <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={vmConnection.name}>
             <div class="float-right">
-              <Tooltip bottom tip="{provider.name} details">
+              <Tooltip bottom tip={(t('settings.details') ?? '{name} details').replace('{name}', provider.name)}>
                 <button
-                  aria-label="{provider.name} details"
+                  aria-label={(t('settings.details') ?? '{name} details').replace('{name}', provider.name)}
                   type="button"
                   onclick={(): void =>
                     router.goto(
@@ -689,9 +690,9 @@ $effect(() => {
               addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
               {#snippet advanced_actions()}
                 <span  class:hidden={providers.length === 0}>
-                  <Tooltip bottom tip="More Options">
+                  <Tooltip bottom tip={t('settings.moreOptions') ?? 'More Options'}>
                     <ActionsMenu dropdownMenu={true}>
-                      <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => router.goto(
+                      <DropdownMenu.Item title={t('settings.openTerminal') ?? 'Open Terminal'} icon={faTerminal} onClick={(): void => router.goto(
                         `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
                       )}/>
                     </ActionsMenu>

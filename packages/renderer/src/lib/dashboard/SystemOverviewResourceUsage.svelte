@@ -5,6 +5,7 @@ import type { ContainerProviderConnection } from '@desktop-framework/extension-a
 import { ProgressBar } from '@podman-desktop/ui-svelte';
 import { filesize } from 'filesize';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { extractConnectionResourceMetrics } from '/@/lib/preferences/connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from '/@/lib/preferences/Util';
 import { configurationProperties } from '/@/stores/configurationProperties';
@@ -83,15 +84,15 @@ let resourceData = $derived.by((): ResourceData | undefined => {
   <div class="flex flex-col gap-1 text-xs">
     <div class="flex items-center gap-1.5">
       <span class="w-7 text-right text-[10px] text-[var(--pd-content-text-sub)]">CPU</span>
-      <ProgressBar progress={resourceData.cpu.percent} width="w-12" height="h-1.5" class="items-center" aria-label="CPU usage" />
+      <ProgressBar progress={resourceData.cpu.percent} width="w-12" height="h-1.5" class="items-center" aria-label={t('workloads.cpuUsage') ?? 'CPU usage'} />
     </div>
     <div class="flex items-center gap-1.5">
-      <span class="w-7 text-right text-[10px] text-[var(--pd-content-text-sub)]">Mem</span>
-      <ProgressBar progress={resourceData.memory.percent} width="w-12" height="h-1.5" class="items-center" aria-label="Mem usage" />
+      <span class="w-7 text-right text-[10px] text-[var(--pd-content-text-sub)]">{t('workloads.memory') ?? 'Mem'}</span>
+      <ProgressBar progress={resourceData.memory.percent} width="w-12" height="h-1.5" class="items-center" aria-label={t('workloads.memoryUsage') ?? 'Mem usage'} />
     </div>
     <div class="flex items-center gap-1.5">
-      <span class="w-7 text-right text-[10px] text-[var(--pd-content-text-sub)]">Disk</span>
-      <ProgressBar progress={resourceData.disk.percent} width="w-12" height="h-1.5" class="items-center" aria-label="Disk usage" />
+      <span class="w-7 text-right text-[10px] text-[var(--pd-content-text-sub)]">{t('workloads.disk') ?? 'Disk'}</span>
+      <ProgressBar progress={resourceData.disk.percent} width="w-12" height="h-1.5" class="items-center" aria-label={t('workloads.diskUsage') ?? 'Disk usage'} />
     </div>
   </div>
 {/if}

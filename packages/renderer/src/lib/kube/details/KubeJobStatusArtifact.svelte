@@ -3,6 +3,7 @@ import type { V1JobStatus } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   artifact?: V1JobStatus;
@@ -10,40 +11,39 @@ interface Props {
 
 let { artifact }: Props = $props();
 </script>
-  
+
   {#if artifact && (artifact.active ?? artifact.succeeded ?? artifact.failed ?? artifact.startTime ?? artifact.completionTime)}
     <tr>
-      <Title>Status</Title>
+      <Title>{t('workloads.status') ?? 'Status'}</Title>
     </tr>
     {#if artifact.active !== undefined}
       <tr>
-        <Cell>Active Jobs</Cell>
+        <Cell>{t('workloads.activeJobs') ?? 'Active Jobs'}</Cell>
         <Cell>{artifact.active}</Cell>
       </tr>
     {/if}
     {#if artifact.succeeded !== undefined}
       <tr>
-        <Cell>Succeeded</Cell>
+        <Cell>{t('workloads.succeeded') ?? 'Succeeded'}</Cell>
         <Cell>{artifact.succeeded}</Cell>
       </tr>
     {/if}
     {#if artifact.failed !== undefined}
       <tr>
-        <Cell>Failed</Cell>
+        <Cell>{t('workloads.failed') ?? 'Failed'}</Cell>
         <Cell>{artifact.failed}</Cell>
       </tr>
     {/if}
     {#if artifact.startTime}
       <tr>
-        <Cell>Start Time</Cell>
+        <Cell>{t('workloads.startTime') ?? 'Start Time'}</Cell>
         <Cell>{artifact.startTime}</Cell>
       </tr>
     {/if}
     {#if artifact.completionTime}
       <tr>
-        <Cell>Completion Time</Cell>
+        <Cell>{t('workloads.completionTime') ?? 'Completion Time'}</Cell>
         <Cell>{artifact.completionTime}</Cell>
       </tr>
     {/if}
   {/if}
-  

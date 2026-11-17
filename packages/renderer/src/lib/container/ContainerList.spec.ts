@@ -28,6 +28,7 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
@@ -37,8 +38,10 @@ import ContainerList from './ContainerList.svelte';
 
 vi.mock(import('tinro'));
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   // vi.resetAllMocks does not touch Svelte stores; a test that sets one would
   // otherwise leak its contributions into every test declared after it
   viewsContributions.set([]);
@@ -119,45 +122,57 @@ test('Expect no containers being displayed', async () => {
   expect(noStoppedContainers).toBeInTheDocument();
 });
 
-test('Expect is:running / is:stopped is added to the filter field', async () => {
-  vi.mocked(window.getProviderInfos).mockResolvedValue([
-    {
-      name: 'podman',
-      status: 'started',
-      internalId: 'podman-internal-id',
-      containerConnections: [
-        {
-          name: 'podman-machine-default',
-          status: 'started',
-        },
-      ],
-    } as ProviderInfo,
-  ]);
+test.each<{ running: string; stopped: string; translations: Record<string, string> }>([
+  { running: 'Running', stopped: 'Stopped', translations: {} },
+  {
+    running: '実行中',
+    stopped: '停止中',
+    translations: { 'resources.running': '実行中', 'resources.stopped': '停止中' },
+  },
+])(
+  'Expect $running / $stopped tabs to preserve is:running / is:stopped filter values',
+  async ({ running, stopped, translations }) => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue(translations);
+    await initTranslations();
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
+      {
+        name: 'podman',
+        status: 'started',
+        internalId: 'podman-internal-id',
+        containerConnections: [
+          {
+            name: 'podman-machine-default',
+            status: 'started',
+          },
+        ],
+      } as ProviderInfo,
+    ]);
 
-  window.dispatchEvent(new CustomEvent('extensions-already-started'));
-  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
+    window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+    window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
-  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
-  await waitRender({});
+    await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+    await waitRender({});
 
-  const searchField = screen.getByPlaceholderText('Search...');
-  expect(searchField).toBeInTheDocument();
-  expect(searchField).not.toHaveDisplayValue(/is:running/);
-  expect(searchField).not.toHaveDisplayValue(/is:stopped/);
+    const searchField = screen.getByPlaceholderText('Search...');
+    expect(searchField).toBeInTheDocument();
+    expect(searchField).not.toHaveDisplayValue(/is:running/);
+    expect(searchField).not.toHaveDisplayValue(/is:stopped/);
 
-  const runningTab = screen.getByRole('button', { name: 'Running' });
-  await fireEvent.click(runningTab);
+    const runningTab = screen.getByRole('button', { name: running });
+    await fireEvent.click(runningTab);
 
-  expect(searchField).toHaveDisplayValue(/is:running/);
-  expect(searchField).not.toHaveDisplayValue(/is:stopped/);
+    expect(searchField).toHaveDisplayValue(/is:running/);
+    expect(searchField).not.toHaveDisplayValue(/is:stopped/);
 
-  const stoppedTab = screen.getByRole('button', { name: 'Stopped' });
-  await fireEvent.click(stoppedTab);
+    const stoppedTab = screen.getByRole('button', { name: stopped });
+    await fireEvent.click(stoppedTab);
 
-  expect(searchField).not.toHaveDisplayValue(/is:running/);
-  expect(searchField).toHaveDisplayValue(/is:stopped/);
-});
+    expect(searchField).not.toHaveDisplayValue(/is:running/);
+    expect(searchField).toHaveDisplayValue(/is:stopped/);
+  },
+);
 
 test('Expect filter is preserved between tabs', async () => {
   vi.mocked(window.getProviderInfos).mockResolvedValue([

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
 import { cliToolInfos } from '/@/stores/cli-tools';
 
@@ -13,8 +14,8 @@ import SettingsPage from './SettingsPage.svelte';
     <EmptyScreen
       aria-label="no-resource-panel"
       icon={EngineIcon}
-      title="No CLI tool has been registered"
-      message="Start an extension that registers a CLI"
+      title={t('settings.cli.empty') ?? 'No CLI tool has been registered'}
+      message={t('settings.cli.emptyMessage') ?? 'Start an extension that registers a CLI'}
       hidden={$cliToolInfos.length > 0} />
 
     {#each $cliToolInfos as cliTool (cliTool.id)}

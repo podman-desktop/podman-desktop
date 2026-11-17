@@ -59,3 +59,23 @@ test('Expect button to fire event and clear search term', async () => {
   const title = screen.getByText("No object matching '' found");
   expect(title).toBeInTheDocument();
 });
+
+test('Expect localized empty-state labels without changing the resource kind or reset action', async () => {
+  const onResetFilter = vi.fn();
+  render(FilteredEmptyScreen, {
+    kind: 'containers',
+    searchTerm: 'name:demo',
+    onResetFilter,
+    labels: {
+      title: '「name:demo」に一致するコンテナーが見つかりません',
+      message: '検索語に誤りがないか確認してください。',
+      detail: 'すべてのコンテナーを表示しますか？',
+      clearFilter: 'フィルターを解除',
+    },
+  });
+
+  screen.getByText('「name:demo」に一致するコンテナーが見つかりません');
+  screen.getByText('検索語に誤りがないか確認してください。');
+  await fireEvent.click(screen.getByRole('button', { name: 'フィルターを解除' }));
+  expect(onResetFilter).toHaveBeenCalledOnce();
+});

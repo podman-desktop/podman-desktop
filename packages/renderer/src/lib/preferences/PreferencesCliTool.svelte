@@ -4,6 +4,7 @@ import { faCircleArrowDown, faCircleArrowUp, faCircleXmark, faTrash } from '@for
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 
@@ -64,7 +65,9 @@ async function update(cliTool: CliToolInfo): Promise<void> {
     await window.updateCliTool(cliTool.id, loggerHandlerKey, newVersion, eventCollect);
     showError = false;
   } catch (e) {
-    errorMessage = `Unable to update ${cliTool.displayName} to version ${newVersion}.`;
+    errorMessage = (t('settings.cli.updateError') ?? 'Unable to update {name} to version {version}.')
+      .replace('{name}', cliTool.displayName)
+      .replace('{version}', newVersion);
     showError = true;
   } finally {
     cliToolUpdateStatus.inProgress = false;
@@ -79,7 +82,10 @@ async function install(cliTool: CliToolInfo): Promise<void> {
     versionToInstall = await window.selectCliToolVersionToInstall(cliTool.id);
   } catch (e) {
     // do nothing
-    errorMessage = `Error when selecting a version: ${String(e)}`;
+    errorMessage = (t('settings.cli.versionError') ?? 'Error when selecting a version: {error}').replace(
+      '{error}',
+      String(e),
+    );
     console.error(e);
     showError = true;
   }
@@ -93,7 +99,9 @@ async function install(cliTool: CliToolInfo): Promise<void> {
     await window.installCliTool(cliTool.id, versionToInstall, loggerHandlerKey, eventCollect);
     showError = false;
   } catch (e) {
-    errorMessage = `Unable to install ${cliTool.displayName} to version ${versionToInstall}.`;
+    errorMessage = (t('settings.cli.installError') ?? 'Unable to install {name} to version {version}.')
+      .replace('{name}', cliTool.displayName)
+      .replace('{version}', versionToInstall);
     showError = true;
   } finally {
     cliToolInstallStatus.inProgress = false;
@@ -102,14 +110,17 @@ async function install(cliTool: CliToolInfo): Promise<void> {
 }
 
 async function uninstall(cliTool: CliToolInfo): Promise<void> {
+  const uninstallLabel = t('settings.uninstall') ?? 'Uninstall';
   const result = await window.showMessageBox({
-    title: `Uninstall ${cliTool.displayName}?`,
+    title: (t('settings.cli.uninstallTitle') ?? 'Uninstall {name}?').replace('{name}', cliTool.displayName),
     type: 'danger',
-    message: `Uninstall ${cliTool.displayName} ${cliTool.version} ?`,
-    buttons: ['Uninstall', 'Cancel'],
+    message: (t('settings.cli.uninstallMessage') ?? 'Uninstall {name} {version} ?')
+      .replace('{name}', cliTool.displayName)
+      .replace('{version}', `${cliTool.version}`),
+    buttons: [uninstallLabel, t('settings.cancel') ?? 'Cancel'],
   });
 
-  if (result?.response !== 'Uninstall') {
+  if (result?.response !== uninstallLabel) {
     return;
   }
 
@@ -120,7 +131,9 @@ async function uninstall(cliTool: CliToolInfo): Promise<void> {
     await window.uninstallCliTool(cliTool.id, loggerHandlerKey, eventCollect);
     showError = false;
   } catch (e) {
-    errorMessage = `Unable to uninstall ${cliTool.displayName}. Error: ${String(e)}`;
+    errorMessage = (t('settings.cli.uninstallError') ?? 'Unable to uninstall {name}. Error: {error}')
+      .replace('{name}', cliTool.displayName)
+      .replace('{error}', String(e));
     showError = true;
   } finally {
     cliToolUninstallStatus.inProgress = false;
@@ -178,7 +191,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                 icon={faCircleArrowDown}
                 state={cliToolInstallStatus}
                 color="primary"
-                tooltip={`Install ${cliTool.displayName}`} />
+                tooltip={`${t('settings.install') ?? 'Install'} ${cliTool.displayName}`} />
             </div>
           {/if}
           {#if cliTool.version && cliTool.canUpdate && cliToolUpdateStatus}
@@ -194,10 +207,10 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                 state={cliToolUpdateStatus}
                 color="primary"
                 tooltip={!cliTool.canUpdate
-                  ? 'No updates'
+                  ? (t('settings.cli.noUpdates') ?? 'No updates')
                   : cliTool.newVersion
-                    ? `Update to v${cliTool.newVersion}`
-                    : 'Upgrade/Downgrade'} />
+                    ? (t('settings.cli.updateVersion') ?? 'Update to v{version}').replace('{version}', cliTool.newVersion)
+                    : (t('settings.cli.changeVersion') ?? 'Upgrade/Downgrade')} />
             </div>
           {/if}
           {#if cliTool.version && cliTool.canInstall && cliToolUninstallStatus}
@@ -212,7 +225,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                 icon={faTrash}
                 state={cliToolUninstallStatus}
                 color="secondary"
-                tooltip={`Uninstall ${cliTool.displayName}`} />
+                tooltip={`${t('settings.uninstall') ?? 'Uninstall'} ${cliTool.displayName}`} />
             </div>
           {/if}
         </div>
@@ -226,16 +239,16 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
         role="region"
         class="float-right text-[var(--pd-invert-content-card-text)] px-2 text-sm"
         aria-label="cli-registered-by">
-        Registered by {cliTool.extensionInfo.label}
+        {(t('settings.cli.registeredBy') ?? 'Registered by {name}').replace('{name}', cliTool.extensionInfo.label)}
       </div>
       <div role="region" class="ml-3 mt-2 text-[var(--pd-invert-content-card-text)]">
         <div class="text-[var(--pd-invert-content-card-text)]">
-          <Markdown markdown={cliTool.description} />
+          <Markdown markdown={t(`settings.cli.${cliTool.id}.description`) ?? cliTool.description} />
         </div>
         {#if cliTool.version}
           <div
             class="flex flex-row justify-between align-center bg-[var(--pd-invert-content-bg)] p-2 rounded-lg min-w-[320px] w-fit">
-            <Tooltip containerClass="relative inline-block my-auto" bottomRight={true} tip="Path: {cliTool.path}">
+            <Tooltip containerClass="relative inline-block my-auto" bottomRight={true} tip="{t('settings.path') ?? 'Path:'} {cliTool.path}">
               <div
                 class="flex text-[var(--pd-invert-content-card-text)] font-bold text-sm items-center"
                 aria-label="cli-version">
@@ -252,9 +265,9 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                     await update(cliTool);
                   }
                 }}
-                title={`${cliTool.displayName} will be updated${cliTool.newVersion ? ' to ' + cliTool.newVersion : ''} `}
+                title={t('settings.cli.update') ? `${cliTool.displayName}: ${t('settings.cli.update')} ${cliTool.newVersion ?? ''}` : `${cliTool.displayName} will be updated${cliTool.newVersion ? ' to ' + cliTool.newVersion : ''} `}
                 disabled={!cliTool.canUpdate}>
-                {`${cliTool.newVersion ? 'Update available' : 'Upgrade/Downgrade'}`}
+                {cliTool.newVersion ? (t('settings.cli.updateAvailable') ?? 'Update available') : (t('settings.cli.changeVersion') ?? 'Upgrade/Downgrade')}
               </Button>
             {/if}
           </div>
@@ -264,7 +277,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
             <div
               class="flex text-[var(--pd-invert-content-card-text)] font-bold text-sm items-center"
               aria-label="no-cli-version">
-              No version detected
+              {t('settings.cli.noVersion') ?? 'No version detected'}
             </div>
             {#if cliTool.canInstall}
               <Button
@@ -276,10 +289,10 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                     await install(cliTool);
                   }
                 }}
-                title={`${cliTool.displayName} will be installed`}
+                title={(t('settings.cli.willInstall') ?? '{name} will be installed').replace('{name}', cliTool.displayName)}
                 disabled={!cliTool.canInstall}
-                aria-label={`Install ${cliTool.displayName}`}>
-                Install
+                aria-label={`${t('settings.install') ?? 'Install'} ${cliTool.displayName}`}>
+                {t('settings.install') ?? 'Install'}
               </Button>
             {/if}
           </div>
@@ -295,8 +308,8 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
         type="link"
         padding="p-0"
         class="ml-1 text-sm"
-        aria-label="Check why it failed: {cliTool.displayName}"
-        on:click={showTaskManager}>Check why it failed</Button>
+        aria-label="{t('settings.cli.checkFailure') ?? 'Check why it failed'}: {cliTool.displayName}"
+        on:click={showTaskManager}>{t('settings.cli.checkFailure') ?? 'Check why it failed'}</Button>
     </div>
   {/if}
 </div>

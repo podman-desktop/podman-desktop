@@ -5,6 +5,7 @@ import { SettingsNavItem } from '@podman-desktop/ui-svelte';
 import { onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
 import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
@@ -138,6 +139,12 @@ function scheduleNavigationWidthUpdate(): void {
   tick().then(updateNavigationWidth).catch(updateNavigationWidth);
 }
 
+$effect(() => {
+  // Track language changes and measure after translated labels have rendered.
+  t('settings.title');
+  scheduleNavigationWidthUpdate();
+});
+
 function updateDockerCompatibility(): void {
   window
     .getConfigurationValue<boolean>(`${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`)
@@ -267,7 +274,7 @@ onMount(() => {
     <div class="pt-4 px-3 mb-5">
       <p
         class="text-xl font-semibold text-[color:var(--pd-secondary-nav-header-text)] border-l-[4px] border-transparent">
-        Settings
+        {t('settings.title') ?? 'Settings'}
       </p>
     </div>
   </div>
@@ -276,7 +283,7 @@ onMount(() => {
       {#if navItem.visible}
         {@const visibleChildren = navItem.children?.filter(c => c.visible) ?? []}
         <SettingsNavItem
-          title={navItem.title}
+          title={t(`settings.navigation.${navItem.title}`) ?? navItem.title}
           href={navItem.href}
           icon={navItem.icon}
           section={visibleChildren.length > 0}
@@ -286,7 +293,7 @@ onMount(() => {
         {#if sectionExpanded[navItem.title]}
           {#each visibleChildren as child (child.href)}
             <SettingsNavItem
-              title={child.title}
+              title={t(`settings.navigation.${child.title}`) ?? child.title}
               href={child.href}
               icon={child.icon}
               child={true}
@@ -300,7 +307,7 @@ onMount(() => {
     <!-- Default configuration properties start -->
     {#each configProperties as [configSection, configItems] (configSection)}
       <SettingsNavItem
-        title={configSection}
+        title={t(`${configSection}.title`) ?? configSection}
         href="/preferences/default/{configSection}"
         icon={PreferencesIcon}
         section={configItems.length > 0}
@@ -310,7 +317,7 @@ onMount(() => {
       {#if sectionExpanded[configSection]}
         {#each sortItems(configItems) as configItem (configItem.id)}
           <SettingsNavItem
-            title={configItem.title}
+            title={t(`${configItem.id}.title`) ?? configItem.title}
             href="/preferences/default/{configItem.id}"
             child={true}
             onClick={scheduleNavigationWidthUpdate}
@@ -324,7 +331,7 @@ onMount(() => {
       icon='fas fa-crosshairs'
       iconRight={ShortcutArrowIcon}
       iconRightAlign="end"
-      title="Troubleshooting"
+      title={t('settings.navigation.Troubleshooting') ?? 'Troubleshooting'}
       href="/troubleshooting/repair-connections"
       onClick={scheduleNavigationWidthUpdate}
       selected={meta.url === '/troubleshooting/repair-connections'}

@@ -5,6 +5,7 @@ import { Link } from '@podman-desktop/ui-svelte';
 import DetailsCell from '/@/lib/details/DetailsCell.svelte';
 import DetailsTable from '/@/lib/details/DetailsTable.svelte';
 import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { handleNavigation } from '/@/navigation';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
@@ -29,51 +30,51 @@ function openContainer(containerID: string): void {
 
 <DetailsTable>
   <tr>
-    <DetailsTitle>Details</DetailsTitle>
+    <DetailsTitle>{t('resources.details') ?? 'Details'}</DetailsTitle>
   </tr>
   <tr>
-    <DetailsCell>Name</DetailsCell>
+    <DetailsCell>{t('resources.name') ?? 'Name'}</DetailsCell>
     <DetailsCell>{volume.name}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Size</DetailsCell>
+    <DetailsCell>{t('resources.size') ?? 'Size'}</DetailsCell>
     <DetailsCell>{volume.humanSize}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Age</DetailsCell>
+    <DetailsCell>{t('resources.age') ?? 'Age'}</DetailsCell>
     <DetailsCell>{volume.age}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Created</DetailsCell>
+    <DetailsCell>{t('resources.created') ?? 'Created'}</DetailsCell>
     <DetailsCell>{createdTime}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Status</DetailsCell>
-    <DetailsCell>{volume.status.toLowerCase()}</DetailsCell>
+    <DetailsCell>{t('resources.status') ?? 'Status'}</DetailsCell>
+    <DetailsCell>{t(`resources.status.${volume.status.toLowerCase()}`) ?? volume.status.toLowerCase()}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Mount Point</DetailsCell>
+    <DetailsCell>{t('resources.mount-point') ?? 'Mount Point'}</DetailsCell>
     <DetailsCell>{volume.mountPoint}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Scope</DetailsCell>
+    <DetailsCell>{t('resources.scope') ?? 'Scope'}</DetailsCell>
     <DetailsCell>{volume.scope}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Driver</DetailsCell>
+    <DetailsCell>{t('resources.driver') ?? 'Driver'}</DetailsCell>
     <DetailsCell>{volume.driver}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Engine ID</DetailsCell>
+    <DetailsCell>{t('resources.engine-id') ?? 'Engine ID'}</DetailsCell>
     <DetailsCell>{volume.engineId}</DetailsCell>
   </tr>
   <tr>
-    <DetailsCell>Engine Name</DetailsCell>
+    <DetailsCell>{t('resources.engine-name') ?? 'Engine Name'}</DetailsCell>
     <DetailsCell>{volume.engineName}</DetailsCell>
   </tr>
   {#if volume.containersUsage.length > 0}
     <tr>
-      <DetailsTitle>Container Usage</DetailsTitle>
+      <DetailsTitle>{t('resources.container-usage') ?? 'Container Usage'}</DetailsTitle>
     </tr>
     {#each volume.containersUsage as container (container.id)}
       <tr>

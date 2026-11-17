@@ -16,6 +16,7 @@ import { get, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import AuditMessageBox from '/@/lib/ui/AuditMessageBox.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
@@ -441,7 +442,7 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
         typeof error.message === 'string' &&
         error.message.indexOf('Execution cancelled') >= 0
       ) {
-        errorMessage = 'Action cancelled. See logs for more details';
+        errorMessage = t('settings.connection.cancelled') ?? 'Action cancelled. See logs for more details';
         return;
       }
       errorMessage = String(error);
@@ -515,14 +516,14 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
 
 <div class="flex flex-col w-full h-full overflow-hidden">
   {#if operationSuccessful && !disableEmptyScreen}
-    <EmptyScreen icon={faCubes} title={operationLabel} message="Successful operation">
+    <EmptyScreen icon={faCubes} title={t(`settings.${operationLabel.toLowerCase()}`) ?? operationLabel} message={t('settings.connection.success') ?? 'Successful operation'}>
       <Button
         class="py-3"
         on:click={async (): Promise<void> => {
           await cleanup();
           router.goto('/preferences/resources');
         }}>
-        Go back to resources
+        {t('settings.connection.back') ?? 'Go back to resources'}
       </Button>
     </EmptyScreen>
   {:else}
@@ -537,20 +538,20 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
             <div class="mt-2 mb-8">
               <div class="mt-2 float-right">
                 <button
-                  aria-label="Show Logs"
+                  aria-label={t('settings.showLogs') ?? 'Show Logs'}
                   class="text-xs mr-3 hover:underline"
                   onclick={(): boolean => (showLogs = !showLogs)}
-                  >Show Logs <i class="fas {showLogs ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i
+                  >{t('settings.showLogs') ?? 'Show Logs'} <i class="fas {showLogs ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i
                   ></button>
                 <button
-                  aria-label="Cancel {operationLabel.toLowerCase()}"
+                  aria-label={t('settings.cancel') ?? `Cancel ${operationLabel.toLowerCase()}`}
                   class="text-xs {errorMessage ? 'mr-3' : ''} hover:underline {tokenId ? '' : 'hidden'}"
                   disabled={!tokenId}
-                  onclick={cancelCreation}>Cancel</button>
+                  onclick={cancelCreation}>{t('settings.cancel') ?? 'Cancel'}</button>
                 <button
                   class="text-xs hover:underline {inProgress ? 'hidden' : ''}"
-                  aria-label="Close panel"
-                  onclick={closePanel}>Close</button>
+                  aria-label={t('settings.close') ?? 'Close panel'}
+                  onclick={closePanel}>{t('settings.close') ?? 'Close'}</button>
               </div>
             </div>
             <div id="log" class="pt-2 h-80 {showLogs ? '' : 'hidden'}">
@@ -580,10 +581,10 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
               <div class="mb-2.5">
                 <div class="flex flex-row items-center h-fit">
                   {#if configurationKey.description}
-                    {configurationKey.description}:
+                    {t(`${configurationKey.id}.description`) ?? configurationKey.description}:
                   {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}
                     <div class="[&>section]:pb-0 [&_p]:text-inherit">
-                      <Markdown markdown={configurationKey.markdownDescription} />
+                      <Markdown markdown={t(`${configurationKey.id}.markdownDescription`) ?? configurationKey.markdownDescription} />
                     </div>
                   {/if}
                   {#if configurationKey.format === 'memory' || configurationKey.format === 'diskSize' || configurationKey.format === 'cpu'}
@@ -610,10 +611,10 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
             <div class="w-full">
               <ButtonRow>
                 {#if !hideCloseButton}
-                  <Button type="link" aria-label="Close page" on:click={closePage}>Close</Button>
+                  <Button type="link" aria-label={t('settings.closePage') ?? 'Close page'} on:click={closePage}>{t('settings.close') ?? 'Close'}</Button>
                 {/if}
                 <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl?.requestSubmit()}
-                  >{buttonLabel}</Button>
+                  >{t(`settings.${buttonLabel.toLowerCase()}`) ?? buttonLabel}</Button>
               </ButtonRow>
             </div>
           </form>

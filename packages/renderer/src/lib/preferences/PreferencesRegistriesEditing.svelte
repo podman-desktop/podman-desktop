@@ -8,6 +8,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
@@ -199,13 +200,16 @@ async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<
         error.message.includes('self signed certificate in certificate chain'))
     ) {
       showNewRegistryForm = false;
+      const addLabel = t('settings.add') ?? 'Add';
       const result = await window.showMessageBox({
-        title: 'Add Untrusted Registry?',
+        title: t('settings.registries.untrustedTitle') ?? 'Add Untrusted Registry?',
         type: 'warning',
-        message: 'The certificate for this registry is not trusted / verifiable. Would you like to still add it?',
-        buttons: ['Add', 'Cancel'],
+        message:
+          t('settings.registries.untrustedMessage') ??
+          'The certificate for this registry is not trusted / verifiable. Would you like to still add it?',
+        buttons: [addLabel, t('settings.cancel') ?? 'Cancel'],
       });
-      if (result?.response === 'Add') {
+      if (result?.response === addLabel) {
         registry.insecure = true;
       } else {
         setErrorResponse(registry.serverUrl, error.message);
@@ -247,7 +251,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
   {#snippet actions()}
     <div >
       <Button onclick={(): void => setNewRegistryFormVisible(true)} icon={faPlusCircle} disabled={showNewRegistryForm}>
-        Add registry
+        {t('settings.registries.add') ?? 'Add registry'}
       </Button>
     </div>
   {/snippet}
@@ -267,9 +271,9 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         class="flex w-full space-x-2 text-sm font-semibold text-[var(--pd-table-header-text)]"
         role="rowgroup"
         aria-label="header">
-        <div class="text-left py-4 uppercase w-2/5 min-w-0 pl-5" role="columnheader">Registry Location</div>
-        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader">Username</div>
-        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader">Password</div>
+        <div class="text-left py-4 uppercase w-2/5 min-w-0 pl-5" role="columnheader">{t('settings.registries.location') ?? 'Registry Location'}</div>
+        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader">{t('settings.username') ?? 'Username'}</div>
+        <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader">{t('settings.password') ?? 'Password'}</div>
         <div class="text-left py-4 uppercase w-1/5 min-w-0" role="columnheader"></div>
       </div>
 
@@ -303,9 +307,9 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
             <!-- Username -->
             <div class="w-1/5 min-w-0 truncate" role="cell">
               {#if originRegistries.some(r => r.serverUrl === registry.serverUrl)}
-                <Input placeholder="Username" aria-label="Username" bind:value={registry.username} />
+                <Input placeholder={t('settings.username') ?? 'Username'} aria-label={t('settings.username') ?? 'Username'} bind:value={registry.username} />
               {:else if !registry.username && !registry.secret}
-                <Button onclick={(): void => markRegistryAsModified(registry)}>Login now</Button>
+                <Button onclick={(): void => markRegistryAsModified(registry)}>{t('settings.loginNow') ?? 'Login now'}</Button>
               {:else}
                 {registry.alias ?? registry.username}
               {/if}
@@ -324,8 +328,8 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                     )} />
               </div>
               <div class="w-1/5 min-w-0 flex flex-row items-center justify-end space-x-1" role="cell">
-                <Button onclick={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>Login</Button>
-                <Button onclick={(): void => markRegistryAsClean(registry)} type="link">Cancel</Button>
+                <Button onclick={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>{t('settings.login') ?? 'Login'}</Button>
+                <Button onclick={(): void => markRegistryAsClean(registry)} type="link">{t('settings.cancel') ?? 'Cancel'}</Button>
               </div>
             {:else}
               <div class="w-1/5 min-w-0" role="cell">
@@ -349,8 +353,8 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                       type="button"
                       class="justify-center"
                       id="hide-password"
-                      title="Hide password"
-                      aria-label="Hide password"
+                      title={t('settings.hidePassword') ?? 'Hide password'}
+                      aria-label={t('settings.hidePassword') ?? 'Hide password'}
                       aria-expanded="true"
                       aria-haspopup="true"
                       onclick={(): void => setPasswordForRegistryVisible(registry, false)}>
@@ -361,8 +365,8 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                       type="button"
                       class="justify-center"
                       id="show-password"
-                      title="Show password"
-                      aria-label="Show password"
+                      title={t('settings.showPassword') ?? 'Show password'}
+                      aria-label={t('settings.showPassword') ?? 'Show password'}
                       aria-expanded="true"
                       aria-haspopup="true"
                       onclick={(): void => setPasswordForRegistryVisible(registry, true)}>
@@ -375,16 +379,16 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                 <!-- containerDesktopAPI.Registry menu start -->
                 <DropdownMenu>
                   <DropdownMenu.Item
-                    title="Login"
+                    title={t('settings.login') ?? 'Login'}
                     onClick={(): void => markRegistryAsModified(registry)}
                     hidden={!!registry.username && !!registry.secret}
                     icon={faUser} />
                   <DropdownMenu.Item
-                    title="Edit password"
+                    title={t('settings.editPassword') ?? 'Edit password'}
                     onClick={(): void => markRegistryAsModified(registry)}
                     hidden={!registry.username && !registry.secret}
                     icon={faUserPen} />
-                  <DropdownMenu.Item title="Remove" onClick={async (): Promise<void> => await removeExistingRegistry(registry)} icon={faTrash} />
+                  <DropdownMenu.Item title={t('settings.remove') ?? 'Remove'} onClick={async (): Promise<void> => await removeExistingRegistry(registry)} icon={faTrash} />
                 </DropdownMenu>
               </div>
             {/if}
@@ -426,7 +430,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
             </div>
             <div class="w-1/5 min-w-0" role="cell">
               {#if listedSuggestedRegistries[i]}
-                <Input placeholder="Username" aria-label="Username" bind:value={newRegistryRequest.username} />
+                <Input placeholder={t('settings.username') ?? 'Username'} aria-label={t('settings.username') ?? 'Username'} bind:value={newRegistryRequest.username} />
               {/if}
             </div>
             <div class="w-1/5 min-w-0" role="cell">
@@ -447,14 +451,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                   onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}
                   disabled={!newRegistryRequest.serverUrl || !newRegistryRequest.username || !newRegistryRequest.secret}
                   inProgress={loggingIn}>
-                  Login
+                  {t('settings.login') ?? 'Login'}
                 </Button>
               {/if}
 
               {#if listedSuggestedRegistries[i]}
-                <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
+                <Button onclick={(): void => hideSuggestedRegistries()} type="link">{t('settings.cancel') ?? 'Cancel'}</Button>
               {:else}
-                <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
+                <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>{t('settings.configure') ?? 'Configure'}</Button>
               {/if}
             </div>
           </div>
@@ -475,25 +479,25 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 
 {#if showNewRegistryForm}
   <Dialog
-    title="Add registry"
+    title={t('settings.registries.add') ?? 'Add registry'}
     onclose={(): void => {
       setNewRegistryFormVisible(false);
     }}>
     {#snippet content()}
         <div  class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
         <div>
-          <div>URL (HTTPS only)</div>
+          <div>{t('settings.registries.url') ?? 'URL (HTTPS only)'}</div>
           <Input placeholder="https://registry.io" bind:value={newRegistryRequest.serverUrl}></Input>
         </div>
 
         <div class="flex flex-row space-x-5 justify-stretch w-full">
           <div class="w-full">
-            <div>Username</div>
-            <Input placeholder="Username" bind:value={newRegistryRequest.username}></Input>
+            <div>{t('settings.username') ?? 'Username'}</div>
+            <Input placeholder={t('settings.username') ?? 'Username'} bind:value={newRegistryRequest.username}></Input>
           </div>
 
           <div class="w-full">
-            <div>Password</div>
+            <div>{t('settings.password') ?? 'Password'}</div>
             <PasswordInput
               id="newRegistryRequest"
               bind:password={newRegistryRequest.secret}
@@ -511,14 +515,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
       {/snippet}
     {#snippet buttons()}
       
-        <Button type="link" onclick={(): boolean => (showNewRegistryForm = false)}>Cancel</Button>
+        <Button type="link" onclick={(): boolean => (showNewRegistryForm = false)}>{t('settings.cancel') ?? 'Cancel'}</Button>
         <Button
           type="primary"
           disabled={!newRegistryRequest.serverUrl.trim() ||
             !newRegistryRequest.username.trim() ||
             !newRegistryRequest.secret.trim()}
           inProgress={loggingIn}
-          onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}>Add</Button>
+          onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}>{t('settings.add') ?? 'Add'}</Button>
       
       {/snippet}
   </Dialog>

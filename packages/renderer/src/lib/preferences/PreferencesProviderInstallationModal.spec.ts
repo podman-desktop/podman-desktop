@@ -19,9 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@desktop-framework/api';
-import { render } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import PreferencesProviderInstallationModal from './PreferencesProviderInstallationModal.svelte';
 
@@ -71,6 +73,30 @@ const providerInfo: ProviderInfo = {
 
 const closeCallback = vi.fn();
 const doCreateNew = vi.fn();
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('localizes the creation target but retains the original display name when retrying', async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'settings.provider.create': '新しい{name}を作成',
+    'settings.provider.podman.creationDisplayName': 'Podmanマシン',
+    'settings.retry': '再試行',
+  });
+  await initTranslations();
+  render(PreferencesProviderInstallationModal, {
+    providerToBeInstalled: { provider: providerInfo, displayName: 'Podman machine' },
+    closeCallback,
+    doCreateNew,
+    preflightChecks: [],
+  });
+
+  screen.getByRole('heading', { name: '新しいPodmanマシンを作成' });
+  await userEvent.click(screen.getByRole('button', { name: '再試行' }));
+  expect(doCreateNew).toHaveBeenCalledWith(providerInfo, 'Podman machine');
+});
 
 test('Expect to call closeCallback if clicking on Close', async () => {
   const { findByRole } = render(PreferencesProviderInstallationModal, {

@@ -18,6 +18,9 @@ import { router } from 'tinro';
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
 import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
+import { getFilteredEmptyLabels } from '/@/lib/i18n/filtered-empty-labels';
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
@@ -182,7 +185,7 @@ const columns = [
 
 const row = new TableRow<VolumeInfoUI>({
   selectable: (volume): boolean => volume.status === 'UNUSED',
-  disabledText: 'Volume is used by a container',
+  disabledText: t('resources.volume-is-used-by-a-container') ?? 'Volume is used by a container',
 });
 /**
  * Utility function for the Table to get the key to use for each item
@@ -199,7 +202,7 @@ function label(obj: VolumeInfoUI): string {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="volumes">
+<NavPage bind:searchTerm={searchTerm} title={t('resources.volumes') ?? 'volumes'} searchPlaceholder={t('common.search.placeholder')} searchAriaLabel={t('common.search')}>
   {#snippet additionalActions()}
     {#if $volumeListInfos.length > 0}
       <Prune type="volumes" engines={enginesList} />
@@ -208,13 +211,13 @@ function label(obj: VolumeInfoUI): string {
         type="secondary"
         inProgress={fetchDataInProgress}
         on:click={fetchUsageData}
-        title="Gather sizes for volumes. It can take a while..."
+        title={t('resources.gather-sizes-for-volumes-it-can-take-a-while') ?? 'Gather sizes for volumes. It can take a while...'}
         icon={faPieChart}
-        aria-label="Gather volume sizes">Gather volume sizes</Button>
+        aria-label={t('resources.gather-volume-sizes') ?? 'Gather volume sizes'}>{t('resources.gather-volume-sizes') ?? 'Gather volume sizes'}</Button>
     {/if}
     {#if providerConnections.length > 0}
-      <Button type="primary" on:click={gotoCreateVolume} icon={faPlusCircle} title="Create a volume" aria-label="Create"
-        >Create</Button>
+      <Button type="primary" on:click={gotoCreateVolume} icon={faPlusCircle} title={t('resources.create-a-volume') ?? 'Create a volume'} aria-label={t('resources.create') ?? 'Create'}
+        >{t('resources.create') ?? 'Create'}</Button>
     {/if}
   {/snippet}
 
@@ -226,12 +229,15 @@ function label(obj: VolumeInfoUI): string {
           withBulkConfirmation(
             deleteSelectedVolumes,
             `delete ${selectedItemsNumber} volume${selectedItemsNumber > 1 ? 's' : ''}`,
-            { title: 'Delete Volumes?', variant: 'delete' }
+            {
+              title: t('resources.delete-volumes') ?? 'Delete Volumes?', variant: 'delete',
+              message: t('resources.confirm-delete-selected', { count: selectedItemsNumber }) ?? `Are you sure you want to delete ${selectedItemsNumber} volume${selectedItemsNumber > 1 ? 's' : ''}?`,
+            }
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title={t('resources.delete-selecteditemsnumber-selected-items', { selectedItemsNumber: selectedItemsNumber }) ?? `Delete ${selectedItemsNumber} selected items`}
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>{t('resources.selected-items', { count: selectedItemsNumber }) ?? `On ${selectedItemsNumber} selected items.`}</span>
     {/if}
   {/snippet}
 
@@ -242,14 +248,15 @@ function label(obj: VolumeInfoUI): string {
       <NoContainerEngineEmptyScreen />
     {:else if $filtered.length === 0}
       {#if searchTerm}
-        <FilteredEmptyScreen icon={VolumeIcon} kind="volumes" bind:searchTerm={searchTerm} />
+        <FilteredEmptyScreen labels={getFilteredEmptyLabels('volumes', searchTerm)} icon={VolumeIcon} kind="volumes" bind:searchTerm={searchTerm} />
       {:else}
         <VolumeEmptyScreen />
       {/if}
     {:else if filteredVolumes.length === 0 && selectedEnvironment}
-      <FilteredEmptyScreen icon={VolumeIcon} kind="volumes" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
+      <FilteredEmptyScreen labels={getFilteredEmptyLabels('volumes', t('common.environment') ?? 'selected environment')} icon={VolumeIcon} kind="volumes" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
+        labels={getTableLabels()}
         kind="volume"
         bind:selectedItemsNumber={selectedItemsNumber}
         data={filteredVolumes}

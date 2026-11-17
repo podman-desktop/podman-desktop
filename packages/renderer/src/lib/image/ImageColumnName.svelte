@@ -1,6 +1,7 @@
 <script lang="ts">
 import { NavigationPage } from '@desktop-framework/api';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Badge from '/@/lib/ui/Badge.svelte';
 import { handleNavigation } from '/@/navigation';
 
@@ -24,7 +25,7 @@ function openDetails(image: ImageInfoUI): void {
   <div class="flex flex-row gap-1 items-center max-w-full">
     <div class="text-[var(--pd-table-body-text-highlight)] overflow-hidden text-ellipsis">
       {object.name}
-      {object.isManifest ? ' (manifest)' : ''}
+      {object.isManifest ? (t('resources.manifest-suffix') ?? ' (manifest)') : ''}
     </div>
     {#if object.badges.length}
       {#each object.badges as badge, index (index)}

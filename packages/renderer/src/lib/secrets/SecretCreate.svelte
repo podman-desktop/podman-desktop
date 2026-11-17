@@ -4,6 +4,7 @@ import { Button, ButtonRow, ErrorMessage, Input } from '@podman-desktop/ui-svelt
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import SecretIcon from '/@/lib/images/SecretIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { handleNavigation } from '/@/navigation';
@@ -57,7 +58,7 @@ function close(): void {
 }
 </script>
 
-<EngineFormPage title="Create a secret" showEmptyScreen={providerConnections.length === 0}>
+<EngineFormPage title={t('kubernetes.resources.secrets.create') ?? 'Create a secret'} showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
     <Icon icon={SecretIcon} size={27} />
   {/snippet}
@@ -66,7 +67,7 @@ function close(): void {
       {#if providerConnections.length > 1}
         <div>
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-            >Container Engine <span class="text-(--pd-state-error)">*</span></label>
+            >{t('kubernetes.resources.containerEngine') ?? 'Container Engine'} <span class="text-(--pd-state-error)">*</span></label>
           <ContainerConnectionDropdown
             id="providerChoice"
             name="providerChoice"
@@ -77,32 +78,32 @@ function close(): void {
 
       <div>
         <label for="secretName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-          >Name <span class="text-(--pd-state-error)">*</span></label>
+          >{t('kubernetes.resources.name') ?? 'Name'} <span class="text-(--pd-state-error)">*</span></label>
         <Input
           bind:value={secretCreateOptions.name}
           name="secretName"
           id="secretName"
-          placeholder="Secret name"
+          placeholder={t('kubernetes.resources.secrets.name') ?? 'Secret name'}
           required
           class="w-full" />
       </div>
 
       <div>
         <label for="secretData" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-          >Data <span class="text-(--pd-state-error)">*</span></label>
+          >{t('kubernetes.resources.data') ?? 'Data'} <span class="text-(--pd-state-error)">*</span></label>
         <Input
           bind:value={secretCreateOptions.data}
           name="secretData"
           id="secretData"
           type="password"
-          placeholder="Secret data"
+          placeholder={t('kubernetes.resources.secrets.data') ?? 'Secret data'}
           required
           class="w-full" />
       </div>
 
       <ButtonRow>
-        <Button type="secondary" onclick={close}>Cancel</Button>
-        <Button disabled={!valid || loading} inProgress={loading} onclick={createSecret}>Create</Button>
+        <Button type="secondary" onclick={close}>{t('common.cancel') ?? 'Cancel'}</Button>
+        <Button disabled={!valid || loading} inProgress={loading} onclick={createSecret}>{t('kubernetes.resources.create') ?? 'Create'}</Button>
       </ButtonRow>
 
       {#if createError}

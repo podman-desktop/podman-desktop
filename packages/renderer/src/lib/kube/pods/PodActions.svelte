@@ -5,6 +5,7 @@ import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
@@ -56,22 +57,22 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
-  title="Delete Pod"
-  onClick={():void => withConfirmation(deletePod, `delete pod ${pod.name}`, { title: 'Delete Pod?', variant: 'delete' })}
+  title={t('workloads.deletePod') ?? 'Delete Pod'}
+  onClick={():void => withConfirmation(deletePod, `delete pod ${pod.name}`, { title: t('workloads.deletePodTitle') ?? 'Delete Pod?', message: t('workloads.deletePodMessage', { name: pod.name }) ?? `Are you sure you want to delete pod ${pod.name}?`, variant: 'delete' })}
   icon={faTrash}
   detailed={detailed}/>
 
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
 <ActionsStyle>
   <ListItemButtonIcon
-    title="Restart Pod"
+    title={t('workloads.restartPod') ?? 'Restart Pod'}
     onClick={restartPod}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowsRotate} />
     {#if openingKubernetesUrls.size === 0}
       <ListItemButtonIcon
-        title="Open Browser"
+        title={t('workloads.openBrowser') ?? 'Open Browser'}
         menu={dropdownMenu}
         enabled={false}
         hidden={dropdownMenu}
@@ -79,7 +80,7 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
         icon={faExternalLinkSquareAlt} />
     {:else if openingKubernetesUrls.size === 1}
       <ListItemButtonIcon
-        title="Open {[...openingKubernetesUrls][0][0]}"
+        title={t('workloads.openNamed', { name: [...openingKubernetesUrls][0][0] }) ?? `Open ${[...openingKubernetesUrls][0][0]}`}
         onClick={(): Promise<void> => window.openExternal([...openingKubernetesUrls][0][1])}
         menu={dropdownMenu}
         enabled={pod.status === 'RUNNING'}
@@ -88,13 +89,13 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
         icon={faExternalLinkSquareAlt} />
     {:else if openingKubernetesUrls.size > 1}
       <DropdownMenu
-        title="Open Kubernetes Routes"
+        title={t('workloads.openKubernetesRoutes') ?? 'Open Kubernetes Routes'}
         icon={faExternalLinkSquareAlt}
         hidden={dropdownMenu}
         shownAsMenuActionItem={true}>
         {#each Array.from(openingKubernetesUrls) as [routeName, routeHost] (routeName)}
           <ListItemButtonIcon
-            title="Open {routeName}"
+            title={t('workloads.openNamed', { name: routeName }) ?? `Open ${routeName}`}
             onClick={(): Promise<void>  => window.openExternal(routeHost)}
             menu={!dropdownMenu}
             enabled={pod.status === 'RUNNING'}

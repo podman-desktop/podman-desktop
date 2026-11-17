@@ -4,6 +4,8 @@ import { faCheck, faPencil, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import FloatNumberItem from './FloatNumberItem.svelte';
 
 interface Props {
@@ -87,14 +89,14 @@ function onCancelClick(e: Event): void {
   {/if}
 
   {#if !editingInProgress}
-    <Button on:click={onSwitchToInProgress} title="Edit" class="ml-1" padding="p-2" type="link">
+    <Button on:click={onSwitchToInProgress} title={t('settings.edit') ?? 'Edit'} class="ml-1" padding="p-2" type="link">
       <Icon size="0.8x" icon={faPencil} />
     </Button>
   {:else}
-    <Button on:click={onCancelClick} title="Cancel" class="ml-3" padding="p-2" type="link">
+    <Button on:click={onCancelClick} title={t('settings.cancel') ?? 'Cancel'} class="ml-3" padding="p-2" type="link">
       <Icon size="0.9x" class="text-[var(--pd-state-error)]" icon={faXmark} />
     </Button>
-    <Button on:click={onSaveClick} title="Save" padding="p-2" disabled={disableSaveButton} type="link">
+    <Button on:click={onSaveClick} title={t('settings.save') ?? 'Save'} padding="p-2" disabled={disableSaveButton} type="link">
       <Icon size="0.9x" class={`${disableSaveButton ? 'text-[var(--pd-button-disabled-text)]' : 'text-[var(--pd-state-success)]'}`} icon={faCheck} />
     </Button>
   {/if}

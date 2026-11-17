@@ -4,6 +4,7 @@ import type { V1Secret } from '@kubernetes/client-node';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   artifact?: V1Secret;
@@ -14,19 +15,19 @@ let { artifact }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Details</Title>
+    <Title>{t('workloads.details') ?? 'Details'}</Title>
   </tr>
   <tr>
-    <Cell>Type</Cell>
+    <Cell>{t('workloads.type') ?? 'Type'}</Cell>
     <Cell>{artifact.type}</Cell>
   </tr>
   <tr>
-    <Cell>Immutable</Cell>
+    <Cell>{t('workloads.immutable') ?? 'Immutable'}</Cell>
     <Cell>{artifact.immutable ? 'Yes' : 'No'}</Cell>
   </tr>
   {#if artifact.data}
     <tr>
-      <Subtitle>Data</Subtitle>
+      <Subtitle>{t('workloads.data') ?? 'Data'}</Subtitle>
     </tr>
     {#each Object.entries(artifact.data) as [key, value] (key)}
       <tr>

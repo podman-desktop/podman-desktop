@@ -4,6 +4,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { EventStoreInfo } from '/@/stores/event-store';
 import { allEventStoresInfo } from '/@/stores/event-store-manager';
 
@@ -28,10 +29,10 @@ onDestroy(() => {
 <div class="flex w-full h-fit m-4 flex-col bg-[var(--pd-content-card-bg)] p-4 rounded-lg">
   <div class="flex flex-row align-middle items-center w-full mb-4">
     <Icon size="1.875x" class="pr-3" icon={faDatabase} />
-    <div role="status" aria-label="stores" class="text-xl">Stores</div>
+    <div role="status" aria-label={t('management.stores') ?? 'stores'} class="text-xl">{t('management.stores') ?? 'Stores'}</div>
   </div>
 
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4" role="list" aria-label="stores list">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4" role="list" aria-label={t('management.stores.list') ?? 'stores list'}>
     {#each allEventstores as eventStore (eventStore.name)}
       <TroubleshootingPageStore eventStoreInfo={eventStore} />
     {/each}

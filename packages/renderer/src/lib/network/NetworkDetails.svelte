@@ -2,6 +2,7 @@
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
@@ -46,14 +47,14 @@ $effect(() => {
       <NetworkActions object={network} detailed={true} />
     {/snippet}
     {#snippet tabsSnippet()}
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title={t('resources.summary') ?? 'Summary'} selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title={t('resources.inspect') ?? 'Inspect'} selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
     {/snippet}
     {#snippet contentSnippet()}
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+      <Route path="/summary" breadcrumb={t('resources.summary') ?? 'Summary'} navigationHint="tab">
         <NetworkDetailsSummary network={network} />
       </Route>
-      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+      <Route path="/inspect" breadcrumb={t('resources.inspect') ?? 'Inspect'} navigationHint="tab">
         <NetworkDetailsInspect network={network} />
       </Route>
     {/snippet}

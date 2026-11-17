@@ -3,6 +3,7 @@ import type { V1NodeStatus } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import ConditionsTable from './ConditionsTable.svelte';
 
@@ -16,61 +17,61 @@ let { artifact }: Props = $props();
 {#if artifact}
   {#if artifact.nodeInfo}
     <tr>
-      <Title>Node Info</Title>
+      <Title>{t('workloads.nodeInfo') ?? 'Node Info'}</Title>
     </tr>
     <tr>
-      <Cell>Architecture</Cell>
+      <Cell>{t('workloads.architecture') ?? 'Architecture'}</Cell>
       <Cell>{artifact.nodeInfo.architecture}</Cell>
     </tr>
     <tr>
-      <Cell>Boot ID</Cell>
+      <Cell>{t('workloads.bootId') ?? 'Boot ID'}</Cell>
       <Cell>{artifact.nodeInfo.bootID}</Cell>
     </tr>
     <tr>
-      <Cell>Container Runtime Version</Cell>
+      <Cell>{t('workloads.containerRuntimeVersion') ?? 'Container Runtime Version'}</Cell>
       <Cell>{artifact.nodeInfo.containerRuntimeVersion}</Cell>
     </tr>
     <tr>
-      <Cell>Kernel Version</Cell>
+      <Cell>{t('workloads.kernelVersion') ?? 'Kernel Version'}</Cell>
       <Cell>{artifact.nodeInfo.kernelVersion}</Cell>
     </tr>
     <tr>
-      <Cell>Kubelet Version</Cell>
+      <Cell>{t('workloads.kubeletVersion') ?? 'Kubelet Version'}</Cell>
       <Cell>{artifact.nodeInfo.kubeletVersion}</Cell>
     </tr>
     <tr>
-      <Cell>Kube Proxy Version</Cell>
+      <Cell>{t('workloads.kubeProxyVersion') ?? 'Kube Proxy Version'}</Cell>
       <Cell>{artifact.nodeInfo.kubeProxyVersion}</Cell>
     </tr>
     <tr>
-      <Cell>Machine ID</Cell>
+      <Cell>{t('workloads.machineId') ?? 'Machine ID'}</Cell>
       <Cell>{artifact.nodeInfo.machineID}</Cell>
     </tr>
     <tr>
-      <Cell>Operating System</Cell>
+      <Cell>{t('workloads.operatingSystem') ?? 'Operating System'}</Cell>
       <Cell>{artifact.nodeInfo.operatingSystem}</Cell>
     </tr>
     <tr>
-      <Cell>OS Image</Cell>
+      <Cell>{t('workloads.osImage') ?? 'OS Image'}</Cell>
       <Cell>{artifact.nodeInfo.osImage}</Cell>
     </tr>
     <tr>
-      <Cell>System UUID</Cell>
+      <Cell>{t('workloads.systemUuid') ?? 'System UUID'}</Cell>
       <Cell>{artifact.nodeInfo.systemUUID}</Cell>
     </tr>
   {/if}
   <tr>
-    <Title>Status</Title>
+    <Title>{t('workloads.status') ?? 'Status'}</Title>
   </tr>
   {#if artifact.conditions}
     <tr>
-      <Title>Conditions</Title>
+      <Title>{t('workloads.conditions') ?? 'Conditions'}</Title>
     </tr>
     <ConditionsTable conditions={artifact.conditions} />
   {/if}
   {#if artifact.addresses}
     <tr>
-      <Title>Addresses</Title>
+      <Title>{t('workloads.addresses') ?? 'Addresses'}</Title>
     </tr>
     {#each artifact.addresses as address, index (index)}
       <tr>
@@ -81,7 +82,7 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.capacity}
     <tr>
-      <Title>Capacity</Title>
+      <Title>{t('workloads.capacity') ?? 'Capacity'}</Title>
     </tr>
     {#each Object.entries(artifact.capacity) as [key, value] (key)}
       <tr>
@@ -92,7 +93,7 @@ let { artifact }: Props = $props();
   {/if}
   {#if artifact.allocatable}
     <tr>
-      <Title>Allocatable</Title>
+      <Title>{t('workloads.allocatable') ?? 'Allocatable'}</Title>
     </tr>
     {#each Object.entries(artifact.allocatable) as [key, value] (key)}
       <tr>

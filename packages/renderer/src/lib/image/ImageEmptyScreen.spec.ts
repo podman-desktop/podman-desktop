@@ -24,6 +24,7 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { providerInfos } from '/@/stores/providers';
 
 import ImageEmptyScreen from './ImageEmptyScreen.svelte';
@@ -34,8 +35,30 @@ beforeAll(() => {
   Object.defineProperty(window, 'pullImage', { value: pullImageMock });
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
+
+test('localizes the empty state and tooltip while preserving the image reference', async () => {
+  setup();
+  render(ImageEmptyScreen);
+  screen.getByText('No images');
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'resources.no-images': 'イメージがありません',
+    'resources.pull-your-first-image': '最初のイメージをプル',
+    'resources.pull-firstimagename-image': '{firstImageName} イメージをプル',
+  });
+  await initTranslations();
+  screen.getByText('イメージがありません');
+  screen.getByTitle('quay.io/podman/hello イメージをプル');
+  await userEvent.click(screen.getByRole('button', { name: '最初のイメージをプル' }));
+  expect(window.pullImage).toHaveBeenCalledWith(
+    expect.objectContaining({ name: 'test' }),
+    'quay.io/podman/hello',
+    expect.any(Function),
+  );
 });
 
 // set up a valid provider connection for pull image

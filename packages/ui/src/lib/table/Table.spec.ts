@@ -954,6 +954,47 @@ describe('Table column ordering persistence', () => {
     tablePersistence.storage = undefined;
   });
 
+  test('localizes display labels without changing column identifiers, sorting, or saved layout', async () => {
+    const storage = {
+      load: vi.fn().mockResolvedValue(columnItems),
+      save: vi.fn().mockResolvedValue(undefined),
+      reset: vi.fn().mockResolvedValue(columnItems),
+    };
+    tablePersistence.storage = storage;
+    const column = new TableColumn<{ name: string }>('Name', {
+      comparator: (a, b): number => a.name.localeCompare(b.name),
+    });
+    const { rerender } = render(Table<{ name: string }>, {
+      kind,
+      data: [{ name: 'Zulu' }, { name: 'Alpha' }],
+      columns: [column, new TableColumn('Age', {})],
+      row: { info: {} },
+      enableLayoutConfiguration: true,
+      defaultSortColumn: 'Name',
+      labels: {
+        column: (title: string): string => (title === 'Name' ? '名前' : '年齢'),
+        configureColumns: '表示列の設定',
+        resetColumns: '既定値に戻す',
+      },
+    });
+
+    const header = await screen.findByRole('columnheader', { name: '名前' });
+    expect(header.innerHTML).toContain('fa-sort-up');
+    const rows = await screen.findAllByRole('row');
+    expect(rows[1]).toHaveAccessibleName('Alpha');
+    expect(column.title).toBe('Name');
+    await vi.waitFor(() => expect(storage.save).toHaveBeenCalledWith(kind, columnItems));
+    expect(storage.load).toHaveBeenCalledWith(kind, ['Name', 'Age']);
+
+    await fireEvent.click(screen.getByRole('button', { name: '表示列の設定' }));
+    screen.getByRole('button', { name: '既定値に戻す' });
+    screen.getByRole('button', { name: '名前' });
+
+    await rerender({ labels: undefined });
+    await screen.findByRole('columnheader', { name: 'Name' });
+    expect(column.title).toBe('Name');
+  });
+
   test('saves each column reorder, including a second reorder with the same map size', async () => {
     const storage = {
       load: vi.fn().mockResolvedValue(columnItems),

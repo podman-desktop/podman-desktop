@@ -23,18 +23,51 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import CreateVolume from './CreateVolume.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
   volumeListInfos.set([]);
 });
 
 const createButtonTitle = 'Create';
+
+test('localizes creation and duplicate-name validation without changing the API name', async () => {
+  providerInfos.set([
+    {
+      id: 'podman',
+      name: 'podman',
+      containerConnections: [{ name: 'podman-machine-default', status: 'started' }],
+    } as unknown as ProviderInfo,
+  ]);
+  volumeListInfos.set([{ engineId: 'podman.podman-machine-default', name: 'existing-volume' } as VolumeInfoUI]);
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+    'resources.create-a-volume': 'ボリュームを作成',
+    'resources.volume-name': 'ボリューム名',
+    'resources.create': '作成',
+    'resources.volume-name-exists': '「{name}」は既に存在します。別の名前を指定してください。',
+  });
+  await initTranslations();
+  render(CreateVolume);
+  screen.getByText('ボリュームを作成');
+  const input = screen.getByRole('textbox', { name: 'ボリューム名' });
+  await userEvent.type(input, 'existing-volume');
+  screen.getByText('「existing-volume」は既に存在します。別の名前を指定してください。');
+  expect(screen.getByRole('button', { name: '作成' })).toBeDisabled();
+  await userEvent.clear(input);
+  await userEvent.type(input, 'my-volume');
+  await userEvent.click(screen.getByRole('button', { name: '作成' }));
+  expect(window.createVolume).toHaveBeenCalledWith(expect.objectContaining({ name: 'podman-machine-default' }), {
+    Name: 'my-volume',
+  });
+});
 
 test('Expect no create button with no providers', async () => {
   providerInfos.set([]);

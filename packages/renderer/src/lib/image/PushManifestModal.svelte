@@ -6,6 +6,7 @@ import { tick } from 'svelte';
 import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -49,7 +50,7 @@ async function pushManifestFinished(): Promise<void> {
 </script>
 
 <Dialog
-  title="Push manifest"
+  title={t('resources.push-manifest') ?? 'Push manifest'}
   onclose={(): void => {
     closeCallback();
     logsPush?.dispose();
@@ -58,10 +59,10 @@ async function pushManifestFinished(): Promise<void> {
     <div  class="flex flex-col leading-5 space-y-5">
       {#if !pushInProgress}
         <p class="text-sm">
-          Push manifest {manifestInfoToPush.name}
+          {t('resources.push-manifest') ?? 'Push manifest'} {manifestInfoToPush.name}
 
           {#if manifestInfoToPush.children && manifestInfoToPush.children.length > 0}
-            with {manifestInfoToPush.children.length} associated images
+            {t('resources.associated-images', { count: manifestInfoToPush.children.length }) ?? `with ${manifestInfoToPush.children.length} associated images`}
           {/if}
         </p>
       {/if}
@@ -74,7 +75,7 @@ async function pushManifestFinished(): Promise<void> {
   {#snippet buttons()}
   
       {#if !pushInProgress && !pushFinished}
-        <Button type="link" on:click={closeCallback}>Cancel</Button>
+        <Button type="link" on:click={closeCallback}>{t('resources.cancel') ?? 'Cancel'}</Button>
       {/if}
       {#if !pushFinished}
         <Button
@@ -83,10 +84,10 @@ async function pushManifestFinished(): Promise<void> {
           icon={faCircleArrowUp}
           on:click={pushManifest}
           inProgress={pushInProgress}>
-          Push manifest
+          {t('resources.push-manifest') ?? 'Push manifest'}
         </Button>
       {:else}
-        <Button on:click={pushManifestFinished} class="w-auto">Done</Button>
+        <Button on:click={pushManifestFinished} class="w-auto">{t('resources.done') ?? 'Done'}</Button>
       {/if}
     
   {/snippet}

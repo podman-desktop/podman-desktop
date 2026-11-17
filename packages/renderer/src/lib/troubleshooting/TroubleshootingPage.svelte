@@ -3,6 +3,7 @@ import { Page, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
@@ -25,7 +26,7 @@ onMount(async () => {
 });
 </script>
 
-<Page title="Troubleshooting" onclose={goToPreviousPage}>
+<Page title={t('management.troubleshooting.title') ?? 'Troubleshooting'} onclose={goToPreviousPage}>
   {#snippet icon()}
   <i class="fas fa-crosshairs fa-2x" aria-hidden="true"></i>
   {/snippet}
@@ -33,15 +34,15 @@ onMount(async () => {
   {#snippet tabs()}
   <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
     <Tab
-      title="Repair & connections"
+      title={t('management.troubleshooting.connections') ?? 'Repair & connections'}
       selected={isTabSelected($router.path, 'repair-connections')}
       url={getTabUrl($router.path, 'repair-connections')} />
-    <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+    <Tab title={t('management.logs') ?? 'Logs'} selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
     <Tab
-      title="Gather logs"
+      title={t('management.gatherLogs') ?? 'Gather logs'}
       selected={isTabSelected($router.path, 'gatherlogs')}
       url={getTabUrl($router.path, 'gatherlogs')} />
-    <Tab title="Stores" selected={isTabSelected($router.path, 'stores')} url={getTabUrl($router.path, 'stores')} />
+    <Tab title={t('management.stores') ?? 'Stores'} selected={isTabSelected($router.path, 'stores')} url={getTabUrl($router.path, 'stores')} />
     {#if displayKubernetes}
       <Tab title="Kubernetes" selected={isTabSelected($router.path, 'kubernetes')} url={getTabUrl($router.path, 'kubernetes')} />
     {/if}
@@ -49,19 +50,19 @@ onMount(async () => {
   {/snippet}
   {#snippet content()}
   <div class="flex w-full h-full overflow-auto">
-    <Route path="/repair-connections" breadcrumb="Repair & connections" navigationHint="tab">
+    <Route path="/repair-connections" breadcrumb={t('management.troubleshooting.connections') ?? 'Repair & connections'} navigationHint="tab">
       <TroubleshootingPageProviders />
     </Route>
 
-    <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
+    <Route path="/logs" breadcrumb={t('management.logs') ?? 'Logs'} navigationHint="tab">
       <TroubleshootingDevToolsConsoleLogs />
     </Route>
 
-    <Route path="/gatherlogs" breadcrumb="Gather logs" navigationHint="tab">
+    <Route path="/gatherlogs" breadcrumb={t('management.gatherLogs') ?? 'Gather logs'} navigationHint="tab">
       <TroubleshootingGatherLogs />
     </Route>
 
-    <Route path="/stores" breadcrumb="Stores" navigationHint="tab">
+    <Route path="/stores" breadcrumb={t('management.stores') ?? 'Stores'} navigationHint="tab">
       <TroubleshootingPageStores />
     </Route>
 

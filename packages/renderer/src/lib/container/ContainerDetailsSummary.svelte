@@ -8,6 +8,7 @@ import { router } from 'tinro';
 import DetailsCell from '/@/lib/details/DetailsCell.svelte';
 import DetailsTable from '/@/lib/details/DetailsTable.svelte';
 import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
@@ -37,13 +38,13 @@ function openPort(port: number): void {
     <div class="mx-5 p-3 flex flex-row items-center gap-2 rounded-md border border-[var(--pd-state-info)] bg-[var(--pd-content-card-bg)] text-[var(--pd-content-text)]">
       <Icon icon={faCircleInfo} class="text-[var(--pd-state-info)]" />
       <span>
-      This is an infra container that manages the pod's shared namespaces.
+      {t('resources.this-is-an-infra-container-that-manages-the-pod-s-shared-namespaces') ?? 'This is an infra container that manages the pod\'s shared namespaces.'}
       <Link
         class="inline-flex flex-row items-center"
         onclick={(): void => {
           window.openExternal('https://docs.podman.io/en/stable/markdown/podman-pod-create.1.html').catch(console.warn);
         }}>
-        Learn more <Icon class="ml-1 self-center" icon={faUpRightFromSquare} />
+        {t('resources.learn-more') ?? 'Learn more'} <Icon class="ml-1 self-center" icon={faUpRightFromSquare} />
       </Link>
     </span>
     </div>
@@ -51,10 +52,10 @@ function openPort(port: number): void {
 
   <DetailsTable>
     <tr>
-      <DetailsTitle>Details</DetailsTitle>
+      <DetailsTitle>{t('resources.details') ?? 'Details'}</DetailsTitle>
     </tr>
     <tr>
-      <DetailsCell>Name</DetailsCell>
+      <DetailsCell>{t('resources.name') ?? 'Name'}</DetailsCell>
       <DetailsCell>{container.name}</DetailsCell>
     </tr>
     <tr>
@@ -62,27 +63,27 @@ function openPort(port: number): void {
       <DetailsCell>{container.id}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Engine type</DetailsCell>
+      <DetailsCell>{t('resources.engine-type') ?? 'Engine type'}</DetailsCell>
       <DetailsCell>{container.engineType}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Engine ID</DetailsCell>
+      <DetailsCell>{t('resources.engine-id') ?? 'Engine ID'}</DetailsCell>
       <DetailsCell>{container.engineId}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Image</DetailsCell>
+      <DetailsCell>{t('resources.image') ?? 'Image'}</DetailsCell>
       <DetailsCell>
         <Link on:click={(): void => router.goto(container.imageHref ?? $router.path)}>{container.image}</Link>
       </DetailsCell>
     </tr>
     {#if container.command}
       <tr>
-        <DetailsCell>Command</DetailsCell>
+        <DetailsCell>{t('resources.command') ?? 'Command'}</DetailsCell>
         <DetailsCell>{container.command}</DetailsCell>
       </tr>
     {/if}
     <tr>
-      <DetailsCell>Ports</DetailsCell>
+      <DetailsCell>{t('resources.ports') ?? 'Ports'}</DetailsCell>
       {#if container.hasPublicPort}
         <DetailsCell>
           {#each container.ports as port, i (`${port.IP ?? ''}-${port.PublicPort}-${port.Type}`)}
@@ -95,25 +96,25 @@ function openPort(port: number): void {
           {/each}
         </DetailsCell>
       {:else}
-        <DetailsCell>N/A</DetailsCell>
+        <DetailsCell>{t('resources.n-a') ?? 'N/A'}</DetailsCell>
       {/if}
     </tr>
     <tr>
-      <DetailsCell>State</DetailsCell>
-      <DetailsCell>{container.state.toLowerCase()}</DetailsCell>
+      <DetailsCell>{t('resources.state') ?? 'State'}</DetailsCell>
+      <DetailsCell>{t(`resources.status.${container.state.toLowerCase()}`) ?? container.state.toLowerCase()}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Uptime</DetailsCell>
+      <DetailsCell>{t('resources.uptime') ?? 'Uptime'}</DetailsCell>
       <DetailsCell>{container.uptime === '' ? 'N/A' : container.uptime}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Started at</DetailsCell>
+      <DetailsCell>{t('resources.started-at') ?? 'Started at'}</DetailsCell>
       <DetailsCell>{startedTime}</DetailsCell>
     </tr>
     {#if Object.entries(container.labels).length > 0}
       <tr>
         <DetailsCell style="cursor-pointer flex items-center" onClick={(): boolean => (labelsDropdownOpen = !labelsDropdownOpen)}>
-          Labels
+          {t('resources.labels') ?? 'Labels'}
           <ChevronExpander expanded={labelsDropdownOpen} size="0.9x" class="ml-1" />
         </DetailsCell>
         <DetailsCell>
@@ -129,14 +130,14 @@ function openPort(port: number): void {
       </tr>
     {/if}
     <tr>
-      <DetailsTitle>Group</DetailsTitle>
+      <DetailsTitle>{t('resources.group') ?? 'Group'}</DetailsTitle>
     </tr>
     <tr>
-      <DetailsCell>Name</DetailsCell>
+      <DetailsCell>{t('resources.name') ?? 'Name'}</DetailsCell>
       <DetailsCell>{container.groupInfo.name}</DetailsCell>
     </tr>
     <tr>
-      <DetailsCell>Type</DetailsCell>
+      <DetailsCell>{t('resources.type') ?? 'Type'}</DetailsCell>
       <DetailsCell>{container.groupInfo.type}</DetailsCell>
     </tr>
     {#if container.groupInfo.id}
@@ -147,31 +148,31 @@ function openPort(port: number): void {
     {/if}
     {#if container.groupInfo.engineName}
       <tr>
-        <DetailsCell>Engine name</DetailsCell>
+        <DetailsCell>{t('resources.engine-name') ?? 'Engine name'}</DetailsCell>
         <DetailsCell>{container.groupInfo.engineName}</DetailsCell>
       </tr>
     {/if}
     {#if container.groupInfo.engineType}
       <tr>
-        <DetailsCell>Engine type</DetailsCell>
+        <DetailsCell>{t('resources.engine-type') ?? 'Engine type'}</DetailsCell>
         <DetailsCell>{container.groupInfo.engineType}</DetailsCell>
       </tr>
     {/if}
     {#if container.groupInfo.engineId}
       <tr>
-        <DetailsCell>Engine Id</DetailsCell>
+        <DetailsCell>{t('resources.engine-id') ?? 'Engine Id'}</DetailsCell>
         <DetailsCell>{container.groupInfo.engineId}</DetailsCell>
       </tr>
     {/if}
     {#if container.groupInfo.status}
       <tr>
-        <DetailsCell>status</DetailsCell>
-        <DetailsCell>{container.groupInfo.status.toLowerCase()}</DetailsCell>
+        <DetailsCell>{t('resources.status') ?? 'status'}</DetailsCell>
+        <DetailsCell>{t(`resources.status.${container.groupInfo.status.toLowerCase()}`) ?? container.groupInfo.status.toLowerCase()}</DetailsCell>
       </tr>
     {/if}
     {#if createdTime}
       <tr>
-        <DetailsCell>Created</DetailsCell>
+        <DetailsCell>{t('resources.created') ?? 'Created'}</DetailsCell>
         <DetailsCell>{createdTime}</DetailsCell>
       </tr>
     {/if}

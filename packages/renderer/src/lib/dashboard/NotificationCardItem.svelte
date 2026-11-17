@@ -3,6 +3,7 @@ import type { NotificationCard } from '@desktop-framework/api';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 
 interface Props {
@@ -65,7 +66,7 @@ const notificationStyle = $derived(notificationStyleMap[notification.type]);
         class="p-1 hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px]"
         onclick={(): Promise<void> => window.removeNotification(notification.id)}
         aria-label={`Delete notification ${notification.id}`}
-        title="Delete notification">
+        title={t('workloads.deleteNotification') ?? 'Delete notification'}>
         <Icon icon={faXmark}/>
       </button>
     </div>

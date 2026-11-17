@@ -17,6 +17,7 @@ import { router } from 'tinro';
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { ContextUI } from '/@/lib/context/context';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
 import { context } from '/@/stores/context';
@@ -86,8 +87,9 @@ async function deleteImage(): Promise<void> {
     await imageUtils.deleteImage(image);
   } catch (error) {
     await onError(
-      `Error while deleting image: ${error instanceof Error ? error.message : String(error)}`,
-      'Delete Image Failed',
+      t('resources.image-delete-error', { error: error instanceof Error ? error.message : String(error) }) ??
+        `Error while deleting image: ${error instanceof Error ? error.message : String(error)}`,
+      t('resources.delete-image-failed') ?? 'Delete Image Failed',
     );
   }
 }
@@ -104,12 +106,15 @@ async function showLayersImage(): Promise<void> {
   router.goto(`/images/${image.id}/${image.engineId}/${image.base64RepoTag}/history`);
 }
 
-async function onError(error: string, title = 'Image Operation Failed'): Promise<void> {
+async function onError(
+  error: string,
+  title = t('resources.image-operation-failed') ?? 'Image Operation Failed',
+): Promise<void> {
   await window.showMessageBox({
     title,
     message: error,
     type: 'error',
-    buttons: ['Dismiss'],
+    buttons: [t('resources.dismiss') ?? 'Dismiss'],
   });
 }
 
@@ -137,7 +142,9 @@ async function updateImage(): Promise<void> {
     image.status = previousStatus;
   } catch (error) {
     image.status = previousStatus;
-    await onError(`Error while updating image: ${String(error)}`);
+    await onError(
+      t('resources.image-update-error', { error: String(error) }) ?? `Error while updating image: ${String(error)}`,
+    );
   } finally {
     image.selected = false;
     dispatch('update', image);
@@ -157,7 +164,13 @@ function confirmUpdateImage(): void {
       return updateImage();
     },
     `update all tags of image ${imageRef} to latest build`,
-    { title: 'Update Image?', buttonLabel: 'Update' },
+    {
+      title: t('resources.update-image') ?? 'Update Image?',
+      buttonLabel: t('resources.update') ?? 'Update',
+      message:
+        t('resources.confirm-update-image', { name: imageRef }) ??
+        `Are you sure you want to update all tags of image ${imageRef} to latest build?`,
+    },
   );
 }
 
@@ -168,24 +181,27 @@ function isUpdateCandidate(imageInfo: ImageInfoUI): boolean {
 const updateTooltip = $derived.by(() => {
   switch (image.status) {
     case 'USED':
-      return 'Cannot update an image used by a container';
+      return t('resources.cannot-update-an-image-used-by-a-container') ?? 'Cannot update an image used by a container';
     case 'DELETING':
-      return 'Cannot update an image being deleted';
+      return t('resources.cannot-update-an-image-being-deleted') ?? 'Cannot update an image being deleted';
     case 'UPDATING':
-      return 'Updating image';
+      return t('resources.updating-image') ?? 'Updating image';
   }
   if (!image.name || image.name === '<none>') {
-    return 'Cannot update an image without tags';
+    return t('resources.cannot-update-an-image-without-tags') ?? 'Cannot update an image without tags';
   }
-  return 'Update all tags of this image';
+  return t('resources.update-all-tags-of-this-image') ?? 'Update all tags of this image';
 });
 </script>
 
-<ListItemButtonIcon title="Run Image" onClick={runImage} detailed={detailed} icon={faPlay} />
+<ListItemButtonIcon title={t('resources.run-image') ?? 'Run Image'} onClick={runImage} detailed={detailed} icon={faPlay} />
 
 <ListItemButtonIcon
-  title="Delete Image"
-  onClick={(): void => withConfirmation(deleteImage, `delete image ${image.name}:${image.tag}`, { title: 'Delete Image?', variant: 'delete' })}
+  title={t('resources.delete-image') ?? 'Delete Image'}
+  onClick={(): void => withConfirmation(deleteImage, `delete image ${image.name}:${image.tag}`, {
+    title: t('resources.delete-image') ?? 'Delete Image?', variant: 'delete',
+    message: t('resources.confirm-delete-image', { name: `${image.name}:${image.tag}` }) ?? `Are you sure you want to delete image ${image.name}:${image.tag}?`,
+  })}
   detailed={detailed}
   icon={faTrash}
   enabled={image.status === 'UNUSED'} />
@@ -197,14 +213,14 @@ const updateTooltip = $derived.by(() => {
     globalContext?.setValue('selectedImageId', image.id);
   }}>
   <ListItemButtonIcon
-    title="Push Image"
+    title={t('resources.push-image') ?? 'Push Image'}
     onClick={(): Promise<void> => pushImage(image)}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faCircleArrowUp} />
 
   <ListItemButtonIcon
-    title="Edit Image"
+    title={t('resources.edit-image') ?? 'Edit Image'}
     onClick={(): Promise<void> => renameImage(image)}
     menu={dropdownMenu}
     detailed={detailed}
@@ -212,15 +228,15 @@ const updateTooltip = $derived.by(() => {
 
   {#if !detailed}
     <ListItemButtonIcon
-      title="Show History"
+      title={t('resources.show-history') ?? 'Show History'}
       onClick={showLayersImage}
       menu={dropdownMenu}
       detailed={detailed}
       icon={faLayerGroup} />
   {/if}
   <ListItemButtonIcon
-    title="Save Image"
-    tooltip="Save image to a local directory"
+    title={t('resources.save-image') ?? 'Save Image'}
+    tooltip={t('resources.save-image-to-a-local-directory') ?? 'Save image to a local directory'}
     onClick={saveImage}
     menu={dropdownMenu}
     detailed={detailed}
@@ -228,7 +244,7 @@ const updateTooltip = $derived.by(() => {
 
   {#if dropdownMenu}
     <ListItemButtonIcon
-      title="Update Image"
+      title={t('resources.update-image') ?? 'Update Image'}
       tooltip={updateTooltip}
       onClick={confirmUpdateImage}
       menu={true}
@@ -238,7 +254,7 @@ const updateTooltip = $derived.by(() => {
   {:else}
     <Tooltip bottom tip={updateTooltip}>
       <ListItemButtonIcon
-        title="Update Image"
+        title={t('resources.update-image') ?? 'Update Image'}
         onClick={confirmUpdateImage}
         detailed={detailed}
         icon={faSync}

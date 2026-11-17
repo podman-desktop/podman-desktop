@@ -4,6 +4,8 @@ import type { ProviderDetectionCheck } from '@desktop-framework/extension-api';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   provider: ProviderInfo;
   onDetectionChecks?: (detectionChecks: ProviderDetectionCheck[]) => void;
@@ -38,7 +40,7 @@ async function toggleDetectionChecks(provider: ProviderInfo): Promise<void> {
     on:click={(): Promise<void> => toggleDetectionChecks(provider)}
     inProgress={viewInProgress}
     icon={faList}
-    title="Why {provider.name} is not found.">
-    {mode === 'view' ? 'View' : 'Hide'} detection checks
+    title={t('workloads.detectionChecksTip', { name: provider.name }) ?? `Why ${provider.name} is not found.`}>
+    {mode === 'view' ? (t('workloads.viewDetectionChecks') ?? 'View detection checks') : (t('workloads.hideDetectionChecks') ?? 'Hide detection checks')}
   </Button>
 {/if}

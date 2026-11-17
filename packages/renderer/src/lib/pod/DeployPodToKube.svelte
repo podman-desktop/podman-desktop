@@ -8,6 +8,7 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import { ensureRestrictedSecurityContext } from '/@/lib/pod/pod-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
@@ -411,7 +412,7 @@ let kubeDetails: string = $derived.by(() => {
 });
 </script>
 
-<EngineFormPage title="Deploy generated pod to Kubernetes" inProgress={deployStarted && !deployFinished}>
+<EngineFormPage title={t('resources.deploy-generated-pod-to-kubernetes') ?? 'Deploy generated pod to Kubernetes'} inProgress={deployStarted && !deployFinished}>
   {#snippet icon()}
   <i class="fas fa-rocket fa-2x" aria-hidden="true"></i>
   {/snippet}
@@ -419,7 +420,7 @@ let kubeDetails: string = $derived.by(() => {
   {#snippet content()}
   <div class="space-y-2">
     {#if kubeDetails}
-      <p>Generated Kubernetes YAML:</p>
+      <p>{t('resources.generated-kubernetes-yaml') ?? 'Generated Kubernetes YAML:'}</p>
       <div class="h-48 pt-2">
         <MonacoEditor content={kubeDetails} language="yaml" />
       </div>
@@ -428,11 +429,11 @@ let kubeDetails: string = $derived.by(() => {
     {#if bodyPod?.metadata}
       <div class="pt-2 pb-4">
         <label for="contextToUse" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Pod Name:</label>
+          >{t('resources.pod-name') ?? 'Pod Name:'}</label>
         <Input
           bind:value={bodyPod.metadata.name}
           name="podName"
-          aria-label="Pod Name"
+          aria-label={t('resources.pod-name') ?? 'Pod Name'}
           id="podName"
           class="w-full"
           required />
@@ -441,32 +442,31 @@ let kubeDetails: string = $derived.by(() => {
 
     <div class="pt-2 pb-4">
       <label for="services" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-        >Kubernetes Services:</label>
+        >{t('resources.kubernetes-services') ?? 'Kubernetes Services:'}</label>
       <Checkbox
         bind:checked={deployUsingServices}
         class="text-[var(--pd-content-card-text)] text-sm ml-1"
         name="useServices"
         id="useServices"
-        title="Use Services"
+        title={t('resources.use-services') ?? 'Use Services'}
         required>
-        Replace .hostPort exposure on containers by Services. It is the recommended way to expose ports, as a cluster
-        policy may prevent to use hostPort.</Checkbox>
+        {t('resources.replace-hostport-exposure-on-containers-by-services-it-is-the-recommended-way-to-expose-ports-as-a-cluster-policy-may-prevent-to-use-hostport') ?? 'Replace .hostPort exposure on containers by Services. It is the recommended way to expose ports, as a cluster policy may prevent to use hostPort.'}</Checkbox>
     </div>
 
     <div class="pt-2 pb-4">
       <label for="useRestricted" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-        >Restricted Security Context:</label>
+        >{t('resources.restricted-security-context') ?? 'Restricted Security Context:'}</label>
       <Checkbox
         bind:checked={deployUsingRestrictedSecurityContext}
         class="text-[var(--pd-content-card-text)] text-sm ml-1"
         name="useRestricted"
         id="useRestricted"
-        title="Use Restricted Security Context"
+        title={t('resources.use-restricted-security-context') ?? 'Use Restricted Security Context'}
         required>
-        Update Kubernetes manifest to respect the Pod security <Link
+        {t('resources.restricted-profile-description') ?? 'Update Kubernetes manifest to respect the Pod security'} <Link
           on:click={(): Promise<void> =>
             window.openExternal('https://kubernetes.io/docs/concepts/security/pod-security-standards#restricted')}
-          >restricted profile</Link
+          >{t('resources.restricted-profile') ?? 'restricted profile'}</Link
         >.</Checkbox>
     </div>
 
@@ -474,38 +474,36 @@ let kubeDetails: string = $derived.by(() => {
     {#if !openshiftRouteGroupSupported && deployUsingServices}
       <div class="pt-2 pb-4">
         <label for="createIngress" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Expose Service Locally Using Kubernetes Ingress:</label>
+          >{t('resources.expose-service-locally-using-kubernetes-ingress') ?? 'Expose Service Locally Using Kubernetes Ingress:'}</label>
         <Checkbox
           bind:checked={createIngress}
           class="text-[var(--pd-content-card-text)] text-sm ml-1"
           name="createIngress"
           id="createIngress"
-          title="Create Ingress"
+          title={t('resources.create-ingress') ?? 'Create Ingress'}
           required>
-          Create an Ingress to get access to the local ports exposed, at the default Ingress Controller location.
-          Example: On default kind cluster created with Podman Desktop, it will be accessible at 'localhost:9090'.
-          Requirements: Your cluster must have an Ingress Controller.</Checkbox>
+          {t('resources.create-an-ingress-to-get-access-to-the-local-ports-exposed-at-the-default-ingress-controller-location-example-on-default-kind-cluster-created-with-podman-desktop-it-will-be-accessible-at-localhost-9090-requirements-your-cluster-must-have-an-ingress-controller') ?? 'Create an Ingress to get access to the local ports exposed, at the default Ingress Controller location. Example: On default kind cluster created with Podman Desktop, it will be accessible at \'localhost:9090\'. Requirements: Your cluster must have an Ingress Controller.'}</Checkbox>
       </div>
     {/if}
 
     {#if createIngress && containerPortArray.length > 1}
       <div class="pt-2 pb-4">
         <label for="ingress" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Ingress Host Port:</label>
+          >{t('resources.ingress-host-port') ?? 'Ingress Host Port:'}</label>
         <select
           bind:value={ingressPort}
           name="serviceName"
           id="serviceName"
           class=" cursor-default w-full p-2 outline-hidden text-sm bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
-          aria-label="Select a Port"
+          aria-label={t('resources.select-a-port') ?? 'Select a Port'}
           required>
-          <option value="" disabled selected>Select a port</option>
+          <option value="" disabled selected>{t('resources.select-a-port') ?? 'Select a port'}</option>
           {#each containerPortArray as port, index (index)}
             <option value={port}>{port}</option>
           {/each}
         </select>
         <span class="text-[var(--pd-content-card-text)] text-sm ml-1"
-          >There are multiple exposed ports available. Select the one you want to expose to '/' with the Ingress.
+          >{t('resources.there-are-multiple-exposed-ports-available-select-the-one-you-want-to-expose-to-with-the-ingress') ?? 'There are multiple exposed ports available. Select the one you want to expose to \'/\' with the Ingress.'}
         </span>
       </div>
     {/if}
@@ -514,26 +512,26 @@ let kubeDetails: string = $derived.by(() => {
     {#if openshiftRouteGroupSupported}
       <div class="pt-2">
         <label for="routes" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Create OpenShift routes:</label>
+          >{t('resources.create-openshift-routes') ?? 'Create OpenShift routes:'}</label>
         <Checkbox
           bind:checked={deployUsingRoutes}
           class="text-[var(--pd-content-card-text)] text-sm ml-1"
           name="useRoutes"
           id="useRoutes"
-          title="Use Routes"
+          title={t('resources.use-routes') ?? 'Use Routes'}
           required>
-          Create OpenShift routes to get access to the exposed ports of this pod.</Checkbox>
+          {t('resources.create-openshift-routes-to-get-access-to-the-exposed-ports-of-this-pod') ?? 'Create OpenShift routes to get access to the exposed ports of this pod.'}</Checkbox>
       </div>
     {/if}
 
     {#if defaultContextName}
       <div class="pt-2">
         <label for="contextToUse" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Kubernetes Context:</label>
+          >{t('resources.kubernetes-context') ?? 'Kubernetes Context:'}</label>
         <Input
           bind:value={defaultContextName}
           name="defaultContextName"
-          aria-label="Kubernetes Context"
+          aria-label={t('resources.kubernetes-context') ?? 'Kubernetes Context'}
           id="defaultContextName"
           readonly
           class="w-full"
@@ -544,10 +542,10 @@ let kubeDetails: string = $derived.by(() => {
     {#if allNamespaces}
       <div class="pt-2">
         <label for="namespaceToUse" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Kubernetes Namespace:</label>
+          >{t('resources.kubernetes-namespace') ?? 'Kubernetes Namespace:'}</label>
         <select
           class="w-full p-2 outline-hidden text-sm bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
-          aria-label="Select a Kubernetes Namespace"
+          aria-label={t('resources.select-a-kubernetes-namespace') ?? 'Select a Kubernetes Namespace'}
           name="namespaceChoice"
           bind:value={currentNamespace}>
           {#each allNamespaces.items as namespace, index (index)}
@@ -570,10 +568,10 @@ let kubeDetails: string = $derived.by(() => {
       <ButtonRow class="pt-4">
         <Button
           on:click={deployToKube}
-          aria-label="Deploy"
+          aria-label={t('resources.deploy') ?? 'Deploy'}
           icon={faRocket}
           disabled={bodyPod?.metadata?.name === ''}>
-          Deploy
+          {t('resources.deploy') ?? 'Deploy'}
         </Button>
       </ButtonRow>
     {/if}
@@ -581,42 +579,42 @@ let kubeDetails: string = $derived.by(() => {
     {#if createdPod}
       <div class="bg-[var(--pd-content-card-inset-bg)] p-5 my-4">
         <div class="flex flex-row items-center">
-          <div>Created pod:</div>
+          <div>{t('resources.created-pod') ?? 'Created pod:'}</div>
           {#if openshiftConsoleURL && createdPod?.metadata?.name}
             <div class="justify-end flex flex-1">
               <Link
                 class="text-sm"
-                aria-label="Open in OpenShift Console"
+                aria-label={t('resources.open-in-openshift-console') ?? 'Open in OpenShift Console'}
                 icon={faExternalLink}
-                on:click={openOpenshiftConsole}>Open in OpenShift console</Link>
+                on:click={openOpenshiftConsole}>{t('resources.open-in-openshift-console') ?? 'Open in OpenShift console'}</Link>
             </div>
           {/if}
         </div>
-        <div class="text-[var(--pd-content-card-text)]" role="region" aria-label="Pod Deployment Status Info">
+        <div class="text-[var(--pd-content-card-text)]" role="region" aria-label={t('resources.pod-deployment-status-info') ?? 'Pod Deployment Status Info'}>
           {#if createdPod.metadata?.name}
-            <p class="pt-2">Name: {createdPod.metadata.name}</p>
+            <p class="pt-2">{t('resources.name') ?? 'Name:'} {createdPod.metadata.name}</p>
           {/if}
           {#if createdPod.status?.phase}
-            <p class="pt-2">Phase: {createdPod.status.phase}</p>
+            <p class="pt-2">{t('resources.phase') ?? 'Phase:'} {createdPod.status.phase}</p>
           {/if}
 
           {#if createdPod.status?.containerStatuses}
-            <p class="pt-2">Container statuses:</p>
+            <p class="pt-2">{t('resources.container-statuses') ?? 'Container statuses:'}</p>
             <ul class="list-disc list-inside">
               {#each createdPod.status.containerStatuses as containerStatus, index (index)}
                 <li class="pt-2">
                   {containerStatus.name}
                   {#if containerStatus.ready}
-                    <span class="text-[var(--pd-status-ready)]">Ready</span>
+                    <span class="text-[var(--pd-status-ready)]">{t('resources.ready') ?? 'Ready'}</span>
                   {/if}
                   {#if containerStatus.state?.running}
-                    <span class="text-[var(--pd-status-running)]">(Running)</span>
+                    <span class="text-[var(--pd-status-running)]">{t('resources.running') ?? '(Running)'}</span>
                   {/if}
                   {#if containerStatus.state?.terminated}
-                    <span class="text-[var(--pd-status-terminated)]">(Terminated)</span>
+                    <span class="text-[var(--pd-status-terminated)]">{t('resources.terminated') ?? '(Terminated)'}</span>
                   {/if}
                   {#if containerStatus.state?.waiting}
-                    <span class="text-[var(--pd-status-waiting)]">(Waiting)</span>
+                    <span class="text-[var(--pd-status-waiting)]">{t('resources.waiting') ?? '(Waiting)'}</span>
                     {#if containerStatus.state.waiting.reason}
                       <span class="text-[var(--pd-status-waiting)]">[{containerStatus.state.waiting.reason}]</span>
                     {/if}
@@ -626,11 +624,11 @@ let kubeDetails: string = $derived.by(() => {
             </ul>
           {/if}
           {#if createdRoutes && createdRoutes.length > 0}
-            <p class="pt-2">Endpoints:</p>
+            <p class="pt-2">{t('resources.endpoints') ?? 'Endpoints:'}</p>
             <ul class="list-disc list-inside">
               {#each createdRoutes as createdRoute, index (index)}
                 <li class="pt-2">
-                  Port {createdRoute.spec.port?.targetPort} is reachable with route
+                  {t('resources.route-port', { port: createdRoute.spec.port?.targetPort ?? '' }) ?? `Port ${createdRoute.spec.port?.targetPort} is reachable with route`}
                   <Link on:click={async (): Promise<void> => await openRoute(createdRoute)}>{createdRoute.metadata.name}</Link>
                 </li>
               {/each}
@@ -647,12 +645,12 @@ let kubeDetails: string = $derived.by(() => {
 
     {#if deployFinished}
       <ButtonRow class="pt-4">
-        <Button on:click={goBackToHistory} aria-label="Done">Done</Button>
+        <Button on:click={goBackToHistory} aria-label={t('resources.done') ?? 'Done'}>{t('resources.done') ?? 'Done'}</Button>
         {#if !kubernetesDashboardActive}
           <Button
             on:click={openPodDetails}
             disabled={!createdPod?.metadata?.name || !createdPod?.metadata?.namespace}
-            aria-label="Open Pod">Open Pod</Button>
+            aria-label={t('resources.open-pod') ?? 'Open Pod'}>{t('resources.open-pod') ?? 'Open Pod'}</Button>
         {/if}
       </ButtonRow>
     {/if}

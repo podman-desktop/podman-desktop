@@ -2,6 +2,7 @@
 import { Dropdown, EmptyScreen } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
 import type { PodUI } from './PodUI';
@@ -45,9 +46,9 @@ function handleSelectionChange(value: unknown): void {
       class="block w-auto text-sm font-medium whitespace-nowrap leading-6 text-[var(--pd-content-text)] pl-2 pr-2">
       {#key key}
         {#if terminalService.hasTerminal(pod.name, currentContainerName) && currentContainerStatus.get(currentContainerName) === 'running'}
-          Connected to:
+          {t('workloads.connectedTo') ?? 'Connected to:'}
         {:else}
-          Connecting to:
+          {t('workloads.connectingTo') ?? 'Connecting to:'}
         {/if}
       {/key}
     </label>
@@ -87,5 +88,5 @@ function handleSelectionChange(value: unknown): void {
 <EmptyScreen
   hidden={!currentContainerStatus.get(currentContainerName)}
   icon={NoLogIcon}
-  title="No Terminal"
-  message="Container is not running" />
+  title={t('workloads.noTerminal') ?? 'No Terminal'}
+  message={t('workloads.containerNotRunning') ?? 'Container is not running'} />

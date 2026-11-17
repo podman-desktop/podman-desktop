@@ -2,6 +2,8 @@
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { Input } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
   value?: string;
@@ -27,9 +29,9 @@ function onInput(event: Event): void {
   on:input={onInput}
   class="grow"
   name={record.id}
-  placeholder={record.placeholder}
+  placeholder={t(`${record.id}.placeholder`) ?? record.placeholder}
   value={value}
   readonly={!!record.readonly || !!record.locked}
   id="input-standard-{record.id}"
   aria-invalid={invalidEntry}
-  aria-label={record.description} />
+  aria-label={t(`${record.id}.description`) ?? record.description} />

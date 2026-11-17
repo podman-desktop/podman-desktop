@@ -4,6 +4,7 @@ import { Link } from '@podman-desktop/ui-svelte';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   artifact?: V1IngressSpec;
@@ -14,13 +15,13 @@ let { artifact }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Details</Title>
+    <Title>{t('workloads.details') ?? 'Details'}</Title>
   </tr>
 
   {#if artifact.defaultBackend}
     {#if artifact.defaultBackend.service}
       <tr>
-        <Cell>Default Backend Service</Cell>
+        <Cell>{t('workloads.defaultBackendService') ?? 'Default Backend Service'}</Cell>
         <Cell
           >{artifact.defaultBackend.service?.name}
           {#if artifact.defaultBackend.service?.port?.number}
@@ -34,7 +35,7 @@ let { artifact }: Props = $props();
     {/if}
     {#if artifact.defaultBackend.resource}
       <tr>
-        <Cell>Default Backend Resource</Cell>
+        <Cell>{t('workloads.defaultBackendResource') ?? 'Default Backend Resource'}</Cell>
         <Cell>{artifact.defaultBackend.resource.name} ({artifact.defaultBackend.resource.kind})</Cell>
       </tr>
     {/if}
@@ -46,12 +47,12 @@ let { artifact }: Props = $props();
     </tr>
     {#each artifact.tls as tls, index (index)}
       <tr>
-        <Cell>Secret Name</Cell>
+        <Cell>{t('workloads.secretName') ?? 'Secret Name'}</Cell>
         <Cell>{tls.secretName}</Cell>
       </tr>
       {#if tls.hosts}
         <tr>
-          <Cell>Hosts</Cell>
+          <Cell>{t('workloads.hosts') ?? 'Hosts'}</Cell>
           <Cell>{tls.hosts.join(', ')}</Cell>
         </tr>
       {/if}
@@ -60,7 +61,7 @@ let { artifact }: Props = $props();
 
   {#if artifact.rules}
     <tr>
-      <Cell>Rules</Cell>
+      <Cell>{t('workloads.rules') ?? 'Rules'}</Cell>
       <Cell>
         {#each artifact.rules || [] as rule, index (index)}
           <!-- Here we use || [] to ensure it's always an array -->

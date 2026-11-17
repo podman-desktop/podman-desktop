@@ -9,6 +9,7 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
@@ -36,7 +37,7 @@ onMount(async () => {
 
 async function addContainersToImport(): Promise<void> {
   const images = await window.openDialog({
-    title: 'Select Containers Images to import',
+    title: t('resources.select-containers-images-to-import') ?? 'Select Containers Images to import',
     selectors: ['multiSelections', 'openFile'],
   });
 
@@ -88,7 +89,9 @@ async function importContainers(): Promise<void> {
         imageTag: containerImage.nameWhenImporting,
       });
     } catch (e) {
-      importError += `Error while importing ${containerImage.imagePath}: ${String(e)}\n`;
+      importError +=
+        t('resources.import-image-error', { path: containerImage.imagePath, error: String(e) }) ??
+        `Error while importing ${containerImage.imagePath}: ${String(e)}\n`;
     }
   }
 
@@ -99,7 +102,7 @@ async function importContainers(): Promise<void> {
 }
 </script>
 
-<EngineFormPage title="Import Containers">
+<EngineFormPage title={t('resources.import-containers') ?? 'Import Containers'}>
   {#snippet icon()}
     <i class="fas fa-play fa-2x" aria-hidden="true"></i>
   {/snippet}
@@ -108,7 +111,7 @@ async function importContainers(): Promise<void> {
     {#if providerConnections.length > 1}
     <div class="mb-4">
       <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Container engine</label>
+        >{t('resources.container-engine') ?? 'Container engine'}</label>
       <ContainerConnectionDropdown
         id="providerChoice"
         name="providerChoice"
@@ -118,38 +121,38 @@ async function importContainers(): Promise<void> {
     {/if}
 
     <label for="modalContainersImport" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-      >Containers to import</label>
-    <Button on:click={addContainersToImport} icon={faPlusCircle} type="link">Add images to import</Button>
+      >{t('resources.containers-to-import') ?? 'Containers to import'}</label>
+    <Button on:click={addContainersToImport} icon={faPlusCircle} type="link">{t('resources.add-images-to-import') ?? 'Add images to import'}</Button>
     <!-- Display the list of existing containersToImport -->
     {#if containersToImport.length > 0}
       <div class="flex flex-row justify-center w-full py-1 text-sm font-semibold text-[var(--pd-content-card-text)]">
-        <div class="flex flex-col grow pl-2">Image Path</div>
-        <div class="flex flex-col w-2/4 mr-2.5">Image Name when importing (e.g quay.io/podman/hello)</div>
+        <div class="flex flex-col grow pl-2">{t('resources.image-path') ?? 'Image Path'}</div>
+        <div class="flex flex-col w-2/4 mr-2.5">{t('resources.image-name-when-importing-e-g-quay-io-podman-hello') ?? 'Image Name when importing (e.g quay.io/podman/hello)'}</div>
       </div>
     {/if}
     {#each containersToImport as containerToImport, index (index)}
       <div class="flex flex-row justify-center w-full py-1">
-        <Input bind:value={containerToImport.imagePath} aria-label="container image path" readonly={true} />
+        <Input bind:value={containerToImport.imagePath} aria-label={t('resources.container-image-path') ?? 'container image path'} readonly={true} />
         <Input
           bind:value={containerToImport.nameWhenImporting}
           on:input={(event): void => onHostContainerPortMappingInput(event, index)}
-          aria-label="container importing name"
-          placeholder="Image Name when Importing (e.g. quay.io/namespace/my-image-name)"
+          aria-label={t('resources.container-importing-name') ?? 'container importing name'}
+          placeholder={t('resources.image-name-when-importing-e-g-quay-io-namespace-my-image-name') ?? 'Image Name when Importing (e.g. quay.io/namespace/my-image-name)'}
           class="ml-2" />
-        <Button type="link" on:click={(): void => deleteContainerToImport(index)} icon={faMinusCircle} aria-label="Remove container" />
+        <Button type="link" on:click={(): void => deleteContainerToImport(index)} icon={faMinusCircle} aria-label={t('resources.remove-container') ?? 'Remove container'} />
       </div>
     {/each}
 
     <div class="pt-5">
       <ButtonRow>
-        <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+        <Button type="link" on:click={(): void => router.goto($lastPage.path)}>{t('resources.close') ?? 'Close'}</Button>
         <Button
           on:click={importContainers}
           inProgress={inProgress}
           icon={faCircleArrowDown}
-          aria-label="Import containers"
+          aria-label={t('resources.import-containers') ?? 'Import containers'}
           disabled={importDisabled}>
-          Import Containers
+          {t('resources.import-containers') ?? 'Import Containers'}
         </Button>
       </ButtonRow>
       <div aria-label="importError">

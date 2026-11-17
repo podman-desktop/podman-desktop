@@ -2,6 +2,7 @@
 import { Button } from '@podman-desktop/ui-svelte';
 import type { ComponentProps } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 // always renders a link button, so the tab variant of the Button props (which requires `selected`) does not apply
@@ -33,8 +34,8 @@ async function updateExtension(ociUri: string): Promise<void> {
     padding="p-0"
     {inProgress}
     title="{extension.displayName} will be updated to v{update.version}"
-    aria-label="Update available"
+    aria-label={t('workloads.updateAvailable') ?? 'Update available'}
     onclick={(): Promise<void> => updateExtension(update.ociUri)}
     {...restProps}
-  >Update available</Button>
+  >{t('workloads.updateAvailable') ?? 'Update available'}</Button>
 {/if}

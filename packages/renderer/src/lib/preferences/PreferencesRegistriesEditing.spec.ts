@@ -25,17 +25,57 @@ import { render, screen, within } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
 
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
 
 describe('PreferencesRegistriesEditing', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+    await initTranslations();
     registriesInfos.set([]);
     registriesSuggestedInfos.set([]);
     configurationProperties.set([]);
+  });
+
+  test('Japanese registry form and certificate confirmation retain registry credentials', async () => {
+    vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({
+      'settings.registries.add': 'レジストリーを追加',
+      'settings.username': 'ユーザー名',
+      'settings.password': 'パスワード',
+      'settings.add': '追加',
+      'settings.cancel': 'キャンセル',
+      'settings.registries.untrustedTitle': '信頼されていないレジストリーを追加しますか？',
+    });
+    await initTranslations();
+    vi.mocked(window.getImageRegistryProviderNames).mockResolvedValue(['podman']);
+    vi.mocked(window.checkImageCredentials).mockRejectedValue(new Error('unable to verify the first certificate'));
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: '追加' });
+    render(PreferencesRegistriesEditing, { showNewRegistryForm: true });
+    const dialog = screen.getByRole('dialog', { name: 'レジストリーを追加' });
+    await userEvent.type(within(dialog).getByPlaceholderText('https://registry.io'), 'https://example.com');
+    await userEvent.type(within(dialog).getByPlaceholderText('ユーザー名'), 'my-user');
+    const password = dialog.querySelector<HTMLInputElement>('input[type="password"]');
+    expect(password).not.toBeNull();
+    await userEvent.type(password!, 'my-secret');
+    await userEvent.click(within(dialog).getByRole('button', { name: '追加' }));
+    await waitFor(() =>
+      expect(window.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: '信頼されていないレジストリーを追加しますか？',
+          buttons: ['追加', 'キャンセル'],
+        }),
+      ),
+    );
+    await waitFor(() =>
+      expect(window.createImageRegistry).toHaveBeenCalledWith(
+        'podman',
+        expect.objectContaining({ serverUrl: 'example.com', username: 'my-user', secret: 'my-secret', insecure: true }),
+      ),
+    );
   });
 
   test('Expect the registries list to be a labelled region', () => {

@@ -4,6 +4,7 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import type { ContainerProviderConnection } from '@desktop-framework/extension-api';
 
 import Donut from '/@/lib/donut/Donut.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import { extractConnectionResourceMetrics, RESOURCE_FORMATS, toDisplayMetrics } from './connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
@@ -49,33 +50,33 @@ $effect(() => {
     <div class="flex pl-8 py-4 flex-col w-full text-sm">
       {#if containerConnectionInfo.error}
         <div class="flex flex-row mt-5 text-[var(--pd-state-error)]" role="alert" aria-label="Connection error">
-          <span class="font-semibold min-w-[150px]">Error</span>
+          <span class="font-semibold min-w-[150px]">{t('settings.error') ?? 'Error'}</span>
           <span>{containerConnectionInfo.error}</span>
         </div>
       {/if}
       <div class="flex flex-row mt-5">
-        <span class="font-semibold min-w-[150px]">Name</span>
+        <span class="font-semibold min-w-[150px]">{t('settings.name') ?? 'Name'}</span>
         <span aria-label={containerConnectionInfo.name}>{containerConnectionInfo.name}</span>
       </div>
       {#each displayMetrics as metric (metric.title)}
         <div class="flex flex-row mt-5">
-          <span class="font-semibold min-w-[150px]">{metric.title}</span>
-          <Donut title={metric.title} value={metric.value} percent={metric.percent} />
+          <span class="font-semibold min-w-[150px]">{t(`settings.metrics.${metric.title}`) ?? metric.title}</span>
+          <Donut title={t(`settings.metrics.${metric.title}`) ?? metric.title} value={metric.value} percent={metric.percent} />
         </div>
       {/each}
       {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
         <div class="flex flex-row mt-5">
-          <span class="font-semibold min-w-[150px]">{connectionSetting.description}</span>
+          <span class="font-semibold min-w-[150px]">{t(`${connectionSetting.id}.description`) ?? connectionSetting.description}</span>
           <span>{connectionSetting.value}</span>
         </div>
       {/each}
       <div class="flex flex-row mt-5">
-        <span class="font-semibold min-w-[150px]">Type</span>
+        <span class="font-semibold min-w-[150px]">{t('settings.type') ?? 'Type'}</span>
         <span aria-label={containerConnectionInfo.type}
           >{#if containerConnectionInfo.type === 'docker'}Docker{:else if containerConnectionInfo.type === 'podman'}Podman{/if}</span>
       </div>
       <div class="flex flex-row mt-5">
-        <span class="font-semibold min-w-[150px]">Endpoint</span>
+        <span class="font-semibold min-w-[150px]">{t('settings.endpoint') ?? 'Endpoint'}</span>
         <span aria-label={containerConnectionInfo.endpoint.socketPath}
           >{containerConnectionInfo.endpoint.socketPath}</span>
       </div>

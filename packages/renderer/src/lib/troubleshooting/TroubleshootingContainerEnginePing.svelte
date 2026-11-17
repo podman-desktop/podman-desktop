@@ -4,6 +4,8 @@ import { faSignal } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Buffer } from 'buffer';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   providerContainerEngine: ProviderContainerConnectionInfo;
 }
@@ -18,12 +20,13 @@ async function pingConnection(): Promise<void> {
   const start = performance.now();
   pingInProgress = true;
   pingError = '';
-  pingResult = 'Waiting for response...';
+  pingResult = t('management.waiting') ?? 'Waiting for response...';
   try {
     const result = await window.pingContainerEngine($state.snapshot(providerContainerEngine));
-    pingResult = `Responded: ${Buffer.from(String(result)).toString()}`;
+    const response = Buffer.from(String(result)).toString();
+    pingResult = t('management.responded', { response }) ?? `Responded: ${response}`;
   } catch (e) {
-    pingResult = 'Failed';
+    pingResult = t('management.failed') ?? 'Failed';
     pingError = String(e);
   } finally {
     pingInProgress = false;
@@ -36,7 +39,7 @@ async function pingConnection(): Promise<void> {
 <div class="flex flex-row items-center">
   <div class="w-36">
     <Button inProgress={pingInProgress} class="my-1 w-full" on:click={pingConnection} icon={faSignal}>
-      Ping
+      {t('management.ping') ?? 'Ping'}
     </Button>
   </div>
   <div role="status" class="mx-2">{pingResult}</div>

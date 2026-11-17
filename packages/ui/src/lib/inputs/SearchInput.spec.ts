@@ -64,3 +64,20 @@ test('Expect value', async () => {
   const element = screen.getByRole('textbox');
   expect(element).toHaveValue('a search term');
 });
+
+test('Allow localized text without changing the input identifier or value', async () => {
+  const { rerender } = render(SearchInput, {
+    title: 'preferences',
+    searchTerm: 'zoom',
+    placeholder: '設定を検索…',
+    ariaLabel: '設定を検索',
+  });
+  const input = screen.getByRole('textbox', { name: '設定を検索' });
+  expect(input).toHaveAttribute('placeholder', '設定を検索…');
+  expect(input).toHaveAttribute('id', 'search-preferences');
+  expect(input).toHaveValue('zoom');
+
+  await rerender({ title: 'preferences', searchTerm: 'zoom', placeholder: undefined, ariaLabel: undefined });
+  expect(input).toHaveAccessibleName('search preferences');
+  expect(input).toHaveAttribute('placeholder', 'Search...');
+});

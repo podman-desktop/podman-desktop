@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
 interface Props {
@@ -34,6 +35,6 @@ function onChecked(state: boolean): void {
   readonly={!!record.readonly || !!record.locked}
   disabled={!!record.readonly || !!record.locked}
   aria-invalid={invalidEntry}
-  aria-label={record.description ?? record.markdownDescription}>
-  <span class="text-xs">{checked ? 'Enabled' : 'Disabled'}</span>
+  aria-label={t(`${record.id}.description`) ?? t(`${record.id}.markdownDescription`) ?? record.description ?? record.markdownDescription}>
+  <span class="text-xs">{checked ? (t('settings.enabled') ?? 'Enabled') : (t('settings.disabled') ?? 'Disabled')}</span>
 </SlideToggle>

@@ -12,6 +12,7 @@ import {
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { DeploymentCondition } from '/@/lib/deployments/DeploymentUI';
+import { t } from '/@/lib/i18n/translations.svelte';
 import Label from '/@/lib/ui/Label.svelte';
 
 import type { Props } from './props';
@@ -30,47 +31,47 @@ function getConditionAttributes(condition: DeploymentCondition): { name: string;
   const conditionMap: { [key: string]: { name: string; color: string; icon: IconDefinition } } = {
     'Available:MinimumReplicasAvailable': {
       color: 'text-[var(--pd-status-running)]',
-      name: 'Available',
+      name: t('kubernetes.resources.condition.available') ?? 'Available',
       icon: faCheckCircle,
     },
     'Available:MinimumReplicasUnavailable': {
       color: 'text-[var(--pd-status-degraded)]',
-      name: 'Unavailable',
+      name: t('kubernetes.resources.condition.unavailable') ?? 'Unavailable',
       icon: faTimesCircle,
     },
     'Progressing:ReplicaSetUpdated': {
       color: 'text-[var(--pd-status-updated)]',
-      name: 'Updated',
+      name: t('kubernetes.resources.condition.updated') ?? 'Updated',
       icon: faSync,
     },
     'Progressing:NewReplicaSetCreated': {
       color: 'text-[var(--pd-status-updated)]',
-      name: 'New Replica Set',
+      name: t('kubernetes.resources.condition.newReplicaSet') ?? 'New Replica Set',
       icon: faSync,
     },
     'Progressing:NewReplicaSetAvailable': {
       color: 'text-[var(--pd-status-running)]',
-      name: 'Progressed',
+      name: t('kubernetes.resources.condition.progressed') ?? 'Progressed',
       icon: faSync,
     },
     'Progressing:ReplicaSetScaledUp': {
       color: 'text-[var(--pd-status-updated)]',
-      name: 'Scaled Up',
+      name: t('kubernetes.resources.condition.scaledUp') ?? 'Scaled Up',
       icon: faArrowUp,
     },
     'Progressing:ReplicaSetScaledDown': {
       color: 'text-[var(--pd-status-updated)]',
-      name: 'Scaled Down',
+      name: t('kubernetes.resources.condition.scaledDown') ?? 'Scaled Down',
       icon: faArrowDown,
     },
     'Progressing:ProgressDeadlineExceeded': {
       color: 'text-[var(--pd-status-dead)]',
-      name: 'Deadline Exceeded',
+      name: t('kubernetes.resources.condition.deadlineExceeded') ?? 'Deadline Exceeded',
       icon: faTimesCircle,
     },
     'ReplicaFailure:ReplicaFailure': {
       color: 'text-[var(--pd-status-dead)]',
-      name: 'Replica Failure',
+      name: t('kubernetes.resources.condition.replicaFailure') ?? 'Replica Failure',
       icon: faExclamationTriangle,
     },
   };

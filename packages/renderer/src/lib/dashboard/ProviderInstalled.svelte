@@ -9,6 +9,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import Steps from '/@/lib/ui/Steps.svelte';
 
@@ -173,7 +174,7 @@ async function onInstallationClick(): Promise<void> {
 <ProviderCard provider={provider}>
   {#snippet content()}
     <p class="text-sm text-[var(--pd-content-text)] w-2/3 text-center" aria-label="Suggested Actions">
-      To start working with containers, {provider.name} needs to be initialized.
+      {t('workloads.providerNeedsInitialization', { name: provider.name }) ?? `To start working with containers, ${provider.name} needs to be initialized.`}
     </p>
 
     <ProviderWarnings provider={provider} />
@@ -184,7 +185,7 @@ async function onInstallationClick(): Promise<void> {
           icon={faList}
           inProgress={checksInProgress}
           on:click={runChecks}>
-          Run checks
+          {t('workloads.runChecks') ?? 'Run checks'}
         </Button>
       {/if}
     </div>
@@ -195,11 +196,11 @@ async function onInstallationClick(): Promise<void> {
           <button
             class="float-left bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] pt-2 pr-3 pl-3 pb-2 text-[13px] text-[var(--pd-button-text)] mr-px w-[180px]"
             onclick={onInstallationClick}>
-            {installationOptionSelected}
+            {t(`workloads.initialization.${installationOptionSelected}`) ?? installationOptionSelected}
           </button>
           <button
             class="inline-block bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] text-[13px] text-[var(--pd-button-text)] pt-2 pr-3 pl-3 pb-2 w-[32px]"
-            aria-label="Installation options menu"
+            aria-label={t('workloads.installationOptions') ?? 'Installation options menu'}
             onclick={(): void => updateOptionsMenu(!installationOptionsMenuVisible)}>
             <i class="fas fa-caret-down"></i>
           </button>
@@ -215,7 +216,7 @@ async function onInstallationClick(): Promise<void> {
                   installationOptionSelected = InitializeOnlyMode;
                   installationOptionsMenuVisible = false;
                 }}>
-                {InitializeOnlyMode}
+                {t(`workloads.initialization.${InitializeOnlyMode}`) ?? InitializeOnlyMode}
                 {provider.name}
               </button>
             </li>
@@ -226,7 +227,7 @@ async function onInstallationClick(): Promise<void> {
                   installationOptionSelected = InitializeAndStartMode;
                   installationOptionsMenuVisible = false;
                 }}>
-                {InitializeAndStartMode}
+                {t(`workloads.initialization.${InitializeAndStartMode}`) ?? InitializeAndStartMode}
                 {provider.name}
               </button>
             </li>
@@ -240,7 +241,7 @@ async function onInstallationClick(): Promise<void> {
         <Steps steps={InitializationSteps} />
       {/if}
       <div class="flex flex-col text-[var(--pd-content-text)]">
-        <div>Initializing</div>
+        <div>{t('workloads.initializing') ?? 'Initializing'}</div>
         <div class="my-2">
           <Spinner />
         </div>

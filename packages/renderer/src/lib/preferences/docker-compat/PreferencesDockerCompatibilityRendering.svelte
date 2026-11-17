@@ -1,4 +1,5 @@
 <script lang="ts">
+import { t } from '/@/lib/i18n/translations.svelte';
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 
 import PreferencesDockerCompatibilityContributions from './PreferencesDockerCompatibilityContributions.svelte';
@@ -14,7 +15,7 @@ import PreferencesDockerCompatibilitySocketMappingStatus from './PreferencesDock
   {/snippet}
   <div class="flex flex-col space-y-2">
     <div class="container" role="list">
-      <div class="text-lg font-medium first-letter:uppercase">Docker Preferences</div>
+      <div class="text-lg font-medium first-letter:uppercase">{t('settings.docker.preferences') ?? 'Docker Preferences'}</div>
       <PreferencesDockerCompatibilitySocketMappingStatus />
     </div>
 

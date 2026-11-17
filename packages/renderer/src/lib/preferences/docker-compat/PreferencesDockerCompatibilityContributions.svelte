@@ -8,6 +8,7 @@ import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber, type Writable } from 'svelte/store';
 
 import type { ContextUI } from '/@/lib/context/context';
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { isPropertyValidInContext } from '/@/lib/preferences/Util';
 /* eslint-enable import/no-duplicates */
@@ -190,13 +191,13 @@ async function onChangeProperty(property: PropertyWithDisplayName, value: unknow
               <div
                 class="flex flex-row items-center text-[color:var(--pd-invert-content-card-text)]"
                 role="status"
-                aria-label="{property.displayName}"
+                aria-label={t(`${property.id}.displayName`) ?? property.displayName}
               >
-                {property.displayName}
+                {t(`${property.id}.displayName`) ?? property.displayName}
               </div>
               <div class="mt-2 flex flex-row items-center">
                 <div class="flex flex-col w-full" role="document" aria-label="{property.id}">
-                  <Markdown markdown={property.markdownDescription} />
+                  <Markdown markdown={t(`${property.id}.markdownDescription`) ?? property.markdownDescription} />
                 </div>
               </div>
               {#if property.enumItems && property.enumItems.length > 0}
@@ -206,7 +207,7 @@ async function onChangeProperty(property: PropertyWithDisplayName, value: unknow
                   disabled={property.enumItems.length === 0}
                   bind:value={property.selectedValue}
                   onChange={(val: unknown): Promise<void> => onChangeProperty(property, val)}
-                  options={property.enumItems}>
+                  options={property.enumItems.map(item => ({ ...item, label: t(`${property.id}.enum.${item.value}`) ?? item.label }))}>
                 </Dropdown>
               {/if}
             </div>

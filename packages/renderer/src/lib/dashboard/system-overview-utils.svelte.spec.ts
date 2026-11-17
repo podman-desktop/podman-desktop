@@ -19,6 +19,7 @@
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { eventCollect, registerConnectionCallback } from '/@/lib/preferences/preferences-connection-rendering-task';
 
 import {
@@ -30,6 +31,7 @@ import {
 } from './system-overview-utils.svelte';
 
 vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'));
+vi.mock(import('/@/lib/i18n/translations.svelte'));
 
 const baseProvider: ProviderInfo = {
   internalId: 'podman-internal',
@@ -89,6 +91,21 @@ describe('hasStartLifecycle', () => {
 });
 
 describe('getConnectionStatusConfig', () => {
+  test('localizes state and action while preserving the provider name', () => {
+    vi.mocked(t).mockImplementation((key, parameters) => {
+      if (key === 'workloads.connectionState.stopped') return '停止中';
+      if (key === 'workloads.startProvider') return `${parameters?.name} を開始`;
+      return undefined;
+    });
+
+    expect(getConnectionStatusConfig('stopped', { ...baseProvider, canStart: true })).toStrictEqual({
+      label: '停止中',
+      buttonText: 'Podman を開始',
+      buttonType: 'primary',
+    });
+    expect(t).toHaveBeenCalledWith('workloads.startProvider', { name: 'Podman' });
+  });
+
   test('should return Start for stopped with start lifecycle', () => {
     const config = getConnectionStatusConfig('stopped', { ...baseProvider, canStart: true });
     expect(config).toStrictEqual({

@@ -10,6 +10,7 @@ import type { ContextUI } from '/@/lib/context/context';
 import { ContextUI as ContextUIImpl } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ProviderUpdateButton from '/@/lib/dashboard/ProviderUpdateButton.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   provider: ProviderInfo;
@@ -130,29 +131,29 @@ function executeProviderMenu(menu: Menu): void {
 <div class="text-center mt-10 {className}">
   {#if showOnboardingSetup}
     <Button
-      aria-label="Set up {provider.name}"
-      title="Set up {provider.name}"
+      aria-label={(t('settings.provider.setupName') ?? 'Set up {name}').replace('{name}', provider.name)}
+      title={(t('settings.provider.setupName') ?? 'Set up {name}').replace('{name}', provider.name)}
       onclick={handleSetup}>
-      Set up...
+      {t('settings.provider.setup') ?? 'Set up...'}
     </Button>
   {:else}
     <div class="flex flex-row justify-around flex-wrap gap-2">
       {#if showCreateNewButton}
-        <Tooltip bottom tip={isCreateButtonDisabled ? warningsTooltip : `${buttonTitle} ${providerDisplayName}`}>
+        <Tooltip bottom tip={isCreateButtonDisabled ? warningsTooltip : (t('settings.provider.button.' + buttonTitle) ?? buttonTitle) + ' ' + providerDisplayName}>
           <Button
-            aria-label="{buttonTitle} {providerDisplayName}"
+            aria-label="{t(`settings.provider.button.${buttonTitle}`) ?? buttonTitle} {providerDisplayName}"
             inProgress={providerInstallationInProgress}
             disabled={isCreateButtonDisabled}
             onclick={handleCreateNew}>
-            {buttonTitle}...
+            {t(`settings.provider.button.${buttonTitle}`) ?? buttonTitle}...
           </Button>
         </Tooltip>
       {/if}
 
       {#if showSetupButton}
         <Button
-          aria-label="Set up {provider.name}"
-          title="Set up {provider.name}"
+          aria-label={(t('settings.provider.setupName') ?? 'Set up {name}').replace('{name}', provider.name)}
+          title={(t('settings.provider.setupName') ?? 'Set up {name}').replace('{name}', provider.name)}
           onclick={handleSetup}>
           <Icon size="0.9x" icon={faGear} />
         </Button>
@@ -166,12 +167,12 @@ function executeProviderMenu(menu: Menu): void {
 
       {#each visibleProviderMenus as menu, index (index)}
         <Button
-          aria-label={menu.title}
-          title={menu.title}
+          aria-label={t(`settings.provider.menu.${menu.command}`) ?? menu.title}
+          title={t(`settings.provider.menu.${menu.command}`) ?? menu.title}
           icon={menu.icon}
           disabled={isProviderMenu(DISABLED, menu)}
           onclick={(): void => executeProviderMenu(menu)}>
-          {menu.title}
+          {t(`settings.provider.menu.${menu.command}`) ?? menu.title}
         </Button>
       {/each}
     </div>

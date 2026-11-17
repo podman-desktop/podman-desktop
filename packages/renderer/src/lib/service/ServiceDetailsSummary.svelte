@@ -4,6 +4,7 @@ import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
 import type { EventUI } from '/@/lib/events/EventUI';
+import { t } from '/@/lib/i18n/translations.svelte';
 import KubeEventsArtifact from '/@/lib/kube/details/KubeEventsArtifact.svelte';
 import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 import KubeServiceArtifact from '/@/lib/kube/details/KubeServiceArtifact.svelte';
@@ -31,6 +32,6 @@ basic information -->
     <KubeServiceArtifact serviceName={service.metadata?.name} namespace={service.metadata?.namespace} artifact={service.spec} />
     <KubeEventsArtifact events={events} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">{t('kubernetes.resources.loading') ?? 'Loading...'}</p>
   {/if}
 </Table>

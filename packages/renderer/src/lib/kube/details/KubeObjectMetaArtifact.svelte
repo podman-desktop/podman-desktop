@@ -4,6 +4,7 @@ import { ChevronExpander } from '@podman-desktop/ui-svelte';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import { internalKubernetesKeys } from './utils';
 
@@ -50,25 +51,25 @@ if (artifact?.annotations) {
 
 {#if artifact}
   <tr>
-    <Title>Metadata</Title>
+    <Title>{t('workloads.metadata') ?? 'Metadata'}</Title>
   </tr>
   <tr>
-    <Cell>Name</Cell>
+    <Cell>{t('workloads.name') ?? 'Name'}</Cell>
     <Cell>{artifact?.name}</Cell>
   </tr>
   {#if artifact?.namespace}
     <tr>
-      <Cell>Namespace</Cell>
+      <Cell>{t('workloads.namespace') ?? 'Namespace'}</Cell>
       <Cell>{artifact?.namespace}</Cell>
     </tr>
   {/if}
   <tr>
-    <Cell>Created</Cell>
+    <Cell>{t('workloads.created') ?? 'Created'}</Cell>
     <Cell>{artifact?.creationTimestamp}</Cell>
   </tr>
   {#if labels.length > 0}
     <tr>
-      <Cell>Labels</Cell>
+      <Cell>{t('workloads.labels') ?? 'Labels'}</Cell>
       <Cell>
         {#each labels as [key, value] (key)}
           {key}: {value}
@@ -82,7 +83,7 @@ if (artifact?.annotations) {
       <Cell
         style="cursor-pointer flex items-center"
         onClick={(): boolean => (internalLabelsDropdownOpen = !internalLabelsDropdownOpen)}>
-        Internal Labels
+        {t('workloads.internalLabels') ?? 'Internal Labels'}
         <ChevronExpander expanded={internalLabelsDropdownOpen} size="0.9x" class="ml-1" />
       </Cell>
       <Cell>
@@ -100,7 +101,7 @@ if (artifact?.annotations) {
 
   {#if annotations.length > 0}
     <tr>
-      <Cell>Annotations</Cell>
+      <Cell>{t('workloads.annotations') ?? 'Annotations'}</Cell>
       <Cell>
         {#each annotations as [key, value] (key)}
           {key}: {value}
@@ -114,7 +115,7 @@ if (artifact?.annotations) {
       <Cell
         style="cursor-pointer flex items-center"
         onClick={(): boolean => (internalAnnotationsDropdownOpen = !internalAnnotationsDropdownOpen)}>
-        Internal Annotations
+        {t('workloads.internalAnnotations') ?? 'Internal Annotations'}
         <ChevronExpander expanded={internalAnnotationsDropdownOpen} size="0.9x" class="ml-1" />
       </Cell>
       <Cell>

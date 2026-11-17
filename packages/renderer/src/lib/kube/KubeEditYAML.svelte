@@ -2,6 +2,7 @@
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   content?: string;
@@ -58,10 +59,10 @@ async function applyToCluster(): Promise<void> {
     inProgress = true;
     await window.kubernetesApplyResourcesFromYAML(contextName, editorContent);
     await window.showMessageBox({
-      title: 'Apply Kubernetes YAML',
+      title: t('workloads.applyKubernetesYaml') ?? 'Apply Kubernetes YAML',
       type: 'info',
-      message: 'Successfully applied Kubernetes YAML',
-      buttons: ['Dismiss'],
+      message: t('workloads.appliedYaml') ?? 'Successfully applied Kubernetes YAML',
+      buttons: [t('workloads.dismiss') ?? 'Dismiss'],
     });
 
     // If the apply was successful, we update the originalContent to the new active content in the editor
@@ -71,10 +72,10 @@ async function applyToCluster(): Promise<void> {
   } catch (error) {
     console.error('error playing kube file', error);
     await window.showMessageBox({
-      title: 'Apply Kubernetes YAML Failed',
+      title: t('workloads.applyKubernetesYamlFailed') ?? 'Apply Kubernetes YAML Failed',
       type: 'error',
-      message: 'Could not apply Kubernetes YAML: ' + error,
-      buttons: ['Dismiss'],
+      message: (t('workloads.couldNotApplyYaml') ?? 'Could not apply Kubernetes YAML: ') + error,
+      buttons: [t('workloads.dismiss') ?? 'Dismiss'],
     });
   } finally {
     inProgress = false;
@@ -85,22 +86,22 @@ async function applyToCluster(): Promise<void> {
 <div
   class="flex flex-row-reverse p-6 bg-transparent fixed bottom-0 right-0 mb-5 pr-10 max-h-20 bg-opacity-90 z-50"
   role="group"
-  aria-label="Edit Buttons">
-  <Tooltip topLeft tip="Apply the changes to the cluster, similar to 'kubectl apply'">
+  aria-label={t('workloads.editButtons') ?? 'Edit Buttons'}>
+  <Tooltip topLeft tip={t('workloads.applyChangesTip') ?? 'Apply the changes to the cluster, similar to \'kubectl apply\''}>
     <Button
       type="primary"
-      aria-label="Apply changes to cluster"
+      aria-label={t('workloads.applyChanges') ?? 'Apply changes to cluster'}
       on:click={applyToCluster}
       disabled={!changesDetected}
-      inProgress={inProgress}>Apply changes to cluster</Button>
+      inProgress={inProgress}>{t('workloads.applyChanges') ?? 'Apply changes to cluster'}</Button>
   </Tooltip>
-  <Tooltip topLeft tip="Revert the changes to the original content">
+  <Tooltip topLeft tip={t('workloads.revertChangesTip') ?? 'Revert the changes to the original content'}>
     <Button
       type="secondary"
-      aria-label="Revert changes"
+      aria-label={t('workloads.revertChanges') ?? 'Revert changes'}
       class="mr-2 opacity-100"
       on:click={revertChanges}
-      disabled={!changesDetected}>Revert changes</Button>
+      disabled={!changesDetected}>{t('workloads.revertChanges') ?? 'Revert changes'}</Button>
   </Tooltip>
 </div>
 

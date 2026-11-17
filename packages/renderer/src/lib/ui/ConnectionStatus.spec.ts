@@ -19,7 +19,9 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { initTranslations } from '/@/lib/i18n/translations.svelte';
 
 import ConnectionStatus from './ConnectionStatus.svelte';
 
@@ -28,6 +30,11 @@ import ConnectionStatus from './ConnectionStatus.svelte';
 
 const connectionStatusLabel = 'Connection Status Label';
 const connectionStatusIcon = 'Connection Status Icon';
+
+beforeEach(async () => {
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+});
 
 test('Expect green text and icon when connection is running', async () => {
   render(ConnectionStatus, { status: 'started' });
@@ -82,4 +89,17 @@ test('Expect green text and icon when connection is unknown', async () => {
   expect(label).toBeInTheDocument();
   expect(label).toHaveClass('text-[var(--pd-status-unknown)]');
   expect(label).toHaveTextContent('UNKNOWN');
+});
+
+test('Expect translated status labels to preserve status colors across language changes', async () => {
+  render(ConnectionStatus, { status: 'started' });
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({ 'status.RUNNING': '実行中' });
+  await initTranslations();
+
+  await screen.findByText('実行中');
+  expect(screen.getByLabelText(connectionStatusIcon)).toHaveClass('bg-[var(--pd-status-running)]');
+
+  vi.mocked(window.i18nGetActiveTranslations).mockResolvedValue({});
+  await initTranslations();
+  await screen.findByText('RUNNING');
 });

@@ -5,6 +5,7 @@ import type { V1DeploymentSpec } from '@kubernetes/client-node';
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 import Container from './KubeContainerArtifact.svelte';
 
@@ -18,15 +19,15 @@ let { artifact, deploymentName, namespace }: Props = $props();
 
 {#if artifact}
   <tr>
-    <Title>Details</Title>
+    <Title>{t('workloads.details') ?? 'Details'}</Title>
   </tr>
   <tr>
-    <Cell>Replicas</Cell>
+    <Cell>{t('workloads.replicas') ?? 'Replicas'}</Cell>
     <Cell>{artifact.replicas}</Cell>
   </tr>
   {#if artifact.selector.matchLabels}
     <tr>
-      <Cell>Selector</Cell>
+      <Cell>{t('workloads.selector') ?? 'Selector'}</Cell>
       <Cell>
         {#each Object.entries(artifact.selector.matchLabels) as [key, value] (key)}
           <div>{key}: {value}</div>
@@ -36,13 +37,13 @@ let { artifact, deploymentName, namespace }: Props = $props();
   {/if}
   {#if artifact.strategy}
     <tr>
-      <Cell>Strategy</Cell>
+      <Cell>{t('workloads.strategy') ?? 'Strategy'}</Cell>
       <Cell>{artifact.strategy.type}</Cell>
     </tr>
   {/if}
   {#if artifact.template.spec?.containers}
     <tr>
-      <Title>Containers</Title>
+      <Title>{t('workloads.containers') ?? 'Containers'}</Title>
     </tr>
     {#each artifact.template.spec?.containers as container (container.name)}
       <tr>

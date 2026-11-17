@@ -3,6 +3,8 @@ import { faCodeBranch, faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import type { ExtensionDetailsUI } from './extension-details-ui';
 import ExtensionAutoUpdate from './ExtensionAutoUpdate.svelte';
 import ExtensionUpdateLink from './ExtensionUpdateLink.svelte';
@@ -53,7 +55,7 @@ const hasResources = $derived(Boolean(repositoryUrl) || Boolean(extensionDetails
 
     {#if hasResources}
       <div class="flex flex-col items-start gap-1">
-        <div class="uppercase text-sm text-[var(--pd-details-card-header)]">resources</div>
+        <div class="uppercase text-sm text-[var(--pd-details-card-header)]">{t('workloads.resources') ?? 'resources'}</div>
         {#if repositoryUrl}
           <Tooltip top tip={repositoryUrl}>
             <!-- Native anchor keeps browser/electron context-menu options (e.g. copy link). -->
@@ -64,7 +66,7 @@ const hasResources = $derived(Boolean(repositoryUrl) || Boolean(extensionDetails
               <span aria-hidden="true">
                 <Icon icon={faCodeBranch} size="sm" />
               </span>
-              Repository
+              {t('workloads.repository') ?? 'Repository'}
             </a>
           </Tooltip>
         {/if}
@@ -79,7 +81,7 @@ const hasResources = $derived(Boolean(repositoryUrl) || Boolean(extensionDetails
               <span aria-hidden="true">
                 <Icon icon={faExternalLink} size="sm" />
               </span>
-              Homepage
+              {t('workloads.homepage') ?? 'Homepage'}
             </a>
           </Tooltip>
         {/if}

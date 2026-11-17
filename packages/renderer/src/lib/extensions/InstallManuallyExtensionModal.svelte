@@ -4,6 +4,7 @@ import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 
 interface Props {
   closeCallback: () => void;
@@ -14,7 +15,7 @@ let imageName = $state('');
 
 let inputfieldError: string | undefined = $state('');
 
-const inputAriaLabel = 'Image name to install custom extension';
+const inputAriaLabel = $derived(t('workloads.customExtensionImage') ?? 'Image name to install custom extension');
 
 onMount(async () => {
   // search input field and make focus by aria-label Image name to install custom extension
@@ -28,14 +29,14 @@ function validateImageName(event: Event): void {
   if (event.target instanceof HTMLInputElement) {
     let name = event.target.value;
     if (!name) {
-      inputfieldError = 'Missing name';
+      inputfieldError = t('workloads.missingName') ?? 'Missing name';
       return;
     } else {
       inputfieldError = undefined;
       return;
     }
   }
-  inputfieldError = 'Invalid input';
+  inputfieldError = t('workloads.invalidInput') ?? 'Invalid input';
 }
 
 async function installExtension(): Promise<void> {
@@ -68,18 +69,18 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
 <svelte:window onkeydown={handleKeydown} />
 
 <Dialog
-  title="Install custom extension"
+  title={t('workloads.installCustomExtension') ?? 'Install custom extension'}
   onclose={closeCallback}>
   {#snippet content()}
     <div  class="flex flex-col leading-5 space-y-5">
       <div>
-        <label for="imageName" class="block pb-2 text-[var(--pd-modal-text)]">OCI Image:</label>
+        <label for="imageName" class="block pb-2 text-[var(--pd-modal-text)]">{t('workloads.ociImage') ?? 'OCI Image:'}</label>
         <div class="min-h-14">
           <Input
             bind:value={imageName}
             name="imageName"
             id="imageName"
-            placeholder="Enter OCI image name of the extension (e.g. quay.io/namespace/my-image)"
+            placeholder={t('workloads.extensionImagePlaceholder') ?? 'Enter OCI image name of the extension (e.g. quay.io/namespace/my-image)'}
             on:input={validateImageName}
             error={inputfieldError}
             aria-invalid={inputfieldError !== ''}
@@ -93,12 +94,12 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
 
       <Button
         type="link"
-        on:click={closeCallback}>Cancel</Button>
+        on:click={closeCallback}>{t('workloads.cancel') ?? 'Cancel'}</Button>
       <Button
         type="primary"
         icon={faCloudDownload}
         disabled={inputfieldError !== undefined}
-        on:click={installExtension}>Install</Button>
+        on:click={installExtension}>{t('workloads.install') ?? 'Install'}</Button>
 
   {/snippet}
 </Dialog>

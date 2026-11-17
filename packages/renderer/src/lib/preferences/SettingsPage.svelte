@@ -1,6 +1,8 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   title: string;
   subtitle?: Snippet;
@@ -10,9 +12,10 @@ interface Props {
 }
 
 let { title, subtitle, actions, header, children }: Props = $props();
+let displayTitle = $derived(t(title === 'Settings' ? 'settings.title' : `settings.navigation.${title}`) ?? title);
 </script>
 
-<div class="flex flex-col w-full h-full" role="region" aria-label={title}>
+<div class="flex flex-col w-full h-full" role="region" aria-label={displayTitle}>
   <div class="w-full px-5 py-4" role="region" aria-label="Header">
     <div class="flex flex-row">
       <div class="grow">
@@ -21,7 +24,7 @@ let { title, subtitle, actions, header, children }: Props = $props();
           role="heading"
           aria-level="1"
           aria-label="Title">
-          {title}
+          {displayTitle}
         </div>
         <div
           class="text-[color:var(--pd-invert-content-header2-text)]"

@@ -2,6 +2,8 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 import type { EngineInfoUI } from './EngineInfoUI';
 
 interface Props {
@@ -11,8 +13,9 @@ interface Props {
 
 let { type, engines }: Props = $props();
 
-const LABEL_IMAGE_UNUSED = 'All unused images';
-const LABEL_IMAGE_UNTAGGED = 'All untagged images';
+const LABEL_IMAGE_UNUSED = $derived(t('management.prune.unusedImages') ?? 'All unused images');
+const LABEL_IMAGE_UNTAGGED = $derived(t('management.prune.untaggedImages') ?? 'All untagged images');
+const resourceLabel = $derived(t(`management.prune.${type}`) ?? type);
 
 async function openPruneDialog(): Promise<void> {
   let message = 'This action will prune';
@@ -28,18 +31,29 @@ async function openPruneDialog(): Promise<void> {
     message += ' from the ' + engines[0].name + ' engine.';
   }
 
+  message =
+    t(engines.length > 1 ? 'management.prune.allEngines' : 'management.prune.engine', {
+      resource:
+        type === 'images'
+          ? resourceLabel
+          : (t('management.prune.unused', { resource: resourceLabel }) ?? `all unused ${type}`),
+      name: engines[0].name,
+    }) ?? message;
+
   const buttons: string[] = [];
-  const cancel = 'Cancel';
+  const cancel = t('common.cancel') ?? 'Cancel';
   buttons.push(cancel);
   if (type === 'images') {
     buttons.push(LABEL_IMAGE_UNUSED);
     buttons.push(LABEL_IMAGE_UNTAGGED);
   } else {
-    buttons.push('Prune');
+    buttons.push(t('management.prune.action') ?? 'Prune');
   }
 
   const result = await window.showMessageBox({
-    title: `Prune ${type.charAt(0).toUpperCase() + type.slice(1)}?`,
+    title:
+      t('management.prune.title', { resource: resourceLabel }) ??
+      `Prune ${type.charAt(0).toUpperCase() + type.slice(1)}?`,
     type: 'danger',
     message: message,
     buttons,
@@ -96,4 +110,4 @@ async function prune(type: string, selectedItemLabel: string): Promise<void> {
 }
 </script>
 
-<Button type="secondary" on:click={openPruneDialog} title="Remove unused {type}" icon={faTrash}>Prune</Button>
+<Button type="secondary" on:click={openPruneDialog} title={t('management.prune.tooltip', { resource: resourceLabel }) ?? `Remove unused ${type}`} icon={faTrash}>{t('management.prune.action') ?? 'Prune'}</Button>

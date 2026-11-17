@@ -54,6 +54,7 @@ vi.mock(import('electron'), async () => {
       getVersion: vi.fn(),
       getPath: vi.fn(),
       getName: vi.fn(),
+      getLocale: vi.fn().mockReturnValue('en'),
       on: vi.fn(),
       once: vi.fn(),
       quit: vi.fn(),

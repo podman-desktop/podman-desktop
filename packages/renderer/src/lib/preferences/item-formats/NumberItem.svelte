@@ -2,6 +2,8 @@
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
 import { NumberInput, Tooltip } from '@podman-desktop/ui-svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
+
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
   value?: number;
@@ -46,7 +48,7 @@ function onValidation(newValue: number, validationError?: string): void {
     onValidation={onValidation}
     bind:value={recordValue}
     bind:error={error}
-    aria-label={record.description}
+    aria-label={t(`${record.id}.displayName`) ?? t(`${record.id}.description`) ?? record.description}
     minimum={record.minimum}
     step={record.step}
     type={record.type === 'integer' ? 'integer' : 'number'}

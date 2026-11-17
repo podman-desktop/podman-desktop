@@ -2,6 +2,7 @@
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
 import { kubernetesCurrentContextState } from '/@/stores/kubernetes-contexts-state';
 
@@ -47,7 +48,7 @@ async function handleNamespaceChange(value: unknown): Promise<void> {
 {#await currentNamespacePromise then currentNamespace}
 {#await namespacesPromise then namespaces}
 <Dropdown
-  ariaLabel="Kubernetes Namespace"
+  ariaLabel={t('workloads.kubernetesNamespace') ?? 'Kubernetes Namespace'}
   name="namespace"
   class="w-56 max-w-56"
   value={currentNamespace}
@@ -58,7 +59,7 @@ async function handleNamespaceChange(value: unknown): Promise<void> {
     value: namespace.metadata?.name ?? '',
   }))}>
   {#snippet left()}
-  <div class="mr-1 text-[var(--pd-input-field-placeholder-text)]">Namespace:</div>
+  <div class="mr-1 text-[var(--pd-input-field-placeholder-text)]">{t('workloads.namespaceLabel') ?? 'Namespace:'}</div>
   {/snippet}
 </Dropdown>
 {/await}

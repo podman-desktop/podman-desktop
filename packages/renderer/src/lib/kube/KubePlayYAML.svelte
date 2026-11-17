@@ -10,6 +10,7 @@ import { router } from 'tinro';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import KubePlayIcon from '/@/lib/kube/KubePlayIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
@@ -61,10 +62,10 @@ $effect(() => {
 });
 
 const kubeFileDialogOptions: OpenDialogOptions = {
-  title: 'Select a .yaml file to play',
+  title: t('workloads.selectYamlToPlay') ?? 'Select a .yaml file to play',
   filters: [
     {
-      name: 'YAML files',
+      name: t('workloads.yamlFiles') ?? 'YAML files',
       extensions: ['yaml', 'yml'],
     },
   ],
@@ -133,7 +134,7 @@ async function playKubeFile(): Promise<void> {
 
           // For each Pod that has container errors, we will add the container errors to the warning message
           if (containerErrors.length > 0) {
-            runWarning = `The following pods were created but failed to start: ${containerErrors
+            runWarning = `${t('workloads.createdButFailed') ?? 'The following pods were created but failed to start: '}${containerErrors
               .map((pod: unknown) =>
                 pod && typeof pod === 'object' && 'ContainerErrors' in pod && Array.isArray(pod.ContainerErrors)
                   ? pod.ContainerErrors.join(', ')
@@ -175,7 +176,7 @@ function toggle(choice: 'podman' | 'custom'): void {
 {/if}
 
 {#if providerConnections.length > 0}
-  <EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
+  <EngineFormPage title={t('workloads.createPodsFromYaml') ?? 'Create pods from a Kubernetes YAML file'} inProgress={runStarted && !runFinished}>
     {#snippet icon()}
     <KubePlayIcon size="30px" />
     {/snippet}
@@ -184,7 +185,7 @@ function toggle(choice: 'podman' | 'custom'): void {
     <div class="space-y-6">
       <div hidden={runStarted}>
         <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
-          >Kubernetes YAML file</label>
+          >{t('workloads.kubernetesYamlFile') ?? 'Kubernetes YAML file'}</label>
 
       </div>
 
@@ -198,7 +199,7 @@ function toggle(choice: 'podman' | 'custom'): void {
           <button
             type="button"
             class="absolute inset-0 w-full rounded-md cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]"
-            aria-label="Podman Container Engine Runtime"
+            aria-label={t('workloads.podmanRuntime') ?? 'Podman Container Engine Runtime'}
             aria-pressed={userChoice === 'podman' ? 'true' : 'false'}
             onclick={toggle.bind(undefined, 'podman')}></button>
           <div class="relative z-10 flex flex-row align-middle items-center pointer-events-none">
@@ -214,7 +215,7 @@ function toggle(choice: 'podman' | 'custom'): void {
                 id="containerFilePath"
                 disabled={userChoice === 'custom'}
                 bind:value={kubernetesYamlFilePath}
-                placeholder="Select a .yaml file to play"
+                placeholder={t('workloads.selectYamlToPlay') ?? 'Select a .yaml file to play'}
                 options={kubeFileDialogOptions}
                 class="w-full p-2" />
             </div>
@@ -226,7 +227,7 @@ function toggle(choice: 'podman' | 'custom'): void {
                 class="block mb-2 font-medium"
                 class:text-[var(--pd-content-card-header-text)]={userChoice === 'podman'}
                 class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'podman'}
-                >Container Engine</label>
+                >{t('workloads.containerEngine') ?? 'Container Engine'}</label>
               <ContainerConnectionDropdown
                 id="providerChoice"
                 name="providerChoice"
@@ -242,7 +243,7 @@ function toggle(choice: 'podman' | 'custom'): void {
 
         <button
           class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-          aria-label="Create a file from scratch"
+          aria-label={t('workloads.createFile') ?? 'Create a file from scratch'}
           aria-pressed={userChoice === 'custom' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'custom'}
@@ -258,7 +259,7 @@ function toggle(choice: 'podman' | 'custom'): void {
               class="pl-2"
               class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
               class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
-              Create a file from scratch
+              {t('workloads.createFile') ?? 'Create a file from scratch'}
             </div>
           </div>
         </button>
@@ -268,7 +269,7 @@ function toggle(choice: 'podman' | 'custom'): void {
       {#if userChoice === 'custom'}
         <div class="space-y-3">
           <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
-            Custom Kubernetes YAML content
+            {t('workloads.customYamlContent') ?? 'Custom Kubernetes YAML content'}
           </label>
           <div id="custom-yaml-editor" class="h-[400px] border">
             <MonacoEditor
@@ -282,13 +283,13 @@ function toggle(choice: 'podman' | 'custom'): void {
       {/if}
 
       <div class="flex flex-col gap-y-2">
-        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Options</div>
+        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">{t('workloads.options') ?? 'Options'}</div>
         <div class="flex flex-row gap-x-2">
-          <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
-            <div>Enable build</div>
+          <Checkbox class="mx-1 my-auto" title={t('workloads.enableBuild') ?? 'Enable build'} bind:checked={kubeBuild} >
+            <div>{t('workloads.enableBuild') ?? 'Enable build'}</div>
           </Checkbox>
-          <Checkbox class="mx-1 my-auto" title="Replace" bind:checked={kubeReplace} >
-            <div>Replace</div>
+          <Checkbox class="mx-1 my-auto" title={t('workloads.replace') ?? 'Replace'} bind:checked={kubeReplace} >
+            <div>{t('workloads.replace') ?? 'Replace'}</div>
           </Checkbox>
         </div>
       </div>
@@ -296,24 +297,24 @@ function toggle(choice: 'podman' | 'custom'): void {
       {#if !runFinished}
         <ButtonRow>
           {#if !runStarted}
-            <Button type="link" on:click={(): void => router.goto($lastPage.path)}>Close</Button>
+            <Button type="link" on:click={(): void => router.goto($lastPage.path)}>{t('workloads.close') ?? 'Close'}</Button>
             <Button
               on:click={playKubeFile}
               disabled={hasInvalidFields || runStarted}
               inProgress={runStarted}
               icon={KubePlayIcon}>
-              {userChoice === 'custom' ? 'Play custom YAML' : 'Play'}
+              {userChoice === 'custom' ? (t('workloads.playCustomYaml') ?? 'Play custom YAML') : (t('workloads.play') ?? 'Play')}
             </Button>
           {:else}
-            <Button onclick={cancel} title="Cancel">
-              Cancel
+            <Button onclick={cancel} title={t('workloads.cancel') ?? 'Cancel'}>
+              {t('workloads.cancel') ?? 'Cancel'}
             </Button>
           {/if}
         </ButtonRow>
       {/if}
       {#if runStarted}
         <div class="text-[var(--pd-content-card-text)] text-sm">
-          Please do not change screens while Play Kube executes. This process may take a few minutes to complete...
+          {t('workloads.playInProgress') ?? 'Please do not change screens while Play Kube executes. This process may take a few minutes to complete...'}
         </div>
       {/if}
 
@@ -331,9 +332,9 @@ function toggle(choice: 'podman' | 'custom'): void {
           <div class="flex flex-row items-center">
             <div>
               {#if playKubeResult.Pods && playKubeResult.Pods.length > 1}
-                Created pods:
+                {t('workloads.createdPods') ?? 'Created pods:'}
               {:else}
-                Created pod:
+                {t('workloads.createdPod') ?? 'Created pod:'}
               {/if}
             </div>
           </div>
@@ -346,7 +347,7 @@ function toggle(choice: 'podman' | 'custom'): void {
 
       {#if runFinished}
         <ButtonRow>
-          <Button onclick={goBackToPodsPage}>Done</Button>
+          <Button onclick={goBackToPodsPage}>{t('workloads.done') ?? 'Done'}</Button>
         </ButtonRow>
       {/if}
     </div>

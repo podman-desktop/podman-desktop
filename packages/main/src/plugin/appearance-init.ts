@@ -22,6 +22,8 @@ import { type IConfigurationNode, IConfigurationRegistry } from '@desktop-framew
 import { nativeTheme } from 'electron';
 import { inject, injectable } from 'inversify';
 
+import { getLanguages } from './i18n/language-registry.js';
+
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;
 const SEARCHBAR_FULL_KEY = `titleBar.${AppearanceSettings.SearchBar}`;
 
@@ -60,6 +62,14 @@ export class AppearanceInit {
           minimum: 50,
           maximum: 240,
           default: 160,
+        },
+        // Language names remain self-identifying; the renderer localizes the system option.
+        [`${AppearanceSettings.SectionName}.${AppearanceSettings.Language}`]: {
+          description: 'Select the display language, or use your system setting.',
+          type: 'string',
+          enum: [AppearanceSettings.SystemEnumValue, ...getLanguages().map(language => language.id)],
+          enumLabels: ['Follow system language', ...getLanguages().map(language => language.label)],
+          default: AppearanceSettings.SystemEnumValue,
         },
       },
     };

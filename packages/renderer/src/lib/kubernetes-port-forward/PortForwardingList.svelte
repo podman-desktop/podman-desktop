@@ -3,6 +3,8 @@ import type { ForwardConfig, WorkloadKind } from '@desktop-framework/api';
 import { faEthernet } from '@fortawesome/free-solid-svg-icons';
 import { EmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 
+import { getTableLabels } from '/@/lib/i18n/table-labels';
+import { t } from '/@/lib/i18n/translations.svelte';
 import PortForwardActions from '/@/lib/kubernetes-port-forward/PortForwardActions.svelte';
 import PortForwardIcon from '/@/lib/kubernetes-port-forward/PortForwardIcon.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
@@ -54,11 +56,12 @@ function key(config: ForwardConfig): string {
 }
 </script>
 
-<NavPage searchEnabled={false} title="Port forwarding">
+<NavPage searchEnabled={false} title={t('kubernetes.resources.portForward.title') ?? 'Port forwarding'}>
   {#snippet content()}
   <div class="flex min-w-full grow">
     {#if $kubernetesCurrentContextPortForwards.length > 0}
       <Table
+        labels={getTableLabels()}
         kind="port"
         data={$kubernetesCurrentContextPortForwards}
         columns={columns}
@@ -67,7 +70,7 @@ function key(config: ForwardConfig): string {
         defaultSortColumn="Name">
       </Table>
     {:else}
-      <EmptyScreen message="To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)" icon={faEthernet} title="No port forwarding configured"/>
+      <EmptyScreen message={t('kubernetes.resources.portForward.emptyMessage') ?? 'To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)'} icon={faEthernet} title={t('kubernetes.resources.portForward.empty') ?? 'No port forwarding configured'}/>
     {/if}
   </div>
   {/snippet}

@@ -3,6 +3,7 @@ import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/ap
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
+import { t } from '/@/lib/i18n/translations.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import BooleanItem from '/@/lib/preferences/item-formats/BooleanItem.svelte';
 import EnumItem from '/@/lib/preferences/item-formats/EnumItem.svelte';
@@ -155,7 +156,9 @@ async function onChange(recordId: string, value: boolean | string | number): Pro
     return;
   }
   if (!ensureType(value)) {
-    invalidText = `Value type provided is ${typeof value} instead of ${record.type}.`;
+    invalidText = (t('settings.invalidType') ?? 'Value type provided is {actual} instead of {expected}.')
+      .replace('{actual}', typeof value)
+      .replace('{expected}', `${record.type}`);
     invalidRecord(invalidText);
     return Promise.reject(invalidText);
   }
@@ -249,7 +252,7 @@ function numberItemValue(): number {
     {/if}
   {:else if record.type === 'markdown'}
     <div class="text-sm">
-      <Markdown markdown={record.markdownDescription} />
+      <Markdown markdown={t(`${record.id}.markdownDescription`) ?? record.markdownDescription} />
     </div>
   {/if}
 </div>

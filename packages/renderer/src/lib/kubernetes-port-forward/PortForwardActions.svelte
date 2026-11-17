@@ -3,6 +3,7 @@ import { type ForwardConfig } from '@desktop-framework/api';
 import { faSquareUpRight, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { t } from '/@/lib/i18n/translations.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
 
@@ -34,10 +35,10 @@ async function openExternal(): Promise<void> {
 </script>
 
 <ListItemButtonIcon
-  title="Open forwarded port"
+  title={t('kubernetes.resources.portForward.open') ?? 'Open forwarded port'}
   onClick={openExternal.bind(undefined)}
   icon={faSquareUpRight} />
 <ListItemButtonIcon
-  title="Delete forwarded port"
-  onClick={(): void => withConfirmation(deletePortForward, `Delete port forward`, { title: 'Delete Port Forward?', variant: 'delete' })}
+  title={t('kubernetes.resources.portForward.delete') ?? 'Delete forwarded port'}
+  onClick={(): void => withConfirmation(deletePortForward, `Delete port forward`, { title: t('kubernetes.resources.portForward.deleteTitle') ?? 'Delete Port Forward?', message: t('kubernetes.resources.portForward.deleteMessage') ?? 'Are you sure you want to Delete port forward?', variant: 'delete' })}
   icon={faTrash} />

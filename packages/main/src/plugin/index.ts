@@ -224,6 +224,7 @@ import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
 import { HelpMenu } from './help-menu/help-menu.js';
+import { LocalizationInit } from './i18n/localization-init.js';
 import { IconRegistry } from './icon-registry.js';
 import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
@@ -755,6 +756,14 @@ export class PluginSystem {
     container.bind<AppearanceInit>(AppearanceInit).toSelf().inSingletonScope();
     const appearanceConfiguration = container.get<AppearanceInit>(AppearanceInit);
     appearanceConfiguration.init();
+
+    // share the active language translations with the renderer (PoC: Appearance page descriptions)
+    container.bind<LocalizationInit>(LocalizationInit).toSelf().inSingletonScope();
+    const localizationInit = container.get<LocalizationInit>(LocalizationInit);
+    localizationInit.init();
+    this.ipcHandle('i18n:get-active-translations', async (): Promise<Record<string, string>> => {
+      return localizationInit.getActiveTranslations();
+    });
 
     container.bind<ConfirmationInit>(ConfirmationInit).toSelf().inSingletonScope();
     const confirmationConfiguration = container.get<ConfirmationInit>(ConfirmationInit);

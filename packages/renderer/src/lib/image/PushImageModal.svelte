@@ -7,6 +7,7 @@ import { onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { t } from '/@/lib/i18n/translations.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -89,12 +90,12 @@ $effect(() => {
 </script>
 
 <Dialog
-  title="Push image"
+  title={t('resources.push-image') ?? 'Push image'}
   onclose={closeCallback}>
   {#snippet content()}
     <div  class="flex flex-col text-sm leading-5 space-y-5">
       <div class="pb-4">
-        <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
+        <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">{t('resources.image-tag') ?? 'Image tag'}</label>
         {#if isAuthenticatedForThisImage}
           <Icon class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />
         {:else}
@@ -115,8 +116,8 @@ $effect(() => {
         and to click to go to the registries page -->
         {#if !isAuthenticatedForThisImage}
           <p class="text-[var(--pd-state-warning)] pt-1">
-            No registry with push permissions found. <Link on:click={(): void => router.goto('/preferences/registries')}
-              >Add a registry now.</Link>
+            {t('resources.no-registry-with-push-permissions-found') ?? 'No registry with push permissions found.'} <Link on:click={(): void => router.goto('/preferences/registries')}
+              >{t('resources.add-a-registry-now') ?? 'Add a registry now.'}</Link>
           </p>{/if}
       </div>
 
@@ -129,7 +130,7 @@ $effect(() => {
   {#snippet buttons()}
 
       {#if !pushInProgress && !pushFinished}
-        <Button type="link" on:click={closeCallback}>Cancel</Button>
+        <Button type="link" on:click={closeCallback}>{t('resources.cancel') ?? 'Cancel'}</Button>
       {/if}
       {#if !pushFinished}
         <Button
@@ -141,10 +142,10 @@ $effect(() => {
             await pushImage(selectedImageTag);
           }}
           inProgress={pushInProgress}>
-          Push image
+          {t('resources.push-image') ?? 'Push image'}
         </Button>
       {:else}
-        <Button on:click={pushImageFinished} class="w-auto">Done</Button>
+        <Button on:click={pushImageFinished} class="w-auto">{t('resources.done') ?? 'Done'}</Button>
       {/if}
 
   {/snippet}
