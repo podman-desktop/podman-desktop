@@ -282,12 +282,23 @@ export class ContainerProviderRegistry {
 
     api.getEvents((err, stream) => {
       if (err) {
+        // only log the first failure to avoid flooding the console while the engine is unreachable,
+        // but always report it so the provider keeps retrying
         if (this.notify) {
           console.log('error is', err);
-          errorCallback(new Error('Error in handling events', err));
           this.notify = false;
         }
+        errorCallback(new Error('Error in handling events', err));
       }
+
+      // a stream that ends without an error (for example when the engine goes away)
+      // must also trigger a reconnect, otherwise no more events are received
+      stream?.on('end', () => {
+        errorCallback(new Error('Events stream ended'));
+      });
+      stream?.on('close', () => {
+        errorCallback(new Error('Events stream closed'));
+      });
 
       stream?.on('error', error => {
         console.error('/event stream received an error.', error);
@@ -362,27 +373,40 @@ export class ContainerProviderRegistry {
       return;
     }
 
-    internalProvider.api = new Dockerode({ socketPath: containerProviderConnection.endpoint.socketPath });
+    const api = new Dockerode({ socketPath: containerProviderConnection.endpoint.socketPath });
+    internalProvider.api = api;
     if (containerProviderConnection.type === 'podman') {
-      internalProvider.libpodApi = internalProvider.api as unknown as LibPod;
+      internalProvider.libpodApi = api as unknown as LibPod;
     }
 
     // in case of errors reported during handling events like the connection is aborted, etc.
     // we need to reconnect the provider
     const errorHandler = (error: Error): void => {
-      console.warn('Error when handling events', error, 'Will reconnect in 5s', error);
+      // ignore failures of a subscription that has already been replaced (or already reported):
+      // they must not tear down a newer, healthy connection
+      if (internalProvider.api !== api) {
+        return;
+      }
+      // failures repeat on every retry while the engine is unreachable:
+      // only log the first one until events are received again
+      if (this.notify) {
+        console.warn('Error when handling events', error, `Will reconnect in ${this.retryDelayEvents}ms`);
+        this.notify = false;
+      }
       internalProvider.api = undefined;
       internalProvider.libpodApi = undefined;
 
       // ok we had some errors so we need to reconnect the provider
       // delay the reconnection to avoid too many reconnections
-      // retry in 5 seconds
       setTimeout(() => {
-        this.setupConnectionAPI(internalProvider, containerProviderConnection);
+        // the periodic status check may have already reconnected the provider
+        if (!internalProvider.api) {
+          this.setupConnectionAPI(internalProvider, containerProviderConnection);
+        }
       }, this.retryDelayEvents);
     };
 
-    this.handleEvents(internalProvider.api, errorHandler);
+    this.handleEvents(api, errorHandler);
     this.apiSender.send('provider-change', {});
     this._onApiAttached.fire(internalProvider.id);
   }

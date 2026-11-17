@@ -42,7 +42,7 @@ import { type SetupServer, setupServer } from 'msw/node';
 import type { Headers, PackOptions } from 'tar-fs';
 import * as tarstream from 'tar-stream';
 import type { MockInstance } from 'vitest';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
@@ -4203,8 +4203,9 @@ test('setupConnectionAPI with errors', async () => {
   expect(allCalls).toBeDefined();
 
   // filter calls to find the one with container-started-event
+  // the provider reconnected to the new stream, so the event must have been received
   const containerStartedEventCalls = allCalls.filter(call => call[0] === 'container-started-event');
-  expect(containerStartedEventCalls).toHaveLength(0);
+  expect(containerStartedEventCalls).toHaveLength(1);
 
   stream2.end();
 
@@ -4558,6 +4559,122 @@ test('check handleEvents calls errorCallback and destroys pipeline on parse erro
   expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: 'Error while parsing events' }));
 
   consoleErrorSpy.mockRestore();
+});
+
+describe('events stream reconnect', () => {
+  const providerConnectionInfo: podmanDesktopAPI.ContainerProviderConnection = {
+    name: 'podman',
+    displayName: 'podman',
+    type: 'podman',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    status: () => 'started',
+  };
+
+  let internalContainerProvider: InternalContainerProvider;
+
+  // replace handleEvents to capture the error callback of each events subscription instead of connecting to an engine
+  function captureEventsSubscriptions(): ((error: Error) => void)[] {
+    const errorCallbacks: ((error: Error) => void)[] = [];
+    containerRegistry.handleEvents = vi.fn((_api: Dockerode, errorCallback: (error: Error) => void): void => {
+      errorCallbacks.push(errorCallback);
+    });
+    return errorCallbacks;
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('console', { ...console, log: vi.fn(), warn: vi.fn(), error: vi.fn() });
+
+    internalContainerProvider = {
+      name: 'podman',
+      id: 'podman1',
+      connection: providerConnectionInfo,
+    };
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('check handleEvents reports the end of the events stream so the provider reconnects', async () => {
+    let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+    const fakeDockerode = {
+      getEvents: vi.fn((callback: (ignored: unknown, stream: PassThrough) => void) => {
+        eventsMockCallback = callback;
+      }),
+    } as unknown as Dockerode;
+    const errorCallback = vi.fn();
+
+    containerRegistry.handleEvents(fakeDockerode, errorCallback);
+    assert(eventsMockCallback);
+    const passThrough = new PassThrough();
+    eventsMockCallback(undefined, passThrough);
+
+    // end the stream without any error (engine went away)
+    passThrough.end();
+    passThrough.resume();
+
+    await vi.waitFor(() =>
+      expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: 'Events stream ended' })),
+    );
+  });
+
+  test('check handleEvents reports every getEvents failure so the provider keeps retrying', () => {
+    const fakeDockerode = {
+      getEvents: vi.fn((callback: (err: unknown, stream?: PassThrough) => void) => {
+        callback(new Error('connection refused'));
+      }),
+    } as unknown as Dockerode;
+    const errorCallback = vi.fn();
+
+    containerRegistry.handleEvents(fakeDockerode, errorCallback);
+    containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+    expect(errorCallback).toHaveBeenCalledTimes(2);
+    // only the first failure is logged
+    expect(console.log).toHaveBeenCalledTimes(1);
+  });
+
+  test('setupConnectionAPI ignores errors from a superseded events subscription', () => {
+    const errorCallbacks = captureEventsSubscriptions();
+
+    // first subscription, then a second one replacing it (e.g. periodic status check)
+    containerRegistry.setupConnectionAPI(internalContainerProvider, providerConnectionInfo);
+    containerRegistry.setupConnectionAPI(internalContainerProvider, providerConnectionInfo);
+    const currentApi = internalContainerProvider.api;
+    assert(currentApi);
+    const [staleCallback, currentCallback] = errorCallbacks;
+    assert(staleCallback);
+    assert(currentCallback);
+
+    // late error from the first, stale subscription
+    staleCallback(new Error('stale'));
+    expect(internalContainerProvider.api).toBe(currentApi);
+
+    // error from the current subscription resets the connection, reporting twice is harmless
+    currentCallback(new Error('current'));
+    currentCallback(new Error('current again'));
+    expect(internalContainerProvider.api).toBeUndefined();
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
+  test('setupConnectionAPI logs only the first of repeated reconnect failures', () => {
+    vi.useFakeTimers();
+    const errorCallbacks = captureEventsSubscriptions();
+    containerRegistry.addInternalProvider(internalContainerProvider.id, internalContainerProvider);
+    containerRegistry.setupConnectionAPI(internalContainerProvider, providerConnectionInfo);
+
+    const [firstCallback] = errorCallbacks;
+    assert(firstCallback);
+    firstCallback(new Error('Events stream ended'));
+
+    // the delayed retry subscribes again, and fails again
+    vi.advanceTimersByTime(5000);
+    const [, secondCallback] = errorCallbacks;
+    assert(secondCallback);
+    secondCallback(new Error('Error in handling events'));
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
 });
 
 test('check volume mounted is replicated when executing replicatePodmanContainer with named volume', async () => {
