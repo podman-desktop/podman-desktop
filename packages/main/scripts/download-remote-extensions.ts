@@ -108,6 +108,23 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
   };
 }
 
+async function getConfigDigest(imageRegistry: ImageRegistry, extension: RemoteExtension): Promise<string> {
+  const { config } = await imageRegistry.getManifestFromImageName(extension.oci);
+  if (!config) {
+    throw new Error(
+      `extension ${extension.name} has malformed content: the OCI image manifest should contains a "config" field`,
+    );
+  }
+
+  const digest: unknown = config.digest;
+  if (typeof digest !== 'string' || !digest) {
+    throw new Error(
+      `extension ${extension.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
+    );
+  }
+  return digest;
+}
+
 export async function downloadExtension(options: DownloadOptions): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
@@ -132,23 +149,8 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
 
   // a digest pinned in the reference (name@sha256:...) is returned as the tag, it is known without contacting the registry
   const { tag } = imageRegistry.extractImageDataFromImageName(options.extension.oci);
-  let expectedDigest: string | undefined = tag.includes(':') ? tag : undefined;
-
   // otherwise use the config digest of the manifest
-  if (!expectedDigest) {
-    const { config } = await imageRegistry.getManifestFromImageName(options.extension.oci);
-    if (!config) {
-      throw new Error(
-        `extension ${options.extension.name} has malformed content: the OCI image manifest should contains a "config" field`,
-      );
-    }
-    if (!config.digest) {
-      throw new Error(
-        `extension ${options.extension.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
-      );
-    }
-    expectedDigest = config.digest as string;
-  }
+  const expectedDigest = tag.includes(':') ? tag : await getConfigDigest(imageRegistry, options.extension);
 
   // check if the extension is already downloaded
   if (existingDigest === expectedDigest) {

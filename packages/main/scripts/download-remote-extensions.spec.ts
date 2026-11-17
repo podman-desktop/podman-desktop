@@ -459,6 +459,20 @@ describe('downloadExtension', () => {
     });
   });
 
+  test.each<unknown>([undefined, '', 42])('config.digest %s in the manifest should throw an error', async digest => {
+    vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue({ config: { digest } });
+
+    await expect(
+      downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      }),
+    ).rejects.toThrowError(
+      `extension ${REMOTE_INFO_MOCK.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
+    );
+    expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
+  });
+
   test('invalid OCI registry name with auth should throw an error', async () => {
     vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue(undefined);
 
