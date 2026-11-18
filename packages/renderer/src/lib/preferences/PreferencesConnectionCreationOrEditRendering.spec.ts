@@ -23,6 +23,7 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@desktop-framework/api';
 import type { IConfigurationPropertyRecordedSchema } from '@desktop-framework/api/configuration';
+import type { AuditRequestItems } from '@desktop-framework/extension-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { get } from 'svelte/store';
@@ -391,6 +392,91 @@ describe.each([
     await vi.waitFor(() => expect(vi.mocked(window.auditConnectionParameters)).toBeCalledTimes(2));
     await vi.waitFor(() => expect(createButton).toBeEnabled());
   });
+});
+
+test('Expect Create button to be disabled on mount if initial audit returns errors', async () => {
+  const callback = vi.fn();
+  const auditSpy = vi.spyOn(window, 'auditConnectionParameters').mockResolvedValue({
+    records: [
+      {
+        type: 'error',
+        record: 'error message',
+      },
+    ],
+  });
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: [
+      {
+        title: 'StringProperty',
+        parentId: '',
+        scope: 'ContainerProviderConnectionFactory',
+        id: 'test.stringProperty',
+        type: 'string',
+        default: 'foo',
+        description: 'test.stringProperty',
+      },
+    ],
+    providerInfo,
+    connectionInfo: undefined,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+  });
+
+  await vi.waitFor(() => expect(auditSpy).toBeCalledWith('test', { 'test.stringProperty': 'foo' }));
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await vi.waitFor(() => expect(createButton).toBeDisabled());
+});
+
+test('Expect initial audit to use restored values when reopening a task', async () => {
+  const callback = vi.fn();
+  const stringProperties: IConfigurationPropertyRecordedSchema[] = [
+    {
+      title: 'StringProperty',
+      parentId: '',
+      scope: 'ContainerProviderConnectionFactory',
+      id: 'test.stringProperty',
+      type: 'string',
+      default: 'foo',
+      description: 'test.stringProperty',
+    },
+  ];
+  // the default value fails the audit, the saved value passes it
+  const auditSpy = vi
+    .spyOn(window, 'auditConnectionParameters')
+    .mockImplementation(async (_id: string, data: AuditRequestItems) => ({
+      records: data['test.stringProperty'] === 'foo' ? [{ type: 'error', record: 'error message' }] : [],
+    }));
+
+  const taskId = 1;
+  operationConnectionsInfo.update(map =>
+    map.set(taskId, {
+      operationKey: Symbol(),
+      providerInfo,
+      connectionInfo: undefined,
+      properties: stringProperties,
+      propertyScope,
+      operationInProgress: false,
+      operationSuccessful: false,
+      operationStarted: true,
+      errorMessage: 'error',
+      formData: { 'test.stringProperty': 'saved' },
+    }),
+  );
+
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: stringProperties,
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId,
+  });
+
+  await vi.waitFor(() => expect(auditSpy).toBeCalledWith('test', { 'test.stringProperty': 'saved' }));
+  expect(auditSpy).not.toBeCalledWith('test', { 'test.stringProperty': 'foo' });
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  expect(createButton).toBeEnabled();
 });
 
 test(`Check itemsAudit receive updated values`, async () => {
