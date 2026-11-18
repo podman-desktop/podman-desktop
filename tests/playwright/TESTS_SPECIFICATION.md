@@ -626,14 +626,14 @@ Local-image suite extras:
 ```bash
 TEST_PODMAN_MACHINE=true pnpm test:e2e:pdmachine:run
 TEST_PODMAN_MACHINE=true pnpm test:e2e:experimental:run
-TEST_PODMAN_MACHINE=true pnpm test:e2e:pdmachine:local-image:run
 ```
 
 The experimental command selects the enhanced Dashboard, not all tests that
 happen to enable experimental features. The feedback-dialog and Docker
-compatibility specs retain their own smoke selection. The local-image command
-runs only `z-podman-machine-local-image.spec.ts` (use `test:e2e:pdmachine:local-image`
-when the airgap asset still needs to be built).
+compatibility specs retain their own smoke selection. To run only the
+local-image suite, use `pnpm test:e2e:suite z-podman-machine-local-image`
+(with `TEST_PODMAN_MACHINE=true`, and `AIRGAP_DOWNLOAD=1` on the prior build
+when exercising the airgap scenario).
 
 ### Notes
 
