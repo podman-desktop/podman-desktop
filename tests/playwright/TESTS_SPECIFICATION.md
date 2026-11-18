@@ -605,6 +605,7 @@ free, and run these before destructive machine lifecycle workflows.
 | [z-podman-machine-onboarding.spec.ts](src/specs/z-podman-machine-onboarding.spec.ts)                     | `@pdmachine`    | Delete default machine, onboarding defaults/provider/privileges, create/details/stop/start/restart/edit, optional final deletion.                                |
 | [z-podman-machine-resources.spec.ts](src/specs/z-podman-machine-resources.spec.ts)                       | `@pdmachine`    | Stop default machine, create/start/restart/delete machines through Resources; skips Hyper-V. User-mode networking variant is Windows-only; its restart skips CI. |
 | [z-podman-machine-tests.spec.ts](src/specs/z-podman-machine-tests.spec.ts)                               | `@pdmachine`    | Provider-page navigation, default/rootless machine switching and cleanup.                                                                                        |
+| [z-podman-machine-local-image.spec.ts](src/specs/z-podman-machine-local-image.spec.ts)                   | `@pdmachine`    | Create/start/delete a machine from a local image (airgap asset or `MACHINE_IMAGE_PATH`); airgap scenario skips Hyper-V.                                          |
 | [environment-filter.spec.ts](src/specs/environment-filter.spec.ts)                                       | `@pdmachine`    | Second running machine and environment-specific pod/volume filtering; skips Hyper-V.                                                                             |
 | [enhanced-dashboard.spec.ts](src/specs/enhanced-dashboard.spec.ts)                                       | `@experimental` | Experimental Dashboard toggle, CLI/UI machine detection/creation and dummy Kubernetes/VM connections; downloads a dummy resource extension from Quay.            |
 
@@ -620,6 +621,14 @@ onboarding specs; unset/other values keep it. This flag is also read in
 Dashboard setup paths, but never bypasses the `TEST_PODMAN_MACHINE` gate.
 It is not a general cleanup switch for every machine suite.
 
+Local-image suite extras:
+
+| Variable / prerequisite                                                                                          | Meaning                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Airgap asset at `extensions/podman/packages/extension/assets/podman-image-{arch}.zst`                             | Required for the airgap-embedded scenario; produced when the app is built with `AIRGAP_DOWNLOAD=1`. Absent file skips that scenario.                                                                    |
+| `MACHINE_IMAGE_PATH`                                                                                             | Absolute path to an externally provided machine image for the second scenario; unset/empty skips it.                                                                                                    |
+| `CONTAINERS_MACHINE_PROVIDER=hyperv`                                                                             | Skips the airgap-embedded scenario (Windows airgap download embeds the WSL disktype only). With no `MACHINE_IMAGE_PATH`, the whole local-image file is skipped so hooks do not stop the default machine. |
+
 ### Execution
 
 ```bash
@@ -629,7 +638,10 @@ TEST_PODMAN_MACHINE=true pnpm test:e2e:experimental:run
 
 The experimental command selects the enhanced Dashboard, not all tests that
 happen to enable experimental features. The feedback-dialog and Docker
-compatibility specs retain their own smoke selection.
+compatibility specs retain their own smoke selection. To run only the
+local-image suite, use `pnpm test:e2e:suite z-podman-machine-local-image`
+(with `TEST_PODMAN_MACHINE=true`, and `AIRGAP_DOWNLOAD=1` on the prior build
+when exercising the airgap scenario).
 
 ### Notes
 
