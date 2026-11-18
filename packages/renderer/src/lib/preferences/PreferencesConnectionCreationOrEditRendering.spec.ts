@@ -396,7 +396,7 @@ describe.each([
 
 test('Expect Create button to be disabled on mount if initial audit returns errors', async () => {
   const callback = vi.fn();
-  const auditSpy = vi.spyOn(window, 'auditConnectionParameters').mockResolvedValue({
+  vi.mocked(window.auditConnectionParameters).mockResolvedValue({
     records: [
       {
         type: 'error',
@@ -423,7 +423,9 @@ test('Expect Create button to be disabled on mount if initial audit returns erro
     pageIsLoading: false,
   });
 
-  await vi.waitFor(() => expect(auditSpy).toBeCalledWith('test', { 'test.stringProperty': 'foo' }));
+  await vi.waitFor(() =>
+    expect(window.auditConnectionParameters).toBeCalledWith('test', { 'test.stringProperty': 'foo' }),
+  );
   const createButton = screen.getByRole('button', { name: 'Create' });
   await vi.waitFor(() => expect(createButton).toBeDisabled());
 });
@@ -442,11 +444,9 @@ test('Expect initial audit to use restored values when reopening a task', async 
     },
   ];
   // the default value fails the audit, the saved value passes it
-  const auditSpy = vi
-    .spyOn(window, 'auditConnectionParameters')
-    .mockImplementation(async (_id: string, data: AuditRequestItems) => ({
-      records: data['test.stringProperty'] === 'foo' ? [{ type: 'error', record: 'error message' }] : [],
-    }));
+  vi.mocked(window.auditConnectionParameters).mockImplementation(async (_id: string, data: AuditRequestItems) => ({
+    records: data['test.stringProperty'] === 'foo' ? [{ type: 'error', record: 'error message' }] : [],
+  }));
 
   const taskId = 1;
   operationConnectionsInfo.update(map =>
@@ -473,8 +473,10 @@ test('Expect initial audit to use restored values when reopening a task', async 
     taskId,
   });
 
-  await vi.waitFor(() => expect(auditSpy).toBeCalledWith('test', { 'test.stringProperty': 'saved' }));
-  expect(auditSpy).not.toBeCalledWith('test', { 'test.stringProperty': 'foo' });
+  await vi.waitFor(() =>
+    expect(window.auditConnectionParameters).toBeCalledWith('test', { 'test.stringProperty': 'saved' }),
+  );
+  expect(window.auditConnectionParameters).not.toBeCalledWith('test', { 'test.stringProperty': 'foo' });
   const createButton = screen.getByRole('button', { name: 'Create' });
   expect(createButton).toBeEnabled();
 });
