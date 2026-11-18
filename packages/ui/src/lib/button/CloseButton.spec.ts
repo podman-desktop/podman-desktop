@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 
 import CloseButton from './CloseButton.svelte';
@@ -55,4 +56,15 @@ test('Check onclick action', async () => {
   await fireEvent.click(button);
 
   expect(clickMock).toBeCalled();
+});
+
+test('Disable the close action', async () => {
+  const onclick = vi.fn();
+  render(CloseButton, { onclick, disabled: true });
+
+  const button = screen.getByRole('button', { name: 'Close' });
+  expect(button).toBeDisabled();
+
+  await userEvent.click(button);
+  expect(onclick).not.toHaveBeenCalled();
 });

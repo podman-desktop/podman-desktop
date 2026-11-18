@@ -52,6 +52,45 @@ test('bg click should trigger close event', async () => {
   expect(closeMock).toHaveBeenCalled();
 });
 
+test('ignoreFocusOut prevents backdrop close and still allows Escape', async () => {
+  const onclose = vi.fn();
+  render(Dialog, { title: 'A dialog', onclose, ignoreFocusOut: true });
+
+  await userEvent.click(screen.getByLabelText('fade-bg'));
+  expect(onclose).not.toHaveBeenCalled();
+
+  await userEvent.keyboard('{Escape}');
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
+test('close button is enabled by default', async () => {
+  const onclose = vi.fn();
+  render(Dialog, { title: 'A dialog', onclose });
+
+  const button = screen.getByRole('button', { name: 'Close' });
+  expect(button).toBeEnabled();
+
+  await userEvent.click(button);
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
+test('closeDisabled disables the close button until re-enabled', async () => {
+  const onclose = vi.fn();
+  const { rerender } = render(Dialog, { title: 'A dialog', onclose, closeDisabled: true });
+
+  const button = screen.getByRole('button', { name: 'Close' });
+  expect(button).toBeDisabled();
+
+  await userEvent.click(button);
+  expect(onclose).not.toHaveBeenCalled();
+
+  await rerender({ closeDisabled: false });
+  expect(button).toBeEnabled();
+
+  await userEvent.click(button);
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
 test('Escape key should trigger close', async () => {
   const closeMock = vi.fn();
   render(Dialog, { title: 'A dialog', onclose: closeMock });
