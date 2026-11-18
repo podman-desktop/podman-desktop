@@ -99,9 +99,11 @@ export class ImageUtils {
     }
 
     return containersInfo.some(container => {
-      // imageId is required on ContainerInfoUI, but a hand-built fixture (e.g. in tests)
-      // may still omit it; an undefined one simply never matches. Falling back to another
-      // field here would report the wrong image as in-use
+      // If both container and image specify an engineId and they differ, they belong to different engines.
+      // (When container.engineId is omitted, e.g. in test fixtures or legacy models, preserve match on imageId).
+      if (container.engineId && imageInfo.engineId && container.engineId !== imageInfo.engineId) {
+        return false;
+      }
       if (container.imageId !== imageInfo.Id) {
         return false;
       }

@@ -40,7 +40,10 @@ const progress = {
 };
 
 const mockTelemetryLogger = {} as TelemetryLogger;
-const mockWinPlatform = {} as WinPlatform;
+const mockWinPlatform = {
+  getPreflightChecks: vi.fn(),
+  getUpdatePreflightChecks: vi.fn(),
+} as unknown as WinPlatform;
 const legacyInstaller = {
   isInstalled: vi.fn(),
   uninstall: vi.fn(),
@@ -63,6 +66,13 @@ beforeEach(() => {
   vi.mocked(extensionApi.window.withProgress).mockImplementation((options, task) => {
     return task(progress, {} as unknown as extensionApi.CancellationToken);
   });
+});
+
+test('getUpdatePreflightChecks should return the Windows platform update checks', () => {
+  const checks = [{ title: 'WSL Version for Podman', execute: vi.fn() }];
+  vi.mocked(mockWinPlatform.getUpdatePreflightChecks).mockReturnValue(checks);
+
+  expect(installer.getUpdatePreflightChecks()).toBe(checks);
 });
 
 test('expect update on windows to show notification in case of 0 exit code', async () => {

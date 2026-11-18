@@ -198,6 +198,10 @@ const PODMAN_INSTALL_MOCK: PodmanInstall = {
 const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
+  removeStaleApiSocket: vi.fn(),
+  wslPodmanVersionCheck: {
+    executeFor: vi.fn(),
+  },
 } as unknown as WinPlatform;
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
@@ -263,6 +267,7 @@ beforeEach(async () => {
   };
   vi.resetAllMocks();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
+  vi.mocked(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).mockResolvedValue({ successful: true });
 
   // Mock withProgress to execute the task immediately
   vi.mocked(extensionApi.window.withProgress).mockImplementation((_options, task) => {
@@ -886,6 +891,71 @@ describe('createMachine on windows without an explicit provider', () => {
   });
 });
 
+describe('createMachine on windows with a WSL version incompatible with Podman', () => {
+  const machineParams = {
+    'podman.factory.machine.cpus': '2',
+    'podman.factory.machine.image': 'path',
+  };
+
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.1.4' });
+    vi.mocked(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).mockResolvedValue({
+      successful: false,
+      description: 'WSL is too old.',
+      docLinksDescription: 'Update WSL.',
+    });
+  });
+
+  test('fails early for a WSL machine', async () => {
+    await expect(
+      extension.createMachine({ ...machineParams, 'podman.factory.machine.win.provider': 'wsl' }, podmanConfiguration),
+    ).rejects.toThrow('WSL is too old. Update WSL.');
+
+    expect(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).toHaveBeenCalledWith('6.1.4');
+
+    expect(extensionApi.process.exec).not.toHaveBeenCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.anything(),
+    );
+    await waitTelemetryLoggerUsage();
+    expect(telemetryLogger.logUsage).toBeCalledWith(
+      'podman.machine.init',
+      expect.objectContaining({ provider: 'wsl', errorCode: 'ErrUnsupportedWSLVersion' }),
+    );
+  });
+
+  test('creates a Hyper-V machine', async () => {
+    await extension.createMachine(
+      { ...machineParams, 'podman.factory.machine.win.provider': 'hyperv' },
+      podmanConfiguration,
+    );
+
+    expect(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).not.toHaveBeenCalled();
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.objectContaining({ env: { CONTAINERS_MACHINE_PROVIDER: 'hyperv' } }),
+    );
+  });
+
+  test('creates a WSL machine when WSL is compatible', async () => {
+    vi.mocked(WIN_PLATFORM_MOCK.wslPodmanVersionCheck.executeFor).mockResolvedValue({ successful: true });
+
+    await extension.createMachine(
+      { ...machineParams, 'podman.factory.machine.win.provider': 'wsl' },
+      podmanConfiguration,
+    );
+
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.objectContaining({ env: { CONTAINERS_MACHINE_PROVIDER: 'wsl' } }),
+    );
+  });
+});
+
 test.each([
   { architecture: 'arm64', expectedProvider: VMTYPE.LIBKRUN },
   { architecture: 'arm64', expectedProvider: VMTYPE.APPLEHV },
@@ -1089,6 +1159,63 @@ test('if autoStart is true, machine start uses detached mode', async () => {
   });
 
   expect(spyUpdateStatus).toHaveBeenCalledWith('started');
+});
+
+describe('startMachine stale API socket on Windows', () => {
+  beforeEach(() => {
+    extension.podmanMachinesStatuses.clear();
+    extension.podmanMachinesStatuses.set('name', 'stopped');
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+  });
+
+  test.each([
+    { autoStart: false, label: 'manual start' },
+    { autoStart: true, label: 'autostart' },
+  ])('removes the stale API socket before starting the machine ($label)', async ({ autoStart }) => {
+    await extension.startMachine(
+      provider,
+      podmanConfiguration,
+      machineInfo,
+      undefined,
+      undefined,
+      undefined,
+      autoStart,
+    );
+
+    expect(WIN_PLATFORM_MOCK.removeStaleApiSocket).toHaveBeenCalledWith('name', expect.any(LoggerDelegator));
+    expect(vi.mocked(WIN_PLATFORM_MOCK.removeStaleApiSocket).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(extensionApi.process.exec).mock.invocationCallOrder[0],
+    );
+  });
+
+  test.each([true, false])('reports staleApiSocketRemoved %s in the start telemetry', async removed => {
+    vi.mocked(WIN_PLATFORM_MOCK.removeStaleApiSocket).mockResolvedValue(removed);
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    await waitTelemetryLoggerUsage();
+    expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
+      'podman.machine.start',
+      expect.objectContaining({ staleApiSocketRemoved: removed }),
+    );
+  });
+
+  test.each(['started', 'starting'] as const)('does not remove the API socket when the machine is %s', async status => {
+    extension.podmanMachinesStatuses.set('name', status);
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    expect(WIN_PLATFORM_MOCK.removeStaleApiSocket).not.toHaveBeenCalled();
+  });
+
+  test('does not remove the API socket on other platforms', async () => {
+    vi.mocked(extensionApi.env).isWindows = false;
+
+    await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+    expect(WIN_PLATFORM_MOCK.removeStaleApiSocket).not.toHaveBeenCalled();
+  });
 });
 
 test('if a machine is successfully reporting telemetry', async () => {

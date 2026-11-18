@@ -16,14 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { rm } from 'node:fs/promises';
+import * as fs from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import type { ExtensionInfo } from '@desktop-framework/api';
 import type { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { CatalogFetchableExtension } from '@desktop-framework/api/extension-catalog';
 import type { IpcMain, IpcMainEvent } from 'electron';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { Directories } from '/@/plugin/directories.js';
@@ -39,6 +40,14 @@ import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { ExtensionInstaller } from './extension-installer.js';
 
 let extensionInstaller: ExtensionInstaller;
+
+const extractExtensionFilesMock = vi.fn<ExtensionInstaller['extractExtensionFiles']>();
+
+class TestExtensionInstaller extends ExtensionInstaller {
+  override async extractExtensionFiles(tmpFolderPath: string, finalFolderPath: string): Promise<void> {
+    return extractExtensionFilesMock(tmpFolderPath, finalFolderPath);
+  }
+}
 
 const apiSenderSendMock = vi.fn();
 const apiSender: ApiSenderType = {
@@ -238,6 +247,91 @@ test('should install an image if labels are correct', async () => {
   expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started');
 });
 
+describe('installFromImage tmp folder cleanup', () => {
+  const imageToPull = 'fake.io/fake-image:fake-tag';
+  const TMP_FOLDER = '/fake/tmp/fakeiofakeimage-abc123';
+  const originalConsoleError = console.error;
+
+  afterEach(() => {
+    console.error = originalConsoleError;
+  });
+
+  beforeEach(() => {
+    console.error = vi.fn();
+    extensionInstaller = new TestExtensionInstaller(
+      apiSender,
+      extensionLoader,
+      imageRegistry,
+      extensionsCatalog,
+      telemetryMock,
+      directories,
+      contributionManager,
+      ipcMainOnMock,
+      taskManager,
+      messageBox,
+    );
+    vi.mocked(mkdtemp).mockResolvedValue(TMP_FOLDER);
+    getImageConfigLabelsMock.mockResolvedValueOnce({
+      'org.opencontainers.image.title': 'title',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'io.podman-desktop.api.version': '1.0.0',
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+  });
+
+  test('should remove the tmp folder when the download fails', async () => {
+    downloadAndExtractImageMock.mockRejectedValueOnce(new Error('layer download failed'));
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
+      'layer download failed',
+    );
+
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
+  });
+
+  test('should remove the tmp folder when extracting the extension files fails', async () => {
+    extractExtensionFilesMock.mockRejectedValueOnce(new Error('extract failed'));
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
+      'extract failed',
+    );
+
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
+  });
+
+  test('should use a unique tmp folder for each installation', async () => {
+    extractExtensionFilesMock.mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(mkdtemp).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('fakeiofakeimage-'));
+    expect(downloadAndExtractImageMock).toHaveBeenCalledWith(imageToPull, TMP_FOLDER, expect.any(Function));
+  });
+
+  test('should keep the original error when the tmp folder cannot be removed', async () => {
+    downloadAndExtractImageMock.mockRejectedValueOnce(new Error('layer download failed'));
+    const cleanupError = new Error('EPERM');
+    vi.mocked(rm).mockRejectedValueOnce(cleanupError);
+
+    await expect(extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull)).rejects.toThrowError(
+      'layer download failed',
+    );
+
+    expect(console.error).toHaveBeenCalledWith(`Unable to remove the temporary folder ${TMP_FOLDER}`, cleanupError);
+  });
+
+  test('should remove the tmp folder when the installation succeeds', async () => {
+    extractExtensionFilesMock.mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
+  });
+});
+
 test('should install an image (dd extensions) if labels are correct', async () => {
   const sendLog = vi.fn();
   const sendError = vi.fn();
@@ -289,6 +383,8 @@ test('should fail if extension with same id is already installed', async () => {
       path: '/some/existing/path',
     },
   ]);
+
+  vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
 
   analyzeExtensionMock.mockResolvedValueOnce({
     id,
@@ -367,6 +463,40 @@ test('should fail if an image have incorrect labels', async () => {
 
   // extension not started
   expect(apiSenderSendMock).not.toBeCalled();
+});
+
+test('extractExtensionFiles should throw when the image has no /extension folder', async () => {
+  vi.mocked(fs.existsSync).mockReturnValue(false);
+
+  await expect(extensionInstaller.extractExtensionFiles('/tmp/fake-tmp', '/fake/final')).rejects.toThrow(
+    'Malformed extension: the image does not contain an /extension folder',
+  );
+  expect(fs.promises.readdir).not.toHaveBeenCalled();
+});
+
+test('should fail with a malformed extension error if the image has no /extension folder', async () => {
+  const sendError = vi.fn();
+  const sendEnd = vi.fn();
+
+  const imageToPull = 'fake.io/fake-image:fake-tag';
+
+  getImageConfigLabelsMock.mockResolvedValueOnce({
+    'org.opencontainers.image.title': 'fake-title',
+    'org.opencontainers.image.description': 'fake-description',
+    'org.opencontainers.image.vendor': 'fake-vendor',
+    'io.podman-desktop.api.version': '1.0.0',
+  });
+  listExtensionsMock.mockResolvedValueOnce([]);
+  vi.mocked(fs.existsSync).mockReturnValue(false);
+
+  await expect(extensionInstaller.installFromImage(vi.fn(), sendError, sendEnd, imageToPull)).rejects.toThrow(
+    'Malformed extension: the image does not contain an /extension folder',
+  );
+
+  const task = createTaskMock.mock.results[0]?.value;
+  expect(task.error).toBe('Error: Malformed extension: the image does not contain an /extension folder');
+  expect(analyzeExtensionMock).not.toHaveBeenCalled();
+  expect(sendEnd).not.toHaveBeenCalled();
 });
 
 test('should remove the extension folders when the dependencies analysis reports errors', async () => {

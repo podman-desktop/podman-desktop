@@ -208,7 +208,7 @@ test('when editing context a modal dialog should be oppened', async () => {
   expect(editBtn).toBeInTheDocument();
   await fireEvent.click(editBtn);
 
-  expect(screen.getByRole('dialog', { name: 'Edit Context' })).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Edit context' })).toBeVisible();
 });
 
 describe.each([

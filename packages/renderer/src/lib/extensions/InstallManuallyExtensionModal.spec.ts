@@ -143,3 +143,9 @@ test('pressing Enter without an image does not install', async () => {
   expect(closeCallback).not.toHaveBeenCalled();
   expect(window.extensionInstallFromImage).not.toHaveBeenCalled();
 });
+
+test('expect dialog title to use sentence case', () => {
+  render(InstallManuallyExtensionModal, { closeCallback });
+
+  expect(screen.getByRole('dialog', { name: 'Install custom extension' })).toBeInTheDocument();
+});

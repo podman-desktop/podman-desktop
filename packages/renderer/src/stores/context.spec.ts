@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,22 @@
  ***********************************************************************/
 
 import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 
 import { setup } from './context';
 
+const callbacks = new Map<string, (data?: unknown) => void>();
+
 beforeEach(() => {
+  callbacks.clear();
   vi.resetAllMocks();
   vi.useRealTimers();
+  vi.mocked(window.events.receive).mockImplementation((message, callback) => {
+    callbacks.set(message, callback);
+    return { dispose: vi.fn() };
+  });
 });
 
 test('context store values updated on context-value-updated/context-key-removed events', async () => {
@@ -60,6 +67,44 @@ test('context store values updated on context-value-updated/context-key-removed 
   initial.setValue('b', 2);
   // context-key-updated has updated the value in the store
   expect(get(context)).toEqual(initial);
+});
+
+test('context store emits a new instance on context-value-updated', () => {
+  const store = setup();
+  const initial = new ContextUI();
+  initial.setValue('a', 1);
+  store.set(initial);
+
+  const previous = get(store);
+  const listener = callbacks.get('context-value-updated');
+  assert(listener, 'the store should listen to context-value-updated events');
+  listener({ key: 'b', value: 'two' });
+
+  const updated = get(store);
+  // a new instance is emitted so that $derived($context) consumers are notified
+  expect(updated).not.toBe(previous);
+  expect(updated.getValue('a')).toBe(1);
+  expect(updated.getValue('b')).toBe('two');
+  // the previous instance is left untouched
+  expect(previous.getValue('b')).toBeUndefined();
+});
+
+test('context store emits a new instance on context-key-removed', () => {
+  const store = setup();
+  const initial = new ContextUI();
+  initial.setValue('a', 1);
+  store.set(initial);
+
+  const previous = get(store);
+  const listener = callbacks.get('context-key-removed');
+  assert(listener, 'the store should listen to context-key-removed events');
+  listener({ key: 'a' });
+
+  const updated = get(store);
+  expect(updated).not.toBe(previous);
+  expect(updated.getValue('a')).toBeUndefined();
+  // the previous instance is left untouched
+  expect(previous.getValue('a')).toBe(1);
 });
 
 test('context store values set on extensions-already-started', async () => {

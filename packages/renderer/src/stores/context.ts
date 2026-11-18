@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,19 +26,23 @@ export const context: Writable<ContextUI> = setup();
 export function setup(): Writable<ContextUI> {
   const store = writable(new ContextUI());
 
+  // a new ContextUI instance is returned on each update so that consumers relying on the
+  // reference (e.g. a Svelte $derived($context)) are notified of the change
   window.events?.receive('context-value-updated', (value: unknown) => {
     const typedValue = value as { key: string; value: string };
     store.update(ctx => {
-      ctx.setValue(typedValue.key, typedValue.value);
-      return ctx;
+      const updatedContext = ctx.clone();
+      updatedContext.setValue(typedValue.key, typedValue.value);
+      return updatedContext;
     });
   });
 
   window.events?.receive('context-key-removed', (value: unknown) => {
     const typedValue = value as { key: string; value: string };
     store.update(ctx => {
-      ctx.removeValue(typedValue.key);
-      return ctx;
+      const updatedContext = ctx.clone();
+      updatedContext.removeValue(typedValue.key);
+      return updatedContext;
     });
   });
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CheckResult } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 
 import { BaseCheck } from '/@/checks/base-check';
+import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
 
 import { HyperVInstalledCheck } from './hyper-v-installed-check';
 import { HyperVRunningCheck } from './hyper-v-running-check';
@@ -34,6 +35,7 @@ export class HyperVCheck extends BaseCheck {
     @inject(HyperVInstalledCheck) private isHyperVInstalledCheck: HyperVInstalledCheck,
     @inject(PodmanDesktopElevatedCheck) private isPodmanDesktopElevatedCheck: PodmanDesktopElevatedCheck,
     @inject(UserAdminCheck) private userAdminCheck: UserAdminCheck,
+    @inject(HyperVPrep) @optional() private hyperVPrep?: HyperVPrep,
   ) {
     super();
   }
@@ -41,14 +43,24 @@ export class HyperVCheck extends BaseCheck {
   async execute(): Promise<CheckResult> {
     const userAdminResult = await this.userAdminCheck.execute();
     if (!userAdminResult.successful) {
-      return userAdminResult;
+      if (!(await this.isHyperVAdminGroupMember())) {
+        return userAdminResult;
+      }
+    } else {
+      const podmanDesktopElevatedResult = await this.isPodmanDesktopElevatedCheck.execute();
+      if (!podmanDesktopElevatedResult.successful && !(await this.isHyperVAdminGroupMember())) {
+        return podmanDesktopElevatedResult;
+      }
     }
 
-    const podmanDesktopElevatedResult = await this.isPodmanDesktopElevatedCheck.execute();
-    if (!podmanDesktopElevatedResult.successful) {
-      return podmanDesktopElevatedResult;
-    }
+    return this.executeHyperVAvailabilityChecks();
+  }
 
+  private async isHyperVAdminGroupMember(): Promise<boolean> {
+    return (await this.hyperVPrep?.isCurrentUserHyperVAdminGroupMember()) ?? false;
+  }
+
+  private async executeHyperVAvailabilityChecks(): Promise<CheckResult> {
     const hyperVInstalledResult = await this.isHyperVInstalledCheck.execute();
     if (!hyperVInstalledResult.successful) {
       return hyperVInstalledResult;

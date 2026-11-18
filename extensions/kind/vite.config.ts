@@ -25,6 +25,7 @@ export default mergeConfig(baseConfig, {
   resolve: {
     alias: {
       '/@/': join(__dirname, 'src') + '/',
+      '/@package.json': join(__dirname, 'package.json'),
     },
   },
 });

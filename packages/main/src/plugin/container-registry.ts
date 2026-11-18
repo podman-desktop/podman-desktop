@@ -127,6 +127,15 @@ interface JSONEvent {
   Actor?: { ID: string };
 }
 
+// listeners added on a container stream by attachContainer()
+interface AttachStreamListeners {
+  stream: NodeJS.ReadWriteStream;
+  data: (chunk: Buffer) => void;
+  error: (err: unknown) => void;
+  end: () => void;
+  dispose: () => void;
+}
+
 @injectable()
 export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
@@ -183,6 +192,8 @@ export class ContainerProviderRegistry {
   // map of streams per container id
   protected streamsPerContainerId: Map<string, NodeJS.ReadWriteStream> = new Map();
   protected streamsOutputPerContainerId: Map<string, Buffer[]> = new Map();
+  // listeners added by the latest attachContainer() call per container id
+  protected attachListenersPerContainerId: Map<string, AttachStreamListeners> = new Map();
 
   useLibpodApiForImageList(): boolean {
     return this.configurationRegistry
@@ -309,6 +320,7 @@ export class ContainerProviderRegistry {
     const cleanStreamMap = (containerId: unknown): void => {
       this.streamsPerContainerId.delete(String(containerId));
       this.streamsOutputPerContainerId.delete(String(containerId));
+      this.attachListenersPerContainerId.delete(String(containerId));
     };
 
     this.apiSender.receive('container-stopped-event', (containerId: unknown) => {
@@ -2392,34 +2404,49 @@ export class ContainerProviderRegistry {
     let attachStream = this.streamsPerContainerId.get(containerId);
 
     const setupStream = (stream: NodeJS.ReadWriteStream): void => {
-      let ended = false;
-      const receiveData = (chunk: Buffer): void => {
-        onData(chunk.toString('utf-8'));
-      };
+      // Replace only the caller's listeners; the cached stream and replay buffer stay alive.
+      const previousListeners = this.attachListenersPerContainerId.get(containerId);
+      if (previousListeners?.stream === stream) previousListeners.dispose();
 
-      const finish = (): void => {
+      let ended = false;
+      const dispose = (): void => {
         if (ended) return;
         ended = true;
-        stream.off('data', receiveData);
-        stream.off('end', finish);
-        stream.off('close', finish);
+        stream.off('data', listeners.data);
+        stream.off('error', listeners.error);
+        stream.off('end', listeners.end);
+        stream.off('close', listeners.end);
+        if (this.attachListenersPerContainerId.get(containerId) === listeners) {
+          this.attachListenersPerContainerId.delete(containerId);
+        }
+        onEnd();
+      };
+      const finish = (): void => {
+        if (ended) return;
         if (this.streamsPerContainerId.get(containerId) === stream) {
           this.streamsPerContainerId.delete(containerId);
           this.streamsOutputPerContainerId.delete(containerId);
         }
-        onEnd();
+        dispose();
       };
-
-      stream.on('data', receiveData);
-
-      stream.on('error', err => {
-        if (ended) return;
-        onError(String(err));
-        finish();
-      });
-
-      stream.on('end', finish);
-      stream.on('close', finish);
+      const listeners: AttachStreamListeners = {
+        stream,
+        data: (chunk: Buffer): void => {
+          onData(chunk.toString('utf-8'));
+        },
+        error: (err: unknown): void => {
+          if (ended) return;
+          onError(String(err));
+          finish();
+        },
+        end: finish,
+        dispose,
+      };
+      stream.on('data', listeners.data);
+      stream.on('error', listeners.error);
+      stream.on('end', listeners.end);
+      stream.on('close', listeners.end);
+      this.attachListenersPerContainerId.set(containerId, listeners);
 
       // do we have previous data?
       const previousData = this.streamsOutputPerContainerId.get(containerId);
@@ -2596,10 +2623,11 @@ export class ContainerProviderRegistry {
     }
 
     // convert env from array of string to an object with key being the env name
+    // the value may be empty or contain '=' signs, entries without '=' are skipped
     const updatedEnv = options.Env?.reduce((acc: { [key: string]: string }, env) => {
-      const [key, value] = env.split('=');
-      if (key && value) {
-        acc[key] = value;
+      const [key, ...values] = env.split('=');
+      if (key && values.length > 0) {
+        acc[key] = values.join('=');
       }
       return acc;
     }, {});

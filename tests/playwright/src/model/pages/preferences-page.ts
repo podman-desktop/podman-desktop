@@ -126,6 +126,18 @@ export class PreferencesPage extends SettingsPage {
     await preferenceInput.fill(value);
   }
 
+  /**
+   * Reads the saved value of a preference from the configuration, regardless of what the page displays.
+   * Unlike reopening the page, it does not remount the preference inputs, which would schedule a new save.
+   */
+  async getStoredPreferenceValue(configId: string): Promise<unknown> {
+    return this.page.evaluate(
+      key =>
+        (window as unknown as { getConfigurationValue: (key: string) => Promise<unknown> }).getConfigurationValue(key),
+      configId,
+    );
+  }
+
   async selectKubeFile(pathToKube: string): Promise<void> {
     return test.step('Select Kube File', async () => {
       if (!pathToKube) {

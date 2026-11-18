@@ -308,7 +308,7 @@ export class LibpodDockerode {
     const buildRequest = modem.buildRequest.bind(modem);
     modem.buildRequest = (options, context, data, callback): void => {
       // The upgraded attach socket becomes stdin, so its POST body must be empty.
-      if (context.openStdin && context.path.includes('/attach?')) {
+      if ((context.openStdin || context.hijack) && context.path.includes('/attach?')) {
         data = '';
         const headers = Object.assign({}, options.headers, { 'Content-Length': 0 });
         Reflect.deleteProperty(headers, 'Transfer-Encoding');
@@ -420,10 +420,9 @@ export class LibpodDockerode {
         path: `/v4.2.0/libpod/containers/${containerId}/attach?stdin=true&stdout=true&stderr=true&`,
         method: 'POST',
         isStream: true,
-        openStdin: true,
+        hijack: true,
         allowEmpty: true,
         statusCodes: {
-          200: true,
           404: 'no such container',
           500: 'server error',
         },
