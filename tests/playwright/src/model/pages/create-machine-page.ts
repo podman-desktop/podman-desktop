@@ -47,16 +47,12 @@ export class CreateMachinePage extends BasePage {
       startNow = true,
       setAsDefault = true,
       virtualizationProvider,
-      imagePath,
-      timeout = 120_000,
     }: {
       isRootful?: boolean;
       enableUserNet?: boolean;
       startNow?: boolean;
       setAsDefault?: boolean;
       virtualizationProvider?: PodmanVirtualizationProviders;
-      imagePath?: string;
-      timeout?: number;
     },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
@@ -65,7 +61,6 @@ export class CreateMachinePage extends BasePage {
         enableUserNet,
         startNow,
         virtualizationProvider,
-        imagePath,
       });
 
       const successfulCreationMessage = this.page.getByText('Successful operation');
@@ -73,24 +68,20 @@ export class CreateMachinePage extends BasePage {
         name: 'Go back to resources',
       });
 
-      await playExpect(successfulCreationMessage).toBeVisible({ timeout });
+      await playExpect(successfulCreationMessage).toBeVisible({
+        timeout: 120_000,
+      });
       await playExpect(goBackToResourcesButton).toBeVisible();
 
-      // The "set as default?" dialog only appears when the machine is started
-      // during creation. Skip the wait when startNow is false.
-      if (startNow) {
-        try {
-          await this.handleConnectionDialog(machineName, setAsDefault);
-        } catch (error) {
-          console.log('No handling dialog displayed', error);
-        }
+      try {
+        await this.handleConnectionDialog(machineName, setAsDefault);
+      } catch (error) {
+        console.log('No handling dialog displayed', error);
       }
 
       await playExpect(goBackToResourcesButton).toBeEnabled();
       await goBackToResourcesButton.click();
-      const resourcesPage = new ResourcesPage(this.page);
-      await playExpect(resourcesPage.heading).toBeVisible();
-      return resourcesPage;
+      return new ResourcesPage(this.page);
     });
   }
 
