@@ -45,7 +45,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Cloudflare Pages
-        uses: AdrianGonz97/refined-cf-pages-action@45ea15c1c69a7bce8ffbb79ba114daa2b52f0cff # v1.3.0
+        uses: AdrianGonz97/refined-cf-pages-action@cbfcac3174e3abfbc38ee14fac05a82000c1f6e9 # v1.3.1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_AUTH_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
