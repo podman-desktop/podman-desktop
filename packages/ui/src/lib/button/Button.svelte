@@ -62,7 +62,7 @@ interface BaseProps {
   /** Click handler. Prefer it over the legacy `on:click` event, which is kept for Svelte 4 callers. */
   onclick?: () => void;
 
-  /** Visible label. Use sentence case, see CODE-GUIDELINES.md. */
+  /** Visible label. Use sentence case, see DESIGN-GUIDELINES.md. */
   children?: Snippet;
 }
 

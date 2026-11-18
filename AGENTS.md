@@ -86,7 +86,7 @@ storybook/              - UI component showcase
 
 ## Guidelines
 
-1. Read [CODE-GUIDELINES.md](CODE-GUIDELINES.md) before making changes
+1. Read [CODE-GUIDELINES.md](CODE-GUIDELINES.md) before making changes, and [DESIGN-GUIDELINES.md](DESIGN-GUIDELINES.md) before changing UI
 2. Run `pnpm lint-staged` before committing
 3. Unit tests are mandatory for new features
 4. Use Svelte 5 runes (`$state`, `$derived`, `$effect`) — see [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
@@ -109,6 +109,7 @@ storybook/              - UI component showcase
 ## Pattern References
 
 - **Coding standards & Svelte patterns**: [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
+- **UX rules (dialogs, buttons, forms)**: [DESIGN-GUIDELINES.md](DESIGN-GUIDELINES.md)
 - **Contributing & development setup**: [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Architecture decisions**: [docs/adr/](docs/adr/)
 - **Extension API docs**: `website/docs/extensions/`
