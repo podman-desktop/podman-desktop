@@ -573,6 +573,7 @@ See the <a href="https://github.com/podman-desktop/community/issues?q=is%3Aissue
             <content:encoded><![CDATA[<p><img decoding="async" loading="lazy" alt="Banner announcing 5 million downloads" src="https://podman-desktop.io/assets/images/banner-d5797627269f7b4e2f6a2482e4aca936.jpg" width="1200" height="630" class="img_SS3x"></p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="wooohooo-">Wooohooo 🎉<a href="https://podman-desktop.io/blog/5-million-lessons-learned#wooohooo-" class="hash-link" aria-label="Direct link to Wooohooo 🎉" title="Direct link to Wooohooo 🎉" translate="no">​</a></h2>
 <p>Podman Desktop just crossed <strong>5,000,000 downloads</strong>! Less than a year ago we were celebrating <a class="" href="https://podman-desktop.io/blog/3-million">3 million</a>, and now we're humbled to be at 5 million. That kind of growth doesn't happen without a community pushing us, challenging us, and choosing us. Thank you.</p>
+<!-- -->
 <p>Download numbers can easily become vanity metrics. So instead of just announcing one, we wanted to mark this milestone the way developers <em>actually</em> like to celebrate: with a retro. Here's what came out of it.</p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="1-extensibility-works">1. Extensibility works<a href="https://podman-desktop.io/blog/5-million-lessons-learned#1-extensibility-works" class="hash-link" aria-label="Direct link to 1. Extensibility works" title="Direct link to 1. Extensibility works" translate="no">​</a></h2>
 <p>The container landscape hasn't stood still since Podman Desktop launched: new tooling, AI, and constant churn in integration points, to name a few. Our extension-based architecture made it easier to respond, and that wasn't an accident. Many of us on the founding team came from the IDE space, building tools and extensions on top of VS Code, so making Podman Desktop extensible from day one was a deliberate choice, not an afterthought. We wanted people to be able to shape the tool to their own needs, and we wanted people working with other, related container technologies to be able to build their own extensions too.</p>
@@ -998,6 +999,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Podman update</strong>: Podman <a href="https://github.com/podman-container-tools/podman/releases/tag/v5.8.3" target="_blank" rel="noopener noreferrer" class="">5.8.3</a></li>
 <li class=""><strong>Security updates</strong>: Multiple CVE vulnerabilities resolved in Podman Desktop and its dependencies to ensure a safer work environment.</li>
 </ul>
+<!-- -->
 <hr>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.28#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="enhanced-dashboard-with-system-overview">Enhanced dashboard with system overview<a href="https://podman-desktop.io/blog/podman-desktop-release-1.28#enhanced-dashboard-with-system-overview" class="hash-link" aria-label="Direct link to Enhanced dashboard with system overview" title="Direct link to Enhanced dashboard with system overview" translate="no">​</a></h3>
@@ -1244,6 +1246,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Extension development JSON schema</strong>: A JSON schema is now available for the development and validation of Podman Desktop extensions' <code>package.json</code> files.</li>
 <li class=""><strong>Security updates</strong>: Multiple CVE vulnerabilities resolved in Podman Desktop and its extensions to ensure a safer work environment.</li>
 </ul>
+<!-- -->
 <hr>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.27#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="high-contrast-theme-support">High contrast theme support<a href="https://podman-desktop.io/blog/podman-desktop-release-1.27#high-contrast-theme-support" class="hash-link" aria-label="Direct link to High contrast theme support" title="Direct link to High contrast theme support" translate="no">​</a></h3>
@@ -1484,6 +1487,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Troubleshooting section in Settings</strong>: A new troubleshooting entry has been added to the settings menu for quicker access to diagnostics.</li>
 <li class=""><strong>Confirmation dialog for connection deletion</strong>: Deleting a provider connection now shows a confirmation dialog to prevent accidental removal.</li>
 </ul>
+<!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.26#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="host-certificate-sync-to-podman-vms">Host certificate sync to Podman VMs<a href="https://podman-desktop.io/blog/podman-desktop-release-1.26#host-certificate-sync-to-podman-vms" class="hash-link" aria-label="Direct link to Host certificate sync to Podman VMs" title="Direct link to Host certificate sync to Podman VMs" translate="no">​</a></h3>
 <p>Working behind a corporate proxy or pulling from internal registries? You can now sync your local certificates to running Podman VMs directly from the command palette. Open the command palette with <kbd>F1</kbd> and run the <strong>Podman: Synchronize certificates to all VMs</strong> command.</p>
@@ -1825,6 +1829,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Kube play is now cancellable</strong>: Stop long-running Kube Play operations at any time with the always-enabled cancel button, reducing wasted time on incorrect or stuck deployments.</li>
 <li class=""><strong>Windows Podman installer update</strong>: The included Windows Podman installer has been updated to the MSI which removes the need for Admin privileges during installation.</li>
 </ul>
+<!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.25#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="navigation-history-controls-backforward">Navigation history controls (back/forward)<a href="https://podman-desktop.io/blog/podman-desktop-release-1.25#navigation-history-controls-backforward" class="hash-link" aria-label="Direct link to Navigation history controls (back/forward)" title="Direct link to Navigation history controls (back/forward)" translate="no">​</a></h3>
 <p>Moving through the app is now faster with dedicated back/forward controls. Use the toolbar arrows, jump via the <a href="https://podman-desktop.io/docs/extensions/developing/command-palette" target="_blank" rel="noopener noreferrer" class="">command palette</a>, or rely on shortcuts to quickly return to previous views and re-open recently visited pages.</p>
@@ -2096,6 +2101,7 @@ release we received pull requests from the following people:</p>
             <description><![CDATA[The Journey of Podman Desktop in 2025 post CNCF sandbox project.]]></description>
             <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_tleR" id="a-year-of-growth-and-gratitude">A Year of Growth and Gratitude<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#a-year-of-growth-and-gratitude" class="hash-link" aria-label="Direct link to A Year of Growth and Gratitude" title="Direct link to A Year of Growth and Gratitude" translate="no">​</a></h2>
 <p>Welcome to the journey of <strong>Podman Desktop in 2025</strong>, a year that marked incredible growth, deeper integrations, and continued community collaboration.</p>
+<!-- -->
 <p>This year Podman Desktop <strong>closed 1,669 issues, merged 2,814 pull requests, and welcomed 28 new contributors</strong>, with even more activity happening across extension repositories.</p>
 <p>It’s been almost a year since Podman Desktop became a <a href="https://www.cncf.io/projects/podman-desktop/" target="_blank" rel="noopener noreferrer" class=""><strong>CNCF Sandbox Project (November 2024)</strong></a> and what a journey it’s been! From passing <a href="https://podman-desktop.io/blog/3-million" target="_blank" rel="noopener noreferrer" class="">**three million downloads**</a> to introducing new extensions, integrations and platform support, the project has seen remarkable progress, driven by passionate contributors and an engaged community.</p>
 <p>This blog takes you through some of the key highlights of <strong>2025</strong>.</p>
@@ -2199,6 +2205,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Remote Podman connections visibility</strong>: Resource lists now include the connection name.</li>
 <li class=""><strong>Select build targets in Containerfile</strong>: Choose a specific build stage when working with multi-stage Containerfiles.</li>
 </ul>
+<!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.24#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="enterprise-managed-default-registries-and-mirrors">Enterprise-managed default registries and mirrors<a href="https://podman-desktop.io/blog/podman-desktop-release-1.24#enterprise-managed-default-registries-and-mirrors" class="hash-link" aria-label="Direct link to Enterprise-managed default registries and mirrors" title="Direct link to Enterprise-managed default registries and mirrors" translate="no">​</a></h3>
 <p>Enterprises often use a set of specific registries as well as mirrors for security and performance. Administrators can now preconfigure default container registries and mirrors across their organization's deployment of Podman Desktop.
@@ -2396,6 +2403,7 @@ release we received pull requests from the following people:</p>
             <pubDate>Thu, 20 Nov 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[Boost your performance with Search Bar component]]></description>
             <content:encoded><![CDATA[<p>We rolled out a brand-new Search Bar in Podman Desktop 1.22, giving users a faster way to navigate and discover content. With the 1.23 update, we’ve made it even better, adding smart improvements and handy features!</p>
+<!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="search-bar">Search Bar<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#search-bar" class="hash-link" aria-label="Direct link to Search Bar" title="Direct link to Search Bar" translate="no">​</a></h2>
 <p>The Search Bar (previously known as the Command Palette) is a powerful, keyboard-first feature that brings everything in Podman Desktop just a few keystrokes away. Located directly in the title bar, it provides unified access to commands, documentation, and navigation across your entire workspace.</p>
 <!--$--><youtube-video style="display:block;width:100%;height:500px" src="https://youtu.be/n-pwWolzxJ0?si=qMu-DX3EMl0pFoL-" controls=""><template shadowrootmode="open">
@@ -2485,6 +2493,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Support for a managed configuration</strong>: IT teams can deploy pre-configured settings organization-wide. Administrators get consistent, ready-to-be-used Podman Desktop with managed settings already set up.</li>
 <li class=""><strong>Created Docker context for Podman machine</strong>: Improved compatibility with Docker contexts.</li>
 </ul>
+<!-- -->
 <hr>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.23#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="podman-network-support">Podman network support<a href="https://podman-desktop.io/blog/podman-desktop-release-1.23#podman-network-support" class="hash-link" aria-label="Direct link to Podman network support" title="Direct link to Podman network support" translate="no">​</a></h3>
@@ -2814,6 +2823,7 @@ release we received pull requests from the following people:</p>
 <li class=""><strong>Include ARM64 Podman Installer for Windows</strong>: Provides a Podman installer for Windows running on the ARM64 platform <a href="https://github.com/podman-desktop/podman-desktop/pull/13815" target="_blank" rel="noopener noreferrer" class="">#13815</a></li>
 <li class=""><strong>Podman Desktop Main Window Display Issue on Linux with Wayland</strong>: Workaround for running Podman Desktop binary on Linux with Wayland <a href="https://github.com/podman-desktop/podman-desktop/issues/14387" target="_blank" rel="noopener noreferrer" class="">#14387</a></li>
 </ul>
+<!-- -->
 <hr>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.22#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="explore-features-section-on-the-dashboard">Explore Features Section on the Dashboard<a href="https://podman-desktop.io/blog/podman-desktop-release-1.22#explore-features-section-on-the-dashboard" class="hash-link" aria-label="Direct link to Explore Features Section on the Dashboard" title="Direct link to Explore Features Section on the Dashboard" translate="no">​</a></h3>
@@ -3035,6 +3045,7 @@ making them unaffected by this regression.</p>
             <pubDate>Tue, 30 Sep 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[Contribute to Podman Desktop this Hacktoberfest!]]></description>
             <content:encoded><![CDATA[<p>October is here and <a href="https://hacktoberfest.com/" target="_blank" rel="noopener noreferrer" class=""><strong>Hacktoberfest</strong></a> is back! It’s the perfect opportunity to sharpen your skills, explore open source, and contribute to <a href="https://podman-desktop.io/" target="_blank" rel="noopener noreferrer" class=""><strong>Podman Desktop</strong> </a> — an open source tool designed to simplify working with containers and Kubernetes from your local machine.</p>
+<!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="why-contribute-to-podman-desktop">Why Contribute to Podman Desktop?<a href="https://podman-desktop.io/blog/hacktoberfest-2025#why-contribute-to-podman-desktop" class="hash-link" aria-label="Direct link to Why Contribute to Podman Desktop?" title="Direct link to Why Contribute to Podman Desktop?" translate="no">​</a></h2>
 <p>Podman Desktop is a <a href="https://www.cncf.io/" target="_blank" rel="noopener noreferrer" class="">CNCF</a> sandbox project and has already grown into a thriving open source community with over <a href="https://podman-desktop.io/blog/3-million" target="_blank" rel="noopener noreferrer" class=""><strong>3 million downloads worldwide</strong></a>. By contributing, you’re not only helping shape a successful, widely used project, but also joining a community of developers building tools that benefit peers and the broader ecosystem.</p>
 <p>Podman Desktop is built with developers in mind. <strong>Designed by developers, for developers</strong> !!
@@ -3085,6 +3096,7 @@ It’s a cross-platform tool that helps streamline container workflows, offering
             <content:encoded><![CDATA[<p><img decoding="async" loading="lazy" alt="Banner announcing 3 million downloads" src="https://podman-desktop.io/assets/images/banner-4f4896528393a29779ce087a702c4966.jpg" width="1200" height="630" class="img_SS3x"></p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="wooohooo">Wooohooo!!<a href="https://podman-desktop.io/blog/3-million#wooohooo" class="hash-link" aria-label="Direct link to Wooohooo!!" title="Direct link to Wooohooo!!" translate="no">​</a></h2>
 <p>We are extremely excited to share that Podman Desktop just crossed <em>3,000,000 downloads</em>! This is a huge step for the project and we are incredibly thankful for how each of you has helped! This milestone belongs to you. You file issues, suggest features, build extensions, teach teammates, and nudge us to make the day-to-day better. Thank you for helping turn an idea into a tool people rely on.</p>
+<!-- -->
 <p>To celebrate this milestone, and thank you, we built a small surprise:
 <a href="https://3m.podman-desktop.io/" target="_blank" rel="noopener noreferrer" class="">https://3m.podman-desktop.io</a></p>
 <p>We are grateful for all the feedback we have been receiving, here is just a short collection:</p>
@@ -3209,6 +3221,7 @@ It’s a cross-platform tool that helps streamline container workflows, offering
             <pubDate>Mon, 25 Aug 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[Simplifying container and AI development on RHEL 10 with Podman Desktop]]></description>
             <content:encoded><![CDATA[<p>In the ever-evolving world of containerization and AI, developers require tools that are designed for seamless integration into their daily workflows. Podman and its graphical tool, Podman Desktop, have emerged as promising tools for building applications on different platforms, including Red Hat Enterprise Linux (RHEL) 10.</p>
+<!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="podman-the-foundation">Podman: The foundation<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#podman-the-foundation" class="hash-link" aria-label="Direct link to Podman: The foundation" title="Direct link to Podman: The foundation" translate="no">​</a></h2>
 <p>Podman offers an efficient way to interact with containers and Kubernetes. It is fast and light-weight and operates with a daemonless architecture. Podman supports rootless containers, allowing you to restrict privileges without compromising functionality. Developers can pull, build, and push images, run and debug containers, and efficiently work with Kubernetes. Podman integrates smoothly with systemd, offering basic container orchestration capabilities like pod management and Quadlet systemd generation.</p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="podman-desktop-a-crucial-component-for-developers-on-rhel">Podman Desktop: A crucial component for developers on RHEL<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#podman-desktop-a-crucial-component-for-developers-on-rhel" class="hash-link" aria-label="Direct link to Podman Desktop: A crucial component for developers on RHEL" title="Direct link to Podman Desktop: A crucial component for developers on RHEL" translate="no">​</a></h2>
