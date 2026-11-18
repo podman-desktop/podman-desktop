@@ -20,7 +20,6 @@ import { Preferences } from '/@/model/core/settings/preferences';
 import { ContainerState } from '/@/model/core/states';
 import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
-import type { SettingsBar } from '/@/model/pages/settings-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
@@ -32,15 +31,7 @@ const containerStartParams: ContainerInteractiveParams = { attachTerminal: true,
 
 const scrollbackLines = 150;
 const printedLines = 500;
-
-let settingsBar: SettingsBar;
-let preferencesPage: PreferencesPage;
-
-const getScrollbackValue = async (): Promise<string> =>
-  preferencesPage.getPreferenceNumberInputValue(
-    Preferences.Labels.SCROLLBACK,
-    Preferences.TERMINAL_SCROLLBACK_INPUT_LABEL,
-  );
+const defaultScrollbackLines = 1000;
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   test.setTimeout(180_000);
@@ -58,7 +49,13 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
     try {
       const settings = await navigationBar.openSettings();
       await settings.preferencesTab.click();
-      await new PreferencesPage(page).resetPreference(Preferences.Labels.SCROLLBACK);
+      const preferencesPage = new PreferencesPage(page);
+      await preferencesPage.resetPreference(Preferences.Labels.SCROLLBACK);
+      await playExpect
+        .poll(async () => await preferencesPage.getStoredPreferenceValue(Preferences.TERMINAL_SCROLLBACK_INPUT_LABEL), {
+          timeout: 10_000,
+        })
+        .toBe(defaultScrollbackLines);
     } catch (error) {
       console.log('Error resetting the scrollback preference:', error);
     }
@@ -78,9 +75,9 @@ test.describe('Terminal scrollback size is applied to the container terminal', (
   test.describe.configure({ mode: 'serial' });
 
   test(`Set the scrollback size to ${scrollbackLines} lines`, async ({ page, navigationBar }) => {
-    settingsBar = await navigationBar.openSettings();
+    const settingsBar = await navigationBar.openSettings();
     await settingsBar.preferencesTab.click();
-    preferencesPage = new PreferencesPage(page);
+    const preferencesPage = new PreferencesPage(page);
     await playExpect(preferencesPage.heading).toBeVisible();
 
     await preferencesPage.setPreferenceNumberInputValue(
@@ -89,17 +86,14 @@ test.describe('Terminal scrollback size is applied to the container terminal', (
       String(scrollbackLines),
     );
 
-    // the value is saved after a short debounce, so keep reopening the page until it is read back from the configuration
+    // the value is saved after a short delay, so wait until it is in the saved configuration, where the terminals read it from.
+    // Do not reopen the page to check it: every time the page is opened the input schedules a new save of the value it displays
     await playExpect
-      .poll(
-        async () => {
-          await settingsBar.resourcesTab.click();
-          await settingsBar.preferencesTab.click();
-          return getScrollbackValue();
-        },
-        { timeout: 10_000, message: 'Scrollback preference was not persisted' },
-      )
-      .toBe(String(scrollbackLines));
+      .poll(async () => await preferencesPage.getStoredPreferenceValue(Preferences.TERMINAL_SCROLLBACK_INPUT_LABEL), {
+        timeout: 10_000,
+        message: 'Scrollback preference was not saved',
+      })
+      .toBe(scrollbackLines);
   });
 
   test(`Start a container '${containerToRun}' from the '${imageToPull}' image`, async ({ navigationBar }) => {
