@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { ResourceElementState } from '/@/model/core/states';
+import { PodmanVirtualizationProviders } from '/@/model/core/types';
 import { CreateMachinePage } from '/@/model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
@@ -59,13 +60,17 @@ const TIMEOUT_AFTER_ALL = 180_000;
 
 const enableUserNet = process.env.PODMAN_NETWORKING === '1';
 const baseSkipCondition = isLinux || process.env.TEST_PODMAN_MACHINE !== 'true';
+// AIRGAP_DOWNLOAD only embeds the WSL disktype; Hyper-V needs a separate follow-up.
+const isHyperV = getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV;
 
 const scenarios = [
   {
     name: 'airgap-embedded image',
     imagePath: AIRGAP_IMAGE_PATH,
-    shouldSkip: baseSkipCondition || !existsSync(AIRGAP_IMAGE_PATH),
-    skipReason: `Skipped: requires non-Linux platform, TEST_PODMAN_MACHINE=true, and airgap image at ${AIRGAP_IMAGE_PATH}`,
+    shouldSkip: baseSkipCondition || isHyperV || !existsSync(AIRGAP_IMAGE_PATH),
+    skipReason: isHyperV
+      ? 'Skipped: airgap-embedded image is WSL-only; Hyper-V disktype download not supported yet'
+      : `Skipped: requires non-Linux platform, TEST_PODMAN_MACHINE=true, and airgap image at ${AIRGAP_IMAGE_PATH}`,
   },
   {
     name: 'externally provided image path',
@@ -75,6 +80,12 @@ const scenarios = [
       'Skipped: requires non-Linux platform, TEST_PODMAN_MACHINE=true, and MACHINE_IMAGE_PATH env var to be set',
   },
 ];
+
+// Avoid beforeAll/afterAll when Hyper-V would run no scenarios (airgap skipped; no external path).
+test.skip(
+  isHyperV && !EXTERNAL_IMAGE_PATH,
+  'Skipped: airgap-embedded image is WSL-only on Hyper-V; set MACHINE_IMAGE_PATH to exercise local-image create',
+);
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(TIMEOUT_AFTER_ALL);
