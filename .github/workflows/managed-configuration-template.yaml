@@ -79,6 +79,10 @@ jobs:
           sudo cp tests/playwright/resources/managed-configuration/locked.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/locked.json"
           echo "Default settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json
           echo "Locked settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json
+          # Let the test create and remove its per-user plist without elevation.
+          managedUserDir="/Library/Managed Preferences/$(id -un)"
+          sudo mkdir -p "$managedUserDir"
+          sudo chown "$(id -u):$(id -g)" "$managedUserDir"
       - name: Windows managed configuration files
         if: ${{ startsWith(matrix.os, 'windows') }}
         shell: pwsh
