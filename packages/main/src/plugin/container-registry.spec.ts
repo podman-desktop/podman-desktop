@@ -18,8 +18,6 @@
 
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
-import type { ClientRequest } from 'node:http';
-import nodeHttp from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough, Readable } from 'node:stream';
@@ -3605,87 +3603,128 @@ describe('unpauseContainer', () => {
   });
 });
 
-describe('attachment HTTP payload', () => {
+describe('TTY stream recovery', () => {
+  let stream: PassThrough;
+  let replacement: PassThrough;
+  let container: Dockerode.Container;
   let provider: InternalContainerProvider;
-  let request: PassThrough;
-  let attached: PassThrough;
 
   beforeEach(() => {
-    const connection: podmanDesktopAPI.ContainerProviderConnection = {
-      name: 'docker',
-      displayName: 'Docker',
-      type: 'docker',
-      endpoint: { socketPath: '/fixture.sock' },
-      status: () => 'started',
+    stream = new PassThrough();
+    replacement = new PassThrough();
+    const api = new Dockerode({ socketPath: '/fixture.sock' });
+    container = new Dockerode.Container(api.modem, 'fixture');
+    container.attach = vi.fn();
+    vi.mocked(container.attach).mockImplementation(async () => replacement);
+    api.getContainer = vi.fn();
+    vi.mocked(api.getContainer).mockReturnValue(container);
+    provider = {
+      id: 'docker',
+      name: 'Docker',
+      api,
+      connection: {
+        name: 'docker',
+        displayName: 'Docker',
+        type: 'docker',
+        endpoint: { socketPath: '/fixture.sock' },
+        status: (): podmanDesktopAPI.ProviderConnectionStatus => 'started',
+      },
     };
-    provider = { id: 'docker', name: 'Docker', connection };
-    vi.spyOn(containerRegistry, 'handleEvents').mockImplementation(() => {});
-    containerRegistry.setupConnectionAPI(provider, connection);
     containerRegistry.addInternalProvider('docker', provider);
-    request = new PassThrough();
-    attached = new PassThrough();
-    vi.spyOn(request, 'write');
-    vi.spyOn(nodeHttp, 'request').mockImplementation(() => {
-      queueMicrotask(() => request.emit('upgrade', {}, attached, Buffer.alloc(0)));
-      return request as unknown as ClientRequest;
-    });
+    containerRegistry.setStreamsPerContainerId('fixture', stream);
+    containerRegistry.setStreamsOutputPerContainerId('fixture', [Buffer.from('old output')]);
   });
 
-  afterEach(() => {
-    request.destroy();
-    attached.destroy();
-    vi.restoreAllMocks();
+  test('evicts an errored cached stream and its output before retrying', async () => {
+    const ended = vi.fn();
+    await containerRegistry.attachContainer('docker', 'fixture', vi.fn(), vi.fn(), ended);
+    stream.emit('error', new Error('connection lost'));
+
+    expect(containerRegistry.getStreamsPerContainerId().has('fixture')).toBe(false);
+    expect(containerRegistry.getStreamsOutputPerContainerId().has('fixture')).toBe(false);
+    expect(ended).toHaveBeenCalledOnce();
+
+    const output = vi.fn();
+    const send = await containerRegistry.attachContainer('docker', 'fixture', output, vi.fn(), vi.fn());
+    expect(output).not.toHaveBeenCalled();
+    send('first command\n');
+    expect(output).toHaveBeenCalledExactlyOnceWith('first command\n');
+    expect(container.attach).toHaveBeenCalledOnce();
   });
 
-  test.each(['attachContainer', 'attachToContainer'])('does not write JSON into stdin through %s', async operation => {
-    const onData = vi.fn();
-    if (operation === 'attachContainer') {
-      const send = await containerRegistry.attachContainer('docker', 'fixture', onData, vi.fn(), vi.fn());
-      send('first command\n');
-      expect(onData).toHaveBeenCalledExactlyOnceWith('first command\n');
-    } else {
-      if (!provider.api) throw new Error('Container API was not initialized');
-      await containerRegistry.attachToContainer(provider, provider.api.getContainer('fixture'), true, true);
-    }
-
-    expect(request.write).toHaveBeenCalledExactlyOnceWith('');
-    expect(nodeHttp.request).toHaveBeenCalledWith(
-      expect.objectContaining({ headers: expect.objectContaining({ 'Content-Length': 0 }) }),
-      expect.any(Function),
-    );
-    const options = vi.mocked(nodeHttp.request).mock.calls[0]?.[0];
-    expect(options).toHaveProperty('path', expect.stringContaining('stdin=true'));
-    expect(options).toHaveProperty('path', expect.stringContaining('stdout=true'));
+  test.each(['error', 'close'])('evicts a cached background stream on %s without waiting for end', async event => {
+    vi.mocked(container.attach).mockImplementation(async () => stream);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    stream.emit(event, new Error('connection lost'));
+    expect(containerRegistry.getStreamsPerContainerId().has('fixture')).toBe(false);
+    expect(containerRegistry.getStreamsOutputPerContainerId().has('fixture')).toBe(false);
   });
 
-  test('preserves the JSON body of ordinary POST requests', async () => {
-    vi.mocked(nodeHttp.request).mockImplementation(() => {
-      const response = Object.assign(Readable.from([Buffer.from('{"Id":"created"}')]), { statusCode: 201 });
-      queueMicrotask(() => request.emit('response', response));
-      return request as unknown as ClientRequest;
-    });
-    if (!provider.api) throw new Error('Container API was not initialized');
-    const options = { Image: 'alpine:3.20', Cmd: ['/bin/sh'] };
-    await provider.api.createContainer(options);
-    expect(request.write).toHaveBeenCalledExactlyOnceWith(JSON.stringify(options));
+  test('an old stream ending does not evict a newer cached stream', async () => {
+    vi.mocked(container.attach).mockImplementation(async () => stream);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    containerRegistry.setStreamsPerContainerId('fixture', replacement);
+    stream.emit('end');
+    expect(containerRegistry.getStreamsPerContainerId().get('fixture')).toBe(replacement);
+  });
+
+  test('late data from an old stream does not overwrite the replacement history', async () => {
+    vi.mocked(container.attach).mockImplementation(async () => stream);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    container.attach = vi.fn();
+    vi.mocked(container.attach).mockImplementation(async () => replacement);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    replacement.write('current');
+    stream.write('stale');
+    expect(containerRegistry.getStreamsOutputPerContainerId().get('fixture')).toEqual([Buffer.from('current')]);
+  });
+
+  test('does not replay old output before a replacement stream produces its first data', async () => {
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    const output = vi.fn();
+    await containerRegistry.attachContainer('docker', 'fixture', output, vi.fn(), vi.fn());
+    expect(output).not.toHaveBeenCalled();
   });
 });
 
 describe('attach container', () => {
-  test.each(['compat', 'libpod'])('propagates %s attachment failures so the caller can retry', async api => {
-    const attachError = new Error('container is restarting');
-    const dockerodeContainer = { id: '1234', attach: vi.fn() } as unknown as Dockerode.Container;
-    vi.mocked(dockerodeContainer.attach).mockRejectedValue(attachError);
-    vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
-    if (api === 'libpod') {
-      const libpod = { podmanAttach: vi.fn() } as unknown as LibPod;
-      vi.mocked(libpod.podmanAttach).mockRejectedValue(attachError);
-      vi.spyOn(containerRegistry, 'getMatchingPodmanEngineLibPod').mockReturnValue(libpod);
-    }
+  describe('failed attachment', () => {
+    let provider: InternalContainerProvider;
+    let libpod: LibPod;
+    let error: Error;
 
-    await expect(containerRegistry.attachContainer('podman', '1234', vi.fn(), vi.fn(), vi.fn())).rejects.toBe(
-      attachError,
-    );
+    beforeEach(() => {
+      error = new Error('container is restarting');
+      const api = LibpodDockerode.createDockerode({ socketPath: '/fixture.sock' });
+      const container = new Dockerode.Container(api.modem, '1234');
+      container.attach = vi.fn();
+      vi.mocked(container.attach).mockImplementation(async () => {
+        throw error;
+      });
+      api.getContainer = vi.fn();
+      vi.mocked(api.getContainer).mockReturnValue(container);
+      api.podmanAttach = vi.fn();
+      vi.mocked(api.podmanAttach).mockRejectedValue(error);
+      libpod = api;
+      provider = {
+        id: 'podman',
+        name: 'Podman',
+        api,
+        connection: {
+          name: 'podman',
+          displayName: 'Podman',
+          type: 'podman',
+          endpoint: { socketPath: '/fixture.sock' },
+          status: (): podmanDesktopAPI.ProviderConnectionStatus => 'started',
+        },
+      };
+      containerRegistry.addInternalProvider('podman', provider);
+    });
+
+    test.each(['compat', 'libpod'])('propagates %s attachment failures so the caller can retry', async api => {
+      if (api === 'libpod') provider.libpodApi = libpod;
+      await expect(containerRegistry.attachContainer('podman', '1234', vi.fn(), vi.fn(), vi.fn())).rejects.toBe(error);
+    });
   });
 
   test('container attach stream', async () => {

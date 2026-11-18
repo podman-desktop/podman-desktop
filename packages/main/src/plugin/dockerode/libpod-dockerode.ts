@@ -294,6 +294,30 @@ const wrapAs = <T>(data: unknown): T => {
 // tweak Dockerode by adding the support of libpod API
 // WARNING: make sure to not override existing functions
 export class LibpodDockerode {
+  private static readonly patchedModems = new WeakSet<DockerodeInternalsModem>();
+
+  static createDockerode(options: Dockerode.DockerOptions): Dockerode & LibPod {
+    const api = wrapAs<Dockerode & LibPod>(new Dockerode(options));
+    LibpodDockerode.patchAttachRequests(wrapAs<DockerodeInternals>(api).modem);
+    return api;
+  }
+
+  private static patchAttachRequests(modem: DockerodeInternalsModem): void {
+    if (LibpodDockerode.patchedModems.has(modem)) return;
+    LibpodDockerode.patchedModems.add(modem);
+    const buildRequest = modem.buildRequest.bind(modem);
+    modem.buildRequest = (options, context, data, callback): void => {
+      // The upgraded attach socket becomes stdin, so its POST body must be empty.
+      if (context.openStdin && context.path.includes('/attach?')) {
+        data = '';
+        const headers = Object.assign({}, options.headers, { 'Content-Length': 0 });
+        Reflect.deleteProperty(headers, 'Transfer-Encoding');
+        options.headers = headers;
+      }
+      buildRequest(options, context, data, callback);
+    };
+  }
+
   // setup the libpod API
   enhancePrototypeWithLibPod(): void {
     const prototypeOfDockerode = Dockerode.prototype as unknown as DockerodeInternals;
@@ -406,20 +430,7 @@ export class LibpodDockerode {
         options: {},
       };
 
-      // patch the modem to not send any data. By default dockerode send query parameters as JSON payload
-      // but podman REST API will then echo the response, so send empty data '' instead
-      const originalBuildRequest = this.modem.buildRequest;
-      this.modem.buildRequest = function (
-        options: RequestOptions,
-        context: DialOptions,
-        data?: string | Buffer | NodeJS.ReadableStream,
-        callback?: DockerModem.RequestCallback,
-      ): void {
-        if (context.allowEmpty && context.path.includes('/attach?')) {
-          data = '';
-        }
-        originalBuildRequest.call(this, options, context, data, callback);
-      };
+      LibpodDockerode.patchAttachRequests(this.modem);
 
       return new Promise((resolve, reject) => {
         this.modem.dial(optsf, (err: unknown, stream: unknown) => {

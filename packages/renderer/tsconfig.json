@@ -2,6 +2,7 @@
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "target": "esnext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "esnext",
     "strict": true,
     "resolveJsonModule": true,
