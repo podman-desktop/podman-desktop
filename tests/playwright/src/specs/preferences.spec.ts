@@ -16,10 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { Preferences } from '/@/model/core/settings/preferences';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
+import type { SettingsBar } from '/@/model/pages/settings-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const preferencesTestString = 'this text should persist through page change';
+const defaultScrollback = 1000;
+const customScrollback = 5000;
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('preferences-e2e');
@@ -49,5 +53,65 @@ test.describe('Preferences text persistence validation', { tag: '@macos_sanity' 
     await settingsBar.preferencesTab.click();
     await playExpect(preferencesPage.heading).toBeVisible();
     await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
+  });
+});
+
+test.describe('Terminal scrollback preference', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  let settingsBar: SettingsBar;
+  let preferencesPage: PreferencesPage;
+
+  const getScrollbackValue = async (): Promise<string> =>
+    preferencesPage.getPreferenceNumberInputValue(
+      Preferences.Labels.SCROLLBACK,
+      Preferences.TERMINAL_SCROLLBACK_INPUT_LABEL,
+    );
+
+  const getStoredScrollbackValue = async (): Promise<unknown> =>
+    preferencesPage.getStoredPreferenceValue(Preferences.TERMINAL_SCROLLBACK_INPUT_LABEL);
+
+  test.beforeAll(async ({ page, navigationBar }) => {
+    settingsBar = await navigationBar.openSettings();
+    await settingsBar.preferencesTab.click();
+    preferencesPage = new PreferencesPage(page);
+    await playExpect(preferencesPage.heading).toBeVisible();
+  });
+
+  test('Scrollback has the default value of 1000 lines', async () => {
+    const scrollbackRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.SCROLLBACK);
+    await playExpect(scrollbackRow).toBeAttached();
+    playExpect(await preferencesPage.isPreferenceManaged(Preferences.Labels.SCROLLBACK)).toBeFalsy();
+    playExpect(await getScrollbackValue()).toBe(String(defaultScrollback));
+  });
+
+  test('Scrollback can be changed and the value persists', async () => {
+    await preferencesPage.setPreferenceNumberInputValue(
+      Preferences.Labels.SCROLLBACK,
+      Preferences.TERMINAL_SCROLLBACK_INPUT_LABEL,
+      String(customScrollback),
+    );
+    playExpect(await getScrollbackValue()).toBe(String(customScrollback));
+
+    // the value is saved after a short delay, check the saved configuration instead of reopening the page:
+    // every time the page is opened the input schedules a new save of the value it displays
+    await playExpect
+      .poll(getStoredScrollbackValue, { timeout: 10_000, message: 'Scrollback preference was not saved' })
+      .toBe(customScrollback);
+
+    // the saved value is displayed again after leaving and re-entering the page
+    await settingsBar.resourcesTab.click();
+    await settingsBar.preferencesTab.click();
+    await playExpect(preferencesPage.heading).toBeVisible();
+    await playExpect.poll(getScrollbackValue).toBe(String(customScrollback));
+  });
+
+  test('Scrollback can be reset to the default value', async () => {
+    await preferencesPage.resetPreference(Preferences.Labels.SCROLLBACK);
+
+    await playExpect
+      .poll(getStoredScrollbackValue, { timeout: 10_000, message: 'Scrollback preference was not reset' })
+      .toBe(defaultScrollback);
+    await playExpect.poll(getScrollbackValue).toBe(String(defaultScrollback));
   });
 });
