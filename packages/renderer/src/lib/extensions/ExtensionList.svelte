@@ -10,6 +10,7 @@ import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/st
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
+import { CatalogCategoryFilter } from './catalog-category-filter';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { CatalogInstallStatusFilter } from './catalog-install-status-filter';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
@@ -79,6 +80,16 @@ function changeInstallStatus(status: string): void {
   searchTerm = installStatusFilter.withStatus(status);
 }
 
+const categoryFilter = $derived(new CatalogCategoryFilter(searchTerm, enhancedCatalogExtensions));
+
+function getCategory(): string {
+  return categoryFilter.value;
+}
+
+function changeCategory(category: string): void {
+  searchTerm = categoryFilter.withCategory(category);
+}
+
 function closeModal(): void {
   installManualImageModal = false;
 }
@@ -141,17 +152,30 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
       class:gap-y-2={screen === 'catalog'}
       role="region"
       aria-label="search">
-      <div class="pl-5 w-72">
+      <div
+        class="pl-5 w-72"
+        class:grow={screen === 'catalog'}
+        class:basis-40={screen === 'catalog'}
+        class:min-w-40={screen === 'catalog'}
+        class:max-w-72={screen === 'catalog'}>
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
       </div>
       {#if screen === 'catalog'}
-        <div class="flex items-center gap-2 pl-5">
+        <div class="flex min-w-0 flex-wrap items-center gap-2 pl-5">
           <Dropdown
             class="w-40"
             bind:value={getInstallStatus, changeInstallStatus}
             options={CatalogInstallStatusFilter.OPTIONS}>
             {#snippet left()}
               <span class="sr-only">Install status </span>
+            {/snippet}
+          </Dropdown>
+          <Dropdown
+            class="w-48 max-w-60 [&>button]:min-w-0 [&>button>span]:truncate [&>button>div]:shrink-0 [&>div>button>div:last-child]:truncate"
+            bind:value={getCategory, changeCategory}
+            options={categoryFilter.options}>
+            {#snippet left()}
+              <span class="sr-only">Category </span>
             {/snippet}
           </Dropdown>
         </div>
