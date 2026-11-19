@@ -399,8 +399,8 @@ export class ContainerProviderRegistry {
       // ok we had some errors so we need to reconnect the provider
       // delay the reconnection to avoid too many reconnections
       setTimeout(() => {
-        // the periodic status check may have already reconnected the provider
-        if (!internalProvider.api) {
+        // skip when the provider has been removed or the periodic status check already reconnected it
+        if (!internalProvider.api && this.internalProviders.get(internalProvider.id) === internalProvider) {
           this.setupConnectionAPI(internalProvider, containerProviderConnection);
         }
       }, this.retryDelayEvents);

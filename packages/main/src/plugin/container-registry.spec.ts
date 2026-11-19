@@ -372,6 +372,10 @@ class TestContainerProviderRegistry extends ContainerProviderRegistry {
     this.internalProviders.set(name, provider);
   }
 
+  removeInternalProvider(name: string): void {
+    this.internalProviders.delete(name);
+  }
+
   addContainerProvider(name: string, provider: podmanDesktopAPI.ContainerProviderConnection): void {
     this.containerProviders.set(name, provider);
   }
@@ -4157,6 +4161,8 @@ test('setupConnectionAPI with errors', async () => {
   // check that api is being added
   expect(internalContainerProvider.api).toBeUndefined();
   expect(internalContainerProvider.libpodApi).toBeUndefined();
+  // reconnects only happen for registered providers
+  containerRegistry.addInternalProvider('podman1', internalContainerProvider);
   containerRegistry.setupConnectionAPI(internalContainerProvider, providerConnectionInfo);
 
   // change delay of setRetryDelayEvents to be 200ms
@@ -4206,11 +4212,12 @@ test('setupConnectionAPI with errors', async () => {
   // the provider reconnected to the new stream, so the event must have been received
   const containerStartedEventCalls = allCalls.filter(call => call[0] === 'container-started-event');
   expect(containerStartedEventCalls).toHaveLength(1);
-
-  stream2.end();
-
   // it should have reconnect to the stream now and add again the api object
   expect(internalContainerProvider.api).toBeDefined();
+
+  // unregister the provider so that ending the stream does not keep reconnecting after the test
+  containerRegistry.removeInternalProvider('podman1');
+  stream2.end();
 });
 
 test('setupConnectionAPI with errors after machine being removed', async () => {
@@ -4674,6 +4681,35 @@ describe('events stream reconnect', () => {
     secondCallback(new Error('Error in handling events'));
 
     expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
+  test('registerContainerConnection does not reconnect a disposed connection', () => {
+    vi.useFakeTimers();
+    const errorCallbacks = captureEventsSubscriptions();
+    const setupConnectionAPI = vi.fn(containerRegistry.setupConnectionAPI.bind(containerRegistry));
+    containerRegistry.setupConnectionAPI = setupConnectionAPI;
+
+    const podmanProvider = { name: 'podman', id: 'podman' } as unknown as podmanDesktopAPI.Provider;
+    const providerRegistry = {
+      onBeforeDidUpdateContainerConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    } as unknown as ProviderRegistry;
+
+    const disposable = containerRegistry.registerContainerConnection(
+      podmanProvider,
+      providerConnectionInfo,
+      providerRegistry,
+    );
+    expect(setupConnectionAPI).toHaveBeenCalledTimes(1);
+
+    // the stream fails, then the connection is removed before the delayed reconnect runs
+    const [errorCallback] = errorCallbacks;
+    assert(errorCallback);
+    errorCallback(new Error('Events stream ended'));
+    disposable.dispose();
+
+    vi.advanceTimersByTime(5000);
+
+    expect(setupConnectionAPI).toHaveBeenCalledTimes(1);
   });
 });
 
