@@ -82,6 +82,11 @@ const buttonClass =
 const buttonDisabledClass =
   'text-[var(--pd-action-button-disabled-text)] font-medium rounded-full items-center px-2 py-2 text-center';
 
+// a getter, so a visible tooltip updates its text in place when the props change
+function getTooltipText(): string {
+  return tooltip || title;
+}
+
 function handleClick(): void {
   if (enabled && !inProgress) {
     onClick();
@@ -119,7 +124,7 @@ const styleClass = $derived(
     class:hidden={hidden}
     class:inline-flex={!hidden}
     disabled={!enabled}
-    {@attach tooltipAttachment(() => tooltip || title)}>
+    {@attach tooltipAttachment(getTooltipText, { placement: 'bottom' })}>
     <LoadingIcon
       icon={icon}
       loading={inProgress}
