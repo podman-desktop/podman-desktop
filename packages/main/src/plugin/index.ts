@@ -219,6 +219,7 @@ import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionInstaller } from './extension/extension-installer.js';
+import { ExtensionPlatformService } from './extension/extension-platform.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -3587,6 +3588,7 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
+    container.bind<ExtensionPlatformService>(ExtensionPlatformService).toSelf().inSingletonScope();
     container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();
