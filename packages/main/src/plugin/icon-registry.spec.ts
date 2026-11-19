@@ -102,6 +102,7 @@ test.each([
   { iconId: 'kind-icon', fontPath: 'kind-icon.woff2', fontCharacter: '\\EA01' },
   { iconId: 'my_icon2', fontPath: 'fonts/my icons.woff2', fontCharacter: '\\0041' },
   { iconId: 'single-char', fontPath: 'icons.woff2', fontCharacter: 'A' },
+  { iconId: 'supplementary-char', fontPath: 'icons.woff2', fontCharacter: '\u{F0001}' },
 ])('should register valid icon $iconId', ({ iconId, fontPath, fontCharacter }) => {
   registerIcon(iconId, fontPath, fontCharacter);
 
@@ -117,6 +118,8 @@ test.each([
   { name: 'two characters', iconId: 'reject-3', fontPath: 'icons.woff2', fontCharacter: 'AB' },
   { name: 'single quote', iconId: 'reject-4', fontPath: 'icons.woff2', fontCharacter: `'` },
   { name: 'empty character', iconId: 'reject-5', fontPath: 'icons.woff2', fontCharacter: '' },
+  { name: 'newline', iconId: 'reject-11', fontPath: 'icons.woff2', fontCharacter: '\n' },
+  { name: 'C1 control character', iconId: 'reject-12', fontPath: 'icons.woff2', fontCharacter: '\u0085' },
   {
     name: 'CSS injection in fontCharacter',
     iconId: 'reject-6',

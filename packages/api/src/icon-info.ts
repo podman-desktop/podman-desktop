@@ -46,12 +46,12 @@ export const IconContributionSchema = z.object({
         .regex(/^[\w ./-]+$/, 'fontPath may only contain letters, digits, spaces, "-", "_", "." and "/"')
         .optional(),
       // a CSS escape such as \EA01, or a single character other than a backslash, a quote or a control character
-      fontCharacter: z.string().regex(
-        // control characters are listed on purpose, to reject them
-        // eslint-disable-next-line no-control-regex
-        /^(?:\\[0-9a-fA-F]{1,6}|[^\\'"\u0000-\u001f\u007f])$/,
-        'fontCharacter must be a CSS escape such as \\EA01 or a single character',
-      ),
+      fontCharacter: z
+        .string()
+        .regex(
+          /^(?:\\[0-9a-fA-F]{1,6}|[^\\'"\p{Cc}])$/u,
+          'fontCharacter must be a CSS escape such as \\EA01 or a single character',
+        ),
     })
     .optional(),
 });
