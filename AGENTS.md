@@ -86,15 +86,19 @@ storybook/              - UI component showcase
 
 ## Guidelines
 
-1. Read [CODE-GUIDELINES.md](CODE-GUIDELINES.md) before making changes, and [DESIGN-GUIDELINES.md](DESIGN-GUIDELINES.md) before changing UI
+1. Read [CODE-GUIDELINES.md](CODE-GUIDELINES.md) before making changes
 2. Run `pnpm lint-staged` before committing
 3. Unit tests are mandatory for new features
-4. Use Svelte 5 runes (`$state`, `$derived`, `$effect`) — see [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
-5. Use `vi.mock(import('./module'))` not `vi.mock('./module')` — see [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
-6. IPC patterns and DI — see [docs/adr/](docs/adr/)
-7. Extension development — see `website/docs/extensions/`
-8. We use semantic commits (e.g. `feat(renderer): add feature`)
-9. Every commit must be signed; mention AI assistance
+4. Use `vi.mock(import('./module'))` not `vi.mock('./module')` — see [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
+5. IPC patterns and DI — see [docs/adr/](docs/adr/)
+6. Extension development — see `website/docs/extensions/`
+7. We use semantic commits (e.g. `feat(renderer): add feature`)
+8. Every commit must be signed; mention AI assistance
+
+When changing UI:
+
+- Read [DESIGN-GUIDELINES.md](DESIGN-GUIDELINES.md)
+- Use Svelte 5 runes (`$state`, `$derived`, `$effect`) — see [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
 
 ## Pull requests
 
