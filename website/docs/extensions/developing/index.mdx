@@ -218,6 +218,18 @@ extensionContext.subscriptions.push(extensionApi.commands.registerCommand('my.co
 );
 ```
 
+### Restricting the platforms an extension supports
+
+By default, an extension can be installed on any platform. If your extension only runs on some platforms, declare them with the optional top-level `targetPlatforms` property of the `package.json` file, using the `os/architecture` identifiers of the OCI image specification:
+
+```json
+"targetPlatforms": ["darwin/arm64"]
+```
+
+Each entry combines an OCI operating system (`darwin`, `linux`, `windows`) and an OCI architecture (`amd64`, `arm64`). The list must not be empty, and an entry which is not an `os/architecture` value (such as `darwin-arm64`) is invalid.
+
+When the property is absent, the extension supports every platform. When Podman Desktop installs an extension from an image on a platform that is not listed, it refuses the installation instead of installing an extension that cannot run.
+
 ### Expanding the `extension-api` API
 
 Sometimes you'll need to add new functionality to the API in order to make an internal change within Podman Desktop. An example would be a new UI/UX component that happens within the renderer, you'd need to expand the API in order to make that change to Podman Desktop's inner-workings.
