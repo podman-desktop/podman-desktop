@@ -108,6 +108,23 @@ export function findAuthEnvironment(registry: string): RegistryAuth | undefined 
   };
 }
 
+async function getConfigDigest(imageRegistry: ImageRegistry, extension: RemoteExtension): Promise<string> {
+  const { config } = await imageRegistry.getManifestFromImageName(extension.oci);
+  if (!config) {
+    throw new Error(
+      `extension ${extension.name} has malformed content: the OCI image manifest should contains a "config" field`,
+    );
+  }
+
+  const digest: unknown = config.digest;
+  if (typeof digest !== 'string' || !digest) {
+    throw new Error(
+      `extension ${extension.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
+    );
+  }
+  return digest;
+}
+
 export async function downloadExtension(options: DownloadOptions): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
@@ -128,29 +145,22 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
   }
 
   const finalPath = join(options.destination, options.extension.name);
+  const existingDigest = await findExtensionDigest(finalPath);
 
-  const { config } = await imageRegistry.getManifestFromImageName(options.extension.oci);
-  if (!config) {
-    throw new Error(
-      `extension ${options.extension.name} has malformed content: the OCI image manifest should contains a "config" field`,
-    );
-  }
-  if (!config.digest) {
-    throw new Error(
-      `extension ${options.extension.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
-    );
-  }
+  // a digest pinned in the reference (name@sha256:...) is returned as the tag, it is known without contacting the registry
+  const { tag } = imageRegistry.extractImageDataFromImageName(options.extension.oci);
+  // otherwise use the config digest of the manifest
+  const expectedDigest = tag.includes(':') ? tag : await getConfigDigest(imageRegistry, options.extension);
 
   // check if the extension is already downloaded
+  if (existingDigest === expectedDigest) {
+    console.log(`cache hit for ${options.extension.name} ${expectedDigest.substring(0, 18)}`);
+    return;
+  }
+
   if (existsSync(finalPath)) {
-    const existingDigest = await findExtensionDigest(finalPath);
-    if (existingDigest === config.digest) {
-      console.log(`cache hit for ${options.extension.name} ${config.digest.substring(0, 18)}`);
-      return;
-    } else {
-      console.log(`invalid digest for ${options.extension.name}, cleanup ${finalPath}`);
-      await rm(finalPath, { recursive: true });
-    }
+    console.log(`invalid digest for ${options.extension.name}, cleanup ${finalPath}`);
+    await rm(finalPath, { recursive: true });
   }
 
   // unique tmp folder (not derived from the extension name), so it can safely be removed once done
@@ -172,7 +182,7 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
 
     // rename tmp to destination
     await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
-    await writeFile(join(finalPath, DIGEST_FILENAME), config.digest, { encoding: 'utf-8' });
+    await writeFile(join(finalPath, DIGEST_FILENAME), expectedDigest, { encoding: 'utf-8' });
   } finally {
     // delete the tmp folder, whether the download succeeded or not
     // a cleanup failure must not hide the error of the download

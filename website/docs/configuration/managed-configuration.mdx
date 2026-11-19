@@ -15,39 +15,51 @@ In enterprise environments, administrators can enforce specific configuration va
 
 ## How it works
 
-Podman Desktop stores values for the following types of configuration in three separate JSON files:
+Podman Desktop supports three types of configuration:
 
-1. **User configuration** - Editable user-enforced values for Podman Desktop customization.
-2. **Managed defaults configuration** - Read-only administrator-enforced default values that cannot be edited by the user.
-3. **Locked configuration** - Read-only administrator-enforced list of keys that must use managed values.
+1. **User configuration**: Values that users can change in `settings.json` or through the UI.
+2. **Managed defaults**: Administrator-provided values in `default-settings.json` that supply initial settings.
+3. **Locked configuration**: Keys in `locked.json` that must use managed values instead of user values.
+
+On macOS, Podman Desktop also reads managed preference plists from `/Library/Managed Preferences` at startup.
+The device plist supplies managed defaults and locks. The per-user plist supplies user values.
+The JSON files remain supported alongside these plists.
+
+For MDM setup, examples, and precedence rules, see [Manage macOS settings with MDM](/docs/configuration/managed-configuration-macos).
 
 ### Default settings
 
-On startup, Podman Desktop checks `default-settings.json` and applies any settings that don't already exist in the user's `settings.json`. This is a one-time copy per setting:
+At startup, Podman Desktop copies managed defaults into the user configuration for keys without a user value.
+On macOS, device plist values override `default-settings.json` values for the same key before this copy.
 
-- Settings already in the user's `settings.json` are not overwritten
-- Settings that match the built-in schema default are not copied (to avoid unnecessary entries)
-- Only settings that differ from the schema default are persisted to `settings.json`
+- Existing user values remain unchanged.
+- Users can change these initial values unless the key is locked.
+- The settings writer omits values that match the registered schema default from `settings.json`.
 
 This allows administrators to pre-configure settings for new users while respecting existing user preferences.
 
 ### Locked settings
 
-Settings listed in `locked.json` are enforced on every read and cannot be changed by the user:
+Keys in `locked.json` use managed values on every configuration read.
+On macOS, the device plist can also supply a `locked` array. Podman Desktop combines both lock lists.
 
-- The value is always read from `default-settings.json`, ignoring the user's `settings.json`
-- The setting displays a lock icon in the UI
-- User changes to locked keys are ignored
+- The value comes from the managed defaults, including device plist overrides on macOS.
+- The setting displays a lock icon or a **Managed** label in the UI.
+- User values do not override the managed value.
+
+Each locked key requires a value in the managed defaults. A lock without a managed value does not enforce a value.
 
 Use locked settings when you need to enforce compliance, such as proxy servers or telemetry policies.
 
 ### Configuration priority
 
-When a configuration changes, Podman Desktop returns a value after checking the user configuration files in the following priority order:
+Podman Desktop resolves configuration values in this order:
 
-1. **Locked keys** - Return a value from the managed defaults configuration file, which is of highest priority
-2. **Unlocked keys** - Return a value from the user configuration file
-3. **Default value** - Returns the default value built into Podman Desktop
+1. **Locked key with a managed value**: Return the managed value.
+2. **User value**: Return the user configuration value, including defaults copied at startup.
+3. **Built-in default**: Use the default from the setting definition.
+
+On macOS, per-user plist values override `settings.json` at startup. They cannot override locked managed values.
 
 ## File locations
 
@@ -74,6 +86,9 @@ _Locked configuration_
 
 </TabItem>
 <TabItem value="mac" label="macOS">
+
+macOS also supports device and per-user managed preference plists.
+See [macOS preference locations](/docs/configuration/managed-configuration-macos#preference-domain-and-locations) for their paths and roles.
 
 _User configuration_
 
@@ -281,6 +296,9 @@ Choose a deployment tool: Ansible, Puppet, Chef, Salt, RPM/DEB packages, or shel
 
 **Step 1: Create configuration files**
 
+For a deployment through macOS managed preferences, follow [Manage macOS settings with MDM](/docs/configuration/managed-configuration-macos#deploy-through-mdm).
+The procedure below deploys the JSON files.
+
 Save the following files at `/Library/Application Support/io.podman_desktop.PodmanDesktop/`:
 
 _Managed defaults file:_
@@ -375,6 +393,7 @@ Users are notified when settings are managed by administrators, ensuring transpa
 
 ## Additional resources
 
+- [Manage macOS settings with MDM](/docs/configuration/managed-configuration-macos)
 - [Troubleshooting managed configuration](/docs/configuration/managed-configuration-troubleshooting)
 
 - [Managed configuration use cases](/docs/configuration/managed-configuration-use-cases)
