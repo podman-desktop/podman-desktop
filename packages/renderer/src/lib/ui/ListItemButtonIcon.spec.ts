@@ -19,13 +19,20 @@
 import '@testing-library/jest-dom/vitest';
 
 import { faCircleCheck, faRocket } from '@fortawesome/free-solid-svg-icons';
+import { tooltip as tooltipAttachment } from '@podman-desktop/ui-svelte';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 
 import ListItemButtonIcon from './ListItemButtonIcon.svelte';
+
+// spy on the real attachment, so the tooltip still renders in the other tests
+vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
+  const actual = await importOriginal();
+  return { ...actual, tooltip: vi.fn(actual.tooltip) };
+});
 
 test('Expect the dropDownMenuItem to have classes that display a disabled object if the disabled when clause is evaluated to true', async () => {
   const title = 'title';
@@ -234,8 +241,22 @@ test('expect a visible tooltip to update its text when the tooltip prop changes'
 
   const listItemButton = screen.getByRole('button', { name: 'Update Image' });
   await fireEvent.mouseEnter(listItemButton);
+  const tooltip = screen.getByRole('tooltip');
+  expect(tooltip).toHaveTextContent('Update all tags of this image');
 
   await rerender({ tooltip: 'Updating image' });
 
-  expect(screen.getByRole('tooltip')).toHaveTextContent('Updating image');
+  // same element: the text is updated in place, the tooltip is not recreated
+  expect(screen.getByRole('tooltip')).toBe(tooltip);
+  expect(tooltip).toHaveTextContent('Updating image');
+});
+
+test('expect the tooltip to be placed below the button', () => {
+  render(ListItemButtonIcon, {
+    title: 'Run Image',
+    icon: faRocket,
+    menu: false,
+  });
+
+  expect(tooltipAttachment).toHaveBeenCalledWith(expect.any(Function), { placement: 'bottom' });
 });
