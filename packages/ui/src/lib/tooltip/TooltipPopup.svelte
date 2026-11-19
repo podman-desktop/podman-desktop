@@ -54,6 +54,8 @@ async function updateTooltipPosition(): Promise<void> {
     middleware: [
       offset(8),
       flip({
+        // flip only when the side overflows: horizontal overflow of a top/bottom tooltip is handled by shift()
+        crossAxis: false,
         fallbackAxisSideDirection: 'start',
         padding: 5,
       }),

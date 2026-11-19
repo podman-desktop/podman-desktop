@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { autoUpdate, computePosition } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, shift } from '@floating-ui/dom';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -104,6 +104,13 @@ test('positions relative to the reference with top placement by default', async 
       expect.objectContaining({ placement: 'top' }),
     ),
   );
+});
+
+test('flips only on the main axis and leaves cross-axis overflow to shift', async () => {
+  render(TooltipPopup, { reference, id: 'my-tooltip', tip: 'hello' });
+
+  await waitFor(() => expect(flip).toHaveBeenCalledWith(expect.objectContaining({ crossAxis: false })));
+  expect(shift).toHaveBeenCalled();
 });
 
 test('positions with the given placement', async () => {
