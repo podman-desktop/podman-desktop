@@ -28,6 +28,15 @@ import { z } from 'zod';
 
 import { RawCommandSchema } from '/@/plugin/command-registry.js';
 
+export const ExtensionPlatformSchema = z
+  .string()
+  .regex(
+    /^(?:(?:windows|darwin|linux)\/(?:amd64|arm64)|(?!windows\/|darwin\/|linux\/)[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*)$/,
+    'expected an "os/architecture" value such as darwin/arm64 (windows, darwin and linux only support amd64 and arm64)',
+  );
+
+export type ExtensionPlatform = z.infer<typeof ExtensionPlatformSchema>;
+
 const ExtensionRepositorySchema = z.union([
   z.string(),
   z.object({
@@ -55,6 +64,7 @@ export const ExtensionManifestSchema = z
         'podman-desktop': z.string().optional(),
       })
       .optional(),
+    targetPlatforms: z.array(ExtensionPlatformSchema).min(1).optional(),
     contributes: z
       .object({
         configuration: IConfigurationNodeSchema.omit({ id: true }).optional(),

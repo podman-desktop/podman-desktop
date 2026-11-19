@@ -95,6 +95,14 @@
           },
           "additionalProperties": false
         },
+        "targetPlatforms": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:(?:windows|darwin|linux)\\/(?:amd64|arm64)|(?!windows\\/|darwin\\/|linux\\/)[a-z0-9][a-z0-9._-]*\\/[a-z0-9][a-z0-9._-]*)$"
+          }
+        },
         "contributes": {
           "type": "object",
           "properties": {
