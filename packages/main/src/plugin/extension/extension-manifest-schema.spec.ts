@@ -75,6 +75,61 @@ describe('ExtensionManifestSchema', () => {
     expect(result.data.engines?.['podman-desktop']).toBe('>=1.0.0');
   });
 
+  test('accepts targetPlatforms', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      targetPlatforms: ['darwin/arm64'],
+    });
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.targetPlatforms).toEqual(['darwin/arm64']);
+  });
+
+  test('accepts a manifest without targetPlatforms', () => {
+    const result = ExtensionManifestSchema.safeParse(minimalValidManifest);
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.targetPlatforms).toBeUndefined();
+  });
+
+  test('rejects an empty targetPlatforms', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      targetPlatforms: [],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test('rejects a targetPlatforms entry which is not an os/architecture value', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      targetPlatforms: ['darwin-arm64'],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test.each(['windows/arm64', 'darwin/amd64', 'linux/arm64', 'freebsd/amd64', 'linux-musl/amd64', 'plan9/386'])(
+    'accepts the targetPlatforms entry %s',
+    platform => {
+      const result = ExtensionManifestSchema.safeParse({
+        ...minimalValidManifest,
+        targetPlatforms: [platform],
+      });
+      expect(result.success).toBe(true);
+    },
+  );
+
+  test.each(['windows/x64', 'darwin/arm', 'linux/amd64v2', 'linux/ppc64le', 'linux/', 'Windows/amd64', '/amd64'])(
+    'rejects the targetPlatforms entry %s',
+    platform => {
+      const result = ExtensionManifestSchema.safeParse({
+        ...minimalValidManifest,
+        targetPlatforms: [platform],
+      });
+      expect(result.success).toBe(false);
+    },
+  );
+
   test('accepts extensionDependencies and extensionPack', () => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
