@@ -29,3 +29,14 @@ test('binary path has an explicit label without changing its configuration contr
     description: 'Custom path to Podman binary (Default is blank)',
   });
 });
+
+test('Hyper-V preparation onboarding is offered between the machine check and machine creation', () => {
+  const steps = manifest.contributes.onboarding.steps;
+  const checkIndex = steps.findIndex(step => step.id === 'checkHyperVPrepCommand');
+  const prepIndex = steps.findIndex(step => step.id === 'hypervPrepView');
+  const createMachineIndex = steps.findIndex(step => step.id === 'createPodmanMachineCommand');
+
+  expect(checkIndex).toBeGreaterThan(-1);
+  expect(prepIndex).toBeGreaterThan(checkIndex);
+  expect(createMachineIndex).toBeGreaterThan(prepIndex);
+});
