@@ -116,9 +116,9 @@ let {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   'aria-disabled': _ariaDisabled,
   'aria-busy': _ariaBusy,
-  'aria-pressed': _ariaPressed,
   /* eslint-enable @typescript-eslint/no-unused-vars */
 
+  'aria-pressed': ariaPressed,
   ...restProps
 }: Props = $props();
 
@@ -191,7 +191,7 @@ let classes = $derived.by(() => {
   disabled={disabled || inProgress}
   aria-disabled={disabled || inProgress}
   aria-busy={inProgress}
-  aria-pressed={pressed}
+  aria-pressed={pressed ?? ariaPressed}
   {...restProps}>
   {#if icon ?? inProgress}
     <div

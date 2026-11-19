@@ -357,6 +357,15 @@ test('Button passes data attributes and native attributes to the button element'
   expect(button).toHaveAttribute('name', 'my-name');
 });
 
+test('Button uses the passthrough aria-pressed only when pressed is unset', () => {
+  const { unmount } = render(Button, { 'aria-pressed': 'mixed' });
+  expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'mixed');
+  unmount();
+
+  render(Button, { pressed: true, 'aria-pressed': false });
+  expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('Button own aria attributes win over passthrough ones', () => {
   render(Button, { inProgress: true, 'aria-disabled': false });
 
