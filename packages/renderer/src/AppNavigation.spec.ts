@@ -336,3 +336,11 @@ test('dropping an entry where it started does not save the order', async () => {
 
   expect(window.updateConfigurationValue).not.toHaveBeenCalledWith('navbar.itemOrder', expect.anything());
 });
+
+test('the navigation links announce the reorder keyboard shortcut', async () => {
+  await renderNavigation();
+
+  const containers = screen.getByRole('link', { name: 'Containers' });
+  expect(containers).toHaveAttribute('aria-keyshortcuts', 'Space');
+  expect(containers).toHaveAttribute('title', expect.stringContaining('Space to pick up'));
+});

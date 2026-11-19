@@ -5,7 +5,13 @@
 <script lang="ts">
 import { NavigationPage } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
-import { type DragDropEventHandlers, DragDropProvider, DragOverlay, PointerSensor } from '@dnd-kit/svelte';
+import {
+  type DragDropEventHandlers,
+  DragDropProvider,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+} from '@dnd-kit/svelte';
 import { isSortable } from '@dnd-kit/svelte/sortable';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
@@ -68,6 +74,21 @@ function position(name: string): number {
   const index = order.indexOf(name);
   return index === -1 ? order.length : index;
 }
+
+// Space picks an item up and drops it; Enter keeps following the link instead.
+const keyboardSensor = KeyboardSensor.configure({
+  keyboardCodes: {
+    start: ['Space'],
+    cancel: ['Escape'],
+    end: ['Space', 'Enter', 'Tab'],
+    up: ['ArrowUp'],
+    down: ['ArrowDown'],
+    left: [],
+    right: [],
+  },
+});
+
+let itemTitle = $derived(dragOrder ? undefined : 'Hold to reorder. Space to pick up, arrows to move');
 
 const onDragStart: NonNullable<DragDropEventHandlers['onDragStart']> = () => {
   dragOrder = entries.map(entry => entry.name);
@@ -278,11 +299,11 @@ function onDidChangeConfigurationCallback(e: Event): void {
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
       onpointerdown={onScrollRegionPointerDown}>
-      <DragDropProvider sensors={[PointerSensor]} {onDragStart} {onDragOver} {onDragEnd}>
+      <DragDropProvider sensors={[PointerSensor, keyboardSensor]} {onDragStart} {onDragOver} {onDragEnd}>
         <!-- dnd-kit marks the dragged entry with aria-grabbed: dim it while the overlay shows it under the pointer. -->
         <div class="[&_[aria-grabbed=true]]:opacity-40">
           {#each entries as entry, index (entry.name)}
-            <NavRegistryEntry {entry} {index} bind:meta={meta} {expanded} />
+            <NavRegistryEntry {entry} {index} bind:meta={meta} {expanded} aria-keyshortcuts="Space" title={itemTitle} />
           {/each}
         </div>
         <!-- The dragged entry follows the pointer in an overlay, outside the list being reordered. -->
