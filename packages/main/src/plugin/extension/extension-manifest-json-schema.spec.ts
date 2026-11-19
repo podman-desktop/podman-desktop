@@ -57,6 +57,15 @@ describe('generateExtensionManifestJsonSchema', () => {
     expect(properties).toHaveProperty('extensionPack');
   });
 
+  test('generates the targetPlatforms os/architecture pattern', () => {
+    const extensionSchema = getExtensionSchema();
+    const properties = extensionSchema['properties'] as Record<string, unknown>;
+
+    expect(properties).toHaveProperty('targetPlatforms.items.pattern');
+    expect(properties).toHaveProperty('targetPlatforms.minItems', 1);
+    expect(extensionSchema['required']).not.toContain('targetPlatforms');
+  });
+
   test('does not set additionalProperties to false (loose schema)', () => {
     const extensionSchema = getExtensionSchema();
     expect(extensionSchema['additionalProperties']).not.toBe(false);
