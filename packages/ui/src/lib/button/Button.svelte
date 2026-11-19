@@ -112,6 +112,13 @@ let {
   'aria-label': ariaLabel,
   onclick = dispatch.bind(undefined, 'click'),
   children,
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  'aria-disabled': _ariaDisabled,
+  'aria-busy': _ariaBusy,
+  'aria-pressed': _ariaPressed,
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
   ...restProps
 }: Props = $props();
 
@@ -170,7 +177,6 @@ let classes = $derived.by(() => {
 </script>
 
 <button
-  {...restProps}
   type="button"
   class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] select-none {classes} {classNames}"
   class:border-[var(--pd-button-tab-border-selected)]={(type === 'tab' && selected === true && !disabled && !inProgress) ||
@@ -185,7 +191,8 @@ let classes = $derived.by(() => {
   disabled={disabled || inProgress}
   aria-disabled={disabled || inProgress}
   aria-busy={inProgress}
-  aria-pressed={pressed}>
+  aria-pressed={pressed}
+  {...restProps}>
   {#if icon ?? inProgress}
     <div
       class="flex flex-row p-0 m-0 bg-transparent justify-center items-center space-x-[4px]"
