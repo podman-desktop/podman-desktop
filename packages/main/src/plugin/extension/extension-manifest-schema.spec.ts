@@ -75,6 +75,39 @@ describe('ExtensionManifestSchema', () => {
     expect(result.data.engines?.['podman-desktop']).toBe('>=1.0.0');
   });
 
+  test('accepts targetPlatforms', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      targetPlatforms: ['darwin/arm64'],
+    });
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.targetPlatforms).toEqual(['darwin/arm64']);
+  });
+
+  test('accepts a manifest without targetPlatforms', () => {
+    const result = ExtensionManifestSchema.safeParse(minimalValidManifest);
+    expect(result.success).toBe(true);
+    assert(result.data);
+    expect(result.data.targetPlatforms).toBeUndefined();
+  });
+
+  test('rejects an empty targetPlatforms', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      targetPlatforms: [],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test('rejects a targetPlatforms entry which is not an os/architecture value', () => {
+    const result = ExtensionManifestSchema.safeParse({
+      ...minimalValidManifest,
+      targetPlatforms: ['darwin-arm64'],
+    });
+    expect(result.success).toBe(false);
+  });
+
   test('accepts extensionDependencies and extensionPack', () => {
     const result = ExtensionManifestSchema.safeParse({
       ...minimalValidManifest,
