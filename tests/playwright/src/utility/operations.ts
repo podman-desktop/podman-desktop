@@ -441,7 +441,8 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
 
     // Delete the machine
     await podmanResourceCard.performConnectionAction(ResourceElementActions.Delete);
-    await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 60_000 });
+    // WSL machine deletion can take over a minute when the distro does not shut down promptly
+    await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 120_000 });
   });
 }
 

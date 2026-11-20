@@ -23,20 +23,23 @@ import { homedir } from 'node:os';
 import * as path from 'node:path';
 
 import type { IDisposable } from '@desktop-framework/api';
-import type { ApiSenderType } from '@desktop-framework/api/api-sender';
+import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { IConfigurationNode, IConfigurationPropertySchema } from '@desktop-framework/api/configuration';
 import {
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '@desktop-framework/api/configuration';
+import { Container } from 'inversify';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import product from '/@product.json' with { type: 'json' };
 
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type { DefaultConfiguration } from './default-configuration.js';
-import type { Directories } from './directories.js';
-import type { LockedConfiguration } from './locked-configuration.js';
+import { DefaultConfiguration } from './default-configuration.js';
+import { Directories } from './directories.js';
+import { LockedConfiguration } from './locked-configuration.js';
+import { ManagedConfiguration } from './managed-configuration.js';
+import type { ManagedSettings } from './managed-settings.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
 // mock the fs module
@@ -883,6 +886,157 @@ describe('Managed Locked', () => {
     // other.setting should NOT be marked as locked
     expect(properties['other.setting']).toBeDefined();
     expect(properties['other.setting']?.locked).toBe(false);
+  });
+});
+
+describe('managed settings', () => {
+  const managedConfiguration: ManagedConfiguration = {
+    getSettings: vi.fn<ManagedConfiguration['getSettings']>(),
+  };
+
+  let managedSettings: ManagedSettings;
+
+  beforeEach(() => {
+    managedSettings = { defaults: {}, user: {}, locked: [] };
+  });
+
+  test('load JSON settings without a platform provider', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.user': 'local', 'test.locked': 'local' }));
+    getContentMock.mockResolvedValue({ 'test.default': 'managed', 'test.locked': 'device' });
+    getLockedContentMock.mockResolvedValue({ locked: ['test.locked'] });
+    const container = new Container();
+    container.bind(ApiSenderType).toConstantValue(apiSender);
+    container.bind(Directories).toConstantValue(directories);
+    container.bind(DefaultConfiguration).toConstantValue(defaultConfiguration);
+    container.bind(LockedConfiguration).toConstantValue(lockedConfiguration);
+    container.bind(ConfigurationRegistry).toSelf().inSingletonScope();
+
+    const registry = container.get(ConfigurationRegistry);
+    await registry.init();
+
+    expect(registry.getConfiguration('test').get('user')).toBe('local');
+    expect(registry.getConfiguration('test').get('default')).toBe('managed');
+    expect(registry.getConfiguration('test').get('locked')).toBe('device');
+  });
+
+  async function initRegistry(): Promise<ConfigurationRegistry> {
+    const container = new Container();
+    container.bind(ApiSenderType).toConstantValue(apiSender);
+    container.bind(Directories).toConstantValue(directories);
+    container.bind(DefaultConfiguration).toConstantValue(defaultConfiguration);
+    container.bind(LockedConfiguration).toConstantValue(lockedConfiguration);
+    vi.mocked(managedConfiguration.getSettings).mockResolvedValue(managedSettings);
+    container.bind(ManagedConfiguration).toConstantValue(managedConfiguration);
+    container.bind(ConfigurationRegistry).toSelf().inSingletonScope();
+
+    const registry = container.get(ConfigurationRegistry);
+    await registry.init();
+    return registry;
+  }
+
+  test('device preferences override JSON defaults and retain unrelated defaults', async () => {
+    getContentMock.mockResolvedValue({ 'test.value': 'json', 'test.other': 'retained' });
+    managedSettings = {
+      defaults: { 'test.value': 'device' },
+      user: {},
+      locked: [],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('value')).toBe('device');
+    expect(registry.getConfiguration('test').get('other')).toBe('retained');
+  });
+
+  test('user preferences override user JSON and device defaults', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.value': 'local', 'test.other': 'retained' }));
+    getContentMock.mockResolvedValue({ 'test.value': 'json' });
+    managedSettings = {
+      defaults: { 'test.value': 'device' },
+      user: { 'test.value': 'user' },
+      locked: [],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('value')).toBe('user');
+    expect(registry.getConfiguration('test').get('other')).toBe('retained');
+  });
+
+  test('unlocked device defaults retain existing user values', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.value': 'local' }));
+    managedSettings = {
+      defaults: { 'test.value': 'device' },
+      user: {},
+      locked: [],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('value')).toBe('local');
+  });
+
+  test('device locks enforce device values over user preferences and subsequent updates', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'test.value': true }));
+    getContentMock.mockResolvedValue({ 'test.value': true });
+    managedSettings = {
+      defaults: { 'test.value': false },
+      user: { 'test.value': true },
+      locked: ['test.value'],
+    };
+
+    const registry = await initRegistry();
+    registry.registerConfigurations([
+      {
+        id: 'test',
+        title: 'Test',
+        type: 'object',
+        properties: { 'test.value': { type: 'boolean', default: true } },
+      },
+    ]);
+
+    expect(registry.getConfiguration('test').get('value')).toBe(false);
+    expect(registry.getConfigurationProperties()['test.value']?.locked).toBe(true);
+    await registry.getConfiguration('test').update('value', true);
+    expect(registry.getConfiguration('test').get('value')).toBe(false);
+  });
+
+  test.each(['null', 'true', '1', '"invalid"'])(
+    'device locks remain enforced when locked.json is not a dictionary: %s',
+    async content => {
+      getLockedContentMock.mockResolvedValue(JSON.parse(content));
+      managedSettings = {
+        defaults: { 'test.device': false },
+        user: { 'test.device': true },
+        locked: ['test.device'],
+      };
+
+      const registry = await initRegistry();
+
+      expect(registry.getConfiguration('test').get('device')).toBe(false);
+      expect(registry.getConfiguration(undefined, CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE).get('locked')).toEqual([
+        'test.device',
+      ]);
+    },
+  );
+
+  test('JSON locks remain enforced alongside device locks', async () => {
+    getContentMock.mockResolvedValue({ 'test.json': false });
+    getLockedContentMock.mockResolvedValue({ locked: ['test.json', 'test.device'] });
+    managedSettings = {
+      defaults: { 'test.device': false },
+      user: { 'test.json': true, 'test.device': true },
+      locked: ['test.device'],
+    };
+
+    const registry = await initRegistry();
+
+    expect(registry.getConfiguration('test').get('json')).toBe(false);
+    expect(registry.getConfiguration('test').get('device')).toBe(false);
+    expect(registry.getConfiguration(undefined, CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE).get('locked')).toEqual([
+      'test.json',
+      'test.device',
+    ]);
   });
 });
 

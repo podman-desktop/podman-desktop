@@ -44,7 +44,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup testenv using external action
-        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@b88d2d400b93a6050b4bcd36426aa191168cc5aa
 
       - name: Install pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -79,6 +79,10 @@ jobs:
           sudo cp tests/playwright/resources/managed-configuration/locked.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/locked.json"
           echo "Default settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json
           echo "Locked settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json
+          # Let the test create and remove its per-user plist without elevation.
+          managedUserDir="/Library/Managed Preferences/$(id -un)"
+          sudo mkdir -p "$managedUserDir"
+          sudo chown "$(id -u):$(id -g)" "$managedUserDir"
       - name: Windows managed configuration files
         if: ${{ startsWith(matrix.os, 'windows') }}
         shell: pwsh

@@ -3,7 +3,7 @@
   "name": "podman",
   "displayName": "Podman",
   "description": "Integration for Podman and Podman Machines",
-  "version": "1.31.0-next",
+  "version": "1.32.0-next",
   "icon": "icon.png",
   "type": "module",
   "publisher": "podman-desktop",
@@ -531,11 +531,11 @@
     "adm-zip": "^0.6.1",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
-    "msw": "^3.0.4",
+    "msw": "^3.0.6",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
     "tsx": "^4.23.15",
-    "vite": "^8.3.6",
+    "vite": "^8.3.8",
     "vitest": "^5.1.0"
   }
 }

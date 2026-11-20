@@ -45,6 +45,7 @@ export class LegacyDirectories implements Directories {
   private readonly contributionStorageDirectory: string;
   private readonly safeStorageDirectory: string;
   private readonly desktopAppHomeDir: string;
+  private readonly managedPreferencesDir = '/Library/Managed Preferences';
 
   constructor() {
     // Check for custom directory override
@@ -93,6 +94,19 @@ export class LegacyDirectories implements Directories {
 
   getDataDirectory(): string {
     return this.dataDirectory;
+  }
+
+  getManagedPreferencesDir(username?: string): string | undefined {
+    if (!isMac()) {
+      return undefined;
+    }
+
+    // macOS stores account policies below the device policy directory.
+    if (username !== undefined) {
+      return path.join(this.managedPreferencesDir, username);
+    }
+
+    return this.managedPreferencesDir;
   }
 
   getManagedDefaultsDirectory(): string {

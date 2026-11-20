@@ -70,7 +70,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
-        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@b88d2d400b93a6050b4bcd36426aa191168cc5aa
 
       - name: Remove pre-installed Docker images
         run: |

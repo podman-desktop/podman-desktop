@@ -153,8 +153,9 @@ test.describe('Enhanced dashboard experimental feature', { tag: ['@experimental'
     await test.step('Create machine from system overview', async () => {
       await setEnhancedDashboardFeature(page, navigationBar, true);
       const dashboardPage = await waitForDashboardState(navigationBar, true);
+      // Rootful: this test does not assert privileges; leaving rootless polluted later suites.
       await dashboardPage.createPodmanMachineFromSystemOverview(PODMAN_MACHINE_NAME, {
-        isRootful: false,
+        isRootful: true,
         enableUserNet: false,
         startNow: true,
         virtualizationProvider: getVirtualizationProvider(),

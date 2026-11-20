@@ -2,12 +2,13 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { Component, Snippet } from 'svelte';
 import { createEventDispatcher, untrack } from 'svelte';
+import type { HTMLButtonAttributes } from 'svelte/elements';
 
 import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
-import type { ButtonType } from './Button';
+import type { ActionButtonType } from './Button';
 
-interface Props {
+interface BaseProps extends Omit<HTMLButtonAttributes, 'type'> {
   /**
    * Native tooltip, shown on mouse hover only, so keyboard and touch users never see it. Use it for extra
    * hints, not as the only name of an icon-only button: set `aria-label` for that.
@@ -26,24 +27,11 @@ interface Props {
   disabled?: boolean;
 
   /**
-   * Visual style: `primary` (default) for the main action, `secondary` for other actions, `danger` for
-   * destructive actions, `link` for Cancel, Close and other low-emphasis actions, `tab` for tab-like filters
-   * and navigation. An unknown value falls back to `primary` with a console warning.
-   */
-  type?: ButtonType;
-
-  /**
    * Icon shown before the label. An icon-only button needs `aria-label`. The component throws on mount when
-   * there is no label, `title` or `aria-label`, but any body counts as a label, even an empty `{''}`, so the
-   * check does not catch an empty label variable.
+   * there is no label, `title`, `aria-label` or `aria-labelledby`, but any body counts as a label, even an
+   * empty `{''}`, so the check does not catch an empty label variable.
    */
   icon?: IconDefinition | Component | string;
-
-  /**
-   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
-   * Use `pressed` for toggle buttons instead.
-   */
-  selected?: boolean;
 
   /**
    * Makes the button a toggle and sets `aria-pressed`. Leave undefined for a regular button,
@@ -75,9 +63,37 @@ interface Props {
   /** Click handler. Prefer it over the legacy `on:click` event, which is kept for Svelte 4 callers. */
   onclick?: () => void;
 
-  /** Visible label. Use sentence case, see CODE-GUIDELINES.md. */
+  /** Visible label. Use sentence case, see DESIGN-GUIDELINES.md. */
   children?: Snippet;
 }
+
+interface ActionButtonProps extends BaseProps {
+  /**
+   * Visual style: `primary` (default) for the main action, `secondary` for other actions, `danger` for
+   * destructive actions, `link` for Cancel, Close and other low-emphasis actions. An unknown value falls
+   * back to `primary` with a console warning. Use `tab` for tab-like filters and navigation, which
+   * requires `selected`.
+   */
+  type?: ActionButtonType;
+  /**
+   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
+   * Use `pressed` for toggle buttons instead.
+   */
+  selected?: boolean;
+}
+
+interface TabButtonProps extends BaseProps {
+  /** Tab-like filter or navigation button. It requires `selected`. */
+  type: 'tab';
+  /**
+   * Marks a `tab` button as the active one. Visual only, it does not set `aria-selected`.
+   * Use `pressed` for toggle buttons instead.
+   */
+  selected: boolean;
+}
+
+// A tab button must say whether it is the active tab, so `selected` is required for type 'tab' (checked by svelte-check)
+type Props = TabButtonProps | ActionButtonProps;
 
 // support legacy usage (on:click)
 const dispatch = createEventDispatcher<{ click: undefined }>();
@@ -96,9 +112,17 @@ let {
   'aria-label': ariaLabel,
   onclick = dispatch.bind(undefined, 'click'),
   children,
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  'aria-disabled': _ariaDisabled,
+  'aria-busy': _ariaBusy,
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
+  'aria-pressed': ariaPressed,
+  ...restProps
 }: Props = $props();
 
-if (untrack(() => icon !== undefined && !title && !children && !ariaLabel)) {
+if (untrack(() => icon !== undefined && !title && !children && !ariaLabel && !restProps['aria-labelledby'])) {
   throw new Error('Icon-only buttons must have an aria-label for accessibility');
 }
 
@@ -167,7 +191,8 @@ let classes = $derived.by(() => {
   disabled={disabled || inProgress}
   aria-disabled={disabled || inProgress}
   aria-busy={inProgress}
-  aria-pressed={pressed}>
+  aria-pressed={pressed ?? ariaPressed}
+  {...restProps}>
   {#if icon ?? inProgress}
     <div
       class="flex flex-row p-0 m-0 bg-transparent justify-center items-center space-x-[4px]"
