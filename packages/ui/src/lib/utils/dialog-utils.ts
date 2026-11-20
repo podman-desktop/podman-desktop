@@ -43,7 +43,7 @@ export class ModalStack {
     };
   }
 
-  // Enter activates the button marked `default`, like a native desktop dialog. Controls that consume Enter
+  // Enter activates the button marked `data-default`, like a native desktop dialog. Controls that consume Enter
   // themselves (buttons, links, textareas, selects, contenteditable) keep their native behavior.
   // A body target means focus was dropped (e.g. a click on the dialog text), so the modal still owns the key.
   activateDefaultButton(e: KeyboardEvent, modal: HTMLElement): void {

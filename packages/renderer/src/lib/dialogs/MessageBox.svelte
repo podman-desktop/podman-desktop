@@ -204,10 +204,10 @@ function getInitialButtonFocus(): 'first' | 'last' | 'none' {
                 options={dropdownButtons.buttons.map(button => ({label: button, value: button}))}/>
             {:else if buttonsType[i].type === 'iconButton'}
               {@const button = buttonsType[i] as IconButtonType}
-              <Button type="primary" icon={button.icon} default={isEnterDefault(i)} on:click={async (): Promise<void> => await clickButton(i)}>{button.label}</Button>
+              <Button type="primary" icon={button.icon} data-default={isEnterDefault(i) || undefined} on:click={async (): Promise<void> => await clickButton(i)}>{button.label}</Button>
             {/if}
           {:else}
-            <Button type={getButtonType(defaultId === i)} default={isEnterDefault(i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttonsType[i]}</Button>
+            <Button type={getButtonType(defaultId === i)} data-default={isEnterDefault(i) || undefined} on:click={async (): Promise<void> => await clickButton(i)}>{buttonsType[i]}</Button>
           {/if}
         {/each}
       
