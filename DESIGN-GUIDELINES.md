@@ -130,7 +130,7 @@ Data or configuration they cannot recreate, or that takes other resources with i
 ### Button styling
 
 - The control that starts the action uses `type="danger"` in every tier, whether or not a confirmation follows. The dialog does not make the page button less dangerous: `Clear / Purge Data` is danger on the page and in the dialog.
-- Exception: icon-only actions in table rows and action columns (`ListItemButtonIcon`, `LoadingIconButton`) keep the neutral icon color at rest and switch to the danger color on hover and on keyboard focus. A column of red trash icons would overfill the page. The icon and its accessible name carry the meaning, the color reinforces it.
+  - Exception: icon-only actions in table rows and action columns keep the neutral icon color at rest and switch to the danger color on hover and on keyboard focus. A column of red trash icons would overfill the page. The icon and its accessible name carry the meaning, the color reinforces it.
 - Styling never depends on the confirmation preference. A delete button looks the same no matter if the user turned confirmations off or not.
 - There is one danger style. Do not add outlined, lighter, or "soft" danger variants.
 - The confirmation dialog's action button is danger too, labeled with the action verb (see [Button text](#button-text)), and focus starts on Cancel (see [Focus management](#focus-management)).
