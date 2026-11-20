@@ -113,6 +113,21 @@ On Windows, you need to use an absolute path for the identities; a path with ~ w
 
 5. Check within Podman Desktop such as the **Containers** section that you can now access your remote instance.
 
+#### SSH server identity
+
+For non-localhost SSH endpoints, Podman Desktop uses `~/.ssh/known_hosts`, sharing
+server host keys with the Podman CLI. Like the CLI, it automatically adds unknown
+hosts on the first connection without prompting.
+
+Connections to `localhost` and literal loopback addresses (`127.0.0.0/8` and
+`::1`) are exempt, including local Podman machine shells.
+
+Subsequent remote connections must present a known key. Changed keys are rejected
+without overwriting `known_hosts`. If the server's key legitimately changes,
+independently verify its new fingerprint before updating its entry in
+`~/.ssh/known_hosts`. Disable and re-enable remote connections to
+retry; a rejected tunnel does not retry automatically.
+
 #### Verification
 
 **GUI verification:**
