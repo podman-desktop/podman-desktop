@@ -25,6 +25,7 @@ import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
 import DropdownMenu from './dropdownMenu';
+import HelperText from './helperText/HelperText.svelte';
 import ChevronExpander from './icons/ChevronExpander.svelte';
 import type { IconType, ThemedIconImage } from './icons/Icon';
 import Input from './inputs/Input.svelte';
@@ -79,6 +80,7 @@ export {
   Expandable,
   FilteredEmptyScreen,
   FormPage,
+  HelperText,
   Input,
   LinearProgress,
   Link,

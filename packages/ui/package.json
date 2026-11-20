@@ -67,6 +67,10 @@
       "types": "./dist/alert/ErrorMessage.svelte.d.ts",
       "svelte": "./dist/alert/ErrorMessage.svelte"
     },
+    "./HelperText": {
+      "types": "./dist/helperText/HelperText.svelte.d.ts",
+      "svelte": "./dist/helperText/HelperText.svelte"
+    },
     "./Dropdown": {
       "types": "./dist/dropdown/Dropdown.svelte.d.ts",
       "svelte": "./dist/dropdown/Dropdown.svelte"
