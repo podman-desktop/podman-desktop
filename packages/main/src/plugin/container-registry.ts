@@ -3382,10 +3382,12 @@ export class ContainerProviderRegistry {
       throw new Error('no running engine for the matching provider');
     }
 
-    const repoTag = options.imageTag.split(':');
+    // a colon only opens a tag when no path separator follows it, a registry port carries one too
+    const tagIndex = options.imageTag.lastIndexOf(':');
+    const hasTag = tagIndex > 0 && !options.imageTag.includes('/', tagIndex);
     await matchingEngine.importImage(options.archivePath, {
-      repo: repoTag[0],
-      tag: repoTag[1] ?? 'latest',
+      repo: hasTag ? options.imageTag.slice(0, tagIndex) : options.imageTag,
+      tag: hasTag ? options.imageTag.slice(tagIndex + 1) : 'latest',
     });
   }
 
