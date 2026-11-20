@@ -115,12 +115,12 @@ Resources the action cannot undo, but that the user can generally recreate witho
 
 - Examples: delete a container, image, pod, volume or network, bulk delete.
 - Confirmation: required by default. For common actions, a preference may let the user turn it off, such as `userConfirmation.bulk` for bulk deletes.
-- Actions covered by a preference: use the helper that reads it, such as `withBulkConfirmation()` from `/@/lib/actions/BulkActions`.
-- Other actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils`.
+- Actions covered by a preference: use the helper that reads it, such as `withBulkConfirmation()` from `/@/lib/actions/BulkActions`, with `variant: 'delete'`.
+- Other actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`.
 
 #### 🟥 Very destructive
 
-Data or configuration they cannot recreate, or that takes other resources with it.
+Data or configuration the user cannot recreate, or that takes other resources with it.
 
 - Examples: Clear / Purge Data, delete a connection or machine, delete the current Kubernetes context.
 - Confirmation: required, cannot be turned off.
