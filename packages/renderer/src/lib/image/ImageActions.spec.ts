@@ -98,7 +98,7 @@ test('Expect error dialog with correct message when image deletion fails', async
     onRenameImage: vi.fn(),
     image,
   });
-  const button = screen.getByTitle('Delete Image');
+  const button = screen.getByRole('button', { name: 'Delete Image' });
   expect(button).toBeDefined();
   await fireEvent.click(button);
 
@@ -135,7 +135,7 @@ test('Expect no dropdown when one contribution and dropdownMenu off', async () =
   expect(getContributedMenusMock).toHaveBeenCalled();
 
   await waitFor(() => {
-    const div = screen.getByTitle('dummy-contrib').parentElement;
+    const div = screen.getByRole('button', { name: 'dummy-contrib' }).parentElement;
     expect(div).toBeDefined();
     expect(div?.classList).toHaveLength(0);
   });
@@ -220,7 +220,7 @@ test('Expect Push image to be there', async () => {
     image,
   });
 
-  const button = screen.getByTitle('Push Image');
+  const button = screen.getByRole('button', { name: 'Push Image' });
   expect(button).toBeDefined();
 });
 
@@ -239,7 +239,7 @@ test('Expect Save image to be there', async () => {
     image,
   });
 
-  const button = screen.getByTitle('Save Image');
+  const button = screen.getByRole('button', { name: 'Save Image' });
   expect(button).toBeDefined();
 
   await userEvent.click(button);
@@ -261,7 +261,7 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
     onRenameImage: vi.fn(),
     image,
   });
-  const button = screen.getByTitle('Delete Image');
+  const button = screen.getByRole('button', { name: 'Delete Image' });
   expect(button).toBeDefined();
   await fireEvent.click(button);
 
@@ -287,24 +287,24 @@ describe('run', () => {
   });
 
   test('Expect Run image to be there', async () => {
-    const { getByTitle } = render(ImageActions, {
+    const { getByRole } = render(ImageActions, {
       onPushImage: vi.fn(),
       onRenameImage: vi.fn(),
       image,
     });
 
-    const button = getByTitle('Run Image');
+    const button = getByRole('button', { name: 'Run Image' });
     expect(button).toBeDefined();
   });
 
   test('Expect Run image to navigate to appropriate page', async () => {
-    const { getByTitle } = render(ImageActions, {
+    const { getByRole } = render(ImageActions, {
       onPushImage: vi.fn(),
       onRenameImage: vi.fn(),
       image,
     });
 
-    const button = getByTitle('Run Image');
+    const button = getByRole('button', { name: 'Run Image' });
     expect(button).toBeDefined();
 
     await fireEvent.click(button);
@@ -369,7 +369,7 @@ describe('update', () => {
         image: { ...image, name, status, tag },
       });
 
-      const button = screen.getByTitle('Update Image');
+      const button = screen.getByRole('button', { name: 'Update Image' });
       if (expectEnabled) {
         expect(button).toBeEnabled();
       } else {
@@ -396,8 +396,7 @@ describe('update', () => {
     });
 
     const button = screen.getByRole('button', { name: 'Update Image' });
-    expect(button).toHaveAttribute('title', 'Update Image');
-    await fireEvent.mouseEnter(screen.getByTestId('tooltip-trigger'));
+    await fireEvent.mouseEnter(button);
     expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip);
 
     await rerender({ dropdownMenu: true });
@@ -419,7 +418,7 @@ describe('update', () => {
       image,
     });
 
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     expect(ImageUtils.prototype.updateImages).not.toHaveBeenCalled();
     expect(image.status).toBe('DELETING');
@@ -434,7 +433,7 @@ describe('update', () => {
       image,
     });
 
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     expect(withConfirmation).toHaveBeenCalledExactlyOnceWith(
       expect.any(Function),
@@ -461,7 +460,7 @@ describe('update', () => {
       onRenameImage: vi.fn(),
       image: { ...image, name: 'localhost:5000/alpine', tag: '3.10' },
     });
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     const { message } = vi.mocked(window.showMessageBox).mock.calls[0][0];
     const { container } = render(Markdown, { markdown: message });
@@ -475,7 +474,7 @@ describe('update', () => {
     vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Cancel' });
 
     render(ImageActions, { onPushImage: vi.fn(), onRenameImage: vi.fn(), image });
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     expect(window.showMessageBox).toHaveBeenCalledOnce();
     expect(ImageUtils.prototype.updateImages).not.toHaveBeenCalled();
@@ -491,7 +490,7 @@ describe('update', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
 
       render(ImageActions, { onPushImage: vi.fn(), onRenameImage: vi.fn(), image });
-      await fireEvent.click(screen.getByTitle('Update Image'));
+      await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
       await waitFor(() => expect(consoleErrorSpy).toHaveBeenCalledWith('Image update confirmation failed', error));
       expect(ImageUtils.prototype.updateImages).not.toHaveBeenCalled();
@@ -513,7 +512,7 @@ describe('update', () => {
       image,
     });
 
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     await waitFor(() => expect(consoleInfoSpy).toHaveBeenCalledWith('image-name:1.0: Already up to date'));
     expect(image.status).toBe('UNUSED');
@@ -530,7 +529,7 @@ describe('update', () => {
     const consoleInfoSpy = vi.spyOn(console, 'info').mockReturnValue(undefined);
 
     render(ImageActions, { onPushImage: vi.fn(), onRenameImage: vi.fn(), image });
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     await waitFor(() => expect(consoleInfoSpy).toHaveBeenCalledWith('image-name:latest: Already up to date'));
     expect(consoleInfoSpy).toHaveBeenCalledWith('other-name:stable: Registry unavailable');
@@ -544,7 +543,7 @@ describe('update', () => {
     getContributedMenusMock.mockResolvedValue([]);
 
     render(ImageActions, { onPushImage: vi.fn(), onRenameImage: vi.fn(), image });
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     await waitFor(() => expect(ImageUtils.prototype.updateImages).toHaveBeenCalledExactlyOnceWith([image]));
     expect(image.status).toBe('UNUSED');
@@ -564,7 +563,7 @@ describe('update', () => {
       image,
     });
 
-    await fireEvent.click(screen.getByTitle('Update Image'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Update Image' }));
 
     await waitFor(() =>
       expect(window.showMessageBox).toHaveBeenCalledWith({

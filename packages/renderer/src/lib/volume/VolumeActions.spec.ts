@@ -61,7 +61,7 @@ test('Expect prompt dialog and deletion', async () => {
   render(VolumeActions, {
     volume,
   });
-  const button = screen.getByTitle('Delete Volume');
+  const button = screen.getByRole('button', { name: 'Delete Volume' });
   expect(button).toBeDefined();
   await fireEvent.click(button);
 
