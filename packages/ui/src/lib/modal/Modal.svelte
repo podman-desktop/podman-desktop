@@ -37,7 +37,8 @@ onMount(() => {
 });
 
 const handle_keydown = (e: KeyboardEvent): void => {
-  if (e.key === 'Escape') {
+  // Apply the backdrop guard to keyboard dismissal too.
+  if (e.key === 'Escape' && !ignoreFocusOut) {
     onclose();
     return;
   }

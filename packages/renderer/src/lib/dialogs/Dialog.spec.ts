@@ -52,6 +52,55 @@ test('bg click should trigger close event', async () => {
   expect(closeMock).toHaveBeenCalled();
 });
 
+test.each([
+  { ignoreFocusOut: true, closeDisabled: false },
+  { ignoreFocusOut: false, closeDisabled: true },
+  { ignoreFocusOut: true, closeDisabled: true },
+])('close guards $ignoreFocusOut/$closeDisabled block dismissal until cleared', async props => {
+  const onclose = vi.fn();
+  const { rerender } = render(Dialog, { title: 'A dialog', onclose, ...props });
+
+  await userEvent.click(screen.getByLabelText('fade-bg'));
+  await userEvent.keyboard('{Escape}');
+  expect(onclose).not.toHaveBeenCalled();
+
+  await rerender({ ignoreFocusOut: false, closeDisabled: false });
+
+  await userEvent.keyboard('{Escape}');
+  expect(onclose).toHaveBeenCalledOnce();
+
+  await userEvent.click(screen.getByLabelText('fade-bg'));
+  expect(onclose).toHaveBeenCalledTimes(2);
+});
+
+test.each([false, true])('close button stays enabled with ignoreFocusOut=%s', async ignoreFocusOut => {
+  const onclose = vi.fn();
+  render(Dialog, { title: 'A dialog', onclose, ignoreFocusOut });
+
+  const button = screen.getByRole('button', { name: 'Close' });
+  expect(button).toBeEnabled();
+
+  await userEvent.click(button);
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
+test('closeDisabled disables the close button until re-enabled', async () => {
+  const onclose = vi.fn();
+  const { rerender } = render(Dialog, { title: 'A dialog', onclose, closeDisabled: true });
+
+  const button = screen.getByRole('button', { name: 'Close' });
+  expect(button).toBeDisabled();
+
+  await userEvent.click(button);
+  expect(onclose).not.toHaveBeenCalled();
+
+  await rerender({ closeDisabled: false });
+  expect(button).toBeEnabled();
+
+  await userEvent.click(button);
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
 test('Escape key should trigger close', async () => {
   const closeMock = vi.fn();
   render(Dialog, { title: 'A dialog', onclose: closeMock });
