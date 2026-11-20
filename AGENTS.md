@@ -113,7 +113,7 @@ When changing UI:
 ## Pattern References
 
 - **Coding standards & Svelte patterns**: [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
-- **UX rules (dialogs, buttons, forms)**: [DESIGN-GUIDELINES.md](DESIGN-GUIDELINES.md)
+- **UX rules (dialogs, buttons, forms, destructive actions)**: [DESIGN-GUIDELINES.md](DESIGN-GUIDELINES.md)
 - **Contributing & development setup**: [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Architecture decisions**: [docs/adr/](docs/adr/)
 - **Extension API docs**: `website/docs/extensions/`
