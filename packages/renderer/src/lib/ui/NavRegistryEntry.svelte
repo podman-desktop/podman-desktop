@@ -1,6 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+import { createSortable } from '@dnd-kit/svelte/sortable';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { HTMLAnchorAttributes } from 'svelte/elements';
 import type { TinroRouteMeta } from 'tinro';
@@ -13,9 +14,21 @@ interface NavRegistryEntryProps extends Omit<HTMLAnchorAttributes, 'href' | 'onc
   entry: NavigationRegistryEntry;
   meta: TinroRouteMeta;
   expanded: boolean;
+  /** Position of the entry in the navigation list. */
+  index: number;
 }
 
-let { entry, meta = $bindable(), expanded = false, ...props }: NavRegistryEntryProps = $props();
+let { entry, meta = $bindable(), expanded = false, index, ...props }: NavRegistryEntryProps = $props();
+
+// dnd-kit gives the dragged element role="button" unless it already has one, hence role="link" below.
+const sortable = createSortable({
+  get id() {
+    return entry.name;
+  },
+  get index() {
+    return index;
+  },
+});
 </script>
 
 {#if !entry.hidden}
@@ -26,7 +39,9 @@ let { entry, meta = $bindable(), expanded = false, ...props }: NavRegistryEntryP
     ariaLabel={entry.name}
     bind:meta={meta}
     {expanded}
-    {...props}>
+    role="link"
+    {...props}
+    {@attach sortable.attach}>
     <div class="flex items-center w-full">
       <div class="flex-shrink-0 flex items-center justify-center w-6">
         {#if entry.icon === undefined}
