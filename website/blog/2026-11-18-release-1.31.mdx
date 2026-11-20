@@ -10,6 +10,11 @@ image: /img/blog/podman-desktop-release-1.31/banner.png
 ---
 
 import ThemedImage from '@theme/ThemedImage';
+import ReactPlayer from 'react-player';
+
+Podman Desktop 1.31 Release
+
+![podman-desktop-hero-1.31](/img/blog/podman-desktop-release-1.31/banner.png)
 
 Podman Desktop 1.31 is now available. [Click here to download it](/downloads)!
 
@@ -41,7 +46,13 @@ an installed extension can declare that it *overrides* a bundled extension, and 
 priority. You can also update bundled extensions directly from the catalog, with a new **Overrides** badge on the
 extension card confirming that your version is the one running.
 
-![Extension card displaying the Overrides badge and Update available link](path/to/extension-card-overrides.png)
+<ThemedImage
+  alt="Extension card displaying the Overrides badge"
+  sources={{
+    light: require('./img/podman-desktop-release-1.31/overrides-badge-light.png').default,
+    dark: require('./img/podman-desktop-release-1.31/overrides-badge-dark.png').default,
+  }}
+/>
 
 Overriding bundled extensions is paired with granular control over automatic updates. You can now disable auto-updates
 for individual extensions from their details page. Whenever a newer version is waiting, an **Update available** link
@@ -49,7 +60,15 @@ appears next to the version on both the extension card and the details page so y
 Lifecycle status indicators have also been refreshed across the UI to align with the updated look and
 placement of these controls on both extension cards and details pages
 
-![Extension details page showing per-extension auto-update settings](path/to/extension-details-autoupdate.png)
+![Extension details page showing per-extension auto-update settings](./img/podman-desktop-release-1.31/extension-auto-update-dark.png)
+
+![Extension card Update Available link](./img/podman-desktop-release-1.31/extension-update-available-dark.png)
+
+<img
+  src={require('./img/podman-desktop-release-1.31/extension-update-link-dark.png').default}
+  alt="Extension details page Update Available link"
+  style={{ marginLeft: 'auto', marginRight: 'auto' }}
+/>
 
 ### Container image updates
 
@@ -58,18 +77,19 @@ the tag—you can now check for and pull image updates directly from the UI.
 
 **Single image update:** Trigger an update action directly from the upper-right corner of the Image Details page; Podman
 Desktop checks the local digest against the remote manifest and pulls the newer version only if an update exists.
-
-![Updating a single container image from the Image Details page](path/to/single-image-update.png)
-
 **Bulk images update:** Select multiple images from the Images list and run the update action across the entire batch at
 once, automatically skipping any images that are already up to date.
-
-![Selecting and updating multiple container images in bulk](path/to/bulk-images-update.png)
-
 **Non-blocking task tracking:** Image update checks and pulls run in the background as cancellable tasks in the task
 manager, ensuring large downloads never lock up the UI.
 
-![Task manager showing live progress and cancellation for image pulls](path/to/image-update-task-tracking.png)
+<ReactPlayer
+  playing
+  playsInline
+  controls
+  src="https://github.com/user-attachments/assets/fc9519ed-0c44-4aab-b921-fc3542ff0508"
+  width="100%"
+  height="100%"
+/>
 
 ### Guided Hyper-V setup on Windows
 
@@ -80,7 +100,13 @@ requests a one-time administrator confirmation (UAC) to run `podman system hyper
 the action once complete, and reminds you to sign out or restart Windows for the changes to take effect. Once
 preparation is complete, you no longer need to run Podman Desktop as an administrator to create a Hyper-V VM.
 
-![Podman provider card in Settings > Resources showing the Prepare Hyper-V action](path/to/prepare-hyperv-windows.png)
+<ThemedImage
+  alt="Podman provider card in Settings > Resources showing the Prepare Hyper-V action"
+  sources={{
+    light: require('./img/podman-desktop-release-1.31/prepare-hyperv-windows-light.png').default,
+    dark: require('./img/podman-desktop-release-1.31/prepare-hyperv-windows-dark.png').default,
+  }}
+/>
 
 ### Using existing volumes in Run Image page
 
@@ -91,14 +117,26 @@ flexible source-type selector to each mount row, making it easier to attach pers
 **Source-type selection:** Each mount row now includes a dropdown allowing you to switch between **Host path** and
 **Existing volume**.
 
-![Run Image volume mount row showing the source-type dropdown](path/to/run-image-source-type.png)
+<ThemedImage
+  alt="Run Image volume mount row showing the source-type dropdown"
+  sources={{
+    light: require('./img/podman-desktop-release-1.31/run-image-volume-source-type-light.png').default,
+    dark: require('./img/podman-desktop-release-1.31/run-image-volume-source-type-dark.png').default,
+  }}
+/>
 
 **Engine-filtered volume dropdown:** When **Existing volume** is selected, the host path input swaps for a dropdown
 populated from your available volumes, automatically filtered to match the target image's engine and sorted by name. The
 dropdown displays reader-friendly short names while submitting the full identifier as the bind source, making it
 effortless to select pre-created data volumes without copying and pasting long strings.
 
-![Volume selection dropdown filtered by engine and showing volume names](path/to/run-image-volume-dropdown.png)
+<ThemedImage
+  alt="Volume selection dropdown filtered by engine and showing volume names"
+  sources={{
+    light: require('./img/podman-desktop-release-1.31/run-image-volume-dropdown-light.png').default,
+    dark: require('./img/podman-desktop-release-1.31/run-image-volume-dropdown-dark.png').default,
+  }}
+/>
 
 ## Manage macOS settings with MDM
 
